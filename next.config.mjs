@@ -17,6 +17,18 @@ const config = {
     locales: ["en"],
     defaultLocale: "en",
   },
+  output: "standalone",
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'profile.line-scdn.net',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+  },
 };
 
 export default config;

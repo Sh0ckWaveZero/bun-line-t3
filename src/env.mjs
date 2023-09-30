@@ -29,8 +29,15 @@ export const env = createEnv({
       process.env.VERCEL ? z.string().min(1) : z.string().url()
     ),
     // Add `.min(1) on ID and SECRET if you want to make sure they're not empty
-    DISCORD_CLIENT_ID: z.string(),
-    DISCORD_CLIENT_SECRET: z.string(),
+    LINE_CLIENT_ID: z.string(),
+    LINE_CLIENT_SECRET: z.string(),
+    LINE_CHANNEL_SECRET: z.string(),
+    JWT_EXPIRES_IN: z.string().default("1d"),
+    LINE_MESSAGING_API: z.string().url(),
+    LINE_CHANNEL_ACCESS: z.string(),
+    CMC_URL: z.string().url(),
+    CMC_API_KEY: z.string(),
+    FRONTEND_URL: z.string().url(),
   },
 
   /**
@@ -51,8 +58,15 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-    DISCORD_CLIENT_ID: process.env.DISCORD_CLIENT_ID,
-    DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET,
+    LINE_CLIENT_ID: process.env.LINE_CLIENT_ID,
+    LINE_CLIENT_SECRET: process.env.LINE_CLIENT_SECRET,
+    LINE_CHANNEL_SECRET: process.env.LINE_CHANNEL_SECRET,
+    JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN,
+    LINE_MESSAGING_API: process.env.LINE_MESSAGING_API,
+    LINE_CHANNEL_ACCESS: process.env.LINE_CHANNEL_ACCESS,
+    CMC_URL: process.env.CMC_URL,
+    CMC_API_KEY: process.env.CMC_API_KEY,
+    FRONTEND_URL: process.env.FRONTEND_URL,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

@@ -5,7 +5,7 @@ import {
   type DefaultSession,
   type NextAuthOptions,
 } from "next-auth";
-import DiscordProvider from "next-auth/providers/discord";
+import LineProvider from "next-auth/providers/line";
 
 import { env } from "~/env.mjs";
 import { db } from "~/server/db";
@@ -38,19 +38,47 @@ declare module "next-auth" {
  */
 export const authOptions: NextAuthOptions = {
   callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
-    }),
+    async signIn({ user, account, profile, email, credentials }) {
+      const expires = new Date();
+      expires.setDate(expires.getDate() + 30);
+      const expiresAt = Date.parse(expires.toString());
+
+      const response: any = await db.account.findUnique({
+        where: { userId: user.id },
+      });
+
+      if (response && response.expires_at < Date.now()) {
+        await db.account.update({
+          where: { userId: user.id },
+          data: { expires_at: expiresAt },
+        });
+      }
+
+      const isAllowedToSignIn = true;
+      if (isAllowedToSignIn) {
+        return true;
+      } else {
+        // Return false to display a default error message
+        return false;
+        // Or you can return a URL to redirect to:
+        // return '/unauthorized'
+      }
+    },
+    session: async ({ session, user }) => {
+      return ({
+        ...session,
+        user: {
+          ...session.user,
+          id: user.id,
+        },
+      })
+    },
   },
   adapter: PrismaAdapter(db),
   providers: [
-    DiscordProvider({
-      clientId: env.DISCORD_CLIENT_ID,
-      clientSecret: env.DISCORD_CLIENT_SECRET,
+    LineProvider({
+      clientId: env.LINE_CLIENT_ID,
+      clientSecret: env.LINE_CLIENT_SECRET
     }),
     /**
      * ...add more providers here.
