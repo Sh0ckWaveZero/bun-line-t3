@@ -39,7 +39,6 @@ declare module "next-auth" {
 export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account, profile, email, credentials }) {
-      console.log('🚀 ~ file: auth.ts:42 ~ signIn ~ account:', account);
       const expires = new Date();
       expires.setDate(expires.getDate() + 30);
       const expiresAt = Date.parse(expires.toString());
@@ -48,7 +47,7 @@ export const authOptions: NextAuthOptions = {
 
       if (accountInfo && accountInfo?.expires_at < Date.now()) {
         await db.account.update({
-          where: { userId: user.id },
+          where: { providerAccountId: accountInfo?.providerAccountId },
           data: { expires_at: expiresAt },
         });
       }
