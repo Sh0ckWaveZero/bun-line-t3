@@ -18,7 +18,7 @@ export default function handler(
     const secret = env.LINE_CHANNEL_SECRET;
     const signature = crypto
       .createHmac('SHA256', secret as string)
-      .update(data)
+      .update(data as string)
       .digest('base64')
       .toString();
 
@@ -31,7 +31,7 @@ export default function handler(
     if (utils.isEmpty(req?.body?.events)) {
       return res.status(200).json({ message: 'ok' });
     }
-    
+
     return lineService.handleEvent(req, res);
   } catch (error) {
     console.log('🚀 ~ file: line.ts ~ error', error);

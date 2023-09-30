@@ -72,8 +72,8 @@ const pickHue = (options: RandomColorOptions): number => {
   if (colorRanges.length > 0) {
     const hueRange: number[] = getRealHueRange(options.hue) as number[];
     let hue: number = randomWithin(hueRange as any);
-    const step: number = (hueRange[1] - hueRange[0]) / colorRanges.length;
-    let j: number = Math.floor((hue - hueRange[0]) / step);
+    const step: number = ((hueRange[1] as number) - (hueRange[0] as number)) / colorRanges.length;
+    let j: number = Math.floor((hue - (hueRange[0] as number)) / step);
 
     if (colorRanges[j] === true) {
       j = (j + 2) % colorRanges.length;
@@ -81,8 +81,8 @@ const pickHue = (options: RandomColorOptions): number => {
       colorRanges[j] = true;
     }
 
-    const min = (hueRange[0] + j * step) % 359;
-    const max = (hueRange[0] + (j + 1) * step) % 359;
+    const min = ((hueRange[0] as number) + j * step) % 359;
+    const max = ((hueRange[0] as number) + (j + 1) * step) % 359;
 
     hue = randomWithin([min, max]);
 
@@ -198,8 +198,8 @@ const getMinimumBrightness = (H: number, S: number): number => {
   const lowerBounds = colorInfo.lowerBounds;
 
   for (let i = 0; i < lowerBounds.length - 1; i++) {
-    const [s1, v1] = lowerBounds[i];
-    const [s2, v2] = lowerBounds[i + 1];
+    const [s1, v1] = lowerBounds[i] as [number, number];
+    const [s2, v2] = lowerBounds[i + 1] as [number, number];
 
     if (S >= s1 && S <= s2) {
       const m = (v2 - v1) / (s2 - s1);
@@ -290,7 +290,7 @@ const HSVtoHex = (hsv: number[]): string => {
   return hex;
 };
 
-const defineColor = (name: string, hueRange: number[] | null, lowerBounds: number[][]): void => {
+const defineColor = (name: string, hueRange: number[] | null, lowerBounds: any): void => {
   const sMin = lowerBounds[0][0];
   const sMax = lowerBounds[lowerBounds.length - 1][0];
   const bMin = lowerBounds[lowerBounds.length - 1][1];
@@ -438,7 +438,7 @@ const HexToHSB = (hex: string): [number, number, number] => {
 }
 
 
-const HSVtoHSL = (hsv: number[]): number[] => {
+const HSVtoHSL = (hsv: any): number[] => {
   const h = hsv[0];
   const s = hsv[1] / 100;
   const v = hsv[2] / 100;

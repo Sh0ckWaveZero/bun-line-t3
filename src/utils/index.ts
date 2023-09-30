@@ -2,15 +2,13 @@ type TemplateParameter = any[];
 
 const regex = new RegExp(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g);
 
-const template = <T>(
-  templateData: TemplateStringsArray,
-  param: T[],
-  delimiter = '\n',
-): string => {
+function template<T>(templateData: TemplateStringsArray, param: T[], delimiter = '\n') {
   let output = '';
+
   for (let i = 0; i < param.length; i += 1) {
-    output += templateData[i] + param[i];
+    output += templateData[i] as any + param[i];
   }
+
   output += templateData[param.length];
 
   const lines: string[] = output.split(/(?:\r\n|\n|\r)/);
@@ -115,7 +113,7 @@ const priceColor = (name: string) => {
 const randomItems = (source: any[]) => {
   const url = source;
   const randomIndex = Math.floor(Math.random() * url.length - 1);
-  
+
   return url[randomIndex];
 };
 
