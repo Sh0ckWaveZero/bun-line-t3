@@ -46,7 +46,6 @@ const handleLogin = async (req: NextApiRequest, message: string) => {
       providerAccountId: userId,
     },
   });
-  console.log('🚀 ~ file: line.ts:49 ~ handleLogin ~ userPermission:', userPermission);
 
   if (
     !userPermission ||
