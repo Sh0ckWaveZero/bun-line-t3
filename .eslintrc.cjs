@@ -41,6 +41,8 @@ const config = {
     "@typescript-eslint/restrict-template-expressions": "warn",
     "@typescript-eslint/no-misused-promises": "warn",
     "prefer-const": "warn",
+    "next/no-nonstandard-ghs-env": "off",
+    "@typescript-eslint/no-inferrable-types": "off",
   },
 };
 
