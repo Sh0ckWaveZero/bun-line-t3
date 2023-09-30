@@ -163,7 +163,7 @@ const replyRaw = async (req: Request, cryptoInfoItems: any[], options?: string) 
   Promise.all(bubbleItems)
     .then(async (items) => {
       const payload = flexMessage(items);
-      sendMessage(req, payload);
+      await sendMessage(req, payload);
     })
     .catch((err) => {
       console.error('error: ', err.message);

@@ -14,13 +14,13 @@ interface ColorInfo {
 }
 
 // Seed to get repeatable colors
-var seed: any = null;
+let seed: any = null;
 
 // Shared color dictionary
-var colorDictionary: any = {};
+const colorDictionary: any = {};
 
 // check if a range is taken
-var colorRanges: any[] = [];
+const colorRanges: any[] = [];
 
 export default function randomColor(options: RandomColorOptions = {}): string | string[] {
   let seed: number | null;
@@ -250,7 +250,7 @@ const getColorInfo = (hue: number): ColorInfo | string => {
     hue -= 360;
   }
 
-  for (let colorName in colorDictionary) {
+  for (const colorName in colorDictionary) {
     const color = colorDictionary[colorName];
     if (color.hueRange && hue >= color.hueRange[0] && hue <= color.hueRange[1]) {
       return color;
