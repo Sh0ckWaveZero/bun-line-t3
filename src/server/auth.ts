@@ -43,11 +43,11 @@ export const authOptions: NextAuthOptions = {
       expires.setDate(expires.getDate() + 30);
       const expiresAt = Date.parse(expires.toString());
 
-      const response: any = await db.account.findFirst({
-        where: { userId: user.id },
+      const response: any = await db.account.findRaw({
+        filter: { userId: { $eq: { $oid: user.id } } },
       });
 
-      if (response && response.expires_at < Date.now()) {
+      if (response && response[0].expires_at < Date.now()) {
         await db.account.update({
           where: { userId: user.id },
           data: { expires_at: expiresAt },
