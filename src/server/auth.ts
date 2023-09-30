@@ -43,7 +43,7 @@ export const authOptions: NextAuthOptions = {
       expires.setDate(expires.getDate() + 30);
       const expiresAt = Date.parse(expires.toString());
 
-      const response: any = await db.account.findUnique({
+      const response: any = await db.account.findFirst({
         where: { userId: user.id },
       });
 
