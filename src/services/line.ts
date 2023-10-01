@@ -1,5 +1,4 @@
 import { CONSOLATION, IMAGE_GOLD_URLS, IMAGE_URLS } from '~/config/common.constant';
-import axios from 'axios';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { CryptoInfo } from '~/interface';
 import randomColor from '~/utils/randomColor';
@@ -799,7 +798,7 @@ const flexMessage = (bubbleItems: any[]) => {
   ];
 }
 
-const sendMessage = (req: any, payload: any) => {
+const sendMessage = async (req: any, payload: any) => {
   try {
     const lineChannelAccessToken = env.LINE_CHANNEL_ACCESS;
     const lineHeader = {
@@ -807,15 +806,20 @@ const sendMessage = (req: any, payload: any) => {
       Authorization: `Bearer ${lineChannelAccessToken}`,
     };
 
-    return axios({
-      method: 'post',
-      url: `${env.LINE_MESSAGING_API}/reply`,
+    const response = await fetch(`${env.LINE_MESSAGING_API}/reply`, {
+      method: 'POST',
       headers: lineHeader,
-      data: JSON.stringify({
+      body: JSON.stringify({
         replyToken: req.body.events[0].replyToken,
         messages: payload,
       }),
     });
+
+    if (!response.ok) {
+      throw new Error('Failed to send message');
+    }
+
+    return response;
   } catch (err: any) {
     console.error(err.message);
   }

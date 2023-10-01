@@ -4,7 +4,6 @@ import { cmcService } from './cmc';
 import { cryptoCurrencyService } from './crypto-currency';
 import { CryptoInfo } from '~/interface';
 import { utils } from '~/utils';
-import axios from 'axios';
 import { env } from '~/env.mjs';
 
 type CryptoInfoType = CryptoInfo | null;
@@ -177,7 +176,6 @@ const getMexc = async (_currency: string): Promise<CryptoInfoType> => {
   };
 };
 
-
 const getCoinMarketCap = async (_currency: string): Promise<CryptoInfoType> => {
   const currency = cryptoCurrencyService.mapSymbolsThai(_currency);
   const response: any = await cmc(currency);
@@ -211,11 +209,12 @@ const getCmcList = async (start: number, limit: number) => {
 
 const bitkub = async (currencyName: string): Promise<any> => {
   try {
-    const response: any = await axios.get(
-      `https://api.bitkub.com/api/market/ticker?sym=THB_${currencyName.toUpperCase()}`,
+    const response = await fetch(
+      `https://api.bitkub.com/api/market/ticker?sym=THB_${currencyName.toUpperCase()}`
     );
-    for (const key of Object.keys(response.data)) {
-      const value = response.data[key];
+    const data = await response.json();
+    for (const key of Object.keys(data)) {
+      const value = data[key];
       return value;
     }
   } catch (error) {
@@ -228,13 +227,11 @@ const binance = async (
   pairs = 'USDT',
 ): Promise<any> => {
   try {
-    return await axios
-      .get(
-        `https://api.binance.com/api/v3/ticker/24hr?symbol=${currencyName.toUpperCase()}${pairs.toUpperCase()}`,
-      )
-      .then((item: any) => {
-        return item.data;
-      });
+    const response = await fetch(
+      `https://api.binance.com/api/v3/ticker/24hr?symbol=${currencyName.toUpperCase()}${pairs.toUpperCase()}`
+    );
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error(error);
   }
@@ -242,11 +239,12 @@ const binance = async (
 
 const bitazza = async (currencyName: string): Promise<any> => {
   try {
-    const response: any = await axios.get(
-      `https://apexapi.bitazza.com:8443/AP/summary`,
+    const response = await fetch(
+      `https://apexapi.bitazza.com:8443/AP/summary`
     );
-    for (const key in response.data) {
-      const value = response.data[key];
+    const data = await response.json();
+    for (const key in data) {
+      const value = data[key];
       if (value.trading_pairs === `${currencyName.toUpperCase()}_THB`) {
         return value;
       }
@@ -258,9 +256,10 @@ const bitazza = async (currencyName: string): Promise<any> => {
 
 const geteIO = async (currencyName: string) => {
   try {
-    const { data } = await axios.get(
-      `https://api.gateio.ws/api/v4/spot/tickers`,
+    const response = await fetch(
+      `https://api.gateio.ws/api/v4/spot/tickers`
     );
+    const data = await response.json();
     return data.filter(
       (val: any) =>
         val.currency_pair === `${currencyName.toUpperCase()}_USDT`,
@@ -273,9 +272,10 @@ const geteIO = async (currencyName: string) => {
 
 const mexc = async (currencyName: string): Promise<any> => {
   try {
-    const { data }: any = await axios.get(
-      `https://www.mexc.com/open/api/v2/market/ticker?symbol=${currencyName}_USDT`,
+    const response = await fetch(
+      `https://www.mexc.com/open/api/v2/market/ticker?symbol=${currencyName}_USDT`
     );
+    const data = await response.json();
     return data.data[0];
   } catch (error) {
     console.error('mexc is error: ', error);
@@ -286,21 +286,13 @@ const cmc = async (currencyName: string): Promise<any> => {
   try {
     const coin = currencyName.toUpperCase();
     const cryptoInfo = await cmcService.findOne(coin);
-    const config: any = {
-      method: 'get',
-      url:
-        `${env.CMC_URL}/v1/cryptocurrency/quotes/latest?id=${cryptoInfo?.id}`,
-      headers: {
-        'X-CMC_PRO_API_KEY': env.CMC_API_KEY,
-      },
+    const url = `${env.CMC_URL}/v1/cryptocurrency/quotes/latest?id=${cryptoInfo?.id}`;
+    const headers = {
+      'X-CMC_PRO_API_KEY': env.CMC_API_KEY,
     };
-    return await axios(config)
-      .then(async (response) => {
-        return await response.data.data?.[`${cryptoInfo}`];
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+    const response = await fetch(url, { headers });
+    const data = await response.json();
+    return data.data?.[`${cryptoInfo}`];
   } catch (error) {
     console.error('CoinMarkerCap is error: ', error);
   }
@@ -308,21 +300,14 @@ const cmc = async (currencyName: string): Promise<any> => {
 
 const cmcList = async (start: number, limit: number): Promise<any> => {
   try {
-    const config: any = {
-      method: 'get',
-      url: `${env.CMC_URL}/v1/cryptocurrency/map?start=${start}&limit=${limit}`,
-      headers: {
-        'X-CMC_PRO_API_KEY': env.CMC_API_KEY,
-      },
+    const url = `${env.CMC_URL}/v1/cryptocurrency/map?start=${start}&limit=${limit}`;
+    const headers = {
+      'X-CMC_PRO_API_KEY': env.CMC_API_KEY,
     };
-    return await axios(config)
-      .then(async (response) => {
-        console.log(response?.data?.data);
-        return await response?.data?.data;
-      })
-      .catch((error) => {
-        console.log(error.response.data);
-      });
+    const response = await fetch(url, { headers });
+    const data = await response.json();
+    console.log(data?.data);
+    return data?.data;
   } catch (error) {
     console.error('CoinMarkerCap is error: ', error);
   }
@@ -331,10 +316,11 @@ const cmcList = async (start: number, limit: number): Promise<any> => {
 
 const satangCorp = async (currencyName: string): Promise<any> => {
   try {
-    const response = await axios.get(
-      `https://satangcorp.com/api/v3/ticker/24hr?symbol=${currencyName}_thb`,
+    const response = await fetch(
+      `https://satangcorp.com/api/v3/ticker/24hr?symbol=${currencyName}_thb`
     );
-    return response.data;
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error(error);
   }
@@ -344,7 +330,8 @@ const getGoldPrice = async (): Promise<any> => {
   try {
     const goldPrice: any = {};
     // Fetch HTML
-    const { data }: any = await axios.get('https://xn--42cah7d0cxcvbbb9x.com/');
+    const response: any = await fetch('https://xn--42cah7d0cxcvbbb9x.com/');
+    const data = await response.text();
     // Load HTML
     const $: any = cheerio.load(data);
 
@@ -394,9 +381,8 @@ const getGoldPrice = async (): Promise<any> => {
 const getGasPrice = async (provider: string): Promise<any> => {
   try {
     // Fetch HTML
-    const { data }: any = await axios.get(
-      'http://gasprice.kapook.com/gasprice.php',
-    );
+    const response = await fetch('http://gasprice.kapook.com/gasprice.php');
+    const data = await response.text();
     // Load HTML
     const $: any = cheerio.load(data);
     // Select div items

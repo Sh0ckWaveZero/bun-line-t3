@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { cmcService } from './cmc';
 import { CRYPTO_CURRENCIES_LIST } from '~/config/common.constant';
 
@@ -17,12 +16,12 @@ const getCurrencyLogo = async (currencyName: string): Promise<any> => {
     const cmcCurrenciesLogo = `https://s2.coinmarketcap.com/static/img/coins/128x128/${res?.no}.png`;
     let response: any;
     if (!res) {
-      response = await axios.get(
+      response = await fetch(
         `https://lcw.nyc3.cdn.digitaloceanspaces.com/production/currencies/64/${currencyName}.webp`,
       );
     }
 
-    return res ? cmcCurrenciesLogo : response.config.url;
+    return res ? cmcCurrenciesLogo : response.url;
   } catch (error) {
     return 'https://cryptoicon-api.vercel.app/api/icon/notfound';
   }
