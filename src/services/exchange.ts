@@ -227,11 +227,9 @@ const binance = async (
   pairs = 'USDT',
 ): Promise<any> => {
   try {
-    const response = await fetch(
-      `https://api.binance.com/api/v3/ticker/24hr?symbol=${currencyName.toUpperCase()}${pairs.toUpperCase()}`
-    );
+    const url = `https://api.binance.com/api/v3/ticker/24hr?symbol=${currencyName.toUpperCase()}${pairs.toUpperCase()}`;
+    const response = await fetch(url);
     const data = await response.json();
-    console.log('🚀 ~ file: exchange.ts:234 ~ data:', data);
     return data;
   } catch (error) {
     console.error(error);
