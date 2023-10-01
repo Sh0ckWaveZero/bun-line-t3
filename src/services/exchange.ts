@@ -231,6 +231,7 @@ const binance = async (
       `https://api.binance.com/api/v3/ticker/24hr?symbol=${currencyName.toUpperCase()}${pairs.toUpperCase()}`
     );
     const data = await response.json();
+    console.log('🚀 ~ file: exchange.ts:234 ~ data:', data);
     return data;
   } catch (error) {
     console.error(error);
