@@ -5,6 +5,7 @@ import { cryptoCurrencyService } from './crypto-currency';
 import { CryptoInfo } from '~/interface';
 import { utils } from '~/utils';
 import { env } from '~/env.mjs';
+import { IMAGE_LOTTO_FAIL_URLS, IMAGE_LOTTO_HAPPY_URLS } from '~/config/common.constant';
 
 type CryptoInfoType = CryptoInfo | null;
 
@@ -405,6 +406,69 @@ const getGasPrice = async (provider: string): Promise<any> => {
   }
 };
 
+
+
+const getLotto = async (lottoNo: string[]): Promise<any> => {
+  try {
+    const requestOptions: RequestInit = {
+      method: 'POST',
+      redirect: 'follow',
+    };
+
+    const response = await fetch('https://www.glo.or.th/api/lottery/getLatestLottery', requestOptions);
+    const data = await response.json();
+
+    const lottoData = data?.response?.data;
+    const lottoDate = data?.response?.date;
+    const lottoAt = `วันที่ ${new Date(lottoDate).toLocaleString('th-TH', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })}`;
+    const options = {
+      style: 'currency',
+      currency: 'THB',
+    };
+
+    const prizes = [
+      { name: 'รางวัลที่ 1', data: lottoData?.first, value: lottoData?.first?.number },
+      { name: 'รางวัลที่ 2', data: lottoData?.second, value: lottoData?.second?.number },
+      { name: 'รางวัลที่ 3', data: lottoData?.third, value: lottoData?.third?.number },
+      { name: 'รางวัลที่ 4', data: lottoData?.fourth, value: lottoData?.fourth?.number },
+      { name: 'รางวัลที่ 5', data: lottoData?.fifth, value: lottoData?.fifth?.number },
+      { name: 'รางวัลเลขข้างเคียงรางวัลที่ 1', data: lottoData?.near1, value: lottoData?.near1?.number },
+    ];
+
+    const prizeValues = await Promise.all(prizes.map(async (prize) => {
+      const matchingNumbers = prize.value?.filter((number: any) => lottoNo.includes(number?.value));
+      const formattedNumber = Number(prize.data?.price).toLocaleString('en-US', options);
+      return {
+        name: `สลากของคุณถูก${prize.name} \nมูลค่า ${formattedNumber}\n\nขอแสดงความยินดีด้วยค่ะ 🎉`,
+        value: matchingNumbers?.map((number: any) => number?.value)[0],
+        price: prize.data?.price,
+        lottoAt: lottoAt,
+        image: utils.randomItems(IMAGE_LOTTO_HAPPY_URLS),
+      };
+    }));
+
+    const lotto = prizeValues.filter((prize) => prize.value?.length);
+
+    if (lotto.length === 0) {
+      return lottoNo.map((item) => ({
+        name: 'สลากของคุณไม่ถูกรางวัล... เสียใจด้วยนะค่ะ 😭',
+        value: item,
+        price: '',
+        lottoAt: lottoAt,
+        image: utils.randomItems(IMAGE_LOTTO_FAIL_URLS),
+      }));
+    }
+
+    return lotto;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 export const exchangeService = {
   getBitkub,
   getSatangCorp,
@@ -416,4 +480,5 @@ export const exchangeService = {
   getCmcList,
   getGoldPrice,
   getGasPrice,
+  getLotto,
 };
