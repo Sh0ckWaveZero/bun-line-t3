@@ -46,7 +46,7 @@ export const authOptions: NextAuthOptions = {
       const accountInfo = account as any;
 
       if (accountInfo && accountInfo?.expires_at < Date.now()) {
-        await db.account.update({
+        await db.account.updateMany({
           where: { providerAccountId: accountInfo?.providerAccountId },
           data: { expires_at: expiresAt },
         });
