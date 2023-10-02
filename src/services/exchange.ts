@@ -437,6 +437,9 @@ const getLotto = async (lottoNo: string[]): Promise<any> => {
       { name: 'รางวัลที่ 4', data: lottoData?.fourth, value: lottoData?.fourth?.number },
       { name: 'รางวัลที่ 5', data: lottoData?.fifth, value: lottoData?.fifth?.number },
       { name: 'รางวัลเลขข้างเคียงรางวัลที่ 1', data: lottoData?.near1, value: lottoData?.near1?.number },
+      { name: 'รางวัลเลขท้าย 2 ตัว', data: lottoData?.last2, value: lottoData?.last2?.number },
+      { name: 'รางวัลเลขท้าย 3 ตัว', data: lottoData?.last3b, value: lottoData?.last3b?.number },
+      { name: 'รางวัลเลขหน้า 3 ตัว', data: lottoData?.last3f, value: lottoData?.last3f?.number },
     ];
 
     const prizeValues = await Promise.all(prizes.map(async (prize) => {
