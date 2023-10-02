@@ -443,25 +443,25 @@ const getLotto = async (lottoNo: string[]): Promise<any> => {
     ];
 
     const wonTemplate: any = [];
-    const failedTemplate: Set<string> = new Set(lottoNo);
+    const failedTemplate: any = new Set();
 
-    for (const prize of prizes) {
-      const matchingNumbers = prize.value?.filter((number: any) => {
-        switch (prize.name) {
-          case 'รางวัลเลขท้าย 2 ตัว':
-            return lottoNo.some(lotto => number.value.slice(-2) === lotto.slice(-2));
-          case 'รางวัลเลขท้าย 3 ตัว':
-            return lottoNo.some(lotto => number.value.slice(-3) === lotto.slice(-3));
-          case 'รางวัลเลขหน้า 3 ตัว':
-            return lottoNo.some(lotto => number.value.slice(0, 3) === lotto.slice(0, 3));
-          default:
-            return lottoNo.some(lotto => number.value === lotto);
-        }
-      });
+    for (const lotto of lottoNo) {
+      for (const prize of prizes) {
+        const matchingNumbers = prize.value?.filter((number: any) => {
+          switch (prize.name) {
+            case 'รางวัลเลขท้าย 2 ตัว':
+              return number.value.slice(-2) === lotto.slice(-2);
+            case 'รางวัลเลขท้าย 3 ตัว':
+              return number.value.slice(-3) === lotto.slice(-3);
+            case 'รางวัลเลขหน้า 3 ตัว':
+              return number.value.slice(0, 3) === lotto.slice(0, 3);
+            default:
+              return number.value === lotto;
+          }
+        });
 
-      if (matchingNumbers.length > 0) {
-        const formattedNumber = Number(prize.data?.price).toLocaleString('en-US', options);
-        matchingNumbers.forEach((lotto: string) => {
+        if (matchingNumbers.length > 0) {
+          const formattedNumber = Number(prize.data?.price).toLocaleString('en-US', options);
           wonTemplate.push({
             name: `สลากของคุณถูก${prize.name} \nมูลค่า ${formattedNumber}\n\nขอแสดงความยินดีด้วยค่ะ 🎉`,
             value: lotto,
@@ -469,20 +469,24 @@ const getLotto = async (lottoNo: string[]): Promise<any> => {
             lottoAt: lottoAt,
             image: utils.randomItems(IMAGE_LOTTO_HAPPY_URLS),
           });
-          failedTemplate.delete(lotto);
-        });
+        } else {
+          failedTemplate.add(lotto);
+        }
       }
     }
 
-    failedTemplate.forEach((lotto: string) => {
-      wonTemplate.push({
-        name: 'สลากของคุณไม่ถูกรางวัล... เสียใจด้วยนะค่ะ 😭',
-        value: lotto,
-        price: '',
-        lottoAt: lottoAt,
-        image: utils.randomItems(IMAGE_LOTTO_FAIL_URLS),
-      });
-    });
+    for (const lotto of failedTemplate) {
+      const isWon = wonTemplate.find((item: any) => item.value === lotto);
+      if (!isWon) {
+        wonTemplate.push({
+          name: 'สลากของคุณไม่ถูกรางวัล... เสียใจด้วยนะค่ะ 😭',
+          value: lotto,
+          price: '',
+          lottoAt: lottoAt,
+          image: utils.randomItems(IMAGE_LOTTO_FAIL_URLS),
+        });
+      }
+    }
 
     return wonTemplate;
   } catch (error) {
