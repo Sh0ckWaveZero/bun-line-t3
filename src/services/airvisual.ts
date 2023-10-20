@@ -1,6 +1,7 @@
+import { env } from '~/env.mjs';
 
 const getNearestCity = async (latitude: number, longitude: number): Promise<any> => {
-  const url = `http://api.airvisual.com/v2/nearest_city?lat=${latitude}&lon=${longitude}&key=${process.env.AIRVISUAL_API_KEY}`
+  const url = `http://api.airvisual.com/v2/nearest_city?lat=${latitude}&lon=${longitude}&key=${env.AIRVISUAL_API_KEY}`
   try {
     const response = await fetch(url, {
       method: 'GET',

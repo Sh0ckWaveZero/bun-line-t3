@@ -38,6 +38,7 @@ export const env = createEnv({
     CMC_URL: z.string().url(),
     CMC_API_KEY: z.string(),
     FRONTEND_URL: z.string().url(),
+    AIRVISUAL_API_KEY: z.string()
   },
 
   /**
@@ -67,6 +68,7 @@ export const env = createEnv({
     CMC_URL: process.env.CMC_URL,
     CMC_API_KEY: process.env.CMC_API_KEY,
     FRONTEND_URL: process.env.FRONTEND_URL,
+    AIRVISUAL_API_KEY: process.env.AIRVISUAL_API_KEY
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
