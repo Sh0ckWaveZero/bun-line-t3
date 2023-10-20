@@ -5,6 +5,7 @@ import { exchangeService } from './exchange';
 import { db } from "~/server/db";
 import { env } from '~/env.mjs';
 import { bubbleTemplate } from '~/utils/line';
+import { airVisualService } from './airvisual';
 
 const handleEvent = (req: NextApiRequest,
   res: NextApiResponse): any => {
@@ -18,6 +19,9 @@ const handleEvent = (req: NextApiRequest,
             break;
           case 'sticker':
             handleSticker(req, event);
+            break;
+          case 'location':
+            handleLocation(req, event);
             break;
           default:
             res.status(401).send('Invalid token');
@@ -55,6 +59,23 @@ const handleLogin = async (req: NextApiRequest, message: string) => {
 
   if (prefix === '/') {
     handleText(req, message);
+  }
+}
+
+const handleLocation = async (req: NextApiRequest, event: any) => {
+  try {
+    const location: any = await airVisualService.getNearestCity(
+      event.message.latitude,
+      event.message.longitude,
+    );
+    const msg = airVisualService.getNearestCityBubble(
+      location.data.current.pollution.aqius,
+      location.data.current.pollution.ts,
+    );
+    sendMessage(req, flexMessage(msg));
+  } catch (err: any) {
+    replyNotFound(req);
+    return;
   }
 }
 
