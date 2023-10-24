@@ -49,8 +49,6 @@ const handleLogin = async (req: NextApiRequest, message: string) => {
     },
   });
   
-  console.log('🚀 ~ file: line.ts:51 ~ handleLogin ~ userPermission:', userPermission);
-
   if (
     !userPermission ||
     !utils.compareDate(userPermission?.expires_at, new Date().toISOString())

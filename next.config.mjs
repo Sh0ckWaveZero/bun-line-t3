@@ -31,7 +31,7 @@ const config = {
   },
   experimental: {
     optimizePackageImports : [
-      '@prisma/client/edge',
+      '@prisma/client',
     ]
   },
 };
