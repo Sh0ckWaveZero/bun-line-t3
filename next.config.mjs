@@ -29,10 +29,6 @@ const config = {
       },
     ],
   },
-  /**  optimized package imports */
-  experimental: {
-    optimizePackageImports: ['@prisma/client', 'cheerio', '"@next-auth/prisma-adapter']
-  },
 };
 
 export default config;
