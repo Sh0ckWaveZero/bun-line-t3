@@ -31,9 +31,10 @@ const config = {
   },
   experimental: {
     optimizePackageImports : [
-      '@prisma/client',
+      '@prisma/client/edge',
     ]
   },
 };
+
 
 export default config;
