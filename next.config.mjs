@@ -5,7 +5,7 @@
 await import("./src/env.mjs");
 
 /** @type {import("next").NextConfig} */
-module.exports = {
+const config = {
   reactStrictMode: true,
 
   /**
@@ -30,3 +30,5 @@ module.exports = {
     ],
   },
 };
+
+export default config;
