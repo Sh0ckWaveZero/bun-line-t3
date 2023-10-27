@@ -1,8 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import * as crypto from 'crypto';
+
+import crypto from 'node:crypto';
+import { env } from "~/env.mjs";
 import { lineService } from '~/services/line';
 import { utils } from '~/utils';
-import { env } from "~/env.mjs";
 
 type ResponseData = {
   message: string
