@@ -30,12 +30,18 @@ const config = {
       },
     ],
   },
-  experimental: {
-    optimizePackageImports: [
-      '@prisma/client',
-    ]
+  // experimental: {
+  //   optimizePackageImports: [
+  //     '@prisma/client',
+  //   ]
+  // },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.plugins = [...config.plugins, new PrismaPlugin()]
+    }
+
+    return config
   },
-  plugins: [new PrismaPlugin()],
 };
 
 
