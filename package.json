@@ -16,7 +16,7 @@
     "@t3-oss/env-nextjs": "^0.7.1",
     "cheerio": "^1.0.0-rc.12",
     "next": "^14.0.0",
-    "next-auth": "^4.24.3",
+    "next-auth": "^4.24.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "zod": "^3.22.4"
