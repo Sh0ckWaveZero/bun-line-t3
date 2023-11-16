@@ -35,7 +35,6 @@ export default function handler(
 
     return lineService.handleEvent(req, res);
   } catch (error) {
-    console.log('🚀 ~ file: line.ts ~ error', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
 }

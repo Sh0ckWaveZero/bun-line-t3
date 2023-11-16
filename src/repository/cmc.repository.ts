@@ -1,4 +1,3 @@
-// import { db } from "~/server/db";
 import { db } from "~/server/db";
 
 function findBySymbol(symbol: string) {
