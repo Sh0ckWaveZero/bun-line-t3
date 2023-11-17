@@ -21,7 +21,7 @@ const getNearestCityBubble = (aqi: number, ts: string) => {
       boxImageColor: '#87C13C',
       imageUrl: 'https://i.ibb.co/2g3LhbW/ic-face-green.png',
       textColor: '#607631',
-      decription: 'ดี',
+      description: 'ดี',
       pm25: '0-15 µg/m³',
     },
     {
@@ -30,7 +30,7 @@ const getNearestCityBubble = (aqi: number, ts: string) => {
       boxImageColor: '#EFBE1D',
       imageUrl: 'https://i.ibb.co/L6v112C/ic-face-yellow.png',
       textColor: '#8B6B1D',
-      decription: 'ปานกลาง',
+      description: 'ปานกลาง',
       pm25: '16-35.4 µg/m³',
     },
     {
@@ -39,7 +39,7 @@ const getNearestCityBubble = (aqi: number, ts: string) => {
       boxImageColor: '#F27E2F',
       imageUrl: 'https://i.ibb.co/Z20zDcs/ic-face-orange.png',
       textColor: '#974920',
-      decription: 'มีผลกระทบต่อผู้ป่วยหรือร่างกายอ่อนแอ',
+      description: 'มีผลกระทบต่อผู้ป่วยหรือร่างกายอ่อนแอ',
       pm25: '35.5-65 µg/m³',
     },
     {
@@ -48,7 +48,7 @@ const getNearestCityBubble = (aqi: number, ts: string) => {
       boxImageColor: '#E84B51',
       imageUrl: 'https://i.ibb.co/B26L61b/ic-face-red.png',
       textColor: '#942431',
-      decription: 'มีผลกระทบต่อทุกคน',
+      description: 'มีผลกระทบต่อทุกคน',
       pm25: '66-150 µg/m³',
     },
     {
@@ -57,7 +57,7 @@ const getNearestCityBubble = (aqi: number, ts: string) => {
       boxImageColor: '#8A5D9D',
       imageUrl: 'https://i.ibb.co/3YRzknH/ic-face-purple.png',
       textColor: '#543B63',
-      decription: 'มีผลกระทบต่อทุกคนอย่างรุนแรง',
+      description: 'มีผลกระทบต่อทุกคนอย่างรุนแรง',
       pm25: '201-250 µg/m³',
     },
   ];
@@ -75,7 +75,7 @@ const getNearestCityBubble = (aqi: number, ts: string) => {
     level = 'purple';
   }
 
-  const datetime = new Date(ts).toLocaleString('th-TH', {
+  const dateTime = new Date(ts).toLocaleString('th-TH', {
     timeZone: 'Asia/Bangkok',
     hour12: false,
   });
@@ -103,7 +103,7 @@ const getNearestCityBubble = (aqi: number, ts: string) => {
           },
           {
             type: 'text',
-            text: `${datetime}`,
+            text: `${dateTime}`,
             size: 'sm',
             margin: 'md',
             color: '#93A2B7',
@@ -150,7 +150,7 @@ const getNearestCityBubble = (aqi: number, ts: string) => {
                 contents: [
                   {
                     type: 'text',
-                    text: `${objAqi.decription}`,
+                    text: `${objAqi.description}`,
                     wrap: true,
                     weight: 'bold',
                     size: 'xs',
