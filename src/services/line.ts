@@ -48,7 +48,7 @@ const handleLogin = async (req: NextApiRequest, message: string) => {
       providerAccountId: userId,
     },
   });
-  
+
   if (
     !userPermission ||
     !utils.compareDate(userPermission?.expires_at, new Date().toISOString())
@@ -68,6 +68,7 @@ const handleLocation = async (req: NextApiRequest, event: any) => {
       event.message.latitude,
       event.message.longitude,
     );
+    console.dir(location, { depth: null });
     const msg = airVisualService.getNearestCityBubble(
       location.data.current.pollution.aqius,
       location.data.current.pollution.ts,
