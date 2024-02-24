@@ -14,7 +14,7 @@ const getNearestCity = async (latitude: number, longitude: number): Promise<any>
 };
 
 const getNearestCityBubble = (aqi: number, ts: string) => {
-  const aqiData: any = [
+  const aqiData: AQIData[] = [
     {
       level: 'green',
       backgroundColor: '#A8DF5F',
@@ -63,16 +63,25 @@ const getNearestCityBubble = (aqi: number, ts: string) => {
   ];
 
   let level = '';
-  if (aqi <= 50) {
-    level = 'green';
-  } else if (aqi >= 51 && aqi <= 100) {
-    level = 'yellow';
-  } else if (aqi >= 101 && aqi <= 150) {
-    level = 'orange';
-  } else if (aqi >= 151 && aqi <= 200) {
-    level = 'red';
-  } else if (aqi >= 201 && aqi <= 300) {
-    level = 'purple';
+  switch (true) {
+    case (aqi <= 50):
+      level = 'green';
+      break;
+    case (aqi >= 51 && aqi <= 100):
+      level = 'yellow';
+      break;
+    case (aqi >= 101 && aqi <= 150):
+      level = 'orange';
+      break;
+    case (aqi >= 151 && aqi <= 200):
+      level = 'red';
+      break;
+    case (aqi >= 201 && aqi <= 300):
+      level = 'purple';
+      break;
+    default:
+      level = 'unknown';
+      break;
   }
 
   const dateTime = new Date(ts).toLocaleString('th-TH', {
@@ -80,7 +89,8 @@ const getNearestCityBubble = (aqi: number, ts: string) => {
     hour12: false,
   });
 
-  const objAqi = aqiData.filter((item: any) => item.level === level)[0];
+  const objAqi = aqiData.find((item: any) => item.level === level);
+
   const bubble: any = [
     {
       type: 'bubble',
@@ -118,10 +128,10 @@ const getNearestCityBubble = (aqi: number, ts: string) => {
                 contents: [
                   {
                     type: 'image',
-                    url: `${objAqi.imageUrl}`,
+                    url: `${objAqi?.imageUrl}`,
                   },
                 ],
-                backgroundColor: `${objAqi.boxImageColor}`,
+                backgroundColor: `${objAqi?.boxImageColor}`,
               },
               {
                 type: 'box',
@@ -130,13 +140,13 @@ const getNearestCityBubble = (aqi: number, ts: string) => {
                   {
                     type: 'text',
                     text: `${aqi}`,
-                    color: `${objAqi.textColor}`,
+                    color: `${objAqi?.textColor}`,
                     size: '4xl',
                   },
                   {
                     type: 'text',
                     text: 'สหรัฐ AQI',
-                    color: `${objAqi.textColor}`,
+                    color: `${objAqi?.textColor}`,
                     size: 'xxs',
                     style: 'normal',
                   },
@@ -150,11 +160,11 @@ const getNearestCityBubble = (aqi: number, ts: string) => {
                 contents: [
                   {
                     type: 'text',
-                    text: `${objAqi.description}`,
+                    text: `${objAqi?.description}`,
                     wrap: true,
                     weight: 'bold',
                     size: 'xs',
-                    color: `${objAqi.textColor}`,
+                    color: `${objAqi?.textColor}`,
                   },
                   {
                     type: 'box',
@@ -162,10 +172,10 @@ const getNearestCityBubble = (aqi: number, ts: string) => {
                     contents: [
                       {
                         type: 'text',
-                        text: `${objAqi.pm25}`,
+                        text: `${objAqi?.pm25}`,
                         size: 'xxs',
                         align: 'center',
-                        color: `${objAqi.textColor}`,
+                        color: `${objAqi?.textColor}`,
                       },
                     ],
                     backgroundColor: '#ffffff',
@@ -180,7 +190,7 @@ const getNearestCityBubble = (aqi: number, ts: string) => {
             margin: 'lg',
             alignItems: 'flex-start',
             justifyContent: 'space-between',
-            backgroundColor: `${objAqi.backgroundColor}`,
+            backgroundColor: `${objAqi?.backgroundColor}`,
             cornerRadius: 'sm',
           },
         ],
