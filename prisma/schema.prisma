@@ -22,7 +22,7 @@ model Account {
     verified_request  DateTime?
     verification_id   String?
     is_verified       Boolean   @default(false)
-    expires_at        DateTime? @default(now())
+    expires_at        Int?      @default(0)
     token_type        String?
     scope             String?
     id_token          String? // @db.Text

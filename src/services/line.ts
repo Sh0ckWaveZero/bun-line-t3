@@ -42,19 +42,19 @@ const handleLogin = async (req: NextApiRequest, message: string) => {
     return;
   }
 
-  const userId = req.body.events[0].source.userId;
-  const userPermission: any = await db.account.findFirst({
-    where: {
-      providerAccountId: userId,
-    },
-  });
+  // const userId = req.body.events[0].source.userId;
+  // const userPermission: any = await db.account.findFirst({
+  //   where: {
+  //     providerAccountId: userId,
+  //   },
+  // });
 
-  const isPermissionExpired = !userPermission || !utils.compareDate(userPermission?.expires_at, new Date().toISOString());
+  // const isPermissionExpired = !userPermission || !utils.compareDate(userPermission?.expires_at, new Date().toISOString());
   
-  if (isPermissionExpired) {
-    const payload = bubbleTemplate.signIn();
-    return sendMessage(req, flexMessage(payload));
-  }
+  // if (isPermissionExpired) {
+  //   const payload = bubbleTemplate.signIn();
+  //   return sendMessage(req, flexMessage(payload));
+  // }
 
   if (prefix === '/') {
     handleText(req, message);
