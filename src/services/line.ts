@@ -49,10 +49,9 @@ const handleLogin = async (req: NextApiRequest, message: string) => {
     },
   });
 
-  if (
-    !userPermission ||
-    !utils.compareDate(userPermission?.expires_at, new Date().toISOString())
-  ) {
+  const isPermissionExpired = !userPermission || !utils.compareDate(userPermission?.expires_at, new Date().toISOString());
+  
+  if (isPermissionExpired) {
     const payload = bubbleTemplate.signIn();
     return sendMessage(req, flexMessage(payload));
   }

@@ -39,18 +39,22 @@ declare module "next-auth" {
 export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account, profile, email, credentials }) {
-      const expires = new Date();
-      expires.setDate(expires.getDate() + 30);
-      const expiresAt = Date.parse(expires.toString());
-
+      const expiresAt = Date.now() + 90 * 24 * 60 * 60 * 1000; // 90 days in milliseconds
       const accountInfo = account as any;
 
       if (accountInfo && accountInfo?.expires_at < Date.now()) {
         await db.account.updateMany({
           where: { providerAccountId: accountInfo?.providerAccountId },
-          data: { expires_at: expiresAt },
+          data: { expires_at: new Date(expiresAt) },
         });
       }
+
+      // get user info from db
+      const userInDb = await db.account.findFirst({
+        where: {
+          providerAccountId: accountInfo?.providerAccountId
+        }
+      });
 
       const isAllowedToSignIn = true;
       if (isAllowedToSignIn) {
