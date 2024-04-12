@@ -1,5 +1,6 @@
 import { AqiData } from '~/data/aqi_data';
 import { env } from '~/env.mjs';
+import { WeatherIcon } from "../data/aqi_data";
 
 const getNearestCity = async (latitude: number, longitude: number): Promise<any> => {
   const url = `http://api.airvisual.com/v2/nearest_city?lat=${latitude}&lon=${longitude}&key=${env.AIRVISUAL_API_KEY}`
@@ -14,7 +15,18 @@ const getNearestCity = async (latitude: number, longitude: number): Promise<any>
   }
 };
 
-const getNearestCityBubble = (aqi: number, ts: string) => {
+const getNearestCityBubble = (location: any) => {
+  const aqi = location.data.current.pollution.aqius;
+  const ts = location.data.current.pollution.ts;
+  const city = location.data.city;
+  const state = location.data.state;
+  const country = location.data.country;
+  const tp = location.data.current.weather.tp;
+  const ws = location.data.current.weather.ws;
+  const hu = location.data.current.weather.hu;
+  const ic = location.data.current.weather.ic;
+
+
   let level = '';
   switch (true) {
     case (aqi <= 50):
@@ -43,116 +55,171 @@ const getNearestCityBubble = (aqi: number, ts: string) => {
   });
 
   const objAqi = AqiData.find((item: any) => item.level === level);
+  const weatherIcon = WeatherIcon.find((item: any) => item.icon === ic);
 
-  const bubble: any = [
+  const bubble = [
     {
-      type: 'bubble',
-      size: 'giga',
-      header: {
-        type: 'box',
-        layout: 'vertical',
-        contents: [
+      "type": "bubble",
+      "size": "giga",
+      "hero": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
           {
-            type: 'text',
-            text: 'ดัชนีคุณภาพอากาศ (AQI)',
-            size: 'lg',
-            weight: 'bold',
-            color: '#414141',
+            "type": "text",
+            "text": `📍 ${city} District`,
+            "size": "xl",
+            "color": "#404040"
           },
           {
-            type: 'separator',
-            margin: 'sm',
-            color: '#414141',
-          },
-          {
-            type: 'text',
-            text: `${dateTime}`,
-            size: 'sm',
-            margin: 'md',
-            color: '#93A2B7',
-          },
-          {
-            type: 'box',
-            layout: 'horizontal',
-            contents: [
-              {
-                type: 'box',
-                layout: 'vertical',
-                contents: [
-                  {
-                    type: 'image',
-                    url: `${objAqi?.imageUrl}`,
-                  },
-                ],
-                backgroundColor: `${objAqi?.boxImageColor}`,
-              },
-              {
-                type: 'box',
-                layout: 'vertical',
-                contents: [
-                  {
-                    type: 'text',
-                    text: `${aqi}`,
-                    color: `${objAqi?.textColor}`,
-                    size: '4xl',
-                  },
-                  {
-                    type: 'text',
-                    text: 'สหรัฐ AQI',
-                    color: `${objAqi?.textColor}`,
-                    size: 'xxs',
-                    style: 'normal',
-                  },
-                ],
-                alignItems: 'center',
-                spacing: 'lg',
-              },
-              {
-                type: 'box',
-                layout: 'vertical',
-                contents: [
-                  {
-                    type: 'text',
-                    text: `${objAqi?.description}`,
-                    wrap: true,
-                    weight: 'bold',
-                    size: 'xs',
-                    color: `${objAqi?.textColor}`,
-                  },
-                  {
-                    type: 'box',
-                    layout: 'vertical',
-                    contents: [
-                      {
-                        type: 'text',
-                        text: `${objAqi?.pm25}`,
-                        size: 'xxs',
-                        align: 'center',
-                        color: `${objAqi?.textColor}`,
-                      },
-                    ],
-                    backgroundColor: '#ffffff',
-                    cornerRadius: 'sm',
-                    paddingAll: 'xs',
-                  },
-                ],
-                spacing: 'lg',
-                paddingAll: 'lg',
-              },
-            ],
-            margin: 'lg',
-            alignItems: 'flex-start',
-            justifyContent: 'space-between',
-            backgroundColor: `${objAqi?.backgroundColor}`,
-            cornerRadius: 'sm',
-          },
+            "type": "text",
+            "text": `${state}, ${country}`,
+            "color": "#68788D"
+          }
         ],
+        "justifyContent": "center",
+        "alignItems": "center",
+        "paddingTop": "xxl"
       },
-      styles: {
-        hero: {},
-      },
-    },
-  ];
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                      {
+                        "type": "image",
+                        "url": `${objAqi?.imageUrl}`,
+                        "size": "sm"
+                      }
+                    ],
+                    "backgroundColor": objAqi?.boxImageColor,
+                    "height": "110px",
+                    "alignItems": "center",
+                    "justifyContent": "center",
+                    "paddingAll": "xl",
+                    "width": "110px"
+                  },
+                  {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                      {
+                        "type": "text",
+                        "text": `${aqi}`,
+                        "color": `${objAqi?.textColor}`,
+                        "size": "xxl"
+                      },
+                      {
+                        "type": "text",
+                        "text": "สหรัฐ AQI",
+                        "color": `${objAqi?.textColor}`,
+                        "size": "sm"
+                      }
+                    ],
+                    "alignItems": "center",
+                    "backgroundColor": `${objAqi?.backgroundColor}`,
+                    "justifyContent": "center",
+                    "width": "110px"
+                  },
+                  {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                      {
+                        "type": "text",
+                        "text": "มีผลกระทบต่อทุกคน",
+                        "color": `${objAqi?.textColor}`,
+                        "size": "sm",
+                        "wrap": true,
+                        "align": "center"
+                      }
+                    ],
+                    "alignItems": "center",
+                    "justifyContent": "center",
+                    "backgroundColor": `${objAqi?.backgroundColor}`,
+                    "paddingAll": "md"
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
+                    "type": "box",
+                    "layout": "horizontal",
+                    "contents": [
+                      {
+                        "type": "image",
+                        "url": `${weatherIcon?.imageUrl}`,
+                        "size": "md",
+                        "align": "center"
+                      },
+                      {
+                        "type": "text",
+                        "text": `${tp}°`,
+                        "align": "center",
+                        "size": "md",
+                        "color": "#414141"
+                      }
+                    ],
+                    "height": "60px",
+                    "alignItems": "center",
+                    "justifyContent": "center",
+                    "paddingAll": "xl"
+                  },
+                  {
+                    "type": "box",
+                    "layout": "horizontal",
+                    "contents": [
+                      {
+                        "type": "text",
+                        "text": `💨 ${ws} km/h`,
+                        "color": "#414141",
+                        "size": "md",
+                        "align": "center"
+                      }
+                    ],
+                    "alignItems": "center",
+                    "justifyContent": "center"
+                  },
+                  {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                      {
+                        "type": "text",
+                        "text": `💧 ${hu}%`,
+                        "color": "#414141",
+                        "size": "md",
+                        "align": "center"
+                      }
+                    ],
+                    "alignItems": "center",
+                    "justifyContent": "center"
+                  }
+                ],
+                "backgroundColor": "#EDEDED"
+              }
+            ],
+            "cornerRadius": "md"
+          }
+        ]
+      }
+    }
+  ]
+
   return bubble;
 };
 

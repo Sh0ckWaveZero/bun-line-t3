@@ -7,3 +7,9 @@ interface AQIData {
   description: string;
   pm25: string;
 }
+
+interface WeatherIcon {
+  icon: string;
+  imageUrl: string;
+
+}

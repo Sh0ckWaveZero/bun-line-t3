@@ -69,8 +69,7 @@ const handleLocation = async (req: NextApiRequest, event: any) => {
     );
     console.dir(location, { depth: null });
     const msg = airVisualService.getNearestCityBubble(
-      location.data.current.pollution.aqius,
-      location.data.current.pollution.ts,
+     location
     );
     sendMessage(req, flexMessage(msg));
   } catch (err: any) {

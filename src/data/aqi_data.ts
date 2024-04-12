@@ -45,3 +45,51 @@ export const AqiData: AQIData[] = [
     pm25: '201-250 µg/m³',
   },
 ];
+
+
+export const WeatherIcon: WeatherIcon[] = [
+  {
+    icon: '01d',
+    imageUrl: 'https://i.ibb.co/JQqz1Qb/01d.png',
+  },
+  {
+    icon: '01n',
+    imageUrl: 'https://i.ibb.co/Q9nJyQ5/01n.png',
+  },
+  {
+    icon: '02d',
+    imageUrl: 'https://i.ibb.co/y5ZWQ0c/02d.png',
+  },
+  {
+    icon: '02n',
+    imageUrl: 'https://i.ibb.co/mTtDVyH/02n.png',
+  },
+  {
+    icon: '03d',
+    imageUrl: 'https://i.ibb.co/sKFjdDn/03d.png',
+  },
+  {
+    icon: '09d',
+    imageUrl: 'https://i.ibb.co/YWqfZLC/09d.png',
+  },
+  {
+    icon: '10d',
+    imageUrl: 'https://i.ibb.co/qpPmZwx/10d.png',
+  },
+  {
+    icon: '10n',
+    imageUrl: 'https://i.ibb.co/RH8ZFyV/10n.png',
+  },
+  {
+    icon: '11d',
+    imageUrl: 'https://i.ibb.co/G5Kcx0W/11d.png',
+  },
+  {
+    icon: '13d',
+    imageUrl: 'https://i.ibb.co/G719bLG/13d.png',
+  },
+  {
+    icon: '50d',
+    imageUrl: 'https://i.ibb.co/tcDt0qL/50d.png',
+  },
+];
