@@ -13,42 +13,47 @@ datasource db {
 // Necessary for Next auth
 model Account {
     id                String    @id @default(auto()) @map("_id") @db.ObjectId
-    userId            String    @unique @db.ObjectId
+    userId            String    @unique @map("user_id") @db.ObjectId
     provider          String
     type              String
-    providerAccountId String    @unique
-    refresh_token     String? // @db.Text
-    access_token      String? // @db.Text
+    providerAccountId String    @unique @map("provider_account_id")
+    refresh_token     String?   @db.String
+    access_token      String?   @db.String
     verified_request  DateTime?
     verification_id   String?
     is_verified       Boolean   @default(false)
     expires_at        Int?      @default(0)
     token_type        String?
     scope             String?
-    id_token          String? // @db.Text
+    id_token          String?   @db.String
     session_state     String?
     user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     @@unique([provider, providerAccountId])
+    @@map("accounts")
 }
 
 model Session {
     id           String   @id @default(auto()) @map("_id") @db.ObjectId
-    sessionToken String   @unique
-    userId       String   @unique @db.ObjectId
+    sessionToken String   @unique @map("session_token")
+    userId       String   @unique @map("user_id") @db.ObjectId
     expires      DateTime
     user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@map("sessions")
 }
 
 model User {
     id            String    @id @default(auto()) @map("_id") @db.ObjectId
     name          String?
     email         String?   @unique
-    emailVerified DateTime?
+    emailVerified DateTime? @map("email_verified")
     is_verified   Boolean?  @default(false)
     image         String?
     accounts      Account[]
     sessions      Session[]
+
+    @@map("users")
 }
 
 model VerificationToken {
