@@ -35,10 +35,10 @@ const handleEvent = (req: NextApiRequest,
 }
 
 const handleLogin = async (req: NextApiRequest, message: string) => {
-  const prefix = message[0];
+  const prefix = message[0] || '';
 
-  // reject not en lang
-  if (prefix !== '/' && prefix !== '$') {
+
+  if (!new Set(['/', '$']).has(prefix)) {
     return;
   }
 
@@ -48,9 +48,10 @@ const handleLogin = async (req: NextApiRequest, message: string) => {
       providerAccountId: userId,
     },
   });
+  console.log('🚀 ~ handleLogin ~ userPermission:', userPermission);
 
   const isPermissionExpired = !userPermission || !utils.compareDate(userPermission?.expires_at, new Date().toISOString());
-  
+
   if (isPermissionExpired) {
     const payload = bubbleTemplate.signIn();
     return sendMessage(req, flexMessage(payload));
@@ -69,9 +70,9 @@ const handleLocation = async (req: NextApiRequest, event: any) => {
     );
 
     const msg = airVisualService.getNearestCityBubble(
-     location
+      location
     );
-    
+
     sendMessage(req, flexMessage(msg));
   } catch (err: any) {
     replyNotFound(req);
