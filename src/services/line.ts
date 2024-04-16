@@ -48,7 +48,6 @@ const handleLogin = async (req: NextApiRequest, message: string) => {
       providerAccountId: userId,
     },
   });
-  console.log('🚀 ~ handleLogin ~ userPermission:', userPermission);
 
   const isPermissionExpired = !userPermission || !utils.compareDate(userPermission?.expires_at, new Date().toISOString());
 
