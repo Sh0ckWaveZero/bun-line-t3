@@ -70,7 +70,7 @@ export const authOptions: NextAuthOptions = {
       const userInDb = await getUserInfo(accountInfo);
 
       // Check if user is allowed to sign in
-      const isAllowedToSignIn = userInDb;
+      const isAllowedToSignIn = true;
       if (isAllowedToSignIn) {
         return true;
       } else {
