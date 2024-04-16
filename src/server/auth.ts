@@ -67,12 +67,8 @@ export const authOptions: NextAuthOptions = {
       // Update account expiry date
       await updateAccountExpiryDate(accountInfo);
 
-      // Get user info from db
-      const userInDb = await getUserInfo(accountInfo);
-
-
       // Check if user is allowed to sign in
-      const isAllowedToSignIn = !utils.isEmpty(userInDb);
+      const isAllowedToSignIn = true;
       if (isAllowedToSignIn) {
         return true;
       } else {
