@@ -9,6 +9,7 @@ import LineProvider from "next-auth/providers/line";
 
 import { env } from "~/env.mjs";
 import { db } from "~/server/db";
+import { utils } from '~/utils';
 
 
 declare module "next-auth" {
@@ -69,8 +70,9 @@ export const authOptions: NextAuthOptions = {
       // Get user info from db
       const userInDb = await getUserInfo(accountInfo);
 
+
       // Check if user is allowed to sign in
-      const isAllowedToSignIn = true;
+      const isAllowedToSignIn = !utils.isEmpty(userInDb);
       if (isAllowedToSignIn) {
         return true;
       } else {
