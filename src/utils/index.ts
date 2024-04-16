@@ -56,9 +56,10 @@ const isEmpty = (obj: any): boolean => {
 }
 
 const compareDate = (dateA: string, dateB: string) => {
-  const _date1 = new Date(dateA);
-  const _date2 = new Date(dateB);
-  return _date1.getTime() > _date2.getTime();
+  const dateFromTimestampA = new Date(Number(dateA) * 1000);
+  const dateFromTimestampB = new Date(dateB);
+
+  return dateFromTimestampA.getTime() > dateFromTimestampB.getTime();
 };
 
 const expo = (price: string, symbol: string) => {
