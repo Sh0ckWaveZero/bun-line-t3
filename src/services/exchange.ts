@@ -340,26 +340,23 @@ const getGoldPrice = async (): Promise<any> => {
     const goldJewelryPrices = $('div.divgta.goldshopf td:contains("ทองรูปพรรณ")').parent().children();
     const getGoldJewelryColors = utils.getGoldPricesColors($, goldJewelryPrices);
     const goldTodayChangePrices = $('div.divgta.goldshopf td:contains("วันนี้")').parent().children();
+    const [text, goldChange] = goldTodayChangePrices.eq(0).text().split(' ');
     const goldUpdatePrices = $('div.divgta.goldshopf tr td.span.bg-span.txtd.al-r').parent().children();
 
     const goldTodayChange: any = {};
+    const classToChangeMap: { [key: string]: { color: string; symbol: string } } = {
+      'span bg-span g-u': { color: "#0F8000", symbol: "🟢" },
+      'span bg-span g-d': { color: "#E20303", symbol: "🔴" },
+    };
+
     goldTodayChangePrices.each((index: any, el: any) => {
       if (index === 0) {
         const className = $(el).attr('class');
-        if (className === 'span bg-span g-u') {
-          goldTodayChange.color = "#0F8000";
-          goldTodayChange.symbol = "🟢";
-        } else if (className === 'span bg-span g-d') {
-          goldTodayChange.color = "#E20303";
-          goldTodayChange.symbol = "🔴";
-        } else {
-          goldTodayChange.color = "#444";
-          goldTodayChange.symbol = "🟰";
-        }
+        const change = classToChangeMap[className] || { color: "#444", symbol: "🟰" };
+        Object.assign(goldTodayChange, change);
       }
     });
 
-    // Select div items
     goldPrice.barSell = goldBarPrices.eq(1).text();
     goldPrice.barSellColor = getGoldBarColors[0];
     goldPrice.barBuy = goldBarPrices.eq(2).text();
@@ -368,9 +365,9 @@ const getGoldPrice = async (): Promise<any> => {
     goldPrice.jewelrySellColor = getGoldJewelryColors[0];
     goldPrice.jewelryBuy = goldJewelryPrices.eq(2).text();
     goldPrice.jewelryBuyColor = getGoldJewelryColors[1];
-    goldPrice.change = goldTodayChange.symbol + " " + goldTodayChangePrices.eq(2).text();
+    goldPrice.change = `${goldTodayChange.symbol} ${goldChange}`;
     goldPrice.changeColor = goldTodayChange.color;
-    goldPrice.updateAt = goldUpdatePrices.eq(0).text() + ' ' + goldUpdatePrices.eq(1).text() + ' ' + goldUpdatePrices.eq(2).text();
+    goldPrice.updateAt = Array.from({ length: 3 }, (_, i) => goldUpdatePrices.eq(i).text()).join(' ');
 
     return goldPrice;
   } catch (error) {
@@ -425,7 +422,8 @@ const getLotto = async (lottoNo: string[]): Promise<any> => {
       month: 'long',
       year: 'numeric',
     })}`;
-    const options = {
+
+    const options: any = {
       style: 'currency',
       currency: 'THB',
     };
