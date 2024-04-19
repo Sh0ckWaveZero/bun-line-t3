@@ -218,31 +218,54 @@ const flexMessage = (bubbleItems: any[]) => {
   ];
 }
 
-const sendMessage = async (req: any, payload: any) => {
+const sendRequest = async (url: string, method: string, headers: any, body: any) => {
   try {
-    const lineChannelAccessToken = env.LINE_CHANNEL_ACCESS;
-    const lineHeader = {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${lineChannelAccessToken}`,
-    };
-
-    const response = await fetch(`${env.LINE_MESSAGING_API}/reply`, {
-      method: 'POST',
-      headers: lineHeader,
-      body: JSON.stringify({
-        replyToken: req.body.events[0].replyToken,
-        messages: payload,
-      }),
+    const response = await fetch(url, {
+      method,
+      headers,
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to send message');
+      throw new Error('Failed to send request');
     }
 
     return response;
   } catch (err: any) {
     console.error(err.message);
   }
+};
+
+const sendMessage = async (req: any, payload: any) => {
+  const lineChannelAccessToken = env.LINE_CHANNEL_ACCESS;
+  const lineHeader = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${lineChannelAccessToken}`,
+  };
+
+  try {
+    await sendLoadingAnimation(req);
+
+    return sendRequest(`${env.LINE_MESSAGING_API}/reply`, 'POST', lineHeader, {
+      replyToken: req.body.events[0].replyToken,
+      messages: payload,
+    });
+  } catch (err: any) {
+    console.error(err.message);
+  }
+};
+
+const sendLoadingAnimation = async (req: any) => {
+  const lineChannelAccessToken = env.LINE_CHANNEL_ACCESS;
+  const lineHeader = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${lineChannelAccessToken}`,
+  };
+
+  return sendRequest('https://api.line.me/v2/bot/chat/loading/start', 'POST', lineHeader, {
+    chatId: req.body.events[0].source.userId,
+    loadingSeconds: 5
+  });
 };
 
 
