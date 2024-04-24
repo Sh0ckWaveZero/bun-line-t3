@@ -12,17 +12,17 @@
   },
   "dependencies": {
     "@next-auth/prisma-adapter": "latest",
-    "@prisma/client": "^5.12.1",
+    "@prisma/client": "^5.13.0",
     "@t3-oss/env-nextjs": "^0.7.3",
     "cheerio": "^1.0.0-rc.12",
     "next": "^14.2.2",
     "next-auth": "^4.24.7",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "zod": "^3.22.4"
+    "zod": "^3.23.4"
   },
   "devDependencies": {
-    "@types/eslint": "^8.56.9",
+    "@types/eslint": "^8.56.10",
     "@types/node": "^18.19.31",
     "@types/react": "^18.2.20",
     "@types/react-dom": "18.2.16",
@@ -34,7 +34,7 @@
     "postcss": "^8.4.38",
     "prettier": "3.1.0",
     "prettier-plugin-tailwindcss": "0.5.7",
-    "prisma": "^5.12.1",
+    "prisma": "^5.13.0",
     "tailwindcss": "^3.4.3",
     "typescript": "5.3.2"
   },
