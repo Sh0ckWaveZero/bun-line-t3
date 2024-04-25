@@ -138,7 +138,7 @@ const getNearestCityBubble = (location: any) => {
                     "contents": [
                       {
                         "type": "text",
-                        "text": "มีผลกระทบต่อทุกคน",
+                        "text": `${objAqi?.description}`,
                         "color": `${objAqi?.textColor}`,
                         "size": "sm",
                         "wrap": true,
