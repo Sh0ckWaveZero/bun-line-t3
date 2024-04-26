@@ -68,6 +68,10 @@ export const WeatherIcon: WeatherIcon[] = [
     icon: '03d',
     imageUrl: 'https://i.ibb.co/sKFjdDn/03d.png',
   },
+   {
+    icon: '04d',
+    imageUrl: 'https://i.ibb.co/dLbDYY3/04d.png',
+   },
   {
     icon: '09d',
     imageUrl: 'https://i.ibb.co/YWqfZLC/09d.png',
