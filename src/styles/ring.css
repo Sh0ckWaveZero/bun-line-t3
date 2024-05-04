@@ -1,0 +1,86 @@
+.rings {
+  width: 50vmin;
+  max-width: 300px;
+  aspect-ratio: 1;
+  position: relative;
+  transform: translate3d(0, 0, 100vmin) rotateX(-32deg) rotateY(-32deg)
+    rotateX(90deg);
+}
+
+[data-scale="true"] .ring {
+  --scale-base: calc(((100 / var(--count)) * 1) * 1%);
+  --scale-top: calc(((100 / var(--count)) * var(--count)) * 1%);
+  width: calc(((100 / var(--count)) * 1) * 1%);
+}
+
+.ring {
+  --scale-base: calc(((100 / var(--count)) * var(--index)) * 1%);
+  --scale-top: calc(((100 / var(--count)) * var(--index)) * 1%);
+  width: calc(((100 / var(--count)) * var(--index)) * 1%);
+  aspect-ratio: 1;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  transform: translate3d(0, 0, calc(var(--distance) * -1vmin));
+  animation: float calc(var(--speed) * 1s) infinite var(--ease);
+  animation-delay: calc(
+    sin((var(--index) / var(--count)) * 45deg) * var(--speed) * -1s
+  );
+}
+
+.ring::after {
+  content: "";
+  border: 2px solid
+    oklch(var(--lightness, 0.5) var(--chroma, 0.25) var(--base, 8));
+  border-radius: calc(var(--radius) * 1%);
+  position: absolute;
+  inset: 0;
+}
+
+[data-hue="true"] .ring::after {
+  animation: hue calc(var(--speed) * 1s) infinite var(--ease);
+  animation-delay: calc(
+    sin((var(--index) / var(--count)) * 45deg) * var(--speed) * -1s
+  );
+}
+
+[data-alternate="true"] .ring {
+  animation: float-alternate calc(var(--speed) * 1s) infinite var(--ease)
+    alternate;
+  animation-delay: calc(
+    sin((var(--index) / var(--count)) * 45deg) * var(--speed) * -1s
+  );
+}
+
+@keyframes hue {
+  50% {
+    filter: hue-rotate(calc((var(--limit) - var(--base)) * 1deg));
+  }
+}
+
+@keyframes float {
+  50% {
+    transform: translate3d(0, 0, calc(var(--distance) * 1vmin));
+  }
+  0%,
+  45% {
+    width: var(--scale-base);
+  }
+  75% {
+    width: var(--scale-top);
+  }
+}
+
+@keyframes float-alternate {
+  100% {
+    transform: translate3d(0, 0, calc(var(--distance) * 1vmin));
+  }
+  0%,
+  45% {
+    width: var(--scale-base);
+  }
+  75% {
+    width: var(--scale-top);
+  }
+}
