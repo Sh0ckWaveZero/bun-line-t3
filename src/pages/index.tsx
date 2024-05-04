@@ -1,6 +1,7 @@
 import { signIn, signOut, useSession } from "next-auth/react";
 import Head from "next/head";
 import Image from "next/image";
+import Rings from "./components/Rings";
 
 export default function Home() {
   const { data: session } = useSession();
@@ -79,6 +80,8 @@ export default function Home() {
             </>
           )}
         </div>
+
+        <Rings count={20} />
       </main>
     </>
   );

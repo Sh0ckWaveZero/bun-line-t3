@@ -3,6 +3,7 @@ import { SessionProvider } from "next-auth/react";
 import { type AppType } from "next/app";
 
 import "~/styles/globals.css";
+import "~/styles/ring.css";
 
 const MyApp: AppType<{ session: Session | null }> = ({
   Component,
