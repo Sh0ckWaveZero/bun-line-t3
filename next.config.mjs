@@ -18,7 +18,7 @@ const config = {
     locales: ["en"],
     defaultLocale: "en",
   },
-  output: "standalone",
+  // output: "standalone",
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
