@@ -42,16 +42,16 @@ const Rings: React.FC<RingProps> = ({ count }) => {
   }, []);
 
   useEffect(() => {
-    const CTRL = new Pane({ title: "Config", expanded: false });
+    const pane = new Pane({ title: "Config", expanded: false });
 
-    CTRL.addBinding(CONFIG, "radius", {
+    pane.addBinding(CONFIG, "radius", {
       min: 0,
       max: 50,
       step: 1,
       label: "Radius",
     });
 
-    CTRL.on("change", UPDATE);
+    pane.on("change", UPDATE);
 
     UPDATE();
   }, [UPDATE]);
