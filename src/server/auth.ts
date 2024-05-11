@@ -9,8 +9,6 @@ import LineProvider from "next-auth/providers/line";
 
 import { env } from "~/env.mjs";
 import { db } from "~/server/db";
-import { utils } from '~/utils';
-
 
 declare module "next-auth" {
   interface Session extends DefaultSession {
@@ -24,7 +22,9 @@ declare module "next-auth" {
 const calculateExpiryDate = () => {
   const MILLISECONDS_IN_A_DAY = 24 * 60 * 60 * 1000;
   const SECONDS_IN_A_MILLISECOND = 1 / 1000;
-  return Math.floor((Date.now() + 90 * MILLISECONDS_IN_A_DAY) * SECONDS_IN_A_MILLISECOND);
+  return Math.floor(
+    (Date.now() + 90 * MILLISECONDS_IN_A_DAY) * SECONDS_IN_A_MILLISECOND,
+  );
 };
 
 // Function to update the account expiry date
@@ -35,17 +35,8 @@ const updateAccountExpiryDate = async (accountInfo: any) => {
       data: { expires_at: calculateExpiryDate() },
     });
   } catch (error) {
-    console.error('Failed to update account expiry date:', error);
+    console.error("Failed to update account expiry date:", error);
   }
-};
-
-// Function to get user info from db
-const getUserInfo = async (accountInfo: any) => {
-  return await db.account.findFirst({
-    where: {
-      providerAccountId: accountInfo.providerAccountId
-    }
-  });
 };
 
 /**
@@ -58,8 +49,9 @@ export const authOptions: NextAuthOptions = {
   providers: [
     LineProvider({
       clientId: env.LINE_CLIENT_ID,
-      clientSecret: env.LINE_CLIENT_SECRET
-    })],
+      clientSecret: env.LINE_CLIENT_SECRET,
+    }),
+  ],
   callbacks: {
     async signIn({ user, account, profile, email, credentials }) {
       const accountInfo = account as any;
@@ -79,13 +71,13 @@ export const authOptions: NextAuthOptions = {
       }
     },
     session: async ({ session, user }) => {
-      return ({
+      return {
         ...session,
         user: {
           ...session.user,
           id: user.id,
         },
-      })
+      };
     },
   },
 };
