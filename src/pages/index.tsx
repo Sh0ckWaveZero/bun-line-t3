@@ -18,7 +18,7 @@ export default function Home() {
         <meta
           name="theme-color"
           media="(prefers-color-scheme: dark)"
-          content="black"
+          content="hsl(280,100%,70%)"
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
