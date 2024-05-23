@@ -13,12 +13,12 @@ export default function Home() {
         <meta
           name="theme-color"
           media="(prefers-color-scheme: light)"
-          content="hsl(280,100%,70%)"
+          content="#2e026d"
         />
         <meta
           name="theme-color"
           media="(prefers-color-scheme: dark)"
-          content="hsl(280,100%,70%)"
+          content="#2e026d"
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
