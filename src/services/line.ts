@@ -67,7 +67,7 @@ const handleLocation = async (req: NextApiRequest, event: any) => {
       event.message.latitude,
       event.message.longitude,
     );
-
+    
     const msg = airVisualService.getNearestCityBubble(
       location
     );
