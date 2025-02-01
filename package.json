@@ -13,7 +13,7 @@
   "dependencies": {
     "@next-auth/prisma-adapter": "latest",
     "@prisma/client": "^6.3.0",
-    "@t3-oss/env-nextjs": "0.12.0",
+    "@t3-oss/env-nextjs": "^0.9.1",
     "@tweakpane/core": "^2.0.5",
     "cheerio": "1.0.0",
     "next": "^15.1.6",
