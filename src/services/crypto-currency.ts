@@ -12,13 +12,20 @@ const mapSymbolsThai = (symbols: string): string => {
 
 const getCurrencyLogo = async (currencyName: string): Promise<any> => {
   try {
-    const res = await cmcService.findOne(currencyName.toUpperCase());
+    // Sanitize input: only allow alphanumeric characters
+    const sanitizedCurrencyName = currencyName.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+
+    // Validate against CMC first
+    const res = await cmcService.findOne(sanitizedCurrencyName);
     const cmcCurrenciesLogo = `https://s2.coinmarketcap.com/static/img/coins/128x128/${res?.no}.png`;
+
     let response: any;
     if (!res) {
-      response = await fetch(
-        `https://lcw.nyc3.cdn.digitaloceanspaces.com/production/currencies/64/${currencyName}.webp`,
-      );
+      // Use a fixed hostname and sanitized path
+      const logoBaseUrl = 'https://lcw.nyc3.cdn.digitaloceanspaces.com';
+      const logoPath = `/production/currencies/64/${sanitizedCurrencyName.toLowerCase()}.webp`;
+
+      response = await fetch(`${logoBaseUrl}${logoPath}`);
     }
 
     return res ? cmcCurrenciesLogo : response.url;
@@ -26,7 +33,6 @@ const getCurrencyLogo = async (currencyName: string): Promise<any> => {
     return 'https://cryptoicon-api.vercel.app/api/icon/notfound';
   }
 };
-
 
 export const cryptoCurrencyService = {
   mapSymbolsThai,
