@@ -11,6 +11,9 @@ const mapSymbolsThai = (symbols: string): string => {
 };
 
 const getCurrencyLogo = async (currencyName: string): Promise<any> => {
+  // Define fallback URL as a constant
+  const FALLBACK_ICON_URL = 'https://cryptoicon-api.vercel.app/api/icon/notfound';
+  
   try {
     // Sanitize input: only allow alphanumeric characters
     const sanitizedCurrencyName = currencyName.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
@@ -30,7 +33,8 @@ const getCurrencyLogo = async (currencyName: string): Promise<any> => {
 
     return res ? cmcCurrenciesLogo : response.url;
   } catch (error) {
-    return 'https://cryptoicon-api.vercel.app/api/icon/notfound';
+    console.error(`Failed to fetch logo for currency: ${currencyName}`, error);
+    return FALLBACK_ICON_URL;
   }
 };
 
