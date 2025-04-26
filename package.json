@@ -11,7 +11,7 @@
     "start": "next start"
   },
   "dependencies": {
-    "@next-auth/prisma-adapter": "latest",
+    "@auth/prisma-adapter": "^2.9.0",
     "@prisma/client": "^6.6.0",
     "@t3-oss/env-nextjs": "^0.13.0",
     "@tweakpane/core": "^2.0.5",

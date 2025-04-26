@@ -2,7 +2,7 @@ import { CONSOLATION } from '~/config/common.constant';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { utils } from '~/utils';
 import { exchangeService } from './exchange';
-import { db } from "~/server/db";
+import { prisma } from "~/server/db";
 import { env } from '~/env.mjs';
 import { bubbleTemplate } from '~/utils/line';
 import { airVisualService } from './airvisual';
@@ -43,7 +43,7 @@ const handleLogin = async (req: NextApiRequest, message: string) => {
   }
 
   const userId = req.body.events[0].source.userId;
-  const userPermission: any = await db.account.findFirst({
+  const userPermission: any = await prisma.account.findFirst({
     where: {
       providerAccountId: userId,
     },

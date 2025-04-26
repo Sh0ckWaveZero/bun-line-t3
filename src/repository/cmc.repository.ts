@@ -1,7 +1,7 @@
-import { db } from "~/server/db";
+import { prisma } from "~/server/db";
 
 function findBySymbol(symbol: string) {
-  return db.cmc.findFirst({
+  return prisma.cmc.findFirst({
     where: {
       symbol: symbol,
     },
@@ -9,7 +9,7 @@ function findBySymbol(symbol: string) {
 }
 
 function addMany(items: any[]) {
-  return db.cmc.createMany({
+  return prisma.cmc.createMany({
     data: items,
   });
 }

@@ -1,5 +1,5 @@
 import { env } from '~/env.mjs';
-import { db } from "~/server/db";
+import { prisma } from "~/server/db";
 
 export class UsersRepository {
   expiresIn = 0;
@@ -11,7 +11,7 @@ export class UsersRepository {
 
   async findById(userId: string) {
     try {
-      const userPermission: any = await db.account.aggregate({
+      const userPermission: any = await prisma.account.aggregate({
         where: {
           providerAccountId: {
             contains: userId,
@@ -32,7 +32,7 @@ export class UsersRepository {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-    return await db.user.create({
+    return await prisma.user.create({
       data: data,
     });
   }
@@ -46,7 +46,7 @@ export class UsersRepository {
       },
     };
     const find = await this.findById(user.userId);
-    return db.user.update({
+    return prisma.user.update({
       where: {
         id: find?.id,
       },
