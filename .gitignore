@@ -46,3 +46,4 @@ certificates
 .flaskenv*
 !.env.project
 .env.vault
+prisma/generated/*
