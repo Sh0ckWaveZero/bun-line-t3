@@ -1,4 +1,3 @@
-
 import { type GetServerSidePropsContext } from "next";
 import {
   getServerSession,
@@ -9,6 +8,7 @@ import LineProvider from "next-auth/providers/line";
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { env } from "~/env.mjs";
 import { prisma } from './db';
+
 
 
 declare module "next-auth" {
@@ -46,7 +46,7 @@ const updateAccountExpiryDate = async (accountInfo: any) => {
  * @see https://next-auth.js.org/configuration/options
  */
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma as any),
+  adapter: PrismaAdapter(prisma),
   providers: [
     LineProvider({
       clientId: env.LINE_CLIENT_ID,
