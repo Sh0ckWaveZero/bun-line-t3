@@ -1,6 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { env } from '~/env.mjs';
 import { bubbleTemplate } from '~/utils/line';
+import { attendanceService } from '~/services/attendance';
+import { prisma } from '~/server/db';
 
 // Helper function to send push message
 const sendPushMessage = async (userId: string, messages: any[]) => {
@@ -56,20 +58,56 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ message: 'userId is required' });
     }
 
+    // Find user account to get internal userId
+    const userAccount = await prisma.account.findFirst({
+      where: { providerAccountId: userId }
+    });
+
     let payload;
     
     switch (messageType) {
       case 'checkin_menu':
-        payload = flexMessage(bubbleTemplate.workCheckIn());
+        // Check current attendance status
+        if (userAccount?.userId) {
+          const attendance = await attendanceService.getTodayAttendance(userAccount.userId);
+          if (attendance) {
+            // User already has attendance record, show status
+            payload = flexMessage(bubbleTemplate.workStatus(attendance));
+          } else {
+            // No attendance record, show check-in menu
+            payload = flexMessage(bubbleTemplate.workCheckIn());
+          }
+        } else {
+          // No user account found, show sign-in
+          payload = flexMessage(bubbleTemplate.signIn());
+        }
         break;
       case 'reminder':
-        payload = [
-          {
-            type: 'text',
-            text: '⏰ อย่าลืมลงชื่อเข้างานนะคะ! กดที่ปุ่มด้านล่างเพื่อเริ่มทำงาน 😊'
-          },
-          ...flexMessage(bubbleTemplate.workCheckIn())
-        ];
+        // For reminders, check status first
+        if (userAccount?.userId) {
+          const attendance = await attendanceService.getTodayAttendance(userAccount.userId);
+          if (attendance) {
+            // Already has attendance, show status instead of reminder
+            payload = [
+              {
+                type: 'text',
+                text: '📊 สถานะการทำงานของคุณวันนี้'
+              },
+              ...flexMessage(bubbleTemplate.workStatus(attendance))
+            ];
+          } else {
+            // No attendance, show reminder
+            payload = [
+              {
+                type: 'text',
+                text: '⏰ อย่าลืมลงชื่อเข้างานนะคะ! กดที่ปุ่มด้านล่างเพื่อเริ่มทำงาน 😊'
+              },
+              ...flexMessage(bubbleTemplate.workCheckIn())
+            ];
+          }
+        } else {
+          payload = flexMessage(bubbleTemplate.signIn());
+        }
         break;
       case 'checkout_reminder':
         payload = [
@@ -80,7 +118,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ];
         break;
       default:
-        payload = flexMessage(bubbleTemplate.workCheckIn());
+        // Default case - check status first
+        if (userAccount?.userId) {
+          const attendance = await attendanceService.getTodayAttendance(userAccount.userId);
+          if (attendance) {
+            payload = flexMessage(bubbleTemplate.workStatus(attendance));
+          } else {
+            payload = flexMessage(bubbleTemplate.workCheckIn());
+          }
+        } else {
+          payload = flexMessage(bubbleTemplate.signIn());
+        }
     }
 
     await sendPushMessage(userId, payload);

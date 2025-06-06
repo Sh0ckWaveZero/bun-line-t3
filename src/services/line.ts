@@ -71,7 +71,7 @@ const handleLocation = async (req: NextApiRequest, event: any) => {
       event.message.latitude,
       event.message.longitude,
     );
-    
+
     const msg = airVisualService.getNearestCityBubble(
       location
     );
@@ -105,22 +105,26 @@ const handleCommand = async (command: string, conditions: any[], req: NextApiReq
   let options: string = '';
 
   switch (exchangeName) {
-    case 'bk' || 'bitkub':
+    case 'bk':
+    case 'bitkub':
       conditions.forEach((condition: any) => {
         promises.push(exchangeService.getBitkub(condition));
       });
       break;
-    case 'st' || 'satang':
+    case 'st':
+    case 'satang':
       conditions.forEach((condition: any) => {
         promises.push(exchangeService.getSatangCorp(condition));
       });
       break;
-    case 'btz' || 'bitazza':
+    case 'btz':
+    case 'bitazza':
       conditions.forEach((condition: any) => {
         promises.push(exchangeService.getBitazza(condition));
       });
       break;
-    case 'bn' || 'binance':
+    case 'bn':
+    case 'binance':
       conditions.forEach((condition: any) => {
         promises.push(exchangeService.getBinance(condition, 'USDT'));
       });
@@ -130,51 +134,80 @@ const handleCommand = async (command: string, conditions: any[], req: NextApiReq
         promises.push(exchangeService.getBinance(condition, 'BUSD'));
       });
       break;
-    case 'gate' || 'gateio' || 'gt':
+    case 'gate':
+    case 'gateio':
+    case 'gt':
       conditions.forEach((condition: any) => {
         promises.push(exchangeService.getGeteio(condition));
       });
       break;
-    case 'mexc' || 'mx':
+    case 'mexc':
+    case 'mx':
       conditions.forEach((condition: any) => {
         promises.push(exchangeService.getMexc(condition));
       });
       break;
-    case 'cmc' || 'coinmarketcap':
+    case 'cmc':
+    case 'coinmarketcap':
       conditions.forEach((condition: any) => {
         promises.push(exchangeService.getCoinMarketCap(condition));
       });
       break;
-    case 'gold' || 'ทอง':
+    case 'gold':
+    case 'ทอง':
       promises = [exchangeService.getGoldPrice()];
       options = 'gold';
       break;
-    case 'หวย' || 'lotto':
+    case 'หวย':
+    case 'lotto':
       promises = [exchangeService.getLotto(conditions)];
       options = 'lotto';
       break;
-    case 'gas' || 'น้ำมัน':
+    case 'gas':
+    case 'น้ำมัน':
       if (conditions.length === 0) replyNotFound(req);
       promises = [exchangeService.getGasPrice(conditions[0])];
       break;
-    case 'work' || 'งาน' || 'เข้างาน' || 'checkin':
+    case 'work':
+    case 'งาน':
+    case 'เข้างาน':
+    case 'checkin':
       await handleWorkAttendanceCommand(req);
       return;
-    case 'เลิกงาน' || 'ออกงาน' || 'checkout':
+    case 'เลิกงาน':
+    case 'ออกงาน':
+    case 'checkout':
       const userId = req.body.events[0].source.userId;
       const userAccount = await prisma.account.findFirst({
         where: { providerAccountId: userId }
       });
-      if (userAccount) {
+
+      const isPermissionExpired = !userAccount || !userAccount.expires_at || !utils.compareDate(userAccount.expires_at.toString(), new Date().toISOString());
+
+      if (isPermissionExpired) {
+        const payload = bubbleTemplate.signIn();
+        return sendMessage(req, flexMessage(payload));
+      }
+
+      if (userAccount?.userId) {
         await handleCheckOut(req, userAccount.userId);
       }
       return;
-    case 'สถานะ' || 'status':
+    case 'สถานะ':
+    case 'status':
       const statusUserId = req.body.events[0].source.userId;
       const statusUserAccount = await prisma.account.findFirst({
         where: { providerAccountId: statusUserId }
       });
-      if (statusUserAccount) {
+
+      const isStatusPermissionExpired = !statusUserAccount || !statusUserAccount.expires_at || !utils.compareDate(statusUserAccount.expires_at.toString(), new Date().toISOString());
+
+      if (isStatusPermissionExpired) {
+        const payload = bubbleTemplate.signIn();
+        return sendMessage(req, flexMessage(payload));
+      }
+
+      if (statusUserAccount?.userId) {
         await handleWorkStatus(req, statusUserAccount.userId);
       }
       return;
@@ -297,7 +330,7 @@ const sendLoadingAnimation = async (req: any) => {
 const handlePostback = async (req: NextApiRequest, event: any) => {
   const userId = req.body.events[0].source.userId;
   const data = event.postback.data;
-  
+
   // Check user permission first
   const userPermission: any = await prisma.account.findFirst({
     where: {
@@ -317,7 +350,17 @@ const handlePostback = async (req: NextApiRequest, event: any) => {
 
   switch (action) {
     case 'checkin':
-      await handleCheckIn(req, userPermission.userId);
+      // Check current attendance status before allowing check-in
+      const currentAttendance = await attendanceService.getTodayAttendance(userPermission.userId);
+      
+      if (currentAttendance) {
+        // If already has attendance record, show current status instead of check-in
+        const payload = bubbleTemplate.workStatus(currentAttendance);
+        await sendMessage(req, flexMessage(payload));
+      } else {
+        // No attendance record, proceed with check-in
+        await handleCheckIn(req, userPermission.userId);
+      }
       break;
     case 'checkout':
       await handleCheckOut(req, userPermission.userId);
@@ -335,10 +378,11 @@ const handlePostback = async (req: NextApiRequest, event: any) => {
 
 const handleCheckIn = async (req: NextApiRequest, userId: string) => {
   try {
+    // Proceed with check-in (status already checked in postback handler)
     const result = await attendanceService.checkIn(userId);
-    
+
     if (result.success && result.checkInTime && result.expectedCheckOutTime) {
-            const payload = bubbleTemplate.workCheckInSuccess(result.checkInTime, result.expectedCheckOutTime);
+      const payload = bubbleTemplate.workCheckInSuccess(result.checkInTime, result.expectedCheckOutTime);
       await sendMessage(req, flexMessage(payload));
     } else if (result.alreadyCheckedIn && result.checkInTime && result.expectedCheckOutTime) {
       const payload = bubbleTemplate.workAlreadyCheckedIn(result.checkInTime);
@@ -356,9 +400,34 @@ const handleCheckIn = async (req: NextApiRequest, userId: string) => {
 
 const handleCheckOut = async (req: NextApiRequest, userId: string) => {
   try {
+    // First check current status
+    const currentAttendance = await attendanceService.getTodayAttendance(userId);
+    
+    // If no attendance record found
+    if (!currentAttendance) {
+      const payload = bubbleTemplate.workError('ไม่พบการลงชื่อเข้างานวันนี้');
+      await sendMessage(req, flexMessage(payload));
+      return;
+    }
+    
+    // If already checked out, show the checkout success with existing data
+    if (currentAttendance.status === "checked_out") {
+      const payload = bubbleTemplate.workCheckOutSuccess(
+        currentAttendance.checkInTime, 
+        currentAttendance.checkOutTime || new Date()
+      );
+      await sendMessage(req, flexMessage(payload));
+      return;
+    }
+    
+    // Proceed with check-out
     const result = await attendanceService.checkOut(userId);
     
     if (result.success && result.checkInTime && result.expectedCheckOutTime) {
+      const payload = bubbleTemplate.workCheckOutSuccess(result.checkInTime, result.expectedCheckOutTime);
+      await sendMessage(req, flexMessage(payload));
+    } else if (!result.success && result.checkInTime && result.expectedCheckOutTime) {
+      // Already checked out case - show status instead of error
       const payload = bubbleTemplate.workCheckOutSuccess(result.checkInTime, result.expectedCheckOutTime);
       await sendMessage(req, flexMessage(payload));
     } else {
@@ -375,7 +444,7 @@ const handleCheckOut = async (req: NextApiRequest, userId: string) => {
 const handleWorkStatus = async (req: NextApiRequest, userId: string) => {
   try {
     const attendance = await attendanceService.getTodayAttendance(userId);
-    
+
     if (attendance) {
       const payload = bubbleTemplate.workStatus(attendance);
       await sendMessage(req, flexMessage(payload));
@@ -391,8 +460,29 @@ const handleWorkStatus = async (req: NextApiRequest, userId: string) => {
 };
 
 const handleCheckInMenu = async (req: NextApiRequest) => {
-  const payload = bubbleTemplate.workCheckIn();
-  await sendMessage(req, flexMessage(payload));
+  const userId = req.body.events[0].source.userId;
+  const userAccount = await prisma.account.findFirst({
+    where: { providerAccountId: userId }
+  });
+
+  if (!userAccount) {
+    const payload = bubbleTemplate.signIn();
+    await sendMessage(req, flexMessage(payload));
+    return;
+  }
+
+  // Check current attendance status
+  const attendance = await attendanceService.getTodayAttendance(userAccount.userId);
+  
+  if (attendance) {
+    // If already has attendance record, show status instead of check-in menu
+    const payload = bubbleTemplate.workStatus(attendance);
+    await sendMessage(req, flexMessage(payload));
+  } else {
+    // No attendance record, show check-in menu
+    const payload = bubbleTemplate.workCheckIn();
+    await sendMessage(req, flexMessage(payload));
+  }
 };
 
 const handleWorkAttendanceCommand = async (req: NextApiRequest) => {
@@ -400,11 +490,23 @@ const handleWorkAttendanceCommand = async (req: NextApiRequest) => {
   const userAccount = await prisma.account.findFirst({
     where: { providerAccountId: userId }
   });
-  
-  if (userAccount) {
-    await handleWorkStatus(req, userAccount.userId);
-  } else {
+
+  if (!userAccount) {
     const payload = bubbleTemplate.signIn();
+    await sendMessage(req, flexMessage(payload));
+    return;
+  }
+
+  // Always check attendance status first
+  const attendance = await attendanceService.getTodayAttendance(userAccount.userId);
+  
+  if (attendance) {
+    // Show current status if there's an attendance record
+    const payload = bubbleTemplate.workStatus(attendance);
+    await sendMessage(req, flexMessage(payload));
+  } else {
+    // No attendance record for today, show check-in menu
+    const payload = bubbleTemplate.workCheckIn();
     await sendMessage(req, flexMessage(payload));
   }
 };
