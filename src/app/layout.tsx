@@ -1,8 +1,15 @@
 import { type Metadata } from "next";
+import { Noto_Sans_Thai } from "next/font/google";
 import Providers from "./providers";
 
 import "~/styles/globals.css";
 import "~/styles/ring.css";
+
+const notoSansThai = Noto_Sans_Thai({
+  subsets: ["thai", "latin"],
+  display: "swap",
+  variable: "--font-noto-sans-thai",
+});
 
 export const metadata: Metadata = {
   title: "Bun LINE T3 App",
@@ -16,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="th" className={notoSansThai.variable}>
       <head>
         <meta
           name="theme-color"
@@ -29,7 +36,7 @@ export default function RootLayout({
           content="#2e026d"
         />
       </head>
-      <body>
+      <body className={notoSansThai.className}>
         <Providers>
           {children}
         </Providers>
