@@ -763,10 +763,646 @@ const notFound = () => {
     },
   ];
 };
+
+const workCheckIn = () => {
+  return [
+    {
+      type: 'bubble',
+      size: 'giga',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: '⏰ ระบบลงชื่อเข้างาน',
+            weight: 'bold',
+            size: 'xl',
+            color: '#ffffff',
+            align: 'center'
+          }
+        ],
+        backgroundColor: '#4CAF50',
+        paddingAll: '20px'
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: '📅 วันนี้คุณพร้อมทำงานแล้วใช่ไหม?',
+            weight: 'bold',
+            size: 'lg',
+            wrap: true,
+            align: 'center',
+            margin: 'md'
+          },
+          {
+            type: 'text',
+            text: 'กดปุ่มด้านล่างเพื่อลงชื่อเข้างาน ระบบจะคำนวณเวลาเลิกงานให้อัตโนมัติ (9 ชั่วโมงทำงาน)',
+            wrap: true,
+            size: 'sm',
+            color: '#666666',
+            align: 'center',
+            margin: 'lg'
+          }
+        ],
+        paddingAll: '20px'
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'sm',
+        contents: [
+          {
+            type: 'button',
+            style: 'primary',
+            action: {
+              type: 'postback',
+              label: '🟢 เข้างาน',
+              data: 'action=checkin'
+            },
+            color: '#4CAF50',
+            height: 'md'
+          },
+          {
+            type: 'button',
+            style: 'secondary',
+            action: {
+              type: 'postback',
+              label: '📊 ดูสถานะการทำงาน',
+              data: 'action=status'
+            },
+            height: 'sm'
+          }
+        ],
+        paddingAll: '20px'
+      }
+    }
+  ];
+};
+
+const workCheckInSuccess = (checkInTime: Date, expectedCheckOutTime: Date) => {
+  const checkInTimeStr = checkInTime.toLocaleString('th-TH', {
+    timeZone: 'Asia/Bangkok',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+  
+  const checkOutTimeStr = expectedCheckOutTime.toLocaleString('th-TH', {
+    timeZone: 'Asia/Bangkok',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  const dateStr = checkInTime.toLocaleString('th-TH', {
+    timeZone: 'Asia/Bangkok',
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  return [
+    {
+      type: 'bubble',
+      size: 'giga',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: '✅ ลงชื่อเข้างานสำเร็จ',
+            weight: 'bold',
+            size: 'xl',
+            color: '#ffffff',
+            align: 'center'
+          }
+        ],
+        backgroundColor: '#4CAF50',
+        paddingAll: '20px'
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: `📅 ${dateStr}`,
+            weight: 'bold',
+            size: 'md',
+            wrap: true,
+            align: 'center',
+            margin: 'md',
+            color: '#333333'
+          },
+          {
+            type: 'separator',
+            margin: 'xl'
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            margin: 'xl',
+            spacing: 'sm',
+            contents: [
+              {
+                type: 'box',
+                layout: 'horizontal',
+                contents: [
+                  {
+                    type: 'text',
+                    text: '🕐 เวลาเข้างาน:',
+                    size: 'sm',
+                    color: '#555555',
+                    flex: 0
+                  },
+                  {
+                    type: 'text',
+                    text: checkInTimeStr,
+                    weight: 'bold',
+                    size: 'sm',
+                    color: '#4CAF50',
+                    align: 'end'
+                  }
+                ]
+              },
+              {
+                type: 'box',
+                layout: 'horizontal',
+                contents: [
+                  {
+                    type: 'text',
+                    text: '🕔 เวลาเลิกงาน (คาด):',
+                    size: 'sm',
+                    color: '#555555',
+                    flex: 0
+                  },
+                  {
+                    type: 'text',
+                    text: checkOutTimeStr,
+                    weight: 'bold',
+                    size: 'sm',
+                    color: '#FF9800',
+                    align: 'end'
+                  }
+                ]
+              },
+              {
+                type: 'box',
+                layout: 'horizontal',
+                contents: [
+                  {
+                    type: 'text',
+                    text: '⏱️ ชั่วโมงทำงาน:',
+                    size: 'sm',
+                    color: '#555555',
+                    flex: 0
+                  },
+                  {
+                    type: 'text',
+                    text: '9 ชั่วโมง',
+                    weight: 'bold',
+                    size: 'sm',
+                    color: '#2196F3',
+                    align: 'end'
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        paddingAll: '20px'
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'sm',
+        contents: [
+          {
+            type: 'button',
+            style: 'secondary',
+            action: {
+              type: 'postback',
+              label: '🔴 ออกงาน',
+              data: 'action=checkout'
+            },
+            color: '#f44336'
+          }
+        ],
+        paddingAll: '20px'
+      }
+    }
+  ];
+};
+
+const workStatus = (attendance: any) => {
+  const checkInTimeStr = attendance.checkInTime.toLocaleString('th-TH', {
+    timeZone: 'Asia/Bangkok',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  const expectedCheckOutTime = new Date(attendance.checkInTime.getTime() + 9 * 60 * 60 * 1000);
+  const expectedCheckOutTimeStr = expectedCheckOutTime.toLocaleString('th-TH', {
+    timeZone: 'Asia/Bangkok',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  const dateStr = attendance.checkInTime.toLocaleString('th-TH', {
+    timeZone: 'Asia/Bangkok',
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  const isCheckedOut = attendance.status === 'checked_out';
+  const statusText = isCheckedOut ? '✅ ออกงานแล้ว' : '🟢 กำลังทำงาน';
+  const statusColor = isCheckedOut ? '#4CAF50' : '#FF9800';
+
+  let checkOutTimeContent: any[] = [];
+  if (isCheckedOut && attendance.checkOutTime) {
+    const checkOutTimeStr = attendance.checkOutTime.toLocaleString('th-TH', {
+      timeZone: 'Asia/Bangkok',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    checkOutTimeContent = [
+      {
+        type: 'box',
+        layout: 'horizontal',
+        contents: [
+          {
+            type: 'text',
+            text: '🕐 เวลาออกงาน:',
+            size: 'sm',
+            color: '#555555',
+            flex: 0
+          },
+          {
+            type: 'text',
+            text: checkOutTimeStr,
+            weight: 'bold',
+            size: 'sm',
+            color: '#4CAF50',
+            align: 'end'
+          }
+        ]
+      }
+    ];
+  }
+
+  return [
+    {
+      type: 'bubble',
+      size: 'giga',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: '📊 สถานะการทำงาน',
+            weight: 'bold',
+            size: 'xl',
+            color: '#ffffff',
+            align: 'center'
+          }
+        ],
+        backgroundColor: statusColor,
+        paddingAll: '20px'
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: statusText,
+            weight: 'bold',
+            size: 'lg',
+            align: 'center',
+            margin: 'md',
+            color: statusColor
+          },
+          {
+            type: 'text',
+            text: `📅 ${dateStr}`,
+            size: 'sm',
+            wrap: true,
+            align: 'center',
+            color: '#666666'
+          },
+          {
+            type: 'separator',
+            margin: 'xl'
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            margin: 'xl',
+            spacing: 'sm',
+            contents: [
+              {
+                type: 'box',
+                layout: 'horizontal',
+                contents: [
+                  {
+                    type: 'text',
+                    text: '🕐 เวลาเข้างาน:',
+                    size: 'sm',
+                    color: '#555555',
+                    flex: 0
+                  },
+                  {
+                    type: 'text',
+                    text: checkInTimeStr,
+                    weight: 'bold',
+                    size: 'sm',
+                    color: '#4CAF50',
+                    align: 'end'
+                  }
+                ]
+              },
+              ...checkOutTimeContent,
+              {
+                type: 'box',
+                layout: 'horizontal',
+                contents: [
+                  {
+                    type: 'text',
+                    text: '🕔 เวลาเลิกงาน (คาด):',
+                    size: 'sm',
+                    color: '#555555',
+                    flex: 0
+                  },
+                  {
+                    type: 'text',
+                    text: expectedCheckOutTimeStr,
+                    weight: 'bold',
+                    size: 'sm',
+                    color: '#FF9800',
+                    align: 'end'
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        paddingAll: '20px'
+      },
+      footer: !isCheckedOut ? {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'sm',
+        contents: [
+          {
+            type: 'button',
+            style: 'primary',
+            action: {
+              type: 'postback',
+              label: '🔴 ออกงาน',
+              data: 'action=checkout'
+            },
+            color: '#f44336'
+          }
+        ],
+        paddingAll: '20px'
+      } : undefined
+    }
+  ];
+};
+
+const workAlreadyCheckedIn = (checkInTime: Date, expectedCheckOutTime: Date) => {
+  return workStatus({
+    checkInTime,
+    status: 'checked_in',
+    checkOutTime: null
+  });
+};
+
+const workCheckOutSuccess = (checkInTime: Date, checkOutTime: Date) => {
+  const checkInTimeStr = checkInTime.toLocaleString('th-TH', {
+    timeZone: 'Asia/Bangkok',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+  
+  const checkOutTimeStr = checkOutTime.toLocaleString('th-TH', {
+    timeZone: 'Asia/Bangkok',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  const dateStr = checkInTime.toLocaleString('th-TH', {
+    timeZone: 'Asia/Bangkok',
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  // Calculate actual work hours
+  const workDurationMs = checkOutTime.getTime() - checkInTime.getTime();
+  const workHours = Math.floor(workDurationMs / (1000 * 60 * 60));
+  const workMinutes = Math.floor((workDurationMs % (1000 * 60 * 60)) / (1000 * 60));
+
+  return [
+    {
+      type: 'bubble',
+      size: 'giga',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: '✅ ออกงานสำเร็จ',
+            weight: 'bold',
+            size: 'xl',
+            color: '#ffffff',
+            align: 'center'
+          }
+        ],
+        backgroundColor: '#4CAF50',
+        paddingAll: '20px'
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: `📅 ${dateStr}`,
+            weight: 'bold',
+            size: 'md',
+            wrap: true,
+            align: 'center',
+            margin: 'md',
+            color: '#333333'
+          },
+          {
+            type: 'text',
+            text: 'ขอบคุณสำหรับการทำงานวันนี้! 🎉',
+            size: 'sm',
+            wrap: true,
+            align: 'center',
+            color: '#666666'
+          },
+          {
+            type: 'separator',
+            margin: 'xl'
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            margin: 'xl',
+            spacing: 'sm',
+            contents: [
+              {
+                type: 'box',
+                layout: 'horizontal',
+                contents: [
+                  {
+                    type: 'text',
+                    text: '🕐 เวลาเข้างาน:',
+                    size: 'sm',
+                    color: '#555555',
+                    flex: 0
+                  },
+                  {
+                    type: 'text',
+                    text: checkInTimeStr,
+                    weight: 'bold',
+                    size: 'sm',
+                    color: '#4CAF50',
+                    align: 'end'
+                  }
+                ]
+              },
+              {
+                type: 'box',
+                layout: 'horizontal',
+                contents: [
+                  {
+                    type: 'text',
+                    text: '🕔 เวลาออกงาน:',
+                    size: 'sm',
+                    color: '#555555',
+                    flex: 0
+                  },
+                  {
+                    type: 'text',
+                    text: checkOutTimeStr,
+                    weight: 'bold',
+                    size: 'sm',
+                    color: '#4CAF50',
+                    align: 'end'
+                  }
+                ]
+              },
+              {
+                type: 'box',
+                layout: 'horizontal',
+                contents: [
+                  {
+                    type: 'text',
+                    text: '⏱️ ชั่วโมงทำงาน:',
+                    size: 'sm',
+                    color: '#555555',
+                    flex: 0
+                  },
+                  {
+                    type: 'text',
+                    text: `${workHours} ชม. ${workMinutes} นาที`,
+                    weight: 'bold',
+                    size: 'sm',
+                    color: '#2196F3',
+                    align: 'end'
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        paddingAll: '20px'
+      }
+    }
+  ];
+};
+
+const workError = (message: string) => {
+  return [
+    {
+      type: 'bubble',
+      size: 'giga',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: '⚠️ เกิดข้อผิดพลาด',
+            weight: 'bold',
+            size: 'xl',
+            color: '#ffffff',
+            align: 'center'
+          }
+        ],
+        backgroundColor: '#f44336',
+        paddingAll: '20px'
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: message,
+            wrap: true,
+            size: 'md',
+            align: 'center',
+            margin: 'md',
+            color: '#f44336'
+          }
+        ],
+        paddingAll: '20px'
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'sm',
+        contents: [
+          {
+            type: 'button',
+            style: 'secondary',
+            action: {
+              type: 'postback',
+              label: 'ลองใหม่',
+              data: 'action=checkin_menu'
+            }
+          }
+        ],
+        paddingAll: '20px'
+      }
+    }
+  ];
+};
+
 export const bubbleTemplate = {
   lottery,
   cryptoCurrency,
   gold,
   signIn,
   notFound,
+  workCheckIn,
+  workCheckInSuccess,
+  workStatus,
+  workAlreadyCheckedIn,
+  workCheckOutSuccess,
+  workError,
 };
