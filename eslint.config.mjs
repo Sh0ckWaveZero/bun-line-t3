@@ -18,8 +18,8 @@ const eslintConfig = [
         "error",
         {
           "ts-expect-error": "allow-with-description",
-          "ts-ignore": "allow",
-          "ts-nocheck": "allow",
+          "ts-ignore": true,
+          "ts-nocheck": true,
           "ts-check": false,
           "minimumDescriptionLength": 0
         }

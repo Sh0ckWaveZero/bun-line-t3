@@ -1,4 +1,3 @@
-// @ts-nocheck
 import path from 'path';
 import { promises as fs } from 'fs';
 
@@ -6,7 +5,7 @@ import { promises as fs } from 'fs';
 // regex works both on escaped and non-escaped code
 const prismaDirRegex =
   /\\?"?output\\?"?:\s*{(?:\\n?|\s)*\\?"?value\\?"?:(?:\\n?|\s)*\\?"(.*?)\\?",(?:\\n?|\s)*\\?"?fromEnvVar\\?"?/g
-// @ts-ignore
+// @ts-expect-error - Parameter type is not strictly typed in this context
 async function getPrismaDir(from) {
   // if we can find schema.prisma in the path, we are done
   if (await fs.stat(path.join(from, 'schema.prisma')).catch(() => false)) {
@@ -16,7 +15,7 @@ async function getPrismaDir(from) {
   // otherwise we need to find the generated prisma client
   return path.dirname(require.resolve('.prisma/client', { paths: [from] }))
 }
-// @ts-ignore
+// @ts-expect-error - Parameter type is not strictly typed in this context
 // get all required prisma files (schema + engine)
 async function getPrismaFiles(from) {
   const prismaDir = await getPrismaDir(from)
@@ -32,7 +31,7 @@ export class PrismaPlugin {
   }
 
   /**
-   * @param {import('webpack').Compiler} compiler
+   * @param {any} compiler
    */
   apply(compiler) {
     const { webpack } = compiler
@@ -40,7 +39,7 @@ export class PrismaPlugin {
 
     let schemaCount = 0
     const fromDestPrismaMap = {} // { [from]: dest }
-    // @ts-ignore
+    // @ts-expect-error - Webpack types are not available in this context
     // read bundles to find which prisma files to copy (for all users)
     compiler.hooks.compilation.tap('PrismaPlugin', (compilation) => {
       compilation.hooks.processAssets.tapPromise(
@@ -48,7 +47,7 @@ export class PrismaPlugin {
           name: 'PrismaPlugin',
           stage: Compilation.PROCESS_ASSETS_STAGE_ANALYSE,
         },
-        // @ts-ignore
+        // @ts-expect-error - Assets parameter type is not strictly typed
         async (assets) => {
           const jsAssetNames = Object.keys(assets).filter((k) => k.endsWith('.js'))
           const jsAsyncActions = jsAssetNames.map(async (assetName) => {
@@ -68,15 +67,15 @@ export class PrismaPlugin {
 
               prismaFiles.forEach((f) => {
                 const from = path.join(prismaDir, f)
-                // @ts-ignore
+                // @ts-expect-error - Dynamic property access on object
                 // if we have multiple schema.prisma files, we need to rename them
                 if (f === 'schema.prisma' && fromDestPrismaMap[from] === undefined) {
                   f += ++schemaCount
                 }
-                // @ts-ignore
+                // @ts-expect-error - Dynamic property access on object
                 // if we already have renamed it, we need to get its "renamed" name
                 if (f.includes('schema.prisma') && fromDestPrismaMap[from] !== undefined) {
-                  // @ts-ignore
+                  // @ts-expect-error - Dynamic property access on object
                   f = path.basename(fromDestPrismaMap[from])
                 }
 
@@ -86,7 +85,7 @@ export class PrismaPlugin {
                   const newRawSource = new sources.RawSource(newSourceString)
                   compilation.updateAsset(assetName, newRawSource)
                 }
-                // @ts-ignore
+                // @ts-expect-error - Dynamic property assignment on object
                 // update copy map
                 fromDestPrismaMap[from] = path.join(assetDir, f)
               })
@@ -97,7 +96,7 @@ export class PrismaPlugin {
         },
       )
     })
-    // @ts-ignore
+    // @ts-expect-error - Webpack types are not available in this context
     // update nft.json files to include prisma files (only for next.js)
     compiler.hooks.compilation.tap('PrismaPlugin', (compilation) => {
       compilation.hooks.processAssets.tapPromise(
@@ -105,7 +104,7 @@ export class PrismaPlugin {
           name: 'PrismaPlugin',
           stage: Compilation.PROCESS_ASSETS_STAGE_ANALYSE,
         },
-        // @ts-ignore
+        // @ts-expect-error - Assets parameter type is not strictly typed
         async (assets) => {
           const nftAssetNames = Object.keys(assets).filter((k) => k.endsWith('.nft.json'))
           const nftAsyncActions = nftAssetNames.map((assetName) => {
@@ -120,7 +119,7 @@ export class PrismaPlugin {
             const ntfLoadedAsJson = JSON.parse(oldSourceContents)
 
             // update sources
-            Object.entries(fromDestPrismaMap).forEach(([from, dest]) => {
+            Object.entries(fromDestPrismaMap).forEach(([, dest]) => {
               ntfLoadedAsJson.files.push(path.relative(assetDir, dest))
             })
 

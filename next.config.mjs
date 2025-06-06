@@ -18,6 +18,10 @@ const config = {
     locales: ["en"],
     defaultLocale: "en",
   },
+  // Allow cross-origin requests from LINE Login domain
+  allowedDevOrigins: [
+    "*.line-login.midseelee.com"
+  ],
   // output: "standalone",
   images: {
     formats: ['image/avif', 'image/webp'],

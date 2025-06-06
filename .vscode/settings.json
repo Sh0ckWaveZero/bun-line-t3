@@ -1,6 +1,29 @@
 {
   "cSpell.words": [
+    "checkin",
     "giga",
     "tweakpane"
-  ]
+  ],
+  "mcp": {
+    "inputs": [
+      {
+        "type": "promptString",
+        "id": "line_bot_channel_access_token",
+        "description": "LINE Bot Channel Access Token",
+        "password": true
+      },
+    ],
+    "servers": {
+      "line-bot": {
+        "command": "bunx",
+        "args": [
+          "@line/line-bot-mcp-server"
+        ],
+        "env": {
+          "CHANNEL_ACCESS_TOKEN": "${input:line_bot_channel_access_token}",
+          "DESTINATION_USER_ID": "FILL_HERE"
+        }
+      }
+    }
+  }
 }

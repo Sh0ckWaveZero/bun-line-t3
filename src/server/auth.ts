@@ -1,4 +1,3 @@
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { type GetServerSidePropsContext } from "next";
 import {
   getServerSession,
@@ -6,9 +5,11 @@ import {
   type NextAuthOptions,
 } from "next-auth";
 import LineProvider from "next-auth/providers/line";
-
+import { PrismaAdapter } from "@auth/prisma-adapter"
 import { env } from "~/env.mjs";
-import { db } from "~/server/db";
+import { prisma } from './db';
+
+
 
 declare module "next-auth" {
   interface Session extends DefaultSession {
@@ -30,7 +31,7 @@ const calculateExpiryDate = () => {
 // Function to update the account expiry date
 const updateAccountExpiryDate = async (accountInfo: any) => {
   try {
-    await db.account.update({
+    await prisma.account.update({
       where: { providerAccountId: accountInfo.providerAccountId },
       data: { expires_at: calculateExpiryDate() },
     });
@@ -45,7 +46,7 @@ const updateAccountExpiryDate = async (accountInfo: any) => {
  * @see https://next-auth.js.org/configuration/options
  */
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(db),
+  adapter: PrismaAdapter(prisma),
   providers: [
     LineProvider({
       clientId: env.LINE_CLIENT_ID,
@@ -53,7 +54,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile, email, credentials }) {
+    async signIn({ account }) {
       const accountInfo = account as any;
 
       // Update account expiry date

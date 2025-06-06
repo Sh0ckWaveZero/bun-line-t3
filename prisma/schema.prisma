@@ -3,7 +3,7 @@
 
 generator client {
     provider = "prisma-client-js"
-    output   = "./generated/prisma"
+
 }
 
 datasource db {
@@ -45,14 +45,15 @@ model Session {
 }
 
 model User {
-    id            String    @id @default(auto()) @map("_id") @db.ObjectId
-    name          String?
-    email         String?   @unique
-    emailVerified DateTime? @map("email_verified")
-    is_verified   Boolean?  @default(false)
-    image         String?
-    accounts      Account[]
-    sessions      Session[]
+    id              String            @id @default(auto()) @map("_id") @db.ObjectId
+    name            String?
+    email           String?           @unique
+    emailVerified   DateTime?         @map("email_verified")
+    is_verified     Boolean?          @default(false)
+    image           String?
+    accounts        Account[]
+    sessions        Session[]
+    workAttendances WorkAttendance[]
 
     @@map("users")
 }
@@ -77,4 +78,19 @@ model Cmc {
     createdAt DateTime @default(now())
 
     @@map("cmc")
+}
+
+model WorkAttendance {
+    id            String    @id @default(auto()) @map("_id") @db.ObjectId
+    userId        String    @map("user_id") @db.ObjectId
+    checkInTime   DateTime  @map("check_in_time")
+    checkOutTime  DateTime? @map("check_out_time")
+    workDate      String    @map("work_date") // YYYY-MM-DD format
+    status        String    @default("checked_in") // checked_in, checked_out
+    createdAt     DateTime  @default(now()) @map("created_at")
+    updatedAt     DateTime  @updatedAt @map("updated_at")
+    user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, workDate])
+    @@map("work_attendance")
 }

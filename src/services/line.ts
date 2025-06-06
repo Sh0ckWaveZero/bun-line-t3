@@ -2,7 +2,8 @@ import { CONSOLATION } from '~/config/common.constant';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { utils } from '~/utils';
 import { exchangeService } from './exchange';
-import { db } from "~/server/db";
+import { attendanceService } from './attendance';
+import { prisma } from "~/server/db";
 import { env } from '~/env.mjs';
 import { bubbleTemplate } from '~/utils/line';
 import { airVisualService } from './airvisual';
@@ -28,6 +29,9 @@ const handleEvent = (req: NextApiRequest,
             break;
         }
         break;
+      case 'postback':
+        handlePostback(req, event);
+        break;
       default:
         res.status(401).send('Invalid token');
     }
@@ -43,7 +47,7 @@ const handleLogin = async (req: NextApiRequest, message: string) => {
   }
 
   const userId = req.body.events[0].source.userId;
-  const userPermission: any = await db.account.findFirst({
+  const userPermission: any = await prisma.account.findFirst({
     where: {
       providerAccountId: userId,
     },
@@ -74,6 +78,7 @@ const handleLocation = async (req: NextApiRequest, event: any) => {
 
     sendMessage(req, flexMessage(msg));
   } catch (err: any) {
+    console.error('Location handling error:', err);
     replyNotFound(req);
     return;
   }
@@ -152,6 +157,27 @@ const handleCommand = async (command: string, conditions: any[], req: NextApiReq
       if (conditions.length === 0) replyNotFound(req);
       promises = [exchangeService.getGasPrice(conditions[0])];
       break;
+    case 'work' || 'งาน' || 'เข้างาน' || 'checkin':
+      await handleWorkAttendanceCommand(req);
+      return;
+    case 'เลิกงาน' || 'ออกงาน' || 'checkout':
+      const userId = req.body.events[0].source.userId;
+      const userAccount = await prisma.account.findFirst({
+        where: { providerAccountId: userId }
+      });
+      if (userAccount) {
+        await handleCheckOut(req, userAccount.userId);
+      }
+      return;
+    case 'สถานะ' || 'status':
+      const statusUserId = req.body.events[0].source.userId;
+      const statusUserAccount = await prisma.account.findFirst({
+        where: { providerAccountId: statusUserId }
+      });
+      if (statusUserAccount) {
+        await handleWorkStatus(req, statusUserAccount.userId);
+      }
+      return;
     default:
       replyNotFound(req);
       return;
@@ -266,6 +292,121 @@ const sendLoadingAnimation = async (req: any) => {
     chatId: req.body.events[0].source.userId,
     loadingSeconds: 5
   });
+};
+
+const handlePostback = async (req: NextApiRequest, event: any) => {
+  const userId = req.body.events[0].source.userId;
+  const data = event.postback.data;
+  
+  // Check user permission first
+  const userPermission: any = await prisma.account.findFirst({
+    where: {
+      providerAccountId: userId,
+    },
+  });
+
+  const isPermissionExpired = !userPermission || !utils.compareDate(userPermission?.expires_at, new Date().toISOString());
+
+  if (isPermissionExpired) {
+    const payload = bubbleTemplate.signIn();
+    return sendMessage(req, flexMessage(payload));
+  }
+
+  const params = new URLSearchParams(data);
+  const action = params.get('action');
+
+  switch (action) {
+    case 'checkin':
+      await handleCheckIn(req, userPermission.userId);
+      break;
+    case 'checkout':
+      await handleCheckOut(req, userPermission.userId);
+      break;
+    case 'status':
+      await handleWorkStatus(req, userPermission.userId);
+      break;
+    case 'checkin_menu':
+      await handleCheckInMenu(req);
+      break;
+    default:
+      break;
+  }
+};
+
+const handleCheckIn = async (req: NextApiRequest, userId: string) => {
+  try {
+    const result = await attendanceService.checkIn(userId);
+    
+    if (result.success && result.checkInTime && result.expectedCheckOutTime) {
+            const payload = bubbleTemplate.workCheckInSuccess(result.checkInTime, result.expectedCheckOutTime);
+      await sendMessage(req, flexMessage(payload));
+    } else if (result.alreadyCheckedIn && result.checkInTime && result.expectedCheckOutTime) {
+      const payload = bubbleTemplate.workAlreadyCheckedIn(result.checkInTime);
+      await sendMessage(req, flexMessage(payload));
+    } else {
+      const payload = bubbleTemplate.workError(result.message);
+      await sendMessage(req, flexMessage(payload));
+    }
+  } catch (error) {
+    console.error('Error in handleCheckIn:', error);
+    const payload = bubbleTemplate.workError('เกิดข้อผิดพลาดในระบบ');
+    await sendMessage(req, flexMessage(payload));
+  }
+};
+
+const handleCheckOut = async (req: NextApiRequest, userId: string) => {
+  try {
+    const result = await attendanceService.checkOut(userId);
+    
+    if (result.success && result.checkInTime && result.expectedCheckOutTime) {
+      const payload = bubbleTemplate.workCheckOutSuccess(result.checkInTime, result.expectedCheckOutTime);
+      await sendMessage(req, flexMessage(payload));
+    } else {
+      const payload = bubbleTemplate.workError(result.message);
+      await sendMessage(req, flexMessage(payload));
+    }
+  } catch (error) {
+    console.error('Error in handleCheckOut:', error);
+    const payload = bubbleTemplate.workError('เกิดข้อผิดพลาดในระบบ');
+    await sendMessage(req, flexMessage(payload));
+  }
+};
+
+const handleWorkStatus = async (req: NextApiRequest, userId: string) => {
+  try {
+    const attendance = await attendanceService.getTodayAttendance(userId);
+    
+    if (attendance) {
+      const payload = bubbleTemplate.workStatus(attendance);
+      await sendMessage(req, flexMessage(payload));
+    } else {
+      const payload = bubbleTemplate.workCheckIn();
+      await sendMessage(req, flexMessage(payload));
+    }
+  } catch (error) {
+    console.error('Error in handleWorkStatus:', error);
+    const payload = bubbleTemplate.workError('เกิดข้อผิดพลาดในระบบ');
+    await sendMessage(req, flexMessage(payload));
+  }
+};
+
+const handleCheckInMenu = async (req: NextApiRequest) => {
+  const payload = bubbleTemplate.workCheckIn();
+  await sendMessage(req, flexMessage(payload));
+};
+
+const handleWorkAttendanceCommand = async (req: NextApiRequest) => {
+  const userId = req.body.events[0].source.userId;
+  const userAccount = await prisma.account.findFirst({
+    where: { providerAccountId: userId }
+  });
+  
+  if (userAccount) {
+    await handleWorkStatus(req, userAccount.userId);
+  } else {
+    const payload = bubbleTemplate.signIn();
+    await sendMessage(req, flexMessage(payload));
+  }
 };
 
 
