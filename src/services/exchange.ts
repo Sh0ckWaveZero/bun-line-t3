@@ -340,7 +340,7 @@ const getGoldPrice = async (): Promise<any> => {
     const goldJewelryPrices = $('div.divgta.goldshopf td:contains("ทองรูปพรรณ")').parent().children();
     const getGoldJewelryColors = utils.getGoldPricesColors($, goldJewelryPrices);
     const goldTodayChangePrices = $('div.divgta.goldshopf td:contains("วันนี้")').parent().children();
-    const [text, goldChange] = goldTodayChangePrices.eq(0).text().split(' ');
+    const [, goldChange] = goldTodayChangePrices.eq(0).text().split(' ');
     const goldUpdatePrices = $('div.divgta.goldshopf tr td.span.bg-span.txtd.al-r').parent().children();
 
     const goldTodayChange: any = {};

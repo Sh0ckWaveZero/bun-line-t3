@@ -54,7 +54,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile, email, credentials }) {
+    async signIn({ account }) {
       const accountInfo = account as any;
 
       // Update account expiry date

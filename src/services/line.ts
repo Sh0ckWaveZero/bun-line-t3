@@ -78,6 +78,7 @@ const handleLocation = async (req: NextApiRequest, event: any) => {
 
     sendMessage(req, flexMessage(msg));
   } catch (err: any) {
+    console.error('Location handling error:', err);
     replyNotFound(req);
     return;
   }
@@ -337,10 +338,10 @@ const handleCheckIn = async (req: NextApiRequest, userId: string) => {
     const result = await attendanceService.checkIn(userId);
     
     if (result.success && result.checkInTime && result.expectedCheckOutTime) {
-      const payload = bubbleTemplate.workCheckInSuccess(result.checkInTime, result.expectedCheckOutTime);
+            const payload = bubbleTemplate.workCheckInSuccess(result.checkInTime, result.expectedCheckOutTime);
       await sendMessage(req, flexMessage(payload));
     } else if (result.alreadyCheckedIn && result.checkInTime && result.expectedCheckOutTime) {
-      const payload = bubbleTemplate.workAlreadyCheckedIn(result.checkInTime, result.expectedCheckOutTime);
+      const payload = bubbleTemplate.workAlreadyCheckedIn(result.checkInTime);
       await sendMessage(req, flexMessage(payload));
     } else {
       const payload = bubbleTemplate.workError(result.message);

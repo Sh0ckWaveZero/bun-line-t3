@@ -28,13 +28,14 @@ export default function handler(
       return res.status(401).send('Unauthorized' as any);
     }
 
-    // set webhook
+        // set webhook
     if (utils.isEmpty(req?.body?.events)) {
       return res.status(200).json({ message: 'ok' });
     }
 
     return lineService.handleEvent(req, res);
   } catch (error) {
+    console.error('LINE API error:', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
 }

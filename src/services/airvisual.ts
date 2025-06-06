@@ -1,6 +1,6 @@
 import { AqiData } from '~/data/aqi_data';
 import { env } from '~/env.mjs';
-import { WeatherIcon } from "../data/aqi_data";
+import { weatherIcons } from "../data/aqi_data";
 
 const getNearestCity = async (latitude: number, longitude: number): Promise<any> => {
   const url = `http://api.airvisual.com/v2/nearest_city?lat=${latitude}&lon=${longitude}&key=${env.AIRVISUAL_API_KEY}`
@@ -17,7 +17,7 @@ const getNearestCity = async (latitude: number, longitude: number): Promise<any>
 
 const getNearestCityBubble = (location: any) => {
   const aqi = location.data.current.pollution.aqius;
-  const ts = location.data.current.pollution.ts;
+  // const ts = location.data.current.pollution.ts; // Timestamp not currently used
   const city = location.data.city;
   const state = location.data.state;
   const country = location.data.country;
@@ -49,13 +49,14 @@ const getNearestCityBubble = (location: any) => {
       break;
   }
 
-  const dateTime = new Date(ts).toLocaleString('th-TH', {
-    timeZone: 'Asia/Bangkok',
-    hour12: false,
-  });
+  // Date formatting for potential future use
+  // const dateTime = new Date(ts).toLocaleString('th-TH', {
+  //   timeZone: 'Asia/Bangkok',
+  //   hour12: false,
+  // });
 
   const objAqi = AqiData.find((item: any) => item.level === level);
-  const weatherIcon = WeatherIcon.find((item: any) => item.icon === ic);
+  const weatherIcon = weatherIcons.find((item: any) => item.icon === ic);
 
   const bubble = [
     {

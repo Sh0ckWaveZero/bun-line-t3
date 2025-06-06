@@ -1177,7 +1177,7 @@ const workStatus = (attendance: any) => {
   ];
 };
 
-const workAlreadyCheckedIn = (checkInTime: Date, expectedCheckOutTime: Date) => {
+const workAlreadyCheckedIn = (checkInTime: Date) => {
   return workStatus({
     checkInTime,
     status: 'checked_in',

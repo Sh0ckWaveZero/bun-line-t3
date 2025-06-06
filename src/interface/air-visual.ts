@@ -1,4 +1,4 @@
-interface AQIData {
+export interface AQIData {
   level: string;
   backgroundColor: string;
   boxImageColor: string;
@@ -8,8 +8,7 @@ interface AQIData {
   pm25: string;
 }
 
-interface WeatherIcon {
+export interface WeatherIcon {
   icon: string;
   imageUrl: string;
-
 }

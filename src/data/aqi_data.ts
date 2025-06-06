@@ -1,3 +1,5 @@
+import type { AQIData, WeatherIcon } from '../interface/air-visual';
+
 export const AqiData: AQIData[] = [
   {
     level: 'green',
@@ -47,7 +49,7 @@ export const AqiData: AQIData[] = [
 ];
 
 
-export const WeatherIcon: WeatherIcon[] = [
+export const weatherIcons: WeatherIcon[] = [
   {
     icon: '01d',
     imageUrl: 'https://i.ibb.co/JQqz1Qb/01d.png',

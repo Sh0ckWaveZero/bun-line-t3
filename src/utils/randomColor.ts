@@ -35,8 +35,6 @@ export default function randomColor(options: RandomColorOptions = {}): string | 
     seed = null;
   }
 
-  let H: number, S: number, B: number;
-
   if (options.count !== null && options.count !== undefined) {
     const totalColors = options.count;
     const colors: string[] = [];
@@ -61,9 +59,9 @@ export default function randomColor(options: RandomColorOptions = {}): string | 
     return colors;
   }
 
-  H = pickHue(options);
-  S = pickSaturation(H, options as any);
-  B = pickBrightness(H, S, options as any);
+  const H = pickHue(options);
+  const S = pickSaturation(H, options as any);
+  const B = pickBrightness(H, S, options as any);
 
   return setFormat([H, S, B], options as any) as string;
 }
