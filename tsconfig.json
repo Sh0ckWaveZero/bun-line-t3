@@ -24,19 +24,34 @@
     "paths": {
       "~/*": [
         "./src/*"
+      ],
+      "@/features/*": [
+        "./src/features/*"
+      ],
+      "@/lib/*": [
+        "./src/lib/*"
+      ],
+      "@/components/*": [
+        "./src/components/*"
       ]
-    }
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
   "include": [
-    ".eslintrc.cjs",
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
     "**/*.cjs",
     "**/*.mjs",
-    "next.config.mjs"
+    "**/*.ts",
+    "**/*.tsx",
+    ".eslintrc.cjs",
+    "next-env.d.ts",
+    "next.config.mjs",
+    ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
+    "node_modules"
   ]
 }

@@ -1,6 +1,44 @@
-# Create T3 App
+# Bun LINE T3 App
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`, featuring a modern **Feature-Based Architecture**.
+
+## 🚀 Recent Updates
+
+- ✅ **Feature-Based Backend Architecture** - Organized by domain/feature
+- ✅ **App Router** with Server Components (Next.js 15)
+- ✅ **LINE Bot Integration** for attendance tracking
+- ✅ **NextAuth.js** authentication with LINE provider
+- ✅ **Monthly Attendance Reports**
+- ✅ **Real-time Push Notifications**
+- ✅ **TypeScript Path Aliases** for clean imports
+
+## 🏗️ Architecture
+
+### Backend Structure
+```
+src/
+├── features/           # Feature-based modules
+│   ├── attendance/     # Attendance management
+│   ├── auth/          # Authentication
+│   ├── crypto/        # Cryptocurrency features
+│   ├── line/          # LINE Bot integration
+│   └── air-quality/   # Air quality monitoring
+├── lib/               # Shared utilities
+│   ├── auth/         # Authentication utilities
+│   ├── database/     # Database connection
+│   ├── constants/    # Application constants
+│   └── validation/   # Validation utilities
+└── app/api/          # Next.js API routes
+```
+
+For detailed architecture documentation, see [`BACKEND_ARCHITECTURE.md`](./docs/BACKEND_ARCHITECTURE.md)
+
+### Key Features:
+- 🔄 **Scalable Structure** - Easy to add new features
+- 🧩 **Modular Design** - Clear separation of concerns
+- 📦 **Barrel Exports** - Clean import paths
+- 🎯 **TypeScript Strict Mode** - Type safety
+- 🔀 **Path Aliases** - `@/features/*`, `@/lib/*`, `@/components/*`
 
 ## What's next? How do I make an app with this?
 
