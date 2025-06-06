@@ -50,6 +50,30 @@ const checkIn = async (userId: string): Promise<CheckInResult> => {
     });
 
     if (existingAttendance) {
+      // If already checked out, allow check in again by updating the record
+      if (existingAttendance.status === "checked_out") {
+        // Calculate expected check-out time (9 hours later)
+        const expectedCheckOutTime = new Date(checkInTime.getTime() + 9 * 60 * 60 * 1000);
+        
+        // Update existing record with new check-in time
+        await prisma.workAttendance.update({
+          where: { id: existingAttendance.id },
+          data: {
+            checkInTime: checkInTime,
+            checkOutTime: null, // Reset check-out time
+            status: "checked_in"
+          }
+        });
+        
+        return {
+          success: true,
+          message: "ลงชื่อเข้างานสำเร็จ",
+          checkInTime: checkInTime,
+          expectedCheckOutTime: expectedCheckOutTime
+        };
+      }
+      
+      // If still checked in, return already checked in message
       return {
         success: false,
         message: "คุณได้ลงชื่อเข้างานวันนี้แล้ว",
@@ -113,7 +137,9 @@ const checkOut = async (userId: string): Promise<CheckInResult> => {
     if (attendance.status === "checked_out") {
       return {
         success: false,
-        message: "คุณได้ลงชื่อออกงานแล้ว"
+        message: "คุณได้ลงชื่อออกงานแล้ว",
+        checkInTime: attendance.checkInTime,
+        expectedCheckOutTime: attendance.checkOutTime || new Date()
       };
     }
 
