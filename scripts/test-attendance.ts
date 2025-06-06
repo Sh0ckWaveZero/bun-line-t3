@@ -1,8 +1,8 @@
 // Test script for attendance system
 // Run with: npx ts-node scripts/test-attendance.ts
 
-import { attendanceService } from '../src/services/attendance';
-import { prisma } from '../src/server/db';
+import { attendanceService } from '../src/features/attendance/services/attendance';
+import { db } from '../src/lib/database/db';
 
 async function testAttendanceSystem() {
   console.log('🧪 Testing Attendance System...\n');
@@ -57,7 +57,7 @@ async function testAttendanceSystem() {
   } catch (error) {
     console.error('❌ Test failed:', error);
   } finally {
-    await prisma.$disconnect();
+    await db.$disconnect();
   }
 }
 

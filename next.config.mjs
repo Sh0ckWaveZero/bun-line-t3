@@ -10,14 +10,14 @@ const config = {
   reactStrictMode: true,
 
   /**
-   * If you are using `appDir` then you must comment the below `i18n` config out.
+   * App Router is now enabled, i18n config commented out.
    *
    * @see https://github.com/vercel/next.js/issues/41980
    */
-  i18n: {
-    locales: ["en"],
-    defaultLocale: "en",
-  },
+  // i18n: {
+  //   locales: ["en"],
+  //   defaultLocale: "en",
+  // },
   // Allow cross-origin requests from LINE Login domain
   allowedDevOrigins: [
     "*.line-login.midseelee.com"
