@@ -1,30 +1,72 @@
 version: '3.8'
 
+# 🛡️ SECURITY-FIRST Docker Compose สำหรับ Bun + Next.js + Prisma
+# ปรับปรุงตาม Docker Security Best Practices
+
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
+      platforms:
+        - linux/amd64  # Force AMD64 for better performance
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+      target: runner
     container_name: bun-line-t3-app
     ports:
       - "12914:12914"  # ใช้ PORT จาก .env.prod
     env_file:
       - .env.prod
-    restart: unless-stopped
-    # ถ้าต้องการให้ container เข้าถึงไฟล์ใน local (เช่น สำหรับ development)
-    # volumes:
-    #   - .:/app # Mount โค้ดปัจจุบันเข้าไปใน container
-    #   - /app/node_modules # ป้องกันไม่ให้ local node_modules ทับใน container
-    #   - /app/.next
+    restart: unless-stopped    
+    # 🛡️ SECURITY: Health check ที่ปลอดภัยสำหรับตรวจสอบสถานะแอปพลิเคชัน
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:12914/api/health"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 20s  # ให้เวลา Prisma และแอปฯ เริ่มต้น
+    
+    # 🔐 SECURITY: Security และ resource limits
+    security_opt:
+      - no-new-privileges:true
+    read_only: false  # Next.js standalone ต้องเขียนไฟล์ชั่วคราว
+    tmpfs:
+      - /tmp:rw,size=100m,mode=1777
+      - /var/tmp:rw,size=50m,mode=1777
+
+    
+    # 🔐 SECURITY: Network isolation - ใช้ yadom network ที่มีอยู่แล้ว
+    networks:
+      - yadom
 
   cron:
     build:
       context: .
       dockerfile: Dockerfile.cron
+      args:
+        - BUILDKIT_INLINE_CACHE=1
     container_name: bun-line-t3-cron
     env_file:
       - .env.prod
     restart: unless-stopped
+    # 🛡️ SECURITY: รอให้ app service ผ่าน health check ก่อนเริ่ม cron
     depends_on:
       app:
-        condition: service_started # รอให้ app service เริ่มทำงานก่อน (อาจปรับเป็น service_healthy ถ้ามี health check)
+        condition: service_healthy
+    
+    # 🔐 SECURITY: Security สำหรับ cron service
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,size=50m,mode=1777
+
+    # 🔐 SECURITY: Network isolation - ใช้ yadom network ที่มีอยู่แล้ว
+    networks:
+      - yadom
+
+# 🔐 SECURITY: Network configuration สำหรับ Raspberry Pi deployment
+networks:
+  yadom:
+    external: true  # ใช้ network yadom ที่มีอยู่แล้วในระบบ
