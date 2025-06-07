@@ -1,32 +1,41 @@
 # Dockerfile สำหรับ Bun + Next.js + Prisma Production
 # 🛡️ Security-First Docker Build ปรับปรุงจากแนวทางที่ work
 # เลียนแบบ Node.js Alpine pattern แต่ใช้ Bun แทน
+# 🔧 Multi-platform support for ARM64 (Raspberry Pi) และ AMD64
 
 ###################
-# BUILD FOR PRODUCTION
+# BUILD FOR PRODUCTION  
 ###################
-FROM oven/bun:1-alpine AS build
+FROM --platform=$BUILDPLATFORM oven/bun:1-alpine AS build
 
 # 🔐 SECURITY: เพิ่ม metadata สำหรับ container security
 LABEL maintainer="security@company.com" \
       version="1.0" \
-      description="Secure Bun + Next.js + Prisma Production Container" \
+      description="Secure Bun + Next.js + Prisma Production Container (Multi-platform)" \
       org.opencontainers.image.source="https://github.com/your-org/bun-line-t3" \
       org.opencontainers.image.title="Bun LINE T3 App" \
       org.opencontainers.image.description="Secure production container for Bun + Next.js + Prisma application"
+
+# 🔧 Multi-platform build arguments
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
+RUN echo "Building on $BUILDPLATFORM for $TARGETPLATFORM"
 
 WORKDIR /app
 
 # 🔐 SECURITY: ติดตั้ง system packages ที่จำเป็นสำหรับ Prisma และ production
 # ✅ SECURITY: อัปเดต package index ก่อนติดตั้งเพื่อความปลอดภัย
+# 🔧 Multi-platform: ปรับ node-prune installation ให้รองรับ ARM64
 RUN apk update && apk add --no-cache \
     curl \
     bash \
     openssl \
     ca-certificates \
     dumb-init \
-    && curl -sfL https://gobinaries.com/tj/node-prune | bash -s -- -b /usr/local/bin \
     && rm -rf /var/cache/apk/*
+
+# 🔧 Multi-platform: Skip node-prune ใน ARM64 เนื่องจากไม่มี ARM64 binary
+# RUN curl -sfL https://gobinaries.com/tj/node-prune | bash -s -- -b /usr/local/bin || echo "node-prune not available for this platform"
 
 # 🚀 OPTIMIZATION: คัดลอกไฟล์ dependency เพื่อใช้ Docker layer caching
 # ✅ SECURITY: คัดลอก lockfile เพื่อ ensure consistency
@@ -56,8 +65,8 @@ RUN bunx prisma generate \
     && bun run build
 
 # 🚀 OPTIMIZATION: ทำความสะอาดไฟล์ที่ไม่จำเป็น และ reduce attack surface
+# 🔧 Multi-platform: ใช้ manual cleanup แทน node-prune สำหรับ ARM64 compatibility
 RUN bun pm cache rm \
-    && /usr/local/bin/node-prune \
     && rm -rf \
     node_modules/.cache/ \
     node_modules/@prisma/engines/ \
@@ -79,6 +88,10 @@ RUN bun pm cache rm \
 FROM oven/bun:1-alpine AS base
 WORKDIR /app
 
+# 🔧 Multi-platform build arguments for runtime
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
+
 # 🔐 SECURITY: ติดตั้ง runtime dependencies ที่จำเป็น
 # ✅ SECURITY: เพิ่ม dumb-init สำหรับ proper signal handling
 RUN apk update && apk add --no-cache \
@@ -99,6 +112,7 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV BUN_ENV=production
 ENV PORT=12914
+ENV HOSTNAME=0.0.0.0
 
 # 🛡️ SECURITY: สร้างผู้ใช้ non-root สำหรับการรันแอปพลิเคชัน
 RUN addgroup --system --gid 1001 nodejs && \

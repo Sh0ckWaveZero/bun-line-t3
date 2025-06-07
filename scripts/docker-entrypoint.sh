@@ -40,8 +40,14 @@ fi
 
 # 🚀 Start Application
 echo "🚀 Starting Next.js application..."
+
+# 🔧 SECURITY: Force bind to 0.0.0.0 for Docker networking
+export HOSTNAME=0.0.0.0
+export PORT=${PORT:-12914}
+
 if [ -f "server.js" ]; then
     echo "✅ Using Next.js standalone mode"
+    echo "🌐 Binding to $HOSTNAME:$PORT"
     exec node server.js
 else
     echo "⚠️ Fallback to bun start"

@@ -1,8 +1,14 @@
 # Dockerfile.cron
+# 🔧 Multi-platform support for ARM64 (Raspberry Pi) และ AMD64
 
 # ใช้ base image ที่มี cron และ curl (สำหรับเรียก API endpoint)
 # Alpine มีขนาดเล็กและมี cron (busybox-cron)
-FROM alpine:latest
+FROM --platform=$TARGETPLATFORM alpine:latest
+
+# 🔧 Multi-platform build arguments
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
+RUN echo "Building cron service on $BUILDPLATFORM for $TARGETPLATFORM"
 
 # ติดตั้ง curl และ ca-certificates (สำหรับ HTTPS)
 RUN apk add --no-cache curl ca-certificates tzdata

@@ -8,8 +8,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      platforms:
-        - linux/amd64  # Force AMD64 for better performance
       args:
         - BUILDKIT_INLINE_CACHE=1
       target: runner
