@@ -1649,11 +1649,12 @@ const monthlyReportMenu = () => {
               "type": "button",
               "action": {
                 "type": "uri",
-                "label": "ดูรายงานแบบละเอียด",
+                "label": "รายงานแบบละเอียดพร้อมกราฟ",
                 "uri": `${env.NEXTAUTH_URL}/attendance-report`
               },
               "style": "link",
-              "margin": "md"
+              "margin": "md",
+              "color": "#059669"
             }
           ],
           "margin": "xl"
@@ -1793,7 +1794,7 @@ const monthlyReportSummary = (report: any) => {
                 },
                 {
                   "type": "text",
-                  "text": `${(report.totalHoursWorked / Math.max(report.totalDaysWorked, 1)).toFixed(1)} ชม.`,
+                  "text": `${report.averageHoursPerDay.toFixed(1)} ชม.`,
                   "weight": "bold",
                   "size": "xl",
                   "color": "#dc2626"
@@ -1803,6 +1804,32 @@ const monthlyReportSummary = (report: any) => {
             }
           ],
           "margin": "xl"
+        },
+        {
+          "type": "separator",
+          "margin": "xl"
+        },
+        {
+          "type": "box",
+          "layout": "vertical",
+          "contents": [
+            {
+              "type": "text",
+              "text": "อัตราการทำงานครบเวลา",
+              "size": "sm",
+              "color": "#6b7280",
+              "align": "center"
+            },
+            {
+              "type": "text",
+              "text": `${report.complianceRate.toFixed(1)}% (${report.completeDays} วัน ครบ 9 ชม.)`,
+              "weight": "bold",
+              "size": "md",
+              "color": "#0891b2",
+              "align": "center"
+            }
+          ],
+          "margin": "lg"
         }
       ]
     },

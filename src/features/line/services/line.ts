@@ -591,8 +591,16 @@ const handleMonthlyReport = async (req: NextApiRequest, userId: string, monthTyp
     const report = await attendanceService.getMonthlyAttendanceReport(userId, month);
 
     if (report && report.attendanceRecords.length > 0) {
+      // Use enhanced monthly report template with analytical data
       const payload = [bubbleTemplate.monthlyReportSummary(report)];
-      await sendMessage(req, flexMessage(payload));
+      
+      // Add text message about checking detailed graph reports
+      const detailMessage = {
+        type: "text",
+        text: "💡 สามารถดูรายงานแบบละเอียดพร้อมกราฟวิเคราะห์ได้ที่เว็บไซต์ โดยคลิกที่ปุ่ม \"ดูรายละเอียดทั้งหมด\" ด้านล่าง"
+      };
+      
+      await sendMessage(req, [detailMessage, ...flexMessage(payload)]);
     } else {
       const payload = [bubbleTemplate.workError('ไม่พบข้อมูลการเข้างานในเดือนที่เลือก')];
       await sendMessage(req, flexMessage(payload));
