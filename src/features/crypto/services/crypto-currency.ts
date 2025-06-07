@@ -37,6 +37,13 @@ const getCurrencyLogo = async (currencyName: string): Promise<string> => {
       return FALLBACK_ICON_URL;
     }
 
+    // Validate against allowlist of known currency names
+    const ALLOWED_CURRENCY_NAMES = new Set(['BTC', 'ETH', 'BNB', 'ADA', 'DOGE']); // Example allowlist
+    if (!ALLOWED_CURRENCY_NAMES.has(sanitizedCurrencyName)) {
+      console.warn('Currency name not in allowlist:', sanitizedCurrencyName);
+      return FALLBACK_ICON_URL;
+    }
+
     // Validate against CMC first
     const res = await cmcService.findOne(sanitizedCurrencyName);
     
