@@ -31,10 +31,18 @@ COPY --from=deps /app/prisma ./prisma
 # คัดลอกโค้ดที่เหลือของแอปพลิเคชัน
 COPY . .
 
+# คัดลอก .env.prod สำหรับ build time environment variables
+# Next.js ต้องการ environment variables ใน build time สำหรับ validation
+COPY .env.prod .env
+
 # สร้าง Next.js production build
 # BUN_ENV=production เพื่อให้แน่ใจว่า build สำหรับ production
 ENV NODE_ENV=production
 RUN bun run build
+
+# ลบไฟล์ .env หลังจาก build เสร็จเพื่อความปลอดภัย
+# ไฟล์นี้จะไม่ถูกคัดลอกไปยัง runtime stage
+RUN rm -f .env
 
 # ---- Runner Stage ----
 # สร้าง image สุดท้ายที่เล็กและพร้อมสำหรับ production
