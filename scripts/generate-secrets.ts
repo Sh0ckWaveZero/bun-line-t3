@@ -1,5 +1,27 @@
-
 import { randomBytes } from 'crypto';
+
+/**
+ * Select a random character from a string using cryptographically secure random bytes
+ * Uses rejection sampling to avoid modulo bias
+ * @param chars - The character set to select from
+ * @returns A single randomly selected character
+ */
+function selectRandomChar(chars: string): string {
+  const charCount = chars.length;
+  const maxValidValue = Math.floor(256 / charCount) * charCount - 1;
+  
+  let randomByte: number;
+  do {
+    const randomArray = randomBytes(1);
+    randomByte = randomArray[0]!;
+  } while (randomByte > maxValidValue);
+  
+  const selectedChar = chars[randomByte % charCount];
+  if (!selectedChar) {
+    throw new Error('Failed to select random character');
+  }
+  return selectedChar;
+}
 
 /**
  * Generate secure random secrets for environment variables
@@ -16,29 +38,30 @@ function generateBase64Secret(length: number = 32): string {
 }
 
 /**
- * Generate alphanumeric secret
+ * Generate alphanumeric secret with unbiased random selection
+ * Uses rejection sampling to avoid modulo bias
  */
 function generateAlphanumericSecret(length: number = 32): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
-  const randomArray = randomBytes(length);
   
   for (let i = 0; i < length; i++) {
-    const randomByte = randomArray[i];
-    if (randomByte !== undefined) {
-      result += chars[randomByte % chars.length];
-    }
+    result += selectRandomChar(chars);
   }
   
   return result;
 }
 
 /**
- * Generate UUID-like format
+ * Generate UUID-like format using cryptographically secure random numbers
  */
 function generateUuidLikeSecret(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
+  const randomArray = randomBytes(16);
+  
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c, index) {
+    const byteIndex = Math.floor(index / 2);
+    const randomByte = randomArray[byteIndex] || 0;
+    const r = (index % 2 === 0) ? (randomByte >> 4) : (randomByte & 0x0f);
     const v = c === 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });

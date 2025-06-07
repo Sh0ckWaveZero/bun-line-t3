@@ -27,7 +27,7 @@ This application can be deployed on various platforms:
 
 ### Required Services
 
-- **MySQL Database** (8.0+)
+- **MongoDB Database** (5.0+)
   - Production-ready instance
   - Backup strategy configured
   - Connection pooling enabled
@@ -64,7 +64,7 @@ NEXTAUTH_URL=https://your-domain.com
 NEXTAUTH_SECRET=super-secure-random-string-min-32-chars
 
 # Database
-DATABASE_URL=mysql://username:password@host:port/database?sslaccept=strict
+DATABASE_URL=mongodb://username:password@host:port/database?retryWrites=true&w=majority
 
 # LINE Integration
 LINE_CLIENT_ID=your-production-line-client-id
@@ -271,8 +271,8 @@ railway login
 # Create new project
 railway init
 
-# Add MySQL database
-railway add mysql
+# Add MongoDB database
+railway add mongodb
 
 # Set environment variables
 railway variables set NEXTAUTH_SECRET=your-secret
@@ -337,9 +337,9 @@ services:
     value: ${DATABASE_URL}
 
 databases:
-- name: mysql-db
-  engine: MYSQL
-  version: "8"
+- name: mongodb-db
+  engine: MONGODB
+  version: "5.0"
   size: db-s-1vcpu-1gb
 ```
 
@@ -423,24 +423,23 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=mysql://root:password@mysql:3306/bun_line_t3
+      - DATABASE_URL=mongodb://mongodb:27017/bun_line_t3
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - NEXTAUTH_URL=http://localhost:3000
     depends_on:
-      - mysql
+      - mongodb
     
-  mysql:
-    image: mysql:8.0
+  mongodb:
+    image: mongo:5.0
     environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: bun_line_t3
+      MONGO_INITDB_DATABASE: bun_line_t3
     ports:
-      - "3306:3306"
+      - "27017:27017"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mongodb_data:/data/db
 
 volumes:
-  mysql_data:
+  mongodb_data:
 ```
 
 #### 3. Build and Run

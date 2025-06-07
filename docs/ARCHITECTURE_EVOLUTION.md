@@ -160,7 +160,7 @@ The application follows a **Feature-Based Architecture** with clear separation o
 🔧 Technical Foundation
 ├── Next.js 15 App Router    # Modern React framework
 ├── TypeScript               # Type-safe development
-├── Prisma + MySQL           # Database layer
+├── Prisma + MongoDB           # Database layer
 ├── NextAuth.js              # Authentication
 └── Bun Runtime              # Fast JavaScript runtime
 ```
