@@ -7,6 +7,7 @@ const WORKPLACE_POLICIES = {
   WORKING_DAYS: [1, 2, 3, 4, 5] as const,
   
   // Flexible working hours: 08:00 - 11:00 start time
+  // NOTE: Early check-in allowed from 00:01-07:59, recording actual time but setting checkout to 17:00
   EARLIEST_CHECK_IN: { hour: 8, minute: 0 },
   LATEST_CHECK_IN: { hour: 11, minute: 0 },
   
@@ -100,12 +101,12 @@ const isValidCheckInTime = (date: Date): { valid: boolean; message?: string; isE
   const earliestTime = WORKPLACE_POLICIES.EARLIEST_CHECK_IN.hour * 60 + WORKPLACE_POLICIES.EARLIEST_CHECK_IN.minute;
   const latestTime = WORKPLACE_POLICIES.LATEST_CHECK_IN.hour * 60 + WORKPLACE_POLICIES.LATEST_CHECK_IN.minute;
   
-  // Allow check-in from midnight (00:00) to before earliest time (08:00) as early check-in
-  if (hour >= 0 && hour < WORKPLACE_POLICIES.EARLIEST_CHECK_IN.hour) {
+  // Allow check-in from 00:01 to before earliest time (08:00) as early check-in
+  if ((hour === 0 && minute >= 1) || (hour > 0 && hour < WORKPLACE_POLICIES.EARLIEST_CHECK_IN.hour)) {
     return {
       valid: true,
       isEarlyCheckIn: true,
-      message: `ลงชื่อเข้างานล่วงหน้า (บันทึกเวลาตามจริง แต่เลิกงาน 17:00 น.)`
+      message: `ลงชื่อเข้างานช่วงเช้า 00:01-07:59 น. (บันทึกเวลาตามจริง แต่เลิกงาน 17:00 น.)`
     };
   }
   
@@ -312,7 +313,12 @@ const checkIn = async (userId: string): Promise<CheckInResult> => {
     // Create message with early check-in info if applicable
     let message = `ลงชื่อเข้างานสำเร็จ เวลา ${checkInTimeStr} น. (เลิกงาน ${expectedCheckOutStr} น.)`;
     if (timeValidation.isEarlyCheckIn) {
-      message += `\n⏰ มาถึงสำนักงานตั้งแต่ ${checkInTimeStr} น. (เลิกงาน 17:00 น.)`;
+      const hour = actualCheckInTime.getHours();
+      if (hour < 1) {
+        message += `\n⏰ มาถึงสำนักงานหลังเที่ยงคืน ${checkInTimeStr} น. (เลิกงาน 17:00 น.)`;
+      } else {
+        message += `\n⏰ มาถึงสำนักงานตั้งแต่ ${checkInTimeStr} น. (เลิกงาน 17:00 น.)`;
+      }
     }
 
     return {

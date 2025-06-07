@@ -80,7 +80,7 @@ The application follows a **Feature-Based Architecture** with clear separation o
 - **Smart Check-in/Check-out** with automatic work hour calculation
 - **Monthly Reports** with comprehensive analytics
 - **Holiday Integration** with Thai national holidays
-- **Early Check-in** support for flexible schedules
+- **Early Check-in** support for flexible schedules (00:01-07:59)
 - **Real-time Notifications** via LINE push messages
 
 ### 📱 LINE Integration
@@ -282,6 +282,22 @@ docker-compose up -d    # Docker
 
 ---
 
+## 🗓️ แผนงานและการพัฒนา (Roadmap)
+
+### 🎉 ความสำเร็จล่าสุด (มิถุนายน 2025)
+- ✅ **ปรับปรุงระบบลงเวลา**: รองรับการลงเวลาช่วง 00:01-07:59 น. โดยบันทึกเวลาจริงแต่กำหนดเวลาออก 17:00 น.
+- ✅ **แสดงข้อความแจ้งเตือน**: ปรับปรุงข้อความแจ้งเตือนให้ชัดเจนสำหรับการลงเวลาช่วงเช้าตรู่
+
+### 🔮 แผนการพัฒนาต่อไป
+- 📊 **ระบบรายงาน**: รายงานสรุปการทำงานแบบ Real-time และการวิเคราะห์ขั้นสูง
+- 📱 **เพิ่มฟีเจอร์สำหรับ LINE**: เพิ่มคำสั่งใหม่และปรับปรุงประสบการณ์ผู้ใช้
+- 🧠 **ระบบ AI**: นำ AI มาใช้ในการวิเคราะห์พฤติกรรมการทำงานและให้คำแนะนำ
+- 🔒 **ปรับปรุงความปลอดภัย**: เพิ่มการยืนยันตัวตนด้วยใบหน้าและตำแหน่ง GPS
+
+ดูรายละเอียดเพิ่มเติมได้ที่ [แผนการพัฒนาระบบลงเวลา](./ATTENDANCE_SYSTEM.md#การปรับปรุงในอนาคต)
+
+---
+
 ## 🎯 Next Steps
 
 1. **New to the project?** Start with the [README.md](../README.md)
@@ -289,6 +305,7 @@ docker-compose up -d    # Docker
 3. **Deploying to production?** Use the [Deployment Guide](./DEPLOYMENT.md)
 4. **Integrating with APIs?** Check the [API Documentation](./API.md)
 5. **Understanding the system?** Review [Backend Architecture](./BACKEND_ARCHITECTURE.md)
+6. **Planning for the future?** Check [Future Development Plans](./FUTURE_DEVELOPMENT.md)
 
 For specific features or technical details, navigate to the relevant documentation using the links above.
 
