@@ -19,6 +19,8 @@ Complete documentation for the Bun LINE T3 application. This index provides an o
 | Document | Description | Focus Area |
 |----------|-------------|------------|
 | **[🏢 Attendance System](./ATTENDANCE_SYSTEM.md)** | Work attendance management features | LINE Bot, Business Logic |
+| **[⏰ Automated Checkout Reminder](./AUTOMATED_CHECKOUT_REMINDER.md)** | ✅ **Production Ready** - End-of-day checkout notification system | Automation, Notifications |
+| **[🕐 Vercel Cron Setup](./VERCEL_CRON_SETUP.md)** | Vercel Cron Jobs configuration guide | Automation, Deployment |
 | **[💰 Cryptocurrency Tracking](./CRYPTO_TRACKING.md)** | Crypto price monitoring features | Financial Data, APIs |
 | **[🌍 Air Quality Monitoring](./AIR_QUALITY_MONITORING.md)** | Location-based air quality data | Environmental Data, Health |
 | **[📝 LINE Commands (English)](./LINE_COMMANDS.md)** | Complete list of all LINE Bot commands | User Guide, Documentation |

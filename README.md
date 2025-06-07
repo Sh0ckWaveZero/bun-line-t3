@@ -19,6 +19,7 @@ Modern LINE Bot application built with T3 Stack, featuring comprehensive attenda
 ### 🏢 Attendance Management
 - **Smart Check-in/Check-out** - Automatic 9-hour work calculation
 - **Real-time Notifications** - Push notifications for attendance events
+- **Automated Checkout Reminders** - ✅ **Production Ready** - Serverless end-of-day notifications via Vercel Cron Jobs
 - **Monthly Reports** - Comprehensive attendance analytics
 - **Holiday Support** - Thai national holidays integration
 - **Early Check-in** - Flexible early arrival handling
@@ -157,6 +158,8 @@ Comprehensive documentation is available in the `/docs` directory:
 - **[📖 Documentation Index](./docs/INDEX.md)** - Complete documentation overview
 - **[🏗️ Backend Architecture](./docs/BACKEND_ARCHITECTURE.md)** - Detailed system architecture
 - **[🏢 Attendance System](./docs/ATTENDANCE_SYSTEM.md)** - Attendance management features
+- **[⏰ Automated Checkout Reminder](./docs/AUTOMATED_CHECKOUT_REMINDER.md)** - ✅ **Production Ready** - Automated notification system
+- **[🕐 Vercel Cron Setup](./docs/VERCEL_CRON_SETUP.md)** - Vercel Cron Jobs deployment guide
 - **[💰 Cryptocurrency Tracking](./docs/CRYPTO_TRACKING.md)** - Crypto price monitoring features
 - **[🌍 Air Quality Monitoring](./docs/AIR_QUALITY_MONITORING.md)** - Location-based air quality data
 - **[📝 LINE Commands (English)](./docs/LINE_COMMANDS.md)** - Complete list of all LINE Bot commands
