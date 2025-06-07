@@ -94,3 +94,20 @@ model WorkAttendance {
     @@unique([userId, workDate])
     @@map("work_attendance")
 }
+
+model PublicHoliday {
+    id             String   @id @default(auto()) @map("_id") @db.ObjectId
+    date           String   @unique @map("date") // YYYY-MM-DD format
+    nameEnglish    String   @map("name_english")
+    nameThai       String   @map("name_thai")
+    year           Int      @map("year")
+    type           String   @default("national") @map("type") // national, royal, religious, special
+    isActive       Boolean  @default(true) @map("is_active")
+    description    String?  @map("description")
+    createdAt      DateTime @default(now()) @map("created_at")
+    updatedAt      DateTime @updatedAt @map("updated_at")
+
+    @@index([year, isActive])
+    @@index([date, isActive])
+    @@map("public_holidays")
+}

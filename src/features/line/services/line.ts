@@ -215,6 +215,24 @@ const handleCommand = async (command: string, conditions: any[], req: NextApiReq
         await handleWorkStatus(req, statusUserAccount.userId);
       }
       return;
+    case 'ช่วยเหลือ':
+    case 'help':
+    case 'คำสั่ง':
+    case 'commands':
+      await handleHelpCommand(req);
+      return;
+    case 'ช่วยเหลือ':
+    case 'help':
+    case 'คำสั่ง':
+    case 'commands':
+      await handleHelpCommand(req);
+      return;
+    case 'นโยบาย':
+    case 'policy':
+    case 'กฎ':
+    case 'rule':
+      await handlePolicyInfo(req);
+      return;
     default:
       replyNotFound(req);
       return;
@@ -357,12 +375,12 @@ const handlePostback = async (req: NextApiRequest, event: any) => {
       // Check current attendance status before allowing check-in
       const currentAttendance = await attendanceService.getTodayAttendance(userPermission.userId);
       
-      if (currentAttendance) {
-        // If already has attendance record, show current status instead of check-in
+      if (currentAttendance && currentAttendance.status === "checked_in") {
+        // If currently checked in, show current status instead of allowing new check-in
         const payload = bubbleTemplate.workStatus(currentAttendance);
         await sendMessage(req, flexMessage(payload));
       } else {
-        // No attendance record, proceed with check-in
+        // No attendance record OR already checked out, proceed with check-in
         await handleCheckIn(req, userPermission.userId);
       }
       break;
@@ -393,14 +411,30 @@ const handleCheckIn = async (req: NextApiRequest, userId: string) => {
     const result = await attendanceService.checkIn(userId);
 
     if (result.success && result.checkInTime && result.expectedCheckOutTime) {
-      const payload = bubbleTemplate.workCheckInSuccess(result.checkInTime, result.expectedCheckOutTime);
-      await sendMessage(req, flexMessage(payload));
+      // Use special template for early check-in
+      if (result.isEarlyCheckIn && result.actualCheckInTime) {
+        const payload = bubbleTemplate.workCheckInEarlySuccess(
+          result.actualCheckInTime, 
+          result.checkInTime, 
+          result.expectedCheckOutTime
+        );
+        await sendMessage(req, flexMessage(payload));
+      } else {
+        const payload = bubbleTemplate.workCheckInSuccess(result.checkInTime, result.expectedCheckOutTime);
+        await sendMessage(req, flexMessage(payload));
+      }
     } else if (result.alreadyCheckedIn && result.checkInTime && result.expectedCheckOutTime) {
       const payload = bubbleTemplate.workAlreadyCheckedIn(result.checkInTime);
       await sendMessage(req, flexMessage(payload));
     } else {
-      const payload = bubbleTemplate.workError(result.message);
-      await sendMessage(req, flexMessage(payload));
+      // Check if it's a public holiday error message
+      if (result.message.includes('วันหยุดประจำปี')) {
+        const payload = bubbleTemplate.workPublicHoliday(result.message);
+        await sendMessage(req, flexMessage(payload));
+      } else {
+        const payload = bubbleTemplate.workError(result.message);
+        await sendMessage(req, flexMessage(payload));
+      }
     }
   } catch (error) {
     console.error('Error in handleCheckIn:', error);
@@ -578,6 +612,50 @@ const handleReportMenu = async (req: NextApiRequest) => {
     console.error('Error in handleReportMenu:', error);
     const payload = [bubbleTemplate.workError('เกิดข้อผิดพลาดในระบบ')];
     await sendMessage(req, flexMessage(payload));
+  }
+};
+
+const handlePolicyInfo = async (req: NextApiRequest) => {
+  try {
+    const payload = [bubbleTemplate.workplacePolicyInfo()];
+    await sendMessage(req, flexMessage(payload));
+  } catch (error) {
+    console.error('Error in handlePolicyInfo:', error);
+    const payload = [bubbleTemplate.workError('เกิดข้อผิดพลาดในการแสดงนโยบาย')];
+    await sendMessage(req, flexMessage(payload));
+  }
+};
+
+const handleHelpCommand = async (req: NextApiRequest) => {
+  try {
+    // Create a text message with instructions to visit the help page
+    const helpText = {
+      type: "text",
+      text: "📝 ดูคำสั่งทั้งหมดและวิธีใช้งานได้ที่:"
+    };
+    
+    // Create a button template to link to the help page
+    const buttonTemplate = {
+      type: "template",
+      altText: "คำสั่งทั้งหมดและวิธีใช้งาน",
+      template: {
+        type: "buttons",
+        text: "คลิกที่ปุ่มด้านล่างเพื่อดูคำสั่งทั้งหมดและคำอธิบายโดยละเอียด",
+        actions: [
+          {
+            type: "uri",
+            label: "ดูรายการคำสั่งทั้งหมด",
+            uri: `${env.FRONTEND_URL}/help`
+          }
+        ]
+      }
+    };
+    
+    // Send both messages
+    sendMessage(req, [helpText, buttonTemplate]);
+  } catch (error) {
+    console.error("Error handling help command:", error);
+    replyNotFound(req);
   }
 };
 

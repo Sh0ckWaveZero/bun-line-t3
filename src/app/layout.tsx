@@ -1,8 +1,16 @@
 import { type Metadata } from "next";
+import { Prompt } from "next/font/google";
 import Providers from "./providers";
 
 import "~/styles/globals.css";
 import "~/styles/ring.css";
+
+const prompt = Prompt({
+  subsets: ["thai", "latin"],
+  display: "swap",
+  variable: "--font-prompt",
+  weight: ["300", "400", "500", "600", "700"],
+});
 
 export const metadata: Metadata = {
   title: "Bun LINE T3 App",
@@ -16,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="th" className={prompt.variable}>
       <head>
         <meta
           name="theme-color"
@@ -29,7 +37,7 @@ export default function RootLayout({
           content="#2e026d"
         />
       </head>
-      <body>
+      <body className={prompt.className}>
         <Providers>
           {children}
         </Providers>
