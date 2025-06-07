@@ -8,7 +8,8 @@ FROM alpine:latest
 RUN apk add --no-cache curl ca-certificates tzdata
 
 # ตั้งค่า Timezone (สำคัญมากสำหรับ cron jobs)
-# ตรวจสอบให้แน่ใจว่าตรงกับ schedule ใน crontab
+# TZ จะถูกส่งผ่านมาจาก .env.prod ผ่าน docker-compose.yml
+# Default เป็น Asia/Bangkok ถ้าไม่ได้ระบุใน environment
 ENV TZ=Asia/Bangkok
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 

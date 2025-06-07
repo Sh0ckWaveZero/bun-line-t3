@@ -56,8 +56,9 @@ COPY --from=builder /app/package.json ./package.json # Next.js standalone ต้
 # COPY --from=builder /app/prisma ./prisma
 
 # ตั้งค่า PORT (Next.js standalone จะใช้ PORT environment variable)
-ENV PORT 3000
-EXPOSE 3000
+# Default port, จะถูก override ด้วยค่าจาก .env.prod ผ่าน docker-compose
+ENV PORT 12914
+EXPOSE 12914
 
 # คำสั่งสำหรับรันแอปพลิเคชัน
 # ใช้ "bun run start" หรือ "node server.js" ขึ้นอยู่กับ output ของ standalone
