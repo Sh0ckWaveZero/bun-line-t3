@@ -1,0 +1,9 @@
+.prompt-text {
+  font-feature-settings: 'liga' 1;
+  text-rendering: optimizeLegibility;
+  letter-spacing: -0.01em;
+}
+
+.code-text {
+  font-feature-settings: 'tnum' 1;
+}

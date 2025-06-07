@@ -800,10 +800,23 @@ const workCheckIn = () => {
           },
           {
             type: 'text',
-            text: 'กดปุ่มด้านล่างเพื่อลงชื่อเข้างาน ระบบจะคำนวณเวลาเลิกงานให้อัตโนมัติ (9 ชั่วโมงทำงาน)',
+            text: 'นโยบายบริษัท: จันทร์-ศุกร์ เข้างาน 08:00-11:00 น.\nทำงาน 9 ชม./วัน (รวมพักกลางวัน 1 ชม.)',
             wrap: true,
             size: 'sm',
             color: '#666666',
+            align: 'center',
+            margin: 'lg'
+          },
+          {
+            type: 'separator',
+            margin: 'lg'
+          },
+          {
+            type: 'text',
+            text: 'กดปุ่มด้านล่างเพื่อลงชื่อเข้างาน\nระบบจะคำนวณเวลาเลิกงานให้อัตโนมัติ',
+            wrap: true,
+            size: 'sm',
+            color: '#333333',
             align: 'center',
             margin: 'lg'
           }
@@ -990,6 +1003,186 @@ const workCheckInSuccess = (checkInTime: Date, expectedCheckOutTime: Date) => {
               data: 'action=checkout'
             },
             color: '#f44336'
+          }
+        ],
+        paddingAll: '20px'
+      }
+    }
+  ];
+};
+
+const workCheckInEarlySuccess = (actualCheckInTime: Date, recordedCheckInTime: Date, expectedCheckOutTime: Date) => {
+  const actualTimeStr = actualCheckInTime.toLocaleString('th-TH', {
+    timeZone: 'Asia/Bangkok',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+  
+  const recordedTimeStr = recordedCheckInTime.toLocaleString('th-TH', {
+    timeZone: 'Asia/Bangkok',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+  
+  const checkOutTimeStr = expectedCheckOutTime.toLocaleString('th-TH', {
+    timeZone: 'Asia/Bangkok',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  const dateStr = actualCheckInTime.toLocaleString('th-TH', {
+    timeZone: 'Asia/Bangkok',
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  return [
+    {
+      type: 'bubble',
+      size: 'giga',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: '⏰ ลงชื่อเข้างานเร็ว',
+            weight: 'bold',
+            size: 'xl',
+            color: '#ffffff',
+            align: 'center'
+          }
+        ],
+        backgroundColor: '#FF9800',
+        paddingAll: '20px'
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: dateStr,
+            size: 'sm',
+            color: '#666666',
+            align: 'center'
+          },
+          {
+            type: 'separator',
+            margin: 'md'
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            margin: 'lg',
+            spacing: 'sm',
+            contents: [
+              {
+                type: 'box',
+                layout: 'horizontal',
+                contents: [
+                  {
+                    type: 'text',
+                    text: '🚪 มาถึงสำนักงาน:',
+                    size: 'sm',
+                    color: '#555555',
+                    flex: 3
+                  },
+                  {
+                    type: 'text',
+                    text: `${actualTimeStr} น.`,
+                    size: 'sm',
+                    weight: 'bold',
+                    color: '#FF9800',
+                    flex: 2,
+                    align: 'end'
+                  }
+                ]
+              },
+              {
+                type: 'box',
+                layout: 'horizontal',
+                contents: [
+                  {
+                    type: 'text',
+                    text: '⏰ เริ่มนับเวลาทำงาน:',
+                    size: 'sm',
+                    color: '#555555',
+                    flex: 3
+                  },
+                  {
+                    type: 'text',
+                    text: `${recordedTimeStr} น.`,
+                    size: 'sm',
+                    weight: 'bold',
+                    color: '#4CAF50',
+                    flex: 2,
+                    align: 'end'
+                  }
+                ]
+              },
+              {
+                type: 'box',
+                layout: 'horizontal',
+                contents: [
+                  {
+                    type: 'text',
+                    text: '🏁 เลิกงาน:',
+                    size: 'sm',
+                    color: '#555555',
+                    flex: 3
+                  },
+                  {
+                    type: 'text',
+                    text: `${checkOutTimeStr} น.`,
+                    size: 'sm',
+                    weight: 'bold',
+                    color: '#2196F3',
+                    flex: 2,
+                    align: 'end'
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            type: 'separator',
+            margin: 'lg'
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            margin: 'lg',
+            backgroundColor: '#F5F5F5',
+            cornerRadius: '8px',
+            paddingAll: '12px',
+            contents: [
+              {
+                type: 'text',
+                text: '📋 นโยบายบริษัท',
+                size: 'sm',
+                weight: 'bold',
+                color: '#333333',
+                align: 'center'
+              },
+              {
+                type: 'text',
+                text: '• การเข้างานก่อน 08:00 น. จะนับเวลาทำงานตั้งแต่ 08:00 น.',
+                size: 'xs',
+                color: '#666666',
+                wrap: true,
+                margin: 'sm'
+              },
+              {
+                type: 'text',
+                text: '• ทำงาน 9 ชั่วโมง (รวมพักเที่ยง 1 ชั่วโมง)',
+                size: 'xs',
+                color: '#666666',
+                wrap: true
+              }
+            ]
           }
         ],
         paddingAll: '20px'
@@ -1632,6 +1825,214 @@ const monthlyReportSummary = (report: any) => {
   };
 };
 
+const workplacePolicyInfo = () => {
+  return {
+    type: 'bubble',
+    size: 'giga',
+    header: {
+      type: 'box',
+      layout: 'vertical',
+      contents: [
+        {
+          type: 'text',
+          text: '📋 นโยบายการทำงานบริษัท',
+          weight: 'bold',
+          size: 'xl',
+          color: '#ffffff',
+          align: 'center'
+        }
+      ],
+      backgroundColor: '#1e40af',
+      paddingAll: '20px'
+    },
+    body: {
+      type: 'box',
+      layout: 'vertical',
+      contents: [
+        {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'text',
+              text: '1. การเข้าสำนักงาน',
+              weight: 'bold',
+              size: 'md',
+              color: '#1e40af',
+              margin: 'md'
+            },
+            {
+              type: 'text',
+              text: '• จันทร์ ถึง ศุกร์ (5 วันต่อสัปดาห์)\n• ทุกกลุ่มงานและทุกระดับงาน',
+              wrap: true,
+              size: 'sm',
+              color: '#374151',
+              margin: 'sm'
+            }
+          ]
+        },
+        {
+          type: 'separator',
+          margin: 'lg'
+        },
+        {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'text',
+              text: '2. เวลาทำงาน',
+              weight: 'bold',
+              size: 'md',
+              color: '#1e40af',
+              margin: 'md'
+            },
+            {
+              type: 'text',
+              text: '• รวม 9 ชั่วโมงต่อวัน (รวมพักกลางวัน 1 ชม.)\n• เวลาปฏิบัติงานจริง 8 ชั่วโมงต่อวัน\n• เวลาเข้างานยืดหยุ่น: 08:00 - 11:00 น.',
+              wrap: true,
+              size: 'sm',
+              color: '#374151',
+              margin: 'sm'
+            }
+          ]
+        },
+        {
+          type: 'separator',
+          margin: 'lg'
+        },
+        {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'text',
+              text: '3. การบันทึกเวลา',
+              weight: 'bold',
+              size: 'md',
+              color: '#1e40af',
+              margin: 'md'
+            },
+            {
+              type: 'text',
+              text: '• บันทึกเข้า-ออกงานที่เครื่องบันทึกเวลา\n• หน้าประตูทางเข้า-ออก (ประตูใหญ่)\n• ระบบนับ 9 ชั่วโมงรวมพัก 1 ชั่วโมง',
+              wrap: true,
+              size: 'sm',
+              color: '#374151',
+              margin: 'sm'
+            }
+          ]
+        }
+      ],
+      paddingAll: '20px'
+    },
+    footer: {
+      type: 'box',
+      layout: 'vertical',
+      contents: [
+        {
+          type: 'button',
+          style: 'primary',
+          action: {
+            type: 'postback',
+            label: '📝 ลงชื่อเข้างาน',
+            data: 'action=checkin_menu'
+          },
+          color: '#1e40af'
+        }
+      ],
+      paddingAll: '20px'
+    }
+  };
+};
+
+const workPublicHoliday = (holidayMessage: string) => {
+  return [
+    {
+      type: 'bubble',
+      size: 'giga',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: '🗓️ วันหยุดประจำปี',
+            weight: 'bold',
+            size: 'xl',
+            color: '#ffffff',
+            align: 'center'
+          },
+          {
+            type: 'text',
+            text: 'Public Holiday',
+            size: 'sm',
+            color: '#ffffff',
+            align: 'center',
+            margin: 'xs'
+          }
+        ],
+        backgroundColor: '#ff9800',
+        paddingAll: '20px'
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: holidayMessage,
+            wrap: true,
+            size: 'md',
+            align: 'center',
+            margin: 'md',
+            color: '#ff9800',
+            weight: 'bold'
+          },
+          {
+            type: 'separator',
+            margin: 'xl'
+          },
+          {
+            type: 'text',
+            text: '📅 วันทำงาน: จันทร์ - ศุกร์',
+            size: 'sm',
+            color: '#666666',
+            align: 'center',
+            margin: 'lg'
+          },
+          {
+            type: 'text',
+            text: '⏰ เวลาทำงาน: 08:00 - 17:00 น.',
+            size: 'sm',
+            color: '#666666',
+            align: 'center'
+          }
+        ],
+        paddingAll: '20px'
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'sm',
+        contents: [
+          {
+            type: 'button',
+            style: 'secondary',
+            action: {
+              type: 'postback',
+              label: '📋 ดูนโยบายการทำงาน',
+              data: 'action=work_policy'
+            },
+            color: '#ff9800'
+          }
+        ],
+        paddingAll: '20px'
+      }
+    }
+  ];
+};
+
 export const bubbleTemplate = {
   lottery,
   cryptoCurrency,
@@ -1640,10 +2041,13 @@ export const bubbleTemplate = {
   notFound,
   workCheckIn,
   workCheckInSuccess,
+  workCheckInEarlySuccess,
   workStatus,
   workAlreadyCheckedIn,
   workCheckOutSuccess,
   workError,
   monthlyReportMenu,
   monthlyReportSummary,
+  workplacePolicyInfo,
+  workPublicHoliday
 };

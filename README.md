@@ -1,66 +1,272 @@
-# Bun LINE T3 App
+# 🚀 Bun LINE T3 App
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`, featuring a modern **Feature-Based Architecture**.
+Modern LINE Bot application built with T3 Stack, featuring comprehensive attendance management, cryptocurrency tracking, and air quality monitoring.
 
-## 🚀 Recent Updates
+## 📋 Table of Contents
 
-- ✅ **Feature-Based Backend Architecture** - Organized by domain/feature
-- ✅ **App Router** with Server Components (Next.js 15)
-- ✅ **LINE Bot Integration** for attendance tracking
-- ✅ **NextAuth.js** authentication with LINE provider
-- ✅ **Monthly Attendance Reports**
-- ✅ **Real-time Push Notifications**
-- ✅ **TypeScript Path Aliases** for clean imports
+- [🌟 Features](#-features)
+- [🏗️ Architecture](#️-architecture)
+- [🚀 Quick Start](#-quick-start)
+- [⚙️ Configuration](#️-configuration)
+- [📚 Documentation](#-documentation)
+- [🛠️ Development](#️-development)
+- [🔧 Tech Stack](#-tech-stack)
+- [📦 Scripts](#-scripts)
+- [🤝 Contributing](#-contributing)
+
+## 🌟 Features
+
+### 🏢 Attendance Management
+- **Smart Check-in/Check-out** - Automatic 9-hour work calculation
+- **Real-time Notifications** - Push notifications for attendance events
+- **Monthly Reports** - Comprehensive attendance analytics
+- **Holiday Support** - Thai national holidays integration
+- **Early Check-in** - Flexible early arrival handling
+
+### 💰 Cryptocurrency Tracking
+- **Real-time Prices** - Live cryptocurrency market data
+- **Multiple Exchanges** - Support for various trading platforms
+- **Price Alerts** - Customizable notification system
+
+### 🌍 Air Quality Monitoring
+- **Real-time AQI** - Air quality index tracking
+- **Location-based** - Area-specific air quality data
+- **Health Recommendations** - Personalized suggestions based on AQI
+
+### 🔐 Authentication & Security
+- **LINE OAuth** - Seamless LINE account integration
+- **NextAuth.js** - Secure session management
+- **Type Safety** - Full TypeScript implementation
 
 ## 🏗️ Architecture
 
-### Backend Structure
+This project follows a **Feature-Based Architecture** pattern for scalability and maintainability.
+
 ```
 src/
-├── features/           # Feature-based modules
-│   ├── attendance/     # Attendance management
-│   ├── auth/          # Authentication
-│   ├── crypto/        # Cryptocurrency features
-│   ├── line/          # LINE Bot integration
-│   └── air-quality/   # Air quality monitoring
-├── lib/               # Shared utilities
-│   ├── auth/         # Authentication utilities
-│   ├── database/     # Database connection
-│   ├── constants/    # Application constants
-│   └── validation/   # Validation utilities
-└── app/api/          # Next.js API routes
+├── features/              # Domain-driven feature modules
+│   ├── attendance/        # 🏢 Work attendance management
+│   ├── auth/             # 🔐 Authentication & user management
+│   ├── crypto/           # 💰 Cryptocurrency tracking
+│   ├── line/             # 📱 LINE Bot integration
+│   └── air-quality/      # 🌍 Air quality monitoring
+├── lib/                  # 🔧 Shared utilities & configurations
+│   ├── auth/            # Authentication utilities
+│   ├── database/        # Database connection & queries
+│   ├── constants/       # Application constants
+│   └── validation/      # Input validation schemas
+├── app/                 # 🌐 Next.js App Router
+│   ├── api/            # API routes
+│   └── (pages)/        # Application pages
+└── components/          # 🎨 Reusable UI components
 ```
+
+### 🔄 Key Architecture Principles
+
+- **Domain Separation** - Each feature is self-contained
+- **Barrel Exports** - Clean import paths with index files
+- **Type Safety** - Strict TypeScript throughout
+- **Server Components** - Next.js 15 RSC optimization
+- **Path Aliases** - Clean imports with `@/` prefix
 
 For detailed architecture documentation, see [`BACKEND_ARCHITECTURE.md`](./docs/BACKEND_ARCHITECTURE.md)
 
-### Key Features:
-- 🔄 **Scalable Structure** - Easy to add new features
-- 🧩 **Modular Design** - Clear separation of concerns
-- 📦 **Barrel Exports** - Clean import paths
-- 🎯 **TypeScript Strict Mode** - Type safety
-- 🔀 **Path Aliases** - `@/features/*`, `@/lib/*`, `@/components/*`
+## 🚀 Quick Start
 
-## What's next? How do I make an app with this?
+### Prerequisites
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+- **Bun** >= 1.0.0
+- **Node.js** >= 18.0.0
+- **MySQL** database
+- **LINE Developer Account**
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+### Installation
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd bun-line-t3
+   ```
 
-## Learn More
+2. **Install dependencies**
+   ```bash
+   bun install
+   ```
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+3. **Environment setup**
+   ```bash
+   cp .env.example .env
+   # Configure your environment variables (see Configuration section)
+   ```
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+4. **Database setup**
+   ```bash
+   bun run db:push
+   ```
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+5. **Start development server**
+   ```bash
+   bun run dev
+   ```
 
-## How do I deploy this?
+The application will be available at `https://localhost:4325`
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+## ⚙️ Configuration
+
+### Environment Variables
+
+Create a `.env` file with the following variables:
+
+```env
+# Database
+DATABASE_URL="mysql://user:password@localhost:3306/bun_line_t3"
+
+# NextAuth.js
+NEXTAUTH_SECRET="your-secret-key"
+NEXTAUTH_URL="https://localhost:4325"
+
+# LINE Integration
+LINE_CLIENT_ID="your-line-client-id"
+LINE_CLIENT_SECRET="your-line-client-secret"
+LINE_CHANNEL_SECRET="your-line-channel-secret"
+LINE_CHANNEL_ACCESS="your-line-channel-access-token"
+LINE_MESSAGING_API="https://api.line.me/v2/bot"
+
+# Application
+APP_ENV="development"
+FRONTEND_URL="https://localhost:4325"
+JWT_EXPIRES_IN="1d"
+
+# External APIs
+CMC_URL="https://pro-api.coinmarketcap.com"
+CMC_API_KEY="your-coinmarketcap-api-key"
+AIRVISUAL_API_KEY="your-airvisual-api-key"
+```
+
+### LINE Bot Setup
+
+1. Create a LINE Channel in [LINE Developers Console](https://developers.line.biz/)
+2. Enable Messaging API
+3. Set webhook URL to `https://your-domain.com/api/line`
+4. Configure OAuth settings for login functionality
+
+## 📚 Documentation
+
+Comprehensive documentation is available in the `/docs` directory:
+
+- **[📖 Documentation Index](./docs/INDEX.md)** - Complete documentation overview
+- **[🏗️ Backend Architecture](./docs/BACKEND_ARCHITECTURE.md)** - Detailed system architecture
+- **[🏢 Attendance System](./docs/ATTENDANCE_SYSTEM.md)** - Attendance management features
+- **[💰 Cryptocurrency Tracking](./docs/CRYPTO_TRACKING.md)** - Crypto price monitoring features
+- **[🌍 Air Quality Monitoring](./docs/AIR_QUALITY_MONITORING.md)** - Location-based air quality data
+- **[📝 LINE Commands (English)](./docs/LINE_COMMANDS.md)** - Complete list of all LINE Bot commands
+- **[📝 LINE Commands (Thai)](./docs/LINE_COMMANDS_THAI.md)** - คำสั่งทั้งหมดของ LINE Bot (ภาษาไทย)
+- **[🛠️ Development Guide](./docs/DEVELOPMENT.md)** - Development best practices
+- **[🔒 Security](./docs/SECURITY.md)** - Security considerations
+- **[📊 Monthly Reports](./docs/MONTHLY_REPORT_FEATURE.md)** - Reporting system
+- **[🏗️ Architecture Evolution](./docs/ARCHITECTURE_EVOLUTION.md)** - Project architecture history
+- **[⏰ Early Check-in](./docs/EARLY_CHECKIN_IMPLEMENTATION.md)** - Early arrival handling
+
+## 🛠️ Development
+
+### Code Style & Standards
+
+- **TypeScript Strict Mode** - Full type safety
+- **ESLint + Prettier** - Code formatting and linting
+- **Functional Programming** - Declarative code patterns
+- **React 19** - Latest React features with RSC
+- **Next.js 15** - App Router with async components
+
+### Development Commands
+
+```bash
+# Development server
+bun run dev
+
+# Type checking
+bun run type-check
+
+# Linting
+bun run lint
+
+# Database operations
+bun run db:push          # Push schema changes
+bun run db:studio        # Open Prisma Studio
+bun run seed:holidays    # Seed holiday data
+```
+
+### Testing
+
+```bash
+# Run test script
+bun run scripts/test-attendance.ts
+```
+
+## 🔧 Tech Stack
+
+### Core Framework
+- **[Next.js 15](https://nextjs.org)** - React framework with App Router
+- **[React 19](https://react.dev)** - Latest React with Server Components
+- **[TypeScript](https://typescriptlang.org)** - Type-safe JavaScript
+- **[Bun](https://bun.sh)** - Fast JavaScript runtime and package manager
+
+### Database & ORM
+- **[Prisma](https://prisma.io)** - Type-safe database toolkit
+- **[MySQL](https://mysql.com)** - Relational database
+
+### Authentication
+- **[NextAuth.js](https://next-auth.js.org)** - Authentication library
+- **[LINE Login](https://developers.line.biz/en/docs/line-login/)** - LINE OAuth provider
+
+### Styling & UI
+- **[Tailwind CSS](https://tailwindcss.com)** - Utility-first CSS framework
+- **[PostCSS](https://postcss.org)** - CSS transformation tool
+
+### Development Tools
+- **[ESLint](https://eslint.org)** - Code linting
+- **[Prettier](https://prettier.io)** - Code formatting
+- **[Zod](https://zod.dev)** - Schema validation
+
+### External APIs
+- **[LINE Messaging API](https://developers.line.biz/en/services/messaging-api/)** - Bot messaging
+- **[CoinMarketCap API](https://coinmarketcap.com/api/)** - Cryptocurrency data
+- **[AirVisual API](https://www.iqair.com/air-pollution-data-api)** - Air quality data
+
+## 📦 Scripts
+
+| Script | Description |
+|--------|-------------|
+| `bun run dev` | Start development server on port 4325 |
+| `bun run build` | Build production application |
+| `bun run start` | Start production server |
+| `bun run lint` | Run ESLint code analysis |
+| `bun run db:push` | Push Prisma schema to database |
+| `bun run seed:holidays` | Seed Thai holiday data for 2025 |
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our contributing guidelines:
+
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
+4. **Push** to the branch (`git push origin feature/amazing-feature`)
+5. **Open** a Pull Request
+
+### Development Workflow
+
+1. Follow the existing code style and architecture patterns
+2. Add TypeScript types for all new features
+3. Update documentation for significant changes
+4. Test your changes thoroughly
+5. Ensure all linting passes
+
+## 📄 License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+**Built with ❤️ using T3 Stack and modern web technologies**
+
+For more information, visit our [documentation](./docs/) or contact the development team.

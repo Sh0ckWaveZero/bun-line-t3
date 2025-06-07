@@ -1,14 +1,15 @@
 import { type Metadata } from "next";
-import { Noto_Sans_Thai } from "next/font/google";
+import { Prompt } from "next/font/google";
 import Providers from "./providers";
 
 import "~/styles/globals.css";
 import "~/styles/ring.css";
 
-const notoSansThai = Noto_Sans_Thai({
+const prompt = Prompt({
   subsets: ["thai", "latin"],
   display: "swap",
-  variable: "--font-noto-sans-thai",
+  variable: "--font-prompt",
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -23,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="th" className={notoSansThai.variable}>
+    <html lang="th" className={prompt.variable}>
       <head>
         <meta
           name="theme-color"
@@ -36,7 +37,7 @@ export default function RootLayout({
           content="#2e026d"
         />
       </head>
-      <body className={notoSansThai.className}>
+      <body className={prompt.className}>
         <Providers>
           {children}
         </Providers>

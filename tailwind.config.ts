@@ -5,7 +5,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-noto-sans-thai)", "system-ui", "sans-serif"],
+        sans: ["var(--font-prompt)", "system-ui", "sans-serif"],
       },
     },
   },
