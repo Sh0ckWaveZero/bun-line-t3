@@ -48,37 +48,60 @@ const getCurrencyLogo = async (currencyName: string): Promise<string> => {
       }
     }
 
-    // 🛡️ SECURITY: Use allowlist approach for external requests
-    const logoBaseUrl = 'https://lcw.nyc3.cdn.digitaloceanspaces.com';
-    const logoPath = `/production/currencies/64/${sanitizedCurrencyName.toLowerCase()}.webp`;
-    const fullUrl = `${logoBaseUrl}${logoPath}`;
+    // 🛡️ SECURITY: Use predefined URL patterns to prevent SSRF
+    const SAFE_URL_PATTERNS = {
+      'lcw': (currency: string) => `https://lcw.nyc3.cdn.digitaloceanspaces.com/production/currencies/64/${currency.toLowerCase()}.webp`,
+      'generic': () => FALLBACK_ICON_URL
+    };
     
-    // 🔒 SECURITY: Validate URL before making request
-    const url = new URL(fullUrl);
+    // 🔒 SECURITY: Generate URL using safe pattern only
+    const safeUrl = SAFE_URL_PATTERNS.lcw(sanitizedCurrencyName);
+    
+    // 🛡️ SECURITY: Double-check URL is still in allowlist
+    const url = new URL(safeUrl);
     if (!ALLOWED_HOSTS.has(url.hostname)) {
-      console.warn(`Blocked request to unauthorized host: ${url.hostname}`);
+      console.warn('Generated URL hostname not in allowlist');
       return FALLBACK_ICON_URL;
     }
     
-    // 🛡️ SECURITY: Make request with timeout and size limits
+    // 🔒 SECURITY: Additional URL validation - ensure path matches expected pattern
+    const expectedPathPattern = /^\/production\/currencies\/64\/[a-z0-9]{1,10}\.webp$/;
+    if (!expectedPathPattern.test(url.pathname)) {
+      console.warn('Generated URL path does not match expected pattern');
+      return FALLBACK_ICON_URL;
+    }
+    
+    // 🛡️ SECURITY: Make request with strict controls
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
     
-    const response = await fetch(fullUrl, {
-      signal: controller.signal,
-      headers: {
-        'User-Agent': 'CryptoApp/1.0'
+    try {
+      const response = await fetch(safeUrl, {
+        signal: controller.signal,
+        method: 'GET', // Explicitly set to GET only
+        headers: {
+          'User-Agent': 'CryptoApp/1.0',
+          'Accept': 'image/webp,image/*,*/*;q=0.8'
+        },
+        redirect: 'error', // Don't follow redirects to prevent redirect-based attacks
+        referrerPolicy: 'no-referrer'
+      });
+      
+      clearTimeout(timeoutId);
+      
+      // 🔒 SECURITY: Strict response validation
+      if (response.ok && 
+          response.status === 200 &&
+          response.headers.get('content-type')?.startsWith('image/') &&
+          response.url === safeUrl) { // Ensure no redirects occurred
+        return response.url;
       }
-    });
-    
-    clearTimeout(timeoutId);
-    
-    // 🔒 SECURITY: Validate response
-    if (response.ok && response.headers.get('content-type')?.startsWith('image/')) {
-      return response.url;
+      
+      return FALLBACK_ICON_URL;
+      
+    } finally {
+      clearTimeout(timeoutId);
     }
-    
-    return FALLBACK_ICON_URL;
     
   } catch (error) {
     // 🔒 SECURITY: Don't leak sensitive information in logs
