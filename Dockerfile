@@ -46,23 +46,30 @@ COPY prisma ./prisma
 
 # 🚀 OPTIMIZATION: ติดตั้ง dependencies โดยไม่รัน postinstall script
 # ✅ SECURITY: ใช้ dependencies ทั้งหมดสำหรับ build stage
-RUN bun install --frozen-lockfile --ignore-scripts
+# 🔧 RASPBERRY PI: ลด memory usage และ parallel jobs
+RUN NODE_OPTIONS="--max_old_space_size=1536" bun install --frozen-lockfile --ignore-scripts
 
 # 🚀 OPTIMIZATION: Generate Prisma Client แยกต่างหาก
-RUN bunx prisma generate
+# 🔧 RASPBERRY PI: จำกัด memory สำหรับ Prisma generation
+RUN NODE_OPTIONS="--max_old_space_size=1024" bunx prisma generate
 
 # 🔐 SECURITY: คัดลอกไฟล์ที่จำเป็นทั้งหมด
 COPY . .
 
 # 🔐 SECURITY: ตั้งค่า Prisma สำหรับ production build
+# 🔧 RASPBERRY PI OPTIMIZATION: ตั้งค่า memory limits สำหรับ Node.js
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV CI=true
 ENV SKIP_ENV_VALIDATION=true
+ENV NODE_OPTIONS="--max_old_space_size=1536"
 
 # 🚀 OPTIMIZATION: Generate Prisma Client และ build Next.js
-RUN bunx prisma generate \
-    && bun run build
+# 🔧 RASPBERRY PI: แยก commands เพื่อลด memory peak usage
+RUN NODE_OPTIONS="--max_old_space_size=1024" bunx prisma generate
+
+# 🔧 RASPBERRY PI: Build Next.js แยกต่างหาก เพื่อลด memory usage
+RUN NODE_OPTIONS="--max_old_space_size=1536" bun run build
 
 # 🚀 OPTIMIZATION: ทำความสะอาดไฟล์ที่ไม่จำเป็น และ reduce attack surface
 # 🔧 Multi-platform: ใช้ manual cleanup แทน node-prune สำหรับ ARM64 compatibility
