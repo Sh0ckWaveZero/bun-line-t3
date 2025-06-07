@@ -532,6 +532,33 @@ const getWorkingDaysInMonth = async (year: number, month: number): Promise<numbe
   return workingDays;
 };
 
+/**
+ * Finds all users who checked in today but haven't checked out yet
+ * @returns Array of user IDs who need checkout reminders
+ */
+const getUsersWithPendingCheckout = async (): Promise<string[]> => {
+  try {
+    const todayDate = getTodayDateString();
+    
+    // Get all attendance records for today with status "checked_in"
+    const pendingCheckouts = await db.workAttendance.findMany({
+      where: {
+        workDate: todayDate,
+        status: "checked_in",
+      },
+      select: {
+        userId: true
+      }
+    });
+    
+    // Extract just the user IDs
+    return pendingCheckouts.map(record => record.userId);
+  } catch (error) {
+    console.error('Error finding users with pending checkouts:', error);
+    return [];
+  }
+};
+
 // Debug function to check current time and validation
 const debugTimeValidation = () => {
   const currentTime = getCurrentBangkokTime();
@@ -570,5 +597,6 @@ export const attendanceService = {
   getWorkingDaysInMonth,
   getCurrentBangkokTime,
   debugTimeValidation,
-  WORKPLACE_POLICIES
+  WORKPLACE_POLICIES,
+  getUsersWithPendingCheckout
 };

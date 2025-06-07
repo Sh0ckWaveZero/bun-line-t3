@@ -4,6 +4,34 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useSession, signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Tooltip,
+  Legend,
+  Filler
+} from 'chart.js';
+import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import { format } from 'date-fns';
+import { th } from 'date-fns/locale';
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Tooltip,
+  Legend,
+  Filler
+);
 
 interface AttendanceRecord {
   id: string;
@@ -22,6 +50,9 @@ interface MonthlyAttendanceReport {
   attendanceRecords: AttendanceRecord[];
   workingDaysInMonth: number;
   attendanceRate: number;
+  complianceRate: number; // percentage of days with full 9-hour work
+  averageHoursPerDay: number;
+  completeDays: number; // number of days with complete 9-hour work
 }
 
 export default function AttendanceReportPage() {
@@ -164,6 +195,114 @@ export default function AttendanceReportPage() {
     }
   };
 
+  // Helper functions for chart data
+  const prepareHoursChartData = (records: AttendanceRecord[]) => {
+    const sortedRecords = [...records].sort((a, b) => 
+      new Date(a.workDate).getTime() - new Date(b.workDate).getTime()
+    );
+    
+    return {
+      labels: sortedRecords.map(record => formatShortDate(record.workDate)),
+      datasets: [
+        {
+          label: 'ชั่วโมงทำงาน',
+          data: sortedRecords.map(record => record.hoursWorked || 0),
+          fill: true,
+          backgroundColor: 'rgba(59, 130, 246, 0.2)',
+          borderColor: 'rgb(59, 130, 246)',
+          tension: 0.1
+        },
+        {
+          label: 'เป้าหมาย (9 ชม.)',
+          data: sortedRecords.map(() => 9), // 9 hours target line
+          borderColor: 'rgba(249, 115, 22, 0.5)',
+          borderWidth: 2,
+          borderDash: [5, 5],
+          fill: false,
+          pointRadius: 0
+        }
+      ]
+    };
+  };
+
+  const prepareAttendanceDonutData = (report: MonthlyAttendanceReport) => {
+    return {
+      labels: ['มาทำงาน', 'ขาดงาน'],
+      datasets: [
+        {
+          data: [report.totalDaysWorked, report.workingDaysInMonth - report.totalDaysWorked],
+          backgroundColor: ['rgb(34, 197, 94)', 'rgb(239, 68, 68)'],
+          hoverOffset: 4
+        }
+      ]
+    };
+  };
+
+  const prepareComplianceDonutData = (report: MonthlyAttendanceReport) => {
+    return {
+      labels: ['ทำงานครบ 9 ชม.', 'ทำงานไม่ครบ 9 ชม.'],
+      datasets: [
+        {
+          data: [report.completeDays, report.totalDaysWorked - report.completeDays],
+          backgroundColor: ['rgb(124, 58, 237)', 'rgb(249, 115, 22)'],
+          hoverOffset: 4
+        }
+      ]
+    };
+  };
+
+  const prepareDailyHoursBarData = (records: AttendanceRecord[]) => {
+    // Group by day of week and calculate average hours
+    const dayMap = new Map<number, {total: number, count: number}>();
+    
+    records.forEach(record => {
+      if (record.hoursWorked) {
+        const date = new Date(record.workDate);
+        const day = date.getDay(); // 0 = Sunday, 1 = Monday, ...
+        
+        if (!dayMap.has(day)) {
+          dayMap.set(day, {total: 0, count: 0});
+        }
+        
+        const current = dayMap.get(day)!;
+        current.total += record.hoursWorked;
+        current.count += 1;
+      }
+    });
+    
+    // Create array of day names in correct order (Monday first for Thai localization)
+    const dayNames = ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์', 'อาทิตย์'];
+    const dayOrder = [1, 2, 3, 4, 5, 6, 0]; // Monday first
+    
+    const labels = [];
+    const data = [];
+    
+    for (const dayIndex of dayOrder) {
+      labels.push(dayNames[dayIndex === 0 ? 6 : dayIndex - 1]); // Convert to 0-indexed for array
+      
+      const dayData = dayMap.get(dayIndex);
+      const avgHours = dayData ? dayData.total / dayData.count : 0;
+      data.push(avgHours);
+    }
+    
+    return {
+      labels,
+      datasets: [
+        {
+          label: 'ชั่วโมงทำงานเฉลี่ยตามวัน',
+          data,
+          backgroundColor: 'rgba(124, 58, 237, 0.7)',
+          borderRadius: 5
+        }
+      ]
+    };
+  };
+  
+  const formatShortDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return format(date, 'd MMM', { locale: th });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
@@ -222,7 +361,7 @@ export default function AttendanceReportPage() {
           {report && !loading && (
             <>
               {/* Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <h3 className="text-sm font-medium text-blue-600">วันที่ทำงาน</h3>
                   <p className="text-2xl font-bold text-blue-900">{report.totalDaysWorked}</p>
@@ -239,65 +378,185 @@ export default function AttendanceReportPage() {
                 </div>
                 <div className="bg-orange-50 p-4 rounded-lg">
                   <h3 className="text-sm font-medium text-orange-600">ชั่วโมงเฉลี่ย/วัน</h3>
-                  <p className="text-2xl font-bold text-orange-900">
-                    {report.totalDaysWorked > 0 ? (report.totalHoursWorked / report.totalDaysWorked).toFixed(1) : '0'}
-                  </p>
+                  <p className="text-2xl font-bold text-orange-900">{report.averageHoursPerDay.toFixed(1)}</p>
                   <p className="text-xs text-orange-600">ชั่วโมง</p>
+                </div>
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <h3 className="text-sm font-medium text-purple-600">อัตราการทำงานครบเวลา</h3>
+                  <p className="text-2xl font-bold text-purple-900">{report.complianceRate.toFixed(1)}%</p>
+                  <p className="text-xs text-purple-600">{report.completeDays} วัน ครบ 9 ชม.</p>
                 </div>
               </div>
 
               {/* Attendance Records Table */}
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        วันที่
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        เวลาเข้างาน
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        เวลาออกงาน
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        ชั่วโมงทำงาน
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        สถานะ
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {report.attendanceRecords.map((record) => (
-                      <tr key={record.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {formatDate(record.workDate)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {formatTime(record.checkInTime)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {record.checkOutTime ? formatTime(record.checkOutTime) : '-'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {formatHours(record.hoursWorked)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(record.status)}`}>
-                            {getStatusText(record.status)}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              {/* Charts */}
+              <div className="mb-8">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">กราฟวิเคราะห์การทำงาน</h2>
                 
-                {report.attendanceRecords.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    ไม่มีข้อมูลการเข้างานในเดือนนี้
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                  {/* Hours worked per day chart */}
+                  <div className="bg-white rounded-lg shadow p-4">
+                    <h3 className="text-sm font-medium text-gray-600 mb-4">ชั่วโมงทำงานรายวัน</h3>
+                    <div className="h-64">
+                      {report.attendanceRecords.length > 0 ? (
+                        <Line 
+                          data={prepareHoursChartData(report.attendanceRecords)} 
+                          options={{
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                              legend: {
+                                position: 'bottom'
+                              }
+                            },
+                            scales: {
+                              y: {
+                                min: 0,
+                                max: Math.max(10, ...report.attendanceRecords.map(r => r.hoursWorked || 0))
+                              }
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-gray-400">
+                          ไม่มีข้อมูลการทำงานสำหรับเดือนนี้
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
+
+                  {/* Average hours by day of week */}
+                  <div className="bg-white rounded-lg shadow p-4">
+                    <h3 className="text-sm font-medium text-gray-600 mb-4">ชั่วโมงทำงานเฉลี่ยตามวัน</h3>
+                    <div className="h-64">
+                      {report.attendanceRecords.length > 0 ? (
+                        <Bar 
+                          data={prepareDailyHoursBarData(report.attendanceRecords)}
+                          options={{
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                              legend: {
+                                display: false
+                              }
+                            },
+                            scales: {
+                              y: {
+                                beginAtZero: true,
+                                max: 10
+                              }
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-gray-400">
+                          ไม่มีข้อมูลการทำงานสำหรับเดือนนี้
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                  {/* Attendance donut chart */}
+                  <div className="bg-white rounded-lg shadow p-4">
+                    <h3 className="text-sm font-medium text-gray-600 mb-4">สัดส่วนการมาทำงาน</h3>
+                    <div className="h-64 flex justify-center">
+                      <div style={{ width: '250px', height: '250px' }}>
+                        <Doughnut 
+                          data={prepareAttendanceDonutData(report)} 
+                          options={{
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: {
+                              legend: {
+                                position: 'bottom'
+                              }
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Compliance donut chart */}
+                  <div className="bg-white rounded-lg shadow p-4">
+                    <h3 className="text-sm font-medium text-gray-600 mb-4">การทำงานครบตามเวลา (9 ชม.)</h3>
+                    <div className="h-64 flex justify-center">
+                      <div style={{ width: '250px', height: '250px' }}>
+                        <Doughnut 
+                          data={prepareComplianceDonutData(report)} 
+                          options={{
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: {
+                              legend: {
+                                position: 'bottom'
+                              }
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Detailed Table */}
+              <div className="mb-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">ตารางบันทึกการลงเวลา</h2>
+                <div className="bg-white rounded-lg shadow overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          วันที่
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          เวลาเข้างาน
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          เวลาออกงาน
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          ชั่วโมงทำงาน
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          สถานะ
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {report.attendanceRecords.map((record) => (
+                        <tr key={record.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {formatDate(record.workDate)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {formatTime(record.checkInTime)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {record.checkOutTime ? formatTime(record.checkOutTime) : '-'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {formatHours(record.hoursWorked)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(record.status)}`}>
+                              {getStatusText(record.status)}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  
+                  {report.attendanceRecords.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      ไม่มีข้อมูลการเข้างานในเดือนนี้
+                    </div>
+                  )}
+                </div>
               </div>
             </>
           )}

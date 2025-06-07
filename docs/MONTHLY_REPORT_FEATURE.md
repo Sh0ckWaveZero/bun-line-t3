@@ -5,7 +5,7 @@ This document describes the newly implemented monthly attendance report function
 ## Features Implemented
 
 ### 1. Monthly Attendance Report Service
-- **File**: `src/services/attendance.ts`
+- **File**: `src/features/attendance/services/attendance.ts`
 - **Function**: `getMonthlyAttendanceReport(userId: string, month: string)`
 - **Purpose**: Generates comprehensive monthly attendance reports with statistics
 
@@ -14,6 +14,9 @@ This document describes the newly implemented monthly attendance report function
 - Total hours worked
 - Working days in month (excluding weekends)
 - Attendance rate percentage
+- Compliance rate percentage (days with full 9-hour work)
+- Average hours per day
+- Complete days (number of days with complete 9-hour work)
 - Detailed attendance records with check-in/check-out times
 - Hours worked per day
 
@@ -31,16 +34,22 @@ GET /api/attendance-report?userId=12345&month=2025-06
 ```
 
 ### 3. Frontend Report Page
-- **File**: `src/pages/attendance-report.tsx`
+- **File**: `src/app/attendance-report/page.tsx`
 - **Route**: `/attendance-report`
 - **Features**:
   - Month selector dropdown
-  - User ID input field
+  - User ID input field (auto-populated from session)
   - Summary cards showing:
     - Days worked
     - Total hours
     - Attendance percentage
     - Average hours per day
+    - Compliance rate (days with full 9-hour work)
+  - Interactive analytical graphs:
+    - Hours worked per day with target line
+    - Average hours by day of week
+    - Attendance rate donut chart
+    - Compliance rate donut chart
   - Detailed table with all attendance records
   - Responsive design with Tailwind CSS
 
@@ -53,7 +62,7 @@ GET /api/attendance-report?userId=12345&month=2025-06
 
 **LINE Bot Bubble Templates**:
 - `monthlyReportMenu()` - Interactive menu for report selection
-- `monthlyReportSummary(report)` - Summary card with key statistics
+- `monthlyReportSummary(report)` - Enhanced summary card with key statistics and compliance metrics
 
 ## Usage
 
@@ -79,10 +88,12 @@ fetch('/api/attendance-report?userId=USER_ID&month=2025-06')
 ## Report Statistics
 
 The system calculates:
-- **Working Days**: Excludes weekends (Saturday and Sunday)
+- **Working Days**: Excludes weekends (Saturday and Sunday) and public holidays
 - **Hours Worked**: Time difference between check-in and check-out
 - **Attendance Rate**: (Days worked / Working days in month) × 100
 - **Average Hours**: Total hours / Days worked
+- **Compliance Rate**: (Days with 9+ hours / Days worked) × 100
+- **Complete Days**: Number of days with at least 9 hours worked
 
 ## Data Structure
 
@@ -95,8 +106,45 @@ interface MonthlyAttendanceReport {
   attendanceRecords: AttendanceRecord[];
   workingDaysInMonth: number;
   attendanceRate: number; // percentage
+  complianceRate: number; // percentage of days with full 9-hour work
+  averageHoursPerDay: number;
+  completeDays: number; // number of days with complete 9-hour work
 }
 ```
+
+## Analytical Graphs
+
+The report page includes several interactive charts to visualize attendance data:
+
+### 1. Hours Worked Per Day Chart
+- **Type**: Line chart
+- **Data**: Hours worked for each day in the selected month
+- **Features**:
+  - Target line at 9 hours to visualize compliance
+  - Interactive tooltip showing exact hours
+  - Date labels on x-axis
+
+### 2. Average Hours By Day Of Week
+- **Type**: Bar chart
+- **Data**: Average working hours for each day of the week
+- **Features**:
+  - Visualizes work patterns across different weekdays
+  - Thai day names (Monday-Sunday)
+  - Interactive tooltips
+
+### 3. Attendance Rate Chart
+- **Type**: Doughnut chart
+- **Data**: Proportion of working days attended vs. missed
+- **Features**:
+  - Color-coded (green for attended, red for missed)
+  - Interactive legend and tooltips
+
+### 4. Compliance Rate Chart
+- **Type**: Doughnut chart
+- **Data**: Proportion of days with complete 9-hour work vs. incomplete days
+- **Features**:
+  - Color-coded (purple for complete, orange for incomplete)
+  - Interactive legend and tooltips
 
 ## Security
 

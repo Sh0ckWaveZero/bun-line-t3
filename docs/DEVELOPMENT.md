@@ -21,7 +21,7 @@ Comprehensive guide for developing and maintaining the Bun LINE T3 application.
 
 - **Bun** >= 1.0.0 - [Install Bun](https://bun.sh/docs/installation)
 - **Node.js** >= 18.0.0 - [Install Node.js](https://nodejs.org/)
-- **MySQL** >= 8.0 - [Install MySQL](https://dev.mysql.com/downloads/)
+- **MongoDB** >= 5.0 - [Install MongoDB](https://docs.mongodb.com/manual/installation/)
 - **Git** - Version control
 
 ### Development Tools
@@ -68,7 +68,7 @@ vim .env  # or your preferred editor
 
 Required environment variables:
 ```env
-DATABASE_URL="mysql://user:password@localhost:3306/bun_line_t3"
+DATABASE_URL="mongodb://user:password@localhost:27017/bun_line_t3"
 NEXTAUTH_SECRET="your-secret-key"
 NEXTAUTH_URL="https://localhost:4325"
 LINE_CLIENT_ID="your-line-client-id"
@@ -428,14 +428,14 @@ tail -f logs/application.log
 
 1. **Database Connection Issues**
    ```bash
-   # Check MySQL status
-   brew services list | grep mysql
+   # Check MongoDB status
+   brew services list | grep mongodb
    
-   # Restart MySQL
-   brew services restart mysql
+   # Restart MongoDB
+   brew services restart mongodb/brew/mongodb-community
    
    # Check connection
-   mysql -u root -p
+   mongosh "mongodb://localhost:27017/bun_line_t3"
    ```
 
 2. **SSL Certificate Problems**
@@ -496,7 +496,7 @@ bun outdated
 ### Important Dependencies
 
 - **Framework**: Next.js 15, React 19, Bun
-- **Database**: Prisma, MySQL
+- **Database**: Prisma, MongoDB
 - **Authentication**: NextAuth.js
 - **Validation**: Zod
 - **Styling**: Tailwind CSS
@@ -623,7 +623,7 @@ railway up
 // src/app/api/health/route.ts
 export async function GET() {
   try {
-    await db.$queryRaw`SELECT 1`
+    await db.$runCommandRaw({ ping: 1 })
     return Response.json({ status: 'healthy', timestamp: new Date() })
   } catch (error) {
     return Response.json({ status: 'unhealthy', error }, { status: 500 })

@@ -19,11 +19,15 @@ Complete documentation for the Bun LINE T3 application. This index provides an o
 | Document | Description | Focus Area |
 |----------|-------------|------------|
 | **[🏢 Attendance System](./ATTENDANCE_SYSTEM.md)** | Work attendance management features | LINE Bot, Business Logic |
+| **[⏰ Automated Checkout Reminder](./AUTOMATED_CHECKOUT_REMINDER.md)** | ✅ **Production Ready** - End-of-day checkout notification system | Automation, Notifications |
+| **[🕐 Vercel Cron Setup](./VERCEL_CRON_SETUP.md)** | Vercel Cron Jobs configuration guide | Automation, Deployment |
 | **[💰 Cryptocurrency Tracking](./CRYPTO_TRACKING.md)** | Crypto price monitoring features | Financial Data, APIs |
 | **[🌍 Air Quality Monitoring](./AIR_QUALITY_MONITORING.md)** | Location-based air quality data | Environmental Data, Health |
 | **[📝 LINE Commands (English)](./LINE_COMMANDS.md)** | Complete list of all LINE Bot commands | User Guide, Documentation |
 | **[📝 LINE Commands (Thai)](./LINE_COMMANDS_THAI.md)** | คำสั่งทั้งหมดของ LINE Bot (ภาษาไทย) | User Guide, Documentation |
 | **[🔒 Security Guide](./SECURITY.md)** | Security considerations and best practices | Security, Compliance |
+| **[🔐 Cryptographic Random](./CRYPTO_RANDOM.md)** | Unbiased cryptographically secure random generation | Security, Cryptography |
+| **[🤖 Copilot Security Update](./COPILOT_SECURITY_UPDATE.md)** | Security-first AI coding assistant configuration | Security, Development |
 | **[📊 Monthly Reports](./MONTHLY_REPORT_FEATURE.md)** | Attendance reporting system | Analytics, Data Export |
 
 ### 🔧 Technical Documentation
@@ -69,7 +73,7 @@ The application follows a **Feature-Based Architecture** with clear separation o
 🔧 Technical Foundation
 ├── Next.js 15 App Router   # Modern React framework
 ├── TypeScript              # Type-safe development
-├── Prisma + MySQL          # Database layer
+├── Prisma + MongoDB        # Database layer
 ├── NextAuth.js             # Authentication
 └── Bun Runtime             # Fast JavaScript runtime
 ```
@@ -163,7 +167,7 @@ docker-compose up -d    # Docker
 
 ### Database & Backend
 - **[Prisma](https://prisma.io)** - Type-safe database toolkit
-- **[MySQL](https://mysql.com)** - Relational database
+- **[MongoDB](https://mongodb.com)** - Document database
 - **[NextAuth.js](https://next-auth.js.org)** - Authentication library
 - **[Zod](https://zod.dev)** - Schema validation
 
