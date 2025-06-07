@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bun-line-t3-app
+    ports:
+      - "3000:3000"
+    environment:
+      # --- General Environment Variables ---
+      NODE_ENV: production
+      PORT: 3000
+
+      # --- NextAuth Configuration ---
+      # ควรตั้งค่าเหล่านี้ในไฟล์ .env และไม่ commit เข้า repository
+      # NEXTAUTH_URL: http://localhost:3000 # หรือ URL ที่ใช้งานจริง
+      # NEXTAUTH_SECRET: # สร้าง secret ด้วย `openssl rand -hex 32` หรือ `bun scripts/generate-secrets.ts`
+
+      # --- Database Configuration (Prisma) ---
+      # DATABASE_URL: # เช่น postgresql://user:password@host:port/database?schema=public
+
+      # --- LINE API Configuration ---
+      # LINE_CHANNEL_ID:
+      # LINE_CHANNEL_SECRET:
+      # LINE_CHANNEL_ACCESS_TOKEN:
+      # LIFF_ID:
+
+      # --- Other Application Specific Variables ---
+      # NEXT_PUBLIC_BASE_URL: http://localhost:3000 # หรือ URL ที่ใช้งานจริง
+      # TZ: Asia/Bangkok # ตั้งค่า timezone ถ้าจำเป็น
+
+    # Uncomment บรรทัดด้านล่างถ้าคุณต้องการใช้ .env file เพื่อจัดการ environment variables
+    # env_file:
+    #   - .env
+    restart: unless-stopped
+    # ถ้าต้องการให้ container เข้าถึงไฟล์ใน local (เช่น สำหรับ development)
+    # volumes:
+    #   - .:/app # Mount โค้ดปัจจุบันเข้าไปใน container
+    #   - /app/node_modules # ป้องกันไม่ให้ local node_modules ทับใน container
+    #   - /app/.next
+
+  cron:
+    build:
+      context: .
+      dockerfile: Dockerfile.cron
+    container_name: bun-line-t3-cron
+    environment:
+      # ตรวจสอบให้แน่ใจว่า TZ ตรงกับที่ตั้งใน Dockerfile.cron หรือตั้งค่าที่นี่
+      TZ: Asia/Bangkok # หรือโซนเวลาที่คุณต้องการ
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_started # รอให้ app service เริ่มทำงานก่อน (อาจปรับเป็น service_healthy ถ้ามี health check)

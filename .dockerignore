@@ -1,0 +1,40 @@
+# .dockerignore
+
+# Git
+.git
+.gitignore
+
+# Node modules
+node_modules
+
+# Next.js build artifacts (ยกเว้น .next/standalone และ .next/static ที่จะถูกคัดลอกใน Dockerfile)
+.next
+# ถ้าไม่ได้ใช้ standalone output, .next ทั้งหมดจะถูกสร้างใน builder stage
+# แต่เนื่องจากเราใช้ standalone, เราจะจัดการ .next/static และ .next/standalone โดยเฉพาะ
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Vercel
+.vercel
+
+# Local environment files
+.env*.local
+*.log
+
+# macOS
+.DS_Store
+
+# IDE specific
+.vscode/
+*.swp
+
+# Bun
+bun.lockb # ถูกคัดลอกใน Dockerfile แล้ว ไม่จำเป็นต้อง ignore ที่นี่ถ้าจัดการถูกต้อง
+# แต่ถ้าต้องการความชัดเจน สามารถใส่ไว้ได้
+
+# Test files and coverage reports
+coverage/
+*.test.ts
+*.spec.ts
