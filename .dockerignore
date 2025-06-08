@@ -1,0 +1,144 @@
+# 🚀 OPTIMIZATION: Docker Build Performance Ignore List
+# High-impact optimizations for faster builds
+
+# Git และ version control (ลด build context size มาก)
+.git
+.gitignore
+.gitattributes
+
+# Node.js และ dependencies (จะถูก install ใหม่)
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+bun.lockb.backup*
+
+# ✅ Prisma generated files (จะ generate ใหม่ใน container)
+node_modules/.prisma/
+node_modules/@prisma/engines/
+# Keep src/@prisma/ for build utilities
+!src/@prisma/
+
+# Next.js build outputs (จะถูกสร้างใหม่)
+.next/
+out/
+build/
+dist/
+
+# Development และ testing files
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+__tests__/
+coverage/
+.nyc_output
+junit.xml
+
+# IDE และ editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs และ debug files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.eslintcache
+
+# Documentation และ markdown files (ไม่จำเป็นใน runtime)
+README.md
+CHANGELOG.md
+LICENSE
+*.md
+docs/
+
+# Development tools และ configuration
+.eslintrc*
+.prettierrc*
+.babelrc*
+jest.config.*
+cypress/
+.storybook/
+stories/
+
+# Docker files (ป้องกัน recursive copy)
+Dockerfile*
+.dockerignore
+docker-compose*.yml
+
+# Deployment และ CI/CD files
+.vercel
+.netlify
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# SSL certificates และ development keys
+certificates/
+*.pem
+*.key
+*.crt
+
+# Scripts และ development tools (ไม่ใช้ใน container)
+scripts/
+!scripts/docker-entrypoint.sh
+!scripts/health-check.sh
+Makefile
+
+# 🔐 SECURITY & 🚀 OPTIMIZATION: Prisma และ Database Management
+# รวม Prisma files ที่จำเป็นสำหรับ Docker build
+# prisma/migrations/ - สำหรับ development เท่านั้น
+prisma/migrations/
+
+# 🛡️ SECURITY: Database และ migration files ที่ไม่ควรอยู่ใน container
+*.db
+*.sqlite
+*.sqlite3
+migration-*.sql
+
+# 🔐 SECURITY: Generated Prisma Client (จะถูกสร้างใหม่ใน container)
+node_modules/.prisma/
+
+# Environment files (จะถูกจัดการผ่าน Docker)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.*.local
+!.env.example
+!.env.prod
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+temp/
+
+# Runtime และ cache files
+.cache/
+.parcel-cache/
+.nuxt/
+.output/
+.vuepress/dist
+.serverless/
+.fusebox/
+.dynamodb/
+
+# Package manager locks (เว้น bun.lockb ที่จำเป็น)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

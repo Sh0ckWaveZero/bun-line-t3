@@ -1,0 +1,15 @@
+# crontab
+# นาที ชั่วโมง วัน เดือน วันในสัปดาห์ คำสั่ง
+
+# Vercel schedule: "30 16 * * 1-5" (16:30 UTC, Monday to Friday)
+# แปลงเป็นเวลา Asia/Bangkok (UTC+7) จะเป็น 23:30, Monday to Friday
+
+# ตรวจสอบให้แน่ใจว่า container และ host มี timezone ที่ถูกต้อง
+# ถ้า Dockerfile.cron ตั้ง TZ=Asia/Bangkok แล้ว schedule นี้จะทำงานตามเวลา Asia/Bangkok
+
+# เรียก API endpoint /api/cron/checkout-reminder เวลา 23:30 (Asia/Bangkok) วันจันทร์ถึงศุกร์
+# ใช้ GET request และใช้ environment variable $CRON_SECRET สำหรับความปลอดภัย
+# `app` คือชื่อ service ใน docker-compose.yml
+30 23 * * 1-5 curl -H "Authorization: Bearer $CRON_SECRET" http://app:12914/api/cron/checkout-reminder
+
+# บรรทัดสุดท้ายต้องเป็น newline เสมอสำหรับ crontab

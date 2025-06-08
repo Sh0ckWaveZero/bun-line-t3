@@ -1,0 +1,37 @@
+# Dockerfile.cron
+# 🔧 Multi-platform support for ARM64 (Raspberry Pi) และ AMD64
+
+# ใช้ base image ที่มี cron และ curl (สำหรับเรียก API endpoint)
+# Alpine มีขนาดเล็กและมี cron (busybox-cron)
+FROM --platform=$TARGETPLATFORM alpine:latest
+
+# 🔧 Multi-platform build arguments
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
+RUN echo "Building cron service on $BUILDPLATFORM for $TARGETPLATFORM"
+
+# ติดตั้ง curl และ ca-certificates (สำหรับ HTTPS)
+RUN apk add --no-cache curl ca-certificates tzdata
+
+# ตั้งค่า Timezone (สำคัญมากสำหรับ cron jobs)
+# TZ จะถูกส่งผ่านมาจาก .env.prod ผ่าน docker-compose.yml
+# Default เป็น Asia/Bangkok ถ้าไม่ได้ระบุใน environment
+ENV TZ=Asia/Bangkok
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# สร้างไดเรกทอรีสำหรับ cron scripts
+WORKDIR /app
+
+# คัดลอก crontab file เข้าไปในตำแหน่งที่ถูกต้อง
+COPY crontab /etc/crontabs/root
+
+# ให้สิทธิ์ execute กับ crontab (อาจไม่จำเป็นสำหรับ busybox-cron แต่ไม่เสียหาย)
+# RUN chmod 0644 /etc/crontabs/root
+
+# คัดลอก script ที่ cron job จะเรียก (ถ้ามี)
+# ในกรณีนี้ เราจะใช้ curl เรียก API endpoint โดยตรงจาก crontab
+# COPY scripts/checkout-reminder-cron.sh /usr/local/bin/checkout-reminder-cron.sh
+# RUN chmod +x /usr/local/bin/checkout-reminder-cron.sh
+
+# รัน cron daemon ใน foreground
+CMD ["crond", "-f", "-d", "8"]

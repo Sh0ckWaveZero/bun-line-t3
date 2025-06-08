@@ -1,0 +1,89 @@
+version: '3.8'
+
+# 🛡️ SECURITY-FIRST Docker Compose สำหรับ Bun + Next.js + Prisma
+# ปรับปรุงตาม Docker Security Best Practices
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+        # 🔧 RASPBERRY PI OPTIMIZATION: จำกัด parallel builds สำหรับ ARM64
+        - MAX_PARALLEL_BUILDS=1
+        - NODE_OPTIONS=--max_old_space_size=2048
+      target: runner
+      # 🔧 RASPBERRY PI: จำกัด memory สำหรับ build process
+      shm_size: 512m
+    container_name: bun-line-t3-app
+    ports:
+      - "12914:12914"  # ใช้ PORT จาก .env.prod
+    env_file:
+      - .env.prod
+    restart: unless-stopped    
+    
+    # 🔧 RASPBERRY PI OPTIMIZATION: จำกัด memory usage runtime
+    mem_limit: 1.5g
+    mem_reservation: 512m
+    cpus: 2.0  # จำกัด CPU cores ที่ใช้
+    
+    # 🛡️ SECURITY: Health check ที่ปลอดภัยสำหรับตรวจสอบสถานะแอปพลิเคชัน
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:12914/api/health"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 30s  # เพิ่มเวลาสำหรับ Pi ที่ช้ากว่า
+    
+    # 🔐 SECURITY: Security และ resource limits
+    security_opt:
+      - no-new-privileges:true
+    read_only: false  # Next.js standalone ต้องเขียนไฟล์ชั่วคราว
+    tmpfs:
+      - /tmp:rw,size=100m,mode=1777
+      - /var/tmp:rw,size=50m,mode=1777
+
+    
+    # 🔐 SECURITY: Network isolation - ใช้ yadom network ที่มีอยู่แล้ว
+    networks:
+      - yadom
+
+  cron:
+    build:
+      context: .
+      dockerfile: Dockerfile.cron
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+        # 🔧 RASPBERRY PI: Memory optimization สำหรับ cron build
+        - NODE_OPTIONS=--max_old_space_size=1024
+    container_name: bun-line-t3-cron
+    env_file:
+      - .env.prod
+    restart: unless-stopped
+    
+    # 🔧 RASPBERRY PI OPTIMIZATION: จำกัด memory สำหรับ cron service
+    mem_limit: 512m
+    mem_reservation: 128m
+    cpus: 1.0
+    
+    # 🛡️ SECURITY: รอให้ app service ผ่าน health check ก่อนเริ่ม cron
+    depends_on:
+      app:
+        condition: service_healthy
+    
+    # 🔐 SECURITY: Security สำหรับ cron service
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,size=50m,mode=1777
+
+    # 🔐 SECURITY: Network isolation - ใช้ yadom network ที่มีอยู่แล้ว
+    networks:
+      - yadom
+
+# 🔐 SECURITY: Network configuration สำหรับ Raspberry Pi deployment
+networks:
+  yadom:
+    external: true  # ใช้ network yadom ที่มีอยู่แล้วในระบบ

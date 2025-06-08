@@ -3,7 +3,7 @@
 
 generator client {
     provider = "prisma-client-js"
-
+    binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -45,11 +45,11 @@ model Session {
 }
 
 model User {
-    id              String            @id @default(auto()) @map("_id") @db.ObjectId
+    id              String           @id @default(auto()) @map("_id") @db.ObjectId
     name            String?
-    email           String?           @unique
-    emailVerified   DateTime?         @map("email_verified")
-    is_verified     Boolean?          @default(false)
+    email           String?          @unique
+    emailVerified   DateTime?        @map("email_verified")
+    is_verified     Boolean?         @default(false)
     image           String?
     accounts        Account[]
     sessions        Session[]
@@ -81,31 +81,31 @@ model Cmc {
 }
 
 model WorkAttendance {
-    id            String    @id @default(auto()) @map("_id") @db.ObjectId
-    userId        String    @map("user_id") @db.ObjectId
-    checkInTime   DateTime  @map("check_in_time")
-    checkOutTime  DateTime? @map("check_out_time")
-    workDate      String    @map("work_date") // YYYY-MM-DD format
-    status        String    @default("checked_in") // checked_in, checked_out
-    createdAt     DateTime  @default(now()) @map("created_at")
-    updatedAt     DateTime  @updatedAt @map("updated_at")
-    user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    id           String    @id @default(auto()) @map("_id") @db.ObjectId
+    userId       String    @map("user_id") @db.ObjectId
+    checkInTime  DateTime  @map("check_in_time")
+    checkOutTime DateTime? @map("check_out_time")
+    workDate     String    @map("work_date") // YYYY-MM-DD format
+    status       String    @default("checked_in") // checked_in, checked_out
+    createdAt    DateTime  @default(now()) @map("created_at")
+    updatedAt    DateTime  @updatedAt @map("updated_at")
+    user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     @@unique([userId, workDate])
     @@map("work_attendance")
 }
 
 model PublicHoliday {
-    id             String   @id @default(auto()) @map("_id") @db.ObjectId
-    date           String   @unique @map("date") // YYYY-MM-DD format
-    nameEnglish    String   @map("name_english")
-    nameThai       String   @map("name_thai")
-    year           Int      @map("year")
-    type           String   @default("national") @map("type") // national, royal, religious, special
-    isActive       Boolean  @default(true) @map("is_active")
-    description    String?  @map("description")
-    createdAt      DateTime @default(now()) @map("created_at")
-    updatedAt      DateTime @updatedAt @map("updated_at")
+    id          String   @id @default(auto()) @map("_id") @db.ObjectId
+    date        String   @unique @map("date") // YYYY-MM-DD format
+    nameEnglish String   @map("name_english")
+    nameThai    String   @map("name_thai")
+    year        Int      @map("year")
+    type        String   @default("national") @map("type") // national, royal, religious, special
+    isActive    Boolean  @default(true) @map("is_active")
+    description String?  @map("description")
+    createdAt   DateTime @default(now()) @map("created_at")
+    updatedAt   DateTime @updatedAt @map("updated_at")
 
     @@index([year, isActive])
     @@index([date, isActive])

@@ -22,7 +22,7 @@ const config = {
   allowedDevOrigins: [
     "*.line-login.midseelee.com"
   ],
-  // output: "standalone",
+  output: "standalone",
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
