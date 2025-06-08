@@ -4,6 +4,7 @@ import { env } from '~/env.mjs';
 import { bubbleTemplate } from '~/lib/validation/line';
 import { attendanceService } from '~/features/attendance/services/attendance';
 import { db } from '~/lib/database/db';
+import { roundToOneDecimal } from '~/lib/utils/number';
 
 // Helper function to send push message
 const sendPushMessage = async (userId: string, messages: any[]) => {
@@ -112,7 +113,7 @@ export async function GET(_req: NextRequest) {
           const payload = [
             {
               type: 'text',
-              text: `⏰ ใกล้ถึงเวลาเลิกงานแล้ว! อย่าลืมลงชื่อออกงานนะคะ\n\nคุณเข้างานตั้งแต่ ${attendanceService.formatThaiTimeOnly(checkInTime)} น.\n(ทำงานแล้วประมาณ ${hoursWorked.toFixed(1)} ชั่วโมง)`
+              text: `⏰ ใกล้ถึงเวลาเลิกงานแล้ว! อย่าลืมลงชื่อออกงานนะคะ\n\nคุณเข้างานตั้งแต่ ${attendanceService.formatThaiTimeOnly(checkInTime)} น.\n(ทำงานแล้วประมาณ ${roundToOneDecimal(hoursWorked)} ชั่วโมง)`
             },
             ...flexMessage(bubbleTemplate.workStatus(attendance))
           ];

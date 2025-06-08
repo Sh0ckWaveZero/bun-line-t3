@@ -3,6 +3,10 @@ import randomColor from '~/lib/validation/randomColor';
 import { utils } from '~/lib/validation';
 import { IMAGE_GOLD_URLS, IMAGE_URLS } from '~/lib/constants/common.constant';
 import { env } from 'process';
+import { 
+  formatHours, 
+  formatPercentage
+} from '~/lib/utils/number';
 
 const lottery = (infoItems: any[]) => {
   return infoItems.map((item) => {
@@ -782,7 +786,7 @@ const workCheckIn = () => {
             align: 'center'
           }
         ],
-        backgroundColor: '#4CAF50',
+        backgroundColor: '#c8e6c9', // พาสเทลเขียว - นุ่มนวล
         paddingAll: '20px'
       },
       body: {
@@ -803,7 +807,7 @@ const workCheckIn = () => {
             text: 'กดปุ่มด้านล่างเพื่อลงชื่อเข้างาน ระบบจะคำนวณเวลาเลิกงานให้อัตโนมัติ (9 ชั่วโมงทำงาน)',
             wrap: true,
             size: 'sm',
-            color: '#666666',
+            color: '#9e9e9e', // สีเทาอ่อนนุ่มนวล
             align: 'center',
             margin: 'lg'
           }
@@ -823,7 +827,7 @@ const workCheckIn = () => {
               label: '🟢 เข้างาน',
               data: 'action=checkin'
             },
-            color: '#4CAF50',
+            color: '#81c784', // เขียวพาสเทลสำหรับปุ่ม
             height: 'md'
           },
           {
@@ -881,7 +885,7 @@ const workCheckInSuccess = (checkInTime: Date, expectedCheckOutTime: Date) => {
             align: 'center'
           }
         ],
-        backgroundColor: '#4CAF50',
+        backgroundColor: '#c8e6c9', // พาสเทลเขียว - นุ่มนวล
         paddingAll: '20px'
       },
       body: {
@@ -896,7 +900,7 @@ const workCheckInSuccess = (checkInTime: Date, expectedCheckOutTime: Date) => {
             wrap: true,
             align: 'center',
             margin: 'md',
-            color: '#333333'
+            color: '#757575' // เทาอ่อนนุ่มนวล
           },
           {
             type: 'separator',
@@ -916,7 +920,7 @@ const workCheckInSuccess = (checkInTime: Date, expectedCheckOutTime: Date) => {
                     type: 'text',
                     text: '🕐 เวลาเข้างาน:',
                     size: 'sm',
-                    color: '#555555',
+                    color: '#9e9e9e', // เทาอ่อนนุ่มนวล
                     flex: 0
                   },
                   {
@@ -924,7 +928,7 @@ const workCheckInSuccess = (checkInTime: Date, expectedCheckOutTime: Date) => {
                     text: checkInTimeStr,
                     weight: 'bold',
                     size: 'sm',
-                    color: '#4CAF50',
+                    color: '#81c784', // เขียวพาสเทล
                     align: 'end'
                   }
                 ]
@@ -937,7 +941,7 @@ const workCheckInSuccess = (checkInTime: Date, expectedCheckOutTime: Date) => {
                     type: 'text',
                     text: '🕔 เวลาเลิกงาน (คาด):',
                     size: 'sm',
-                    color: '#555555',
+                    color: '#9e9e9e', // เทาอ่อนนุ่มนวล
                     flex: 0
                   },
                   {
@@ -945,7 +949,7 @@ const workCheckInSuccess = (checkInTime: Date, expectedCheckOutTime: Date) => {
                     text: checkOutTimeStr,
                     weight: 'bold',
                     size: 'sm',
-                    color: '#FF9800',
+                    color: '#ffcc80', // ส้มพาสเทล
                     align: 'end'
                   }
                 ]
@@ -958,7 +962,7 @@ const workCheckInSuccess = (checkInTime: Date, expectedCheckOutTime: Date) => {
                     type: 'text',
                     text: '⏱️ ชั่วโมงทำงาน:',
                     size: 'sm',
-                    color: '#555555',
+                    color: '#9e9e9e', // เทาอ่อนนุ่มนวล
                     flex: 0
                   },
                   {
@@ -966,7 +970,7 @@ const workCheckInSuccess = (checkInTime: Date, expectedCheckOutTime: Date) => {
                     text: '9 ชั่วโมง',
                     weight: 'bold',
                     size: 'sm',
-                    color: '#2196F3',
+                    color: '#90caf9', // ฟ้าพาสเทล
                     align: 'end'
                   }
                 ]
@@ -989,7 +993,7 @@ const workCheckInSuccess = (checkInTime: Date, expectedCheckOutTime: Date) => {
               label: '🔴 ออกงาน',
               data: 'action=checkout'
             },
-            color: '#f44336'
+            color: '#ffab91' // แดงพาสเทล
           }
         ],
         paddingAll: '20px'
@@ -1022,7 +1026,7 @@ const workStatus = (attendance: any) => {
 
   const isCheckedOut = attendance.status === 'checked_out';
   const statusText = isCheckedOut ? '✅ ออกงานแล้ว' : '🟢 กำลังทำงาน';
-  const statusColor = isCheckedOut ? '#4CAF50' : '#FF9800';
+  const statusColor = isCheckedOut ? '#c8e6c9' : '#ffcc80'; // พาสเทลเขียวและส้ม
 
   let checkOutTimeContent: any[] = [];
   if (isCheckedOut && attendance.checkOutTime) {
@@ -1040,7 +1044,7 @@ const workStatus = (attendance: any) => {
             type: 'text',
             text: '🕐 เวลาออกงาน:',
             size: 'sm',
-            color: '#555555',
+            color: '#9e9e9e', // เทาอ่อนนุ่มนวล
             flex: 0
           },
           {
@@ -1048,7 +1052,7 @@ const workStatus = (attendance: any) => {
             text: checkOutTimeStr,
             weight: 'bold',
             size: 'sm',
-            color: '#4CAF50',
+            color: '#81c784', // เขียวพาสเทล
             align: 'end'
           }
         ]
@@ -1095,7 +1099,7 @@ const workStatus = (attendance: any) => {
             size: 'sm',
             wrap: true,
             align: 'center',
-            color: '#666666'
+            color: '#9e9e9e' // เทาอ่อนนุ่มนวล
           },
           {
             type: 'separator',
@@ -1115,7 +1119,7 @@ const workStatus = (attendance: any) => {
                     type: 'text',
                     text: '🕐 เวลาเข้างาน:',
                     size: 'sm',
-                    color: '#555555',
+                    color: '#9e9e9e', // เทาอ่อนนุ่มนวล
                     flex: 0
                   },
                   {
@@ -1123,7 +1127,7 @@ const workStatus = (attendance: any) => {
                     text: checkInTimeStr,
                     weight: 'bold',
                     size: 'sm',
-                    color: '#4CAF50',
+                    color: '#81c784', // เขียวพาสเทล
                     align: 'end'
                   }
                 ]
@@ -1137,7 +1141,7 @@ const workStatus = (attendance: any) => {
                     type: 'text',
                     text: '🕔 เวลาเลิกงาน (คาด):',
                     size: 'sm',
-                    color: '#555555',
+                    color: '#9e9e9e', // เทาอ่อนนุ่มนวล
                     flex: 0
                   },
                   {
@@ -1145,7 +1149,7 @@ const workStatus = (attendance: any) => {
                     text: expectedCheckOutTimeStr,
                     weight: 'bold',
                     size: 'sm',
-                    color: '#FF9800',
+                    color: '#ffcc80', // ส้มพาสเทล
                     align: 'end'
                   }
                 ]
@@ -1168,21 +1172,13 @@ const workStatus = (attendance: any) => {
               label: '🔴 ออกงาน',
               data: 'action=checkout'
             },
-            color: '#f44336'
+            color: '#ffab91' // แดงพาสเทล
           }
         ],
         paddingAll: '20px'
       } : undefined
     }
   ];
-};
-
-const workAlreadyCheckedIn = (checkInTime: Date) => {
-  return workStatus({
-    checkInTime,
-    status: 'checked_in',
-    checkOutTime: null
-  });
 };
 
 const workCheckOutSuccess = (checkInTime: Date, checkOutTime: Date) => {
@@ -1228,7 +1224,7 @@ const workCheckOutSuccess = (checkInTime: Date, checkOutTime: Date) => {
             align: 'center'
           }
         ],
-        backgroundColor: '#4CAF50',
+        backgroundColor: '#c8e6c9', // พาสเทลเขียว - นุ่มนวล
         paddingAll: '20px'
       },
       body: {
@@ -1243,7 +1239,7 @@ const workCheckOutSuccess = (checkInTime: Date, checkOutTime: Date) => {
             wrap: true,
             align: 'center',
             margin: 'md',
-            color: '#333333'
+            color: '#757575' // เทาอ่อนนุ่มนวล
           },
           {
             type: 'text',
@@ -1251,7 +1247,7 @@ const workCheckOutSuccess = (checkInTime: Date, checkOutTime: Date) => {
             size: 'sm',
             wrap: true,
             align: 'center',
-            color: '#666666'
+            color: '#9e9e9e' // เทาอ่อนนุ่มนวล
           },
           {
             type: 'separator',
@@ -1271,7 +1267,7 @@ const workCheckOutSuccess = (checkInTime: Date, checkOutTime: Date) => {
                     type: 'text',
                     text: '🕐 เวลาเข้างาน:',
                     size: 'sm',
-                    color: '#555555',
+                    color: '#9e9e9e', // เทาอ่อนนุ่มนวล
                     flex: 0
                   },
                   {
@@ -1279,7 +1275,7 @@ const workCheckOutSuccess = (checkInTime: Date, checkOutTime: Date) => {
                     text: checkInTimeStr,
                     weight: 'bold',
                     size: 'sm',
-                    color: '#4CAF50',
+                    color: '#81c784', // เขียวพาสเทล
                     align: 'end'
                   }
                 ]
@@ -1292,7 +1288,7 @@ const workCheckOutSuccess = (checkInTime: Date, checkOutTime: Date) => {
                     type: 'text',
                     text: '🕔 เวลาออกงาน:',
                     size: 'sm',
-                    color: '#555555',
+                    color: '#9e9e9e', // เทาอ่อนนุ่มนวล
                     flex: 0
                   },
                   {
@@ -1300,7 +1296,7 @@ const workCheckOutSuccess = (checkInTime: Date, checkOutTime: Date) => {
                     text: checkOutTimeStr,
                     weight: 'bold',
                     size: 'sm',
-                    color: '#4CAF50',
+                    color: '#81c784', // เขียวพาสเทล
                     align: 'end'
                   }
                 ]
@@ -1313,7 +1309,7 @@ const workCheckOutSuccess = (checkInTime: Date, checkOutTime: Date) => {
                     type: 'text',
                     text: '⏱️ ชั่วโมงทำงาน:',
                     size: 'sm',
-                    color: '#555555',
+                    color: '#9e9e9e', // เทาอ่อนนุ่มนวล
                     flex: 0
                   },
                   {
@@ -1321,7 +1317,7 @@ const workCheckOutSuccess = (checkInTime: Date, checkOutTime: Date) => {
                     text: `${workHours} ชม. ${workMinutes} นาที`,
                     weight: 'bold',
                     size: 'sm',
-                    color: '#2196F3',
+                    color: '#90caf9', // ฟ้าพาสเทล
                     align: 'end'
                   }
                 ]
@@ -1335,7 +1331,38 @@ const workCheckOutSuccess = (checkInTime: Date, checkOutTime: Date) => {
   ];
 };
 
-const workError = (message: string) => {
+const workError = (message: string, errorType: 'error' | 'warning' | 'info' = 'error') => {
+  // 🚀 การกำหนดค่าตาม error type แบบ functional - โทนพาสเทลนุ่มนวล
+  const errorConfig = {
+    error: {
+      icon: '⚠️',
+      title: 'เกิดข้อผิดพลาด',
+      backgroundColor: '#ffb3ba', // พาสเทลแดง - นุ่มนวล
+      textColor: '#d32f2f',      // แดงเข้มอ่อนลง
+      buttonLabel: 'ลองใหม่',
+      buttonData: 'action=checkin_menu'
+    },
+    warning: {
+      icon: '⚡',
+      title: 'คำเตือน',
+      backgroundColor: '#ffd4a3', // พาสเทลส้ม - อบอุ่น
+      textColor: '#e65100',      // ส้มเข้มอ่อนลง
+      buttonLabel: 'เข้าใจแล้ว',
+      buttonData: 'action=checkin_menu'
+    },
+    info: {
+      icon: 'ℹ️',
+      title: 'ข้อมูล',
+      backgroundColor: '#a3d5ff', // พาสเทลฟ้า - สงบ
+      textColor: '#1565c0',      // ฟ้าเข้มอ่อนลง
+      buttonLabel: 'ตกลง',
+      buttonData: 'action=checkin_menu'
+    }
+  } as const;
+
+  // 🚀 ใช้ config ที่เลือกตาม type
+  const config = errorConfig[errorType];
+  
   return [
     {
       type: 'bubble',
@@ -1346,14 +1373,14 @@ const workError = (message: string) => {
         contents: [
           {
             type: 'text',
-            text: '⚠️ เกิดข้อผิดพลาด',
+            text: `${config.icon} ${config.title}`,
             weight: 'bold',
             size: 'xl',
             color: '#ffffff',
             align: 'center'
           }
         ],
-        backgroundColor: '#f44336',
+        backgroundColor: config.backgroundColor,
         paddingAll: '20px'
       },
       body: {
@@ -1367,8 +1394,23 @@ const workError = (message: string) => {
             size: 'md',
             align: 'center',
             margin: 'md',
-            color: '#f44336'
-          }
+            color: config.textColor
+          },
+          ...(errorType === 'error' ? [
+            {
+              type: 'separator',
+              margin: 'xl'
+            },
+            {
+              type: 'text',
+              text: '💡 หากปัญหายังคงเกิดขึ้น กรุณาติดต่อทีมงาน',
+              wrap: true,
+              size: 'xs',
+              align: 'center',
+              margin: 'md',
+              color: '#9e9e9e' // สีเทาอ่อนนุ่มนวล
+            }
+          ] : [])
         ],
         paddingAll: '20px'
       },
@@ -1379,12 +1421,13 @@ const workError = (message: string) => {
         contents: [
           {
             type: 'button',
-            style: 'secondary',
+            style: errorType === 'error' ? 'secondary' : 'primary',
             action: {
               type: 'postback',
-              label: 'ลองใหม่',
-              data: 'action=checkin_menu'
-            }
+              label: config.buttonLabel,
+              data: config.buttonData
+            },
+            color: errorType === 'error' ? undefined : config.backgroundColor
           }
         ],
         paddingAll: '20px'
@@ -1409,7 +1452,7 @@ const monthlyReportMenu = () => {
           "color": "#ffffff"
         }
       ],
-      "backgroundColor": "#4f46e5",
+      "backgroundColor": "#b39ddb", // ม่วงพาสเทล
       "paddingAll": "20px"
     },
     "body": {
@@ -1420,7 +1463,7 @@ const monthlyReportMenu = () => {
           "type": "text",
           "text": "เลือกเดือนที่ต้องการดูรายงาน",
           "size": "md",
-          "color": "#374151",
+          "color": "#9e9e9e", // เทาอ่อนนุ่มนวล
           "margin": "md"
         },
         {
@@ -1439,7 +1482,7 @@ const monthlyReportMenu = () => {
                 "data": "action=monthly_report&month=current"
               },
               "style": "primary",
-              "color": "#4f46e5",
+              "color": "#b39ddb", // ม่วงพาสเทล
               "margin": "md"
             },
             {
@@ -1475,7 +1518,7 @@ const monthlyReportMenu = () => {
           "type": "text",
           "text": "สามารถดูรายงานย้อนหลังได้ที่เว็บไซต์",
           "size": "xs",
-          "color": "#9ca3af",
+          "color": "#bdbdbd", // เทาอ่อนมากขึ้น
           "align": "center"
         }
       ],
@@ -1506,7 +1549,7 @@ const monthlyReportSummary = (report: any) => {
           "wrap": true
         }
       ],
-      "backgroundColor": "#059669",
+      "backgroundColor": "#a5d6a7", // เขียวพาสเทลเข้ม
       "paddingAll": "20px"
     },
     "body": {
@@ -1525,14 +1568,14 @@ const monthlyReportSummary = (report: any) => {
                   "type": "text",
                   "text": "วันที่ทำงาน",
                   "size": "sm",
-                  "color": "#6b7280"
+                  "color": "#9e9e9e" // เทาอ่อนนุ่มนวล
                 },
                 {
                   "type": "text",
                   "text": `${report.totalDaysWorked} วัน`,
                   "weight": "bold",
                   "size": "xl",
-                  "color": "#059669"
+                  "color": "#81c784" // เขียวพาสเทล
                 }
               ],
               "flex": 1
@@ -1545,14 +1588,14 @@ const monthlyReportSummary = (report: any) => {
                   "type": "text",
                   "text": "ชั่วโมงรวม",
                   "size": "sm",
-                  "color": "#6b7280"
+                  "color": "#9e9e9e" // เทาอ่อนนุ่มนวล
                 },
                 {
                   "type": "text",
-                  "text": `${report.totalHoursWorked.toFixed(1)} ชม.`,
+                  "text": formatHours(report.totalHoursWorked),
                   "weight": "bold",
                   "size": "xl",
-                  "color": "#059669"
+                  "color": "#81c784" // เขียวพาสเทล
                 }
               ],
               "flex": 1
@@ -1576,14 +1619,14 @@ const monthlyReportSummary = (report: any) => {
                   "type": "text",
                   "text": "เปอร์เซ็นต์การเข้างาน",
                   "size": "sm",
-                  "color": "#6b7280"
+                  "color": "#9e9e9e" // เทาอ่อนนุ่มนวล
                 },
                 {
                   "type": "text",
-                  "text": `${report.attendanceRate.toFixed(1)}%`,
+                  "text": formatPercentage(report.attendanceRate),
                   "weight": "bold",
                   "size": "xl",
-                  "color": "#dc2626"
+                  "color": "#ef9a9a" // แดงพาสเทล
                 }
               ],
               "flex": 1
@@ -1596,14 +1639,14 @@ const monthlyReportSummary = (report: any) => {
                   "type": "text",
                   "text": "ชั่วโมงเฉลี่ย/วัน",
                   "size": "sm",
-                  "color": "#6b7280"
+                  "color": "#9e9e9e" // เทาอ่อนนุ่มนวล
                 },
                 {
                   "type": "text",
-                  "text": `${(report.totalHoursWorked / Math.max(report.totalDaysWorked, 1)).toFixed(1)} ชม.`,
+                  "text": formatHours(report.totalHoursWorked / Math.max(report.totalDaysWorked, 1)),
                   "weight": "bold",
                   "size": "xl",
-                  "color": "#dc2626"
+                  "color": "#ef9a9a" // แดงพาสเทล
                 }
               ],
               "flex": 1
@@ -1625,11 +1668,19 @@ const monthlyReportSummary = (report: any) => {
             "uri": `${env.NEXTAUTH_URL}/attendance-report?month=${report.month}`
           },
           "style": "primary",
-          "color": "#059669"
+          "color": "#a5d6a7" // เขียวพาสเทลเข้ม
         }
       ]
     }
   };
+};
+
+const workAlreadyCheckedIn = (checkInTime: Date) => {
+  return workStatus({
+    checkInTime,
+    status: 'checked_in',
+    checkOutTime: null
+  });
 };
 
 export const bubbleTemplate = {

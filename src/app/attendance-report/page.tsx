@@ -19,6 +19,9 @@ import {
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
+import { 
+  roundToOneDecimal
+} from '~/lib/utils/number';
 
 // Register Chart.js components
 ChartJS.register(
@@ -170,7 +173,7 @@ export default function AttendanceReportPage() {
 
   const formatHours = (hours: number | null) => {
     if (hours === null) return '-';
-    return `${hours.toFixed(2)} ชั่วโมง`;
+    return `${roundToOneDecimal(hours)} ชั่วโมง`;
   };
 
   const getStatusColor = (status: string) => {
@@ -369,21 +372,21 @@ export default function AttendanceReportPage() {
                 </div>
                 <div className="bg-green-50 p-4 rounded-lg">
                   <h3 className="text-sm font-medium text-green-600">ชั่วโมงรวม</h3>
-                  <p className="text-2xl font-bold text-green-900">{report.totalHoursWorked.toFixed(1)}</p>
+                  <p className="text-2xl font-bold text-green-900">{roundToOneDecimal(report.totalHoursWorked)}</p>
                   <p className="text-xs text-green-600">ชั่วโมง</p>
                 </div>
                 <div className="bg-purple-50 p-4 rounded-lg">
                   <h3 className="text-sm font-medium text-purple-600">เปอร์เซ็นต์การเข้างาน</h3>
-                  <p className="text-2xl font-bold text-purple-900">{report.attendanceRate.toFixed(1)}%</p>
+                  <p className="text-2xl font-bold text-purple-900">{roundToOneDecimal(report.attendanceRate)}%</p>
                 </div>
                 <div className="bg-orange-50 p-4 rounded-lg">
                   <h3 className="text-sm font-medium text-orange-600">ชั่วโมงเฉลี่ย/วัน</h3>
-                  <p className="text-2xl font-bold text-orange-900">{report.averageHoursPerDay.toFixed(1)}</p>
+                  <p className="text-2xl font-bold text-orange-900">{roundToOneDecimal(report.averageHoursPerDay)}</p>
                   <p className="text-xs text-orange-600">ชั่วโมง</p>
                 </div>
                 <div className="bg-purple-50 p-4 rounded-lg">
                   <h3 className="text-sm font-medium text-purple-600">อัตราการทำงานครบเวลา</h3>
-                  <p className="text-2xl font-bold text-purple-900">{report.complianceRate.toFixed(1)}%</p>
+                  <p className="text-2xl font-bold text-purple-900">{roundToOneDecimal(report.complianceRate)}%</p>
                   <p className="text-xs text-purple-600">{report.completeDays} วัน ครบ 9 ชม.</p>
                 </div>
               </div>
