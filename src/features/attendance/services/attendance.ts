@@ -1,5 +1,12 @@
 import { db } from "~/lib/database/db";
 import { holidayService } from "./holidays";
+import { selectRandomElement } from "~/lib/crypto-random";
+import { 
+  roundToTwoDecimals, 
+  roundToOneDecimal, 
+  calculatePercentage,
+  calculateAverage
+} from "~/lib/utils/number";
 
 // Company workplace policies (based on Thai requirements)
 const WORKPLACE_POLICIES = {
@@ -120,9 +127,19 @@ const isValidCheckInTime = (date: Date): { valid: boolean; message?: string; isE
   }
   
   if (timeInMinutes > latestTime) {
+    const lateMessages = [
+      `เวลาเข้างานสายเกินไป กรุณาเข้างานก่อน ${WORKPLACE_POLICIES.LATEST_CHECK_IN.hour}:${WORKPLACE_POLICIES.LATEST_CHECK_IN.minute.toString().padStart(2, '0')} น.`,
+      `อุ๊ย สายไปแล้ว! 🙈 พรุ่งนี้ตั้งนาฬิกาปลุกเร็วหน่อยนะ`,
+      `หลับหลือ? 😴 เข้างานทันเวลาดีกว่า (ก่อน 11:00 น.)`,
+      `เอาใจช่วยนาฬิกาปลุกด้วยนะ ⏰ เข้างานช้าไปแล้วจ้า`,
+      `แปะ! สายเกินไปแล้ว 🏃‍♂️💨 พรุ่งนี้มาเร็วกว่านี้นะ`,
+      `เฮ้อ... สายอีกแล้ว 😅 ไปกินข้าวเช้าแล้วมาใหม่พรุ่งนี้`,
+      `มองนาฬิกาซิ สายแล้วค่ะ 🕐 เข้างานก่อน 11:00 น. นะ`
+    ] as const;
+    const randomMessage = selectRandomElement(lateMessages);
     return {
       valid: false,
-      message: `เวลาเข้างานสายเกินไป กรุณาเข้างานก่อน ${WORKPLACE_POLICIES.LATEST_CHECK_IN.hour}:${WORKPLACE_POLICIES.LATEST_CHECK_IN.minute.toString().padStart(2, '0')} น.`
+      message: randomMessage
     };
   }
   
@@ -153,7 +170,7 @@ const getWorkingHoursInfo = (checkInTime: Date, checkOutTime?: Date) => {
     expectedCheckOutTime: expectedCheckOut,
     actualCheckOutTime: checkOutTime,
     isCompleteWorkDay,
-    actualHours: Math.round(actualHours * 100) / 100,
+    actualHours: roundToTwoDecimals(actualHours), // 🚀 ใช้ utility function
     status: isCompleteWorkDay ? 'complete' as const : 'incomplete' as const
   };
 };
@@ -214,16 +231,36 @@ const checkIn = async (userId: string): Promise<CheckInResult> => {
       // Check if it's a public holiday
       const isHoliday = await isPublicHoliday(actualCheckInTime);
       if (isHoliday) {
+        const holidayMessages = [
+          `วันนี้วันหยุดนักขัตฤกษ์ ไม่ต้องมาทำงานครับ 🎉 พักผ่อนได้เลย`,
+          `เฮ้ย! วันนี้วันหยุดใหญ่นะ ไปเที่ยวเลย 🏖️ อย่ามาทำงาน`,
+          `วันนี้หยุดยาวๆ นอนดึกได้ แล้วไปกินข้าวอร่อยๆ 😴🍜`,
+          `เป็นวันหยุดแล้วยังมาทำงาน? พักบ้างสิคะ 😅 ไปผ่อนคลายได้`,
+          `อิอิ วันนี้หยุดนะจ๊ะ ไปเที่ยวกับครอบครัวดีกว่า 👨‍👩‍👧‍👦✨`,
+          `หยุดแล้วหยุดแล้ว! เก็บโน๊ตบุ๊คไว้ ไปทำกิจกรรมสนุกๆ 🎮🎨`,
+          `วันนี้วันพักผ่อน อย่าเครียดกับงานนะ ไปออกกำลังกายมั้ย? 🏃‍♂️💪`
+        ] as const;
+        const randomMessage = selectRandomElement(holidayMessages);
         return {
           success: false,
-          message: `วันนี้เป็นวันหยุดประจำปี ไม่สามารถลงชื่อเข้างานได้`
+          message: randomMessage
         };
       }
       
       // If not a public holiday, it must be a weekend
+      const weekendMessages = [
+        `วันนี้${dayName}หยุดนะครับ 😴 มาทำงานวันจันทร์-ศุกร์เท่านั้น`,
+        `เอ่อ... วันนี้${dayName}แล้วนะ 🤔 ไปนอนต่อดีกว่า หรือไปเที่ยว!`,
+        `${dayName}แล้วยังมาทำงาน? แรงมากเลย 💪 แต่ว่าไปพักดีกว่า`,
+        `ปกติ${dayName}นี่นอนดึกได้นะ 😆 ไปทำอะไรสนุกๆ มาเถอะ`,
+        `${dayName}หยุดจ้า ไปกินข้าวเที่ยงอร่อยๆ แล้วไปดูหนัง 🍽️🎬`,
+        `วันหยุด${dayName} ไปช็อปปิ้งหรือไปตลาดนัดมั้ย? 🛍️✨`,
+        `${dayName}นี้พักเบรกๆ ไปออกกำลังกายหรือไปสปาก็ได้ 🧘‍♀️💆‍♂️`
+      ] as const;
+      const randomMessage = selectRandomElement(weekendMessages);
       return {
         success: false,
-        message: `วันนี้เป็น${dayName} ไม่ใช่วันทำงาน (จันทร์-ศุกร์เท่านั้น)`
+        message: randomMessage
       };
     }
     
@@ -279,18 +316,38 @@ const checkIn = async (userId: string): Promise<CheckInResult> => {
           }
         });
         
+        const afternoonMessages = [
+          "ยิ้มๆ กลับมาแล้ว! (ครึ่งวันหลัง) 🌇",
+          "ยินดีต้อนรับกลับ! 🌇 เข้างานช่วงบ่ายแล้ว",
+          "กลับมาแล้ว! 😊 เข้างานช่วงบ่าย",
+          "เริ่มงานช่วงบ่ายกันเลย! ☀️",
+          "ช่วงบ่ายมาแล้ว 🕐 เริ่มทำงานต่อ",
+          "เข้างานครึ่งวันหลังเรียบร้อย! 👌"
+        ] as const;
+        const randomMessage = selectRandomElement(afternoonMessages);
+        
         return {
           success: true,
-          message: "ลงชื่อเข้างานสำเร็จ (ครึ่งวันหลัง)",
+          message: randomMessage,
           checkInTime: recordedCheckInTime,
           expectedCheckOutTime: calculatedExpectedCheckOutTime
         };
       }
       
       // If still checked in, return already checked in message
+      const alreadyCheckedInMessages = [
+        "คุณได้ลงชื่อเข้างานวันนี้แล้ว",
+        "เฮ้ย! เข้างานไปแล้วนะ 🤔 จำไม่ได้เหรอ?",
+        "มาแล้วค่ะ มาแล้ว! 😄 เข้างานไปตั้งแต่เช้าแล้ว",
+        "อิอิ ลืมแล้วเหรอ? เช็คอินไปแล้วนะจ๊ะ ✅",
+        "เอ๊ะ? เข้างานไปแล้วนี่นา 🙃 ความจำไม่ดีแล้วเหรอ",
+        "มาเก็บข้าวแกงมั้ย? เพราะเข้างานไปแล้ว 😂🍱",
+        "ระวังหลงทางในออฟฟิศนะ เข้างานไปแล้วน้า 🗺️"
+      ] as const;
+      const randomMessage = selectRandomElement(alreadyCheckedInMessages);
       return {
         success: false,
-        message: "คุณได้ลงชื่อเข้างานวันนี้แล้ว",
+        message: randomMessage,
         alreadyCheckedIn: true,
         checkInTime: existingAttendance.checkInTime,
         expectedCheckOutTime: calculateExpectedCheckOutTime(existingAttendance.checkInTime)
@@ -310,14 +367,36 @@ const checkIn = async (userId: string): Promise<CheckInResult> => {
     const checkInTimeStr = formatThaiTimeOnly(recordedCheckInTime);
     const expectedCheckOutStr = formatThaiTimeOnly(calculatedExpectedCheckOutTime);
     
-    // Create message with early check-in info if applicable
-    let message = `ลงชื่อเข้างานสำเร็จ เวลา ${checkInTimeStr} น. (เลิกงาน ${expectedCheckOutStr} น.)`;
+    // Create success messages
+    const successMessages = [
+      `เยี่ยม! เข้างานแล้ว 🌟 ${checkInTimeStr} น. (เลิกงาน ${expectedCheckOutStr} น.)`,
+      `เย่! เข้างานแล้ว 🎉 ${checkInTimeStr} น. (เลิกงาน ${expectedCheckOutStr} น.)`,
+      `ยินดีต้อนรับสู่ออฟฟิศ! ⭐ ${checkInTimeStr} น. (เลิกงาน ${expectedCheckOutStr} น.)`,
+      `สู้ๆ วันนี้นะ! 💪 เข้างาน ${checkInTimeStr} น. (เลิกงาน ${expectedCheckOutStr} น.)`,
+      `เริ่มต้นวันใหม่แล้ว ✨ ${checkInTimeStr} น. (เลิกงาน ${expectedCheckOutStr} น.)`,
+      `มาแล้วจ้า! 😊 เข้างาน ${checkInTimeStr} น. (เลิกงาน ${expectedCheckOutStr} น.)`,
+      `พร้อมทำงานแล้ว! 🚀 ${checkInTimeStr} น. (เลิกงาน ${expectedCheckOutStr} น.)`
+    ] as const;
+    
+    let message = selectRandomElement(successMessages);
+    
     if (timeValidation.isEarlyCheckIn) {
       const hour = actualCheckInTime.getHours();
+      // 🚀 คำนวณ string ครั้งเดียว
+      const checkInStr = checkInTimeStr;
+      const checkOutStr = "17:00 น.";
+      
+      const earlyMessages = [
+        `\n⏰ มาถึงสำนักงานตั้งแต่ ${checkInStr} น. (เลิกงาน ${checkOutStr})`,
+        `\n🌅 มาเช้ามากเลย! ${checkInStr} น. (เลิกงาน ${checkOutStr})`,
+        `\n⭐ ขยันจัง! มาตั้งแต่ ${checkInStr} น. (เลิกงาน ${checkOutStr})`,
+        `\n🐓 ไก่ยังไม่ขัน! ${checkInStr} น. (เลิกงาน ${checkOutStr})`
+      ] as const;
+      
       if (hour < 1) {
-        message += `\n⏰ มาถึงสำนักงานหลังเที่ยงคืน ${checkInTimeStr} น. (เลิกงาน 17:00 น.)`;
+        message += `\n🌙 มาถึงสำนักงานหลังเที่ยงคืน ${checkInStr} น. (เลิกงาน ${checkOutStr})`;
       } else {
-        message += `\n⏰ มาถึงสำนักงานตั้งแต่ ${checkInTimeStr} น. (เลิกงาน 17:00 น.)`;
+        message += selectRandomElement(earlyMessages);
       }
     }
 
@@ -332,9 +411,19 @@ const checkIn = async (userId: string): Promise<CheckInResult> => {
 
   } catch (error) {
     console.error('Error during check-in:', error);
+    const gentleErrorMessages = [
+      "อุ๊ปส์ ระบบมีอาการงัวเงียนิดหน่อย 🌸 รอซักครู่แล้วลองใหม่นะคะ",
+      "เอ๊ะ มีอะไรผิดปกติเล็กน้อย 🦋 ช่วยลองใหม่อีกครั้งได้มั้ยคะ",
+      "โทษทีนะคะ ระบบกำลังหลับในค่ะ 😴💤 ลองกดใหม่ดูนะ",
+      "อ่าว มีบางอย่างไม่ค่อยเรียบร้อย 🌺 ขอโทษด้วยนะ ลองใหม่ได้เลย",
+      "โอ้โห ระบบงงๆ นิดหน่อย 🌙✨ รอหน่อยแล้วลองใหม่ดูนะคะ",
+      "ขออภัยค่ะ มีเรื่องไม่คาดฝันเกิดขึ้น 🌿 ลองอีกครั้งได้มั้ยคะ",
+      "เสียใจด้วยนะ ระบบค้างซักหน่อย 🕊️ ช่วยรอแป้บแล้วลองใหม่ค่ะ"
+    ] as const;
+    const randomMessage = selectRandomElement(gentleErrorMessages);
     return {
       success: false,
-      message: "เกิดข้อผิดพลาดในการลงชื่อเข้างาน"
+      message: randomMessage
     };
   }
 };
@@ -355,17 +444,38 @@ const checkOut = async (userId: string): Promise<CheckInResult> => {
     });
 
     if (!attendance) {
+      const gentleNotFoundMessages = [
+        "หืม... ดูเหมือนว่าวันนี้ยังไม่ได้เข้างานเลยนะ 🌸 ลองเข้างานก่อนไหมคะ",
+        "อ่าว ไม่เจอการลงชื่อเข้างานวันนี้เลย 🦋 เข้างานก่อนแล้วค่อยออกนะ",
+        "เอ๊ะ วันนี้ยังไม่ได้เซ็นชื่อเข้างานเหรอคะ 😴 ลองเข้างานก่อนดูนะ",
+        "โอ้โห ยังไม่เจอรอยเท้าการเข้างานวันนี้เลย 🌺 เข้างานก่อนไหมคะ",
+        "ดูสิ ยังไม่มีการเข้างานวันนี้เลย 🌙 ลองเข้างานก่อนแล้วค่อยออกนะ",
+        "อุ๊ปส์ วันนี้ยังไม่ได้เริ่มงานเหรอคะ 🌿 เข้างานก่อนแล้วค่อยออกนะ",
+        "เฮ้ย ยังไม่เจอข้อมูลการเข้างานวันนี้เลย 🕊️ ลองเข้างานก่อนดูไหม"
+      ] as const;
+      const randomMessage = selectRandomElement(gentleNotFoundMessages);
       return {
         success: false,
-        message: "ไม่พบการลงชื่อเข้างานวันนี้"
+        message: randomMessage
       };
     }
 
     if (attendance.status === "checked_out") {
       const workInfo = getWorkingHoursInfo(attendance.checkInTime, attendance.checkOutTime || checkOutTime);
+      const workHours = roundToOneDecimal(workInfo.actualHours); // 🚀 ใช้ utility function
+      const alreadyCheckedOutMessages = [
+        `เฮ้ย ออกงานไปแล้วนะ 😄 ทำงานมา ${workHours} ชม. เก่งมาก!`,
+        `อ่าว ลงชื่อออกไปแล้วจ้า 🎉 วันนี้ทำงาน ${workHours} ชม. เลย`,
+        `โอ้โห ออกงานไปแล้วหรอ 😊 ทำงานครบ ${workHours} ชม. แล้วนะ`,
+        `เออ ออกงานไปแล้วแหละ ✨ วันนี้ทำงาน ${workHours} ชม. เหนื่อยมั้ย`,
+        `เฮ้ อ๊ากกก ออกไปแล้วจ้า 💪 ทำงานมา ${workHours} ชม. เก่งสุดๆ`,
+        `หืม... ออกงานไปแล้วนะคะ 🚀 วันนี้ทำงาน ${workHours} ชม.`,
+        `อุ๊ปส์ ออกไปแล้วแหละ 😌 ทำงานได้ ${workHours} ชม. ดีมาก!`
+      ] as const;
+      const randomMessage = selectRandomElement(alreadyCheckedOutMessages);
       return {
         success: false,
-        message: `คุณได้ลงชื่อออกงานแล้ว (ทำงาน ${workInfo.actualHours.toFixed(1)} ชม.)`,
+        message: randomMessage,
         checkInTime: attendance.checkInTime,
         expectedCheckOutTime: attendance.checkOutTime || checkOutTime
       };
@@ -388,13 +498,42 @@ const checkOut = async (userId: string): Promise<CheckInResult> => {
     const checkInTimeStr = formatThaiTimeOnly(attendance.checkInTime);
     const checkOutTimeStr = formatThaiTimeOnly(checkOutTime);
     
-    let message = `ลงชื่อออกงานสำเร็จ\nเข้างาน: ${checkInTimeStr} น.\nออกงาน: ${checkOutTimeStr} น.\nรวม: ${workInfo.actualHours.toFixed(1)} ชม.`;
+    const successCheckoutMessages = [
+      "ยิ้มๆ เสร็จงานเรียบร้อยแล้ว! 🎉",
+      "ออกงานแล้วจ้า ดีมากก! ✨",
+      "เก่งมาก! ทำงานจบแล้ว 💪",
+      "สุดยอด! วันนี้ทำงานเสร็จแล้ว 😊",
+      "โอเค! ออกงานเรียบร้อย 🚀",
+      "ได้แล้ว! เลิกงานแล้วจ้า 😌",
+      "เยี่ยม! ลงชื่อออกงานสำเร็จ 🌟"
+    ] as const;
+    const randomSuccessMessage = selectRandomElement(successCheckoutMessages);
+    
+    // 🚀 คำนวณค่าต่างๆ ครั้งเดียว
+    const workHours = roundToOneDecimal(workInfo.actualHours);
+    let message = `${randomSuccessMessage}\nเข้างาน: ${checkInTimeStr} น.\nออกงาน: ${checkOutTimeStr} น.\nรวม: ${workHours} ชม.`;
     
     if (!workInfo.isCompleteWorkDay) {
       const shortHours = WORKPLACE_POLICIES.TOTAL_HOURS_PER_DAY - workInfo.actualHours;
-      message += `\n⚠️ ทำงานไม่ครบ (ขาด ${shortHours.toFixed(1)} ชม.)`;
+      const shortHoursStr = roundToOneDecimal(shortHours); // 🚀 ใช้ utility function
+      const shortWorkMessages = [
+        `💭 วันนี้ทำงานเร็วไปนิดนึง (ขาด ${shortHoursStr} ชม.)`,
+        `🤔 อ่าว เลิกเร็วไปหน่อยนะ (ขาด ${shortHoursStr} ชม.)`,
+        `😊 วันนี้เลิกงานเร็วนะ (ขาด ${shortHoursStr} ชม.)`,
+        `🌸 ทำงานสั้นไปนิดหน่อย (ขาด ${shortHoursStr} ชม.)`
+      ] as const;
+      const randomShortMessage = selectRandomElement(shortWorkMessages);
+      message += `\n${randomShortMessage}`;
     } else {
-      message += `\n✅ ทำงานครบตามนโยบาย`;
+      const completeWorkMessages = [
+        "✨ ทำงานครบตามนโยบาย เก่งมาก!",
+        "🎯 สุดยอด! ทำงานครบแล้ว",
+        "💪 เยี่ยม! ทำงานครบ 8 ชม.",
+        "🌟 ดีมาก! ครบตามนโยบาย",
+        "🎉 เก่งจัง! ทำงานครบเวลา"
+      ] as const;
+      const randomCompleteMessage = selectRandomElement(completeWorkMessages);
+      message += `\n${randomCompleteMessage}`;
     }
 
     return {
@@ -406,9 +545,19 @@ const checkOut = async (userId: string): Promise<CheckInResult> => {
 
   } catch (error) {
     console.error('Error during check-out:', error);
+    const gentleErrorMessages = [
+      "อุ๊ปส์ ระบบมีอาการงัวเงียนิดหน่อย 🌸 รอซักครู่แล้วลองใหม่นะคะ",
+      "เอ๊ะ มีอะไรผิดปกติเล็กน้อย 🦋 ช่วยลองใหม่อีกครั้งได้มั้ยคะ",
+      "โทษทีนะคะ ระบบกำลังหลับในค่ะ 😴💤 ลองกดใหม่ดูนะ",
+      "อ่าว มีบางอย่างไม่ค่อยเรียบร้อย 🌺 ขอโทษด้วยนะ ลองใหม่ได้เลย",
+      "โอ้โห ระบบงงๆ นิดหน่อย 🌙✨ รอหน่อยแล้วลองใหม่ดูนะคะ",
+      "ขออภัยค่ะ มีเรื่องไม่คาดฝันเกิดขึ้น 🌿 ลองอีกครั้งได้มั้ยคะ",
+      "เสียใจด้วยนะ ระบบค้างซักหน่อย 🕊️ ช่วยรอแป้บแล้วลองใหม่ค่ะ"
+    ] as const;
+    const randomMessage = selectRandomElement(gentleErrorMessages);
     return {
       success: false,
-      message: "เกิดข้อผิดพลาดในการลงชื่อออกงาน"
+      message: randomMessage
     };
   }
 };
@@ -487,25 +636,32 @@ const getMonthlyAttendanceReport = async (userId: string, month: string): Promis
     const totalHoursWorked = processedRecords.reduce((total, record) => {
       return total + (record.hoursWorked || 0);
     }, 0);
-    const attendanceRate = workingDaysInMonth > 0 ? (totalDaysWorked / workingDaysInMonth) * 100 : 0;
+    // Calculate metrics
+    const attendanceRate = calculatePercentage(totalDaysWorked, workingDaysInMonth);
     
     // Calculate policy compliance metrics
     const completeDays = processedRecords.filter(record => 
       record.hoursWorked && record.hoursWorked >= WORKPLACE_POLICIES.TOTAL_HOURS_PER_DAY
     ).length;
-    const complianceRate = totalDaysWorked > 0 ? (completeDays / totalDaysWorked) * 100 : 0;
-    const averageHoursPerDay = totalDaysWorked > 0 ? totalHoursWorked / totalDaysWorked : 0;
+    const complianceRate = calculatePercentage(completeDays, totalDaysWorked);
+    const averageHoursPerDay = calculateAverage(totalHoursWorked, totalDaysWorked);
+
+    // 🚀 คำนวณค่าต่างๆ ครั้งเดียว
+    const roundedTotalHours = roundToTwoDecimals(totalHoursWorked);
+    const roundedAttendanceRate = roundToTwoDecimals(attendanceRate);
+    const roundedComplianceRate = roundToTwoDecimals(complianceRate);
+    const roundedAverageHours = roundToTwoDecimals(averageHoursPerDay);
 
     return {
       userId,
       month,
       totalDaysWorked,
-      totalHoursWorked: Math.round(totalHoursWorked * 100) / 100, // Round to 2 decimal places
+      totalHoursWorked: roundedTotalHours,
       attendanceRecords: processedRecords,
       workingDaysInMonth,
-      attendanceRate: Math.round(attendanceRate * 100) / 100,
-      complianceRate: Math.round(complianceRate * 100) / 100,
-      averageHoursPerDay: Math.round(averageHoursPerDay * 100) / 100,
+      attendanceRate: roundedAttendanceRate,
+      complianceRate: roundedComplianceRate,
+      averageHoursPerDay: roundedAverageHours,
       completeDays
     };
 

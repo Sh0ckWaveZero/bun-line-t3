@@ -5,7 +5,6 @@
  */
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/database'
-import { headers } from 'next/headers'
 
 interface HealthCheckResponse {
   status: 'healthy' | 'unhealthy' | 'degraded'

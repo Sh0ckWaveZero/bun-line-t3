@@ -164,3 +164,24 @@ export function generateSecurePassword(length: number = 16, includeSymbols: bool
 export function generateNumericCode(length: number = 6): string {
   return generateRandomString(length, CHARSETS.NUMERIC);
 }
+
+/**
+ * Securely select a random element from an array
+ * Uses cryptographically secure random number generation
+ * 
+ * @param array - The array to select from
+ * @returns A randomly selected element from the array
+ * @throws Error if array is empty
+ */
+export function selectRandomElement<T>(array: readonly T[]): T {
+  if (array.length === 0) {
+    throw new Error('Array cannot be empty');
+  }
+  
+  const randomIndex = randomInt(0, array.length - 1);
+  const selectedElement = array[randomIndex];
+  if (selectedElement === undefined) {
+    throw new Error('Failed to select random element');
+  }
+  return selectedElement;
+}

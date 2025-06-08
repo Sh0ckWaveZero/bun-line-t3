@@ -82,7 +82,8 @@ services:
       - AIRVISUAL_API_KEY=${AIRVISUAL_API_KEY}
       - CMC_API_KEY=${CMC_API_KEY}
       - CMC_URL=https://pro-api.coinmarketcap.com
-    restart: unless-stopped    
+    # 🔄 AUTO-RESTART: เริ่มต้นอัตโนมัติหลังเปิดเครื่อง และ restart เมื่อ crash
+    restart: always
     
     # 🔧 RASPBERRY PI OPTIMIZATION: จำกัด memory usage runtime
     mem_limit: 1.5g
@@ -91,11 +92,11 @@ services:
     
     # 🛡️ SECURITY: Health check ที่ปลอดภัยสำหรับตรวจสอบสถานะแอปพลิเคชัน
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:12914/api/health"]
+      test: ["CMD-SHELL", "curl -f http://localhost:12914/api/health || exit 1"]
       interval: 60s
-      timeout: 5s
-      retries: 3
-      start_period: 30s  # เพิ่มเวลาสำหรับ Pi ที่ช้ากว่า
+      timeout: 10s
+      retries: 5
+      start_period: 60s  # เพิ่มเวลาสำหรับ Pi ที่ช้ากว่า
     
     # 🔐 SECURITY: Security และ resource limits
     security_opt:
@@ -136,7 +137,8 @@ services:
       # Security: เฉพาะ CRON_SECRET ที่จำเป็นสำหรับ API calls
       # =============================================================================
       - CRON_SECRET=${CRON_SECRET}
-    restart: unless-stopped
+    # 🔄 AUTO-RESTART: เริ่มต้นอัตโนมัติหลังเปิดเครื่อง และ restart เมื่อ crash
+    restart: always
     
     # 🔧 RASPBERRY PI OPTIMIZATION: จำกัด memory สำหรับ cron service
     mem_limit: 512m
@@ -147,6 +149,14 @@ services:
     depends_on:
       app:
         condition: service_healthy
+    
+    # ⏰ CRON HEALTH CHECK: ตรวจสอบว่า cron service ยังทำงานอยู่
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'node.*cron' || exit 1"]
+      interval: 300s  # ตรวจสอบทุก 5 นาที
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     
     # 🔐 SECURITY: Security สำหรับ cron service
     security_opt:

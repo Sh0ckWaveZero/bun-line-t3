@@ -2,6 +2,10 @@
 export * from './line';
 export * from './randomColor';
 
+// Import utility functions
+import { roundToTwoDecimals } from '~/lib/utils/number';
+
+
 // Existing utilities
 type TemplateParameter = any[];
 
@@ -70,8 +74,7 @@ const compareDate = (dateA: string, dateB: string) => {
 const expo = (price: string, symbol: string) => {
   const parsedPrice = Number(price);
   if (parsedPrice > 1) {
-    return `${symbol} ${Number.parseFloat(price)
-      .toFixed(3)
+    return `${symbol} ${(Math.round(Number.parseFloat(price) * 1000) / 1000)
       .toString()
       .replace(regex, ',')}`;
   } else if (parsedPrice > 0.00001) {
@@ -94,8 +97,7 @@ const customPriceFormat = (price: string, digit: number, symbol: string) => {
 
 const volumeChangeFormat = (price: string) => {
   const parsedPrice = parseFloat(price);
-  return `${parsedPrice > 0 ? '+' : ''}${parsedPrice
-    .toFixed(2)
+  return `${parsedPrice > 0 ? '+' : ''}${roundToTwoDecimals(parsedPrice)
     .toString()
     .replace(regex, ',')}%`;
 }
