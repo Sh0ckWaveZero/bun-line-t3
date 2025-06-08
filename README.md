@@ -2,6 +2,8 @@
 
 Modern LINE Bot application built with T3 Stack, featuring comprehensive attendance management, cryptocurrency tracking, and air quality monitoring.
 
+> **🛡️ Security-First Architecture** | **🔧 Docker-optimized** | **📱 LINE Integration** | **⚡ Production Ready**
+
 ## 📋 Table of Contents
 
 - [🌟 Features](#-features)
@@ -19,7 +21,7 @@ Modern LINE Bot application built with T3 Stack, featuring comprehensive attenda
 ### 🏢 Attendance Management
 - **Smart Check-in/Check-out** - Automatic 9-hour work calculation
 - **Real-time Notifications** - Push notifications for attendance events
-- **Automated Checkout Reminders** - ✅ **Production Ready** - Serverless end-of-day notifications via Vercel Cron Jobs
+- **🔔 Automated Checkout Reminders** - ✅ **Production Ready** - Docker Cron Jobs with security-first design
 - **Monthly Reports** - Comprehensive attendance analytics
 - **Holiday Support** - Thai national holidays integration
 - **Early Check-in** - Flexible early arrival handling
@@ -71,6 +73,18 @@ src/
 - **Path Aliases** - Clean imports with `@/` prefix
 
 For detailed architecture documentation, see [`BACKEND_ARCHITECTURE.md`](./docs/BACKEND_ARCHITECTURE.md)
+
+## 🛡️ Recent Security Optimization
+
+> **June 8, 2025** - Major security and documentation cleanup completed
+
+### Key Improvements
+- ✅ **Cron Service Security**: Reduced environment variables from 15+ to 3 (-80%)
+- ✅ **Attack Surface Reduction**: Minimalist approach following Principle of Least Privilege
+- ✅ **Documentation Cleanup**: Organized from 28 to 22 files (-21.4%)
+- ✅ **Security Architecture**: Clear separation of concerns between services
+
+See [`SECURITY_OPTIMIZATION_COMPLETE.md`](./docs/SECURITY_OPTIMIZATION_COMPLETE.md) for details.
 
 ## 🚀 Quick Start
 

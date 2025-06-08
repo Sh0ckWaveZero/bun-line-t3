@@ -13,7 +13,13 @@
     "start": "next start",
     "seed:holidays": "tsx scripts/seed-holidays-2025.ts",
     "generate:secrets": "bun scripts/generate-secrets.ts",
-    "build:docker": "NEXT_TELEMETRY_DISABLED=1 next build"
+    "build:docker": "NEXT_TELEMETRY_DISABLED=1 next build",
+    "secrets:generate": "bun scripts/generate-github-secrets.ts generate",
+    "secrets:info": "bun scripts/generate-github-secrets.ts info",
+    "secrets:validate": "bun scripts/generate-github-secrets.ts validate",
+    "runner:monitor": "./monitor-runner.sh",
+    "docker:cleanup": "docker system prune -f && docker image prune -a -f",
+    "deploy:check": "bun scripts/generate-github-secrets.ts validate && docker system info"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.9.1",

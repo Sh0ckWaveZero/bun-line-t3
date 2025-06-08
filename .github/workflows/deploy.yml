@@ -1,0 +1,435 @@
+# 🚀 GitHub Actions Deployment Workflow
+# สำหรับ Self-Hosted Runner (Raspberry Pi) และ GitHub Secrets Management
+
+name: 🚀 Deploy to Production
+
+on:
+  push:
+    branches: [main, production]
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+      - ".vscode/**"
+
+  # Manual deployment trigger พร้อม options
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: "Force rebuild Docker images"
+        required: false
+        default: false
+        type: boolean
+      skip_health_checks:
+        description: "Skip health checks (for emergency deployments)"
+        required: false
+        default: false
+        type: boolean
+      environment:
+        description: "Target environment"
+        required: true
+        default: "production"
+        type: choice
+        options:
+          - production
+          - staging
+
+# 🔐 Security: กำหนด permissions อย่างจำกัด
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+
+# 🛡️ Environment Variables: จาก GitHub Secrets เท่านั้น
+env:
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
+  # ตั้งค่า timezone สำหรับ logs
+  TZ: Asia/Bangkok
+
+jobs:
+  # Job 1: Security และ Environment Validation
+  security-check:
+    name: 🔐 Security & Environment Validation
+    runs-on: self-hosted
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🔍 Validate Required Secrets
+        run: |
+          echo "🔐 ตรวจสอบ GitHub Secrets ที่จำเป็น..."
+
+          REQUIRED_SECRETS=(
+            "DATABASE_URL"
+            "NEXTAUTH_URL" 
+            "NEXTAUTH_SECRET"
+            "JWT_SECRET"
+            "INTERNAL_API_KEY"
+            "CRON_SECRET"
+            "LINE_CLIENT_ID"
+            "LINE_CLIENT_SECRET"
+            "LINE_LOGIN_CHANNEL_ID"
+            "LINE_LOGIN_CHANNEL_SECRET"
+            "LINE_CHANNEL_ACCESS"
+            "LINE_CHANNEL_SECRET"
+            "AIRVISUAL_API_KEY"
+            "CMC_API_KEY"
+            "OPENAI_API_KEY"
+          )
+
+          MISSING_SECRETS=()
+
+          for secret in "${REQUIRED_SECRETS[@]}"; do
+            if [[ -z "${!secret}" ]]; then
+              MISSING_SECRETS+=("$secret")
+            fi
+          done
+
+          if [[ ${#MISSING_SECRETS[@]} -gt 0 ]]; then
+            echo "❌ Missing required secrets:"
+            printf '%s\n' "${MISSING_SECRETS[@]}"
+            echo "กรุณาตั้งค่า GitHub Secrets ใน Repository Settings"
+            exit 1
+          fi
+
+          echo "✅ All required secrets are configured"
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          LINE_CLIENT_ID: ${{ secrets.LINE_CLIENT_ID }}
+          LINE_CLIENT_SECRET: ${{ secrets.LINE_CLIENT_SECRET }}
+          LINE_LOGIN_CHANNEL_ID: ${{ secrets.LINE_LOGIN_CHANNEL_ID }}
+          LINE_LOGIN_CHANNEL_SECRET: ${{ secrets.LINE_LOGIN_CHANNEL_SECRET }}
+          LINE_CHANNEL_ACCESS: ${{ secrets.LINE_CHANNEL_ACCESS }}
+          LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
+          AIRVISUAL_API_KEY: ${{ secrets.AIRVISUAL_API_KEY }}
+          CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+      - name: 🖥️ System Resource Check
+        run: |
+          echo "🖥️ ตรวจสอบ system resources..."
+
+          # Memory check
+          AVAILABLE_MEMORY=$(free -m | awk 'NR==2{printf "%.0f", $7}')
+          REQUIRED_MEMORY=1024
+
+          if [[ $AVAILABLE_MEMORY -lt $REQUIRED_MEMORY ]]; then
+            echo "⚠️ Warning: Available memory: ${AVAILABLE_MEMORY}MB (recommended: ${REQUIRED_MEMORY}MB+)"
+          else
+            echo "✅ Memory: ${AVAILABLE_MEMORY}MB available"
+          fi
+
+          # Disk space check
+          AVAILABLE_DISK=$(df -BM /var/lib/docker 2>/dev/null | awk 'NR==2{print $4}' | sed 's/M//' || echo "1000")
+          REQUIRED_DISK=2048
+
+          if [[ $AVAILABLE_DISK -lt $REQUIRED_DISK ]]; then
+            echo "❌ Insufficient disk space: ${AVAILABLE_DISK}MB (required: ${REQUIRED_DISK}MB+)"
+            exit 1
+          else
+            echo "✅ Disk space: ${AVAILABLE_DISK}MB available"
+          fi
+
+          # Docker service check
+          if ! systemctl is-active --quiet docker; then
+            echo "❌ Docker service is not running"
+            exit 1
+          fi
+          echo "✅ Docker service is running"
+
+      - name: 🧹 Pre-deployment Cleanup
+        run: |
+          echo "🧹 ล้างข้อมูลเก่าเพื่อเตรียมพร้อม deployment..."
+
+          # ลบ dangling images และ unused volumes
+          docker image prune -f || true
+          docker volume prune -f || true
+
+          # ลบ build cache เก่า (เก็บไว้ 24 ชั่วโมง)
+          docker builder prune --filter "until=24h" -f || true
+
+          echo "✅ Cleanup completed"
+
+  # Job 2: Build และ Deploy
+  deploy:
+    name: 🚀 Build & Deploy Application
+    runs-on: self-hosted
+    needs: security-check
+    timeout-minutes: 30
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: 🔧 Setup Environment File
+        run: |
+          echo "🔧 สร้าง .env.prod จาก GitHub Secrets..."
+
+          cat > .env.prod << EOF
+          # =============================================================================
+          # Environment Configuration (Generated from GitHub Secrets)
+          # Generated at: $(date -Iseconds)
+          # Commit: ${{ github.sha }}
+          # =============================================================================
+
+          # Application Environment
+          APP_ENV=production
+          NEXT_PUBLIC_APP_ENV=production
+          HOSTNAME=localhost
+          PORT=${{ secrets.PORT || '12914' }}
+          FRONTEND_URL="${{ secrets.NEXTAUTH_URL }}/"
+
+          # =============================================================================
+          # Authentication & Security
+          # =============================================================================
+
+          # NextAuth Configuration
+          NEXTAUTH_URL="${{ secrets.NEXTAUTH_URL }}"
+          NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}"
+          JWT_SECRET="${{ secrets.JWT_SECRET }}"
+          JWT_EXPIRES_IN=18144000000
+
+          # Internal API Security
+          INTERNAL_API_KEY="${{ secrets.INTERNAL_API_KEY }}"
+
+          # Cron Job Security
+          CRON_SECRET="${{ secrets.CRON_SECRET }}"
+
+          # =============================================================================
+          # LINE Integration
+          # =============================================================================
+
+          # LINE Login Provider
+          LINE_CLIENT_ID="${{ secrets.LINE_CLIENT_ID }}"
+          LINE_CLIENT_SECRET="${{ secrets.LINE_CLIENT_SECRET }}"
+          LINE_LOGIN_CHANNEL_ID="${{ secrets.LINE_LOGIN_CHANNEL_ID }}"
+          LINE_LOGIN_CHANNEL_SECRET="${{ secrets.LINE_LOGIN_CHANNEL_SECRET }}"
+
+          # LINE Messaging API
+          LINE_CHANNEL_ACCESS="${{ secrets.LINE_CHANNEL_ACCESS }}"
+          LINE_MESSAGING_API=https://api.line.me/v2/bot/message
+          LINE_GET_CONTENT=https://api-data.line.me/v2/bot/message
+          LINE_CHANNEL_SECRET="${{ secrets.LINE_CHANNEL_SECRET }}"
+
+          # =============================================================================
+          # Database Configuration
+          # =============================================================================
+
+          # MongoDB
+          MONGODB_URI="${{ secrets.DATABASE_URL }}"
+          DATABASE_URL="${{ secrets.DATABASE_URL }}"
+          DB_NAME=linebot
+
+          # =============================================================================
+          # External API Keys
+          # =============================================================================
+
+          # Air Quality Monitoring
+          AIRVISUAL_API_KEY="${{ secrets.AIRVISUAL_API_KEY }}"
+
+          # Cryptocurrency Market Data
+          CMC_API_KEY="${{ secrets.CMC_API_KEY }}"
+          CMC_URL=https://pro-api.coinmarketcap.com
+
+          # OpenAI API
+          OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}"
+          EOF
+
+          # Set secure permissions
+          chmod 600 .env.prod
+          echo "✅ Environment file created with secure permissions"
+
+      - name: 🛑 Stop Existing Services
+        run: |
+          echo "🛑 หยุดบริการที่ทำงานอยู่..."
+
+          if docker-compose ps | grep -q "Up"; then
+            echo "Stopping existing services..."
+            docker-compose down --timeout 30
+          else
+            echo "No running services found"
+          fi
+
+      - name: 🏗️ Build Application
+        run: |
+          echo "🏗️ Building application..."
+
+          # Force rebuild ถ้า manual trigger เปิดใช้งาน
+          BUILD_ARGS=""
+          if [[ "${{ github.event.inputs.force_rebuild }}" == "true" ]]; then
+            echo "🔄 Force rebuild enabled - pulling base images..."
+            BUILD_ARGS="--pull --no-cache"
+          fi
+
+          docker-compose build $BUILD_ARGS
+
+          echo "✅ Build completed successfully"
+
+      - name: 🚀 Start Services
+        run: |
+          echo "🚀 เริ่มต้นบริการ..."
+
+          # Start services in production mode
+          docker-compose up -d
+
+          echo "✅ Services started successfully"
+        env:
+          # Override environment variables สำหรับ docker-compose
+          PORT: ${{ secrets.PORT || '12914' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          LINE_CLIENT_ID: ${{ secrets.LINE_CLIENT_ID }}
+          LINE_CLIENT_SECRET: ${{ secrets.LINE_CLIENT_SECRET }}
+          LINE_LOGIN_CHANNEL_ID: ${{ secrets.LINE_LOGIN_CHANNEL_ID }}
+          LINE_LOGIN_CHANNEL_SECRET: ${{ secrets.LINE_LOGIN_CHANNEL_SECRET }}
+          LINE_CHANNEL_ACCESS: ${{ secrets.LINE_CHANNEL_ACCESS }}
+          LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
+          AIRVISUAL_API_KEY: ${{ secrets.AIRVISUAL_API_KEY }}
+          CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+      - name: 🔐 Security Cleanup
+        if: always()
+        run: |
+          echo "🔐 ล้างข้อมูลสำคัญ..."
+
+          # ลบไฟล์ environment variables อย่างปลอดภัย
+          if [[ -f .env.prod ]]; then
+            shred -vfz -n 3 .env.prod
+            echo "✅ Environment file securely deleted"
+          fi
+
+          # ล้าง environment variables จาก shell history
+          unset DATABASE_URL NEXTAUTH_SECRET LINE_CHANNEL_SECRET LINE_CHANNEL_ACCESS_TOKEN
+          unset AIRVISUAL_API_KEY CMC_API_KEY ENCRYPTION_KEY HMAC_SECRET
+
+          echo "✅ Security cleanup completed"
+
+  # Job 3: Health Checks และ Monitoring
+  monitor:
+    name: 🏥 Health Checks & Monitoring
+    runs-on: self-hosted
+    needs: deploy
+    timeout-minutes: 10
+    if: github.event.inputs.skip_health_checks != 'true'
+
+    steps:
+      - name: ⏱️ Wait for Service Startup
+        run: |
+          echo "⏱️ รอให้บริการเริ่มต้น..."
+          sleep 30
+
+      - name: 🏥 Application Health Check
+        run: |
+          echo "🏥 ตรวจสอบสุขภาพแอปพลิเคชัน..."
+
+          HEALTH_URL="http://localhost:${{ secrets.PORT || '12914' }}/api/health"
+          MAX_ATTEMPTS=10
+          ATTEMPT=1
+
+          while [[ $ATTEMPT -le $MAX_ATTEMPTS ]]; do
+            echo "Health check attempt $ATTEMPT/$MAX_ATTEMPTS..."
+            
+            if curl -f -s -m 10 "$HEALTH_URL" > /dev/null; then
+              echo "✅ Application is healthy"
+              break
+            else
+              if [[ $ATTEMPT -eq $MAX_ATTEMPTS ]]; then
+                echo "❌ Application health check failed after $MAX_ATTEMPTS attempts"
+                docker-compose logs --tail=50
+                exit 1
+              fi
+              echo "⏳ Waiting 10 seconds before retry..."
+              sleep 10
+              ((ATTEMPT++))
+            fi
+          done
+
+      - name: 🔍 Service Status Check
+        run: |
+          echo "🔍 ตรวจสอบสถานะบริการ..."
+
+          # Check container status
+          if ! docker-compose ps | grep -E "(Up|healthy)"; then
+            echo "❌ Services are not running properly"
+            docker-compose logs --tail=100
+            exit 1
+          fi
+
+          echo "✅ All services are running"
+
+      - name: 📊 Resource Usage Report
+        run: |
+          echo "📊 รายงานการใช้ทรัพยากร..."
+
+          echo "=== Docker Container Stats ==="
+          docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}"
+
+          echo "=== System Resource Usage ==="
+          echo "Memory Usage:"
+          free -h
+
+          echo "Disk Usage:"
+          df -h /var/lib/docker
+
+          echo "✅ Resource report completed"
+
+      - name: 📝 Deployment Summary
+        run: |
+          echo "📝 สรุปการ deployment..."
+
+          echo "🎉 Deployment completed successfully!"
+          echo "📅 Deployed at: $(date -Iseconds)"
+          echo "🔖 Commit: ${{ github.sha }}"
+          echo "🌿 Branch: ${{ github.ref_name }}"
+          echo "👤 Triggered by: ${{ github.actor }}"
+          echo "🔗 Application URL: ${{ secrets.NEXTAUTH_URL }}"
+
+          # Container information
+          echo "🐳 Running containers:"
+          docker-compose ps --format "table {{.Name}}\t{{.State}}\t{{.Ports}}"
+
+  # Job 4: Post-deployment Verification (เฉพาะ production)
+  verify:
+    name: ✅ Post-deployment Verification
+    runs-on: self-hosted
+    needs: monitor
+    timeout-minutes: 5
+    if: github.ref == 'refs/heads/main' && github.event.inputs.skip_health_checks != 'true'
+
+    steps:
+      - name: 🔍 LINE Bot Health Check
+        run: |
+          echo "🔍 ตรวจสอบสุขภาพ LINE Bot..."
+
+          # Test webhook endpoint (ถ้ามี test endpoint)
+          WEBHOOK_URL="http://localhost:${{ secrets.PORT || '12914' }}/api/line"
+
+          if curl -f -s -m 10 -X POST "$WEBHOOK_URL" \
+             -H "Content-Type: application/json" \
+             -d '{"events":[],"destination":"test"}' > /dev/null; then
+            echo "✅ LINE Bot webhook is responsive"
+          else
+            echo "⚠️ LINE Bot webhook test failed (may be normal for production)"
+          fi
+
+      - name: 📧 Notification (Future Enhancement)
+        run: |
+          echo "📧 ส่งการแจ้งเตือน deployment สำเร็จ..."
+          echo "ℹ️ การแจ้งเตือนจะถูกเพิ่มในอนาคต (LINE Notify, Slack, etc.)"
