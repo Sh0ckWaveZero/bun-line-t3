@@ -17,14 +17,15 @@
 ### 📍 ขั้นตอนการเพิ่ม Secrets
 
 1. **เข้าสู่ GitHub Repository**
+
    - ไปที่ repository ของคุณ
    - คลิก **Settings** tab
-
 2. **เข้าไปที่ Secrets การตั้งค่า**
+
    - ใน sidebar คลิก **Secrets and variables**
    - เลือก **Actions**
-
 3. **เพิ่ม Repository Secrets**
+
    - คลิก **New repository secret**
    - เพิ่ม secrets ตาม list ด้านล่าง
 
@@ -36,49 +37,49 @@
 
 ### 🗄️ Database Configuration
 
-| Secret Name | Description | Example/Format |
-|-------------|-------------|----------------|
+| Secret Name      | Description               | Example/Format                                         |
+| ---------------- | ------------------------- | ------------------------------------------------------ |
 | `DATABASE_URL` | MongoDB connection string | `mongodb+srv://user:pass@cluster.mongodb.net/dbname` |
 
 ### 🔐 Authentication & Security
 
-| Secret Name | Description | Format/Length |
-|-------------|-------------|---------------|
-| `NEXTAUTH_URL` | Application base URL | `https://your-domain.com` |
-| `NEXTAUTH_SECRET` | NextAuth.js secret key | Random string 32+ characters |
-| `JWT_SECRET` | JWT signing secret | Random string 32+ characters |
-| `INTERNAL_API_KEY` | Internal API authentication | 64-character hex string |
-| `CRON_SECRET` | Cron job authentication | 64-character hex string |
+| Secret Name          | Description                 | Format/Length                |
+| -------------------- | --------------------------- | ---------------------------- |
+| `NEXTAUTH_URL`     | Application base URL        | `https://your-domain.com`  |
+| `NEXTAUTH_SECRET`  | NextAuth.js secret key      | Random string 32+ characters |
+| `JWT_SECRET`       | JWT signing secret          | Random string 32+ characters |
+| `INTERNAL_API_KEY` | Internal API authentication | 64-character hex string      |
+| `CRON_SECRET`      | Cron job authentication     | 64-character hex string      |
 
 ### 📱 LINE Integration (4 Secrets)
 
-| Secret Name | Description | Where to Find |
-|-------------|-------------|---------------|
-| `LINE_CLIENT_ID` | LINE Login Client ID | LINE Developers Console > Login Channel |
-| `LINE_CLIENT_SECRET` | LINE Login Client Secret | LINE Developers Console > Login Channel |
-| `LINE_LOGIN_CHANNEL_ID` | LINE Login Channel ID | LINE Developers Console > Login Channel |
+| Secret Name                   | Description               | Where to Find                           |
+| ----------------------------- | ------------------------- | --------------------------------------- |
+| `LINE_CLIENT_ID`            | LINE Login Client ID      | LINE Developers Console > Login Channel |
+| `LINE_CLIENT_SECRET`        | LINE Login Client Secret  | LINE Developers Console > Login Channel |
+| `LINE_LOGIN_CHANNEL_ID`     | LINE Login Channel ID     | LINE Developers Console > Login Channel |
 | `LINE_LOGIN_CHANNEL_SECRET` | LINE Login Channel Secret | LINE Developers Console > Login Channel |
 
 ### 🤖 LINE Messaging API (2 Secrets)
 
-| Secret Name | Description | Where to Find |
-|-------------|-------------|---------------|
-| `LINE_CHANNEL_ACCESS` | LINE Messaging API Access Token | LINE Developers Console > Messaging API |
+| Secret Name             | Description                       | Where to Find                           |
+| ----------------------- | --------------------------------- | --------------------------------------- |
+| `LINE_CHANNEL_ACCESS` | LINE Messaging API Access Token   | LINE Developers Console > Messaging API |
 | `LINE_CHANNEL_SECRET` | LINE Messaging API Channel Secret | LINE Developers Console > Messaging API |
 
 ### 🌐 External API Keys (3 Secrets)
 
-| Secret Name | Description | Provider | Required |
-|-------------|-------------|----------|----------|
-| `AIRVISUAL_API_KEY` | Air quality monitoring | AirVisual/IQAir | Yes |
-| `CMC_API_KEY` | Cryptocurrency data | CoinMarketCap | Yes |
-| `OPENAI_API_KEY` | OpenAI API for AI features | OpenAI | Yes |
+| Secret Name           | Description            | Provider        | Required |
+| --------------------- | ---------------------- | --------------- | -------- |
+| `AIRVISUAL_API_KEY` | Air quality monitoring | AirVisual/IQAir | Yes      |
+| `CMC_API_KEY`       | Cryptocurrency data    | CoinMarketCap   | Yes      |
+|                       |                        |                 |          |
 
 ### 🔧 Optional Configuration
 
-| Secret Name | Description | Default Value |
-|-------------|-------------|---------------|
-| `PORT` | Application port | `12914` |
+| Secret Name | Description      | Default Value |
+| ----------- | ---------------- | ------------- |
+| `PORT`    | Application port | `12914`     |
 
 ---
 
@@ -117,7 +118,7 @@ npm run generate:github-secrets
 ตรวจสอบให้แน่ใจว่าคุณมี secrets ทั้งหมดนี้:
 
 - [ ] `DATABASE_URL`
-- [ ] `NEXTAUTH_URL`  
+- [ ] `NEXTAUTH_URL`
 - [ ] `NEXTAUTH_SECRET`
 - [ ] `LINE_CHANNEL_SECRET`
 - [ ] `LINE_CHANNEL_ACCESS_TOKEN`
@@ -129,6 +130,7 @@ npm run generate:github-secrets
 ### 🎯 Development vs Production
 
 **Development Environment:**
+
 ```bash
 # สำหรับ local development
 NEXTAUTH_URL="http://localhost:12914"
@@ -136,6 +138,7 @@ DATABASE_URL="mongodb://localhost:27017/bun-line-t3-dev"
 ```
 
 **Production Environment:**
+
 ```bash
 # สำหรับ production deployment
 NEXTAUTH_URL="https://your-domain.com"
@@ -149,27 +152,32 @@ DATABASE_URL="mongodb://production-host:27017/bun-line-t3-prod"
 ### ✅ การทดสอบ Secrets
 
 1. **ตรวจสอบใน GitHub Actions**
+
    - ไปที่ **Actions** tab
    - ดูใน **Security & Validation Checks** job
    - ตรวจสอบ output ของ step "Validate GitHub Secrets"
-
 2. **ข้อผิดพลาดที่พบบ่อย**
 
 **ERROR: Required secret not found**
+
 ```
 ❌ ERROR: DATABASE_URL secret ไม่พบ!
 ```
+
 **แก้ไข:** เพิ่ม secret ใน repository settings
 
 **ERROR: Invalid format**
+
 ```
 ❌ ERROR: Invalid DATABASE_URL format
 ```
+
 **แก้ไข:** ตรวจสอบ connection string format
 
 ### 🔧 Debug Commands
 
 **ตรวจสอบ Environment Variables ใน container:**
+
 ```bash
 # เข้าไปใน running container
 docker exec -it bun-line-t3-app sh
@@ -187,32 +195,35 @@ env | grep -E "(DATABASE|NEXTAUTH|LINE)" | head -5
 ### 🔐 Secrets Management Guidelines
 
 1. **Never Commit Secrets to Git**
+
    - ใช้ `.gitignore` สำหรับ `.env*` files
    - ใช้ GitHub Secrets แทน hardcoding
-
 2. **Rotate Secrets Regularly**
+
    - เปลี่ยน secrets ทุก 3-6 เดือน
    - ใช้ strong random generation
-
 3. **Limit Access**
+
    - เฉพาะ repository admins ที่สามารถดู secrets
    - ใช้ environment-specific secrets เมื่อจำเป็น
-
 4. **Monitor Usage**
+
    - ตรวจสอบ deployment logs เป็นประจำ
    - ติดตาม unusual access patterns
 
 ### 🔍 Security Validation
 
 GitHub Actions workflow จะตรวจสอบ:
+
 - ✅ Secrets availability
-- ✅ Format validation  
+- ✅ Format validation
 - ✅ No hardcoded secrets in code
 - ✅ Secure file permissions
 
 ### 📊 Security Monitoring
 
 **ควรตรวจสอบเป็นประจำ:**
+
 - GitHub Actions logs
 - Failed deployment attempts
 - Secret access patterns
