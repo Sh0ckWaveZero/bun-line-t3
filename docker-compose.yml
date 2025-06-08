@@ -9,7 +9,6 @@ version: '3.8'
 # 2. Docker Compose ใช้ค่าเหล่านั้นโดยตรง (ไม่ต้องพึ่งไฟล์ .env.prod)
 # 3. ครอบคลุม 16 required secrets: DATABASE_URL, NEXTAUTH_*, JWT_SECRET,
 #    INTERNAL_API_KEY, CRON_SECRET, LINE_* (6 secrets), AIRVISUAL_API_KEY,
-#    CMC_API_KEY, OPENAI_API_KEY, และ PORT (optional)
 # 4. Security: ไม่มีไฟล์ sensitive ใดๆ บน production server
 
 services:

@@ -79,7 +79,6 @@ jobs:
             "LINE_CHANNEL_SECRET"
             "AIRVISUAL_API_KEY"
             "CMC_API_KEY"
-            "OPENAI_API_KEY"
           )
 
           MISSING_SECRETS=()
@@ -113,7 +112,6 @@ jobs:
           LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
           AIRVISUAL_API_KEY: ${{ secrets.AIRVISUAL_API_KEY }}
           CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       - name: 🖥️ System Resource Check
         run: |
@@ -242,9 +240,6 @@ jobs:
           # Cryptocurrency Market Data
           CMC_API_KEY="${{ secrets.CMC_API_KEY }}"
           CMC_URL=https://pro-api.coinmarketcap.com
-
-          # OpenAI API
-          OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}"
           EOF
 
           # Set secure permissions
@@ -302,8 +297,6 @@ jobs:
           LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
           AIRVISUAL_API_KEY: ${{ secrets.AIRVISUAL_API_KEY }}
           CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-
       - name: 🔐 Security Cleanup
         if: always()
         run: |
