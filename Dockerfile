@@ -62,7 +62,6 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV CI=true
 ENV SKIP_ENV_VALIDATION=true
-ENV SKIP_TESTS=true
 ENV NODE_OPTIONS="--max_old_space_size=1536"
 
 # 🚀 OPTIMIZATION: Generate Prisma Client และ build Next.js
