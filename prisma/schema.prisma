@@ -68,6 +68,12 @@ model VerificationToken {
     @@map("verification_tokens")
 }
 
+enum AttendanceStatusType {
+  CHECKED_IN_ON_TIME
+  CHECKED_IN_LATE
+  CHECKED_OUT
+}
+
 model Cmc {
     id        String   @id @default(auto()) @map("_id") @db.ObjectId
     no        Int
@@ -86,7 +92,7 @@ model WorkAttendance {
     checkInTime  DateTime  @map("check_in_time")
     checkOutTime DateTime? @map("check_out_time")
     workDate     String    @map("work_date") // YYYY-MM-DD format
-    status       String    @default("checked_in") // checked_in, checked_out
+    status       AttendanceStatusType    @default(CHECKED_IN_ON_TIME) 
     createdAt    DateTime  @default(now()) @map("created_at")
     updatedAt    DateTime  @updatedAt @map("updated_at")
     user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)

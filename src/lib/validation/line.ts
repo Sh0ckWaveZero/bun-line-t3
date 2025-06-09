@@ -3,10 +3,11 @@ import randomColor from './randomColor';
 import { utils } from '.';
 import { IMAGE_GOLD_URLS, IMAGE_URLS } from '~/lib/constants/common.constant';
 import { env } from 'process';
-import { 
-  formatHours, 
-  formatPercentage 
+import {
+  formatHours,
+  formatPercentage
 } from '~/lib/utils/number';
+import { AttendanceStatusType } from '@prisma/client';
 
 const lottery = (infoItems: any[]) => {
   return infoItems.map((item) => {
@@ -860,26 +861,15 @@ const workCheckIn = () => {
   ];
 };
 
-const workCheckInSuccess = (checkInTime: Date, expectedCheckOutTime: Date) => {
-  const checkInTimeStr = checkInTime.toLocaleString('th-TH', {
-    timeZone: 'Asia/Bangkok',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-  
-  const checkOutTimeStr = expectedCheckOutTime.toLocaleString('th-TH', {
-    timeZone: 'Asia/Bangkok',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+import { formatThaiDate, formatTimeHM, calculateWorkDuration } from '@/lib/utils/thai-datetime';
 
-  const dateStr = checkInTime.toLocaleString('th-TH', {
-    timeZone: 'Asia/Bangkok',
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+const workCheckInSuccess = (checkInTime: Date, expectedCheckOutTime: Date) => {
+  // ใช้ utilities สำหรับจัดการกับวันที่และเวลาไทย
+  const checkInTimeStr = formatTimeHM(checkInTime);
+  const checkOutTimeStr = formatTimeHM(expectedCheckOutTime);
+
+  // สร้างวันที่ในรูปแบบไทย
+  const dateStr = formatThaiDate(checkInTime);
 
   return [
     {
@@ -1016,31 +1006,13 @@ const workCheckInSuccess = (checkInTime: Date, expectedCheckOutTime: Date) => {
 };
 
 const workCheckInEarlySuccess = (actualCheckInTime: Date, recordedCheckInTime: Date, expectedCheckOutTime: Date) => {
-  const actualTimeStr = actualCheckInTime.toLocaleString('th-TH', {
-    timeZone: 'Asia/Bangkok',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  // ใช้ utilities สำหรับจัดการกับวันที่และเวลาไทย
+  const actualTimeStr = formatTimeHM(actualCheckInTime);
+  const recordedTimeStr = formatTimeHM(recordedCheckInTime);
+  const checkOutTimeStr = formatTimeHM(expectedCheckOutTime);
   
-  const recordedTimeStr = recordedCheckInTime.toLocaleString('th-TH', {
-    timeZone: 'Asia/Bangkok',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-  
-  const checkOutTimeStr = expectedCheckOutTime.toLocaleString('th-TH', {
-    timeZone: 'Asia/Bangkok',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-
-  const dateStr = actualCheckInTime.toLocaleString('th-TH', {
-    timeZone: 'Asia/Bangkok',
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  // สร้างวันที่ในรูปแบบไทย
+  const dateStr = formatThaiDate(actualCheckInTime);
 
   return [
     {
@@ -1195,63 +1167,66 @@ const workCheckInEarlySuccess = (actualCheckInTime: Date, recordedCheckInTime: D
   ];
 };
 
+/**
+ * สร้าง content แสดงเวลาออกงาน หากมีการออกงานแล้ว
+ * @param checkOutTime เวลาออกงาน
+ * @returns array ของ component ที่แสดงเวลาออกงาน หรือ array ว่างถ้าไม่มีข้อมูล
+ */
+const createCheckOutTimeContent = (checkOutTime?: Date): any[] => {
+  if (!checkOutTime) return [];
+  
+  // คำนวณเวลาไทย (UTC+7) จาก UTC หรือใช้ formatTimeHM
+  const checkOutTimeStr = formatTimeHM(checkOutTime);
+  
+  return [
+    {
+      type: 'box',
+      layout: 'horizontal',
+      contents: [
+        {
+          type: 'text',
+          text: '🕐 เวลาออกงาน:',
+          size: 'sm',
+          color: '#777777',
+          flex: 0
+        },
+        {
+          type: 'text',
+          text: checkOutTimeStr,
+          weight: 'bold',
+          size: 'sm',
+          color: '#7BB3A9',
+          align: 'end'
+        }
+      ]
+    }
+  ];
+};
+
+/**
+ * สร้าง bubble template สำหรับแสดงสถานะการทำงาน
+ * @param attendance ข้อมูลการเข้างาน
+ * @returns bubble template
+ */
 const workStatus = (attendance: any) => {
-  const checkInTimeStr = attendance.checkInTime.toLocaleString('th-TH', {
-    timeZone: 'Asia/Bangkok',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-
+  // ใช้ utilities สำหรับจัดการกับวันที่และเวลาไทย
+  const checkInTimeStr = formatTimeHM(attendance.checkInTime);
+  
+  // คำนวณเวลาออกงานที่คาดหวัง (+9 ชั่วโมง)
   const expectedCheckOutTime = new Date(attendance.checkInTime.getTime() + 9 * 60 * 60 * 1000);
-  const expectedCheckOutTimeStr = expectedCheckOutTime.toLocaleString('th-TH', {
-    timeZone: 'Asia/Bangkok',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  const expectedCheckOutTimeStr = formatTimeHM(expectedCheckOutTime);
 
-  const dateStr = attendance.checkInTime.toLocaleString('th-TH', {
-    timeZone: 'Asia/Bangkok',
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  // สร้างวันที่ในรูปแบบไทย
+  const dateStr = formatThaiDate(attendance.checkInTime);
 
-  const isCheckedOut = attendance.status === 'checked_out';
+  const isCheckedOut = attendance.status === AttendanceStatusType.CHECKED_OUT;
   const statusText = isCheckedOut ? '✅ ออกงานแล้ว' : '🟢 กำลังทำงาน';
   const statusColor = isCheckedOut ? '#7BB3A9' : '#FFB366';
 
-  let checkOutTimeContent: any[] = [];
-  if (isCheckedOut && attendance.checkOutTime) {
-    const checkOutTimeStr = attendance.checkOutTime.toLocaleString('th-TH', {
-      timeZone: 'Asia/Bangkok',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-    checkOutTimeContent = [
-      {
-        type: 'box',
-        layout: 'horizontal',
-        contents: [
-          {
-            type: 'text',
-            text: '🕐 เวลาออกงาน:',
-            size: 'sm',
-            color: '#777777',
-            flex: 0
-          },
-          {
-            type: 'text',
-            text: checkOutTimeStr,
-            weight: 'bold',
-            size: 'sm',
-            color: '#7BB3A9',
-            align: 'end'
-          }
-        ]
-      }
-    ];
-  }
+  // สร้าง content สำหรับแสดงเวลาออกงาน (ถ้ามี)
+  const checkOutTimeContent = isCheckedOut && attendance.checkOutTime 
+    ? createCheckOutTimeContent(attendance.checkOutTime) 
+    : [];
 
   return [
     {
@@ -1374,39 +1349,35 @@ const workStatus = (attendance: any) => {
   ];
 };
 
+/**
+ * สร้าง bubble template สำหรับแสดงว่าได้ลงชื่อเข้างานไปแล้ว
+ * @param checkInTime เวลาที่ลงชื่อเข้างาน
+ * @returns bubble template
+ */
 const workAlreadyCheckedIn = (checkInTime: Date) => {
   return workStatus({
     checkInTime,
-    status: 'checked_in',
+    status: AttendanceStatusType.CHECKED_IN_ON_TIME,
     checkOutTime: null
   });
 };
 
+/**
+ * สร้าง bubble template สำหรับการออกงานสำเร็จ
+ * @param checkInTime เวลาที่ลงชื่อเข้างาน
+ * @param checkOutTime เวลาที่ลงชื่อออกงาน
+ * @returns bubble template
+ */
 const workCheckOutSuccess = (checkInTime: Date, checkOutTime: Date) => {
-  const checkInTimeStr = checkInTime.toLocaleString('th-TH', {
-    timeZone: 'Asia/Bangkok',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  // ใช้ utility functions สำหรับจัดการวันที่และเวลาไทย
+  const checkInTimeStr = formatTimeHM(checkInTime);
+  const checkOutTimeStr = formatTimeHM(checkOutTime);
   
-  const checkOutTimeStr = checkOutTime.toLocaleString('th-TH', {
-    timeZone: 'Asia/Bangkok',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  // สร้างวันที่ในรูปแบบไทย
+  const dateStr = formatThaiDate(checkInTime);
 
-  const dateStr = checkInTime.toLocaleString('th-TH', {
-    timeZone: 'Asia/Bangkok',
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-
-  // Calculate actual work hours
-  const workDurationMs = checkOutTime.getTime() - checkInTime.getTime();
-  const workHours = Math.floor(workDurationMs / (1000 * 60 * 60));
-  const workMinutes = Math.floor((workDurationMs % (1000 * 60 * 60)) / (1000 * 60));
+  // คำนวณชั่วโมงการทำงานจริง
+  const { hours: workHours, minutes: workMinutes } = calculateWorkDuration(checkInTime, checkOutTime);
 
   return [
     {
@@ -1532,6 +1503,11 @@ const workCheckOutSuccess = (checkInTime: Date, checkOutTime: Date) => {
   ];
 };
 
+/**
+ * สร้าง bubble template สำหรับแสดงข้อผิดพลาด
+ * @param message ข้อความแสดงข้อผิดพลาด
+ * @returns bubble template
+ */
 const workError = (message: string) => {
   return [
     {
@@ -1590,6 +1566,10 @@ const workError = (message: string) => {
   ];
 };
 
+/**
+ * สร้าง bubble template สำหรับเมนูรายงานรายเดือน
+ * @returns bubble template
+ */
 const monthlyReportMenu = () => {
   return {
     "type": "bubble",
@@ -1682,8 +1662,38 @@ const monthlyReportMenu = () => {
   };
 };
 
+/**
+ * สร้างส่วนหัวของ bubble เดือน
+ * @param monthName ชื่อเดือนในรูปแบบไทย
+ * @returns object header
+ */
+const createMonthlyReportHeader = (monthName: string) => {
+  return {
+    "type": "box",
+    "layout": "vertical",
+    "contents": [
+      {
+        "type": "text",
+        "text": `📊 รายงานประจำเดือน${monthName}`,
+        "weight": "bold",
+        "size": "lg",
+        "color": "#ffffff",
+        "wrap": true
+      }
+    ],
+    "backgroundColor": "#5FB691",
+    "paddingAll": "20px"
+  };
+};
+
+/**
+ * สร้าง bubble แสดงรายงานการเข้างานรายเดือน
+ * @param report ข้อมูลรายงานประจำเดือน
+ * @returns bubble template
+ */
 const monthlyReportSummary = (report: any) => {
   const monthName = new Date(report.month + '-01').toLocaleDateString('th-TH', {
+    timeZone: 'Asia/Bangkok',
     year: 'numeric',
     month: 'long'
   });
@@ -1691,22 +1701,14 @@ const monthlyReportSummary = (report: any) => {
   return {
     "type": "bubble",
     "size": "mega",
-    "header": {
-      "type": "box",
-      "layout": "vertical",
-      "contents": [
-        {
-          "type": "text",
-          "text": `📊 รายงานประจำเดือน${monthName}`,
-          "weight": "bold",
-          "size": "lg",
-          "color": "#ffffff",
-          "wrap": true
-        }
-      ],
-      "backgroundColor": "#5FB691",
-      "paddingAll": "20px"
-    },
+    "header": createMonthlyReportHeader(monthName),
+    /**
+     * สร้าง info box สำหรับแสดงข้อมูลสถิติต่างๆ
+     * @param label ชื่อหัวข้อ
+     * @param value ค่าที่จะแสดง
+     * @param color สีของค่า
+     * @returns object สำหรับแสดงข้อมูล
+     */
     "body": {
       "type": "box",
       "layout": "vertical",
@@ -1837,6 +1839,9 @@ const monthlyReportSummary = (report: any) => {
         }
       ]
     },
+    /**
+     * สร้าง footer สำหรับ bubble ที่มีปุ่มลิงก์ไปยังหน้ารายละเอียด
+     */
     "footer": {
       "type": "box",
       "layout": "vertical",
@@ -2064,6 +2069,229 @@ const workPublicHoliday = (holidayMessage: string) => {
   ];
 };
 
+const workCheckInLateSuccess = (checkInTime: Date, expectedCheckOutTime: Date) => {
+  // ใช้ utilities สำหรับจัดการกับวันที่และเวลาไทย
+  const checkInTimeStr = formatTimeHM(checkInTime);
+  const expectedCheckOutStr = formatTimeHM(expectedCheckOutTime);
+
+  // สร้างวันที่ในรูปแบบไทย
+  const dateStr = formatThaiDate(checkInTime);
+
+  // Random header messages สำหรับ bubble แรก
+  const randomHeaders = [
+    '⚠️ ลงชื่อเข้างานสาย',
+    '😅 มาสายแล้วค่ะ!',
+    '⏰ ตื่นมาช้าใช่ไหม?',
+    '🌞 บ่ายโมงก็มาได้!',
+    '🚨 สายจัง!!',
+    '😴 นอนหลับสบายมาก?',
+    '🐢 มาช้าแต่มา!',
+    '⭐ ยินดีต้อนรับสายๆ',
+    '🎭 มาแล้วจ้า!',
+    '🔥 สายเป็นไฟ!'
+  ] as const;
+
+  // Random body messages สำหรับ bubble แรก - ข้อความสนุกๆ หลากหลาย
+  const randomBodyMessages = [
+    `⏰ ฮั่นแน่!! มาสายอีกแล้ววววว\nนอนล่ะสิ นอนจนหมีพาไป!! 🐻\nแต่อึนๆ ไม่เป็นไร บันทึกให้แล้ว`,
+    `🌞 เห้ยยยยย!! มาละมาละๆ\nดีกว่าขี้เกียจตื่น! สายมากกกกก\nแต่ไม่โดนหักเงินนะจ๊ะ ครั้งนี้ไว้ก่อน!`,
+    `⭐ โอ้โห!! มาแบบสายแซ่บเว่อร์!!\nเลทบัท เก๊ทททททท! 💫\nมาแล้วก็ถือว่ามานะ มาได้ก็ดีแล้ว อิอิ`,
+    `😅 โอ้ยยยยย นาฬิกาปลุกพังหรือคนพัง!!\nรถติด? ฝนตก? ตื่นไม่ไหว? อ้างได้! 🚗💨\nระบบอนุโลมให้ก็แล้วกัน!`,
+    `🚨 อรุณสวัสดิ์.....บ่าย 3 โมงงงง!\nตื่นหรือยังงงง! มาช้าแบบ VIP! ✨\nแต่มาแล้ว! ยังดีที่ไม่เบี้ยว!`,
+    `😎 แหมมมม คนดีเค้ารอได้ค่าาา!\nมาแบบสายสุดติ่ง 🌟\nแต่ไม่ว่ากันนะ!! เค้ารักเธออออ`,
+    `🐢 มาแบบ สาย สาย ซุปเปอร์สายยย!\nบอสใจดีเว่อร์!! 💖\nวันหลังตื่นเร็วๆหน่อยนะจ๊ะ คนขี้สายจุงเบย!!`,
+    `🔥 เฮ้ยยย! ไฟไหม้ที่ไหนนน\nมาช้าขนาดนี้!! ตื่นมาคงงงๆ 😵‍💫\nแต่ไม่สายเกินรักเรานะ!`,
+    `🐣 ไข่ยังไม่ฟักเลยมาป่านนี้!!\nแต่เราให้อภัย 💕\nเพราะอย่างน้อยก็มา!`,
+    `🌙 มาแล้วก็ดีแล้ว! 😅\nช้าไปหน่อยแต่ไม่เป็นไร 🌸\nระบบเข้าใจคน~`,
+    `🎉 ก็มาได้นี่! เลทแต่เก๊ททท!\nยังไงก็ดีกว่าไม่มา! 🎊\nยินดีต้อนรับค่ะ!`,
+    `⭐ ยินดีต้อนรับสายๆ!\nมาช้าแต่มาครบ! ✨\nสำคัญคือความตั้งใจ!`,
+    `💪 สู้ๆ วันนี้นะ!\nแม้จะมาช้า แต่ยังมีเวลาทำงาน! 🚀\nไฟท์ติ้งค่ะ!`,
+    `✨ เริ่มต้นวันใหม่แล้ว\nช้าไปหน่อย แต่ยังทันทำงาน! 🌈\nขอให้มีความสุขกับการทำงาน`,
+    `😊 มาแล้วจ้า! อิอิ\nยิ้มๆ ไว้นะ แม้จะมาช้า! 😄\nวันนี้จะเป็นวันที่ดี!`,
+    `🚀 พร้อมทำงานแล้ว!\nมาช้า แต่มาพร้อม! 💯\nขอให้ประสบความสำเร็จ!`
+  ] as const;
+
+  // เลือกข้อความแบบสุ่มสำหรับ bubble แรก
+  const randomHeader = randomHeaders[Math.floor(Math.random() * randomHeaders.length)];
+  const randomBodyMessage = randomBodyMessages[Math.floor(Math.random() * randomBodyMessages.length)];
+
+  return [
+    {
+      type: 'bubble',
+      size: 'giga',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: randomHeader,
+            weight: 'bold',
+            size: 'xl',
+            color: '#ffffff',
+            align: 'center'
+          }
+        ],
+        backgroundColor: '#FFB84D',
+        paddingAll: '20px'
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: randomBodyMessage,
+            weight: 'bold',
+            size: 'lg',
+            wrap: true,
+            align: 'center',
+            margin: 'md',
+            color: '#5A5A5A'
+          },
+          {
+            type: 'text',
+            text: `📅 ${dateStr}`,
+            weight: 'bold',
+            size: 'md',
+            wrap: true,
+            align: 'center',
+            margin: 'sm',
+            color: '#999999'
+          }
+        ],
+        paddingAll: '20px'
+      }
+    },
+    {
+      type: 'bubble',
+      size: 'giga',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: '🕐 รายละเอียดเวลาทำงาน',
+            weight: 'bold',
+            size: 'lg',
+            color: '#ffffff',
+            align: 'center'
+          }
+        ],
+        backgroundColor: '#4CAF50',
+        paddingAll: '20px'
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'box',
+            layout: 'vertical',
+            margin: 'md',
+            spacing: 'sm',
+            contents: [
+              {
+                type: 'box',
+                layout: 'horizontal',
+                contents: [
+                  {
+                    type: 'text',
+                    text: '🕐',
+                    size: 'md',
+                    color: '#FFB84D',
+                    weight: 'bold',
+                    flex: 0
+                  },
+                  {
+                    type: 'text',
+                    text: 'เวลาเข้างาน',
+                    size: 'md',
+                    color: '#333333',
+                    weight: 'bold',
+                    margin: 'sm'
+                  },
+                  {
+                    type: 'text',
+                    text: `${checkInTimeStr} น.`,
+                    size: 'md',
+                    color: '#FFB84D',
+                    weight: 'bold',
+                    align: 'end'
+                  }
+                ]
+              },
+              {
+                type: 'box',
+                layout: 'horizontal',
+                contents: [
+                  {
+                    type: 'text',
+                    text: '🕔',
+                    size: 'md',
+                    color: '#4CAF50',
+                    weight: 'bold',
+                    flex: 0
+                  },
+                  {
+                    type: 'text',
+                    text: 'เวลาเลิกงาน',
+                    size: 'md',
+                    color: '#333333',
+                    weight: 'bold',
+                    margin: 'sm'
+                  },
+                  {
+                    type: 'text',
+                    text: `${expectedCheckOutStr} น.`,
+                    size: 'md',
+                    color: '#4CAF50',
+                    weight: 'bold',
+                    align: 'end'
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            type: 'separator',
+            margin: 'xl'
+          },
+          {
+            type: 'text',
+            text: '💼 ทำงานหนักๆ ชดเชยความสายนะครับ!',
+            size: 'sm',
+            color: '#999999',
+            align: 'center',
+            margin: 'xl',
+            wrap: true
+          }
+        ],
+        paddingAll: '20px'
+      },
+      footer: {
+        type: 'box',
+        layout: 'horizontal',
+        spacing: 'sm',
+        contents: [
+          {
+            type: 'button',
+            style: 'secondary',
+            action: {
+              type: 'postback',
+              label: '🔴 ออกงาน',
+              data: 'action=checkout'
+            },
+            color: '#E57373'
+          }
+        ],
+        paddingAll: '20px'
+      }
+    }
+  ];
+};
+
 export const bubbleTemplate = {
   lottery,
   cryptoCurrency,
@@ -2072,6 +2300,7 @@ export const bubbleTemplate = {
   notFound,
   workCheckIn,
   workCheckInSuccess,
+  workCheckInLateSuccess,
   workCheckInEarlySuccess,
   workStatus,
   workAlreadyCheckedIn,

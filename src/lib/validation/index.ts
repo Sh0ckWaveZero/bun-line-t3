@@ -103,7 +103,7 @@ const volumeChangeFormat = (price: string) => {
 }
 
 const lastUpdateFormat = (lastUpdate: string | number | null) => {
-  lastUpdate = lastUpdate ? lastUpdate : new Date().toLocaleString();
+  lastUpdate = lastUpdate ? lastUpdate : new Date().toLocaleString('en-US', { timeZone: 'Asia/Bangkok' });
   return new Date(lastUpdate).toLocaleString('th-TH', {
     timeZone: 'Asia/Bangkok',
     hour12: false,
