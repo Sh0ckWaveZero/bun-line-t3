@@ -22,7 +22,7 @@ import { th } from 'date-fns/locale';
 import { 
   roundToOneDecimal
 } from '~/lib/utils/number';
-import { AttendanceStatusType } from '@prisma/client';
+import { AttendanceStatusType } from '@/features/attendance/types/attendance-status';
 
 // Register Chart.js components
 ChartJS.register(
