@@ -7,6 +7,7 @@ import { db } from "~/lib/database/db";
 import { env } from '~/env.mjs';
 import { bubbleTemplate } from '~/lib/validation/line';
 import { airVisualService } from '~/features/air-quality/services/airvisual';
+import { AttendanceStatusType } from '@prisma/client';
 
 const handleEvent = (req: NextApiRequest,
   res: NextApiResponse): any => {
@@ -291,7 +292,8 @@ const flexMessage = (bubbleItems: any[]) => {
     {
       type: 'flex',
       altText: 'CryptoInfo',
-      contents: {
+      contents:
+      {
         type: 'carousel',
         contents: bubbleItems,
       },
@@ -375,7 +377,7 @@ const handlePostback = async (req: NextApiRequest, event: any) => {
       // Check current attendance status before allowing check-in
       const currentAttendance = await attendanceService.getTodayAttendance(userPermission.userId);
       
-      if (currentAttendance && currentAttendance.status === "checked_in") {
+      if (currentAttendance && currentAttendance.status === AttendanceStatusType.CHECKED_IN_ON_TIME) { // Modified to use CHECKED_IN_ON_TIME
         // If currently checked in, show current status instead of allowing new check-in
         const payload = bubbleTemplate.workStatus(currentAttendance);
         await sendMessage(req, flexMessage(payload));
@@ -409,10 +411,21 @@ const handleCheckIn = async (req: NextApiRequest, userId: string) => {
   try {
     // Proceed with check-in (status already checked in postback handler)
     const result = await attendanceService.checkIn(userId);
+    console.log('🚀 ~ handleCheckIn ~ result:', result);
 
     if (result.success && result.checkInTime && result.expectedCheckOutTime) {
-      // Use special template for early check-in
-      if (result.isEarlyCheckIn && result.actualCheckInTime) {
+      // ตรวจสอบการมาสาย
+      if (result.isLateCheckIn) {
+        // สำหรับการมาสาย: ส่ง bubble UI เฉพาะ
+        const bubblePayload = bubbleTemplate.workCheckInLateSuccess(
+          result.checkInTime,
+          result.expectedCheckOutTime
+        );
+        
+        await sendMessage(req, flexMessage(bubblePayload));
+        
+      } else if (result.isEarlyCheckIn && result.actualCheckInTime) {
+        // Use special template for early check-in
         const payload = bubbleTemplate.workCheckInEarlySuccess(
           result.actualCheckInTime, 
           result.checkInTime, 
@@ -420,8 +433,12 @@ const handleCheckIn = async (req: NextApiRequest, userId: string) => {
         );
         await sendMessage(req, flexMessage(payload));
       } else {
-        const payload = bubbleTemplate.workCheckInSuccess(result.checkInTime, result.expectedCheckOutTime);
-        await sendMessage(req, flexMessage(payload));
+        // การเข้างานปกติ
+        const bubblePayload = bubbleTemplate.workCheckInSuccess(
+          result.checkInTime,
+          result.expectedCheckOutTime
+        );
+        await sendMessage(req, flexMessage(bubblePayload));
       }
     } else if (result.alreadyCheckedIn && result.checkInTime && result.expectedCheckOutTime) {
       const payload = bubbleTemplate.workAlreadyCheckedIn(result.checkInTime);
@@ -456,7 +473,7 @@ const handleCheckOut = async (req: NextApiRequest, userId: string) => {
     }
     
     // If already checked out, show the checkout success with existing data
-    if (currentAttendance.status === "checked_out") {
+    if (currentAttendance.status === AttendanceStatusType.CHECKED_OUT) {
       const payload = bubbleTemplate.workCheckOutSuccess(
         currentAttendance.checkInTime, 
         currentAttendance.checkOutTime || new Date()

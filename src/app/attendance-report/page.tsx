@@ -22,6 +22,7 @@ import { th } from 'date-fns/locale';
 import { 
   roundToOneDecimal
 } from '~/lib/utils/number';
+import { AttendanceStatusType } from '@prisma/client';
 
 // Register Chart.js components
 ChartJS.register(
@@ -41,7 +42,7 @@ interface AttendanceRecord {
   workDate: string;
   checkInTime: string;
   checkOutTime: string | null;
-  status: string;
+  status: AttendanceStatusType;
   hoursWorked: number | null;
 }
 
@@ -157,6 +158,7 @@ export default function AttendanceReportPage() {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('th-TH', {
+      timeZone: 'Asia/Bangkok',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -166,6 +168,7 @@ export default function AttendanceReportPage() {
 
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString('th-TH', {
+      timeZone: 'Asia/Bangkok',
       hour: '2-digit',
       minute: '2-digit'
     });
@@ -176,23 +179,27 @@ export default function AttendanceReportPage() {
     return `${roundToOneDecimal(hours)} ชั่วโมง`;
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: AttendanceStatusType) => {
     switch (status) {
-      case 'checked_in':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'checked_out':
+      case AttendanceStatusType.CHECKED_IN_ON_TIME:
         return 'bg-green-100 text-green-800';
+      case AttendanceStatusType.CHECKED_IN_LATE:
+        return 'bg-yellow-100 text-yellow-800';
+      case AttendanceStatusType.CHECKED_OUT:
+        return 'bg-blue-100 text-blue-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getStatusText = (status: string) => {
+  const getStatusText = (status: AttendanceStatusType) => {
     switch (status) {
-      case 'checked_in':
-        return 'เข้างาน';
-      case 'checked_out':
-        return 'ออกงาน';
+      case AttendanceStatusType.CHECKED_IN_ON_TIME:
+        return 'เข้างานตรงเวลา';
+      case AttendanceStatusType.CHECKED_IN_LATE:
+        return 'เข้างานสาย';
+      case AttendanceStatusType.CHECKED_OUT:
+        return 'ออกงานแล้ว';
       default:
         return status;
     }
@@ -303,7 +310,9 @@ export default function AttendanceReportPage() {
   
   const formatShortDate = (dateString: string) => {
     const date = new Date(dateString);
-    return format(date, 'd MMM', { locale: th });
+    // Convert to Bangkok timezone first
+    const bangkokDate = new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }));
+    return format(bangkokDate, 'd MMM', { locale: th });
   };
 
   return (
