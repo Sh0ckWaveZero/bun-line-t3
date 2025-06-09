@@ -66,7 +66,7 @@ jobs:
 
           REQUIRED_SECRETS=(
             "DATABASE_URL"
-            "NEXTAUTH_URL" 
+            "NEXTAUTH_URL"
             "NEXTAUTH_SECRET"
             "JWT_SECRET"
             "INTERNAL_API_KEY"
@@ -171,6 +171,31 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: 💾 Create Backup of Current State
+        run: |
+          echo "💾 สร้างสำรองของสถานะปัจจุบัน..."
+
+          # สร้าง backup directory with timestamp
+          BACKUP_DIR="/tmp/backup-$(date +%Y%m%d-%H%M%S)"
+          mkdir -p "$BACKUP_DIR"
+
+          # Backup current docker images (ถ้ามี)
+          if docker images | grep -q "bun-line-t3"; then
+            echo "Creating image backup..."
+            docker save -o "$BACKUP_DIR/current-images.tar" \
+              $(docker images --format "{{.Repository}}:{{.Tag}}" | grep "bun-line-t3" | head -5)
+            echo "✅ Docker images backed up"
+          else
+            echo "ℹ️ No existing images to backup"
+          fi
+
+          # Backup docker-compose state
+          docker-compose config > "$BACKUP_DIR/docker-compose-state.yml" 2>/dev/null || true
+
+          # Save backup path for later use
+          echo "BACKUP_DIR=$BACKUP_DIR" >> $GITHUB_ENV
+          echo "✅ Backup created at: $BACKUP_DIR"
+
       - name: 🔧 Setup Environment File
         run: |
           echo "🔧 สร้าง .env.prod จาก GitHub Secrets..."
@@ -246,18 +271,9 @@ jobs:
           chmod 600 .env.prod
           echo "✅ Environment file created with secure permissions"
 
-      - name: 🛑 Stop Existing Services
-        run: |
-          echo "🛑 หยุดบริการที่ทำงานอยู่..."
-
-          if docker-compose ps | grep -q "Up"; then
-            echo "Stopping existing services..."
-            docker-compose down --timeout 30
-          else
-            echo "No running services found"
-          fi
-
       - name: 🏗️ Build Application
+        id: build_app
+        continue-on-error: true
         run: |
           echo "🏗️ Building application..."
 
@@ -268,18 +284,71 @@ jobs:
             BUILD_ARGS="--pull --no-cache"
           fi
 
-          docker-compose build $BUILD_ARGS
+          # ส่ง build arguments ที่จำเป็นให้กับ Docker build
+          if docker-compose build $BUILD_ARGS \
+            --build-arg DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+            --build-arg NEXTAUTH_URL="${{ secrets.NEXTAUTH_URL }}" \
+            --build-arg NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}"; then
+            echo "✅ Build completed successfully"
+            echo "BUILD_SUCCESS=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Build failed"
+            echo "BUILD_SUCCESS=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
 
-          echo "✅ Build completed successfully"
+      - name: 🔄 Rollback on Build Failure
+        if: steps.build_app.outcome == 'failure'
+        run: |
+          echo "🔄 Build ล้มเหลว! กำลังทำ rollback..."
+
+          # ตรวจสอบว่ามี backup หรือไม่
+          if [[ -f "$BACKUP_DIR/current-images.tar" ]]; then
+            echo "📦 Restoring previous Docker images..."
+            docker load -i "$BACKUP_DIR/current-images.tar"
+
+            # Restart services with previous images
+            docker-compose down --timeout 30 || true
+            docker-compose up -d
+
+            echo "✅ Rollback completed - services restored to previous version"
+            echo "🔗 Application should be accessible at: ${{ secrets.NEXTAUTH_URL }}"
+          else
+            echo "⚠️ No backup found - this might be the first deployment"
+            echo "🔧 ตรวจสอบ configuration และลองอีกครั้ง"
+          fi
+
+          # ออกจาก workflow แต่ไม่ให้ fail (เพราะได้ rollback แล้ว)
+          echo "::warning::Build failed but rollback completed successfully"
+          exit 1
+
+      - name: 🛑 Stop Existing Services
+        if: steps.build_app.outputs.BUILD_SUCCESS == 'true'
+        run: |
+          echo "🛑 หยุดบริการที่ทำงานอยู่..."
+
+          if docker-compose ps | grep -q "Up"; then
+            echo "Stopping existing services..."
+            docker-compose down --timeout 30
+          else
+            echo "No running services found"
+          fi
 
       - name: 🚀 Start Services
+        id: start_services
+        if: steps.build_app.outputs.BUILD_SUCCESS == 'true'
         run: |
           echo "🚀 เริ่มต้นบริการ..."
 
-          # Start services in production mode
-          docker-compose up -d
-
-          echo "✅ Services started successfully"
+          # Start services with new images
+          if docker-compose up -d; then
+            echo "✅ Services started successfully"
+            echo "SERVICES_STARTED=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Failed to start services"
+            echo "SERVICES_STARTED=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
         env:
           # Override environment variables สำหรับ docker-compose
           PORT: ${{ secrets.PORT || '12914' }}
@@ -297,6 +366,126 @@ jobs:
           LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
           AIRVISUAL_API_KEY: ${{ secrets.AIRVISUAL_API_KEY }}
           CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
+
+      - name: 🏥 Quick Health Check After Startup
+        id: health_check
+        if: steps.start_services.outputs.SERVICES_STARTED == 'true'
+        continue-on-error: true
+        run: |
+          echo "🏥 ตรวจสอบสุขภาพเบื้องต้นหลังเริ่มบริการ..."
+
+          # Wait for services to be ready
+          sleep 20
+
+          # Check if containers are running
+          if ! docker-compose ps | grep -q "Up"; then
+            echo "❌ Containers are not running properly"
+            echo "HEALTH_CHECK_PASSED=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          # Test basic connectivity with retries
+          PORT="${{ secrets.PORT || '12914' }}"
+          MAX_ATTEMPTS=5
+          ATTEMPT=1
+
+          while [[ $ATTEMPT -le $MAX_ATTEMPTS ]]; do
+            echo "Health check attempt $ATTEMPT/$MAX_ATTEMPTS..."
+
+            if curl -f -s -m 10 "http://localhost:$PORT/api/health" > /dev/null 2>&1; then
+              echo "✅ Basic health check passed"
+              echo "HEALTH_CHECK_PASSED=true" >> $GITHUB_OUTPUT
+              exit 0
+            else
+              if [[ $ATTEMPT -eq $MAX_ATTEMPTS ]]; then
+                echo "⚠️ Health check endpoint not responding after $MAX_ATTEMPTS attempts"
+                echo "HEALTH_CHECK_PASSED=false" >> $GITHUB_OUTPUT
+                exit 1
+              fi
+              sleep 5
+              ((ATTEMPT++))
+            fi
+          done
+
+      - name: 🔄 Rollback on Startup or Health Check Failure
+        if: steps.health_check.outcome == 'failure' || steps.start_services.outcome == 'failure'
+        run: |
+          echo "🔄 บริการเริ่มไม่สำเร็จหรือ health check ล้มเหลว! กำลังทำ rollback..."
+
+          # Stop current failed deployment
+          echo "🛑 Stopping failed deployment..."
+          docker-compose down --timeout 30 || true
+
+          # ตรวจสอบว่ามี backup หรือไม่
+          if [[ -f "$BACKUP_DIR/current-images.tar" ]]; then
+            echo "📦 Restoring previous Docker images..."
+            docker load -i "$BACKUP_DIR/current-images.tar"
+
+            # Restart services with previous images
+            echo "🚀 Restarting services with previous images..."
+            docker-compose up -d
+
+            # Wait and check if rollback was successful
+            sleep 15
+            if docker-compose ps | grep -q "Up"; then
+              echo "✅ Rollback completed successfully"
+              echo "🔗 Previous version restored and accessible at: ${{ secrets.NEXTAUTH_URL }}"
+
+              # Quick verification that rollback worked
+              sleep 10
+              if curl -f -s -m 10 "http://localhost:${{ secrets.PORT || '12914' }}/api/health" > /dev/null 2>&1; then
+                echo "✅ Rollback verification: Application is healthy"
+              else
+                echo "⚠️ Rollback verification: Health check failed but containers are running"
+              fi
+            else
+              echo "❌ Rollback failed - containers not starting"
+              echo "🔧 Manual intervention required - checking logs..."
+              docker-compose logs --tail=50
+              exit 1
+            fi
+          else
+            echo "⚠️ No backup found - this might be the first deployment"
+            echo "🔧 First deployment failed - please check configuration and try again"
+            echo "📋 Current container status:"
+            docker-compose ps
+            echo "📋 Recent logs:"
+            docker-compose logs --tail=30
+            exit 1
+          fi
+
+          # Mark as warning (deployment failed but rollback succeeded)
+          echo "::warning::Deployment failed but rollback completed successfully. Previous version is running."
+          exit 1
+
+      - name: 🧹 Cleanup Old Backup
+        if: steps.health_check.outputs.HEALTH_CHECK_PASSED == 'true'
+        run: |
+          echo "🧹 ล้างข้อมูล backup เก่า..."
+
+          # Keep only the 3 most recent backups
+          find /tmp -name "backup-*" -type d -mtime +1 | head -n -3 | xargs rm -rf || true
+
+          echo "✅ Old backups cleaned up"
+
+      - name: 🎉 Deployment Success Summary
+        if: steps.health_check.outputs.HEALTH_CHECK_PASSED == 'true'
+        run: |
+          echo "🎉 Deployment สำเร็จ!"
+          echo "📅 Deployed at: $(date -Iseconds)"
+          echo "🔖 Commit: ${{ github.sha }}"
+          echo "🌿 Branch: ${{ github.ref_name }}"
+          echo "👤 Triggered by: ${{ github.actor }}"
+          echo "🔗 Application URL: ${{ secrets.NEXTAUTH_URL }}"
+
+          echo "🐳 Container Status:"
+          docker-compose ps --format "table {{.Name}}\t{{.State}}\t{{.Ports}}"
+
+          echo "📊 Resource Usage:"
+          docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}"
+
+          echo "✅ Deployment pipeline completed successfully with rollback protection!"
+
       - name: 🔐 Security Cleanup
         if: always()
         run: |
@@ -338,7 +527,7 @@ jobs:
 
           while [[ $ATTEMPT -le $MAX_ATTEMPTS ]]; do
             echo "Health check attempt $ATTEMPT/$MAX_ATTEMPTS..."
-            
+
             if curl -f -s -m 10 "$HEALTH_URL" > /dev/null; then
               echo "✅ Application is healthy"
               break
