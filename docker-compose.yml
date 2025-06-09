@@ -22,6 +22,8 @@ services:
         - MAX_PARALLEL_BUILDS=1
         - NODE_OPTIONS=--max_old_space_size=2048
         - DATABASE_URL=${DATABASE_URL}
+        - NEXTAUTH_URL=${NEXTAUTH_URL}
+        - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       target: runner
       # 🔧 RASPBERRY PI: จำกัด memory สำหรับ build process
       shm_size: 512m

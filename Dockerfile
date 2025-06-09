@@ -56,6 +56,11 @@ RUN NODE_OPTIONS="--max_old_space_size=1024" bunx prisma generate
 # 🔐 SECURITY: คัดลอกไฟล์ที่จำเป็นทั้งหมด
 COPY . .
 
+# 🔐 SECURITY: Build arguments สำหรับ environment variables
+ARG DATABASE_URL
+ARG NEXTAUTH_URL
+ARG NEXTAUTH_SECRET
+
 # 🔐 SECURITY: ตั้งค่า Prisma สำหรับ production build
 # 🔧 RASPBERRY PI OPTIMIZATION: ตั้งค่า memory limits สำหรับ Node.js
 ENV NODE_ENV=production
@@ -63,6 +68,11 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV CI=true
 ENV SKIP_ENV_VALIDATION=true
 ENV NODE_OPTIONS="--max_old_space_size=1536"
+
+# 🔐 SECURITY: ตั้งค่า environment variables สำหรับ build time
+ENV DATABASE_URL=${DATABASE_URL}
+ENV NEXTAUTH_URL=${NEXTAUTH_URL}
+ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
 
 # 🚀 OPTIMIZATION: Generate Prisma Client และ build Next.js
 # 🔧 RASPBERRY PI: แยก commands เพื่อลด memory peak usage

@@ -13,6 +13,8 @@ Complete documentation for the Bun LINE T3 application. This index provides an o
 | **[🛠️ Development Guide](./DEVELOPMENT.md)** | Complete development workflow | Developers |
 | **[🔌 API Documentation](./API.md)** | REST API reference and examples | Developers, Integrators |
 | **[🚀 Deployment Guide](./DEPLOYMENT.md)** | Production deployment instructions | DevOps, Administrators |
+| **[🔄 Rollback Deployment System](./ROLLBACK_DEPLOYMENT_SYSTEM.md)** | ✅ **Production Ready** - Automated rollback and recovery system | DevOps, Security |
+| **[🔄 Rollback Quick Start](./ROLLBACK_QUICK_START.md)** | Quick guide for using rollback system | DevOps, Operations |
 
 ### 🎯 Feature Documentation
 
@@ -46,8 +48,10 @@ Complete documentation for the Bun LINE T3 application. This index provides an o
 
 ### For DevOps/Infrastructure
 1. Check **[Deployment Guide](./DEPLOYMENT.md)** for production setup
-2. Review **[Security Guide](./SECURITY.md)** for security requirements
-3. Understand **[Backend Architecture](./BACKEND_ARCHITECTURE.md)** for system design
+2. Learn **[Rollback System](./ROLLBACK_DEPLOYMENT_SYSTEM.md)** for safe deployments
+3. Use **[Rollback Quick Start](./ROLLBACK_QUICK_START.md)** for operational procedures
+4. Review **[Security Guide](./SECURITY.md)** for security requirements
+5. Understand **[Backend Architecture](./BACKEND_ARCHITECTURE.md)** for system design
 
 ### For Product Managers/Business Users
 1. Review **[README.md](../README.md)** for feature overview
