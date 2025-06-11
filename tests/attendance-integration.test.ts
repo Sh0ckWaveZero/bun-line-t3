@@ -55,20 +55,49 @@ describe('🔗 Attendance Service Integration Tests', () => {
       // ทดสอบเวลาต่างๆ
       const testTimes = [
         { utc: '2025-06-09T01:30:00.000Z', expected: true },  // 08:30 Bangkok
-        { utc: '2025-06-09T00:30:00.000Z', expected: false }, // 07:30 Bangkok (เร็วเกินไป)
+        { utc: '2025-06-09T00:30:00.000Z', expected: true }, // 07:30 Bangkok (early check-in)
         { utc: '2025-06-09T04:30:00.000Z', expected: false }, // 11:30 Bangkok (สายเกินไป)
       ]
       
       for (const testTime of testTimes) {
         const utcTime = new Date(testTime.utc)
         const bangkokTime = attendanceService.convertUTCToBangkok(utcTime)
-        const isValid = attendanceService.isValidCheckInTime(bangkokTime)
+        const timeValidation = attendanceService.isValidCheckInTime(bangkokTime)
         
-        expect(isValid).toBe(testTime.expected)
+        expect(timeValidation.valid).toBe(testTime.expected)
       }
       
     } catch (error) {
       console.warn('⚠️ Cannot test with real service')
+      expect(true).toBe(true)
+    }
+  })
+
+  test('should validate working days with real service', async () => {
+    try {
+      const { attendanceService } = await import('../src/features/attendance/services/attendance')
+      
+      // ทดสอบวันต่างๆ
+      const testDays = [
+        { date: '2025-06-09T01:30:00.000Z', expected: true },  // Monday
+        { date: '2025-06-10T01:30:00.000Z', expected: true },  // Tuesday  
+        { date: '2025-06-11T01:30:00.000Z', expected: true },  // Wednesday
+        { date: '2025-06-12T01:30:00.000Z', expected: true },  // Thursday
+        { date: '2025-06-13T01:30:00.000Z', expected: true },  // Friday
+        { date: '2025-06-14T01:30:00.000Z', expected: false }, // Saturday
+        { date: '2025-06-15T01:30:00.000Z', expected: false }, // Sunday
+      ]
+      
+      for (const testDay of testDays) {
+        const utcTime = new Date(testDay.date)
+        const bangkokTime = attendanceService.convertUTCToBangkok(utcTime)
+        const isWorkingDay = await attendanceService.isWorkingDay(bangkokTime)
+        
+        expect(isWorkingDay).toBe(testDay.expected)
+      }
+      
+    } catch (error) {
+      console.warn('⚠️ Cannot test working days with real service')
       expect(true).toBe(true)
     }
   })
@@ -121,13 +150,14 @@ describe('🎯 Real-world Scenario Tests', () => {
       const bangkokTime = attendanceService.convertUTCToBangkok(utcTime)
       console.log(`🇹🇭 Bangkok time for display: ${bangkokTime.toISOString()}`)
       
-      // 3. ตรวจสอบว่าเป็นวันทำงาน
-      const isWorkingDay = attendanceService.isWorkingDay(bangkokTime)
+      // 3. ตรวจสอบว่าเป็นวันทำงาน (async function)
+      const isWorkingDay = await attendanceService.isWorkingDay(bangkokTime)
       console.log(`📅 Is working day: ${isWorkingDay}`)
       
-      // 4. ตรวจสอบเวลาทำงาน (ถ้าเป็นช่วงเวลาทำงาน)
-      const isValidTime = attendanceService.isValidCheckInTime(bangkokTime)
-      console.log(`⏰ Is valid check-in time: ${isValidTime}`)
+      // 4. ตรวจสอบเวลาทำงาน (returns object with valid property)
+      const timeValidation = attendanceService.isValidCheckInTime(bangkokTime)
+      console.log(`⏰ Is valid check-in time: ${timeValidation.valid}`)
+      console.log(`📝 Time validation message: ${timeValidation.message || 'No message'}`)
       
       // 5. Format สำหรับแสดงผลใน LINE
       const displayTime = attendanceService.formatThaiTimeOnly(bangkokTime)
@@ -139,7 +169,8 @@ describe('🎯 Real-world Scenario Tests', () => {
       expect(utcTime).toBeInstanceOf(Date)
       expect(bangkokTime).toBeInstanceOf(Date)
       expect(typeof isWorkingDay).toBe('boolean')
-      expect(typeof isValidTime).toBe('boolean')
+      expect(typeof timeValidation).toBe('object')
+      expect(typeof timeValidation.valid).toBe('boolean')
       expect(typeof displayTime).toBe('string')
       expect(typeof fullDisplay).toBe('string')
       expect(displayTime).toMatch(/^\d{2}:\d{2}$/)

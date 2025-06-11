@@ -4,12 +4,13 @@ import { authOptions } from '@/lib/auth/auth';
 import { db } from '@/lib/database';
 import { z } from 'zod';
 import { AttendanceStatusType } from '@prisma/client';
+import { datetimeRequired, datetimeOptional, parseDateTime, validateAndParseDateTime, DateTimeSecurity } from '@/lib/validation/datetime';
 
 // Schema สำหรับ validation ข้อมูล
 const UpdateAttendanceSchema = z.object({
   attendanceId: z.string().min(1, 'Attendance ID is required'),
-  checkInTime: z.string().datetime('Invalid check-in time format'),
-  checkOutTime: z.string().datetime('Invalid check-out time format').optional().nullable(),
+  checkInTime: datetimeRequired,
+  checkOutTime: datetimeOptional,
 });
 
 export async function PUT(request: NextRequest) {
@@ -25,6 +26,15 @@ export async function PUT(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
+    
+    // 📝 Log ข้อมูลที่รับมาเพื่อการ debug (ไม่แสดงข้อมูลสำคัญ)
+    console.log('Update attendance request:', {
+      attendanceId: body.attendanceId,
+      checkInDate: DateTimeSecurity.toSafeLogString(validateAndParseDateTime(body.checkInTime)),
+      checkOutDate: body.checkOutTime ? DateTimeSecurity.toSafeLogString(validateAndParseDateTime(body.checkOutTime)) : null,
+      userId: session.user.id,
+      timestamp: new Date().toISOString(),
+    });
     
     // Validate input data
     const validatedData = UpdateAttendanceSchema.parse(body);
@@ -49,9 +59,24 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // แปลง string เป็น Date objects
-    const checkInTime = new Date(validatedData.checkInTime);
-    const checkOutTime = validatedData.checkOutTime ? new Date(validatedData.checkOutTime) : null;
+    // แปลง string เป็น Date objects พร้อมจัดการ timezone และ security checks
+    const checkInTime = validateAndParseDateTime(validatedData.checkInTime);
+    const checkOutTime = validatedData.checkOutTime ? validateAndParseDateTime(validatedData.checkOutTime) : null;
+
+    // 🛡️ Security validations
+    if (!DateTimeSecurity.isWithinAcceptableRange(checkInTime)) {
+      return NextResponse.json(
+        { error: 'Check-in time is outside acceptable range' },
+        { status: 400 }
+      );
+    }
+
+    if (checkOutTime && !DateTimeSecurity.isWithinAcceptableRange(checkOutTime)) {
+      return NextResponse.json(
+        { error: 'Check-out time is outside acceptable range' },
+        { status: 400 }
+      );
+    }
 
     // ตรวจสอบว่าเวลาเข้างานต้องอยู่ก่อนเวลาออกงาน
     if (checkOutTime && checkInTime >= checkOutTime) {
@@ -121,12 +146,14 @@ export async function PUT(request: NextRequest) {
 
     // Handle Zod validation errors
     if (error instanceof z.ZodError) {
+      console.error('Validation error details:', error.errors);
       return NextResponse.json(
         { 
           error: 'Invalid input data',
           details: error.errors.map(err => ({
             field: err.path.join('.'),
             message: err.message,
+            code: err.code,
           })),
         },
         { status: 400 }
@@ -141,8 +168,17 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // Handle general errors
+    if (error instanceof Error) {
+      console.error('Update attendance error:', error.message);
+      return NextResponse.json(
+        { error: 'Internal server error while updating attendance' },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
-      { error: 'Internal server error while updating attendance' },
+      { error: 'Unknown error occurred' },
       { status: 500 }
     );
   }
