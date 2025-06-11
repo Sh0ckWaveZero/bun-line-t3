@@ -59,6 +59,11 @@ interface MonthlyAttendanceReport {
   completeDays: number; // number of days with complete 9-hour work
 }
 
+interface EditAttendanceData {
+  checkInTime: string;
+  checkOutTime: string;
+}
+
 export default function AttendanceReportPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -69,6 +74,15 @@ export default function AttendanceReportPage() {
     const now = new Date();
     return `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
   });
+
+  // States สำหรับ Edit Modal
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<AttendanceRecord | null>(null);
+  const [editData, setEditData] = useState<EditAttendanceData>({
+    checkInTime: '',
+    checkOutTime: ''
+  });
+  const [updateLoading, setUpdateLoading] = useState(false);
 
   // Get userId from session
   const userId = session?.user?.id || '';
@@ -153,6 +167,77 @@ export default function AttendanceReportPage() {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ฟังก์ชันเปิด Modal สำหรับแก้ไข
+  const openEditModal = (record: AttendanceRecord) => {
+    setEditingRecord(record);
+    
+    // แปลงเวลาให้เป็นรูปแบบ input datetime-local
+    const checkInDate = new Date(record.checkInTime);
+    const checkOutDate = record.checkOutTime ? new Date(record.checkOutTime) : new Date();
+    
+    // Format เป็น YYYY-MM-DDTHH:MM สำหรับ input datetime-local
+    const formatForInput = (date: Date) => {
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    };
+
+    setEditData({
+      checkInTime: formatForInput(checkInDate),
+      checkOutTime: record.checkOutTime ? formatForInput(checkOutDate) : ''
+    });
+    
+    setEditModalOpen(true);
+  };
+
+  // ฟังก์ชันปิด Modal
+  const closeEditModal = () => {
+    setEditModalOpen(false);
+    setEditingRecord(null);
+    setEditData({ checkInTime: '', checkOutTime: '' });
+  };
+
+  // ฟังก์ชันอัพเดทข้อมูลการลงเวลา
+  const updateAttendance = async () => {
+    if (!editingRecord || !editData.checkInTime) return;
+
+    setUpdateLoading(true);
+    try {
+      const response = await fetch('/api/attendance/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          attendanceId: editingRecord.id,
+          checkInTime: editData.checkInTime,
+          checkOutTime: editData.checkOutTime || null,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update attendance');
+      }
+
+      // อัพเดทข้อมูลใน report
+      await fetchReport();
+      closeEditModal();
+      
+      // แสดงข้อความสำเร็จ
+      alert('อัพเดทข้อมูลการลงเวลาเรียบร้อยแล้ว');
+      
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการอัพเดท');
+    } finally {
+      setUpdateLoading(false);
     }
   };
 
@@ -536,6 +621,9 @@ export default function AttendanceReportPage() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           สถานะ
                         </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          การจัดการ
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -558,6 +646,17 @@ export default function AttendanceReportPage() {
                               {getStatusText(record.status)}
                             </span>
                           </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <button
+                              onClick={() => openEditModal(record)}
+                              className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                            >
+                              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                              แก้ไข
+                            </button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -573,6 +672,76 @@ export default function AttendanceReportPage() {
             </>
           )}
         </div>
+
+        {/* Edit Modal */}
+        {editModalOpen && editingRecord && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900">แก้ไขเวลาเข้า-ออกงาน</h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  วันที่: {formatDate(editingRecord.workDate)}
+                </p>
+              </div>
+              
+              <div className="px-6 py-4 space-y-4">
+                <div>
+                  <label htmlFor="edit-checkin" className="block text-sm font-medium text-gray-700 mb-2">
+                    เวลาเข้างาน
+                  </label>
+                  <input
+                    id="edit-checkin"
+                    type="datetime-local"
+                    value={editData.checkInTime}
+                    onChange={(e) => setEditData(prev => ({ ...prev, checkInTime: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="edit-checkout" className="block text-sm font-medium text-gray-700 mb-2">
+                    เวลาออกงาน (ถ้ามี)
+                  </label>
+                  <input
+                    id="edit-checkout"
+                    type="datetime-local"
+                    value={editData.checkOutTime}
+                    onChange={(e) => setEditData(prev => ({ ...prev, checkOutTime: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    หากไม่ได้ออกงานให้เว้นว่างไว้
+                  </p>
+                </div>
+              </div>
+              
+              <div className="px-6 py-4 bg-gray-50 flex justify-end space-x-3 rounded-b-lg">
+                <button
+                  onClick={closeEditModal}
+                  disabled={updateLoading}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  onClick={updateAttendance}
+                  disabled={updateLoading || !editData.checkInTime}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {updateLoading ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      กำลังอัพเดท...
+                    </div>
+                  ) : (
+                    'บันทึกการแก้ไข'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
