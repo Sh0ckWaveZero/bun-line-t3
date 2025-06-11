@@ -327,11 +327,12 @@ jobs:
         run: |
           echo "🛑 หยุดบริการที่ทำงานอยู่..."
 
-          if docker-compose ps | grep -q "Up"; then
+          # ตรวจสอบ services ที่ทำงานอยู่ด้วย timeout protection
+          if timeout 10 docker-compose ps 2>/dev/null | grep -q "Up" 2>/dev/null; then
             echo "Stopping existing services..."
-            docker-compose down --timeout 30
+            docker-compose down --timeout 30 || true
           else
-            echo "No running services found"
+            echo "No running services found or docker-compose not responding"
           fi
 
       - name: 🚀 Start Services
@@ -377,9 +378,11 @@ jobs:
           # Wait for services to be ready
           sleep 20
 
-          # Check if containers are running
-          if ! docker-compose ps | grep -q "Up"; then
-            echo "❌ Containers are not running properly"
+          # Check if containers are running with timeout protection
+          if ! timeout 10 docker-compose ps 2>/dev/null | grep -q "Up" 2>/dev/null; then
+            echo "❌ Containers are not running properly or docker-compose not responding"
+            echo "📋 Attempting to get container status directly..."
+            docker ps --filter "name=bun-line-t3" || true
             echo "HEALTH_CHECK_PASSED=false" >> $GITHUB_OUTPUT
             exit 1
           fi
@@ -463,8 +466,31 @@ jobs:
         run: |
           echo "🧹 ล้างข้อมูล backup เก่า..."
 
-          # Keep only the 3 most recent backups
-          find /tmp -name "backup-*" -type d -mtime +1 | head -n -3 | xargs rm -rf || true
+          # ตรวจสอบว่ามี backup directories หรือไม่
+          if ls /tmp/backup-* >/dev/null 2>&1; then
+            # นับจำนวน backup ทั้งหมด
+            TOTAL_BACKUPS=$(ls -1d /tmp/backup-* 2>/dev/null | wc -l)
+            echo "ℹ️ Found $TOTAL_BACKUPS backup directories"
+            
+            # ถ้ามีมากกว่า 3 ตัว ให้ลบอันเก่า
+            if [ "$TOTAL_BACKUPS" -gt 3 ]; then
+              echo "Removing old backups (keeping 3 newest)..."
+              # ใช้ stat เพื่อเรียงตามเวลาแล้วลบอันเก่า
+              cd /tmp && for dir in backup-*; do 
+                stat -f "%m %N" "$dir" 2>/dev/null
+              done | sort -nr | tail -n +4 | cut -d' ' -f2- | while read -r backup_dir; do
+                echo "Removing old backup: $backup_dir"
+                rm -rf "$backup_dir" 2>/dev/null || true
+              done
+            fi
+            
+            # แสดงจำนวน backup ที่เหลือ
+            REMAINING_BACKUPS=$(ls -1d /tmp/backup-* 2>/dev/null | wc -l)
+            echo "ℹ️ Remaining backups: $REMAINING_BACKUPS"
+            ls -1t /tmp/backup-* 2>/dev/null | head -3
+          else
+            echo "ℹ️ No backup directories found to clean up"
+          fi
 
           echo "✅ Old backups cleaned up"
 
@@ -547,10 +573,13 @@ jobs:
         run: |
           echo "🔍 ตรวจสอบสถานะบริการ..."
 
-          # Check container status
-          if ! docker-compose ps | grep -E "(Up|healthy)"; then
-            echo "❌ Services are not running properly"
-            docker-compose logs --tail=100
+          # Check container status with timeout and error handling
+          if ! timeout 15 docker-compose ps 2>/dev/null | grep -E "(Up|healthy)" 2>/dev/null; then
+            echo "❌ Services are not running properly or not responding"
+            echo "📋 Attempting alternative status check..."
+            docker ps --filter "name=bun-line-t3" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" || true
+            echo "📋 Recent logs:"
+            timeout 30 docker-compose logs --tail=100 2>/dev/null || docker logs $(docker ps -q --filter "name=bun-line-t3") --tail=50 2>/dev/null || true
             exit 1
           fi
 
