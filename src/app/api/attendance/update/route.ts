@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth/auth';
 import { db } from '@/lib/database';
 import { z } from 'zod';
 import { AttendanceStatusType } from '@prisma/client';
-import { datetimeRequired, datetimeOptional, parseDateTime, validateAndParseDateTime, DateTimeSecurity } from '@/lib/validation/datetime';
+import { datetimeRequired, datetimeOptional, validateAndParseDateTime, DateTimeSecurity } from '@/lib/validation/datetime';
 
 // Schema สำหรับ validation ข้อมูล
 const UpdateAttendanceSchema = z.object({
