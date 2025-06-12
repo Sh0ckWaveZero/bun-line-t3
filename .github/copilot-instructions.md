@@ -872,12 +872,130 @@ import { pipe, compose, curry, memoize } from '@/lib/functional'
 ### 🏗️ Project Structure Reference | โครงสร้างโปรเจกต์อ้างอิง
 
 ```
-src/
-├── features/           # Domain-driven feature modules | โมดูลฟีเจอร์แบบ domain-driven
-├── lib/               # Shared utilities and configurations | เครื่องมือและการตั้งค่าที่ใช้ร่วมกัน
-├── components/        # Reusable UI components | คอมโพเนนต์ UI ที่ใช้ซ้ำได้
-└── app/              # Next.js App Router pages and API routes | หน้าเว็บและ API routes ของ Next.js
+📁 bun-line-t3/                    # 🚀 LINE Attendance System with Bun + Next.js 15
+├── 📋 Configuration Files         # การกำหนดค่าระบบ
+│   ├── bun.config.test.ts         # Bun test configuration
+│   ├── docker-compose.yml         # Docker orchestration
+│   ├── Dockerfile                 # Production container
+│   ├── Dockerfile.cron            # Cron job container
+│   ├── eslint.config.mjs          # ESLint configuration
+│   ├── next.config.mjs            # Next.js configuration
+│   ├── prettier.config.mjs        # Code formatting
+│   ├── tailwind.config.ts         # Tailwind CSS configuration
+│   └── tsconfig.json              # TypeScript configuration
+│
+├── 🔐 Security & Certificates     # ความปลอดภัยและใบรับรอง
+│   └── certificates/              
+│       ├── localhost.pem          # SSL certificate for development
+│       └── localhost-key.pem      # SSL private key
+│
+├── 📊 Database & Schema           # ฐานข้อมูลและ Schema
+│   └── prisma/
+│       └── schema.prisma          # MongoDB schema with Prisma
+│
+├── 📚 Documentation               # เอกสารประกอบ
+│   └── docs/
+│       ├── API.md                 # API documentation
+│       ├── ATTENDANCE_SYSTEM.md   # Attendance system guide
+│       ├── SECURITY.md            # Security implementation
+│       ├── DEPLOYMENT.md          # Deployment guide
+│       └── [22+ other docs]       # Comprehensive documentation
+│
+├── 🧪 Testing Suite               # ชุดทดสอบ
+│   ├── tests/
+│   │   ├── attendance-integration.test.ts
+│   │   ├── datetime-validation.test.ts
+│   │   ├── line-timezone.test.ts
+│   │   └── timezone.test.ts
+│   └── test-*.js                  # Standalone test files
+│
+├── ⚙️ Scripts & Automation        # สคริปต์และระบบอัตโนมัติ
+│   └── scripts/
+│       ├── checkout-reminder.ts   # Automated checkout reminders
+│       ├── generate-secrets.ts    # Security key generation
+│       ├── health-check.sh        # Health monitoring
+│       └── setup-checkout-reminder.sh
+│
+├── 🎯 Core Application            # แอปพลิเคชันหลัก
+│   └── src/
+│       ├── 📱 App Router (Next.js 15)
+│       │   └── app/
+│       │       ├── layout.tsx              # Root layout
+│       │       ├── page.tsx                # Home page
+│       │       ├── providers.tsx           # App providers
+│       │       ├── attendance-report/      # 📈 Monthly reports
+│       │       ├── help/                   # 🆘 Help system
+│       │       └── api/                    # 🔌 API endpoints
+│       │           ├── attendance/         # Attendance management
+│       │           ├── attendance-export/  # Data export
+│       │           ├── attendance-push/    # Push notifications
+│       │           ├── attendance-report/  # Report generation
+│       │           ├── auth/               # Authentication
+│       │           ├── checkout-reminder/  # Automated reminders
+│       │           ├── cron/               # Scheduled tasks
+│       │           ├── debug/              # Development debugging
+│       │           ├── health/             # System health checks
+│       │           ├── line/               # LINE Bot integration
+│       │           └── timestamp-tracker/  # Time tracking
+│       │
+│       ├── 🧩 Reusable Components
+│       │   └── components/
+│       │       ├── attendance/             # Attendance-specific components
+│       │       ├── common/                 # Shared components
+│       │       │   └── Rings.tsx          # Loading animations
+│       │       └── ui/                     # UI component library
+│       │
+│       ├── 🎯 Feature Modules (Domain-Driven)
+│       │   └── features/
+│       │       ├── air-quality/            # 🌪️ Air quality monitoring
+│       │       │   ├── aqi_data.ts
+│       │       │   ├── services/
+│       │       │   └── types/
+│       │       ├── attendance/             # 👥 Attendance management
+│       │       ├── auth/                   # 🔐 Authentication
+│       │       ├── crypto/                 # 🔑 Cryptographic utilities
+│       │       ├── line/                   # 💬 LINE Bot integration
+│       │       └── timestamp-tracker/      # ⏰ Time tracking
+│       │
+│       ├── 🔧 Shared Libraries & Utilities
+│       │   └── lib/
+│       │       ├── crypto-random.ts        # 🎲 Secure random generation
+│       │       ├── index.ts               # Library exports
+│       │       ├── auth/                  # Authentication utilities
+│       │       ├── constants/             # Application constants
+│       │       ├── database/              # Database utilities
+│       │       ├── types/                 # TypeScript type definitions
+│       │       ├── utils/                 # General utilities
+│       │       └── validation/            # Input validation & security
+│       │
+│       ├── 🎣 Custom React Hooks
+│       │   └── hooks/                     # Reusable React hooks
+│       │
+│       └── 🎨 Styling & Assets
+│           ├── styles/
+│           │   ├── globals.css            # Global styles
+│           │   ├── help.css               # Help page styles
+│           │   └── ring.css               # Loading ring animations
+│           └── @prisma/                   # Prisma-specific configurations
+│
+└── 🌐 Public Assets                       # สินทรัพย์สาธารณะ
+    └── public/
+        ├── favicon.ico                    # Site icon
+        └── images/
+            └── rich-menu/                 # LINE rich menu images
 ```
+
+#### 🏛️ Architecture Highlights | จุดเด่นสถาปัตยกรรม
+
+- **🔒 Security-First Design**: ความปลอดภัยเป็นหลักในทุกส่วน
+- **⚡ Modern Stack**: Bun + Next.js 15 + React 19 + TypeScript
+- **🏗️ Domain-Driven Features**: แยกฟีเจอร์ตามโดเมนธุรกิจ
+- **🧪 Comprehensive Testing**: ทดสอบครอบคลุมทุกส่วนสำคัญ
+- **📱 LINE Bot Integration**: ระบบ chatbot ที่ครบครัน
+- **⏰ Automated Workflows**: ระบบอัตโนมัติด้วย cron jobs
+- **🐳 Docker Ready**: พร้อม deployment ด้วย containerization
+- **📊 Monitoring & Logging**: ระบบตรวจสอบและบันทึกผล
+- **🔐 Secure Secrets Management**: การจัดการความลับอย่างปลอดภัย
 
 ---
 

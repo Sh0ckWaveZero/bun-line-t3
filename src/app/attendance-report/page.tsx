@@ -174,23 +174,28 @@ export default function AttendanceReportPage() {
   const openEditModal = (record: AttendanceRecord) => {
     setEditingRecord(record);
     
-    // แปลงเวลาให้เป็นรูปแบบ input datetime-local
-    const checkInDate = new Date(record.checkInTime);
-    const checkOutDate = record.checkOutTime ? new Date(record.checkOutTime) : new Date();
-    
-    // Format เป็น YYYY-MM-DDTHH:MM สำหรับ input datetime-local
-    const formatForInput = (date: Date) => {
-      const year = date.getFullYear();
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const day = date.getDate().toString().padStart(2, '0');
-      const hours = date.getHours().toString().padStart(2, '0');
-      const minutes = date.getMinutes().toString().padStart(2, '0');
+    // 🔐 SECURITY: แปลง UTC time เป็น Bangkok time สำหรับการแสดงผล
+    // UTC time จาก database → Bangkok time สำหรับ input field
+    const formatForInput = (utcDateString: string) => {
+      const utcDate = new Date(utcDateString);
+      
+      // แปลงเป็น Bangkok timezone สำหรับการแสดงผล
+      const bangkokTime = new Date(utcDate.toLocaleString('en-US', { 
+        timeZone: 'Asia/Bangkok' 
+      }));
+      
+      const year = bangkokTime.getFullYear();
+      const month = (bangkokTime.getMonth() + 1).toString().padStart(2, '0');
+      const day = bangkokTime.getDate().toString().padStart(2, '0');
+      const hours = bangkokTime.getHours().toString().padStart(2, '0');
+      const minutes = bangkokTime.getMinutes().toString().padStart(2, '0');
+      
       return `${year}-${month}-${day}T${hours}:${minutes}`;
     };
 
     setEditData({
-      checkInTime: formatForInput(checkInDate),
-      checkOutTime: record.checkOutTime ? formatForInput(checkOutDate) : ''
+      checkInTime: formatForInput(record.checkInTime),
+      checkOutTime: record.checkOutTime ? formatForInput(record.checkOutTime) : ''
     });
     
     setEditModalOpen(true);
@@ -209,6 +214,14 @@ export default function AttendanceReportPage() {
 
     setUpdateLoading(true);
     try {
+      // 🔐 SECURITY: แปลง Bangkok time input เป็น ISO string พร้อม timezone
+      const convertToISOWithTimezone = (bangkokTimeString: string) => {
+        if (!bangkokTimeString) return null;
+        
+        // เพิ่ม timezone offset ของ Bangkok (+07:00) ใน datetime string
+        return `${bangkokTimeString}:00+07:00`;
+      };
+
       const response = await fetch('/api/attendance/update', {
         method: 'PUT',
         headers: {
@@ -216,8 +229,8 @@ export default function AttendanceReportPage() {
         },
         body: JSON.stringify({
           attendanceId: editingRecord.id,
-          checkInTime: editData.checkInTime,
-          checkOutTime: editData.checkOutTime || null,
+          checkInTime: convertToISOWithTimezone(editData.checkInTime),
+          checkOutTime: editData.checkOutTime ? convertToISOWithTimezone(editData.checkOutTime) : null,
         }),
       });
 
@@ -682,6 +695,19 @@ export default function AttendanceReportPage() {
                 <p className="text-sm text-gray-500 mt-1">
                   วันที่: {formatDate(editingRecord.workDate)}
                 </p>
+                <div className="mt-3 p-3 bg-blue-50 rounded-md border border-blue-200">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <svg className="h-4 w-4 text-blue-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-2">
+                      <p className="text-xs text-blue-700 font-medium">เวลาที่แสดงเป็นเวลาประเทศไทย (UTC+7)</p>
+                      <p className="text-xs text-blue-600 mt-1">ระบบจะบันทึกเวลาเป็น UTC โดยอัตโนมัติ</p>
+                    </div>
+                  </div>
+                </div>
               </div>
               
               <div className="px-6 py-4 space-y-4">
