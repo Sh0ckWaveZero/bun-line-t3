@@ -19,13 +19,22 @@
 }
 
 @utility modal-grid-center {
-  position: fixed;
-  inset: 0;
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
   display: grid;
   place-items: center;
   z-index: 9999;
   background-color: rgb(0 0 0 / 0.5);
-  padding: 1rem;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  min-width: 100vw !important;
+  min-height: 100vh !important;
 }
 
 @utility modal-flex-center {
@@ -46,6 +55,9 @@
   box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
   transform: scale(1);
   transition: all 0.2s ease-out;
+  margin: 1rem;
+  max-width: calc(100vw - 2rem);
+  max-height: calc(100vh - 2rem);
 }
 
 /* 🎯 Modal animations */
@@ -74,4 +86,23 @@
 /* 🎯 Body scroll lock when modal is open */
 .modal-open {
   overflow: hidden !important;
+  position: relative !important;
+}
+
+/* 🎯 Ensure backdrop covers everything including mobile browser UI */
+@utility modal-backdrop-fullscreen {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  min-height: 100vh !important;
+  min-width: 100vw !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  outline: none !important;
+  z-index: 9999 !important;
 }

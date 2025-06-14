@@ -73,21 +73,12 @@ export const MobileModal: React.FC<MobileModalProps> = ({
 
   const modalElement = (
     <div 
-      className="mobile-modal-overlay"
+      className="mobile-modal-overlay modal-backdrop-fullscreen"
       style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 99999, // Increased z-index
         backgroundColor: 'rgba(0, 0, 0, 0.6)', // Darker overlay
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '16px',
-        width: '100vw',
-        height: '100vh',
         // Force hardware acceleration
         transform: 'translateZ(0)',
         WebkitTransform: 'translateZ(0)'
@@ -104,8 +95,9 @@ export const MobileModal: React.FC<MobileModalProps> = ({
           borderRadius: '12px',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
           maxHeight: 'calc(100vh - 32px)',
-          width: '100%',
+          width: 'calc(100% - 32px)', // Add margin for content
           maxWidth: 'calc(100vw - 32px)',
+          margin: '16px', // Add margin back to content instead of backdrop
           overflowY: 'auto',
           overflowX: 'hidden',
           // Animation for better UX

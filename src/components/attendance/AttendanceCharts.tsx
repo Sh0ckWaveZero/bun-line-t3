@@ -60,11 +60,27 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({ report }) =>
   };
 
   const prepareAttendanceDonutData = (report: MonthlyAttendanceReport) => {
+    const daysAbsent = report.workingDaysInMonth - report.totalDaysWorked;
+    
+    // 🎯 ถ้าไม่มีการขาดงานเลย ให้แสดงข้อความแทน chart
+    if (daysAbsent === 0) {
+      return {
+        labels: ['เข้างานครบทุกวัน 🎉'],
+        datasets: [
+          {
+            data: [100],
+            backgroundColor: ['rgb(34, 197, 94)'],
+            hoverOffset: 4
+          }
+        ]
+      };
+    }
+    
     return {
       labels: ['มาทำงาน', 'ขาดงาน'],
       datasets: [
         {
-          data: [report.totalDaysWorked, report.workingDaysInMonth - report.totalDaysWorked],
+          data: [report.totalDaysWorked, daysAbsent],
           backgroundColor: ['rgb(34, 197, 94)', 'rgb(239, 68, 68)'],
           hoverOffset: 4
         }
@@ -73,11 +89,41 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({ report }) =>
   };
 
   const prepareComplianceDonutData = (report: MonthlyAttendanceReport) => {
+    const incompleteDays = report.totalDaysWorked - report.completeDays;
+    
+    // 🎯 ถ้าทำงานครบ 9 ชม. ทุกวัน ให้แสดงข้อความแทน chart
+    if (incompleteDays === 0 && report.totalDaysWorked > 0) {
+      return {
+        labels: ['ทำงานครบ 9 ชม. ทุกวัน 💪'],
+        datasets: [
+          {
+            data: [100],
+            backgroundColor: ['rgb(124, 58, 237)'],
+            hoverOffset: 4
+          }
+        ]
+      };
+    }
+    
+    // 🎯 ถ้าไม่มีการทำงานเลย
+    if (report.totalDaysWorked === 0) {
+      return {
+        labels: ['ไม่มีข้อมูลการทำงาน'],
+        datasets: [
+          {
+            data: [100],
+            backgroundColor: ['rgb(156, 163, 175)'],
+            hoverOffset: 4
+          }
+        ]
+      };
+    }
+    
     return {
       labels: ['ทำงานครบ 9 ชม.', 'ทำงานไม่ครบ 9 ชม.'],
       datasets: [
         {
-          data: [report.completeDays, report.totalDaysWorked - report.completeDays],
+          data: [report.completeDays, incompleteDays],
           backgroundColor: ['rgb(124, 58, 237)', 'rgb(249, 115, 22)'],
           hoverOffset: 4
         }
@@ -158,13 +204,30 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({ report }) =>
                   maintainAspectRatio: false,
                   plugins: {
                     legend: {
-                      position: 'bottom'
+                      position: 'bottom',
+                      labels: {
+                        font: {
+                          family: 'Prompt, sans-serif'
+                        }
+                      }
                     }
                   },
                   scales: {
+                    x: {
+                      ticks: {
+                        font: {
+                          family: 'Prompt, sans-serif'
+                        }
+                      }
+                    },
                     y: {
                       min: 0,
-                      max: Math.max(10, ...report.attendanceRecords.map(r => r.hoursWorked || 0))
+                      max: Math.max(10, ...report.attendanceRecords.map(r => r.hoursWorked || 0)),
+                      ticks: {
+                        font: {
+                          family: 'Prompt, sans-serif'
+                        }
+                      }
                     }
                   }
                 }}
@@ -191,9 +254,21 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({ report }) =>
                     }
                   },
                   scales: {
+                    x: {
+                      ticks: {
+                        font: {
+                          family: 'Prompt, sans-serif'
+                        }
+                      }
+                    },
                     y: {
                       beginAtZero: true,
-                      max: 10
+                      max: 10,
+                      ticks: {
+                        font: {
+                          family: 'Prompt, sans-serif'
+                        }
+                      }
                     }
                   }
                 }}
@@ -209,42 +284,82 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({ report }) =>
         {/* Attendance donut chart */}
         <div className="bg-white rounded-lg shadow p-4">
           <h3 className="text-sm font-medium text-gray-600 mb-4">สัดส่วนการมาทำงาน</h3>
-          <div className="h-64 flex justify-center">
-            <div style={{ width: '250px', height: '250px' }}>
-              <Doughnut 
-                data={prepareAttendanceDonutData(report)} 
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: true,
-                  plugins: {
-                    legend: {
-                      position: 'bottom'
+          <div className="h-64 flex flex-col justify-center">
+            {/* 🎯 แสดงข้อความพิเศษสำหรับการเข้างานครบ */}
+            {report.workingDaysInMonth - report.totalDaysWorked === 0 ? (
+              <div className="text-center">
+                <div className="text-4xl mb-4">🏆</div>
+                <h4 className="text-lg font-bold text-green-600 mb-2">ยอดเยี่ยม!</h4>
+                <p className="text-sm text-gray-600 mb-4">เข้างานครบทุกวันในเดือนนี้</p>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <p className="text-sm text-green-800">
+                    <strong>{report.totalDaysWorked}</strong> วัน จาก <strong>{report.workingDaysInMonth}</strong> วันทำงาน
+                  </p>
+                  <p className="text-xs text-green-600 mt-1">อัตราการเข้างาน: {report.attendanceRate}%</p>
+                </div>
+              </div>
+            ) : (
+              <div style={{ width: '250px', height: '250px', margin: '0 auto' }}>
+                <Doughnut 
+                  data={prepareAttendanceDonutData(report)} 
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                      legend: {
+                        position: 'bottom',
+                        labels: {
+                          font: {
+                            family: 'Prompt, sans-serif'
+                          }
+                        }
+                      }
                     }
-                  }
-                }}
-              />
-            </div>
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
 
         {/* Compliance donut chart */}
         <div className="bg-white rounded-lg shadow p-4">
           <h3 className="text-sm font-medium text-gray-600 mb-4">การทำงานครบตามเวลา (9 ชม.)</h3>
-          <div className="h-64 flex justify-center">
-            <div style={{ width: '250px', height: '250px' }}>
-              <Doughnut 
-                data={prepareComplianceDonutData(report)} 
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: true,
-                  plugins: {
-                    legend: {
-                      position: 'bottom'
+          <div className="h-64 flex flex-col justify-center">
+            {/* 🎯 แสดงข้อความพิเศษสำหรับการทำงานครบเวลาทุกวัน */}
+            {report.totalDaysWorked > 0 && report.completeDays === report.totalDaysWorked ? (
+              <div className="text-center">
+                <div className="text-4xl mb-4">💪</div>
+                <h4 className="text-lg font-bold text-purple-600 mb-2">สุดยอด!</h4>
+                <p className="text-sm text-gray-600 mb-4">ทำงานครบ 9 ชั่วโมงทุกวัน</p>
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                  <p className="text-sm text-purple-800">
+                    <strong>{report.completeDays}</strong> วัน จาก <strong>{report.totalDaysWorked}</strong> วันที่ทำงาน
+                  </p>
+                  <p className="text-xs text-purple-600 mt-1">อัตราการทำงานครบเวลา: {report.complianceRate}%</p>
+                </div>
+              </div>
+            ) : (
+              <div style={{ width: '250px', height: '250px', margin: '0 auto' }}>
+                <Doughnut 
+                  data={prepareComplianceDonutData(report)} 
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                      legend: {
+                        position: 'bottom',
+                        labels: {
+                          font: {
+                            family: 'Prompt, sans-serif'
+                          }
+                        }
+                      }
                     }
-                  }
-                }}
-              />
-            </div>
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>

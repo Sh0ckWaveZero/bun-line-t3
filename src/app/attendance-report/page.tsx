@@ -40,6 +40,10 @@ ChartJS.register(
   Filler
 );
 
+// 🎯 Configure Chart.js to use Prompt font globally
+ChartJS.defaults.font.family = 'Prompt, sans-serif';
+ChartJS.defaults.font.size = 12;
+
 export default function AttendanceReportPage() {
   const {
     session,

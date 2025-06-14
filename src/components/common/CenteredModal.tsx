@@ -72,7 +72,6 @@ export const CenteredModal: React.FC<CenteredModalProps> = ({
         onClick={(e) => e.stopPropagation()}
         style={{
           animation: 'modal-enter 0.2s ease-out',
-          maxHeight: '90vh',
           overflowY: 'auto'
         }}
       >
