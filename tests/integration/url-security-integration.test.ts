@@ -6,13 +6,22 @@
 import { describe, test, expect, beforeAll, afterAll } from 'bun:test'
 import { validateNextAuthUrl, getSafeRedirectUrl } from '@/lib/security/url-validator'
 
+// ✅ Set up test environment with example domains
+beforeAll(() => {
+  process.env.ALLOWED_DOMAINS = 'your-app.example.com,example.com'
+})
+
+afterAll(() => {
+  delete process.env.ALLOWED_DOMAINS
+})
+
 describe('🔒 URL Security Integration Tests', () => {
   
   describe('🌐 LINE OAuth Debug API Integration', () => {
     test('✅ should return secure configuration', async () => {
       // Mock environment for testing
       const originalEnv = process.env.NEXTAUTH_URL
-      process.env.NEXTAUTH_URL = 'https://line-login.midseelee.com'
+      process.env.NEXTAUTH_URL = 'https://your-app.example.com'
       
       try {
         // Test the URL validation logic similar to the API
@@ -21,7 +30,7 @@ describe('🔒 URL Security Integration Tests', () => {
         
         expect(validation.isValid).toBe(true)
         expect(validation.isProduction).toBe(true)
-        expect(validation.hostname).toBe('line-login.midseelee.com')
+        expect(validation.hostname).toBe('your-app.example.com')
         
         // Test callback URL construction
         const callbackUrl = `${nextAuthUrl}/api/auth/callback/line`
@@ -51,8 +60,8 @@ describe('🔒 URL Security Integration Tests', () => {
         expect(validation.error).toContain('not in the allowed list')
         
         // Test safe fallback
-        const safeUrl = getSafeRedirectUrl(nextAuthUrl, 'https://line-login.midseelee.com')
-        expect(safeUrl).toBe('https://line-login.midseelee.com')
+        const safeUrl = getSafeRedirectUrl(nextAuthUrl, 'https://your-app.example.com')
+        expect(safeUrl).toBe('https://your-app.example.com')
         
       } finally {
         if (originalEnv) {
@@ -81,8 +90,8 @@ describe('🔒 URL Security Integration Tests', () => {
     
     test('✅ should validate production configuration', () => {
       const prodConfig = {
-        NEXTAUTH_URL: 'https://line-login.midseelee.com',
-        callbackUrl: 'https://line-login.midseelee.com/api/auth/callback/line'
+        NEXTAUTH_URL: 'https://your-app.example.com',
+        callbackUrl: 'https://your-app.example.com/api/auth/callback/line'
       }
       
       const urlValidation = validateNextAuthUrl(prodConfig.NEXTAUTH_URL)
@@ -99,7 +108,7 @@ describe('🔒 URL Security Integration Tests', () => {
         'javascript:alert("XSS")',
         'data:text/html,<script>alert(1)</script>',
         '//evil.com/steal-tokens',
-        'https://fake-midseelee.com/login'
+        'https://fake-example.com/login'
       ]
       
       maliciousUrls.forEach(url => {
@@ -121,7 +130,7 @@ describe('🔒 URL Security Integration Tests', () => {
         },
         {
           name: 'Subdomain Hijacking',
-          callbackUrl: 'https://fake.line-login.midseelee.com',
+          callbackUrl: 'https://fake.your-app.example.com',
           expected: '/dashboard'
         },
         {
@@ -131,7 +140,7 @@ describe('🔒 URL Security Integration Tests', () => {
         },
         {
           name: 'Host Header Injection',
-          callbackUrl: 'https://midseelee.com.evil.com/callback',
+          callbackUrl: 'https://example.com.evil.com/callback',
           expected: '/dashboard'
         }
       ]
@@ -181,7 +190,7 @@ describe('🔒 URL Security Integration Tests', () => {
       
       // Test 1000 URL validations
       for (let i = 0; i < 1000; i++) {
-        validateNextAuthUrl('https://line-login.midseelee.com')
+        validateNextAuthUrl('https://your-app.example.com')
       }
       
       const end = performance.now()
@@ -194,11 +203,11 @@ describe('🔒 URL Security Integration Tests', () => {
     
     test('should handle concurrent validations', async () => {
       const urls = [
-        'https://line-login.midseelee.com',
+        'https://your-app.example.com',
         'http://localhost:3000',
         'https://evil.com',
         'javascript:alert(1)',
-        'https://midseelee.com'
+        'https://example.com'
       ]
       
       const promises = urls.map(url => 
@@ -208,11 +217,11 @@ describe('🔒 URL Security Integration Tests', () => {
       const results = await Promise.all(promises)
       
       expect(results).toHaveLength(5)
-      expect(results[0]?.isValid).toBe(true) // line-login.midseelee.com
+      expect(results[0]?.isValid).toBe(true) // your-app.example.com
       expect(results[1]?.isValid).toBe(true) // localhost
       expect(results[2]?.isValid).toBe(false) // evil.com
       expect(results[3]?.isValid).toBe(false) // javascript:
-      expect(results[4]?.isValid).toBe(true) // midseelee.com
+      expect(results[4]?.isValid).toBe(true) // example.com
       
       console.log('✅ Concurrent validation completed successfully')
     })
@@ -261,9 +270,9 @@ describe('🔍 Environment-Specific Behavior', () => {
   
   test('should behave correctly in production', () => {
     const prodUrls = [
-      'https://line-login.midseelee.com',
-      'https://midseelee.com',
-      'https://api.midseelee.com'
+      'https://your-app.example.com',
+      'https://example.com',
+      'https://api.example.com'
     ]
     
     prodUrls.forEach(url => {

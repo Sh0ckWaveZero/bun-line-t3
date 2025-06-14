@@ -7,42 +7,8 @@ import { roundToTwoDecimals } from '~/lib/utils/number';
 import { formatDateTimeSafe } from '~/lib/utils/date-formatting';
 import { timeBasedSelect } from '~/lib/utils/safe-random';
 
-
 // Existing utilities
-type TemplateParameter = any[];
-
 const regex = new RegExp(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g);
-
-function template<T>(templateData: TemplateStringsArray, param: T[], delimiter = '\n') {
-  let output = '';
-
-  for (let i = 0; i < param.length; i += 1) {
-    output += templateData[i] as any + param[i];
-  }
-
-  output += templateData[param.length];
-
-  const lines: string[] = output.split(/(?:\r\n|\n|\r)/);
-
-  return lines
-    .map((text: string) => text.replace(/^\s+/gm, ''))
-    .join(delimiter)
-    .trim();
-};
-
-const pre = (
-  templateData: TemplateStringsArray,
-  ...param: TemplateParameter
-): string => {
-  return template(templateData, param, '\n');
-}
-
-const line = (
-  templateData: TemplateStringsArray,
-  ...param: TemplateParameter
-): string => {
-  return template(templateData, param, ' ');
-}
 
 const isKeyOfSchema = <T extends object>(
   key: unknown,
@@ -151,8 +117,6 @@ const getGoldPricesColors = (element: any, goldBarPrices: any) => {
 
 
 export const utils = {
-  pre,
-  line,
   isKeyOfSchema,
   removeUndefined,
   isEmpty,

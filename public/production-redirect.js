@@ -14,7 +14,7 @@
   }
   
   function checkDomain() {
-    const isProduction = window.location.hostname === 'line-login.midseelee.com';
+    const isProduction = window.location.hostname === 'your-app.example.com';
     const isLocalhost = window.location.hostname === 'localhost' || 
                        window.location.hostname === '127.0.0.1';
     

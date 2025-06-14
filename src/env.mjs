@@ -34,7 +34,10 @@ export const env = createEnv({
     FRONTEND_URL: z.string().url(),
     AIRVISUAL_API_KEY: z.string(),
     INTERNAL_API_KEY: z.string().optional(),
-    CRON_SECRET: z.string().optional()
+    CRON_SECRET: z.string().optional(),
+    // 🔐 Security: Domain configuration through environment (NO DEFAULTS - must be explicitly set)
+    APP_DOMAIN: z.string().url(),
+    ALLOWED_DOMAINS: z.string().min(1)
   },
 
   /**
@@ -66,7 +69,9 @@ export const env = createEnv({
     FRONTEND_URL: process.env.FRONTEND_URL,
     AIRVISUAL_API_KEY: process.env.AIRVISUAL_API_KEY,
     INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
-    CRON_SECRET: process.env.CRON_SECRET
+    CRON_SECRET: process.env.CRON_SECRET,
+    APP_DOMAIN: process.env.APP_DOMAIN,
+    ALLOWED_DOMAINS: process.env.ALLOWED_DOMAINS
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

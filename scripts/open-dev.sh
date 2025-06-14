@@ -53,5 +53,5 @@ fi
 
 echo ""
 echo "⚠️  สำคัญ: ใช้เฉพาะ localhost URLs สำหรับ development"
-echo "❌ อย่าใช้: https://line-login.midseelee.com"
+echo "❌ อย่าใช้: https://your-app.example.com"
 echo "✅ ใช้: $DEV_URL"

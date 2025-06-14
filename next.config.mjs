@@ -26,7 +26,7 @@ const config = {
     assetPrefix: '',
     basePath: '',
     // Allow cross-origin requests from production domain
-    allowedDevOrigins: ['https://line-login.midseelee.com'],
+    allowedDevOrigins: ['https://your-app.example.com'],
     // กำหนด dev indicators (แก้ไข warning)
     devIndicators: {
       position: 'bottom-right',
@@ -72,7 +72,7 @@ const config = {
     allowedDevOrigins: ['localhost', '127.0.0.1'],
   } : {
     // Production: อนุญาต production domain
-    allowedDevOrigins: ["*.line-login.midseelee.com"],
+    allowedDevOrigins: ["*.your-app.example.com"],
   }),
   
   output: "standalone",

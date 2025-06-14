@@ -58,8 +58,10 @@ COPY . .
 
 # 🔐 SECURITY: Build arguments สำหรับ environment variables
 ARG DATABASE_URL
-ARG NEXTAUTH_URL
+ARG NEXTAUTH_URL  
 ARG NEXTAUTH_SECRET
+ARG APP_DOMAIN
+ARG ALLOWED_DOMAINS
 
 # 🔐 SECURITY: ตั้งค่า Prisma สำหรับ production build
 # 🔧 RASPBERRY PI OPTIMIZATION: ตั้งค่า memory limits สำหรับ Node.js
@@ -73,6 +75,8 @@ ENV NODE_OPTIONS="--max_old_space_size=1536"
 ENV DATABASE_URL=${DATABASE_URL}
 ENV NEXTAUTH_URL=${NEXTAUTH_URL}
 ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+ENV APP_DOMAIN=${APP_DOMAIN}
+ENV ALLOWED_DOMAINS=${ALLOWED_DOMAINS}
 
 # 🚀 OPTIMIZATION: Generate Prisma Client และ build Next.js
 # 🔧 RASPBERRY PI: แยก commands เพื่อลด memory peak usage

@@ -85,6 +85,12 @@ services:
       - AIRVISUAL_API_KEY=${AIRVISUAL_API_KEY}
       - CMC_API_KEY=${CMC_API_KEY}
       - CMC_URL=https://pro-api.coinmarketcap.com
+      
+      # =============================================================================
+      # Domain Security Configuration (GitHub Secrets)
+      # =============================================================================
+      - APP_DOMAIN=${APP_DOMAIN}
+      - ALLOWED_DOMAINS=${ALLOWED_DOMAINS}
     # 🔄 AUTO-RESTART: เริ่มต้นอัตโนมัติหลังเปิดเครื่อง และ restart เมื่อ crash
     restart: always
     

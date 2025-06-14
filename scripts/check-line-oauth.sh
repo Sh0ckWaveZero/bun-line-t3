@@ -37,11 +37,11 @@ fi
 REDIRECT_URI=$(echo $CONFIG | jq -r '.oauthUrl' | grep -o 'redirect_uri=[^&]*' | cut -d= -f2)
 DECODED_URI=$(printf '%b' "${REDIRECT_URI//%/\\x}")
 
-if [[ "$DECODED_URI" == "https://line-login.midseelee.com/api/auth/callback/line" ]]; then
+if [[ "$DECODED_URI" == "https://your-app.example.com/api/auth/callback/line" ]]; then
   echo "✅ redirect_uri ถูกต้อง: $DECODED_URI"
 else
   echo "❌ redirect_uri ไม่ถูกต้อง: $DECODED_URI"
-  echo "   ควรเป็น: https://line-login.midseelee.com/api/auth/callback/line"
+  echo "   ควรเป็น: https://your-app.example.com/api/auth/callback/line"
   exit 1
 fi
 

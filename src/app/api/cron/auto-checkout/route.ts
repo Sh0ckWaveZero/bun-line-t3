@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
           autoCheckoutTime.setHours(0, 0, 0, 0);
           
           // อัปเดต WorkAttendance record ด้วยการลงชื่อออกงานอัตโนมัติ
-          const updatedAttendance = await db.workAttendance.update({
+          await db.workAttendance.update({
             where: { id: todayAttendance.id },
             data: {
               checkOutTime: autoCheckoutTime,

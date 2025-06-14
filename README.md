@@ -169,20 +169,26 @@ AIRVISUAL_API_KEY="your-airvisual-api-key"
 
 Comprehensive documentation is available in the `/docs` directory:
 
-- **[📖 Documentation Index](./docs/INDEX.md)** - Complete documentation overview
-- **[🏗️ Backend Architecture](./docs/BACKEND_ARCHITECTURE.md)** - Detailed system architecture
-- **[🏢 Attendance System](./docs/ATTENDANCE_SYSTEM.md)** - Attendance management features
-- **[⏰ Automated Checkout Reminder](./docs/AUTOMATED_CHECKOUT_REMINDER.md)** - ✅ **Production Ready** - Automated notification system
-- **[🕐 Vercel Cron Setup](./docs/VERCEL_CRON_SETUP.md)** - Vercel Cron Jobs deployment guide
-- **[💰 Cryptocurrency Tracking](./docs/CRYPTO_TRACKING.md)** - Crypto price monitoring features
-- **[🌍 Air Quality Monitoring](./docs/AIR_QUALITY_MONITORING.md)** - Location-based air quality data
-- **[📝 LINE Commands (English)](./docs/LINE_COMMANDS.md)** - Complete list of all LINE Bot commands
-- **[📝 LINE Commands (Thai)](./docs/LINE_COMMANDS_THAI.md)** - คำสั่งทั้งหมดของ LINE Bot (ภาษาไทย)
-- **[🛠️ Development Guide](./docs/DEVELOPMENT.md)** - Development best practices
-- **[🔒 Security](./docs/SECURITY.md)** - Security considerations
-- **[📊 Monthly Reports](./docs/MONTHLY_REPORT_FEATURE.md)** - Reporting system
-- **[🏗️ Architecture Evolution](./docs/ARCHITECTURE_EVOLUTION.md)** - Project architecture history
-- **[⏰ Early Check-in](./docs/EARLY_CHECKIN_IMPLEMENTATION.md)** - Early arrival handling
+### 📖 Core Documentation
+- **[� Documentation Overview](./docs/README.md)** - Complete documentation index
+- **[🚀 Setup Guide](./docs/SETUP.md)** - Installation and configuration guide
+- **[🏗️ System Architecture](./docs/ARCHITECTURE.md)** - System design and architecture
+- **[🔌 API Documentation](./docs/API.md)** - Complete API reference
+- **[🔐 Security Guide](./docs/SECURITY.md)** - Security best practices and implementation
+
+### 🎯 Feature Documentation
+- **[🏢 Attendance System](./docs/ATTENDANCE_SYSTEM.md)** - Work time tracking features
+- **[💬 LINE Commands (Thai)](./docs/LINE_COMMANDS_THAI.md)** - คำสั่ง LINE Bot (ภาษาไทย)
+- **[💬 LINE Commands (English)](./docs/LINE_COMMANDS.md)** - LINE Bot commands reference
+- **[⏰ Automated Checkout](./docs/AUTOMATED_CHECKOUT.md)** - ✅ **Production Ready** - Automated reminders
+- **[💰 Crypto Tracking](./docs/CRYPTO_TRACKING.md)** - Cryptocurrency monitoring
+- **[🌍 Air Quality](./docs/AIR_QUALITY.md)** - Environmental data monitoring
+
+### 🛠️ Development & Deployment
+- **[🛠️ Development Guide](./docs/DEVELOPMENT.md)** - Development workflow and standards
+- **[� Deployment Guide](./docs/DEPLOYMENT.md)** - Production deployment instructions
+- **[🧪 Testing Guide](./docs/TESTING.md)** - Testing strategies and implementation
+- **[📊 Performance Guide](./docs/PERFORMANCE.md)** - Optimization and monitoring
 
 ## 🛠️ Development
 

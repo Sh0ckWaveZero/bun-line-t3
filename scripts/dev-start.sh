@@ -11,7 +11,7 @@ rm -rf node_modules/.cache
 rm -rf .env.production*
 
 # ตรวจสอบว่า .env.local มี localhost configuration
-if grep -q "line-login.midseelee.com" .env.local 2>/dev/null; then
+if grep -q "your-app.example.com" .env.local 2>/dev/null; then
     echo "⚠️  Found production URLs in .env.local, fixing..."
     sed -i '' 's/https:\/\/line-login\.midseelee\.com/http:\/\/localhost:4325/g' .env.local
 fi
@@ -34,7 +34,7 @@ echo "NEXT_PUBLIC_BASE_URL: $NEXT_PUBLIC_BASE_URL"
 echo ""
 echo "🚀 Starting development server on http://localhost:4325"
 echo "📝 Please open your browser to: http://localhost:4325"
-echo "❌ Do NOT use: https://line-login.midseelee.com"
+echo "❌ Do NOT use: https://your-app.example.com"
 echo ""
 
 # Start development server

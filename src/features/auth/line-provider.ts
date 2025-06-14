@@ -1,8 +1,9 @@
-import { Awaitable } from 'next-auth';
 import LineProvider from 'next-auth/providers/line';
+import { APP_DOMAIN } from '~/lib/constants/domain';
 
-// Constants
-const PRODUCTION_URL = 'https://line-login.midseelee.com';
+// Constants  
+// 🔐 Security: ใช้ environment variable แทน hardcode
+const PRODUCTION_URL = APP_DOMAIN;
 const LINE_AUTH_URL = 'https://access.line.me/oauth2/v2.1/authorize';
 const LINE_TOKEN_URL = 'https://api.line.me/oauth2/v2.1/token';
 const LINE_USERINFO_URL = 'https://api.line.me/v2/profile';
