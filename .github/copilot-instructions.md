@@ -99,6 +99,7 @@
 - 🧩 **Immutability First**: หลีกเลี่ยงการเปลี่ยนแปลง data in-place
 - 🚀 **Pure Functions**: เขียน functions ที่ไม่มี side effects
 - อย่าพยายามยามสร้างไฟล์ที่ไม่จำเป็น
+- อย่าพยายามเปิด terminal ใหม่
 
 #### 🔒 สไตล์โค้ดด้านความปลอดภัย
 
@@ -457,11 +458,11 @@ export function LoginForm() {
       {state.errors?.email && (
         <div id="email-error" role="alert">{state.errors.email}</div>
       )}
-    
+  
       <button type="submit" disabled={isPending}>
         {isPending ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
       </button>
-    
+  
       {state.message && (
         <div role="alert" className="error-message">{state.message}</div>
       )}
@@ -885,7 +886,7 @@ import { pipe, compose, curry, memoize } from '@/lib/functional'
 │   └── tsconfig.json              # TypeScript configuration
 │
 ├── 🔐 Security & Certificates     # ความปลอดภัยและใบรับรอง
-│   └── certificates/              
+│   └── certificates/      
 │       ├── localhost.pem          # SSL certificate for development
 │       └── localhost-key.pem      # SSL private key
 │

@@ -72,6 +72,7 @@ enum AttendanceStatusType {
   CHECKED_IN_ON_TIME
   CHECKED_IN_LATE
   CHECKED_OUT
+  AUTO_CHECKOUT_MIDNIGHT
 }
 
 model Cmc {

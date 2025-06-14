@@ -472,8 +472,9 @@ const handleCheckOut = async (req: NextApiRequest, userId: string) => {
       return;
     }
     
-    // If already checked out, show the checkout success with existing data
-    if (currentAttendance.status === AttendanceStatusType.CHECKED_OUT) {
+    // 🔍 ตรวจสอบว่าออกงานแล้วหรือไม่ (รวมทั้ง manual checkout และ auto checkout)
+    if (currentAttendance.status === AttendanceStatusType.CHECKED_OUT || 
+        currentAttendance.status === AttendanceStatusType.AUTO_CHECKOUT_MIDNIGHT) {
       const payload = bubbleTemplate.workCheckOutSuccess(
         currentAttendance.checkInTime, 
         currentAttendance.checkOutTime || new Date()

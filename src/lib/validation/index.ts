@@ -4,6 +4,8 @@ export * from './randomColor';
 
 // Import utility functions
 import { roundToTwoDecimals } from '~/lib/utils/number';
+import { formatDateTimeSafe } from '~/lib/utils/date-formatting';
+import { timeBasedSelect } from '~/lib/utils/safe-random';
 
 
 // Existing utilities
@@ -103,11 +105,12 @@ const volumeChangeFormat = (price: string) => {
 }
 
 const lastUpdateFormat = (lastUpdate: string | number | null) => {
-  lastUpdate = lastUpdate ? lastUpdate : new Date().toLocaleString('en-US', { timeZone: 'Asia/Bangkok' });
-  return new Date(lastUpdate).toLocaleString('th-TH', {
-    timeZone: 'Asia/Bangkok',
-    hour12: false,
-  });
+  // 🛡️ ใช้ safe date formatting แทน toLocaleString เพื่อป้องกัน hydration mismatch
+  if (!lastUpdate) {
+    return formatDateTimeSafe(new Date());
+  }
+  
+  return formatDateTimeSafe(new Date(lastUpdate));
 };
 
 const priceChangeColor = (price: string) => {
@@ -119,10 +122,12 @@ const priceColor = (name: string) => {
 };
 
 const randomItems = (source: any[]) => {
-  const url = source;
-  const randomIndex = Math.floor(Math.random() * url.length - 1);
-
-  return url[randomIndex];
+  // 🛡️ ใช้ timeBasedSelect แทน Math.random() เพื่อป้องกัน hydration mismatch
+  if (!source || source.length === 0) {
+    return null;
+  }
+  
+  return timeBasedSelect(source, 15); // เปลี่ยนทุก 15 นาที
 };
 
 const getGoldPricesColors = (element: any, goldBarPrices: any) => {

@@ -14,6 +14,15 @@ const eslintConfig = [
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          "argsIgnorePattern": "^_",
+          "varsIgnorePattern": "^(_|AttendanceRecord|EditAttendanceData|MonthlyAttendanceReport|User|.*Props)$",
+          "ignoreRestSiblings": true,
+          "args": "after-used"
+        }
+      ],
       "@typescript-eslint/ban-ts-comment": [
         "error",
         {

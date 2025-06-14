@@ -1,13 +1,32 @@
-import { type Config } from "tailwindcss";
+import type { Config } from 'tailwindcss'
 
-export default {
-  content: ["./src/**/*.{js,ts,jsx,tsx}"],
+const config: Config = {
+  content: [
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/features/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/lib/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
   theme: {
     extend: {
-      fontFamily: {
-        sans: ["var(--font-prompt)", "system-ui", "sans-serif"],
+      // 🎯 Custom utilities และ theme extensions ที่มีอยู่แล้ว
+      animation: {
+        'ring-rotate': 'ring-rotate 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite',
+      },
+      keyframes: {
+        'ring-rotate': {
+          '0%': {
+            transform: 'rotate(0deg)',
+          },
+          '100%': {
+            transform: 'rotate(360deg)',
+          },
+        },
       },
     },
   },
   plugins: [],
-} satisfies Config;
+}
+
+export default config

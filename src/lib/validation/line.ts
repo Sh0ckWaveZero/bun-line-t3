@@ -8,6 +8,7 @@ import {
   formatPercentage
 } from '~/lib/utils/number';
 import { AttendanceStatusType } from '@prisma/client';
+import { timeBasedSelect } from '~/lib/utils/safe-random';
 
 const lottery = (infoItems: any[]) => {
   return infoItems.map((item) => {
@@ -1172,11 +1173,13 @@ const workCheckInEarlySuccess = (actualCheckInTime: Date, recordedCheckInTime: D
  * @param checkOutTime เวลาออกงาน
  * @returns array ของ component ที่แสดงเวลาออกงาน หรือ array ว่างถ้าไม่มีข้อมูล
  */
-const createCheckOutTimeContent = (checkOutTime?: Date): any[] => {
+const createCheckOutTimeContent = (checkOutTime?: Date, isAutoCheckout: boolean = false): any[] => {
   if (!checkOutTime) return [];
   
   // คำนวณเวลาไทย (UTC+7) จาก UTC หรือใช้ formatTimeHM
   const checkOutTimeStr = formatTimeHM(checkOutTime);
+  const timeLabel = isAutoCheckout ? '🕛 ออกงานอัตโนมัติ:' : '🕐 เวลาออกงาน:';
+  const timeColor = isAutoCheckout ? '#FF9500' : '#7BB3A9';
   
   return [
     {
@@ -1185,7 +1188,7 @@ const createCheckOutTimeContent = (checkOutTime?: Date): any[] => {
       contents: [
         {
           type: 'text',
-          text: '🕐 เวลาออกงาน:',
+          text: timeLabel,
           size: 'sm',
           color: '#777777',
           flex: 0
@@ -1195,7 +1198,7 @@ const createCheckOutTimeContent = (checkOutTime?: Date): any[] => {
           text: checkOutTimeStr,
           weight: 'bold',
           size: 'sm',
-          color: '#7BB3A9',
+          color: timeColor,
           align: 'end'
         }
       ]
@@ -1219,13 +1222,27 @@ const workStatus = (attendance: any) => {
   // สร้างวันที่ในรูปแบบไทย
   const dateStr = formatThaiDate(attendance.checkInTime);
 
-  const isCheckedOut = attendance.status === AttendanceStatusType.CHECKED_OUT;
-  const statusText = isCheckedOut ? '✅ ออกงานแล้ว' : '🟢 กำลังทำงาน';
-  const statusColor = isCheckedOut ? '#7BB3A9' : '#FFB366';
+  const isCheckedOut = attendance.status === AttendanceStatusType.CHECKED_OUT || 
+                      attendance.status === AttendanceStatusType.AUTO_CHECKOUT_MIDNIGHT;
+  const isAutoCheckout = attendance.status === AttendanceStatusType.AUTO_CHECKOUT_MIDNIGHT;
+  
+  let statusText: string;
+  let statusColor: string;
+  
+  if (isAutoCheckout) {
+    statusText = '🕛 ออกงานอัตโนมัติ';
+    statusColor = '#FF9500'; // สีส้มสำหรับการออกงานอัตโนมัติ
+  } else if (isCheckedOut) {
+    statusText = '✅ ออกงานแล้ว';
+    statusColor = '#7BB3A9';
+  } else {
+    statusText = '🟢 กำลังทำงาน';
+    statusColor = '#FFB366';
+  }
 
   // สร้าง content สำหรับแสดงเวลาออกงาน (ถ้ามี)
   const checkOutTimeContent = isCheckedOut && attendance.checkOutTime 
-    ? createCheckOutTimeContent(attendance.checkOutTime) 
+    ? createCheckOutTimeContent(attendance.checkOutTime, isAutoCheckout) 
     : [];
 
   return [
@@ -1692,11 +1709,24 @@ const createMonthlyReportHeader = (monthName: string) => {
  * @returns bubble template
  */
 const monthlyReportSummary = (report: any) => {
-  const monthName = new Date(report.month + '-01').toLocaleDateString('th-TH', {
-    timeZone: 'Asia/Bangkok',
-    year: 'numeric',
-    month: 'long'
-  });
+  // 🛡️ Safe month formatting - ใช้ static mapping แทน toLocaleDateString
+  const monthNames: Record<string, string> = {
+    '01': 'มกราคม',
+    '02': 'กุมภาพันธ์',
+    '03': 'มีนาคม',
+    '04': 'เมษายน',
+    '05': 'พฤษภาคม',
+    '06': 'มิถุนายน',
+    '07': 'กรกฎาคม',
+    '08': 'สิงหาคม',
+    '09': 'กันยายน',
+    '10': 'ตุลาคม',
+    '11': 'พฤศจิกายน',
+    '12': 'ธันวาคม'
+  };
+
+  const [year, month] = report.month.split('-');
+  const monthName = `${monthNames[month]} ${year}`;
 
   return {
     "type": "bubble",
@@ -2111,9 +2141,9 @@ const workCheckInLateSuccess = (checkInTime: Date, expectedCheckOutTime: Date) =
     `🚀 พร้อมทำงานแล้ว!\nมาช้า แต่มาพร้อม! 💯\nขอให้ประสบความสำเร็จ!`
   ] as const;
 
-  // เลือกข้อความแบบสุ่มสำหรับ bubble แรก
-  const randomHeader = randomHeaders[Math.floor(Math.random() * randomHeaders.length)];
-  const randomBodyMessage = randomBodyMessages[Math.floor(Math.random() * randomBodyMessages.length)];
+  // 🛡️ เลือกข้อความแบบ time-based แทน Math.random() เพื่อป้องกัน hydration mismatch
+  const randomHeader = timeBasedSelect(randomHeaders, 30); // เปลี่ยนทุก 30 นาที
+  const randomBodyMessage = timeBasedSelect(randomBodyMessages, 45); // เปลี่ยนทุก 45 นาที
 
   return [
     {

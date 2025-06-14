@@ -124,7 +124,9 @@ const checkIn = async (userId: string): Promise<CheckInResult> => {
     });
 
     if (existingAttendance) {
-      if (existingAttendance.status === AttendanceStatusType.CHECKED_OUT) {
+      // 🔍 ตรวจสอบว่าออกงานแล้วหรือไม่ (รวมทั้ง manual checkout และ auto checkout)
+      if (existingAttendance.status === AttendanceStatusType.CHECKED_OUT || 
+          existingAttendance.status === AttendanceStatusType.AUTO_CHECKOUT_MIDNIGHT) {
         await db.workAttendance.update({
           where: { id: existingAttendance.id },
           data: {
@@ -292,7 +294,9 @@ const checkOut = async (userId: string): Promise<CheckInResult> => {
       };
     }
 
-    if (attendance.status === AttendanceStatusType.CHECKED_OUT) {
+    // 🔍 ตรวจสอบว่าออกงานแล้วหรือไม่ (รวมทั้ง manual checkout และ auto checkout)
+    if (attendance.status === AttendanceStatusType.CHECKED_OUT || 
+        attendance.status === AttendanceStatusType.AUTO_CHECKOUT_MIDNIGHT) {
       const storedCheckOutTime = attendance.checkOutTime || checkOutTime;
       const workingHoursMs = storedCheckOutTime.getTime() - attendance.checkInTime.getTime();
       const workingHours = workingHoursMs / (1000 * 60 * 60);
