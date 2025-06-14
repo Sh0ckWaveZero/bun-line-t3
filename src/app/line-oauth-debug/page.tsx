@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { validateNextAuthUrl, isSafeUrl, ALLOWED_HOSTS } from '@/lib/security/url-validator'
 
 interface LineOAuthConfig {
   clientId: string
@@ -146,21 +147,87 @@ export default function LineOAuthDebugPage() {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-3">
-                    {config.nextAuthUrl.includes('line-login.midseelee.com') ? (
-                      <span className="text-green-600">✓</span>
-                    ) : (
-                      <span className="text-red-600">✗</span>
-                    )}
-                    <span>Production URL configuration</span>
-                  </div>
-                  
-                  <div className="bg-green-50 border border-green-200 rounded p-3">
-                    <p className="text-green-800 text-sm">
-                      <strong>Production Ready:</strong> Configuration matches production domain.
-                    </p>
-                  </div>
+                <div className="space-y-4">
+                  {/* 🛡️ Secure URL Validation */}
+                  {(() => {
+                    const urlValidation = validateNextAuthUrl(config.nextAuthUrl)
+                    const callbackValidation = validateNextAuthUrl(config.callbackUrl)
+                    
+                    return (
+                      <>
+                        {/* NextAuth URL Validation */}
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-3">
+                            {urlValidation.isValid ? (
+                              <span className="text-green-600">✓</span>
+                            ) : (
+                              <span className="text-red-600">✗</span>
+                            )}
+                            <span>NextAuth URL Security Check</span>
+                          </div>
+                          
+                          {urlValidation.isValid ? (
+                            <div className="bg-green-50 border border-green-200 rounded p-3">
+                              <p className="text-green-800 text-sm">
+                                <strong>✅ URL ปลอดภัย:</strong> Hostname "{urlValidation.hostname}" 
+                                อยู่ในรายการที่อนุญาต ({urlValidation.isDevelopment ? 'Development' : 'Production'})
+                              </p>
+                              <div className="mt-2 text-xs text-green-700">
+                                <strong>Allowed hosts:</strong> {urlValidation.isDevelopment 
+                                  ? ALLOWED_HOSTS.development.join(', ')
+                                  : ALLOWED_HOSTS.production.join(', ')
+                                }
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="bg-red-50 border border-red-200 rounded p-3">
+                              <p className="text-red-800 text-sm">
+                                <strong>🚨 URL ไม่ปลอดภัย:</strong> {urlValidation.error}
+                              </p>
+                              <div className="mt-2 text-xs text-red-700">
+                                <strong>Current hostname:</strong> {urlValidation.hostname || 'Invalid URL'}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Callback URL Validation */}
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-3">
+                            {callbackValidation.isValid ? (
+                              <span className="text-green-600">✓</span>
+                            ) : (
+                              <span className="text-red-600">✗</span>
+                            )}
+                            <span>Callback URL Security Check</span>
+                          </div>
+                          
+                          {callbackValidation.isValid ? (
+                            <div className="bg-blue-50 border border-blue-200 rounded p-3">
+                              <p className="text-blue-800 text-sm">
+                                <strong>✅ Callback URL ปลอดภัย:</strong> ผ่านการตรวจสอบความปลอดภัย
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="bg-red-50 border border-red-200 rounded p-3">
+                              <p className="text-red-800 text-sm">
+                                <strong>🚨 Callback URL ไม่ปลอดภัย:</strong> {callbackValidation.error}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Security Recommendations */}
+                        <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
+                          <p className="text-yellow-800 text-sm">
+                            <strong>🛡️ Security Note:</strong> ระบบตรวจสอบ URL อัตโนมัติเพื่อป้องกัน 
+                            malicious redirections และ request forgeries โดยจะอนุญาตเฉพาะ 
+                            hostnames ที่อยู่ในรายการที่กำหนดไว้เท่านั้น
+                          </p>
+                        </div>
+                      </>
+                    )
+                  })()}
                 </div>
               )}
             </div>
