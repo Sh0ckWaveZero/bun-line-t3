@@ -1,3 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Import Tailwind CSS v4 with PostCSS integration */
+@import '../input.css';
+
+/* No additional custom CSS needed - all modal styles are in input.css */

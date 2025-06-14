@@ -1,16 +1,11 @@
 import { type Metadata } from "next";
-import { Prompt } from "next/font/google";
 import Providers from "./providers";
 
 import "~/styles/globals.css";
 import "~/styles/ring.css";
 
-const prompt = Prompt({
-  subsets: ["thai", "latin"],
-  display: "swap",
-  variable: "--font-prompt",
-  weight: ["300", "400", "500", "600", "700"],
-});
+// ใช้ static font class names เพื่อป้องกัน hydration mismatch
+const FONT_CLASSES = 'font-prompt antialiased'
 
 export const metadata: Metadata = {
   title: "Bun LINE T3 App",
@@ -24,7 +19,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="th" className={prompt.variable}>
+    <html 
+      lang="th" 
+      style={{ ['--font-prompt' as any]: 'Prompt, sans-serif' }}
+      className="font-prompt"
+    >
       <head>
         <meta
           name="theme-color"
@@ -36,9 +35,26 @@ export default function RootLayout({
           media="(prefers-color-scheme: dark)"
           content="#2e026d"
         />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        <meta name="format-detection" content="telephone=no" />
+        {/* Google Fonts - โหลดใน head เพื่อป้องกัน hydration mismatch */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link 
+          href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" 
+          rel="stylesheet" 
+        />
+        {/* Development checker - โหลดเฉพาะใน development */}
+        {process.env.NODE_ENV === 'development' && (
+          <>
+            <script src="/dev-checker.js" defer />
+            <script src="/production-redirect.js" defer />
+          </>
+        )}
       </head>
-      <body className={prompt.className}>
+      <body className={FONT_CLASSES}>
         <Providers>
+          <div id="modal-root"></div>
           {children}
         </Providers>
       </body>

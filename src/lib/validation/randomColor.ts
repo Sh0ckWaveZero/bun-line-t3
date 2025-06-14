@@ -1,3 +1,5 @@
+import { getDeterministicRandom, getDeterministicAlpha } from '../utils/safe-random';
+
 interface RandomColorOptions {
   seed?: number | string | null;
   count?: number | null;
@@ -167,7 +169,7 @@ const setFormat = (hsv: number[], options: { format: string, alpha?: number }) =
 
     case 'hsla':
       const hslColor = HSVtoHSL(hsv);
-      const alpha = options.alpha || Math.random();
+      const alpha = options.alpha || getDeterministicAlpha();
       return `hsla(${hslColor[0]}, ${hslColor[1]}%, ${hslColor[2]}%, ${alpha})`;
 
     case 'rgbArray':
@@ -179,7 +181,7 @@ const setFormat = (hsv: number[], options: { format: string, alpha?: number }) =
 
     case 'rgba':
       const rgbColor = HSVtoRGB(hsv as any);
-      const alpha2 = options.alpha || Math.random();
+      const alpha2 = options.alpha || getDeterministicAlpha();
       return `rgba(${rgbColor.join(', ')}, ${alpha2})`;
 
     default:
@@ -259,9 +261,9 @@ const getColorInfo = (hue: number): ColorInfo | string => {
 
 const randomWithin = (range: [number, number]): number => {
   if (seed === null) {
-    //generate random evenly destinct number from : https://martin.ankerl.com/2009/12/09/how-to-create-random-colors-programmatically/
+    //generate deterministic number to prevent hydration mismatch
     const golden_ratio = 0.618033988749895;
-    let r = Math.random();
+    let r = getDeterministicRandom(30); // 30-minute intervals for stability
     r += golden_ratio;
     r %= 1;
     return Math.floor(range[0] + r * (range[1] + 1 - range[0]));

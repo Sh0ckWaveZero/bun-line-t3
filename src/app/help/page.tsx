@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Head from 'next/head';
+import { useSafeHydration } from '~/hooks/useHydrationSafe';
 import '~/styles/help.css';
 
 interface CommandCategory {
@@ -22,6 +23,12 @@ export default function HelpPage() {
   const [categories, setCategories] = useState<CommandCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // 🛡️ ป้องกัน hydration mismatch จาก dynamic date
+  const currentYear = useSafeHydration(
+    2025, // server-side fallback
+    () => new Date().getFullYear() // client-side value
+  );
 
   useEffect(() => {
     // In a real application, you might fetch this from an API endpoint
@@ -256,7 +263,7 @@ export default function HelpPage() {
         </main>
 
         <footer className="mt-16 text-center text-gray-500 text-sm font-light">
-          <p>© {new Date().getFullYear()} Bun LINE T3. สามารถใช้คำสั่งทั้งภาษาไทยและอังกฤษได้</p>
+          <p>© {currentYear} Bun LINE T3. สามารถใช้คำสั่งทั้งภาษาไทยและอังกฤษได้</p>
         </footer>
       </div>
     </div>

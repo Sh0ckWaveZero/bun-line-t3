@@ -53,7 +53,6 @@ const flexMessage = (bubbleItems: any[]) => {
  * This endpoint is called by Vercel's cron scheduler at 16:30 on weekdays
  * It finds all users who checked in but haven't checked out and sends them reminders
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(_req: NextRequest) {
   try {
     const headersList = await headers();

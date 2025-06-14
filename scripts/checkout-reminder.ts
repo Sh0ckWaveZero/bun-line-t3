@@ -2,12 +2,12 @@
 
 /**
  * Automated checkout reminder script
- * This script should be scheduled to run near the end of workday (e.g., 16:30)
+ * This script should be scheduled to run near the end of workday (e.g., 17:30)
  * to remind users who haven't checked out yet to do so.
  * 
  * To schedule this script with cron, add a line like:
- * 30 16 * * 1-5 /path/to/bun /path/to/this-script.ts
- * (This runs at 16:30 on weekdays - Monday to Friday)
+ * 30 17 * * 1-5 /path/to/bun /path/to/this-script.ts
+ * (This runs at 17:30 on weekdays - Monday to Friday)
  */
 
 // Import our environment helper
