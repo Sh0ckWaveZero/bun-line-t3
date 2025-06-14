@@ -4,6 +4,115 @@
 >
 > **สำคัญ: ตอบทุกคำถามเป็นภาษาไทยเสมอ | IMPORTANT: Always respond in Thai**
 
+## 📝 AI Logging & Progress Tracking | การบันทึกและติดตามความคืบหน้า
+
+> **🚨 สำคัญ**: ก่อนทำงานใดๆ ต้องเขียน log file เพื่อติดตาม thought process และแสดงความคืบหน้า
+
+### 🎯 ข้อกำหนดการบันทึก | Logging Requirements
+
+#### 📋 สร้าง Task Log ทุกครั้ง
+
+เมื่อได้รับงาน ต้องสร้างไฟล์ `logs/ai-task-[timestamp].md` ด้วยรูปแบบ:
+
+```markdown
+# 🤖 AI Task Log - [วันที่]
+
+## 🎯 Task Overview
+- **User Request**: [คำขอของผู้ใช้]
+- **Task Type**: [ประเภทงาน: debug/feature/refactor/analysis]
+- **Priority**: [ความสำคัญ: high/medium/low]
+- **Estimated Time**: [เวลาที่คาดว่าจะใช้]
+
+## 🧠 Thought Process
+
+### 🔍 Analysis Phase
+- [ ] วิเคราะห์ความต้องการ
+- [ ] ระบุไฟล์ที่เกี่ยวข้อง
+- [ ] ประเมินความเสี่ยงด้านความปลอดภัย
+- [ ] วางแผนการแก้ไข
+
+### 🎯 Planning Phase
+- [ ] แบ่งงานเป็นขั้นตอน
+- [ ] กำหนด acceptance criteria
+- [ ] ระบุ dependencies
+- [ ] วางแผน testing
+
+### 🚀 Implementation Phase
+- [ ] เริ่มแก้ไขโค้ด
+- [ ] ทดสอบการทำงาน
+- [ ] ตรวจสอบความปลอดภัย
+- [ ] อัปเดตเอกสาร
+
+## ✅ Progress Tracking
+
+### 🎯 Current Status: [IN_PROGRESS/COMPLETED/BLOCKED]
+
+#### ✅ Completed Tasks
+- [ ] [งานที่ 1]
+- [ ] [งานที่ 2]
+
+#### 🚧 In Progress
+- [ ] [งานที่กำลังทำ]
+
+#### ❌ Blocked/Issues
+- [ ] [อุปสรรคหรือปัญหา]
+
+## 🔍 Technical Notes
+- **Files Modified**: [รายการไฟล์ที่แก้ไข]
+- **Security Considerations**: [ข้อพิจารณาด้านความปลอดภัย]
+- **Testing Strategy**: [แผนการทดสอบ]
+
+## 📊 Final Summary
+- **Result**: [ผลลัพธ์สุดท้าย]
+- **Next Steps**: [ขั้นตอนต่อไป]
+- **Lessons Learned**: [สิ่งที่ได้เรียนรู้]
+```
+
+#### 🔄 อัปเดต Log อย่างต่อเนื่อง
+
+- ✅ **เมื่อเริ่มแต่ละขั้นตอน**: อัปเดตสถานะและ check ✅
+- ✅ **เมื่อแก้ไขไฟล์**: บันทึกไฟล์และเหตุผล
+- ✅ **เมื่อเจอปัญหา**: บันทึกปัญหาและวิธีแก้ไข
+- ✅ **เมื่อเสร็จแต่ละงาน**: ย้ายไป Completed Tasks
+
+### 📝 Log Format Standards | มาตรฐานการบันทึก
+
+#### 🕐 Timestamp Format
+```
+[2025-06-14 19:30:15] [ANALYSIS] วิเคราะห์ความต้องการแล้ว
+[2025-06-14 19:35:22] [PLANNING] แบ่งงานเป็น 3 ขั้นตอน
+[2025-06-14 19:40:33] [CODING] เริ่มแก้ไข src/components/Button.tsx
+[2025-06-14 19:45:44] [TESTING] ทดสอบ component แล้ว ✅
+[2025-06-14 19:50:55] [COMPLETE] งานเสร็จสิ้น ✅
+```
+
+#### 🎯 Status Indicators
+- 🧠 **[THINKING]** - กำลังคิดวิเคราะห์
+- 🔍 **[ANALYSIS]** - กำลังวิเคราะห์โค้ด/ปัญหา
+- 📋 **[PLANNING]** - กำลังวางแผน
+- 💻 **[CODING]** - กำลังเขียน/แก้ไขโค้ด
+- 🧪 **[TESTING]** - กำลังทดสอบ
+- 🔒 **[SECURITY]** - ตรวจสอบความปลอดภัย
+- ✅ **[COMPLETE]** - เสร็จสิ้น
+- ❌ **[ERROR]** - เกิดข้อผิดพลาด
+- ⚠️ **[WARNING]** - คำเตือน
+
+### 🎯 Mandatory Workflow | ขั้นตอนบังคับ
+
+**ทุกครั้งที่แก้ไขโค้ด ต้องทำตามลำดับ:**
+
+1. 📝 **สร้าง/อัปเดต log file**
+2. 🧠 **[THINKING]** บันทึกความคิด
+3. 🔍 **[ANALYSIS]** วิเคราะห์และ check ✅
+4. 📋 **[PLANNING]** วางแผนและ check ✅  
+5. 💻 **[CODING]** แก้ไขโค้ดและ check ✅
+6. 🧪 **[TESTING]** ทดสอบและ check ✅
+7. ✅ **[COMPLETE]** สรุปผลและ check ✅
+
+**ห้ามข้ามขั้นตอนใดๆ และต้อง check ✅ ทุกขั้นตอนใน log file**
+
+---
+
 ## 👨‍💻 Expert Profile | โปรไฟล์ผู้เชี่ยวชาญ
 
 คุณเป็นวิศวกรซอฟต์แวร์อาวุโสที่เชี่ยวชาญการพัฒนาเว็บโมเดิร์น ด้วยเทคโนโลยีต่อไปนี้:
@@ -849,6 +958,56 @@ Before deploying any code, ensure | ก่อนเผยแพร่โค้�
 
 ---
 
+## � Process Management & Monitoring System | ระบบจัดการ Process และการตรวจสอบ
+
+### 🔒 Simple Process Lock for Dev Server | ระบบป้องกันการรัน Dev Server ซ้ำ
+
+### 🎯 หลักการทำงาน | Core Principle
+
+ระบบง่ายๆ สำหรับป้องกันการรัน `bun run dev` หรือ `npm run dev` ซ้ำ:
+- ✅ ตรวจสอบว่า dev server รันอยู่หรือไม่
+- ⚠️ ถ้ารันอยู่แล้ว แจ้งเตือนและออกจากโปรแกรม  
+- 🔒 ใช้ file-based locking แบบง่าย
+- 🧹 ล้าง lock อัตโนมัติเมื่อกด Ctrl+C
+
+### 🛠️ การใช้งาน | Usage
+
+#### � Development Server
+
+```bash
+# รัน dev server ที่มี process lock
+bun run dev
+
+# หรือ
+npm run dev
+```
+
+#### 🖥️ CLI Commands (สำหรับ debug)
+
+```bash
+# 📋 ดูรายการ dev processes ที่กำลังรัน
+bun scripts/simple-lock.ts list
+
+# หมายเหตุ: ใช้ Ctrl+C เพื่อหยุด dev server และล้าง locks
+```
+
+### 🎭 พฤติกรรมเมื่อ Dev Server รันซ้ำ | Duplicate Process Behavior
+
+เมื่อพยายามรัน dev server ที่รันอยู่แล้ว:
+
+```
+⚠️  Process 'dev-server' is already running (PID: 12345)
+   Started at: 6/14/2025, 10:30:15 AM
+   Please wait for it to finish or stop it with Ctrl+C.
+🚫 Exiting because process is already running.
+```
+
+### 💡 Best Practices | แนวทางปฏิบัติที่ดี
+
+- ✅ **ใช้ `bun run dev` ปกติ**: ระบบจะป้องกันการรันซ้ำให้อัตโนมัติ
+- ✅ **ใช้ Ctrl+C เพื่อหยุด**: Lock files จะถูกล้างอัตโนมัติ
+- ✅ **ไม่ต้องจัดการ lock files**: ระบบจัดการให้เอง
+
 ## 📚 Quick Reference | คู่มืออ้างอิงด่วน
 
 ### 🔗 Key Utilities | เครื่องมือสำคัญ
@@ -912,9 +1071,14 @@ import { pipe, compose, curry, memoize } from '@/lib/functional'
 │
 ├── ⚙️ Scripts & Automation        # สคริปต์และระบบอัตโนมัติ
 │   └── scripts/
-│       ├── checkout-reminder.ts   # Automated checkout reminders
-│       ├── generate-secrets.ts    # Security key generation
-│       ├── health-check.sh        # Health monitoring
+│       ├── checkout-reminder.ts          # Automated checkout reminders (legacy)
+│       ├── enhanced-checkout-reminder.ts # Enhanced checkout reminder with process management
+│       ├── process-manager.ts            # Process lock management และ logging system
+│       ├── process-monitor.ts            # Comprehensive process monitoring และ health checks
+│       ├── log-viewer.ts                 # Log viewing และ analysis tools
+│       ├── manage-processes.sh           # Shell script สำหรับ easy process management
+│       ├── generate-secrets.ts           # Security key generation
+│       ├── health-check.sh               # Health monitoring
 │       └── setup-checkout-reminder.sh
 │
 ├── 🎯 Core Application            # แอปพลิเคชันหลัก
@@ -996,8 +1160,8 @@ import { pipe, compose, curry, memoize } from '@/lib/functional'
 - **⏰ Automated Workflows**: ระบบอัตโนมัติด้วย cron jobs
 - **🐳 Docker Ready**: พร้อม deployment ด้วย containerization
 - **📊 Monitoring & Logging**: ระบบตรวจสอบและบันทึกผล
-- **🔐 Secure Secrets Management**: การจัดการความลับอย่างปลอดภัย
+- **� Process Management**: ระบบป้องกันการรัน process ซ้ำ และ monitoring
+- **📈 Advanced Logging**: ระบบ logging ที่ครอบคลุมพร้อม analytics และ real-time monitoring
+- **�🔐 Secure Secrets Management**: การจัดการความลับอย่างปลอดภัย
 
 ---
-
-**Remember | จำไว้**: Every line of code should be written with security as the primary concern. When in doubt, choose the more secure option. | ทุกบรรทัดของโค้ดควรเขียนด้วยความปลอดภัยเป็นหลัก เมื่อสงสัย ให้เลือกตัวเลือกที่ปลอดภัยกว่า

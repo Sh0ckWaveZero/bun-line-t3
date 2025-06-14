@@ -2,6 +2,7 @@
 
 # 🚀 Quick Development Access Script
 # สคริปต์สำหรับเปิด browser ไปยัง localhost development server
+# Updated to use pm.ts for process management
 
 DEV_URL="http://localhost:4325"
 PORT=4325
@@ -13,10 +14,10 @@ if curl -s "$DEV_URL" > /dev/null 2>&1; then
     echo "✅ Development server กำลังทำงานที่ $DEV_URL"
 else
     echo "❌ Development server ไม่ทำงาน"
-    echo "🚀 เริ่ม development server..."
+    echo "🚀 เริ่ม development server ด้วย pm.ts..."
     
-    # เริ่ม development server ใน background
-    npm run dev:local &
+    # เริ่ม development server ด้วย pm.ts
+    bun scripts/pm.ts dev &
     
     echo "⏳ รอ server เริ่มทำงาน..."
     sleep 5
