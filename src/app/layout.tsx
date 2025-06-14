@@ -52,7 +52,19 @@ export default function RootLayout({
           </>
         )}
       </head>
-      <body className={FONT_CLASSES}>
+      {/* 
+        🔧 suppressHydrationWarning: แก้ไข hydration mismatch จาก browser extensions
+        Browser extensions (เช่น Grammarly, ColorZilla) อาจแทรก attributes เข้าไปใน body:
+        - data-new-gr-c-s-check-loaded, data-gr-ext-installed (Grammarly)
+        - cz-shortcut-listen (ColorZilla)
+        - อื่นๆ
+        การใช้ suppressHydrationWarning ที่ body element จะป้องกัน warning เหล่านี้
+        โดยไม่กระทบต่อการทำงานของแอป
+      */}
+      <body 
+        className={FONT_CLASSES} 
+        suppressHydrationWarning={true}
+      >
         <Providers>
           <div id="modal-root"></div>
           {children}

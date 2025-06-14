@@ -58,6 +58,35 @@ function UserAgent() {
 }
 ```
 
+### 4. 🔌 Browser Extensions
+
+Browser extensions สามารถแทรก attributes หรือ elements เข้าไปใน DOM หลังจาก hydration:
+
+```typescript
+// 🚨 ปัญหาที่เกิดขึ้น - Browser extensions เช่น Grammarly, ColorZilla แทรก attributes:
+// <body data-new-gr-c-s-check-loaded="14.1239.0" data-gr-ext-installed="" cz-shortcut-listen="true">
+
+// ✅ แก้ไข - ใช้ suppressHydrationWarning ที่ body element
+// ใน layout.tsx:
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="th">
+      <head>...</head>
+      {/* 
+        suppressHydrationWarning: แก้ไข hydration mismatch จาก browser extensions
+        Browser extensions อาจแทรก attributes เข้าไปใน body element
+      */}
+      <body suppressHydrationWarning={true}>
+        {children}
+      </body>
+    </html>
+  )
+}
+
+// 📝 หมายเหตุ: การใช้ suppressHydrationWarning ที่ body element จะไม่กระทบต่อ
+// การตรวจจับ hydration mismatch ใน child components
+```
+
 ## 🔧 วิธีการแก้ไข | Solutions
 
 ### 1. 🎯 suppressHydrationWarning={true}
