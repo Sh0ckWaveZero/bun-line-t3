@@ -1,5 +1,5 @@
 import LineProvider from 'next-auth/providers/line';
-import { APP_DOMAIN } from '~/lib/constants/domain';
+import { APP_DOMAIN } from '@/lib/constants/domain';
 
 // Constants  
 // 🔐 Security: ใช้ environment variable แทน hardcode

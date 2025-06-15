@@ -3,7 +3,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { AttendanceRecord, MonthlyAttendanceReport, EditAttendanceData } from '~/lib/types';
+import { AttendanceRecord, MonthlyAttendanceReport, EditAttendanceData } from '@/lib/types';
+import { 
+  formatTimeOnly, 
+  combineOriginalDateWithNewTime 
+} from '@/lib/utils/date-time';
 
 export const useAttendanceReport = () => {
   const { data: session, status } = useSession();
@@ -74,37 +78,15 @@ export const useAttendanceReport = () => {
     }
   }, [userId, selectedMonth]);
 
-  // 🔐 SECURITY: Secure time conversion functions
-  const formatForInput = useCallback((utcDateString: string) => {
-    const utcDate = new Date(utcDateString);
-    
-    const bangkokTime = new Date(utcDate.toLocaleString('en-US', { 
-      timeZone: 'Asia/Bangkok' 
-    }));
-    
-    const year = bangkokTime.getFullYear();
-    const month = (bangkokTime.getMonth() + 1).toString().padStart(2, '0');
-    const day = bangkokTime.getDate().toString().padStart(2, '0');
-    const hours = bangkokTime.getHours().toString().padStart(2, '0');
-    const minutes = bangkokTime.getMinutes().toString().padStart(2, '0');
-    
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-  }, []);
-
-  const convertToISOWithTimezone = useCallback((bangkokTimeString: string) => {
-    if (!bangkokTimeString) return null;
-    return `${bangkokTimeString}:00+07:00`;
-  }, []);
-
   // Modal Management Functions
   const openEditModal = useCallback((record: AttendanceRecord) => {
     setEditingRecord(record);
     setEditData({
-      checkInTime: formatForInput(record.checkInTime),
-      checkOutTime: record.checkOutTime ? formatForInput(record.checkOutTime) : ''
+      checkInTime: formatTimeOnly(new Date(record.checkInTime)),
+      checkOutTime: record.checkOutTime ? formatTimeOnly(new Date(record.checkOutTime)) : ''
     });
     setEditModalOpen(true);
-  }, [formatForInput]);
+  }, []);
 
   const closeEditModal = useCallback(() => {
     setEditModalOpen(false);
@@ -118,6 +100,23 @@ export const useAttendanceReport = () => {
 
     setUpdateLoading(true);
     try {
+      // 🔐 SECURITY: สร้าง datetime ใหม่โดยใช้วันเดิม + เวลาใหม่
+      const newCheckInDateTime = combineOriginalDateWithNewTime(
+        new Date(editingRecord.checkInTime), 
+        editData.checkInTime
+      );
+      
+      const newCheckOutDateTime = editData.checkOutTime && editingRecord.checkOutTime
+        ? combineOriginalDateWithNewTime(
+            new Date(editingRecord.checkInTime), // 🔧 FIX: ใช้ checkInTime เป็น base date เพื่อให้อยู่วันเดียวกัน
+            editData.checkOutTime
+          )
+        : null;
+      
+      if (!newCheckInDateTime) {
+        throw new Error('เวลาเข้างานไม่ถูกต้อง');
+      }
+      
       const response = await fetch('/api/attendance/update', {
         method: 'PUT',
         headers: {
@@ -125,8 +124,8 @@ export const useAttendanceReport = () => {
         },
         body: JSON.stringify({
           attendanceId: editingRecord.id,
-          checkInTime: convertToISOWithTimezone(editData.checkInTime),
-          checkOutTime: editData.checkOutTime ? convertToISOWithTimezone(editData.checkOutTime) : null,
+          checkInTime: newCheckInDateTime.toISOString(),
+          checkOutTime: newCheckOutDateTime ? newCheckOutDateTime.toISOString() : null,
         }),
       });
 
@@ -146,7 +145,7 @@ export const useAttendanceReport = () => {
     } finally {
       setUpdateLoading(false);
     }
-  }, [editingRecord, editData, convertToISOWithTimezone, fetchReport, closeEditModal]);
+  }, [editingRecord, editData, fetchReport, closeEditModal]);
 
   return {
     // Session

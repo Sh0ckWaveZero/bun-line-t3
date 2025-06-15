@@ -5,7 +5,7 @@
  * ระบบแจ้งเตือน checkout ที่มีการป้องกันการรันซ้ำ
  */
 
-import { withProcessLock } from './simple-lock'
+import { withProcessLock } from '../simple-lock'
 
 async function sendCheckoutReminders() {
   console.log('🔔 Starting checkout reminder process...')

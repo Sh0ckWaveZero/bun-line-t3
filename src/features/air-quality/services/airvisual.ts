@@ -1,5 +1,5 @@
 import { AqiData } from '../aqi_data';
-import { env } from '~/env.mjs';
+import { env } from '@/env.mjs';
 import { weatherIcons } from "../aqi_data";
 
 const getNearestCity = async (latitude: number, longitude: number): Promise<any> => {

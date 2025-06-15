@@ -15,7 +15,7 @@
  */
 
 import { runWithProcessManagement } from './process-manager'
-import { env } from '../src/env.mjs'
+import { env } from '@/env.mjs'
 
 // 🔧 Configuration
 const CONFIG = {

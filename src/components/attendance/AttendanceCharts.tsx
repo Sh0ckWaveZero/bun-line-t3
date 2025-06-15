@@ -4,7 +4,7 @@ import React from 'react';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
-import type { AttendanceRecord, MonthlyAttendanceReport, AttendanceChartsProps } from '~/lib/types';
+import type { AttendanceRecord, MonthlyAttendanceReport, AttendanceChartsProps } from '@/lib/types';
 
 export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({ report }) => {
   // �️ Safe date formatting for chart labels

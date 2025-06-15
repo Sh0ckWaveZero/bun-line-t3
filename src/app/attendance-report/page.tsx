@@ -24,8 +24,8 @@ import {
   LoginPrompt,
   ErrorMessage,
   MonthSelector
-} from '~/components/attendance';
-import { useAttendanceReport } from '~/hooks/useAttendanceReport';
+} from '@/components/attendance';
+import { useAttendanceReport } from '@/hooks/useAttendanceReport';
 
 // Register Chart.js components
 ChartJS.register(

@@ -21,4 +21,4 @@ export type {
   EditAttendanceData, 
   User,
   AttendanceStatusType 
-} from '~/lib/types';
+} from '@/lib/types';

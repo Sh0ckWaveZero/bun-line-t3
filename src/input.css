@@ -1,10 +1,9 @@
 @import "tailwindcss";
 
-/* � Font configuration */
-:root {
-  --font-prompt: 'Prompt', sans-serif;
-}
+/* 🎨 Font configuration - Prompt Font สำหรับทั้ง Project */
+/* CSS Variables จะถูกสร้างโดย next/font/google อัตโนมัติ */
 
+/* Font classes for consistency */
 .font-prompt {
   font-family: var(--font-prompt);
 }

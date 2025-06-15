@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { signIn } from 'next-auth/react';
-import type { User, UserInfoCardProps, LoadingSpinnerProps, ErrorMessageProps, MonthSelectorProps } from '~/lib/types';
+import type { User, UserInfoCardProps, LoadingSpinnerProps, ErrorMessageProps, MonthSelectorProps } from '@/lib/types';
 
 export const UserInfoCard: React.FC<UserInfoCardProps> = ({ user }) => (
   <div className="mb-6 bg-blue-50 p-4 rounded-lg">

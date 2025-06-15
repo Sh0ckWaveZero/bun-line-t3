@@ -1,8 +1,8 @@
 "use client";
 
 import React from 'react';
-import type { MonthlyAttendanceReport, AttendanceSummaryCardsProps } from '~/lib/types';
-import { roundToOneDecimal } from '~/lib/utils/number';
+import type { MonthlyAttendanceReport, AttendanceSummaryCardsProps } from '@/lib/types';
+import { roundToOneDecimal } from '@/lib/utils/number';
 
 export const AttendanceSummaryCards: React.FC<AttendanceSummaryCardsProps> = ({ report }) => {
   return (

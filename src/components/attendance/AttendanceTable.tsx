@@ -1,9 +1,9 @@
 "use client";
 
 import React from 'react';
-import type { AttendanceRecord, AttendanceTableProps } from '~/lib/types';
+import type { AttendanceRecord, AttendanceTableProps } from '@/lib/types';
 import { AttendanceStatusType } from '@/features/attendance/types/attendance-status';
-import { dateFormatters, formatHoursSafe } from '~/lib/utils/date-formatting';
+import { dateFormatters, formatHoursSafe } from '@/lib/utils/date-formatting';
 
 export const AttendanceTable: React.FC<AttendanceTableProps> = ({ records, onEditRecord }) => {
   // 🔐 SECURITY: ใช้ safe formatters แทน

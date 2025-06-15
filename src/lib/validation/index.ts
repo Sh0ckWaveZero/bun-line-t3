@@ -3,9 +3,9 @@ export * from './line';
 export * from './randomColor';
 
 // Import utility functions
-import { roundToTwoDecimals } from '~/lib/utils/number';
-import { formatDateTimeSafe } from '~/lib/utils/date-formatting';
-import { timeBasedSelect } from '~/lib/utils/safe-random';
+import { roundToTwoDecimals } from '@/lib/utils/number';
+import { formatDateTimeSafe } from '@/lib/utils/date-formatting';
+import { timeBasedSelect } from '@/lib/utils/safe-random';
 
 // Existing utilities
 const regex = new RegExp(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g);

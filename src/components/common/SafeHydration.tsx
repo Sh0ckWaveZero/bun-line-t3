@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { useSafeTimestamp, useSuppressHydrationWarning, useClientOnlyMounted } from '~/hooks/useHydrationSafe';
+import { useSafeTimestamp, useSuppressHydrationWarning, useClientOnlyMounted } from '@/hooks/useHydrationSafe';
 
 /**
  * 📅 SafeTimestamp Component

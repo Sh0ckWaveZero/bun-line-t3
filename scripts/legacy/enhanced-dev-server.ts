@@ -15,7 +15,7 @@
 
 import { runWithProcessManagement } from './process-manager'
 import { spawn, ChildProcess } from 'child_process'
-import { env } from '../src/env.mjs'
+import { env } from '@/env.mjs'
 import fs from 'fs/promises'
 import net from 'net'
 

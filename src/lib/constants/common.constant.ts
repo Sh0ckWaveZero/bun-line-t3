@@ -1,4 +1,4 @@
-import { CryptoCurrency } from '~/features/crypto/types/crypto.interface';
+import { CryptoCurrency } from '@/features/crypto/types/crypto.interface';
 
 export const IMAGE_URLS: string[] = [
   'https://images.unsplash.com/photo-1572782992110-afab5a6ef870?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80',

@@ -1,10 +1,10 @@
 "use client";
 
 import React from 'react';
-import type { AttendanceRecord, EditAttendanceData, EditAttendanceModalProps } from '~/lib/types';
-import { CenteredModal } from '~/components/common/CenteredModal';
-import { MobileModal } from '~/components/common/MobileModal';
-import { dateFormatters } from '~/lib/utils/date-formatting';
+import type { AttendanceRecord, EditAttendanceData, EditAttendanceModalProps } from '@/lib/types';
+import { CenteredModal } from '@/components/common/CenteredModal';
+import { MobileModal } from '@/components/common/MobileModal';
+import { dateFormatters } from '@/lib/utils/date-formatting';
 
 export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
   isOpen,
@@ -135,7 +135,7 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
             </label>
             <input
               id="edit-checkin"
-              type="datetime-local"
+              type="time"
               value={editData.checkInTime}
               onChange={(e) => handleCheckInChange(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
@@ -143,8 +143,8 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
               disabled={updateLoading}
               aria-describedby="checkin-help"
             />
-            <p id="checkin-help" className="sr-only">
-              กรุณาเลือกเวลาเข้างาน
+            <p id="checkin-help" className="text-xs text-gray-500 mt-2">
+              กรุณาเลือกเวลาเข้างาน (เฉพาะเวลา ไม่สามารถเปลี่ยนวันได้)
             </p>
           </div>
           
@@ -154,7 +154,7 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
             </label>
             <input
               id="edit-checkout"
-              type="datetime-local"
+              type="time"
               value={editData.checkOutTime}
               onChange={(e) => handleCheckOutChange(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
@@ -162,7 +162,7 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
               aria-describedby="checkout-help"
             />
             <p id="checkout-help" className="text-xs text-gray-500 mt-2">
-              หากไม่ได้ออกงานให้เว้นว่างไว้
+              หากไม่ได้ออกงานให้เว้นว่างไว้ (เฉพาะเวลา ไม่สามารถเปลี่ยนวันได้)
             </p>
           </div>
         </div>

@@ -11,7 +11,7 @@
  */
 
 // Import our environment helper
-import { env } from '../src/env.mjs';
+import { env } from '@/env.mjs';
 
 // The URL of our checkout reminder API endpoint
 const API_URL = `${env.FRONTEND_URL}/api/checkout-reminder`;

@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
-import { env } from '~/env.mjs';
-import { attendanceService } from '~/features/attendance/services/attendance';
-import { db } from '~/lib/database/db';
+import { env } from '@/env.mjs';
+import { attendanceService } from '@/features/attendance/services/attendance';
+import { db } from '@/lib/database/db';
 import { AttendanceStatusType } from '@prisma/client';
 
 /**

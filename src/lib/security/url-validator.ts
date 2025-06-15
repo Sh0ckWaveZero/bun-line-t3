@@ -3,7 +3,7 @@
  * ป้องกัน malicious redirections และ request forgeries
  */
 
-import { ALLOWED_DOMAINS } from '~/lib/constants/domain'
+import { ALLOWED_DOMAINS } from '@/lib/constants/domain'
 
 // ✅ Allowed hosts for security validation - ใช้ environment variables
 const ALLOWED_HOSTS = {

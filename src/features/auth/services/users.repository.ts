@@ -1,5 +1,5 @@
-import { env } from '~/env.mjs';
-import { db } from "~/lib/database/db";
+import { env } from '@/env.mjs';
+import { db } from "@/lib/database/db";
 
 export class UsersRepository {
   expiresIn = 0;

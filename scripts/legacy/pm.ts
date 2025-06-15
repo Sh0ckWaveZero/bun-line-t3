@@ -503,7 +503,7 @@ async function main(): Promise<void> {
         await checkoutManager.log('info', 'Starting checkout reminder...')
         
         // Import and run checkout logic
-        const { env } = await import('../src/env.mjs')
+        const { env } = await import('../../src/env.mjs')
         const API_URL = `${env.FRONTEND_URL}/api/checkout-reminder`
         
         const response = await fetch(API_URL, {

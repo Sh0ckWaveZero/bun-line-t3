@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { useSafePortal } from '~/hooks/useHydrationSafe';
+import { useSafePortal } from '@/hooks/useHydrationSafe';
 
 interface MobileModalProps {
   isOpen: boolean;

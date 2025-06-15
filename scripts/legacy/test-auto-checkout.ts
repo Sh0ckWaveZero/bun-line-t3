@@ -5,7 +5,7 @@
  * ใช้สำหรับทดสอบ API endpoint ก่อนนำไปใช้งานจริง
  */
 
-import { env } from '../src/env.mjs';
+import { env } from '@/env.mjs';
 
 const API_URL = `${env.FRONTEND_URL}/api/cron/auto-checkout`;
 

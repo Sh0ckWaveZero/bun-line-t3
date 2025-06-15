@@ -1,5 +1,5 @@
 // Helper functions for attendance module
-import { getTodayDateString } from '~/lib/utils/datetime';
+import { getTodayDateString } from '@/lib/utils/datetime';
 import { db } from "~/lib/database/db";
 import { AttendanceStatusType } from '@prisma/client';
 

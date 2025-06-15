@@ -6,7 +6,7 @@ import {
 } from "next-auth";
 import LineProvider from "next-auth/providers/line";
 import { PrismaAdapter } from "@auth/prisma-adapter"
-import { env } from "~/env.mjs";
+import { env } from "@/env.mjs";
 import { db } from '../database/db';
 
 
