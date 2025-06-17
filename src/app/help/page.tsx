@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { useSafeHydration } from '@/hooks/useHydrationSafe';
-import '~/styles/help.css';
+import '@/styles/help.css';
 
 interface CommandCategory {
   title: string;
