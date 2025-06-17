@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { env } from "~/env.mjs";
+import { env } from "@/env.mjs";
 import { lineService } from '@/features/line/services/line';
 import { utils } from '@/lib/validation';
 import { NextRequest } from 'next/server';

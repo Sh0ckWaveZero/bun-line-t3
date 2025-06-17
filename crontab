@@ -1,9 +1,13 @@
 # crontab
 # นาที ชั่วโมง วัน เดือน วันในสัปดาห์ คำสั่ง
 
-# ส่งแจ้งเตือนออกงานเวลา 17:30 (5:30 PM) Asia/Bangkok วันจันทร์ถึงศุกร์
-# เวลานี้เหมาะสมสำหรับการแจ้งเตือนก่อนเลิกงาน
-30 17 * * 1-5 curl -H "Authorization: Bearer $CRON_SECRET" http://app:12914/api/cron/checkout-reminder
+# ส่งแจ้งเตือนออกงานแบบ Dynamic ทุก 15 นาที วันจันทร์ถึงศุกร์ (เวลา 16:00-20:00)
+# คำนวณเวลาแจ้งเตือนแต่ละคนจากเวลาเข้างาน (ก่อนครบ 8 ชม. 30 นาที)
+*/15 16-20 * * 1-5 curl -H "Authorization: Bearer $CRON_SECRET" http://app:12914/api/cron/enhanced-checkout-reminder
+
+# ส่งแจ้งเตือนออกงานเวลา 16:30 (4:30 PM) Asia/Bangkok วันจันทร์ถึงศุกร์ (Legacy)
+# เวลานี้เหมาะสำหรับการแจ้งเตือนทั่วไป - ใช้เป็น fallback
+30 16 * * 1-5 curl -H "Authorization: Bearer $CRON_SECRET" http://app:12914/api/cron/checkout-reminder
 
 # ลงชื่อออกงานอัตโนมัติตอนเที่ยงคืน (00:00) สำหรับคนที่ลืมลงชื่อออก
 # ทำงานทุกวัน เพื่อให้ครอบคลุมทุกวันทำงาน

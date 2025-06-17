@@ -1,4 +1,4 @@
-import { db } from "~/lib/database/db";
+import { db } from "../../../lib/database/db";
 
 export interface PublicHolidayData {
   date: string; // YYYY-MM-DD format

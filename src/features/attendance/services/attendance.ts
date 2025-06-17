@@ -1,11 +1,11 @@
-import { db } from "~/lib/database/db";
-import { selectRandomElement } from "~/lib/crypto-random";
+import { db } from "../../../lib/database/db";
+import { selectRandomElement } from "../../../lib/crypto-random";
 import { 
   roundToTwoDecimals, 
   roundToOneDecimal, 
   calculatePercentage,
   calculateAverage
-} from "~/lib/utils/number";
+} from "../../../lib/utils/number";
 import {
   getCurrentUTCTime,
   getCurrentBangkokTime,
@@ -13,7 +13,7 @@ import {
   getTodayDateString,
   formatThaiTime,
   formatThaiTimeOnly
-} from "~/lib/utils/datetime";
+} from "../../../lib/utils/datetime";
 import {
   isWorkingDay,
   isPublicHoliday,
@@ -21,7 +21,10 @@ import {
   calculateExpectedCheckOutTime,
   getWorkingHoursInfo,
   getWorkingDaysInMonth,
-  getUsersWithPendingCheckout
+  getUsersWithPendingCheckout,
+  calculateUserReminderTime,
+  shouldReceiveReminderNow,
+  getUsersNeedingDynamicReminder
 } from "../helpers";
 import { WORKPLACE_POLICIES } from "../constants/workplace-policies";
 import type { CheckInResult, MonthlyAttendanceReport, AttendanceRecord } from "../types/attendance";
@@ -540,6 +543,9 @@ export const attendanceService = {
   getWorkingHoursInfo,
   getWorkingDaysInMonth,
   getUsersWithPendingCheckout,
+  calculateUserReminderTime,
+  shouldReceiveReminderNow,
+  getUsersNeedingDynamicReminder,
   
   getCurrentBangkokTime,
   getCurrentUTCTime,

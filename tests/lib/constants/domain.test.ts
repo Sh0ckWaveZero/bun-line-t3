@@ -16,7 +16,7 @@ import {
   isDevelopment,
   isProduction,
   getDomainConfig 
-} from '~/lib/constants/domain'
+} from '@/lib/constants/domain'
 
 describe('🔐 Domain Security Configuration', () => {
   

@@ -6,7 +6,7 @@ import { signIn } from 'next-auth/react';
 import type { User, UserInfoCardProps, LoadingSpinnerProps, ErrorMessageProps, MonthSelectorProps } from '@/lib/types';
 import { useState } from 'react';
 import { Calendar as CalendarIcon } from 'lucide-react';
-import { Calendar } from '@/components/ui/calendar';
+import { MonthPicker } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
@@ -160,11 +160,9 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({ selectedMonth, onM
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 shadow-xl" align="start">
-            <Calendar
-              mode="single"
+            <MonthPicker
               selected={selectedDate}
               onSelect={handleDateSelect}
-              initialFocus
               className="p-4 pointer-events-auto"
             />
           </PopoverContent>
