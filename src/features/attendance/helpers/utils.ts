@@ -34,14 +34,14 @@ export const getUsersWithPendingCheckout = async (): Promise<string[]> => {
 
 /**
  * Calculate dynamic reminder time for each user
- * Reminds users 30 minutes before their 8-hour work completion
+ * Reminds users 30 minutes before their 9-hour work completion (including lunch break)
  */
 export const calculateUserReminderTime = (checkInTime: Date): Date => {
   const checkInBangkok = convertUTCToBangkok(checkInTime);
   
-  // Calculate 8 hours work completion time
+  // Calculate 9 hours work completion time (including lunch break as per WORKPLACE_POLICIES)
   const completionTime = new Date(checkInBangkok);
-  completionTime.setHours(completionTime.getHours() + 8);
+  completionTime.setHours(completionTime.getHours() + 9);
   
   // Calculate reminder time (30 minutes before completion)
   const reminderTime = new Date(completionTime);
@@ -52,10 +52,18 @@ export const calculateUserReminderTime = (checkInTime: Date): Date => {
 
 /**
  * Check if user should receive reminder now based on their check-in time
+ * @param checkInTime UTC time when user checked in
+ * @param currentTime Current Bangkok time
+ * @param toleranceMinutes Tolerance in minutes (default 5)
  */
 export const shouldReceiveReminderNow = (checkInTime: Date, currentTime: Date, toleranceMinutes: number = 5): boolean => {
   const reminderTime = calculateUserReminderTime(checkInTime);
-  const timeDiffMinutes = Math.abs((currentTime.getTime() - reminderTime.getTime()) / (1000 * 60));
+  
+  // Convert currentTime to Bangkok timezone if it's not already
+  // Note: reminderTime is already in Bangkok timezone from calculateUserReminderTime
+  const currentBangkok = currentTime; // Assume it's already Bangkok time
+  
+  const timeDiffMinutes = Math.abs((currentBangkok.getTime() - reminderTime.getTime()) / (1000 * 60));
   
   // Send reminder if current time is within tolerance of calculated reminder time
   return timeDiffMinutes <= toleranceMinutes;

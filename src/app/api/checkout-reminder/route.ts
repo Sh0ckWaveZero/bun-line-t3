@@ -93,17 +93,37 @@ export async function GET(req: NextRequest) {
             return { userId, status: 'skipped', reason: 'No attendance record found' };
           }
           
+          // Calculate if this user should receive reminder now (same logic as enhanced API)
+          const currentBangkokTime = attendanceService.getCurrentBangkokTime();
+          const shouldRemind = attendanceService.shouldReceiveReminderNow(attendance.checkInTime, currentBangkokTime);
+          
+          if (!shouldRemind) {
+            const reminderTime = attendanceService.calculateUserReminderTime(attendance.checkInTime);
+            return { 
+              userId, 
+              status: 'scheduled', 
+              reminderTime: reminderTime.toISOString(),
+              checkInTime: attendance.checkInTime.toISOString(),
+              reason: 'Not time for reminder yet'
+            };
+          }
+          
           // Build checkout reminder payload with personalized information
-          const reminderTime = new Date();
+          const currentTime = new Date();
           const checkInTime = attendance.checkInTime;
-          // Convert UTC checkInTime to Bangkok time for display
-          const bangkokCheckInTime = attendanceService.convertUTCToBangkok(checkInTime);
-          const hoursWorked = (reminderTime.getTime() - checkInTime.getTime()) / (1000 * 60 * 60);
+
+          // Calculate hours worked so far (from check-in to now)
+          const hoursWorked = (currentTime.getTime() - checkInTime.getTime()) / (1000 * 60 * 60);
+          
+          // Format times for display (always show Bangkok time)
+          const displayCheckInTime = attendanceService.formatThaiTimeOnly(
+            attendanceService.convertUTCToBangkok(checkInTime)
+          );
           
           const payload = [
             {
               type: 'text',
-              text: `⏰ ใกล้ถึงเวลาเลิกงานแล้ว! อย่าลืมลงชื่อออกงานนะคะ\n\nคุณเข้างานตั้งแต่ ${attendanceService.formatThaiTimeOnly(bangkokCheckInTime)} น.\n(ทำงานแล้วประมาณ ${roundToOneDecimal(hoursWorked)} ชั่วโมง)`
+              text: `⏰ ใกล้ถึงเวลาเลิกงานแล้ว! อย่าลืมลงชื่อออกงานนะคะ\n\nคุณเข้างานตั้งแต่ ${displayCheckInTime} น.\n(ทำงานแล้วประมาณ ${roundToOneDecimal(hoursWorked)} ชั่วโมง)`
             },
             ...flexMessage(bubbleTemplate.workStatus(attendance))
           ];

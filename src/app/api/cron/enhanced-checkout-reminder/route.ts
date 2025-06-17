@@ -70,6 +70,21 @@ export async function GET(_req: NextRequest) {
     const currentBangkokTime = getCurrentBangkokTime();
     console.log(`⏰ Current Bangkok time: ${currentBangkokTime.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`);
     
+    // ✅ Check if current time is before 16:40 - don't send reminders too early
+    const currentHour = currentBangkokTime.getHours();
+    const currentMinute = currentBangkokTime.getMinutes();
+    const isTooEarly = currentHour < 16 || (currentHour === 16 && currentMinute < 40);
+    
+    if (isTooEarly) {
+      console.log(`⏳ Too early to send reminders (before 16:40). Current time: ${currentHour}:${currentMinute.toString().padStart(2, '0')}`);
+      return Response.json({ 
+        success: true, 
+        message: 'Too early for checkout reminders (before 16:40)',
+        currentTime: currentBangkokTime.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }),
+        timestamp: new Date().toISOString()
+      }, { status: 200 });
+    }
+    
     // Get all users who need checkout reminders
     const usersNeedingReminder = await attendanceService.getUsersWithPendingCheckout();
     
@@ -132,7 +147,7 @@ export async function GET(_req: NextRequest) {
           const payload = [
             {
               type: 'text',
-              text: `⏰ เวลาแจ้งเตือนส่วนตัว!\n\nคุณเข้างานตั้งแต่ ${attendanceService.formatThaiTimeOnly(checkInTime)} น.\nทำงานแล้ว ${roundToOneDecimal(hoursWorked)} ชั่วโมง\n\n🎯 อีกประมาณ 30 นาทีจะครบ 8 ชั่วโมงแล้ว\nอย่าลืมลงชื่อออกงานด้วยนะคะ!`
+              text: `⏰ เวลาแจ้งเตือนส่วนตัว!\n\nคุณเข้างานตั้งแต่ ${attendanceService.formatThaiTimeOnly(attendance.checkInTime)} น.\nทำงานแล้ว ${roundToOneDecimal(hoursWorked)} ชั่วโมง\n\n🎯 อีกประมาณ 30 นาทีจะครบ 9 ชั่วโมงแล้ว\nอย่าลืมลงชื่อออกงานด้วยนะคะ!`
             },
             ...flexMessage(bubbleTemplate.workStatus(attendance))
           ];
