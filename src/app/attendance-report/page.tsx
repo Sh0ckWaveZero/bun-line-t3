@@ -24,8 +24,9 @@ import {
   LoginPrompt,
   ErrorMessage,
   MonthSelector
-} from '~/components/attendance';
-import { useAttendanceReport } from '~/hooks/useAttendanceReport';
+} from '@/components/attendance';
+import { useAttendanceReport } from '@/hooks/useAttendanceReport';
+import { ThemeToggle } from '@/components/ui/theme-toggle-simple';
 
 // Register Chart.js components
 ChartJS.register(
@@ -39,6 +40,10 @@ ChartJS.register(
   Legend,
   Filler
 );
+
+// 🎯 Configure Chart.js to use Prompt font globally
+ChartJS.defaults.font.family = 'Prompt, sans-serif';
+ChartJS.defaults.font.size = 12;
 
 export default function AttendanceReportPage() {
   const {
@@ -70,10 +75,14 @@ export default function AttendanceReportPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">รายงานการเข้างานรายเดือน</h1>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">รายงานการเข้างานรายเดือน</h1>
+            <ThemeToggle />
+          </div>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">ติดตามและจัดการเวลาการทำงานของคุณ</p>
           
           {/* Month Selector */}
           <MonthSelector 

@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server';
-import { env } from '~/env.mjs';
-import { bubbleTemplate } from '~/lib/validation/line';
-import { attendanceService } from '~/features/attendance/services/attendance';
-import { db } from '~/lib/database/db';
+import { env } from '@/env.mjs';
+import { bubbleTemplate } from '@/lib/validation/line';
+import { attendanceService } from '@/features/attendance/services/attendance';
+import { db } from '@/lib/database/db';
 
 // Helper function to send push message
 const sendPushMessage = async (userId: string, messages: any[]) => {

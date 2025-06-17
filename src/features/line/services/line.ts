@@ -1,12 +1,12 @@
-import { CONSOLATION } from '~/lib/constants/common.constant';
+import { CONSOLATION } from '@/lib/constants/common.constant';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { utils } from '~/lib/validation';
-import { exchangeService } from '~/features/crypto/services/exchange';
-import { attendanceService } from '~/features/attendance/services/attendance';
-import { db } from "~/lib/database/db";
-import { env } from '~/env.mjs';
-import { bubbleTemplate } from '~/lib/validation/line';
-import { airVisualService } from '~/features/air-quality/services/airvisual';
+import { utils } from '@/lib/validation';
+import { exchangeService } from '@/features/crypto/services/exchange';
+import { attendanceService } from '@/features/attendance/services/attendance';
+import { db } from "../../../lib/database/db";
+import { env } from '@/env.mjs';
+import { bubbleTemplate } from '@/lib/validation/line';
+import { airVisualService } from '@/features/air-quality/services/airvisual';
 import { AttendanceStatusType } from '@prisma/client';
 
 const handleEvent = (req: NextApiRequest,

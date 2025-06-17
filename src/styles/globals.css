@@ -1,4 +1,4 @@
-/* Import Tailwind CSS v4 with PostCSS integration */
-@import '../input.css';
+/* Import compiled Tailwind CSS output */
+@import '../output.css';
 
-/* No additional custom CSS needed - all modal styles are in input.css */
+/* No additional custom CSS needed - all modal styles are in output.css */

@@ -1,5 +1,5 @@
 // Working hours calculation helpers
-import { roundToTwoDecimals } from "~/lib/utils/number";
+import { roundToTwoDecimals } from "../../../lib/utils/number";
 import { WORKPLACE_POLICIES } from "../constants/workplace-policies";
 
 /**

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { useSafePortal } from '~/hooks/useHydrationSafe';
+import { useSafePortal } from '@/hooks/useHydrationSafe';
 
 interface CenteredModalProps {
   isOpen: boolean;
@@ -68,11 +68,10 @@ export const CenteredModal: React.FC<CenteredModalProps> = ({
       aria-describedby="modal-description"
     >
       <div 
-        className={`modal-content w-full max-w-md overflow-hidden ${className}`}
+        className={`modal-content bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 w-full max-w-md overflow-hidden ${className}`}
         onClick={(e) => e.stopPropagation()}
         style={{
           animation: 'modal-enter 0.2s ease-out',
-          maxHeight: '90vh',
           overflowY: 'auto'
         }}
       >

@@ -1,14 +1,14 @@
-import { CryptoInfo } from '~/features/crypto/types/crypto.interface';
+import { CryptoInfo } from '@/features/crypto/types/crypto.interface';
 import randomColor from './randomColor';
 import { utils } from '.';
-import { IMAGE_GOLD_URLS, IMAGE_URLS } from '~/lib/constants/common.constant';
+import { IMAGE_GOLD_URLS, IMAGE_URLS } from '@/lib/constants/common.constant';
 import { env } from 'process';
 import {
   formatHours,
   formatPercentage
-} from '~/lib/utils/number';
+} from '@/lib/utils/number';
 import { AttendanceStatusType } from '@prisma/client';
-import { timeBasedSelect } from '~/lib/utils/safe-random';
+import { timeBasedSelect } from '@/lib/utils/safe-random';
 
 const lottery = (infoItems: any[]) => {
   return infoItems.map((item) => {

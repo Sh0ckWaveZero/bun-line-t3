@@ -1,11 +1,22 @@
 import { type Metadata } from "next";
+import Script from "next/script";
+import { Prompt } from "next/font/google";
 import Providers from "./providers";
 
-import "~/styles/globals.css";
-import "~/styles/ring.css";
+import "@/styles/globals.css";
+import "@/styles/ring.css";
+
+// 🎨 กำหนด Google Font Prompt
+const promptFont = Prompt({
+  subsets: ['latin', 'thai'],
+  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
+  style: ['normal', 'italic'],
+  display: 'swap',
+  variable: '--font-prompt',
+});
 
 // ใช้ static font class names เพื่อป้องกัน hydration mismatch
-const FONT_CLASSES = 'font-prompt antialiased'
+const FONT_CLASSES = `${promptFont.variable} font-prompt antialiased`
 
 export const metadata: Metadata = {
   title: "Bun LINE T3 App",
@@ -21,8 +32,8 @@ export default function RootLayout({
   return (
     <html 
       lang="th" 
-      style={{ ['--font-prompt' as any]: 'Prompt, sans-serif' }}
-      className="font-prompt"
+      className={promptFont.variable}
+      suppressHydrationWarning={true}
     >
       <head>
         <meta
@@ -37,22 +48,14 @@ export default function RootLayout({
         />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <meta name="format-detection" content="telephone=no" />
-        {/* Google Fonts - โหลดใน head เพื่อป้องกัน hydration mismatch */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link 
-          href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" 
-          rel="stylesheet" 
-        />
-        {/* Development checker - โหลดเฉพาะใน development */}
-        {process.env.NODE_ENV === 'development' && (
-          <>
-            <script src="/dev-checker.js" defer />
-            <script src="/production-redirect.js" defer />
-          </>
-        )}
+        
+        {/* Theme initialization script - runs before React hydration */}
+        <Script src="/theme-init.js" strategy="beforeInteractive" />
       </head>
-      <body className={FONT_CLASSES}>
+      <body 
+        className={FONT_CLASSES} 
+        suppressHydrationWarning={true}
+      >
         <Providers>
           <div id="modal-root"></div>
           {children}

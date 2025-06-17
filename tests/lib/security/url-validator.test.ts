@@ -3,7 +3,7 @@
  * ทดสอบระบบป้องกัน malicious redirections และ request forgeries
  */
 
-import { describe, test, expect } from 'bun:test'
+import { describe, test, expect, beforeAll, afterAll } from 'bun:test'
 import { 
   validateUrl, 
   isAllowedHost, 
@@ -14,6 +14,15 @@ import {
   ALLOWED_HOSTS 
 } from '@/lib/security/url-validator'
 
+// ✅ Set up test environment with example domains
+beforeAll(() => {
+  process.env.ALLOWED_DOMAINS = 'your-app.example.com,example.com'
+})
+
+afterAll(() => {
+  delete process.env.ALLOWED_DOMAINS
+})
+
 describe('🛡️ URL Security Validation', () => {
   
   describe('isAllowedHost', () => {
@@ -23,32 +32,32 @@ describe('🛡️ URL Security Validation', () => {
     })
     
     test('✅ should allow production hosts', () => {
-      expect(isAllowedHost('line-login.midseelee.com', 'production')).toBe(true)
-      expect(isAllowedHost('midseelee.com', 'production')).toBe(true)
+      expect(isAllowedHost('your-app.example.com', 'production')).toBe(true)
+      expect(isAllowedHost('example.com', 'production')).toBe(true)
     })
     
     test('✅ should allow production subdomains', () => {
-      expect(isAllowedHost('api.midseelee.com', 'production')).toBe(true)
-      expect(isAllowedHost('test.line-login.midseelee.com', 'production')).toBe(true)
+      expect(isAllowedHost('api.example.com', 'production')).toBe(true)
+      expect(isAllowedHost('test.your-app.example.com', 'production')).toBe(true)
     })
     
     test('🚨 should reject malicious hosts', () => {
       expect(isAllowedHost('evil.com', 'production')).toBe(false)
       expect(isAllowedHost('malicious.site', 'development')).toBe(false)
-      expect(isAllowedHost('fake-midseelee.com', 'production')).toBe(false)
+      expect(isAllowedHost('fake-example.com', 'production')).toBe(false)
     })
     
     test('🚨 should reject host injection attempts', () => {
-      expect(isAllowedHost('midseelee.com.evil.com', 'production')).toBe(false)
+      expect(isAllowedHost('example.com.evil.com', 'production')).toBe(false)
       expect(isAllowedHost('localhost.evil.com', 'development')).toBe(false)
     })
   })
   
   describe('validateUrl', () => {
     test('✅ should validate correct URLs', () => {
-      const result = validateUrl('https://line-login.midseelee.com/auth', 'production')
+      const result = validateUrl('https://your-app.example.com/auth', 'production')
       expect(result.isValid).toBe(true)
-      expect(result.hostname).toBe('line-login.midseelee.com')
+      expect(result.hostname).toBe('your-app.example.com')
     })
     
     test('🚨 should reject invalid protocols', () => {
@@ -72,7 +81,7 @@ describe('🛡️ URL Security Validation', () => {
   
   describe('getSafeRedirectUrl', () => {
     test('✅ should return valid URLs unchanged', () => {
-      const url = 'https://line-login.midseelee.com/dashboard'
+      const url = 'https://your-app.example.com/dashboard'
       expect(getSafeRedirectUrl(url, '/', 'production')).toBe(url)
     })
     
@@ -89,12 +98,12 @@ describe('🛡️ URL Security Validation', () => {
   
   describe('sanitizeUrl', () => {
     test('✅ should preserve clean URLs', () => {
-      const cleanUrl = 'https://line-login.midseelee.com/auth?code=123'
+      const cleanUrl = 'https://your-app.example.com/auth?code=123'
       expect(sanitizeUrl(cleanUrl)).toBe(cleanUrl)
     })
     
     test('🧹 should remove dangerous parameters', () => {
-      const dirtyUrl = 'https://line-login.midseelee.com/auth?code=123&javascript:alert(1)=bad&onload=evil'
+      const dirtyUrl = 'https://your-app.example.com/auth?code=123&javascript:alert(1)=bad&onload=evil'
       const clean = sanitizeUrl(dirtyUrl)
       expect(clean).not.toContain('javascript:')
       expect(clean).not.toContain('onload')
@@ -116,7 +125,7 @@ describe('🛡️ URL Security Validation', () => {
     })
     
     test('✅ should correctly identify production URLs', () => {
-      const result = validateNextAuthUrl('https://line-login.midseelee.com')
+      const result = validateNextAuthUrl('https://your-app.example.com')
       expect(result.isValid).toBe(true)
       expect(result.isDevelopment).toBe(false)
       expect(result.isProduction).toBe(true)
@@ -135,7 +144,7 @@ describe('🛡️ URL Security Validation', () => {
       const attackUrls = [
         'https://evil.com/steal-tokens',
         '//evil.com/phish',
-        'https://midseelee.com.evil.com/fake',
+        'https://example.com.evil.com/fake',
         'javascript:alert("XSS")',
         'data:text/html,<script>alert(1)</script>',
       ]
@@ -149,7 +158,7 @@ describe('🛡️ URL Security Validation', () => {
     test('should prevent CSRF via malicious origins', () => {
       const maliciousOrigins = [
         'https://evil.com',
-        'https://fake-midseelee.com',
+        'https://fake-example.com',
         'http://localhost.evil.com',
       ]
       
@@ -161,9 +170,9 @@ describe('🛡️ URL Security Validation', () => {
     
     test('should prevent subdomain hijacking attempts', () => {
       const hijackAttempts = [
-        'https://evil.midseelee.com.hacker.com',
-        'https://midseelee.com-evil.com',
-        'https://xn--midseelee-com.evil.com', // IDN homograph attack
+        'https://evil.example.com.hacker.com',
+        'https://example.com-evil.com',
+        'https://xn--example-com.evil.com', // IDN homograph attack
       ]
       
       hijackAttempts.forEach(url => {
@@ -194,8 +203,8 @@ describe('🔒 Integration with NextAuth', () => {
   test('should validate typical NextAuth URLs', () => {
     const nextAuthUrls = [
       'http://localhost:3000',
-      'https://line-login.midseelee.com',
-      'https://midseelee.com',
+      'https://your-app.example.com',
+      'https://example.com',
     ]
     
     nextAuthUrls.forEach(url => {

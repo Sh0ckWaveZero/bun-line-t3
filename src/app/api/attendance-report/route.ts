@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { attendanceService } from '~/features/attendance/services/attendance';
+import { attendanceService } from '@/features/attendance/services/attendance';
 
 export async function GET(req: NextRequest) {
   try {

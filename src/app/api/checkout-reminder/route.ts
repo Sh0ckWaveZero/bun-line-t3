@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
-import { env } from '~/env.mjs';
-import { bubbleTemplate } from '~/lib/validation/line';
-import { attendanceService } from '~/features/attendance/services/attendance';
-import { db } from '~/lib/database/db';
-import { roundToOneDecimal } from '~/lib/utils/number';
+import { env } from '@/env.mjs';
+import { bubbleTemplate } from '@/lib/validation/line';
+import { attendanceService } from '@/features/attendance/services/attendance';
+import { db } from '@/lib/database/db';
+import { roundToOneDecimal } from '@/lib/utils/number';
 
 // Helper function to send push message
 const sendPushMessage = async (userId: string, messages: any[]) => {
@@ -96,12 +96,14 @@ export async function GET(req: NextRequest) {
           // Build checkout reminder payload with personalized information
           const reminderTime = new Date();
           const checkInTime = attendance.checkInTime;
+          // Convert UTC checkInTime to Bangkok time for display
+          const bangkokCheckInTime = attendanceService.convertUTCToBangkok(checkInTime);
           const hoursWorked = (reminderTime.getTime() - checkInTime.getTime()) / (1000 * 60 * 60);
           
           const payload = [
             {
               type: 'text',
-              text: `⏰ ใกล้ถึงเวลาเลิกงานแล้ว! อย่าลืมลงชื่อออกงานนะคะ\n\nคุณเข้างานตั้งแต่ ${attendanceService.formatThaiTimeOnly(checkInTime)} น.\n(ทำงานแล้วประมาณ ${roundToOneDecimal(hoursWorked)} ชั่วโมง)`
+              text: `⏰ ใกล้ถึงเวลาเลิกงานแล้ว! อย่าลืมลงชื่อออกงานนะคะ\n\nคุณเข้างานตั้งแต่ ${attendanceService.formatThaiTimeOnly(bangkokCheckInTime)} น.\n(ทำงานแล้วประมาณ ${roundToOneDecimal(hoursWorked)} ชั่วโมง)`
             },
             ...flexMessage(bubbleTemplate.workStatus(attendance))
           ];

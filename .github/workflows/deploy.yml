@@ -79,6 +79,8 @@ jobs:
             "LINE_CHANNEL_SECRET"
             "AIRVISUAL_API_KEY"
             "CMC_API_KEY"
+            "APP_DOMAIN"
+            "ALLOWED_DOMAINS"
           )
 
           MISSING_SECRETS=()
@@ -112,6 +114,8 @@ jobs:
           LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
           AIRVISUAL_API_KEY: ${{ secrets.AIRVISUAL_API_KEY }}
           CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
+          APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
+          ALLOWED_DOMAINS: ${{ secrets.ALLOWED_DOMAINS }}
 
       - name: 🖥️ System Resource Check
         run: |
@@ -265,6 +269,14 @@ jobs:
           # Cryptocurrency Market Data
           CMC_API_KEY="${{ secrets.CMC_API_KEY }}"
           CMC_URL=https://pro-api.coinmarketcap.com
+
+          # =============================================================================
+          # Domain Security Configuration
+          # =============================================================================
+
+          # Application Domain & Security
+          APP_DOMAIN="${{ secrets.APP_DOMAIN }}"
+          ALLOWED_DOMAINS="${{ secrets.ALLOWED_DOMAINS }}"
           EOF
 
           # Set secure permissions
@@ -288,7 +300,9 @@ jobs:
           if docker-compose build $BUILD_ARGS \
             --build-arg DATABASE_URL="${{ secrets.DATABASE_URL }}" \
             --build-arg NEXTAUTH_URL="${{ secrets.NEXTAUTH_URL }}" \
-            --build-arg NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}"; then
+            --build-arg NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}" \
+            --build-arg APP_DOMAIN="${{ secrets.APP_DOMAIN }}" \
+            --build-arg ALLOWED_DOMAINS="${{ secrets.ALLOWED_DOMAINS }}"; then
             echo "✅ Build completed successfully"
             echo "BUILD_SUCCESS=true" >> $GITHUB_OUTPUT
           else
@@ -367,6 +381,8 @@ jobs:
           LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
           AIRVISUAL_API_KEY: ${{ secrets.AIRVISUAL_API_KEY }}
           CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
+          APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
+          ALLOWED_DOMAINS: ${{ secrets.ALLOWED_DOMAINS }}
 
       - name: 🏥 Quick Health Check After Startup
         id: health_check

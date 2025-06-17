@@ -3,9 +3,9 @@ import * as cheerio from 'cheerio';
 import { cmcService } from './cmc';
 import { cryptoCurrencyService } from './crypto-currency';
 import { CryptoInfo } from '../types/crypto.interface';
-import { utils } from '~/lib/validation';
-import { env } from '~/env.mjs';
-import { IMAGE_LOTTO_FAIL_URLS, IMAGE_LOTTO_HAPPY_URLS } from '~/lib/constants/common.constant';
+import { utils } from '@/lib/validation';
+import { env } from '@/env.mjs';
+import { IMAGE_LOTTO_FAIL_URLS, IMAGE_LOTTO_HAPPY_URLS } from '@/lib/constants/common.constant';
 
 type CryptoInfoType = CryptoInfo | null;
 

@@ -4,7 +4,7 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import Rings from "~/components/common/Rings";
+import Rings from "@/components/common/Rings";
 
 export default function Home() {
   const { data: session, status } = useSession();

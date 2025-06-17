@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
-import { env } from '~/env.mjs';
-import { attendanceService } from '~/features/attendance/services/attendance';
-import { db } from '~/lib/database/db';
+import { env } from '@/env.mjs';
+import { attendanceService } from '@/features/attendance/services/attendance';
+import { db } from '@/lib/database/db';
 import { AttendanceStatusType } from '@prisma/client';
 
 /**
@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
           autoCheckoutTime.setHours(0, 0, 0, 0);
           
           // อัปเดต WorkAttendance record ด้วยการลงชื่อออกงานอัตโนมัติ
-          const updatedAttendance = await db.workAttendance.update({
+          await db.workAttendance.update({
             where: { id: todayAttendance.id },
             data: {
               checkOutTime: autoCheckoutTime,

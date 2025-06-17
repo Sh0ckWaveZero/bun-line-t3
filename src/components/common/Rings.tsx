@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback } from "react";
 import { Pane } from "tweakpane";
-import { CONFIG } from "~/lib/constants/config";
+import { CONFIG } from "@/lib/constants/config";
 
 interface RingProps {
   count: number;

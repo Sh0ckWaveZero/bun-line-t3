@@ -3,12 +3,12 @@
  * ป้องกัน malicious redirections และ request forgeries
  */
 
-import { z } from 'zod'
+import { ALLOWED_DOMAINS } from '@/lib/constants/domain'
 
-// ✅ Allowed hosts for security validation
+// ✅ Allowed hosts for security validation - ใช้ environment variables
 const ALLOWED_HOSTS = {
   development: ['localhost', '127.0.0.1'] as const,
-  production: ['line-login.midseelee.com', 'midseelee.com'] as const,
+  production: ALLOWED_DOMAINS as readonly string[],
 } as const
 
 // ✅ Environment detection
@@ -17,12 +17,6 @@ type Environment = 'development' | 'production'
 const detectEnvironment = (): Environment => {
   return process.env.NODE_ENV === 'production' ? 'production' : 'development'
 }
-
-// ✅ URL validation schema
-const SecureUrlSchema = z.object({
-  url: z.string().url(),
-  environment: z.enum(['development', 'production']),
-})
 
 // ✅ Host validation function
 export const isAllowedHost = (hostname: string, env: Environment = detectEnvironment()): boolean => {
@@ -76,7 +70,7 @@ export const validateUrl = (url: string, env: Environment = detectEnvironment())
       isValid: true,
       hostname,
     }
-  } catch (error) {
+  } catch {
     return {
       isValid: false,
       hostname: null,

@@ -41,6 +41,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 
+# AI logs - exclude from git to avoid cluttering
+logs/
+.locks/
+
 certificates
 .env*
 .flaskenv*

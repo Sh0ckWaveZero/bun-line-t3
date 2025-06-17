@@ -70,7 +70,7 @@ switch_to_dev() {
     
     print_status "Environment switched to DEVELOPMENT"
     print_info "Both dev and prod now use the same callback URL:"
-    print_info "https://line-login.midseelee.com/api/auth/callback/line"
+    print_info "https://your-app.example.com/api/auth/callback/line"
 }
 
 # Function to switch to production environment
@@ -88,7 +88,7 @@ switch_to_prod() {
     show_current_env
     
     print_status "Environment switched to PRODUCTION"
-    print_info "LINE Login should work with callback URL: https://line-login.midseelee.com/api/auth/callback/line"
+    print_info "LINE Login should work with callback URL: https://your-app.example.com/api/auth/callback/line"
 }
 
 # Function to show help
@@ -99,7 +99,7 @@ show_help() {
     echo ""
     echo "Commands:"
     echo "  dev     Switch to development environment (localhost:4325)"
-    echo "  prod    Switch to production environment (line-login.midseelee.com)"
+    echo "  prod    Switch to production environment (your-app.example.com)"
     echo "  status  Show current environment configuration"
     echo "  help    Show this help message"
     echo ""

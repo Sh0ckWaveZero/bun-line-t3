@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validateNextAuthUrl, isSafeUrl, getSafeRedirectUrl } from '@/lib/security/url-validator'
+import { validateNextAuthUrl, getSafeRedirectUrl } from '@/lib/security/url-validator'
 
 export async function GET(request: NextRequest) {
   try {
     // 🛡️ Security: Force production URL for all environments
-    const PRODUCTION_URL = 'https://line-login.midseelee.com'
+    const PRODUCTION_URL = 'https://your-app.example.com'
     
     // 🔒 Security: Validate production URL
     const productionUrlValidation = validateNextAuthUrl(PRODUCTION_URL)
