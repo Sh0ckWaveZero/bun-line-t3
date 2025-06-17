@@ -92,16 +92,16 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
 
   const modalContent = (
     <>
-      <div className="px-6 py-4 border-b border-gray-200">
+      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
-          <h3 id="modal-title" className="text-lg font-semibold text-gray-900">
+          <h3 id="modal-title" className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             แก้ไขเวลาเข้า-ออกงาน
           </h3>
           <button
             type="button"
             onClick={onClose}
             disabled={updateLoading}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="ปิดหน้าต่าง"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -109,19 +109,19 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
             </svg>
           </button>
         </div>
-        <p id="modal-description" className="text-sm text-gray-500 mt-2">
+        <p id="modal-description" className="text-sm text-gray-500 dark:text-gray-400 mt-2">
           วันที่: {dateFormatters.fullDate(editingRecord.workDate)}
         </p>
-        <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+        <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
           <div className="flex items-start">
             <div className="flex-shrink-0">
-              <svg className="h-4 w-4 text-blue-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+              <svg className="h-4 w-4 text-blue-500 dark:text-blue-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
             </div>
             <div className="ml-2">
-              <p className="text-xs text-blue-700 font-medium">เวลาที่แสดงเป็นเวลาประเทศไทย (UTC+7)</p>
-              <p className="text-xs text-blue-600 mt-1">ระบบจะบันทึกเวลาเป็น UTC โดยอัตโนมัติ</p>
+              <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">เวลาที่แสดงเป็นเวลาประเทศไทย (UTC+7)</p>
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">ระบบจะบันทึกเวลาเป็น UTC โดยอัตโนมัติ</p>
             </div>
           </div>
         </div>
@@ -130,26 +130,26 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
       <form onSubmit={handleSubmit} noValidate>
         <div className="px-6 py-4 space-y-6">
           <div>
-            <label htmlFor="edit-checkin" className="block text-sm font-medium text-gray-700 mb-2">
-              เวลาเข้างาน <span className="text-red-500" aria-label="จำเป็น">*</span>
+            <label htmlFor="edit-checkin" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              เวลาเข้างาน <span className="text-red-500 dark:text-red-400" aria-label="จำเป็น">*</span>
             </label>
             <input
               id="edit-checkin"
               type="time"
               value={editData.checkInTime}
               onChange={(e) => handleCheckInChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed"
               required
               disabled={updateLoading}
               aria-describedby="checkin-help"
             />
-            <p id="checkin-help" className="text-xs text-gray-500 mt-2">
+            <p id="checkin-help" className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               กรุณาเลือกเวลาเข้างาน (เฉพาะเวลา ไม่สามารถเปลี่ยนวันได้)
             </p>
           </div>
           
           <div>
-            <label htmlFor="edit-checkout" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="edit-checkout" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               เวลาออกงาน
             </label>
             <input
@@ -157,22 +157,22 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
               type="time"
               value={editData.checkOutTime}
               onChange={(e) => handleCheckOutChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed"
               disabled={updateLoading}
               aria-describedby="checkout-help"
             />
-            <p id="checkout-help" className="text-xs text-gray-500 mt-2">
+            <p id="checkout-help" className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               หากไม่ได้ออกงานให้เว้นว่างไว้ (เฉพาะเวลา ไม่สามารถเปลี่ยนวันได้)
             </p>
           </div>
         </div>
         
-        <div className="px-6 py-4 bg-gray-50 flex flex-col-reverse sm:flex-row justify-end gap-3 rounded-b-xl">
+        <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900 flex flex-col-reverse sm:flex-row justify-end gap-3 rounded-b-xl">
           <button
             type="button"
             onClick={onClose}
             disabled={updateLoading}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
+            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
             style={{ minHeight: '44px' }}
           >
             ยกเลิก

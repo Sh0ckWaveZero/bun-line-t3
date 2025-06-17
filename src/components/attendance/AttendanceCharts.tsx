@@ -5,8 +5,10 @@ import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
 import type { AttendanceRecord, MonthlyAttendanceReport, AttendanceChartsProps } from '@/lib/types';
+import { useChartTheme } from '@/hooks/useChartTheme';
 
 export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({ report }) => {
+  const { mounted, getChartOptions, getDoughnutOptions } = useChartTheme();
   // �️ Safe date formatting for chart labels
   const formatShortDateSafe = (dateString: string) => {
     try {
@@ -182,55 +184,47 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({ report }) =>
   };
 
   const EmptyChartPlaceholder = () => (
-    <div className="flex h-full items-center justify-center text-gray-400">
+    <div className="flex h-full items-center justify-center text-gray-400 dark:text-gray-500">
       ไม่มีข้อมูลการทำงานสำหรับเดือนนี้
     </div>
   );
 
+  // Don't render charts until mounted to avoid hydration issues
+  if (!mounted) {
+    return (
+      <div className="mb-8">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">กราฟวิเคราะห์การทำงาน</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <div className="bg-card-base rounded-lg shadow p-4 border border-theme-primary">
+            <div className="h-64 flex items-center justify-center text-gray-400 dark:text-gray-500">
+              กำลังโหลด...
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mb-8">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">กราฟวิเคราะห์การทำงาน</h2>
+      <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">กราฟวิเคราะห์การทำงาน</h2>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         {/* Hours worked per day chart */}
-        <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-sm font-medium text-gray-600 mb-4">ชั่วโมงทำงานรายวัน</h3>
+        <div className="bg-card-base rounded-lg shadow p-4 border border-theme-primary">
+          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4">ชั่วโมงทำงานรายวัน</h3>
           <div className="h-64">
             {report.attendanceRecords.length > 0 ? (
               <Line 
                 data={prepareHoursChartData(report.attendanceRecords)} 
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      position: 'bottom',
-                      labels: {
-                        font: {
-                          family: 'Prompt, sans-serif'
-                        }
-                      }
-                    }
-                  },
+                options={getChartOptions({
                   scales: {
-                    x: {
-                      ticks: {
-                        font: {
-                          family: 'Prompt, sans-serif'
-                        }
-                      }
-                    },
                     y: {
                       min: 0,
-                      max: Math.max(10, ...report.attendanceRecords.map(r => r.hoursWorked || 0)),
-                      ticks: {
-                        font: {
-                          family: 'Prompt, sans-serif'
-                        }
-                      }
+                      max: Math.max(10, ...report.attendanceRecords.map(r => r.hoursWorked || 0))
                     }
                   }
-                }}
+                })}
               />
             ) : (
               <EmptyChartPlaceholder />
@@ -239,39 +233,25 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({ report }) =>
         </div>
 
         {/* Average hours by day of week */}
-        <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-sm font-medium text-gray-600 mb-4">ชั่วโมงทำงานเฉลี่ยตามวัน</h3>
+        <div className="bg-card-base rounded-lg shadow p-4 border border-theme-primary">
+          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4">ชั่วโมงทำงานเฉลี่ยตามวัน</h3>
           <div className="h-64">
             {report.attendanceRecords.length > 0 ? (
               <Bar 
                 data={prepareDailyHoursBarData(report.attendanceRecords)}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
+                options={getChartOptions({
                   plugins: {
                     legend: {
                       display: false
                     }
                   },
                   scales: {
-                    x: {
-                      ticks: {
-                        font: {
-                          family: 'Prompt, sans-serif'
-                        }
-                      }
-                    },
                     y: {
                       beginAtZero: true,
-                      max: 10,
-                      ticks: {
-                        font: {
-                          family: 'Prompt, sans-serif'
-                        }
-                      }
+                      max: 10
                     }
                   }
-                }}
+                })}
               />
             ) : (
               <EmptyChartPlaceholder />
@@ -282,40 +262,27 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({ report }) =>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         {/* Attendance donut chart */}
-        <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-sm font-medium text-gray-600 mb-4">สัดส่วนการมาทำงาน</h3>
+        <div className="bg-card-base rounded-lg shadow p-4 border border-theme-primary">
+          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4">สัดส่วนการมาทำงาน</h3>
           <div className="h-64 flex flex-col justify-center">
             {/* 🎯 แสดงข้อความพิเศษสำหรับการเข้างานครบ */}
             {report.workingDaysInMonth - report.totalDaysWorked === 0 ? (
               <div className="text-center">
                 <div className="text-4xl mb-4">🏆</div>
-                <h4 className="text-lg font-bold text-green-600 mb-2">ยอดเยี่ยม!</h4>
-                <p className="text-sm text-gray-600 mb-4">เข้างานครบทุกวันในเดือนนี้</p>
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                  <p className="text-sm text-green-800">
+                <h4 className="text-lg font-bold text-green-600 dark:text-green-400 mb-2">ยอดเยี่ยม!</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">เข้างานครบทุกวันในเดือนนี้</p>
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-3">
+                  <p className="text-sm text-green-800 dark:text-green-300">
                     <strong>{report.totalDaysWorked}</strong> วัน จาก <strong>{report.workingDaysInMonth}</strong> วันทำงาน
                   </p>
-                  <p className="text-xs text-green-600 mt-1">อัตราการเข้างาน: {report.attendanceRate}%</p>
+                  <p className="text-xs text-green-600 dark:text-green-400 mt-1">อัตราการเข้างาน: {report.attendanceRate}%</p>
                 </div>
               </div>
             ) : (
               <div style={{ width: '250px', height: '250px', margin: '0 auto' }}>
                 <Doughnut 
                   data={prepareAttendanceDonutData(report)} 
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                      legend: {
-                        position: 'bottom',
-                        labels: {
-                          font: {
-                            family: 'Prompt, sans-serif'
-                          }
-                        }
-                      }
-                    }
-                  }}
+                  options={getDoughnutOptions()}
                 />
               </div>
             )}
@@ -323,40 +290,27 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({ report }) =>
         </div>
 
         {/* Compliance donut chart */}
-        <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-sm font-medium text-gray-600 mb-4">การทำงานครบตามเวลา (9 ชม.)</h3>
+        <div className="bg-card-base rounded-lg shadow p-4 border border-theme-primary">
+          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4">การทำงานครบตามเวลา (9 ชม.)</h3>
           <div className="h-64 flex flex-col justify-center">
             {/* 🎯 แสดงข้อความพิเศษสำหรับการทำงานครบเวลาทุกวัน */}
             {report.totalDaysWorked > 0 && report.completeDays === report.totalDaysWorked ? (
               <div className="text-center">
                 <div className="text-4xl mb-4">💪</div>
-                <h4 className="text-lg font-bold text-purple-600 mb-2">สุดยอด!</h4>
-                <p className="text-sm text-gray-600 mb-4">ทำงานครบ 9 ชั่วโมงทุกวัน</p>
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                  <p className="text-sm text-purple-800">
+                <h4 className="text-lg font-bold text-purple-600 dark:text-purple-400 mb-2">สุดยอด!</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">ทำงานครบ 9 ชั่วโมงทุกวัน</p>
+                <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-3">
+                  <p className="text-sm text-purple-800 dark:text-purple-300">
                     <strong>{report.completeDays}</strong> วัน จาก <strong>{report.totalDaysWorked}</strong> วันที่ทำงาน
                   </p>
-                  <p className="text-xs text-purple-600 mt-1">อัตราการทำงานครบเวลา: {report.complianceRate}%</p>
+                  <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">อัตราการทำงานครบเวลา: {report.complianceRate}%</p>
                 </div>
               </div>
             ) : (
               <div style={{ width: '250px', height: '250px', margin: '0 auto' }}>
                 <Doughnut 
                   data={prepareComplianceDonutData(report)} 
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                      legend: {
-                        position: 'bottom',
-                        labels: {
-                          font: {
-                            family: 'Prompt, sans-serif'
-                          }
-                        }
-                      }
-                    }
-                  }}
+                  options={getDoughnutOptions()}
                 />
               </div>
             )}

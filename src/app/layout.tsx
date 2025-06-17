@@ -1,4 +1,5 @@
 import { type Metadata } from "next";
+import Script from "next/script";
 import { Prompt } from "next/font/google";
 import Providers from "./providers";
 
@@ -32,6 +33,7 @@ export default function RootLayout({
     <html 
       lang="th" 
       className={promptFont.variable}
+      suppressHydrationWarning={true}
     >
       <head>
         <meta
@@ -46,13 +48,9 @@ export default function RootLayout({
         />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <meta name="format-detection" content="telephone=no" />
-        {/* Development checker - โหลดเฉพาะใน development */}
-        {process.env.NODE_ENV === 'development' && (
-          <>
-            <script src="/dev-checker.js" defer />
-            <script src="/production-redirect.js" defer />
-          </>
-        )}
+        
+        {/* Theme initialization script - runs before React hydration */}
+        <Script src="/theme-init.js" strategy="beforeInteractive" />
       </head>
       <body 
         className={FONT_CLASSES} 

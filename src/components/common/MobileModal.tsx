@@ -90,8 +90,8 @@ export const MobileModal: React.FC<MobileModalProps> = ({
       aria-describedby="modal-description"
     >
       <div 
+        className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 mobile-modal ${className}`}
         style={{
-          backgroundColor: 'white',
           borderRadius: '12px',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
           maxHeight: 'calc(100vh - 32px)',
@@ -111,7 +111,6 @@ export const MobileModal: React.FC<MobileModalProps> = ({
           backfaceVisibility: 'hidden',
           WebkitBackfaceVisibility: 'hidden'
         }}
-        className={`mobile-modal ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
         {children}

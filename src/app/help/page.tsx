@@ -221,7 +221,7 @@ export default function HelpPage() {
                     <p className="text-indigo-100 mt-1 font-light">{category.description}</p>
                   </div>
                   
-                  <div className="divide-y divide-gray-200">
+                  <div className="table-divider table-divide-light">
                     {category.commands.map((command, cmdIdx) => (
                       <div key={cmdIdx} className="p-6">
                         <div className="flex flex-wrap gap-2 mb-3">
