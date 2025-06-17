@@ -316,14 +316,30 @@ jobs:
         run: |
           echo "🔄 Build ล้มเหลว! กำลังทำ rollback..."
 
+          # 🔍 ตรวจสอบ environment variables ที่จำเป็น
+          if [[ -z "$DATABASE_URL" || -z "$NEXTAUTH_URL" || -z "$NEXTAUTH_SECRET" ]]; then
+            echo "❌ ตรวจพบว่า environment variables สำคัญไม่ถูกโหลด"
+            echo "🔧 กรุณาตรวจสอบ GitHub Secrets configuration"
+            exit 1
+          fi
+
           # ตรวจสอบว่ามี backup หรือไม่
           if [[ -f "$BACKUP_DIR/current-images.tar" ]]; then
             echo "📦 Restoring previous Docker images..."
             docker load -i "$BACKUP_DIR/current-images.tar"
 
-            # Restart services with previous images
-            docker-compose down --timeout 30 || true
-            docker-compose up -d
+            # ตรวจสอบว่ามี .env.prod หรือไม่ และโหลดให้ docker-compose
+            if [[ -f ".env.prod" ]]; then
+              echo "🔧 Using existing .env.prod for rollback..."
+              # Restart services with previous images และ environment variables
+              docker-compose --env-file .env.prod down --timeout 30 || true
+              docker-compose --env-file .env.prod up -d
+            else
+              echo "⚠️ No .env.prod found, using environment variables directly..."
+              # Restart services with previous images
+              docker-compose down --timeout 30 || true
+              docker-compose up -d
+            fi
 
             echo "✅ Rollback completed - services restored to previous version"
             echo "🔗 Application should be accessible at: ${{ secrets.NEXTAUTH_URL }}"
@@ -335,6 +351,25 @@ jobs:
           # ออกจาก workflow แต่ไม่ให้ fail (เพราะได้ rollback แล้ว)
           echo "::warning::Build failed but rollback completed successfully"
           exit 1
+        env:
+          # 🔐 Environment variables สำหรับ rollback
+          PORT: ${{ secrets.PORT || '12914' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          LINE_CLIENT_ID: ${{ secrets.LINE_CLIENT_ID }}
+          LINE_CLIENT_SECRET: ${{ secrets.LINE_CLIENT_SECRET }}
+          LINE_LOGIN_CHANNEL_ID: ${{ secrets.LINE_LOGIN_CHANNEL_ID }}
+          LINE_LOGIN_CHANNEL_SECRET: ${{ secrets.LINE_LOGIN_CHANNEL_SECRET }}
+          LINE_CHANNEL_ACCESS: ${{ secrets.LINE_CHANNEL_ACCESS }}
+          LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
+          AIRVISUAL_API_KEY: ${{ secrets.AIRVISUAL_API_KEY }}
+          CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
+          APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
+          ALLOWED_DOMAINS: ${{ secrets.ALLOWED_DOMAINS }}
 
       - name: 🛑 Stop Existing Services
         if: steps.build_app.outputs.BUILD_SUCCESS == 'true'
@@ -431,6 +466,13 @@ jobs:
         run: |
           echo "🔄 บริการเริ่มไม่สำเร็จหรือ health check ล้มเหลว! กำลังทำ rollback..."
 
+          # 🔍 ตรวจสอบ environment variables ที่จำเป็น
+          if [[ -z "$DATABASE_URL" || -z "$NEXTAUTH_URL" || -z "$NEXTAUTH_SECRET" ]]; then
+            echo "❌ ตรวจพบว่า environment variables สำคัญไม่ถูกโหลด"
+            echo "🔧 กรุณาตรวจสอบ GitHub Secrets configuration"
+            exit 1
+          fi
+
           # Stop current failed deployment
           echo "🛑 Stopping failed deployment..."
           docker-compose down --timeout 30 || true
@@ -440,9 +482,16 @@ jobs:
             echo "📦 Restoring previous Docker images..."
             docker load -i "$BACKUP_DIR/current-images.tar"
 
-            # Restart services with previous images
-            echo "🚀 Restarting services with previous images..."
-            docker-compose up -d
+            # ตรวจสอบว่ามี .env.prod หรือไม่ และโหลดให้ docker-compose
+            if [[ -f ".env.prod" ]]; then
+              echo "🔧 Using existing .env.prod for rollback..."
+              # Restart services with previous images และ environment variables
+              docker-compose --env-file .env.prod up -d
+            else
+              echo "⚠️ No .env.prod found, using environment variables directly..."
+              # Restart services with previous images
+              docker-compose up -d
+            fi
 
             # Wait and check if rollback was successful
             sleep 15
@@ -476,6 +525,25 @@ jobs:
           # Mark as warning (deployment failed but rollback succeeded)
           echo "::warning::Deployment failed but rollback completed successfully. Previous version is running."
           exit 1
+        env:
+          # 🔐 Environment variables สำหรับ rollback
+          PORT: ${{ secrets.PORT || '12914' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          LINE_CLIENT_ID: ${{ secrets.LINE_CLIENT_ID }}
+          LINE_CLIENT_SECRET: ${{ secrets.LINE_CLIENT_SECRET }}
+          LINE_LOGIN_CHANNEL_ID: ${{ secrets.LINE_LOGIN_CHANNEL_ID }}
+          LINE_LOGIN_CHANNEL_SECRET: ${{ secrets.LINE_LOGIN_CHANNEL_SECRET }}
+          LINE_CHANNEL_ACCESS: ${{ secrets.LINE_CHANNEL_ACCESS }}
+          LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
+          AIRVISUAL_API_KEY: ${{ secrets.AIRVISUAL_API_KEY }}
+          CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
+          APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
+          ALLOWED_DOMAINS: ${{ secrets.ALLOWED_DOMAINS }}
 
       - name: 🧹 Cleanup Old Backup
         if: steps.health_check.outputs.HEALTH_CHECK_PASSED == 'true'
