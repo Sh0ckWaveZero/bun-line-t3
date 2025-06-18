@@ -40,10 +40,17 @@ export default function HelpPage() {
         commands: [
           {
             name: "work",
-            aliases: ["งาน", "เข้างาน", "checkin"],
-            description: "เปิดเมนูลงชื่อเข้างาน",
+            aliases: ["งาน"],
+            description: "เปิดเมนูลงชื่อเข้างาน/ตรวจสอบสถานะ",
             usage: "/work",
-            examples: ["/work", "/งาน", "/เข้างาน", "/checkin"]
+            examples: ["/work", "/งาน"]
+          },
+          {
+            name: "checkin",
+            aliases: ["เข้างาน"],
+            description: "ลงชื่อเข้างานทันที",
+            usage: "/checkin",
+            examples: ["/checkin", "/เข้างาน"]
           },
           {
             name: "checkout",

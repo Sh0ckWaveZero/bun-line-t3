@@ -153,8 +153,8 @@ async function sendAutoCheckoutNotification(userId: string, data: {
       text: `🕛 แจ้งเตือนการลงชื่อออกงานอัตโนมัติ\n\n` +
             `เนื่องจากคุณลืมลงชื่อออกงาน ระบบจึงลงชื่อออกให้อัตโนมัติตอนเที่ยงคืน\n\n` +
             `📅 วันที่: ${data.checkInTime.toLocaleDateString('th-TH')}\n` +
-            `🕐 เข้างาน: ${attendanceService.formatThaiTimeOnly(data.checkInTime)} น.\n` +
-            `🕛 ออกงาน: ${attendanceService.formatThaiTimeOnly(data.checkOutTime)} น. (อัตโนมัติ)\n` +
+            `🕐 เข้างาน: ${attendanceService.formatThaiTimeOnly(attendanceService.convertUTCToBangkok(data.checkInTime))} น.\n` +
+            `🕛 ออกงาน: ${attendanceService.formatThaiTimeOnly(attendanceService.convertUTCToBangkok(data.checkOutTime))} น. (อัตโนมัติ)\n` +
             `⏱️ รวม: ${data.workingHours.toFixed(2)} ชั่วโมง\n\n` +
             `💡 หากมีข้อผิดพลาด กรุณาติดต่อ HR เพื่อแก้ไข`
     };

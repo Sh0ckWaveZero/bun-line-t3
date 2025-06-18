@@ -94,8 +94,9 @@ const config = {
 
     // Development HMR configuration
     if (dev && !isServer) {
-      // กำหนด HMR เพื่อป้องกัน WebSocket connection issues
-      config.devtool = 'eval-source-map'
+      // 🔧 ลบการกำหนด devtool เพื่อให้ Next.js จัดการเอง
+      // Next.js 15 มีการจัดการ development tooling ที่เหมาะสมแล้ว
+      // config.devtool = 'eval-source-map' // ❌ ลบออกเพื่อป้องกัน performance regression
       
       if (config.devServer) {
         config.devServer.allowedHosts = ['localhost', '127.0.0.1', '.localhost']

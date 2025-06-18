@@ -8,6 +8,7 @@ import { env } from '@/env.mjs';
 import { bubbleTemplate } from '@/lib/validation/line';
 import { airVisualService } from '@/features/air-quality/services/airvisual';
 import { AttendanceStatusType } from '@prisma/client';
+import { checkUserAuthAndAttendance } from '@/lib/attendance-utils';
 
 const handleEvent = (req: NextApiRequest,
   res: NextApiResponse): any => {
@@ -171,9 +172,26 @@ const handleCommand = async (command: string, conditions: any[], req: NextApiReq
       break;
     case 'work':
     case 'งาน':
-    case 'เข้างาน':
-    case 'checkin':
       await handleWorkAttendanceCommand(req);
+      return;
+    case 'checkin':
+    case 'เข้างาน':
+      // Direct check-in command - ลงชื่อเข้างานโดยตรง
+      const directCheckinUserId = req.body.events[0].source.userId;
+      const directCheckinUserAccount = await db.account.findFirst({
+        where: { providerAccountId: directCheckinUserId }
+      });
+
+      const isDirectCheckinPermissionExpired = !directCheckinUserAccount || !directCheckinUserAccount.expires_at || !utils.compareDate(directCheckinUserAccount.expires_at.toString(), new Date().toISOString());
+
+      if (isDirectCheckinPermissionExpired) {
+        const payload = bubbleTemplate.signIn();
+        return sendMessage(req, flexMessage(payload));
+      }
+
+      if (directCheckinUserAccount?.userId) {
+        await handleCheckIn(req, directCheckinUserAccount.userId);
+      }
       return;
     case 'เลิกงาน':
     case 'ออกงาน':
@@ -215,12 +233,6 @@ const handleCommand = async (command: string, conditions: any[], req: NextApiReq
       if (statusUserAccount?.userId) {
         await handleWorkStatus(req, statusUserAccount.userId);
       }
-      return;
-    case 'ช่วยเหลือ':
-    case 'help':
-    case 'คำสั่ง':
-    case 'commands':
-      await handleHelpCommand(req);
       return;
     case 'ช่วยเหลือ':
     case 'help':
@@ -524,22 +536,19 @@ const handleWorkStatus = async (req: NextApiRequest, userId: string) => {
 
 const handleCheckInMenu = async (req: NextApiRequest) => {
   const userId = req.body.events[0].source.userId;
-  const userAccount = await db.account.findFirst({
-    where: { providerAccountId: userId }
-  });
-
-  if (!userAccount) {
+  
+  // ✅ ใช้ shared utility แทนการเขียนโค้ดซ้ำ
+  const result = await checkUserAuthAndAttendance(userId);
+  
+  if (result.auth.needsSignIn) {
     const payload = bubbleTemplate.signIn();
     await sendMessage(req, flexMessage(payload));
     return;
   }
 
-  // Check current attendance status
-  const attendance = await attendanceService.getTodayAttendance(userAccount.userId);
-  
-  if (attendance) {
+  if (result.attendance?.hasAttendance) {
     // If already has attendance record, show status instead of check-in menu
-    const payload = bubbleTemplate.workStatus(attendance);
+    const payload = bubbleTemplate.workStatus(result.attendance.attendance);
     await sendMessage(req, flexMessage(payload));
   } else {
     // No attendance record, show check-in menu

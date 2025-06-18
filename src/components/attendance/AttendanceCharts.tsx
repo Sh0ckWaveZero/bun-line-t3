@@ -44,18 +44,25 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({ report }) =>
           label: 'ชั่วโมงทำงาน',
           data: sortedRecords.map(record => record.hoursWorked || 0),
           fill: true,
-          backgroundColor: 'rgba(59, 130, 246, 0.2)',
-          borderColor: 'rgb(59, 130, 246)',
-          tension: 0.1
+          backgroundColor: 'rgba(59, 130, 246, 0.1)', // Blue-500 with low opacity
+          borderColor: 'rgb(37, 99, 235)', // Blue-600 
+          borderWidth: 3,
+          tension: 0.3,
+          pointBackgroundColor: 'rgb(59, 130, 246)',
+          pointBorderColor: 'white',
+          pointBorderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6
         },
         {
           label: 'เป้าหมาย (9 ชม.)',
           data: sortedRecords.map(() => 9),
-          borderColor: 'rgba(249, 115, 22, 0.5)',
+          borderColor: 'rgba(20, 184, 166, 0.8)', // Teal-500
           borderWidth: 2,
-          borderDash: [5, 5],
+          borderDash: [8, 4],
           fill: false,
-          pointRadius: 0
+          pointRadius: 0,
+          tension: 0
         }
       ]
     };
@@ -71,7 +78,7 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({ report }) =>
         datasets: [
           {
             data: [100],
-            backgroundColor: ['rgb(34, 197, 94)'],
+            backgroundColor: ['rgb(16, 185, 129)'], // Emerald-500
             hoverOffset: 4
           }
         ]
@@ -83,8 +90,14 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({ report }) =>
       datasets: [
         {
           data: [report.totalDaysWorked, daysAbsent],
-          backgroundColor: ['rgb(34, 197, 94)', 'rgb(239, 68, 68)'],
-          hoverOffset: 4
+          backgroundColor: [
+            'rgb(16, 185, 129)', // Emerald-500 - success green
+            'rgb(148, 163, 184)'  // Slate-400 - neutral for absence
+          ],
+          borderWidth: 2,
+          borderColor: '#ffffff',
+          hoverOffset: 6,
+          hoverBorderWidth: 3
         }
       ]
     };
@@ -100,7 +113,7 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({ report }) =>
         datasets: [
           {
             data: [100],
-            backgroundColor: ['rgb(124, 58, 237)'],
+            backgroundColor: ['rgb(99, 102, 241)'], // Indigo-500
             hoverOffset: 4
           }
         ]
@@ -114,7 +127,7 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({ report }) =>
         datasets: [
           {
             data: [100],
-            backgroundColor: ['rgb(156, 163, 175)'],
+            backgroundColor: ['rgb(148, 163, 184)'], // Slate-400
             hoverOffset: 4
           }
         ]
@@ -126,8 +139,14 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({ report }) =>
       datasets: [
         {
           data: [report.completeDays, incompleteDays],
-          backgroundColor: ['rgb(124, 58, 237)', 'rgb(249, 115, 22)'],
-          hoverOffset: 4
+          backgroundColor: [
+            'rgb(99, 102, 241)', // Indigo-500 - primary accent
+            'rgb(245, 158, 11)'   // Amber-500 - warning for incomplete
+          ],
+          borderWidth: 2,
+          borderColor: '#ffffff',
+          hoverOffset: 6,
+          hoverBorderWidth: 3
         }
       ]
     };
@@ -176,8 +195,14 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({ report }) =>
         {
           label: 'ชั่วโมงทำงานเฉลี่ยตามวัน',
           data,
-          backgroundColor: 'rgba(124, 58, 237, 0.7)',
-          borderRadius: 5
+          backgroundColor: 'rgba(20, 184, 166, 0.8)', // Teal-500 with opacity
+          borderColor: 'rgb(13, 148, 136)', // Teal-600
+          borderWidth: 2,
+          borderRadius: 8,
+          borderSkipped: false,
+          hoverBackgroundColor: 'rgba(20, 184, 166, 0.9)',
+          hoverBorderColor: 'rgb(15, 118, 110)', // Teal-700
+          hoverBorderWidth: 3
         }
       ]
     };

@@ -22,14 +22,17 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
     const checkMobile = () => {
       const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
       
-      // Multiple detection methods for better accuracy
+      // ✅ ปรับปรุง mobile detection ให้แม่นยำขึ้น
       const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i.test(userAgent.toLowerCase());
       const isTablet = /ipad|tablet|playbook|silk/i.test(userAgent.toLowerCase());
-      const isSmallScreen = window.innerWidth <= 768;
+      const isSmallScreen = window.innerWidth <= 768; // ปรับเป็น 768px
       const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
       
-      // More aggressive mobile detection
-      const mobile = isMobileDevice || isTablet || (isSmallScreen && isTouchDevice);
+      // ✅ เพิ่มการตรวจสอบ user agent strings ที่เฉพาะเจาะจง
+      const mobileKeywords = /mobile|android|iphone|ipad|phone|tablet/i.test(userAgent);
+      
+      // ✅ Force mobile สำหรับ screen ขนาดเล็ก
+      const mobile = isMobileDevice || isTablet || isSmallScreen || (isTouchDevice && mobileKeywords);
       setIsMobile(mobile);
       
       // Enhanced debug logging
@@ -39,6 +42,7 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
         isTablet,
         isSmallScreen,
         isTouchDevice,
+        mobileKeywords,
         windowWidth: window.innerWidth,
         windowHeight: window.innerHeight,
         maxTouchPoints: navigator.maxTouchPoints,
@@ -84,7 +88,8 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
     isOpen, 
     isMobile, 
     editingRecord: !!editingRecord,
-    ModalComponent: isMobile ? 'MobileModal' : 'CenteredModal'
+    ModalComponent: isMobile ? 'MobileModal' : 'CenteredModal',
+    windowWidth: typeof window !== 'undefined' ? window.innerWidth : 'unknown'
   });
 
   // 🔐 SECURITY: ใช้ React.Portal เพื่อ render ที่ body level เสมอ
@@ -201,7 +206,7 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
     <ModalComponent 
       isOpen={isOpen}
       onClose={onClose}
-      className="w-full max-w-md"
+      className="w-full" // ✅ ลบ max-w-md ออกเพื่อให้ Modal components จัดการ size เอง
     >
       {modalContent}
     </ModalComponent>

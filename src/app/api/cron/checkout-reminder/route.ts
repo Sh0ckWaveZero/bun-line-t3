@@ -112,7 +112,7 @@ export async function GET(_req: NextRequest) {
           const payload = [
             {
               type: 'text',
-              text: `⏰ ใกล้ถึงเวลาเลิกงานแล้ว! อย่าลืมลงชื่อออกงานนะคะ\n\nคุณเข้างานตั้งแต่ ${attendanceService.formatThaiTimeOnly(checkInTime)} น.\n(ทำงานแล้วประมาณ ${roundToOneDecimal(hoursWorked)} ชั่วโมง)`
+              text: `⏰ ใกล้ถึงเวลาเลิกงานแล้ว! อย่าลืมลงชื่อออกงานนะคะ\n\nคุณเข้างานตั้งแต่ ${attendanceService.formatThaiTimeOnly(attendanceService.convertUTCToBangkok(checkInTime))} น.\n(ทำงานแล้วประมาณ ${roundToOneDecimal(hoursWorked)} ชั่วโมง)`
             },
             ...flexMessage(bubbleTemplate.workStatus(attendance))
           ];

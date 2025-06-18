@@ -5,7 +5,7 @@ import { bubbleTemplate } from '@/lib/validation/line';
 import { attendanceService } from '@/features/attendance/services/attendance';
 import { db } from '@/lib/database/db';
 import { roundToOneDecimal } from '@/lib/utils/number';
-import { convertUTCToBangkok, getCurrentBangkokTime } from '@/lib/utils/datetime';
+import { getCurrentBangkokTime } from '@/lib/utils/datetime';
 
 // Helper function to send push message
 const sendPushMessage = async (userId: string, messages: any[]) => {
@@ -140,14 +140,17 @@ export async function GET(_req: NextRequest) {
           
           // Build personalized checkout reminder
           const currentTime = getCurrentBangkokTime();
-          const checkInTime = convertUTCToBangkok(attendance.checkInTime);
+          const checkInTime = attendanceService.convertUTCToBangkok(attendance.checkInTime);
           const hoursWorked = (currentTime.getTime() - checkInTime.getTime()) / (1000 * 60 * 60);
           const reminderTime = attendanceService.calculateUserReminderTime(attendance.checkInTime);
+          
+          // Format display time
+          const checkInTimeDisplay = attendanceService.formatThaiTimeOnly(checkInTime);
           
           const payload = [
             {
               type: 'text',
-              text: `⏰ เวลาแจ้งเตือนส่วนตัว!\n\nคุณเข้างานตั้งแต่ ${attendanceService.formatThaiTimeOnly(attendance.checkInTime)} น.\nทำงานแล้ว ${roundToOneDecimal(hoursWorked)} ชั่วโมง\n\n🎯 อีกประมาณ 30 นาทีจะครบ 9 ชั่วโมงแล้ว\nอย่าลืมลงชื่อออกงานด้วยนะคะ!`
+              text: `⏰ เวลาแจ้งเตือนส่วนตัว!\n\nคุณเข้างานตั้งแต่ ${checkInTimeDisplay} น.\nทำงานแล้ว ${roundToOneDecimal(hoursWorked)} ชั่วโมง\n\n🎯 อีกประมาณ 30 นาทีจะครบ 9 ชั่วโมงแล้ว\nอย่าลืมลงชื่อออกงานด้วยนะคะ!`
             },
             ...flexMessage(bubbleTemplate.workStatus(attendance))
           ];
