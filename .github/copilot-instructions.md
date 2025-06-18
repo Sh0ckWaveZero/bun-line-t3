@@ -6,112 +6,42 @@
 
 ## 📝 AI Logging & Progress Tracking | การบันทึกและติดตามความคืบหน้า
 
-> **🚨 สำคัญ**: ก่อนทำงานใดๆ ต้องเขียน log file เพื่อติดตาม thought process และแสดงความคืบหน้า
+> **🚨 สำคัญ**: ต้องสร้าง log file `logs/ai-task-[timestamp].md` ทุกครั้งก่อนทำงาน
 
-### 🎯 ข้อกำหนดการบันทึก | Logging Requirements
+### 🎯 Workflow แบบย่อ | Quick Workflow
 
-#### 📋 สร้าง Task Log ทุกครั้ง
+**ขั้นตอนบังคับ:**
+1. 📝 สร้าง log file
+2. 🔍 [ANALYSIS] วิเคราะห์และ check ✅  
+3. 📋 [PLANNING] วางแผนและ check ✅
+4. 💻 [CODING] แก้ไขและ check ✅
+5. 🧪 [TESTING] ทดสอบและ check ✅
+6. ✅ [COMPLETE] สรุปและ check ✅
 
-เมื่อได้รับงาน ต้องสร้างไฟล์ `logs/ai-task-[timestamp].md` ด้วยรูปแบบ:
+### 📋 Log Template แบบย่อ | Compact Template
 
 ```markdown
 # 🤖 AI Task Log - [วันที่]
 
 ## 🎯 Task Overview
-- **User Request**: [คำขอของผู้ใช้]
-- **Task Type**: [ประเภทงาน: debug/feature/refactor/analysis]
-- **Priority**: [ความสำคัญ: high/medium/low]
-- **Estimated Time**: [เวลาที่คาดว่าจะใช้]
+- **User Request**: [คำขอ]
+- **Task Type**: [debug/feature/refactor]
+- **Priority**: [high/medium/low]
 
-## 🧠 Thought Process
+## 📊 Progress Checklist
+- [ ] 🔍 Analysis
+- [ ] 📋 Planning  
+- [ ] 💻 Coding
+- [ ] 🧪 Testing
+- [ ] ✅ Complete
 
-### 🔍 Analysis Phase
-- [ ] วิเคราะห์ความต้องการ
-- [ ] ระบุไฟล์ที่เกี่ยวข้อง
-- [ ] ประเมินความเสี่ยงด้านความปลอดภัย
-- [ ] วางแผนการแก้ไข
-
-### 🎯 Planning Phase
-- [ ] แบ่งงานเป็นขั้นตอน
-- [ ] กำหนด acceptance criteria
-- [ ] ระบุ dependencies
-- [ ] วางแผน testing
-
-### 🚀 Implementation Phase
-- [ ] เริ่มแก้ไขโค้ด
-- [ ] ทดสอบการทำงาน
-- [ ] ตรวจสอบความปลอดภัย
-- [ ] อัปเดตเอกสาร
-
-## ✅ Progress Tracking
-
-### 🎯 Current Status: [IN_PROGRESS/COMPLETED/BLOCKED]
-
-#### ✅ Completed Tasks
-- [ ] [งานที่ 1]
-- [ ] [งานที่ 2]
-
-#### 🚧 In Progress
-- [ ] [งานที่กำลังทำ]
-
-#### ❌ Blocked/Issues
-- [ ] [อุปสรรคหรือปัญหา]
-
-## 🔍 Technical Notes
-- **Files Modified**: [รายการไฟล์ที่แก้ไข]
-- **Security Considerations**: [ข้อพิจารณาด้านความปลอดภัย]
-- **Testing Strategy**: [แผนการทดสอบ]
-
-## 📊 Final Summary
-- **Result**: [ผลลัพธ์สุดท้าย]
-- **Next Steps**: [ขั้นตอนต่อไป]
-- **Lessons Learned**: [สิ่งที่ได้เรียนรู้]
+##  Technical Notes
+- **Files Modified**: [รายการไฟล์]
+- **Security**: [ข้อพิจารณา]
+- **Result**: [ผลลัพธ์]
 ```
 
-#### 🔄 อัปเดต Log อย่างต่อเนื่อง
-
-- ✅ **เมื่อเริ่มแต่ละขั้นตอน**: อัปเดตสถานะและ check ✅
-- ✅ **เมื่อแก้ไขไฟล์**: บันทึกไฟล์และเหตุผล
-- ✅ **เมื่อเจอปัญหา**: บันทึกปัญหาและวิธีแก้ไข
-- ✅ **เมื่อเสร็จแต่ละงาน**: ย้ายไป Completed Tasks
-
-### 📝 Log Format Standards | มาตรฐานการบันทึก
-
-#### 🕐 Timestamp Format
-
-```
-[2025-06-14 19:30:15] [ANALYSIS] วิเคราะห์ความต้องการแล้ว
-[2025-06-14 19:35:22] [PLANNING] แบ่งงานเป็น 3 ขั้นตอน
-[2025-06-14 19:40:33] [CODING] เริ่มแก้ไข src/components/Button.tsx
-[2025-06-14 19:45:44] [TESTING] ทดสอบ component แล้ว ✅
-[2025-06-14 19:50:55] [COMPLETE] งานเสร็จสิ้น ✅
-```
-
-#### 🎯 Status Indicators
-
-- 🧠 **[THINKING]** - กำลังคิดวิเคราะห์
-- 🔍 **[ANALYSIS]** - กำลังวิเคราะห์โค้ด/ปัญหา
-- 📋 **[PLANNING]** - กำลังวางแผน
-- 💻 **[CODING]** - กำลังเขียน/แก้ไขโค้ด
-- 🧪 **[TESTING]** - กำลังทดสอบ
-- 🔒 **[SECURITY]** - ตรวจสอบความปลอดภัย
-- ✅ **[COMPLETE]** - เสร็จสิ้น
-- ❌ **[ERROR]** - เกิดข้อผิดพลาด
-- ⚠️ **[WARNING]** - คำเตือน
-
-### 🎯 Mandatory Workflow | ขั้นตอนบังคับ
-
-**ทุกครั้งที่แก้ไขโค้ด ต้องทำตามลำดับ:**
-
-1. 📝 **สร้าง/อัปเดต log file**
-2. 🧠 **[THINKING]** บันทึกความคิด
-3. 🔍 **[ANALYSIS]** วิเคราะห์และ check ✅
-4. 📋 **[PLANNING]** วางแผนและ check ✅
-5. 💻 **[CODING]** แก้ไขโค้ดและ check ✅
-6. 🧪 **[TESTING]** ทดสอบและ check ✅
-7. ✅ **[COMPLETE]** สรุปผลและ check ✅
-
-**ห้ามข้ามขั้นตอนใดๆ และต้อง check ✅ ทุกขั้นตอนใน log file**
+**Status Indicators:** 🧠[THINKING] | 🔍[ANALYSIS] | 📋[PLANNING] | 💻[CODING] | 🧪[TESTING] | ✅[COMPLETE] | ❌[ERROR]
 
 ---
 
