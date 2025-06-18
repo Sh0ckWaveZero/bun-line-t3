@@ -73,12 +73,9 @@ export const MobileModal: React.FC<MobileModalProps> = ({
 
   const modalElement = (
     <div 
-      className="mobile-modal-overlay modal-backdrop-fullscreen"
+      className="mobile-modal-overlay"
       style={{
         backgroundColor: 'rgba(0, 0, 0, 0.6)', // Darker overlay
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
         // Force hardware acceleration
         transform: 'translateZ(0)',
         WebkitTransform: 'translateZ(0)'
@@ -93,19 +90,12 @@ export const MobileModal: React.FC<MobileModalProps> = ({
         className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 mobile-modal ${className}`}
         style={{
           borderRadius: '12px',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          maxHeight: 'calc(100vh - 32px)',
-          width: 'calc(100% - 32px)', // Add margin for content
-          maxWidth: 'calc(100vw - 32px)',
-          margin: '16px', // Add margin back to content instead of backdrop
-          overflowY: 'auto',
-          overflowX: 'hidden',
+          width: '90vw', // ✅ ใช้ 90% ของ viewport width แทน calc(100% - 32px)
+          maxWidth: '400px', // ✅ จำกัดขนาดสูงสุดสำหรับ mobile
+          margin: '16px',
           // Animation for better UX
           transform: 'scale(1)',
           transition: 'transform 0.2s ease-out',
-          // Ensure modal is on top
-          position: 'relative',
-          zIndex: 1,
           // Force hardware acceleration
           WebkitTransform: 'translateZ(0) scale(1)',
           backfaceVisibility: 'hidden',

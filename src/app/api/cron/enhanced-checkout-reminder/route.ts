@@ -5,7 +5,7 @@ import { bubbleTemplate } from '@/lib/validation/line';
 import { attendanceService } from '@/features/attendance/services/attendance';
 import { db } from '@/lib/database/db';
 import { roundToOneDecimal } from '@/lib/utils/number';
-import { convertUTCToBangkok, getCurrentBangkokTime } from '@/lib/utils/datetime';
+import { getCurrentBangkokTime } from '@/lib/utils/datetime';
 
 // Helper function to send push message
 const sendPushMessage = async (userId: string, messages: any[]) => {

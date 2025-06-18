@@ -339,7 +339,9 @@ This endpoint receives webhooks from LINE platform. It's automatically called by
 
 | Command (Thai) | Command (English) | Description |
 |----------------|-------------------|-------------|
-| `เข้างาน` | `checkin` | Check in to work |
+| `งาน` | `work` | Show attendance menu/status |
+| `เข้างาน` | `checkin` | **Direct check in** (immediate action) |
+| `/checkin` | `/checkin` | **Direct check in** (immediate action) |
 | `ออกงาน` | `checkout` | Check out from work |
 | `สถานะ` | `status` | View current status |
 | `รายงาน` | `report` | Monthly report |

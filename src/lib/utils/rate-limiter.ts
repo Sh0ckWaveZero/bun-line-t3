@@ -4,7 +4,6 @@ import { headers } from 'next/headers'
 // Rate limiting configuration
 const RATE_LIMIT_WINDOW = 60 * 1000 // 1 minute
 const MAX_REQUESTS_PER_WINDOW = 5 // Max 5 requests per minute for cron endpoints
-const ADMIN_MAX_REQUESTS = 20 // Higher limit for admin endpoints
 
 // In-memory store for rate limiting (in production, use Redis or similar)
 const rateLimitStore = new Map<string, { count: number; windowStart: number }>()
@@ -63,7 +62,7 @@ export class RateLimiter {
   /**
    * Get identifier for rate limiting (IP + User-Agent hash)
    */
-  static async getIdentifier(request: NextRequest): Promise<string> {
+  static async getIdentifier(_request: NextRequest): Promise<string> {
     const headersList = await headers()
     const ip = headersList.get('x-forwarded-for') || 
                headersList.get('x-real-ip') || 

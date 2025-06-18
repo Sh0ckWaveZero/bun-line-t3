@@ -103,17 +103,31 @@
     --radius: 0.75rem;
 
     /* ✨ Custom Theme Variables - Light Mode */
-    --border-primary: #E5E7EB;      /* Gray-200 - subtle borders */
-    --border-secondary: #D1D5DB;    /* Gray-300 - visible borders */
-    --border-emphasis: #9CA3AF;     /* Gray-400 - emphasized borders */
-    --border-hover: #D1D5DB;        /* Hover effect */
+    --border-primary: #D1D5DB;      /* Gray-300 - เป็นเส้นที่เห็นชัดขึ้น */
+    --border-secondary: #9CA3AF;    /* Gray-400 - visible borders */
+    --border-emphasis: #6B7280;     /* Gray-500 - emphasized borders */
+    --border-hover: #9CA3AF;        /* Hover effect */
     
     --card-bg-base: #FFFFFF;        /* Pure white card background */
-    --card-bg-blue: #DBEAFE;        /* Blue-100 */
-    --card-bg-green: #DCFCE7;       /* Green-100 */
-    --card-bg-purple: #E9D5FF;      /* Purple-100 */
-    --card-bg-orange: #FED7AA;      /* Orange-100 */
-    --card-bg-red: #FECACA;         /* Red-100 */
+    --card-bg-blue: #DBEAFE;        /* Blue-100 - สดใสแต่นุ่มตา */
+    --card-bg-green: #DCFCE7;       /* Green-100 - เด่นแต่ไม่แสบ */
+    --card-bg-purple: #F3E8FF;      /* Purple-100 - อ่อนหวานสวยงาม */
+    --card-bg-orange: #FED7AA;      /* Orange-100 - อบอุ่นไม่แสบ */
+    --card-bg-red: #FEE2E2;         /* Red-100 - นุ่มนวลไม่แสง */
+    
+    /* ปรับ border colors ให้นุ่มขึ้น */
+    --card-border-blue: #93C5FD;    /* Blue-300 - นุ่มแต่เห็นชัด */
+    --card-border-green: #86EFAC;   /* Green-300 - สดใสแต่ไม่แสง */
+    --card-border-purple: #C084FC;  /* Purple-300 - อ่อนหวาน */
+    --card-border-orange: #FDB47F;  /* Orange-300 - อบอุ่น */
+    --card-border-red: #FCA5A5;     /* Red-300 - นุ่มนวล */
+    
+    /* เพิ่ม hover colors */
+    --card-bg-blue-hover: #BFDBFE;     /* Blue-200 */
+    --card-bg-green-hover: #BBF7D0;    /* Green-200 */
+    --card-bg-purple-hover: #E9D5FF;   /* Purple-200 */
+    --card-bg-orange-hover: #FED7AA;   /* Orange-200 */
+    --card-bg-red-hover: #FECACA;      /* Red-200 */
     
     --table-divider: #E5E7EB;       /* Table row separators */
     --table-header-bg: #F9FAFB;     /* Table header background */
@@ -216,6 +230,48 @@
   
   .bg-card-red {
     background-color: var(--card-bg-red);
+  }
+
+  /* Card Border Colors */
+  .border-card-blue {
+    border-color: var(--card-border-blue);
+  }
+  
+  .border-card-green {
+    border-color: var(--card-border-green);
+  }
+  
+  .border-card-purple {
+    border-color: var(--card-border-purple);
+  }
+  
+  .border-card-orange {
+    border-color: var(--card-border-orange);
+  }
+  
+  .border-card-red {
+    border-color: var(--card-border-red);
+  }
+
+  /* Card Hover Background Colors */
+  .hover\:bg-card-blue-hover:hover {
+    background-color: var(--card-bg-blue-hover);
+  }
+  
+  .hover\:bg-card-green-hover:hover {
+    background-color: var(--card-bg-green-hover);
+  }
+  
+  .hover\:bg-card-purple-hover:hover {
+    background-color: var(--card-bg-purple-hover);
+  }
+  
+  .hover\:bg-card-orange-hover:hover {
+    background-color: var(--card-bg-orange-hover);
+  }
+  
+  .hover\:bg-card-red-hover:hover {
+    background-color: var(--card-bg-red-hover);
   }
 
   /* Table Utilities */
@@ -354,6 +410,33 @@
     transition: all 0.2s ease-out;
     max-width: calc(100vw - 2rem);
     max-height: calc(100vh - 2rem);
+  }
+
+  /* 📱 Mobile Modal Classes */
+  .mobile-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-backdrop-fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background-color: rgba(0, 0, 0, 0.6);
+  }
+
+  .mobile-modal {
+    position: relative;
+    z-index: 9999;
+    max-width: 90vw;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+    border-radius: 0.75rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   }
 
   .modal-open {

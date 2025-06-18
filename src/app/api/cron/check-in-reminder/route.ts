@@ -1,10 +1,8 @@
 import { NextRequest } from 'next/server';
 import { headers } from 'next/headers';
 import { env } from '@/env.mjs';
-import { bubbleTemplate } from '@/lib/validation/line';
 import { attendanceService } from '@/features/attendance/services/attendance';
 import { holidayService } from '@/features/attendance/services/holidays';
-import { db } from '@/lib/database/db';
 import { selectRandomElement } from '@/lib/crypto-random';
 import { RateLimiter } from '@/lib/utils/rate-limiter';
 

@@ -68,11 +68,13 @@ export const CenteredModal: React.FC<CenteredModalProps> = ({
       aria-describedby="modal-description"
     >
       <div 
-        className={`modal-content bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 w-full max-w-md overflow-hidden ${className}`}
+        className={`modal-content bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl overflow-hidden ${className}`}
         onClick={(e) => e.stopPropagation()}
         style={{
           animation: 'modal-enter 0.2s ease-out',
-          overflowY: 'auto'
+          overflowY: 'auto',
+          maxWidth: '600px', // ✅ จำกัดขนาดสูงสุดให้เหมาะสม
+          width: '90vw' // ✅ ใช้ 90% ของ viewport width
         }}
       >
         {children}

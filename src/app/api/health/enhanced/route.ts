@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { headers } from 'next/headers'
 import { db } from '@/lib/database/db'
-import { attendanceService } from '@/features/attendance/services/attendance'
 import { RateLimiter } from '@/lib/utils/rate-limiter'
 
 interface SystemMetrics {
@@ -47,7 +45,6 @@ export async function GET(request: NextRequest) {
       return rateLimitResponse
     }
 
-    const headersList = await headers()
     const timestamp = new Date().toISOString()
     
     // Initialize health check result
@@ -130,7 +127,7 @@ export async function GET(request: NextRequest) {
         alerts.push(`${missingVars} critical environment variables missing`)
         recommendations.push('Check environment configuration')
       }
-    } catch (authError) {
+    } catch {
       healthScore -= 25
       alerts.push('Authentication system check failed')
     }
@@ -144,7 +141,7 @@ export async function GET(request: NextRequest) {
         alerts.push('LINE integration credentials missing')
         recommendations.push('Configure LINE_CHANNEL_ACCESS_TOKEN and LINE_CHANNEL_SECRET')
       }
-    } catch (lineError) {
+    } catch {
       healthScore -= 20
       alerts.push('LINE integration check failed')
     }
@@ -152,9 +149,9 @@ export async function GET(request: NextRequest) {
     // 5. Rate Limit System Check
     try {
       const testIdentifier = 'health-check-test'
-      const rateLimitResult = RateLimiter.checkRateLimit(testIdentifier, 1)
+      RateLimiter.checkRateLimit(testIdentifier, 1)
       healthCheck.checks.rateLimit = true
-    } catch (rateLimitError) {
+    } catch {
       healthScore -= 10
       alerts.push('Rate limiting system issue')
       recommendations.push('Check rate limiter implementation')
@@ -169,7 +166,7 @@ export async function GET(request: NextRequest) {
         alerts.push('Cron secret not configured')
         recommendations.push('Set CRON_SECRET environment variable')
       }
-    } catch (cronError) {
+    } catch {
       healthScore -= 15
       alerts.push('Cron jobs configuration check failed')
     }
