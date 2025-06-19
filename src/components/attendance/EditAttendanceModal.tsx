@@ -206,9 +206,18 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
     <ModalComponent 
       isOpen={isOpen}
       onClose={onClose}
-      className="w-full" // ✅ ลบ max-w-md ออกเพื่อให้ Modal components จัดการ size เอง
+      className="edit-attendance-modal" // ✅ เพิ่ม specific class name
     >
-      {modalContent}
+      <div 
+        className="edit-attendance-modal-content"
+        style={{ 
+          /* ✅ ป้องกัน content overflow และรับประกันการแสดงผลที่สมบูรณ์ */
+          minHeight: 'fit-content',
+          width: '100%'
+        }}
+      >
+        {modalContent}
+      </div>
     </ModalComponent>
   );
 };
