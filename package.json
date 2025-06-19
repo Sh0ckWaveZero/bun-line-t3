@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.9.1",
-    "@prisma/client": "^6.9.0",
+    "@prisma/client": "^6.10.1",
     "@radix-ui/react-popover": "^1.1.14",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-switch": "^1.2.5",
@@ -93,7 +93,7 @@
     "jsdom": "^26.1.0",
     "prettier": "3.4.2",
     "prettier-plugin-tailwindcss": "^0.5.14",
-    "prisma": "6.9.0",
+    "prisma": "^6.10.1",
     "tsx": "^4.20.3",
     "typescript": "5.5.2",
     "typescript-eslint": "8.33.1"

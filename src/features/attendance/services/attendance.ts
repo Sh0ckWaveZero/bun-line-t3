@@ -23,7 +23,8 @@ import {
   getWorkingDaysInMonth,
   getUsersWithPendingCheckout,
   calculateUserReminderTime,
-  shouldReceiveReminderNow,
+  shouldReceive10MinReminder,
+  shouldReceiveFinalReminder,
   getUsersNeedingDynamicReminder
 } from "../helpers";
 import { WORKPLACE_POLICIES } from "../constants/workplace-policies";
@@ -544,7 +545,8 @@ export const attendanceService = {
   getWorkingDaysInMonth,
   getUsersWithPendingCheckout,
   calculateUserReminderTime,
-  shouldReceiveReminderNow,
+  shouldReceive10MinReminder,
+  shouldReceiveFinalReminder,
   getUsersNeedingDynamicReminder,
   
   getCurrentBangkokTime,

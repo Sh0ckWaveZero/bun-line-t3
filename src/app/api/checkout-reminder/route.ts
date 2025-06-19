@@ -95,7 +95,7 @@ export async function GET(req: NextRequest) {
           
           // Calculate if this user should receive reminder now (same logic as enhanced API)
           const currentBangkokTime = attendanceService.getCurrentBangkokTime();
-          const shouldRemind = attendanceService.shouldReceiveReminderNow(attendance.checkInTime, currentBangkokTime);
+          const shouldRemind = attendanceService.shouldReceive10MinReminder(attendance.checkInTime, currentBangkokTime);
           
           if (!shouldRemind) {
             const reminderTime = attendanceService.calculateUserReminderTime(attendance.checkInTime);
