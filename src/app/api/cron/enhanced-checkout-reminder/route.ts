@@ -6,6 +6,12 @@ import { attendanceService } from '@/features/attendance/services/attendance';
 import { db } from '@/lib/database/db';
 import { roundToOneDecimal } from '@/lib/utils/number';
 import { getCurrentBangkokTime } from '@/lib/utils/datetime';
+import { 
+  shouldReceive10MinReminder, 
+  shouldReceiveFinalReminder,
+  calculateUserReminderTime,
+  calculateUserCompletionTime 
+} from '@/features/attendance/helpers/utils';
 
 // Helper function to send push message
 const sendPushMessage = async (userId: string, messages: any[]) => {
@@ -51,8 +57,8 @@ const flexMessage = (bubbleItems: any[]) => {
 
 /**
  * Enhanced Checkout Reminder with Dynamic Timing
- * This endpoint can be called more frequently (every 15-30 minutes) to check individual users
- * It calculates personalized reminder times based on each user's check-in time
+ * This endpoint can be called more frequently (every 5 minutes) to check individual users
+ * It calculates personalized reminder times based on each user's check-in time (10 minutes before 9-hour completion)
  */
 export async function GET(_req: NextRequest) {
   try {
@@ -64,7 +70,7 @@ export async function GET(_req: NextRequest) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('🔔 Enhanced Cron: Running dynamic checkout reminder job...');
+    console.log('🔔 Enhanced Cron: Running dynamic checkout reminder job (every 5 minutes)...');
     
     // Get current Bangkok time
     const currentBangkokTime = getCurrentBangkokTime();
@@ -99,29 +105,72 @@ export async function GET(_req: NextRequest) {
     
     console.log(`📝 Found ${usersNeedingReminder.length} users to check for dynamic reminders`);
     
-    // Process each user individually with dynamic timing
+    // Process each user individually with dynamic timing (2 reminders max)
     const results = await Promise.all(
       usersNeedingReminder.map(async (userId) => {
         try {
-          // Get the attendance record to check timing
-          const attendance = await attendanceService.getTodayAttendance(userId);
+          // Get the attendance record to check timing and reminder status
+          const attendance = await db.workAttendance.findFirst({
+            where: {
+              userId,
+              workDate: getCurrentBangkokTime().toISOString().split('T')[0],
+              status: {
+                in: ['CHECKED_IN_ON_TIME', 'CHECKED_IN_LATE']
+              }
+            },
+            select: {
+              id: true,
+              userId: true,
+              checkInTime: true,
+              checkOutTime: true,
+              status: true,
+              reminderSent10Min: true,
+              reminderSentFinal: true
+            }
+          });
           
           if (!attendance) {
             console.log(`⚠️ User ${userId}: No attendance record found`);
             return { userId, status: 'skipped', reason: 'No attendance record found' };
           }
           
-          // Calculate if this user should receive reminder now
-          const shouldRemind = attendanceService.shouldReceiveReminderNow(attendance.checkInTime, currentBangkokTime);
+          // Check which reminder should be sent
+          const should10Min = shouldReceive10MinReminder(attendance.checkInTime, currentBangkokTime);
+          const shouldFinal = shouldReceiveFinalReminder(attendance.checkInTime, currentBangkokTime);
           
-          if (!shouldRemind) {
-            const reminderTime = attendanceService.calculateUserReminderTime(attendance.checkInTime);
-            console.log(`⏳ User ${userId}: Not time for reminder yet. Reminder time: ${reminderTime.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`);
+          let reminderType: '10min' | 'final' | null = null;
+          let messageText = '';
+          
+          // Determine which reminder to send (if any)
+          if (should10Min && !attendance.reminderSent10Min) {
+            reminderType = '10min';
+            const checkInTimeDisplay = attendanceService.formatThaiTimeOnly(
+              attendanceService.convertUTCToBangkok(attendance.checkInTime)
+            );
+            const hoursWorked = (currentBangkokTime.getTime() - 
+              attendanceService.convertUTCToBangkok(attendance.checkInTime).getTime()) / (1000 * 60 * 60);
+            
+            messageText = `⏰ เตือนส่วนตัว - ครั้งที่ 1/2\n\nคุณเข้างานตั้งแต่ ${checkInTimeDisplay} น.\nทำงานแล้ว ${roundToOneDecimal(hoursWorked)} ชั่วโมง\n\n🚨 อีกประมาณ 10 นาทีจะครบ 9 ชั่วโมงแล้ว!\nเตรียมลงชื่อออกงานได้เลย 🕐`;
+          } else if (shouldFinal && !attendance.reminderSentFinal) {
+            reminderType = 'final';
+            const checkInTimeDisplay = attendanceService.formatThaiTimeOnly(
+              attendanceService.convertUTCToBangkok(attendance.checkInTime)
+            );
+            
+            messageText = `🎯 เตือนส่วนตัว - ครั้งที่ 2/2\n\nคุณเข้างานตั้งแต่ ${checkInTimeDisplay} น.\n\n✅ ครบ 9 ชั่วโมงแล้ว!\nกรุณาลงชื่อออกงานตอนนี้เลย 🏠`;
+          }
+          
+          if (!reminderType) {
+            const nextReminderTime = !attendance.reminderSent10Min 
+              ? calculateUserReminderTime(attendance.checkInTime)
+              : calculateUserCompletionTime(attendance.checkInTime);
+            
+            console.log(`⏳ User ${userId}: No reminder needed. Next: ${nextReminderTime.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`);
             return { 
               userId, 
               status: 'scheduled', 
-              reminderTime: reminderTime.toISOString(),
-              checkInTime: attendance.checkInTime.toISOString()
+              nextReminderTime: nextReminderTime.toISOString(),
+              remindersSent: `${attendance.reminderSent10Min ? '1' : '0'}/2`
             };
           }
           
@@ -137,35 +186,41 @@ export async function GET(_req: NextRequest) {
             console.log(`⚠️ User ${userId}: No LINE account found`);
             return { userId, status: 'skipped', reason: 'No LINE account found' };
           }
-          
-          // Build personalized checkout reminder
-          const currentTime = getCurrentBangkokTime();
-          const checkInTime = attendanceService.convertUTCToBangkok(attendance.checkInTime);
-          const hoursWorked = (currentTime.getTime() - checkInTime.getTime()) / (1000 * 60 * 60);
-          const reminderTime = attendanceService.calculateUserReminderTime(attendance.checkInTime);
-          
-          // Format display time
-          const checkInTimeDisplay = attendanceService.formatThaiTimeOnly(checkInTime);
-          
+
+          // Send the personalized push message
           const payload = [
             {
               type: 'text',
-              text: `⏰ เวลาแจ้งเตือนส่วนตัว!\n\nคุณเข้างานตั้งแต่ ${checkInTimeDisplay} น.\nทำงานแล้ว ${roundToOneDecimal(hoursWorked)} ชั่วโมง\n\n🎯 อีกประมาณ 30 นาทีจะครบ 9 ชั่วโมงแล้ว\nอย่าลืมลงชื่อออกงานด้วยนะคะ!`
+              text: messageText
             },
-            ...flexMessage(bubbleTemplate.workStatus(attendance))
+            ...flexMessage(bubbleTemplate.workStatus({
+              id: attendance.id,
+              userId: attendance.userId,
+              checkInTime: attendance.checkInTime,
+              checkOutTime: attendance.checkOutTime,
+              status: attendance.status
+            }))
           ];
           
-          // Send the personalized push message
           await sendPushMessage(userAccount.providerAccountId, payload);
           
-          console.log(`✅ User ${userId}: Dynamic reminder sent successfully at ${currentTime.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`);
+          // Update reminder status in database
+          await db.workAttendance.update({
+            where: { id: attendance.id },
+            data: {
+              ...(reminderType === '10min' && { reminderSent10Min: true }),
+              ...(reminderType === 'final' && { reminderSentFinal: true })
+            }
+          });
+          
+          console.log(`✅ User ${userId}: ${reminderType} reminder sent successfully at ${currentBangkokTime.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`);
           return { 
             userId, 
             lineUserId: userAccount.providerAccountId.substring(0, 8) + '...', 
             status: 'sent',
-            checkInTime: checkInTime.toISOString(),
-            reminderTime: reminderTime.toISOString(),
-            hoursWorked: roundToOneDecimal(hoursWorked)
+            reminderType,
+            remindersSent: `${reminderType === '10min' ? '1' : '2'}/2`,
+            checkInTime: attendance.checkInTime.toISOString()
           };
         } catch (error: any) {
           console.error(`❌ Error processing dynamic reminder for user ${userId}:`, error);
@@ -184,16 +239,22 @@ export async function GET(_req: NextRequest) {
     const failedCount = results.filter(r => r.status === 'failed').length;
     const skippedCount = results.filter(r => r.status === 'skipped').length;
     
-    console.log(`📊 Dynamic Results: ${sentCount} sent, ${scheduledCount} scheduled, ${failedCount} failed, ${skippedCount} skipped`);
+    // Count reminder types
+    const sent10MinCount = results.filter(r => r.status === 'sent' && r.reminderType === '10min').length;
+    const sentFinalCount = results.filter(r => r.status === 'sent' && r.reminderType === 'final').length;
+    
+    console.log(`📊 Results: ${sentCount} sent (${sent10MinCount} x 10min, ${sentFinalCount} x final), ${scheduledCount} scheduled, ${failedCount} failed, ${skippedCount} skipped`);
     
     return Response.json({ 
       success: true, 
-      message: `Dynamic checkout reminders processed: ${sentCount} sent, ${scheduledCount} scheduled, ${failedCount} failed, ${skippedCount} skipped`,
+      message: `Checkout reminders processed: ${sentCount} sent (${sent10MinCount} x 10min, ${sentFinalCount} x final), ${scheduledCount} scheduled, ${failedCount} failed, ${skippedCount} skipped`,
       timestamp: new Date().toISOString(),
       currentBangkokTime: currentBangkokTime.toISOString(),
       statistics: {
         total: results.length,
         sent: sentCount,
+        sent10Min: sent10MinCount,
+        sentFinal: sentFinalCount,
         scheduled: scheduledCount,
         failed: failedCount,
         skipped: skippedCount

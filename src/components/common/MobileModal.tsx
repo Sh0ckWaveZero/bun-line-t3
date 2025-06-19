@@ -78,7 +78,11 @@ export const MobileModal: React.FC<MobileModalProps> = ({
         backgroundColor: 'rgba(0, 0, 0, 0.6)', // Darker overlay
         // Force hardware acceleration
         transform: 'translateZ(0)',
-        WebkitTransform: 'translateZ(0)'
+        WebkitTransform: 'translateZ(0)',
+        /* ✅ รับประกันการแสดงผลที่ชัดเจน */
+        zIndex: 10000,
+        position: 'fixed',
+        inset: 0
       }}
       onClick={handleBackgroundClick}
       role="dialog"
@@ -90,20 +94,39 @@ export const MobileModal: React.FC<MobileModalProps> = ({
         className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 mobile-modal ${className}`}
         style={{
           borderRadius: '12px',
-          width: '90vw', // ✅ ใช้ 90% ของ viewport width แทน calc(100% - 32px)
-          maxWidth: '400px', // ✅ จำกัดขนาดสูงสุดสำหรับ mobile
-          margin: '16px',
+          width: 'min(400px, calc(100vw - 2rem))', // ✅ ปรับปรุงการคำนวณขนาด
+          maxHeight: 'calc(100vh - 4rem)', // ✅ เพิ่ม margin ด้านบนล่าง
+          margin: '1rem',
+          display: 'flex',
+          flexDirection: 'column',
           // Animation for better UX
           transform: 'scale(1)',
           transition: 'transform 0.2s ease-out',
           // Force hardware acceleration
           WebkitTransform: 'translateZ(0) scale(1)',
           backfaceVisibility: 'hidden',
-          WebkitBackfaceVisibility: 'hidden'
+          WebkitBackfaceVisibility: 'hidden',
+          /* ✅ ป้องกัน content overflow */
+          overflow: 'hidden',
+          /* ✅ รับประกันการมองเห็น */
+          zIndex: 10001,
+          position: 'relative'
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {children}
+        {/* ✅ Wrap children ใน scrollable container */}
+        <div 
+          className="mobile-modal-body"
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            scrollBehavior: 'smooth',
+            WebkitOverflowScrolling: 'touch'
+          }}
+        >
+          {children}
+        </div>
       </div>
     </div>
   );

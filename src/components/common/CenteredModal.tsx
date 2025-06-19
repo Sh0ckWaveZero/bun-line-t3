@@ -66,18 +66,44 @@ export const CenteredModal: React.FC<CenteredModalProps> = ({
       aria-modal="true"
       aria-labelledby="modal-title"
       aria-describedby="modal-description"
+      style={{
+        /* ✅ รับประกันการแสดงผลที่ชัดเจน */
+        zIndex: 10000,
+        position: 'fixed',
+        inset: 0
+      }}
     >
       <div 
-        className={`modal-content bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl overflow-hidden ${className}`}
+        className={`modal-content bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 ${className}`}
         onClick={(e) => e.stopPropagation()}
         style={{
           animation: 'modal-enter 0.2s ease-out',
-          overflowY: 'auto',
-          maxWidth: '600px', // ✅ จำกัดขนาดสูงสุดให้เหมาะสม
-          width: '90vw' // ✅ ใช้ 90% ของ viewport width
+          /* ✅ ปรับปรุงการจัดการขนาดและ layout */
+          width: 'min(600px, 90vw)',
+          maxHeight: 'calc(100vh - 4rem)',
+          display: 'flex',
+          flexDirection: 'column',
+          /* ✅ ป้องกัน content overflow */
+          overflow: 'hidden',
+          /* ✅ รับประกันการมองเห็น */
+          zIndex: 10001,
+          position: 'relative',
+          margin: 'auto'
         }}
       >
-        {children}
+        {/* ✅ Wrap children ใน scrollable container */}
+        <div 
+          className="modal-body"
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            scrollBehavior: 'smooth',
+            WebkitOverflowScrolling: 'touch'
+          }}
+        >
+          {children}
+        </div>
       </div>
     </div>
   );

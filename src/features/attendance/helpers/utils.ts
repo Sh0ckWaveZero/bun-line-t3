@@ -33,8 +33,7 @@ export const getUsersWithPendingCheckout = async (): Promise<string[]> => {
 };
 
 /**
- * Calculate dynamic reminder time for each user
- * Reminds users 30 minutes before their 9-hour work completion (including lunch break)
+ * Calculate dynamic reminder time for each user (10 minutes before 9-hour completion)
  */
 export const calculateUserReminderTime = (checkInTime: Date): Date => {
   const checkInBangkok = convertUTCToBangkok(checkInTime);
@@ -43,30 +42,53 @@ export const calculateUserReminderTime = (checkInTime: Date): Date => {
   const completionTime = new Date(checkInBangkok);
   completionTime.setHours(completionTime.getHours() + 9);
   
-  // Calculate reminder time (30 minutes before completion)
+  // Calculate reminder time (10 minutes before completion)
   const reminderTime = new Date(completionTime);
-  reminderTime.setMinutes(reminderTime.getMinutes() - 30);
+  reminderTime.setMinutes(reminderTime.getMinutes() - 10);
   
   return reminderTime;
 };
 
 /**
- * Check if user should receive reminder now based on their check-in time
- * @param checkInTime UTC time when user checked in
- * @param currentTime Current Bangkok time
- * @param toleranceMinutes Tolerance in minutes (default 5)
+ * Calculate exact 9-hour completion time for final reminder
  */
-export const shouldReceiveReminderNow = (checkInTime: Date, currentTime: Date, toleranceMinutes: number = 5): boolean => {
-  const reminderTime = calculateUserReminderTime(checkInTime);
+export const calculateUserCompletionTime = (checkInTime: Date): Date => {
+  const checkInBangkok = convertUTCToBangkok(checkInTime);
   
-  // Convert currentTime to Bangkok timezone if it's not already
-  // Note: reminderTime is already in Bangkok timezone from calculateUserReminderTime
-  const currentBangkok = currentTime; // Assume it's already Bangkok time
+  // Calculate 9 hours work completion time (including lunch break)
+  const completionTime = new Date(checkInBangkok);
+  completionTime.setHours(completionTime.getHours() + 9);
+  
+  return completionTime;
+};
+
+/**
+ * Check if user should receive 10-minute reminder now
+ */
+export const shouldReceive10MinReminder = (checkInTime: Date, currentTime: Date, toleranceMinutes: number = 2): boolean => {
+  const reminderTime = calculateUserReminderTime(checkInTime);
+  const currentBangkok = currentTime;
   
   const timeDiffMinutes = Math.abs((currentBangkok.getTime() - reminderTime.getTime()) / (1000 * 60));
-  
-  // Send reminder if current time is within tolerance of calculated reminder time
   return timeDiffMinutes <= toleranceMinutes;
+};
+
+/**
+ * Check if user should receive final reminder (9-hour completion)
+ */
+export const shouldReceiveFinalReminder = (checkInTime: Date, currentTime: Date, toleranceMinutes: number = 2): boolean => {
+  const completionTime = calculateUserCompletionTime(checkInTime);
+  const currentBangkok = currentTime;
+  
+  const timeDiffMinutes = Math.abs((currentBangkok.getTime() - completionTime.getTime()) / (1000 * 60));
+  return timeDiffMinutes <= toleranceMinutes;
+};
+
+/**
+ * Check if user should receive reminder now (alias for shouldReceive10MinReminder for backward compatibility)
+ */
+export const shouldReceiveReminderNow = (checkInTime: Date, currentTime: Date, toleranceMinutes: number = 2): boolean => {
+  return shouldReceive10MinReminder(checkInTime, currentTime, toleranceMinutes);
 };
 
 /**
@@ -95,7 +117,7 @@ export const getUsersNeedingDynamicReminder = async (currentTime: Date) => {
     
     // Filter users who should receive reminder now
     const usersForReminder = pendingCheckouts.filter(record => {
-      return shouldReceiveReminderNow(record.checkInTime, currentTime);
+      return shouldReceive10MinReminder(record.checkInTime, currentTime);
     }).map(record => ({
       userId: record.userId,
       checkInTime: record.checkInTime,

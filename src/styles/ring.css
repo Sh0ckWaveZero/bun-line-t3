@@ -56,7 +56,8 @@
 
 * {
   box-sizing: border-box;
-  transform-style: preserve-3d;
+  /* ✅ ลบ transform-style: preserve-3d ออกจาก global selector */
+  /* เพื่อป้องกันการรบกวน modal/dialog components */
 }
 
 .rings {
@@ -66,6 +67,13 @@
   position: relative;
   transform: translate3d(0, 0, 100vmin) rotateX(-32deg) rotateY(-32deg)
     rotateX(90deg);
+  /* ✅ เพิ่ม transform-style เฉพาะใน rings container */
+  transform-style: preserve-3d;
+}
+
+.rings * {
+  /* ✅ กำหนด transform-style เฉพาะสำหรับ children ของ rings */
+  transform-style: preserve-3d;
 }
 
 [data-scale="true"] .ring {

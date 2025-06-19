@@ -158,9 +158,9 @@ export async function GET(req: NextRequest) {
           text: '👆 กดปุ่มด้านล่างเพื่อลงชื่อเข้างานได้เลย',
           actions: [
             {
-              type: 'uri',
+              type: 'postback',
               label: '🏢 ลงชื่อเข้างาน',
-              uri: `${env.FRONTEND_URL}`,
+              data: 'action=checkin',
             }
           ]
         }

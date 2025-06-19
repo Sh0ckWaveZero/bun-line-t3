@@ -2,70 +2,70 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-    provider = "prisma-client-js"
-    binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
-    provider = "mongodb"
-    url      = env("DATABASE_URL")
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
 }
 
 // Necessary for Next auth
 model Account {
-    id                String    @id @default(auto()) @map("_id") @db.ObjectId
-    userId            String    @unique @map("user_id") @db.ObjectId
-    provider          String
-    type              String
-    providerAccountId String    @unique @map("provider_account_id")
-    refresh_token     String?   @db.String
-    access_token      String?   @db.String
-    verified_request  DateTime?
-    verification_id   String?
-    is_verified       Boolean   @default(false)
-    expires_at        Int?      @default(0)
-    token_type        String?
-    scope             String?
-    id_token          String?   @db.String
-    session_state     String?
-    user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String    @unique @map("user_id") @db.ObjectId
+  provider          String
+  type              String
+  providerAccountId String    @unique @map("provider_account_id")
+  refresh_token     String?   @db.String
+  access_token      String?   @db.String
+  verified_request  DateTime?
+  verification_id   String?
+  is_verified       Boolean   @default(false)
+  expires_at        Int?      @default(0)
+  token_type        String?
+  scope             String?
+  id_token          String?   @db.String
+  session_state     String?
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    @@unique([provider, providerAccountId])
-    @@map("accounts")
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
 }
 
 model Session {
-    id           String   @id @default(auto()) @map("_id") @db.ObjectId
-    sessionToken String   @unique @map("session_token")
-    userId       String   @unique @map("user_id") @db.ObjectId
-    expires      DateTime
-    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique @map("session_token")
+  userId       String   @unique @map("user_id") @db.ObjectId
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    @@map("sessions")
+  @@map("sessions")
 }
 
 model User {
-    id              String           @id @default(auto()) @map("_id") @db.ObjectId
-    name            String?
-    email           String?          @unique
-    emailVerified   DateTime?        @map("email_verified")
-    is_verified     Boolean?         @default(false)
-    image           String?
-    accounts        Account[]
-    sessions        Session[]
-    workAttendances WorkAttendance[]
+  id              String           @id @default(auto()) @map("_id") @db.ObjectId
+  name            String?
+  email           String?          @unique
+  emailVerified   DateTime?        @map("email_verified")
+  is_verified     Boolean?         @default(false)
+  image           String?
+  accounts        Account[]
+  sessions        Session[]
+  workAttendances WorkAttendance[]
 
-    @@map("users")
+  @@map("users")
 }
 
 model VerificationToken {
-    id         String   @id @default(auto()) @map("_id") @db.ObjectId
-    identifier String
-    token      String   @unique
-    expires    DateTime
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  identifier String
+  token      String   @unique
+  expires    DateTime
 
-    @@unique([identifier, token])
-    @@map("verification_tokens")
+  @@unique([identifier, token])
+  @@map("verification_tokens")
 }
 
 enum AttendanceStatusType {
@@ -76,45 +76,48 @@ enum AttendanceStatusType {
 }
 
 model Cmc {
-    id        String   @id @default(auto()) @map("_id") @db.ObjectId
-    no        Int
-    name      String
-    symbol    String
-    slug      String
-    updatedAt DateTime @updatedAt
-    createdAt DateTime @default(now())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  no        Int
+  name      String
+  symbol    String
+  slug      String
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
 
-    @@map("cmc")
+  @@map("cmc")
 }
 
 model WorkAttendance {
-    id           String    @id @default(auto()) @map("_id") @db.ObjectId
-    userId       String    @map("user_id") @db.ObjectId
-    checkInTime  DateTime  @map("check_in_time")
-    checkOutTime DateTime? @map("check_out_time")
-    workDate     String    @map("work_date") // YYYY-MM-DD format
-    status       AttendanceStatusType    @default(CHECKED_IN_ON_TIME) 
-    createdAt    DateTime  @default(now()) @map("created_at")
-    updatedAt    DateTime  @updatedAt @map("updated_at")
-    user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String               @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String               @map("user_id") @db.ObjectId
+  checkInTime       DateTime             @map("check_in_time")
+  checkOutTime      DateTime?            @map("check_out_time")
+  workDate          String               @map("work_date") // YYYY-MM-DD format
+  status            AttendanceStatusType @default(CHECKED_IN_ON_TIME)
+  // Checkout reminder tracking
+  reminderSent10Min Boolean              @default(false) @map("reminder_sent_10min") // ส่งแจ้งเตือน 10 นาทีก่อนแล้ว
+  reminderSentFinal Boolean              @default(false) @map("reminder_sent_final") // ส่งแจ้งเตือนครบ 9 ชั่วโมงแล้ว
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @updatedAt @map("updated_at")
+  user              User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    @@unique([userId, workDate])
-    @@map("work_attendance")
+  @@unique([userId, workDate])
+  @@map("work_attendance")
 }
 
 model PublicHoliday {
-    id          String   @id @default(auto()) @map("_id") @db.ObjectId
-    date        String   @unique @map("date") // YYYY-MM-DD format
-    nameEnglish String   @map("name_english")
-    nameThai    String   @map("name_thai")
-    year        Int      @map("year")
-    type        String   @default("national") @map("type") // national, royal, religious, special
-    isActive    Boolean  @default(true) @map("is_active")
-    description String?  @map("description")
-    createdAt   DateTime @default(now()) @map("created_at")
-    updatedAt   DateTime @updatedAt @map("updated_at")
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  date        String   @unique @map("date") // YYYY-MM-DD format
+  nameEnglish String   @map("name_english")
+  nameThai    String   @map("name_thai")
+  year        Int      @map("year")
+  type        String   @default("national") @map("type") // national, royal, religious, special
+  isActive    Boolean  @default(true) @map("is_active")
+  description String?  @map("description")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
-    @@index([year, isActive])
-    @@index([date, isActive])
-    @@map("public_holidays")
+  @@index([year, isActive])
+  @@index([date, isActive])
+  @@map("public_holidays")
 }
