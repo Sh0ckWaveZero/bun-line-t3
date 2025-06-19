@@ -85,6 +85,13 @@ export const shouldReceiveFinalReminder = (checkInTime: Date, currentTime: Date,
 };
 
 /**
+ * Check if user should receive reminder now (alias for shouldReceive10MinReminder for backward compatibility)
+ */
+export const shouldReceiveReminderNow = (checkInTime: Date, currentTime: Date, toleranceMinutes: number = 2): boolean => {
+  return shouldReceive10MinReminder(checkInTime, currentTime, toleranceMinutes);
+};
+
+/**
  * Get users who need dynamic reminders right now
  * @param currentTime Current Bangkok time
  * @returns Array of user data with reminder details
