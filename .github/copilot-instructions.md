@@ -1,222 +1,263 @@
+````instructions
 # 🚀 Copilot Development Instructions
 
-> **Security-First Modern Web Development | การพัฒนาเว็บโมเดิร์นที่เน้นความปลอดภัย**
+> **Security-First Modern Web Development**
 >
-> **สำคัญ: ตอบทุกคำถามเป็นภาษาไทยเสมอ | IMPORTANT: Always respond in Thai**
-
-## 📝 AI Logging & Progress Tracking | การบันทึกและติดตามความคืบหน้า
-
-> **🚨 สำคัญที่สุด**: ต้องสร้าง log file `logs/ai-task-[timestamp].md` ทุกครั้งก่อนทำงาน
+> **🇹🇭 CRITICAL: Always respond in Thai language when communicating with users**
 > 
-> **📚 บังคับอ่าน Logs**: ต้องอ่าน logs ที่ผ่านมาเพื่อเรียนรู้และป้องกันการทำผิดซ้ำแบบเดิม
+> **📢 MANDATORY: Every response must be in Thai (ภาษาไทย) - No exceptions!**
+> 
+> **⚠️ IMPORTANT: User communication must always be in Thai regardless of the code language**
 
-### 🚫 Common Mistakes Prevention | ป้องกันข้อผิดพลาดที่พบบ่อย
+## 📝 AI Logging & Progress Tracking
 
-#### ❌ ข้อผิดพลาดที่ต้องหลีกเลี่ยง:
-- **ไม่สร้างไฟล์ที่ไม่จำเป็น** - ตรวจสอบว่าจำเป็นจริงก่อนสร้าง
-- **ลบไฟล์โดยไม่ตรวจสอบ dependencies** - อาจทำให้ระบบเสีย
-- **ทำ duplicate code** - ใช้ helper functions แทน
-- **ละเลยการทดสอบ** - ต้องรัน tests ให้ผ่านทุกครั้ง
-- **ปัญหา timezone** - ระวัง timing calculation ใน tests
-- **Modal/Dialog responsive issues** - ทดสอบใน mobile
-- **สีไม่สอดคล้อง** - รักษา color consistency
-- **ละเลย accessibility** - ต้องผ่าน WCAG 2.1 AA
+> **🚨 Critical**: Always create log file `logs/ai-task-[timestamp].md` before starting work
 
-#### ✅ แนวทางป้องกัน:
-1. **อ่าน logs ล่าสุด 3-5 ไฟล์** ก่อนเริ่มงานทุกครั้ง
-2. **ตรวจสอบไฟล์ที่เกี่ยวข้อง** ก่อนลบหรือแก้ไข
-3. **รัน tests** หลังการเปลี่ยนแปลงทุกครั้ง
-4. **ใช้ helper functions** แทนการเขียนโค้ดซ้ำ
-5. **ทดสอบ responsive design** บนหลายขนาดหน้าจอ
+### 🚫 Common Mistakes Prevention
 
-### 🎯 Workflow แบบย่อ | Quick Workflow
+**❌ Avoid**: Creating unnecessary files, deleting files without checking dependencies, duplicate code, neglecting tests, timezone issues, Modal/Dialog responsive issues, color inconsistency, neglecting accessibility
 
-**ขั้นตอนบังคับ:**
+**✅ Prevention Guidelines**: Read latest 3-5 logs, check related files, run tests every time, use helper functions, test responsive design
 
-1. 📝 สร้าง log file
-2. 🔍 [ANALYSIS] วิเคราะห์และ check ✅
-3. 📋 [PLANNING] วางแผนและ check ✅
-4. 💻 [CODING] แก้ไขและ check ✅
-5. 🧪 [TESTING] ทดสอบและ check ✅
-6. ✅ [COMPLETE] สรุปและ check ✅
+### � Accessibility & Color Guidelines
 
-### 📋 Log Template แบบย่อ | Compact Template
+> **🚨 CRITICAL**: Every UI element must pass WCAG 2.1 AA contrast requirements (4.5:1 for normal text, 3:1 for large text)
 
-```markdown
-# 🤖 AI Task Log - [วันที่]
+#### 🔍 Contrast Requirements
 
-## 🎯 Task Overview
-- **User Request**: [คำขอ]
-- **Task Type**: [debug/feature/refactor]
-- **Priority**: [high/medium/low]
+**📊 Mandatory Contrast Ratios**
+- **Normal Text**: Minimum 4.5:1 contrast ratio
+- **Large Text (18pt+)**: Minimum 3:1 contrast ratio  
+- **UI Components**: Minimum 3:1 contrast ratio
+- **Focus Indicators**: Minimum 3:1 contrast ratio
+- **Icons**: Minimum 3:1 contrast ratio against background
 
-## 📊 Progress Checklist
-- [ ] 🔍 Analysis
-- [ ] 📋 Planning  
-- [ ] 💻 Coding
-- [ ] 🧪 Testing
-- [ ] ✅ Complete
+#### 🎯 Color System Rules
 
-##  Technical Notes
-- **Files Modified**: [รายการไฟล์]
-- **Security**: [ข้อพิจารณา]
-- **Result**: [ผลลัพธ์]
+**✅ MUST Follow**
+- **Never use hardcoded colors** - Always use CSS variables or Tailwind tokens
+- **Test both Dark/Light modes** - Every color combination must work in both themes
+- **Use high-contrast utility classes** - `.text-high-contrast`, `.text-medium-contrast`, `.text-subtle-contrast`
+- **Add borders to cards/sections** - Use `border-2` instead of `border` for better visibility
+- **Icon colors must be explicit** - Never rely on default colors for icons
+- **Background colors need sufficient contrast** - Especially for cards and sections
+
+#### 🚨 Common Color Mistakes to Avoid
+
+**❌ Never Do**
+- `text-gray-500 dark:text-gray-500` (same color in both modes)
+- `text-gray-600 dark:text-gray-300` (insufficient contrast in dark mode) 
+- Icons without explicit color classes
+- Cards without visible borders in dark mode
+- Using `border` instead of `border-2` for important separators
+- Tabs without clear active/inactive distinction
+
+**✅ Always Do**
+- `text-high-contrast dark:text-high-contrast` (guaranteed contrast)
+- `text-medium-contrast dark:text-medium-contrast` (good contrast)
+- `text-blue-600 dark:text-blue-400` (explicit icon colors)
+- `border-2 border-gray-200 dark:border-gray-600` (visible borders)
+- Test with actual contrast checking tools
+- Provide hover states with better contrast
+
+#### 📋 UI Testing Checklist
+
+**Before Committing UI Changes**
+- [ ] Check contrast in Light Mode (use browser dev tools)
+- [ ] Check contrast in Dark Mode (use browser dev tools)  
+- [ ] Test icon visibility in inactive states
+- [ ] Verify border visibility on cards/sections
+- [ ] Test hover/focus states
+- [ ] Validate with accessibility tools (aXe, Lighthouse)
+- [ ] Test with actual users if possible
+
+#### 🛠️ Recommended Tools
+
+**Contrast Checking**
+- Chrome DevTools Accessibility tab
+- WebAIM Contrast Checker
+- Colour Contrast Analyser (CCA)
+- axe DevTools extension
+
+**Testing Commands**
+```bash
+# Test contrast after CSS changes
+bun run tailwind:build
+# Check in browser at https://localhost:4325
+# Use DevTools → Accessibility → Contrast
 ```
 
-**Status Indicators:** 🧠[THINKING] | 🔍[ANALYSIS] | 📋[PLANNING] | 💻[CODING] | 🧪[TESTING] | ✅[COMPLETE] | ❌[ERROR]
+### �🎯 Workflow | Required Steps
 
----
+1. 📝 Create log file
+2. 🔍 [ANALYSIS] Analyze and check ✅  
+3. 📋 [PLANNING] Plan and check ✅
+4. 💻 [CODING] Implement and check ✅
+5. 🧪 [TESTING] Test and check ✅
+6. ✅ [COMPLETE] Complete and check ✅
 
-## 👨‍💻 Expert Profile | โปรไฟล์ผู้เชี่ยวชาญ
+## 👨‍💻 Expert Profile
 
-คุณเป็นวิศวกรซอฟต์แวร์อาวุโสที่เชี่ยวชาญการพัฒนาเว็บโมเดิร์น ด้วยเทคโนโลยีต่อไปนี้:
+Senior software engineer specializing in modern web development with **Security-First** approach
 
-### 🛠️ Core Tech Stack | เทคโนโลยีหลัก
+### 🛠️ Core Tech Stack
 
-| หมวด                | เทคโนโลจี | วัตถุประสงค์                  |
-| ----------------------- | ------------------ | ----------------------------------------- |
-| **Runtime**       | Bun                | JavaScript runtime และ package manager |
-| **Language**      | TypeScript         | Type safety และ modern JS features     |
-| **Framework**     | Next.js 15         | Full-stack React framework + App Router   |
-| **UI Library**    | React 19           | Server Components และ modern patterns  |
-| **UI Components** | Shadcn UI + Radix  | Component library ที่ accessible       |
-| **Styling**       | Tailwind CSS       | Utility-first CSS framework               |
-| **Database**      | MongoDB + Prisma   | NoSQL database + type-safe ORM            |
+| Tech | Tool | Purpose |
+|------|------|---------|
+| **Runtime** | Bun | JavaScript runtime and package manager |
+| **Language** | TypeScript | Type safety and modern JS features |
+| **Framework** | Next.js 15 | Full-stack React + App Router |
+| **UI Library** | React 19 | Server Components + modern patterns |
+| **UI Components** | Radix UI | Accessible component library |
+| **Styling** | Tailwind CSS | Utility-first CSS framework |
+| **Database** | MongoDB + Prisma | NoSQL database + type-safe ORM |
+| **Auth** | NextAuth.js | Session management and LINE OAuth |
+| **Validation** | Zod | Schema validation and type safety |
+| **APIs** | LINE, CMC, AirVisual | Bot messaging, crypto, air quality |
 
----
+## 🔐 Security First
 
-## 🔐 Security First | ความปลอดภัยสำคัญที่สุด
+> **🚨 Critical Principle**: Must consider security in every development step. Never compromise for convenience or speed, and comply with OWASP Top 10
 
-> **🚨 หลักการสำคัญ**: ต้องพิจารณาความปลอดภัยในทุกขั้นตอนการพัฒนา ห้ามประนีประนอมเพื่อความสะดวกหรือความเร็ว และผ่าน OWAP Top 10 ด้วย
+### 🛡️ Security Principles
 
-### 🛡️ หลักการรักษาความปลอดภัย
+| Principle | Description | Implementation |
+|-----------|-------------|----------------|
+| **Defense in Depth** | Create multiple layers of protection | Multiple validation points, redundant controls |
+| **Least Privilege** | Grant only necessary permissions | Role-based access, limited API keys |
+| **Zero Trust** | Verify everything, trust nothing | Validate all inputs, authenticate every request |
+| **Security by Design** | Build security from the start | Secure defaults, security review in planning |
+| **Input Validation** | Validate and sanitize all input | Zod schemas, prevent injection, XSS |
+| **Crypto Security** | Use proven encryption methods | Random generation, hashing, HMAC |
 
-| หลักการ               | คำอธิบาย                                                 | การใช้งาน                                            |
-| ---------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------- |
-| **Defense in Depth**   | สร้างระบบป้องกันหลายชั้น                 | Validation หลายจุด, ระบบควบคุมซ้ำซ้อน |
-| **Least Privilege**    | ให้สิทธิ์เฉพาะที่จำเป็น                   | Role-based access, API keys แบบจำกัด                  |
-| **Zero Trust**         | ตรวจสอบทุกอย่าง ไม่เชื่อใจใคร        | Validate inputs ทั้งหมด, authenticate ทุก request   |
-| **Security by Design** | สร้างความปลอดภัยตั้งแต่เริ่มต้น   | Secure defaults, security review ในการวางแผน       |
-| **Input Validation**   | ตรวจสอบและทำความสะอาด input                 | Zod schemas, ป้องกัน injection, XSS                    |
-| **Crypto Security**    | ใช้วิธีการเข้ารหัสที่พิสูจน์แล้ว | Random generation, hashing, HMAC                              |
+## 📋 Development Process
 
-## 📋 กระบวนการพัฒนา | Development Process
+### 🔍 Analysis Phase
 
-### 🔍 ขั้นตอนที่ 1: วิเคราะห์และประเมินความปลอดภัย
+**📚 Log Reading and Learning**
+- Read latest 3-5 logs to review past work
+- Analyze common problems and solutions
+- Check recently modified files for context
 
-**ก่อนเขียนโค้ด ต้องทำการวิเคราะห์อย่างละเอียด:**
+**🎯 Threat Analysis**
+- Identify potential threats and vulnerabilities
+- Define data sensitivity levels: 🟢 Public | 🟡 Internal | 🟠 Confidential | 🔴 Restricted
+- Consider authentication and authorization requirements
 
-#### 📚 การอ่าน Logs และการเรียนรู้
-- **อ่าน logs ล่าสุด 3-5 ไฟล์** เพื่อดูงานที่ผ่านมา
-- **วิเคราะห์ปัญหาที่เกิดขึ้นบ่อย** และวิธีแก้ไข
-- **ตรวจสอบไฟล์ที่ถูกแก้ไขล่าสุด** เพื่อเข้าใจบริบท
-- **เรียนรู้จากข้อผิดพลาดที่ผ่านมา** เพื่อป้องกันการทำผิดซ้ำ
+### 📋 Planning Phase
 
-#### 🎯 การวิเคราะห์ภัยคุกคาม
+**🔧 Technical Planning**
+- Break solution into logical and secure steps
+- Plan security controls for each step
+- Consider modularity and reusability
 
-- ระบุภัยคุกคามและช่องโหว่ที่อาจเกิดขึ้น
-- กำหนดระดับความสำคัญของข้อมูล: 🟢 Public | 🟡 Internal | 🟠 Confidential | 🔴 Restricted
-- พิจารณาข้อกำหนดการยืนยันตัวตนและสิทธิ์การเข้าถึง
+**⚖️ Trade-off Assessment**
+- Evaluate alternatives with security trade-offs
+- Consider performance impact vs security
 
-#### 📊 การวิเคราะห์ความต้องการ
+### 🚀 Implementation Phase
 
-- ระบุประเภทงาน: สร้างใหม่, debug, architecture, refactoring
-- ระบุภาษาและ framework ที่เกี่ยวข้อง
-- จดบันทึกข้อกำหนดที่ชัดเจนและซ่อนเร้น
-- กำหนดปัญหาหลักและผลลัพธ์ที่ต้องการ
+**🏗️ Architecture Decisions**
+- Choose secure design patterns (Factory, Strategy, Observer)
+- Consider performance without compromising security
+- Plan error handling that prevents information leakage
+- Ensure WCAG 2.1 AA accessibility compliance
 
-### 🛡️ ขั้นตอนที่ 2: วางแผนโซลูชันที่ปลอดภัย
+## 📝 Code Standards & Security
 
-**วางแผนโซลูชันด้วยความปลอดภัยเป็นหลัก:**
+### 🇹🇭 Communication Guidelines
 
-#### 🔧 การวางแผนทางเทคนิค
+> **🚨 ABSOLUTE REQUIREMENT: All communication with users MUST be in Thai language**
 
-- แบ่งโซลูชันเป็นขั้นตอนที่มีเหตุผลและปลอดภัย
-- วางแผนการควบคุมความปลอดภัยสำหรับแต่ละขั้นตอน
-- พิจารณาความเป็น modular และการนำกลับมาใช้ใหม่
-- ระบุไฟล์และ dependencies ที่จำเป็น
+#### 📢 Language Requirements
 
-#### ⚖️ การประเมิน Trade-off
+- ✅ **Always respond in Thai (ภาษาไทย)** - This is non-negotiable
+- ✅ **Use Thai for explanations, descriptions, and conversations**
+- ✅ **Use Thai for error messages and user feedback**
+- ✅ **Use Thai for code comments when explaining to users**
+- ✅ **Use Thai for log messages and documentation**
+- ❌ **Never use English for user communication**
+- ❌ **Never mix languages in user responses**
 
-- ประเมินวิธีการทางเลือกต่างๆ พร้อม trade-off ด้านความปลอดภัย
-- พิจารณาผลกระทบของประสิทธิภาพเทียบกับความปลอดภัย
-- วางแผนสำหรับการทดสอบและ validation
+#### 🎯 Communication Examples
 
-### 🚀 ขั้นตอนที่ 3: การใช้งานที่ปลอดภัย
+**✅ Correct Thai Communication:**
+```
+ผมจะสร้างส่วนประกอบ React ใหม่สำหรับคุณ
+กำลังติดตั้ง dependencies ที่จำเป็น
+เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล กรุณาตรวจสอบ connection string
+```
 
-**ดำเนินการด้วยแนวทางปฏิบัติที่ดีด้านความปลอดภัย:**
+**❌ Incorrect English Communication:**
+```
+I'll create a new React component for you
+Installing required dependencies
+Database connection error, please check connection string
+```
 
-#### 🏗️ การตัดสินใจด้าน Architecture
+#### 💬 Code vs Communication Separation
 
-- เลือก design patterns ที่ปลอดภัย (Factory, Strategy, Observer)
-- พิจารณาประสิทธิภาพโดยไม่ประนีประนอมความปลอดภัย
-- วางแผนการจัดการ error ที่ป้องกันการรั่วไหลของข้อมูล
-- รับรองการปฏิบัติตามมาตรฐาน accessibility (WCAG 2.1 AA)
+- ✅ **Code**: Can be in English (variables, functions, comments)
+- ✅ **User Communication**: MUST be in Thai
+- ✅ **Explanations**: MUST be in Thai
+- ✅ **Technical Descriptions**: MUST be in Thai
 
-## 📝 มาตรฐานโค้ดและสไตล์ | Code Style & Standards
+### 🎨 Core Principles
 
-### 🎨 หลักการทั่วไป | General Principles
+#### ✅ Best Practices
 
-#### ✅ แนวทางปฏิบัติที่ดี
+- 🎯 Write **concise, readable TypeScript** with security in mind
+- 🔄 Use **Functional Programming** patterns as primary approach
+- 🚫 Follow **DRY (Don't Repeat Yourself)** principle
+- ⬅️ Use **early returns** for clarity
+- 📁 Structure components: **exports → subcomponents → helpers → types**
+- 📖 Write **self-documenting code** with clear variable names
+- 🧩 **Immutability First**: Avoid mutating data in-place
+- 🚀 **Pure Functions**: Write functions without side effects
+- **Use Bun as primary runtime** - Use `bun` instead of `npm` or `npx`
+- **Always support Dark/Light Mode** - Every page must have theme support
 
-- 🎯 เขียนโค้ด **TypeScript ที่กระชับ อ่านง่าย** โดยคำนึงถึงความปลอดภัย
-- 🔄 ใช้ **Functional Programming** patterns เป็นหลัก
-- 🚫 ปฏิบัติตาม **DRY (Don't Repeat Yourself)** principle
-- ⬅️ ใช้ **early returns** เพื่อความชัดเจน
-- 📁 จัดโครงสร้าง components: **exports → subcomponents → helpers → types**
-- 📖 เขียนโค้ดที่ **อธิบายตัวเอง** ด้วยชื่อตัวแปรที่ชัดเจน
-- 🧩 **Immutability First**: หลีกเลี่ยงการเปลี่ยนแปลง data in-place
-- 🚀 **Pure Functions**: เขียน functions ที่ไม่มี side effects
-- อย่าพยายามยามสร้างไฟล์ที่ไม่จำเป็น
-- อย่าพยายามเปิด terminal ใหม่
-- ถ้ามีการสร้างไฟล์ขึ้นมาใหม่ ต้องเขียนเทสให้ครอบคุมด้วย อันนี้สำคัญ!! และต้องรันผ่านทุกเคสห้ามข้าม
-- ถ้ามีโค้ดซ้ำกันเกิน 3 ที่ควรสร้างฟังก์ชันใหม่
-- พยายามอย่าใช้ Emoji เยอะเกินไป แต่ต้องอ่านง่าย
-- ลบไฟล์ที่สร้างแล้วไม่ได้ใช้งานออกทุกครั้ง
-- ใช้ CSS variables ทุกครั้ง
+#### 🔒 Security Practices
 
-#### 🔒 สไตล์โค้ดด้านความปลอดภัย
+- 🛡️ **Input Sanitization**: Validate and sanitize user inputs everywhere
+- 🚨 **Error Handling**: Never expose sensitive data in error messages
+- 📊 **Security Logging**: Log security events without revealing sensitive data
+- 🔐 **Secrets Management**: Never hardcode secrets, use environment variables
+- 🔍 **Code Reviews**: Security-related code must pass peer review
 
-- 🛡️ **Input Sanitization**: Validate และ sanitize user inputs ทุกจุด
-- 🚨 **Error Handling**: ห้ามเปิดเผยข้อมูลสำคัญใน error messages
-- 📊 **Security Logging**: บันทึก security events โดยไม่เปิดเผยข้อมูลสำคัญ
-- 🔐 **Secrets Management**: ห้าม hardcode secrets, ใช้ environment variables
-- 🔍 **Code Reviews**: โค้ดที่เกี่ยวข้องกับความปลอดภัยต้องผ่าน peer review
+### 🧮 Functional Programming
 
-### 🧮 Functional Programming Principles | หลักการเขียนแบบ Functional
+> **🎯 Key Principle**: Use Functional Programming as the main approach for secure, testable, and maintainable code
 
-> **🎯 หลักการสำคัญ**: ใช้ Functional Programming เป็นแนวทางหลักเพื่อให้โค้ดมีความปลอดภัย ทดสอบง่าย และบำรุงรักษาได้ดี
+#### 🏗️ Core FP Principles
 
-#### 🏗️ Core FP Principles | หลักการหลัก FP
+| Principle | Description | Benefits |
+|-----------|-------------|----------|
+| **Immutability** | Data doesn't change after creation | Prevents side effects, easier debugging |
+| **Pure Functions** | Functions with no side effects | Easy to test, predictable |
+| **Function Composition** | Combine small functions into complex logic | Code reuse, modularity |
+| **Higher-Order Functions** | Functions that take or return other functions | Abstraction, flexibility |
+| **Declarative Style** | Describe "what" instead of "how" | Readable, understandable |
 
-| หลักการ                   | คำอธิบาย                                                | ประโยชน์                                        |
-| -------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------- |
-| **Immutability**           | ข้อมูลไม่เปลี่ยนแปลงหลังสร้าง      | ป้องกัน side effects, ง่ายต่อการ debug |
-| **Pure Functions**         | Functions ไม่มี side effects                               | ทดสอบง่าย, คาดการณ์ได้              |
-| **Function Composition**   | รวม functions เล็กๆ เป็น logic ที่ซับซ้อน | Code reuse, modularity                                  |
-| **Higher-Order Functions** | Functions ที่รับหรือคืน functions อื่น         | Abstraction, flexibility                                |
-| **Declarative Style**      | บอกว่า "อะไร" แทน "อย่างไร"                 | อ่านง่าย, เข้าใจง่าย                  |
+#### 🛡️ Security Benefits
 
-#### 🛡️ Security Benefits | ประโยชน์ด้านความปลอดภัย
+| Benefit | Description | Use Cases |
+|---------|-------------|-----------|
+| **Predictability** | Pure functions always give same results | Input validation, data transformation |
+| **Isolation** | No unexpected side effects | Authentication logic, data processing |
+| **Testability** | Easy and comprehensive testing | Security functions, validation logic |
+| **Thread Safety** | Immutable data safe in concurrent environments | Server-side processing |
 
-| ประโยชน์         | คำอธิบาย                                            | ตัวอย่างการใช้งาน    |
-| ------------------------ | ----------------------------------------------------------- | ------------------------------------- |
-| **Predictability** | Pure functions ให้ผลลัพธ์เดียวกันเสมอ | Input validation, data transformation |
-| **Isolation**      | ไม่มี side effects ที่ไม่คาดคิด            | Authentication logic, data processing |
-| **Testability**    | ทดสอบง่ายและครอบคลุม                    | Security functions, validation logic  |
-| **Thread Safety**  | Immutable data ปลอดภัยใน concurrent environments   | Server-side processing                |
-
-#### 🎯 FP Patterns in TypeScript | รูปแบบ FP ใน TypeScript
+#### 🎯 FP Patterns in TypeScript
 
 ```typescript
-// ✅ Immutable Data Structures
+// ✅ Immutable Data & Pure Functions
 interface User {
   readonly id: string
   readonly email: string
   readonly permissions: readonly Permission[]
 }
 
-// ✅ Pure Function for User Validation
 const validateUser = (user: unknown): Either<ValidationError, User> => {
   const result = UserSchema.safeParse(user)
   return result.success 
@@ -224,80 +265,32 @@ const validateUser = (user: unknown): Either<ValidationError, User> => {
     : left(new ValidationError(result.error.message))
 }
 
-// ✅ Function Composition
+// ✅ Function Composition & Higher-Order Functions
 const pipe = <T>(...fns: Array<(arg: T) => T>) => (value: T): T =>
   fns.reduce((acc, fn) => fn(acc), value)
 
-const processUserData = pipe(
-  validateInput,
-  sanitizeData,
-  transformToUserObject,
-  encryptSensitiveFields
-)
-
-// ✅ Higher-Order Function for Security
 const withAuth = <T extends any[], R>(
   fn: (...args: T) => Promise<R>
 ) => async (...args: T): Promise<R> => {
   await validateSession()
   return fn(...args)
 }
-
-const secureUpdateUser = withAuth(updateUser)
 ```
 
-#### 🔧 Functional Utilities | เครื่องมือสำหรับ FP
+### 🏷️ Naming Conventions
 
-```typescript
-// ✅ Maybe/Option Type for Null Safety
-type Maybe<T> = T | null | undefined
-
-const safeDivide = (a: number, b: number): Maybe<number> =>
-  b === 0 ? null : a / b
-
-// ✅ Either Type for Error Handling
-type Either<L, R> = { kind: 'left'; value: L } | { kind: 'right'; value: R }
-
-const left = <L, R>(value: L): Either<L, R> => ({ kind: 'left', value })
-const right = <L, R>(value: R): Either<L, R> => ({ kind: 'right', value })
-
-// ✅ Currying for Reusable Functions
-const validateField = (fieldName: string) => (schema: z.ZodSchema) => (value: unknown) =>
-  schema.safeParse(value).success
-    ? right(value)
-    : left(`Invalid ${fieldName}`)
-
-const validateEmail = validateField('email')(z.string().email())
-const validateUserId = validateField('userId')(z.string().uuid())
-```
-
-#### 📋 FP Best Practices | แนวทางปฏิบัติที่ดี FP
-
-- ✅ **ใช้ `const` assertions** สำหรับ immutable arrays และ objects
-- ✅ **หลีกเลี่ยง mutations** ใช้ spread operator และ methods ที่ return ค่าใหม่
-- ✅ **แยก side effects** ออกจาก pure functions
-- ✅ **ใช้ function composition** แทนการเขียน imperative code
-- ✅ **ใช้ array methods** เช่น `map`, `filter`, `reduce` แทน for loops
-- ✅ **ใช้ optional chaining** และ nullish coalescing สำหรับ null safety
-
-### 🏷️ การตั้งชื่อ | Naming Conventions
-
-| ประเภท                     | รูปแบบ                                    | ตัวอย่าง                                         | หมายเหตุ              |
-| -------------------------------- | ----------------------------------------------- | -------------------------------------------------------- | ----------------------------- |
-| **Variables**              | คำอธิบายพร้อม auxiliary verbs      | `isLoading`, `hasError`, `canAccess`               | ใช้ boolean prefixes       |
-| **Event Handlers**         | ขึ้นต้นด้วย "handle"                 | `handleClick`, `handleSubmit`, `handleAuth`        | ความสม่ำเสมอ      |
-| **Directories**            | ตัวพิมพ์เล็กและ dashes           | `components/auth-wizard`, `utils/crypto-helpers`     | kebab-case                    |
-| **Components**             | ใช้ named exports                            | `export const LoginForm`, `export const UserProfile` | ดีสำหรับ tree-shaking |
-| **Functions**              | ใช้ verb phrases, pure functions มี prefix | `validateUser`, `parseInput`, `safeGetUser`        | เจตนาที่ชัดเจน  |
-| **Higher-Order Functions** | รูปแบบ "with/create/make"                 | `withAuth`, `createValidator`, `makeSecure`        | แสดงถึง abstraction    |
-| **Functional Utilities**   | รูปแบบ functional programming             | `pipe`, `compose`, `curry`, `memoize`            | ตาม FP conventions         |
+| Type | Pattern | Example | Notes |
+|------|---------|---------|-------|
+| **Variables** | Descriptive with auxiliary verbs | `isLoading`, `hasError`, `canAccess` | Use boolean prefixes |
+| **Event Handlers** | Start with "handle" | `handleClick`, `handleSubmit`, `handleAuth` | Consistency |
+| **Components** | Use named exports | `export const LoginForm`, `export const UserProfile` | Good for tree-shaking |
+| **Functions** | Use verb phrases, pure functions with prefix | `validateUser`, `parseInput`, `safeGetUser` | Clear intent |
+| **Higher-Order Functions** | "with/create/make" pattern | `withAuth`, `createValidator`, `makeSecure` | Shows abstraction |
 
 ### 🔧 TypeScript Best Practices
 
-#### 🎯 Type Safety
-
 ```typescript
-// ✅ Strict type checking พร้อมโฟกัสด้านความปลอดภัย
+// ✅ Strict type checking with security focus
 interface SecureUserData {
   readonly id: UserId              // Custom branded type
   readonly email: EmailAddress     // Validated email type
@@ -305,67 +298,50 @@ interface SecureUserData {
   readonly sessionToken?: SessionToken // Optional sensitive data
 }
 
-// ✅ Runtime validation ด้วย Zod
+// ✅ Runtime validation with Zod
 const UserSchema = z.object({
   id: z.string().uuid(),
   email: z.string().email(),
   permissions: z.array(z.enum(['READ', 'WRITE', 'ADMIN'])),
 })
-```
 
-#### 🔒 Security Types
-
-```typescript
-// ✅ Branded types สำหรับข้อมูลสำคัญ
+// ✅ Branded types for sensitive data
 type UserId = string & { readonly brand: unique symbol }
 type SessionToken = string & { readonly brand: unique symbol }
-type ApiKey = string & { readonly brand: unique symbol }
-
-// ✅ Runtime validation ด้วย Zod schemas
-const SecureInputSchema = z.object({
-  userId: z.string().min(1).max(100),
-  data: z.string().max(1000),
-  timestamp: z.date(),
-}).strict() // ปฏิเสธ unknown properties
 ```
 
-#### 📋 การกำหนดค่า TypeScript
+#### 📋 TypeScript Configuration
 
-- ✅ ใช้ TypeScript สำหรับโค้ดทั้งหมดด้วย **strict mode**
-- ✅ ใช้ **interfaces แทน types** สำหรับ object definitions
-- ✅ หลีกเลี่ยง **enums** ใช้ **const maps** แทน
-- ✅ ใช้ **`satisfies` operator** สำหรับ type validation
+- ✅ Use TypeScript for all code with **strict mode**
+- ✅ Use **interfaces instead of types** for object definitions
+- ✅ Avoid **enums**, use **const maps** instead
+- ✅ Use **`satisfies` operator** for type validation
 
-## ⚛️ React 19 & Next.js 15 แนวทาง | Guidelines
+## ⚛️ React 19 & Next.js 15 Guidelines
 
-### 🏗️ สถาปัตยกรรม Component | Component Architecture
+### 🏗️ Component Architecture
 
-#### 🖥️ Server Components (แนะนำ)
+#### 🖥️ Server Components (Recommended)
 
-React Server Components ให้ความปลอดภัยดีกว่าโดยลดพื้นผิวการโจมตี:
+React Server Components provide better security by reducing attack surface:
 
 ```typescript
 // ✅ Secure Server Component Pattern
 import { validateServerSession } from '@/lib/auth'
-import { db } from '@/lib/database'
 
 interface UserDashboardProps {
   params: Promise<{ userId: string }>
 }
 
 export default async function UserDashboard({ params }: UserDashboardProps) {
-  // 🔐 Server-side authentication
   const session = await validateServerSession()
   if (!session) redirect('/login')
 
-  // ✅ Validate params on server
   const { userId } = await params
   const validatedUserId = validateUserId(userId)
   
-  // 🛡️ Authorize access
   if (!canAccessUser(session.user, validatedUserId)) notFound()
 
-  // 🚀 Fetch data securely on server
   const userData = await db.user.findUnique({
     where: { id: validatedUserId },
     select: { id: true, name: true, email: true }
@@ -375,15 +351,15 @@ export default async function UserDashboard({ params }: UserDashboardProps) {
 }
 ```
 
-#### 🔒 ข้อควรพิจารณาด้านความปลอดภัย | Security Considerations
+#### 🔒 Security Considerations
 
-| ด้านความปลอดภัย             | การดำเนินการ                                                    | ตัวอย่าง                                                                   |
-| ------------------------------------------ | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| **ป้องกัน XSS**               | Escape dynamic content อย่างถูกต้อง                             | ใช้ React's built-in escaping, หลีกเลี่ยง `dangerouslySetInnerHTML` |
-| **ป้องกัน CSRF**              | ใช้ CSRF tokens สำหรับการเปลี่ยนแปลง state           | ใช้ Next.js built-in CSRF protection                                            |
-| **การเปิดเผยข้อมูล** | ห้ามเปิดเผยข้อมูลสำคัญของ server ไปยัง client | กรองฟิลด์ที่สำคัญก่อนส่งไปยัง client                  |
+| Security Aspect | Action | Example |
+|------------------|--------|---------|
+| **Prevent XSS** | Properly escape dynamic content | Use React's built-in escaping, avoid `dangerouslySetInnerHTML` |
+| **Prevent CSRF** | Use CSRF tokens for state changes | Use Next.js built-in CSRF protection |
+| **Data Exposure** | Never expose sensitive server data to client | Filter sensitive fields before sending to client |
 
-#### 🧩 Functional React Patterns | รูปแบบ React แบบ Functional
+#### 🧩 Functional React Patterns
 
 ```typescript
 // ✅ Pure Component Function
@@ -406,7 +382,7 @@ const withSecureAuth = <P extends object>(
   return <Component {...props} />
 }
 
-// ✅ Custom Hook แบบ Functional
+// ✅ Custom Hook with Functional Pattern
 const useSecureData = <T>(
   fetcher: () => Promise<T>,
   validator: (data: unknown) => data is T
@@ -436,87 +412,14 @@ const useSecureData = <T>(
   
   return state
 }
-
-// ✅ Function Composition in Components
-const enhance = pipe(
-  withAuth,
-  withLogging,
-  withErrorBoundary
-)
-
-const EnhancedUserProfile = enhance(UserProfile)
 ```
 
-#### 🔄 State Management แบบ Functional
+### 🔄 State Management
+
+#### 🌟 Modern React Patterns with Security
 
 ```typescript
-// ✅ Immutable State Updates
-const userReducer = (state: UserState, action: UserAction): UserState => {
-  switch (action.type) {
-    case 'SET_USER':
-      return { ...state, user: action.user, loading: false }
-    case 'UPDATE_PERMISSIONS':
-      return {
-        ...state,
-        user: state.user ? {
-          ...state.user,
-          permissions: [...action.permissions]
-        } : null
-      }
-    case 'CLEAR_USER':
-      return { ...state, user: null, loading: false }
-    default:
-      return state
-  }
-}
-
-// ✅ Effect Management แบบ Functional
-const useAsyncEffect = (
-  effect: () => Promise<void>,
-  deps: React.DependencyList,
-  cleanup?: () => void
-) => {
-  useEffect(() => {
-    let isMounted = true
-  
-    const runEffect = async () => {
-      try {
-        await effect()
-      } catch (error) {
-        if (isMounted) {
-          console.error('Async effect error:', error)
-        }
-      }
-    }
-  
-    runEffect()
-  
-    return () => {
-      isMounted = false
-      cleanup?.()
-    }
-  }, deps)
-}
-```
-
-#### 🎯 แนวทางปฏิบัติที่ดี | Best Practices
-
-- ✅ **ใช้ React Server Components** เพื่อความปลอดภัยและประสิทธิภาพที่ดีกว่า
-- ✅ **ลดการใช้ 'use client'** - ใช้เฉพาะเมื่อต้องการ interactive features
-- ✅ **ใช้ error boundaries** ที่ไม่รั่วไหลข้อมูลสำคัญ
-- ✅ **ใช้ Suspense สำหรับ async operations** พร้อม loading states
-- ✅ **Validate props** ที่ขอบเขตของ component ด้วย Zod
-- ✅ **เขียน components เป็น pure functions** เพื่อความคาดการณ์ได้
-- ✅ **ใช้ function composition** สำหรับ component enhancement
-- ✅ **หลีกเลี่ยง side effects** ใน render functions
-- ✅ **ใช้ immutable patterns** สำหรับ state updates
-
-### 🔄 การจัดการ State | State Management
-
-#### 🌟 Modern React Patterns พร้อมความปลอดภัย
-
-```typescript
-// ✅ Secure form handling ด้วย useActionState
+// ✅ Secure form handling with useActionState
 'use client'
 import { useActionState } from 'react'
 import { loginAction } from '@/app/actions/auth'
@@ -545,40 +448,28 @@ export function LoginForm() {
 }
 ```
 
-#### 🔒 กฎความปลอดภัยสำหรับการจัดการ State
+#### 🔒 State Security Rules
 
-| กฎ                                                              | คำอธิบาย                                                                  | การดำเนินการ                                       |
-| ----------------------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| **ห้ามเก็บข้อมูลสำคัญใน Client State** | ห้ามเก็บข้อมูลสำคัญใน client-side state                      | ใช้ server sessions, secure cookies                         |
-| **การจัดการ Session ที่ปลอดภัย**         | ใช้การหมดอายุและการต่ออายุ session ที่เหมาะสม | Auto-logout เมื่อไม่ได้ใช้งาน, refresh tokens |
-| **การตรวจสอบ Input**                              | ตรวจสอบการเปลี่ยนแปลง state ทั้งหมด                   | Zod schemas, sanitization functions                            |
-
-#### 📋 แนวทางปฏิบัติที่ดีสำหรับการจัดการ State
-
-- ✅ ใช้ **`useActionState`** แทน deprecated `useFormState`
-- ✅ ใช้ประโยชน์จาก **`useFormStatus`** ที่ปรับปรุงแล้ว
-- ✅ **ลดการใช้ client-side state** โดยเฉพาะข้อมูลสำคัญ
-- ✅ ใช้ **server actions** สำหรับการเปลี่ยนแปลง state
+| Rule | Description | Action |
+|------|-------------|--------|
+| **Never store sensitive data in Client State** | Don't store sensitive data in client-side state | Use server sessions, secure cookies |
+| **Secure Session Management** | Use appropriate session expiration and renewal | Auto-logout when inactive, refresh tokens |
+| **Input Validation** | Validate all state changes | Zod schemas, sanitization functions |
 
 ### 🌐 Async Request APIs
 
-#### 🔧 รูปแบบ API ที่ปลอดภัย | Secure API Patterns
-
 ```typescript
-// ✅ ใช้ async versions ของ runtime APIs ใน App Router เสมอ
+// ✅ Always use async versions of runtime APIs in App Router
 import { cookies, headers, draftMode } from 'next/headers'
 
 export async function SecureApiRoute() {
-  // 🔐 เข้าถึง request context อย่างปลอดภัย
   const cookieStore = await cookies()
   const headersList = await headers()
   const { isEnabled } = await draftMode()
   
-  // 🛡️ ตรวจสอบ headers เพื่อความปลอดภัย
   const authorization = headersList.get('authorization')
   const origin = headersList.get('origin')
   
-  // ✅ ตรวจสอบ origin เพื่อป้องกัน CSRF
   if (!isValidOrigin(origin)) {
     throw new Error('Invalid origin')
   }
@@ -590,7 +481,6 @@ export async function SecureApiRoute() {
 const createApiHandler = <T, R>(
   validator: (input: unknown) => Either<ValidationError, T>,
   authenticator: (request: Request) => Promise<Either<AuthError, User>>,
-  authorizer: (user: User, data: T) => Either<AuthorizationError, T>,
   processor: (data: T, user: User) => Promise<Either<ProcessError, R>>
 ) => async (request: Request): Promise<Response> => {
   
@@ -598,7 +488,6 @@ const createApiHandler = <T, R>(
     parseRequestBody,
     bindAsync(validator),
     bindAsync(() => authenticator(request)),
-    bindAsync(({ user, data }) => authorizer(user, data)),
     bindAsync(({ user, data }) => processor(data, user))
   )(request)
   
@@ -606,106 +495,459 @@ const createApiHandler = <T, R>(
     ? Response.json(result.value)
     : handleApiError(result.value)
 }
-
-// ✅ จัดการ async params อย่างปลอดภัยใน page components
-interface PageProps {
-  params: Promise<{ id: string }>
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
-}
-
-export default async function SecurePage({ params, searchParams }: PageProps) {
-  // 🔒 SECURITY: ตรวจสอบ incoming parameters เสมอ
-  const validatedData = await pipe(
-    validateParams,
-    bindAsync(validateSearchParams),
-    bindAsync(authorizeAccess),
-    bindAsync(fetchSecureData)
-  )({ params: await params, searchParams: await searchParams })
-  
-  return validatedData.kind === 'right'
-    ? <SecureContent data={validatedData.value} />
-    : <ErrorPage error={validatedData.value} />
-}
 ```
 
-#### 🧮 Functional Data Processing | การประมวลผลข้อมูลแบบ Functional
+#### 📋 React Best Practices
+
+- ✅ **Use React Server Components** for better security and performance
+- ✅ **Minimize 'use client'** - only use when interactive features needed
+- ✅ **Use error boundaries** that don't leak sensitive data
+- ✅ **Use Suspense for async operations** with loading states
+- ✅ **Validate props** at component boundaries with Zod
+- ✅ **Write components as pure functions** for predictability
+- ✅ **Use function composition** for component enhancement
+- ✅ **Avoid side effects** in render functions
+- ✅ **Use immutable patterns** for state updates
+
+## 🌗 Dark/Light Mode Guidelines
+
+> **🎯 Key Principle**: Every page and component must support Dark/Light mode
+
+### 🛠️ Theme System Architecture
+
+#### 🔧 Core Setup
 
 ```typescript
-// ✅ Functional Data Transformation Pipeline
-const processUserData = pipe(
-  validateUserInput,
-  sanitizeInput,
-  enrichWithDefaults,
-  encryptSensitiveFields,
-  saveToDatabase
-)
+// ✅ app/providers.tsx - Theme Provider Setup
+"use client";
 
-// ✅ Array Processing with Functional Methods
-const processUsers = (users: User[]) =>
-  users
-    .filter(isActiveUser)
-    .map(sanitizeUserData)
-    .map(addComputedFields)
-    .sort(byLastLogin)
+import { ThemeProvider } from "next-themes";
 
-// ✅ Async Pipeline for Database Operations
-const createUser = async (userData: CreateUserInput) => {
-  const result = await pipe(
-    validateUserData,
-    bindAsync(checkUserExists),
-    bindAsync(hashPassword),
-    bindAsync(saveUserToDb),
-    bindAsync(sendWelcomeEmail)
-  )(userData)
-  
-  return result
+export default function Providers({ children }: { children: ReactNode }) {
+  return (
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="light"
+      enableSystem={false}
+      themes={["light", "dark"]}
+      storageKey="theme-preference"
+    >
+      {children}
+    </ThemeProvider>
+  );
 }
-
-// ✅ Error Handling with Either Monad
-const safeParseJson = <T>(json: string): Either<ParseError, T> => {
-  try {
-    const parsed = JSON.parse(json)
-    return right(parsed)
-  } catch (error) {
-    return left(new ParseError('Invalid JSON'))
-  }
-}
-
-// ✅ Memoization for Performance
-const memoize = <T extends any[], R>(
-  fn: (...args: T) => R,
-  keyGenerator: (...args: T) => string = (...args) => JSON.stringify(args)
-): ((...args: T) => R) => {
-  const cache = new Map<string, R>()
-  
-  return (...args: T): R => {
-    const key = keyGenerator(...args)
-    if (cache.has(key)) {
-      return cache.get(key)!
-    }
-  
-    const result = fn(...args)
-    cache.set(key, result)
-    return result
-  }
-}
-
-const memoizedUserValidator = memoize(validateUser)
 ```
 
-#### 🛡️ ข้อกำหนดด้านความปลอดภัย | Security Requirements
+#### 🎨 Tailwind CSS Configuration
 
-- ✅ **ตรวจสอบ incoming parameters เสมอ** ด้วย Zod schemas
-- ✅ **ทำความสะอาด search parameters** เพื่อป้องกัน XSS attacks
-- ✅ **ตรวจสอบ request origins** เพื่อป้องกัน CSRF attacks
-- ✅ **จำกัดอัตรา API endpoints** เพื่อป้องกันการใช้งานในทางที่ผิด
-- ✅ **บันทึก security events** เพื่อการตรวจสอบและการสอดสอง
+```typescript
+// ✅ tailwind.config.ts - Dark Mode Strategy
+const config: Config = {
+  darkMode: "class", // Always use class strategy
+  theme: {
+    extend: {
+      colors: {
+        // 🎨 CSS Variables for theme switching
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        // ...existing colors...
+      }
+    }
+  }
+}
+```
 
-## 🛡️ Security Implementation Guidelines | แนวทางการรักษาความปลอดภัย
+#### 🌈 CSS Variables Pattern
 
-### 🔐 Authentication & Authorization | การยืนยันตัวตนและอำนาจ
+```css
+/* ✅ src/input.css - Theme Variables */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+  }
+  
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+  }
+}
+```
 
-**Core Requirements | ข้อกำหนดหลัก**
+### 🧩 Component Theming Patterns
+
+#### ✅ **Tailwind Dark Mode Classes**
+
+```typescript
+// ✅ Dark mode classes pattern
+const ThemeAwareButton = () => (
+  <button className="
+    bg-white dark:bg-gray-800 
+    text-gray-900 dark:text-gray-100
+    border border-gray-200 dark:border-gray-700
+    hover:bg-gray-50 dark:hover:bg-gray-700
+  ">
+    Theme Aware Button
+  </button>
+);
+```
+
+#### ✅ **CSS Variables Pattern (Recommended)**
+
+```typescript
+// ✅ CSS Variables - Cleaner approach
+const ThemeAwareCard = () => (
+  <div className="
+    bg-background 
+    text-foreground
+    border border-border
+    shadow-md
+  ">
+    <h2 className="text-primary">Theme Aware Card</h2>
+  </div>
+);
+```
+
+#### ✅ **Radix UI Components Pattern**
+
+```typescript
+// ✅ Use Radix UI with built-in theming
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+
+const ThemedPage = () => (
+  <Card>
+    <CardHeader>
+      <h1>Auto-themed Content</h1>
+    </CardHeader>
+    <CardContent>
+      <Button variant="default">Themed Button</Button>
+    </CardContent>
+  </Card>
+);
+```
+
+### 🎛️ Theme Toggle Implementation
+
+#### ✅ **Custom Theme Toggle Hook**
+
+```typescript
+// ✅ hooks/useTheme.ts
+"use client";
+
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
+
+export const useThemeToggle = () => {
+  const [mounted, setMounted] = useState(false);
+  const { theme, setTheme } = useTheme();
+
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) return { theme: undefined, setTheme };
+
+  return { theme, setTheme };
+};
+```
+
+#### ✅ **Theme Toggle Component**
+
+```typescript
+// ✅ components/ui/theme-toggle.tsx
+"use client";
+
+import { Moon, Sun } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useThemeToggle } from "@/hooks/useTheme";
+
+export const ThemeToggle = () => {
+  const { theme, setTheme } = useThemeToggle();
+
+  return (
+    <Button
+      variant="outline"
+      size="icon"
+      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+    >
+      <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+      <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+      <span className="sr-only">Toggle theme</span>
+    </Button>
+  );
+};
+```
+
+### 📋 Theme Development Checklist
+
+#### ✅ **For Every Component:**
+- [ ] Support both light and dark mode
+- [ ] Use CSS variables or Tailwind dark: classes
+- [ ] Test contrast to pass WCAG AA
+- [ ] No flicker when changing themes
+
+#### ✅ **For Every Page:**
+- [ ] Have accessible theme toggle
+- [ ] Support system preference detection
+- [ ] Store theme preference in localStorage
+- [ ] No hydration mismatch
+
+### 💡 Best Practices
+
+- ✅ **Use CSS Variables**: Easier than Tailwind dark: classes
+- ✅ **Test in Dark Mode**: Test every component in dark mode
+- ✅ **Consistent Colors**: Use design tokens from Radix UI
+- ✅ **Avoid Hardcoded Colors**: Never hardcode #ffffff or #000000
+- ✅ **Hydration Safety**: Use mounted state to prevent SSR issues
+
+### 🎨 Enhanced Color System Standards
+
+> **🚨 CRITICAL**: Apply these rules to prevent color and contrast issues
+
+#### 🔧 High-Contrast Utility Classes
+
+**Always use these classes for guaranteed accessibility:**
+```css
+/* Primary text - highest contrast */
+.text-high-contrast { color: rgb(17 24 39); }
+.dark .dark\:text-high-contrast { color: rgb(243 244 246); }
+
+/* Secondary text - good contrast */  
+.text-medium-contrast { color: rgb(55 65 81); }
+.dark .dark\:text-medium-contrast { color: rgb(209 213 219); }
+
+/* Subtle text - minimum contrast */
+.text-subtle-contrast { color: rgb(107 114 128); }
+.dark .dark\:text-subtle-contrast { color: rgb(156 163 175); }
+```
+
+#### 🎯 Icon Color Standards
+
+**✅ Required Icon Classes:**
+```typescript
+// Primary icons (buttons, actions)
+<Settings className="text-blue-600 dark:text-blue-400" />
+
+// Secondary icons (navigation, info)  
+<Clock className="text-gray-700 dark:text-gray-200" />
+
+// Status icons with semantic colors
+<CheckCircle className="text-green-600 dark:text-green-400" />
+<AlertTriangle className="text-orange-600 dark:text-orange-400" />
+```
+
+#### 🃏 Card & Container Standards
+
+**✅ Required Card Styling:**
+```typescript
+// Standard card with visible borders
+<div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-lg">
+
+// Form sections with background
+<div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-600 rounded-lg">
+```
+
+#### 📑 Tab System Standards
+
+**✅ Required Tab Implementation:**
+```typescript
+// TabsList with clear background
+<TabsList className="bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+
+// TabsTrigger with active/inactive states
+<TabsTrigger className={
+  isActive 
+    ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-600"
+    : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
+}>
+```
+
+#### ⚠️ Mandatory Testing Rules
+
+**Before committing any UI component:**
+1. **Test Light Mode**: Check all text/icon contrast ratios
+2. **Test Dark Mode**: Verify visibility of borders and icons  
+3. **Test Hover States**: Ensure interactive feedback is visible
+4. **Use DevTools**: Chrome Accessibility tab to verify contrast
+5. **Test Navigation**: Tab through all interactive elements
+
+## 🚀 Bun Runtime Guidelines
+
+> **🎯 Key Principle**: Use Bun as primary runtime for all commands. Never use npm or npx
+
+### 🛠️ Bun Command Patterns
+
+#### ✅ **Package Management**
+
+```bash
+# ✅ Use Bun
+bun install                    # Instead of npm install
+bun add <package>             # Instead of npm install <package>
+bun add -d <package>          # Instead of npm install -D <package>
+bun remove <package>          # Instead of npm uninstall <package>
+bun update                    # Instead of npm update
+
+# ❌ Don't use
+npm install
+npm install <package>
+yarn add <package>
+```
+
+#### ✅ **Script Execution**
+
+```bash
+# ✅ Use Bun
+bun run dev                   # Instead of npm run dev
+bun run build                 # Instead of npm run build
+bun run test                  # Instead of npm test
+bun <file.ts>                 # Run TypeScript directly
+
+# ✅ Bun Tools
+bunx <package>                # Instead of npx <package>
+bunx @tailwindcss/cli         # Instead of npx @tailwindcss/cli
+bunx prisma generate          # Instead of npx prisma generate
+```
+
+#### ✅ **TypeScript Execution**
+
+```bash
+# ✅ Run TypeScript directly with Bun
+bun scripts/simple-dev-server.ts
+bun scripts/generate-secrets.ts
+bun scripts/seed-holidays-2025.ts
+
+# ❌ Don't use
+ts-node scripts/file.ts
+tsx scripts/file.ts
+```
+
+### 📦 Package.json Scripts
+
+#### ✅ **Bun-First Scripts**
+
+```json
+{
+  "scripts": {
+    "dev": "bun scripts/simple-dev-server.ts",
+    "dev:basic": "bun run tailwind:build && next dev --port 4325",
+    "tailwind:build": "bunx @tailwindcss/cli -i ./src/input.css -o ./src/output.css",
+    "postinstall": "bunx prisma generate",
+    "test": "bun test",
+    "generate:secrets": "bun scripts/generate-secrets.ts"
+  }
+}
+```
+
+### 🔧 Development Workflow
+
+#### ✅ **Project Setup**
+
+```bash
+# ✅ Initialize new project
+bun create next-app
+bun install
+
+# ✅ Add dependencies
+bun add next react react-dom
+bun add -d typescript @types/node @types/react
+
+# ✅ Run development
+bun run dev
+```
+
+#### ✅ **Testing**
+
+```bash
+# ✅ Bun Test Runner
+bun test                      # Run all tests
+bun test --watch             # Watch mode
+bun test timezone            # Run specific test
+bun test tests/line-timezone.test.ts  # Run specific file
+```
+
+### 💡 Bun Best Practices
+
+- ✅ **Always use Bun**: Instead of npm, yarn, or pnpm
+- ✅ **TypeScript Direct**: Run .ts files directly with `bun file.ts`
+- ✅ **Bunx for Tools**: Use `bunx` instead of `npx`
+- ✅ **Fast Hot Reload**: Bun has faster hot reload than alternatives
+- ✅ **ESM Native**: Bun supports ES modules natively
+- ❌ **Avoid Mixed PM**: Don't mix with npm/yarn in same project
+
+## 📋 Quick Start Guide
+
+### 🚀 Core Commands
+
+#### Development
+```bash
+bun run dev              # Run dev server (Port: 4325, HTTPS)
+bun run dev:clean        # Clear cache + run dev
+bun run tailwind:build   # Build CSS (src/input.css → src/output.css)
+```
+
+#### Database
+```bash
+bun run db:push          # Update schema (MongoDB - use instead of db:deploy)
+bun run db:generate      # Generate Prisma client
+```
+
+#### Testing
+```bash
+bun test                 # Run all tests
+bun test:timezone        # Test timezone
+bun test:line           # Test LINE integration
+```
+
+#### Production
+```bash
+bun run build           # Build for production
+bun run start           # Run production server
+```
+
+### 🔧 Environment Variables
+
+#### Required
+```bash
+DATABASE_URL="mongodb://..."    # MongoDB connection
+NEXTAUTH_SECRET="..."          # JWT secret
+LINE_CLIENT_ID="..."           # LINE OAuth
+LINE_CLIENT_SECRET="..."       # LINE OAuth
+LINE_CHANNEL_SECRET="..."      # Webhook verification
+LINE_CHANNEL_ACCESS="..."      # Messaging API
+```
+
+#### Optional
+```bash
+APP_DOMAIN="..."               # Production domain
+CMC_API_KEY="..."             # CoinMarketCap
+AIRVISUAL_API_KEY="..."       # Air quality
+```
+
+### 🌐 Application URLs
+
+| Environment | URL | Notes |
+|-------------|-----|-------|
+| Development | `https://localhost:4325` | HTTPS with self-signed cert |
+| Production | Per APP_DOMAIN | Use ENV variables |
+
+### 💡 Important Notes
+
+- **MongoDB**: Use `db:push` instead of `db:deploy` (no migration system)
+- **Bun Runtime**: Always use `bun`/`bunx` instead of `npm`/`npx`
+- **Dark/Light Mode**: Every page must support themes
+- **Port**: 4325 (hardcoded in scripts)
+- **Process Lock**: Prevents running dev server multiple times
+
+## 🛡️ Security Implementation Guidelines
+
+### 🔐 Authentication & Authorization
+
+**Core Requirements**
 
 - ✅ Always verify user identity before sensitive operations
 - ✅ Implement role-based access control (RBAC)
@@ -713,7 +955,7 @@ const memoizedUserValidator = memoize(validateUser)
 - ✅ Validate JWT tokens and handle expiration
 - ✅ Implement proper logout with session invalidation
 
-**Secure API Route Pattern | รูปแบบ API Route ที่ปลอดภัย**
+**Secure API Route Pattern**
 
 ```typescript
 export async function POST(request: Request) {
@@ -747,17 +989,7 @@ export async function POST(request: Request) {
 - ✅ Validate file uploads (type, size, content)
 - ✅ Implement rate limiting on user inputs
 
-### ✅ Input Validation & Sanitization | การตรวจสอบและทำความสะอาด Input
-
-**Validation Rules | กฎการตรวจสอบ**
-
-- ✅ Validate all inputs using Zod schemas at runtime
-- ✅ Sanitize user content before storing or displaying
-- ✅ Use parameterized queries to prevent injection
-- ✅ Validate file uploads (type, size, content)
-- ✅ Implement rate limiting on user inputs
-
-**Example: Secure Input Validation | ตัวอย่าง: การตรวจสอบ Input อย่างปลอดภัย**
+**Example: Secure Input Validation**
 
 ```typescript
 import { z } from 'zod'
@@ -769,7 +1001,7 @@ const AttendanceSchema = z.object({
   notes: z.string().max(500).optional(),
 })
 
-// Always validate before processing | ตรวจสอบเสมอก่อนประมวลผล
+// Always validate before processing
 const validateAttendanceInput = (input: unknown) => {
   const result = AttendanceSchema.safeParse(input)
   if (!result.success) {
@@ -778,7 +1010,7 @@ const validateAttendanceInput = (input: unknown) => {
   return result.data
 }
 
-// ✅ Functional Validation Pipeline | Pipeline การตรวจสอบแบบ Functional
+// ✅ Functional Validation Pipeline
 const validateAndProcessInput = pipe(
   parseInput,
   validateSchema,
@@ -832,6 +1064,14 @@ const attendance = await db.attendance.create({
 - ✅ Use strong connection string authentication
 - ✅ Enable MongoDB audit logging
 - ✅ Implement least privilege access controls
+
+**MongoDB + Prisma Limitations**
+
+- ⚠️ **No Migrations**: MongoDB doesn't support `prisma migrate` commands
+- ✅ **Use db:push**: Use `prisma db push` for schema changes
+- ⚠️ **No Foreign Keys**: MongoDB doesn't have foreign key constraints
+- ✅ **Manual Relations**: Must manage relationships manually
+- ⚠️ **Limited Joins**: Use `include` and `select` instead of SQL joins
 
 ### 🌐 API Security
 
@@ -888,78 +1128,78 @@ function logSecurityEvent(event: string, userId?: string, metadata?: object) {
 }
 ```
 
-## 🚨 Pre-Deployment Security Checklist | รายการตรวจสอบความปลอดภัยก่อนเผยแพร่
+## 🚨 Pre-Deployment Security Checklist
 
-Before deploying any code, ensure | ก่อนเผยแพร่โค้ด ต้องตรวจสอบให้แน่ใจ:
+Before deploying any code, ensure:
 
-### ✅ Input & Output Security | ความปลอดภัยของ Input & Output
+### ✅ Input & Output Security
 
-- [ ] All user inputs are validated and sanitized | ตรวจสอบและทำความสะอาด user inputs ทั้งหมด
-- [ ] Error messages don't leak sensitive information | Error messages ไม่เปิดเผยข้อมูลสำคัญ
-- [ ] Logs don't contain sensitive information | Logs ไม่มีข้อมูลสำคัญ
+- [ ] All user inputs are validated and sanitized
+- [ ] Error messages don't leak sensitive information
+- [ ] Logs don't contain sensitive information
 
-### ✅ Authentication & Authorization | การยืนยันตัวตนและสิทธิ์
+### ✅ Authentication & Authorization
 
-- [ ] Authentication and authorization are properly implemented | ระบบ authentication และ authorization ถูกต้อง
-- [ ] Session management is secure with proper expiration | จัดการ session อย่างปลอดภัยและมีการหมดอายุ
-- [ ] Role-based access control is enforced | บังคับใช้ role-based access control
+- [ ] Authentication and authorization are properly implemented
+- [ ] Session management is secure with proper expiration
+- [ ] Role-based access control is enforced
 
-### ✅ Data Protection | การป้องกันข้อมูล
+### ✅ Data Protection
 
-- [ ] Sensitive data is encrypted and protected | ข้อมูลสำคัญถูกเข้ารหัสและป้องกัน
-- [ ] Database queries use parameterized statements | Database queries ใช้ parameterized statements
-- [ ] Secrets are managed securely (not in code) | จัดการ secrets อย่างปลอดภัย (ไม่ hardcode)
+- [ ] Sensitive data is encrypted and protected
+- [ ] Database queries use parameterized statements
+- [ ] Secrets are managed securely (not in code)
 
-### ✅ Network Security | ความปลอดภัยเครือข่าย
+### ✅ Network Security
 
-- [ ] Security headers are configured correctly | กำหนดค่า security headers ถูกต้อง
-- [ ] HTTPS is enforced everywhere | บังคับใช้ HTTPS ทุกที่
-- [ ] Rate limiting is implemented on sensitive endpoints | มี rate limiting สำหรับ endpoints ที่สำคัญ
+- [ ] Security headers are configured correctly
+- [ ] HTTPS is enforced everywhere
+- [ ] Rate limiting is implemented on sensitive endpoints
 
-### ✅ Dependencies & Monitoring | Dependencies และการตรวจสอบ
+### ✅ Dependencies & Monitoring
 
-- [ ] Dependencies are up to date and scanned for vulnerabilities | Dependencies ล่าสุดและสแกนหาช่องโหว่
-- [ ] Security monitoring and alerting is in place | มีระบบตรวจสอบและแจ้งเตือนความปลอดภัย
+- [ ] Dependencies are up to date and scanned for vulnerabilities
+- [ ] Security monitoring and alerting is in place
 
 ---
 
-## � Process Management & Monitoring System | ระบบจัดการ Process และการตรวจสอบ
+## 🔧 Process Management & Monitoring System
 
-### 🔒 Simple Process Lock for Dev Server | ระบบป้องกันการรัน Dev Server ซ้ำ
+### 🔒 Simple Process Lock for Dev Server
 
-### 🎯 หลักการทำงาน | Core Principle
+### 🎯 Core Principle
 
-ระบบง่ายๆ สำหรับป้องกันการรัน `bun run dev` หรือ `npm run dev` ซ้ำ:
+Simple system to prevent running `bun run dev` or `npm run dev` multiple times:
 
-- ✅ ตรวจสอบว่า dev server รันอยู่หรือไม่
-- ⚠️ ถ้ารันอยู่แล้ว แจ้งเตือนและออกจากโปรแกรม
-- 🔒 ใช้ file-based locking แบบง่าย
-- 🧹 ล้าง lock อัตโนมัติเมื่อกด Ctrl+C
+- ✅ Check if dev server is already running
+- ⚠️ If running, warn and exit
+- 🔒 Use simple file-based locking
+- 🧹 Auto-clean locks on Ctrl+C
 
-### 🛠️ การใช้งาน | Usage
+### 🛠️ Usage
 
-#### � Development Server
+#### 🚀 Development Server
 
 ```bash
-# รัน dev server ที่มี process lock
+# Run dev server with process lock
 bun run dev
 
-# หรือ
+# Or
 npm run dev
 ```
 
-#### 🖥️ CLI Commands (สำหรับ debug)
+#### 🖥️ CLI Commands (for debugging)
 
 ```bash
-# 📋 ดูรายการ dev processes ที่กำลังรัน
+# 📋 List running dev processes
 bun scripts/simple-lock.ts list
 
-# หมายเหตุ: ใช้ Ctrl+C เพื่อหยุด dev server และล้าง locks
+# Note: Use Ctrl+C to stop dev server and clean locks
 ```
 
-### 🎭 พฤติกรรมเมื่อ Dev Server รันซ้ำ | Duplicate Process Behavior
+### 🎭 Duplicate Process Behavior
 
-เมื่อพยายามรัน dev server ที่รันอยู่แล้ว:
+When trying to run dev server that's already running:
 
 ```
 ⚠️  Process 'dev-server' is already running (PID: 12345)
@@ -968,38 +1208,40 @@ bun scripts/simple-lock.ts list
 🚫 Exiting because process is already running.
 ```
 
-### 💡 Best Practices | แนวทางปฏิบัติที่ดี
+### 💡 Best Practices
 
-- ✅ **ใช้ `bun run dev` ปกติ**: ระบบจะป้องกันการรันซ้ำให้อัตโนมัติ
-- ✅ **ใช้ Ctrl+C เพื่อหยุด**: Lock files จะถูกล้างอัตโนมัติ
-- ✅ **ไม่ต้องจัดการ lock files**: ระบบจัดการให้เอง
+- ✅ **Use `bun run dev` normally**: System will prevent duplicates automatically
+- ✅ **Use Ctrl+C to stop**: Lock files will be cleaned automatically
+- ✅ **No manual lock management**: System handles it automatically
 
-## 📚 Quick Reference | คู่มืออ้างอิงด่วน
+## 📚 Quick Reference
 
-### 🔗 Key Utilities | เครื่องมือสำคัญ
+> **🇹🇭 REMINDER: Always communicate in Thai (ภาษาไทย) when responding to users**
+
+### 🔗 Key Utilities
 
 ```typescript
-// Secure random generation | การสร้าง random อย่างปลอดภัย
+// Secure random generation
 import { selectRandomChar, CHARSETS, generateRandomString } from '@/lib/crypto-random'
 
-// Input validation | การตรวจสอบ input
+// Input validation
 import { z } from 'zod'
 
-// Database operations | การดำเนินการฐานข้อมูล
+// Database operations
 import { db } from '@/lib/database'
 
-// Authentication | การยืนยันตัวตน
+// Authentication
 import { getServerSession } from 'next-auth'
 
-// Functional Programming utilities | เครื่องมือ Functional Programming
+// Functional Programming utilities
 import { pipe, compose, curry, memoize } from '@/lib/functional'
 ```
 
-### 🏗️ Project Structure Reference | โครงสร้างโปรเจกต์อ้างอิง
+### 🏗️ Project Structure Reference
 
 ```
 📁 bun-line-t3/                    # 🚀 LINE Attendance System with Bun + Next.js 15
-├── 📋 Configuration Files         # การกำหนดค่าระบบ
+├── 📋 Configuration Files         # System configuration
 │   ├── bun.config.test.ts         # Bun test configuration
 │   ├── docker-compose.yml         # Docker orchestration
 │   ├── Dockerfile                 # Production container
@@ -1010,16 +1252,16 @@ import { pipe, compose, curry, memoize } from '@/lib/functional'
 │   ├── tailwind.config.ts         # Tailwind CSS configuration
 │   └── tsconfig.json              # TypeScript configuration
 │
-├── 🔐 Security & Certificates     # ความปลอดภัยและใบรับรอง
+├── 🔐 Security & Certificates     # Security and certificates
 │   └── certificates/  
 │       ├── localhost.pem          # SSL certificate for development
 │       └── localhost-key.pem      # SSL private key
 │
-├── 📊 Database & Schema           # ฐานข้อมูลและ Schema
+├── 📊 Database & Schema           # Database and schema
 │   └── prisma/
 │       └── schema.prisma          # MongoDB schema with Prisma
 │
-├── 📚 Documentation               # เอกสารประกอบ
+├── 📚 Documentation               # Documentation
 │   └── docs/
 │       ├── API.md                 # API documentation
 │       ├── ATTENDANCE_SYSTEM.md   # Attendance system guide
@@ -1027,7 +1269,7 @@ import { pipe, compose, curry, memoize } from '@/lib/functional'
 │       ├── DEPLOYMENT.md          # Deployment guide
 │       └── [22+ other docs]       # Comprehensive documentation
 │
-├── 🧪 Testing Suite               # ชุดทดสอบ
+├── 🧪 Testing Suite               # Test suite
 │   ├── tests/
 │   │   ├── attendance-integration.test.ts
 │   │   ├── datetime-validation.test.ts
@@ -1035,19 +1277,19 @@ import { pipe, compose, curry, memoize } from '@/lib/functional'
 │   │   └── timezone.test.ts
 │   └── test-*.js                  # Standalone test files
 │
-├── ⚙️ Scripts & Automation        # สคริปต์และระบบอัตโนมัติ
+├── ⚙️ Scripts & Automation        # Scripts and automation
 │   └── scripts/
 │       ├── checkout-reminder.ts          # Automated checkout reminders (legacy)
 │       ├── enhanced-checkout-reminder.ts # Enhanced checkout reminder with process management
-│       ├── process-manager.ts            # Process lock management และ logging system
-│       ├── process-monitor.ts            # Comprehensive process monitoring และ health checks
-│       ├── log-viewer.ts                 # Log viewing และ analysis tools
-│       ├── manage-processes.sh           # Shell script สำหรับ easy process management
+│       ├── process-manager.ts            # Process lock management and logging system
+│       ├── process-monitor.ts            # Comprehensive process monitoring and health checks
+│       ├── log-viewer.ts                 # Log viewing and analysis tools
+│       ├── manage-processes.sh           # Shell script for easy process management
 │       ├── generate-secrets.ts           # Security key generation
 │       ├── health-check.sh               # Health monitoring
 │       └── setup-checkout-reminder.sh
 │
-├── 🎯 Core Application            # แอปพลิเคชันหลัก
+├── 🎯 Core Application            # Core application
 │   └── src/
 │       ├── 📱 App Router (Next.js 15)
 │       │   └── app/
@@ -1109,25 +1351,35 @@ import { pipe, compose, curry, memoize } from '@/lib/functional'
 │           │   └── ring.css               # Loading ring animations
 │           └── @prisma/                   # Prisma-specific configurations
 │
-└── 🌐 Public Assets                       # สินทรัพย์สาธารณะ
+└── 🌐 Public Assets                       # Public assets
     └── public/
         ├── favicon.ico                    # Site icon
         └── images/
             └── rich-menu/                 # LINE rich menu images
 ```
 
-#### 🏛️ Architecture Highlights | จุดเด่นสถาปัตยกรรม
+#### 🏛️ Architecture Highlights
 
-- **🔒 Security-First Design**: ความปลอดภัยเป็นหลักในทุกส่วน
+- **🔒 Security-First Design**: Security as primary concern in every part
 - **⚡ Modern Stack**: Bun + Next.js 15 + React 19 + TypeScript
-- **🏗️ Domain-Driven Features**: แยกฟีเจอร์ตามโดเมนธุรกิจ
-- **🧪 Comprehensive Testing**: ทดสอบครอบคลุมทุกส่วนสำคัญ
-- **📱 LINE Bot Integration**: ระบบ chatbot ที่ครบครัน
-- **⏰ Automated Workflows**: ระบบอัตโนมัติด้วย cron jobs
-- **🐳 Docker Ready**: พร้อม deployment ด้วย containerization
-- **📊 Monitoring & Logging**: ระบบตรวจสอบและบันทึกผล
-- **� Process Management**: ระบบป้องกันการรัน process ซ้ำ และ monitoring
-- **📈 Advanced Logging**: ระบบ logging ที่ครอบคลุมพร้อม analytics และ real-time monitoring
-- **�🔐 Secure Secrets Management**: การจัดการความลับอย่างปลอดภัย
+- **🏗️ Domain-Driven Features**: Features separated by business domain
+- **🧪 Comprehensive Testing**: Tests covering all critical parts
+- **📱 LINE Bot Integration**: Complete chatbot system
+- **⏰ Automated Workflows**: Automation with cron jobs
+- **🐳 Docker Ready**: Ready for deployment with containerization
+- **📊 Monitoring & Logging**: Monitoring and logging system
+- **🔧 Process Management**: System to prevent duplicate processes and monitoring
+- **📈 Advanced Logging**: Comprehensive logging system with analytics and real-time monitoring
+- **🔐 Secure Secrets Management**: Secure secrets management
+
+---
+
+## 🇹🇭 FINAL REMINDER: Thai Language Communication
+
+> **⚠️ CRITICAL REQUIREMENT: Always respond in Thai (ภาษาไทย) when communicating with users**
+>
+> This is **NON-NEGOTIABLE** - Every response, explanation, and communication with users must be in Thai language.
+> 
+> **สำคัญ: ต้องตอบเป็นภาษาไทยทุกครั้งเมื่อสื่อสารกับผู้ใช้งาน**
 
 ---
