@@ -20,7 +20,9 @@ export default function Providers({ children }: { children: ReactNode }) {
           nonce: undefined,
         }}
       >
-        {children}
+        <div id="providers-wrapper">
+          {children}
+        </div>
       </ThemeProvider>
     </SessionProvider>
   );

@@ -14,19 +14,22 @@ export const AttendanceSummaryCards: React.FC<AttendanceSummaryCardsProps> = ({ 
 
   return (
     <div 
+      id="attendance-summary-cards"
       className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8"
       role="region" 
       aria-label="สรุปข้อมูลการเข้างาน"
     >
       {/* 🌸 วันที่ทำงาน - High Contrast Design */}
       <div 
+        id="working-days-card"
         className="bg-white dark:bg-gray-800 p-6 rounded-xl border-2 border-rose-200 dark:border-rose-700 hover:border-rose-400 dark:hover:border-rose-500 hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 focus-within:ring-2 focus-within:ring-rose-500 focus-within:ring-opacity-50"
         role="article"
         aria-labelledby="working-days-title"
         tabIndex={0}
       >
-        <div className="flex items-center gap-3 mb-4">
+        <div id="working-days-header" className="flex items-center gap-3 mb-4">
           <div 
+            id="working-days-indicator"
             className="w-3 h-3 bg-rose-500 rounded-full shadow-sm" 
             role="presentation"
             aria-hidden="true"
@@ -39,12 +42,14 @@ export const AttendanceSummaryCards: React.FC<AttendanceSummaryCardsProps> = ({ 
           </h3>
         </div>
         <p 
+          id="working-days-value"
           className="text-4xl font-bold text-gray-900 dark:text-white mb-2"
           aria-label={`ทำงานไป ${report.totalDaysWorked} วัน`}
         >
           {report.totalDaysWorked}
         </p>
         <p 
+          id="working-days-total"
           className="text-sm font-medium text-gray-600 dark:text-gray-300"
           aria-label={`จากทั้งหมด ${report.workingDaysInMonth} วันทำงาน`}
         >

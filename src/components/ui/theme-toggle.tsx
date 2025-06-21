@@ -24,12 +24,19 @@ const ThemeToggle = () => {
   if (!mounted) {
     // Show skeleton with exact same structure
     return (
-      <div className="flex items-center space-x-3" suppressHydrationWarning>
-        <Sun className="h-4 w-4 text-gray-600" />
-        <div className="h-6 w-11 rounded-full bg-gray-200 border-2 border-transparent flex items-center justify-start p-0.5">
-          <div className="h-5 w-5 rounded-full bg-white shadow-md" />
+      <div 
+        id="theme-toggle-skeleton"
+        className="flex items-center space-x-3" 
+        suppressHydrationWarning
+      >
+        <Sun id="theme-icon-sun-skeleton" className="h-4 w-4 text-gray-600" />
+        <div 
+          id="theme-switch-skeleton"
+          className="h-6 w-11 rounded-full bg-gray-200 border-2 border-transparent flex items-center justify-start p-0.5"
+        >
+          <div id="theme-switch-handle-skeleton" className="h-5 w-5 rounded-full bg-white shadow-md" />
         </div>
-        <Moon className="h-4 w-4 text-gray-600" />
+        <Moon id="theme-icon-moon-skeleton" className="h-4 w-4 text-gray-600" />
       </div>
     )
   }
@@ -78,19 +85,26 @@ const ThemeToggle = () => {
   }
 
   return (
-    <div className="flex items-center space-x-3">
-      <Sun className={`h-4 w-4 transition-colors ${
-        isDark ? 'text-gray-500' : 'text-yellow-600'
-      }`} />
+    <div id="theme-toggle-container" className="flex items-center space-x-3">
+      <Sun 
+        id="theme-icon-sun"
+        className={`h-4 w-4 transition-colors ${
+          isDark ? 'text-gray-500' : 'text-yellow-600'
+        }`} 
+      />
       <Switch
+        id="theme-switch"
         checked={isDark}
         onCheckedChange={handleToggle}
         aria-label="Toggle theme"
         className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-300"
       />
-      <Moon className={`h-4 w-4 transition-colors ${
-        isDark ? 'text-blue-400' : 'text-gray-500'
-      }`} />
+      <Moon 
+        id="theme-icon-moon"
+        className={`h-4 w-4 transition-colors ${
+          isDark ? 'text-blue-400' : 'text-gray-500'
+        }`} 
+      />
     </div>
   )
 }

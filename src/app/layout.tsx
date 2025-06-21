@@ -31,34 +31,40 @@ export default function RootLayout({
 }) {
   return (
     <html 
+      id="html-root"
       lang="th" 
       className={promptFont.variable}
       suppressHydrationWarning={true}
     >
-      <head>
+      <head id="head-main">
         <meta
+          id="meta-theme-light"
           name="theme-color"
           media="(prefers-color-scheme: light)"
           content="#2e026d"
         />
         <meta
+          id="meta-theme-dark"
           name="theme-color"
           media="(prefers-color-scheme: dark)"
           content="#2e026d"
         />
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-        <meta name="format-detection" content="telephone=no" />
+        <meta id="meta-viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        <meta id="meta-format-detection" name="format-detection" content="telephone=no" />
         
         {/* Theme initialization script - runs before React hydration */}
-        <Script src="/theme-init.js" strategy="beforeInteractive" />
+        <Script id="script-theme-init" src="/theme-init.js" strategy="beforeInteractive" />
       </head>
       <body 
+        id="body-main"
         className={FONT_CLASSES} 
         suppressHydrationWarning={true}
       >
         <Providers>
           <div id="modal-root"></div>
-          {children}
+          <main id="main-content">
+            {children}
+          </main>
         </Providers>
       </body>
     </html>
