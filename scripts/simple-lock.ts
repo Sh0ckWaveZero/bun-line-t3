@@ -52,7 +52,7 @@ class SimpleProcessLock {
       } catch {
         // Process ไม่อยู่แล้ว ลบ lock file
         console.log(`🧹 Removing stale lock file for '${this.processName}'`)
-        await fs.unlink(this.lockFile).catch(() => {})
+        await fs.unlink(this.lockFile).catch(() => { })
         return false
       }
     } catch {
@@ -63,7 +63,7 @@ class SimpleProcessLock {
 
   async acquireLock(): Promise<void> {
     await this.ensureLocksDir()
-    
+
     if (await this.isRunning()) {
       console.log('🚫 Exiting because process is already running.')
       process.exit(1)
@@ -77,7 +77,7 @@ class SimpleProcessLock {
 
     await fs.writeFile(this.lockFile, JSON.stringify(processInfo, null, 2))
     console.log(`🔒 Process lock acquired for '${this.processName}' (PID: ${this.pid})`)
-    
+
     // Setup cleanup on exit
     this.setupCleanup()
   }
@@ -99,9 +99,9 @@ class SimpleProcessLock {
 
     // Handle various exit signals
     process.on('SIGINT', cleanup)
-    process.on('SIGTERM', cleanup) 
+    process.on('SIGTERM', cleanup)
     process.on('SIGQUIT', cleanup)
-    process.on('exit', () => this.releaseLock().catch(() => {}))
+    process.on('exit', () => this.releaseLock().catch(() => { }))
   }
 
   // List running processes for debugging
@@ -116,7 +116,7 @@ class SimpleProcessLock {
           try {
             const content = await fs.readFile(path.join(LOCKS_DIR, file), 'utf-8')
             const info: ProcessInfo = JSON.parse(content)
-            
+
             // Verify process is still running
             try {
               process.kill(info.pid, 0)
@@ -137,49 +137,10 @@ class SimpleProcessLock {
   }
 }
 
-// Utility function for easy usage
-export async function withProcessLock<T>(
-  processName: string, 
-  fn: () => Promise<T>
-): Promise<T> {
-  const lock = new SimpleProcessLock(processName)
-  
-  try {
-    await lock.acquireLock()
-    return await fn()
-  } finally {
-    await lock.releaseLock()
-  }
-}
-
-// CLI usage for debugging
-if (import.meta.main) {
-  const [command] = process.argv.slice(2)
-
-  switch (command) {
-    case 'list':
-      const processes = await SimpleProcessLock.listRunningProcesses()
-      if (processes.length === 0) {
-        console.log('📭 No dev processes currently running')
-      } else {
-        console.log('📋 Running dev processes:')
-        processes.forEach(p => {
-          console.log(`  • ${p.processName} (PID: ${p.pid}) - Started: ${new Date(p.startTime).toLocaleString()}`)
-        })
-      }
-      break
-
-    default:
-      console.log(`
-🔒 Simple Process Lock for Dev Server
-
-Usage:
-  bun scripts/simple-lock.ts list    # List running dev processes
-
-Note: Use Ctrl+C to stop dev server and clean up locks automatically
-`)
-      break
-  }
+// Dummy process lock สำหรับ production build
+// ฟังก์ชันนี้จะไม่ทำงานจริงใน production
+export function withProcessLock<T>(name: string, fn: () => Promise<T>): Promise<T> {
+  return fn();
 }
 
 export default SimpleProcessLock

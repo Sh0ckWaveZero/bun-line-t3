@@ -76,9 +76,12 @@
     ".eslintrc.cjs",
     "next-env.d.ts",
     "next.config.mjs",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "tests",
+    "**/*.test.ts",
+    "**/*.test.tsx"
   ]
 }

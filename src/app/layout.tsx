@@ -1,5 +1,4 @@
 import { type Metadata } from "next";
-import Script from "next/script";
 import { Prompt } from "next/font/google";
 import Providers from "./providers";
 
@@ -8,15 +7,15 @@ import "@/styles/ring.css";
 
 // 🎨 กำหนด Google Font Prompt
 const promptFont = Prompt({
-  subsets: ['latin', 'thai'],
-  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
-  style: ['normal', 'italic'],
-  display: 'swap',
-  variable: '--font-prompt',
+  subsets: ["latin", "thai"],
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--font-prompt",
 });
 
 // ใช้ static font class names เพื่อป้องกัน hydration mismatch
-const FONT_CLASSES = `${promptFont.variable} font-prompt antialiased`
+const FONT_CLASSES = `${promptFont.variable} font-prompt antialiased`;
 
 export const metadata: Metadata = {
   title: "Bun LINE T3 App",
@@ -30,41 +29,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html 
+    <html
       id="html-root"
-      lang="th" 
+      lang="th"
       className={promptFont.variable}
       suppressHydrationWarning={true}
     >
-      <head id="head-main">
-        <meta
-          id="meta-theme-light"
-          name="theme-color"
-          media="(prefers-color-scheme: light)"
-          content="#2e026d"
-        />
-        <meta
-          id="meta-theme-dark"
-          name="theme-color"
-          media="(prefers-color-scheme: dark)"
-          content="#2e026d"
-        />
-        <meta id="meta-viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-        <meta id="meta-format-detection" name="format-detection" content="telephone=no" />
-        
-        {/* Theme initialization script - runs before React hydration */}
-        <Script id="script-theme-init" src="/theme-init.js" strategy="beforeInteractive" />
-      </head>
-      <body 
+      <body
         id="body-main"
-        className={FONT_CLASSES} 
+        className={FONT_CLASSES}
         suppressHydrationWarning={true}
       >
         <Providers>
           <div id="modal-root"></div>
-          <main id="main-content">
-            {children}
-          </main>
+          <main id="main-content">{children}</main>
         </Providers>
       </body>
     </html>
