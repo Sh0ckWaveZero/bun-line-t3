@@ -54,6 +54,7 @@ model User {
   accounts        Account[]
   sessions        Session[]
   workAttendances WorkAttendance[]
+  leaves          Leave[]
 
   @@map("users")
 }
@@ -120,4 +121,19 @@ model PublicHoliday {
   @@index([year, isActive])
   @@index([date, isActive])
   @@map("public_holidays")
+}
+
+model Leave {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @map("user_id") @db.ObjectId
+  date      String   @map("date") // YYYY-MM-DD
+  type      String   @default("personal") // personal, sick, vacation, etc.
+  reason    String?  @map("reason")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date, isActive])
+  @@map("leaves")
 }

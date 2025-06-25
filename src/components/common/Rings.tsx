@@ -4,9 +4,10 @@ import { CONFIG } from "@/lib/constants/config";
 
 interface RingProps {
   count: number;
+  id?: string;
 }
 
-const Rings: React.FC<RingProps> = ({ count }) => {
+const Rings: React.FC<RingProps> = ({ count, id }) => {
   const UPDATE = useCallback(() => {
     document.documentElement.style.setProperty(
       "--radius",
@@ -102,10 +103,15 @@ const Rings: React.FC<RingProps> = ({ count }) => {
   }, [UPDATE]);
 
   return (
-    <div className="rings" style={{ "--count": count } as React.CSSProperties}>
+    <div 
+      id={id}
+      className="rings" 
+      style={{ "--count": count } as React.CSSProperties}
+    >
       {Array.from({ length: count }, (_, i) => (
         <div
           key={i}
+          id={id ? `${id}-ring-${i + 1}` : undefined}
           className="ring"
           style={
             {

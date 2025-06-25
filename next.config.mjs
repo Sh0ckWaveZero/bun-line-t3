@@ -8,57 +8,29 @@ import { fileURLToPath } from 'url'
 
 await import("./src/env.mjs");
 
-// ESM-compatible path resolution
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 /** @type {import("next").NextConfig} */
 const config = {
   reactStrictMode: true,
-
-  /**
-   * 🛡️ Hydration และ Performance Optimizations
-   */
   experimental: {
-    // ปรับปรุงการ hydrate เพื่อลด hydration mismatch
     optimizePackageImports: ['date-fns', 'date-fns-tz', 'zod'],
-    // เปิดใช้ optimized loading
     optimizeServerReact: true,
   },
-
-  /**
-   * 🔧 TypeScript และ Path Mapping Support
-   */
   typescript: {
-    // Ignore build errors สำหรับ legacy scripts
     ignoreBuildErrors: false,
   },
-
-  /**
-   * 🛡️ Development Configuration  
-   */
-  ...(process.env.NODE_ENV === 'development' && {
-    // ล้างค่า asset prefix สำหรับ development
+  ...(process.env.NODE_ENV === 'development' ? {
     assetPrefix: '',
     basePath: '',
-    // กำหนด dev indicators
-    devIndicators: {
-      position: 'bottom-right',
-    },
-    // Development: อนุญาต localhost และ local IPs
+    devIndicators: { position: 'bottom-right' },
     allowedDevOrigins: ['localhost', '127.0.0.1', '.localhost'],
-  }),
-
-  /**
-   * 🛡️ Production Configuration
-   */
-  ...(process.env.NODE_ENV === 'production' && {
-    // Production: อนุญาต production domain
+  } : {}),
+  ...(process.env.NODE_ENV === 'production' ? {
     allowedDevOrigins: ["*.your-app.example.com"],
-  }),
-  
+  } : {}),
   output: "standalone",
-  
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
@@ -70,76 +42,43 @@ const config = {
       },
     ],
   },
-  
-  /**
-   * 🔧 Webpack Configuration สำหรับ Alias Paths และ Optimization
-   */
   webpack: (config, { isServer, dev }) => {
-    // 📁 Absolute imports และ alias paths ใหม่
+    config.resolve = config.resolve || {};
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': path.resolve(__dirname, './src'),
-      '@/lib': path.resolve(__dirname, './src/lib'),
-      '@/components': path.resolve(__dirname, './src/components'),
-      '@/hooks': path.resolve(__dirname, './src/hooks'),
-      '@/utils': path.resolve(__dirname, './src/lib/utils'),
-      '@/types': path.resolve(__dirname, './src/lib/types'),
-      '@/constants': path.resolve(__dirname, './src/lib/constants'),
-      '@/auth': path.resolve(__dirname, './src/lib/auth'),
-      '@/database': path.resolve(__dirname, './src/lib/database'),
-      '@/validation': path.resolve(__dirname, './src/lib/validation'),
-      '@/features': path.resolve(__dirname, './src/features'),
       '@/app': path.resolve(__dirname, './src/app'),
+      '@/auth': path.resolve(__dirname, './src/lib/auth'),
+      '@/components': path.resolve(__dirname, './src/components'),
+      '@/constants': path.resolve(__dirname, './src/lib/constants'),
+      '@/database': path.resolve(__dirname, './src/lib/database'),
+      '@/features': path.resolve(__dirname, './src/features'),
+      '@/hooks': path.resolve(__dirname, './src/hooks'),
+      '@/lib': path.resolve(__dirname, './src/lib'),
+      '@/types': path.resolve(__dirname, './src/lib/types'),
+      '@/utils': path.resolve(__dirname, './src/lib/utils'),
+      '@/validation': path.resolve(__dirname, './src/lib/validation'),
     }
-
-    // Development HMR configuration
     if (dev && !isServer) {
-      // 🔧 ลบการกำหนด devtool เพื่อให้ Next.js จัดการเอง
-      // Next.js 15 มีการจัดการ development tooling ที่เหมาะสมแล้ว
-      // config.devtool = 'eval-source-map' // ❌ ลบออกเพื่อป้องกัน performance regression
-      
       if (config.devServer) {
-        config.devServer.allowedHosts = ['localhost', '127.0.0.1', '.localhost']
+        const allowedFromEnv = process.env.ALLOWED_DOMAINS
+          ? process.env.ALLOWED_DOMAINS.split(',').map(s => s.trim()).filter(Boolean)
+          : ['localhost', '127.0.0.1', '.localhost']
+        config.devServer.allowedHosts = allowedFromEnv
         config.devServer.host = 'localhost'
         config.devServer.port = 4325
       }
     }
-
-    // 🎯 Webpack optimizations สำหรับ hydration
-    if (isServer) {
-      config.plugins = [...config.plugins]
-    }
-
-    // 📁 Exclude legacy scripts และ test files จาก build
-    config.module.rules.push({
-      test: /scripts\/legacy\/.*\.ts$/,
-      use: 'ignore-loader'
-    })
-
+    config.module = config.module || {};
+    config.module.rules = config.module.rules || [];
+    config.module.rules.push({ test: /scripts\/legacy\/.*\.ts$/, use: 'ignore-loader' })
+    config.module.rules.push({ test: /tests\/.*/, use: 'ignore-loader' })
+    config.module.rules.push({ test: /\.test\.(ts|tsx)$/, use: 'ignore-loader' })
     return config
   },
-
-  /**
-   * App Router is now enabled, i18n config commented out.
-   * @see https://github.com/vercel/next.js/issues/41980
-   */
-  // i18n: {
-  //   locales: ["en"],
-  //   defaultLocale: "en",
-  // },
-
-  // 🔧 Compiler options เพื่อลด hydration issues
   compiler: {
-    // ลบ console.log ใน production
     removeConsole: process.env.NODE_ENV === 'production',
   },
-
-  /**
-   *  Bundle Analyzer (เปิดเมื่อต้องการ)
-   */
-  // bundleAnalyzer: {
-  //   enabled: process.env.ANALYZE === 'true',
-  // },
 };
 
 

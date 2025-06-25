@@ -33,7 +33,7 @@ export const getUsersWithPendingCheckout = async (): Promise<string[]> => {
 };
 
 /**
- * Calculate dynamic reminder time for each user (10 minutes before 9-hour completion)
+ * Calculate dynamic reminder time for each user (30 minutes before 9-hour completion)
  */
 export const calculateUserReminderTime = (checkInTime: Date): Date => {
   const checkInBangkok = convertUTCToBangkok(checkInTime);
@@ -42,9 +42,9 @@ export const calculateUserReminderTime = (checkInTime: Date): Date => {
   const completionTime = new Date(checkInBangkok);
   completionTime.setHours(completionTime.getHours() + 9);
   
-  // Calculate reminder time (10 minutes before completion)
+  // Calculate reminder time (30 minutes before completion)
   const reminderTime = new Date(completionTime);
-  reminderTime.setMinutes(reminderTime.getMinutes() - 10);
+  reminderTime.setMinutes(reminderTime.getMinutes() - 30);
   
   return reminderTime;
 };

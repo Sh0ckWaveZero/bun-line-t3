@@ -5,8 +5,9 @@
  * ป้องกันการรัน bun run dev ซ้ำ
  */
 
-import { withProcessLock } from './simple-lock'
+
 import { spawn } from 'child_process'
+import { withProcessLock } from './simple-lock'
 
 async function startDevServer() {
   console.log('🚀 Starting development server...')

@@ -7,6 +7,7 @@ export type MonthPickerProps = {
   className?: string;
   selected?: Date;
   onSelect?: (date: Date) => void;
+  id?: string;
   locale?: {
     localize: {
       month: (n: number) => string;
@@ -18,6 +19,7 @@ function MonthPicker({
   className,
   selected,
   onSelect,
+  id,
   locale,
 }: MonthPickerProps) {
   const [currentYear, setCurrentYear] = React.useState(
@@ -66,10 +68,14 @@ function MonthPicker({
   const buddhistYear = currentYear + 543;
 
   return (
-    <div className={cn("w-full max-w-sm p-4", className)}>
+    <div id={id} className={cn("w-full max-w-sm p-4", className)}>
       {/* Year Navigation */}
-      <div className="mb-4 flex items-center justify-between">
+      <div 
+        id={id ? `${id}-year-nav` : undefined}
+        className="mb-4 flex items-center justify-between"
+      >
         <button
+          id={id ? `${id}-prev-year` : undefined}
           onClick={() => navigateYear("prev")}
           className={cn(
             buttonVariants({ variant: "outline" }),
@@ -79,9 +85,15 @@ function MonthPicker({
           <ChevronLeft className="h-4 w-4" />
         </button>
 
-        <h2 className="text-lg font-semibold">ปี {buddhistYear}</h2>
+        <h2 
+          id={id ? `${id}-year-display` : undefined}
+          className="text-lg font-semibold"
+        >
+          ปี {buddhistYear}
+        </h2>
 
         <button
+          id={id ? `${id}-next-year` : undefined}
           onClick={() => navigateYear("next")}
           className={cn(
             buttonVariants({ variant: "outline" }),
@@ -93,10 +105,14 @@ function MonthPicker({
       </div>
 
       {/* Month Grid */}
-      <div className="grid grid-cols-3 gap-2">
+      <div 
+        id={id ? `${id}-month-grid` : undefined}
+        className="grid grid-cols-3 gap-2"
+      >
         {Array.from({ length: 12 }, (_, i) => (
           <button
             key={i}
+            id={id ? `${id}-month-${i}` : undefined}
             onClick={() => handleMonthSelect(i)}
             className={cn(
               "rounded-md border p-3 text-sm transition-colors",

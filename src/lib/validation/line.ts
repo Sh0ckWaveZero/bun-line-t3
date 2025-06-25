@@ -1584,6 +1584,70 @@ const workError = (message: string) => {
 };
 
 /**
+ * สร้าง bubble template สำหรับแสดงข้อผิดพลาดเกี่ยวกับการลา
+ * @param message ข้อความแสดงข้อผิดพลาด
+ * @returns bubble template
+ */
+const leaveError = (message: string) => {
+  return [
+    {
+      type: 'bubble',
+      size: 'giga',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: '⚠️ เกิดข้อผิดพลาดการลา',
+            weight: 'bold',
+            size: 'xl',
+            color: '#ffffff',
+            align: 'center'
+          }
+        ],
+        backgroundColor: '#E57373',
+        paddingAll: '20px'
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: message,
+            wrap: true,
+            size: 'md',
+            align: 'center',
+            margin: 'md',
+            color: '#E57373'
+          }
+        ],
+        paddingAll: '20px'
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'sm',
+        contents: [
+          {
+            type: 'button',
+            style: 'primary',
+            action: {
+              type: 'uri',
+              label: 'เปิดหน้าลางาน',
+              uri: `${env.NEXTAUTH_URL}/leave`
+            },
+            color: '#5B7FD3'
+          }
+        ],
+        paddingAll: '20px'
+      }
+    }
+  ];
+};
+
+/**
  * สร้าง bubble template สำหรับเมนูรายงานรายเดือน
  * @returns bubble template
  */
@@ -2339,5 +2403,6 @@ export const bubbleTemplate = {
   monthlyReportMenu,
   monthlyReportSummary,
   workplacePolicyInfo,
-  workPublicHoliday
+  workPublicHoliday,
+  leaveError
 };

@@ -42,6 +42,7 @@
     "@radix-ui/react-popover": "^1.1.14",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-switch": "^1.2.5",
+    "@radix-ui/react-toast": "^1.2.14",
     "@t3-oss/env-nextjs": "0.13.6",
     "@tweakpane/core": "^2.0.5",
     "chart.js": "^4.4.9",

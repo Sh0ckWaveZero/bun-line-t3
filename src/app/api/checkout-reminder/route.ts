@@ -4,6 +4,8 @@ import { bubbleTemplate } from '@/lib/validation/line';
 import { attendanceService } from '@/features/attendance/services/attendance';
 import { db } from '@/lib/database/db';
 import { roundToOneDecimal } from '@/lib/utils/number';
+import { holidayService } from '@/features/attendance/services/holidays';
+import { leaveService } from '@/features/attendance/services/leave';
 
 // Helper function to send push message
 const sendPushMessage = async (userId: string, messages: any[]) => {
@@ -59,20 +61,36 @@ export async function GET(req: NextRequest) {
     if (apiKey !== env.INTERNAL_API_KEY) {
       return Response.json({ message: 'Unauthorized access' }, { status: 401 });
     }
-    
-    // Get all users who need checkout reminders
+
+    // ✅ ตรวจสอบว่าวันนี้เป็นวันหยุดหรือไม่ ถ้าใช่ไม่ต้องแจ้งเตือน
+    const today = new Date();
+    const isHoliday = await holidayService.isPublicHoliday(today);
+    if (isHoliday) {
+      return Response.json({
+        success: true,
+        message: 'วันนี้เป็นวันหยุดนักขัตฤกษ์ ระบบจะไม่ส่งแจ้งเตือนออกงาน',
+        holiday: true
+      }, { status: 200 });
+    }
+    // ✅ ตรวจสอบวันลาของแต่ละ user ก่อนแจ้งเตือน
     const usersNeedingReminder = await attendanceService.getUsersWithPendingCheckout();
-    
-    if (!usersNeedingReminder.length) {
-      return Response.json({ 
-        success: true, 
-        message: 'No users need checkout reminders' 
+    // กรอง user ที่ลาวันนี้ออก
+    const usersNotOnLeave = [];
+    for (const userId of usersNeedingReminder) {
+      const onLeave = await leaveService.isUserOnLeave(userId, today);
+      if (!onLeave) usersNotOnLeave.push(userId);
+    }
+    if (!usersNotOnLeave.length) {
+      return Response.json({
+        success: true,
+        message: 'ไม่มีผู้ใช้ที่ต้องแจ้งเตือน (ทุกคนลาหรือวันหยุด)',
+        allOnLeave: true
       }, { status: 200 });
     }
     
     // Get the LINE user IDs for each internal user ID
     const results = await Promise.all(
-      usersNeedingReminder.map(async (userId) => {
+      usersNotOnLeave.map(async (userId) => {
         try {
           // Find the LINE account associated with this user
           const userAccount = await db.account.findFirst({

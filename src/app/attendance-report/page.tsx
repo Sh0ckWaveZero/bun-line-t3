@@ -75,14 +75,36 @@ export default function AttendanceReportPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">รายงานการเข้างานรายเดือน</h1>
+    <div 
+      id="attendance-report-page"
+      className="min-h-screen bg-white dark:bg-gray-900"
+    >
+      <div 
+        id="attendance-report-container"
+        className="max-w-4xl mx-auto px-4 py-8"
+      >
+        <div 
+          id="attendance-report-card"
+          className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-6"
+        >
+          <div 
+            id="attendance-report-header"
+            className="flex justify-between items-center mb-6"
+          >
+            <h1 
+              id="attendance-report-title"
+              className="text-3xl font-bold text-gray-800 dark:text-gray-100"
+            >
+              รายงานการเข้างานรายเดือน
+            </h1>
             <ThemeToggle />
           </div>
-          <p className="text-gray-700 dark:text-gray-400 mb-6">ติดตามและจัดการเวลาการทำงานของคุณ</p>
+          <p 
+            id="attendance-report-description"
+            className="text-gray-700 dark:text-gray-400 mb-6"
+          >
+            ติดตามและจัดการเวลาการทำงานของคุณ
+          </p>
           
           {/* Month Selector */}
           <MonthSelector 
@@ -101,19 +123,25 @@ export default function AttendanceReportPage() {
 
           {/* Report Content */}
           {report && !loading && (
-            <>
+            <div id="report-content">
               {/* Summary Cards */}
-              <AttendanceSummaryCards report={report} />
+              <div id="summary-cards-section">
+                <AttendanceSummaryCards report={report} />
+              </div>
 
               {/* Charts */}
-              <AttendanceCharts report={report} />
+              <div id="charts-section">
+                <AttendanceCharts report={report} />
+              </div>
 
               {/* Detailed Table */}
-              <AttendanceTable 
-                records={report.attendanceRecords}
-                onEditRecord={openEditModal}
-              />
-            </>
+              <div id="table-section">
+                <AttendanceTable 
+                  records={report.attendanceRecords}
+                  onEditRecord={openEditModal}
+                />
+              </div>
+            </div>
           )}
         </div>
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { ToastProvider } from "@/components/common/ToastProvider";
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
 import { type ReactNode } from "react";
@@ -20,7 +21,9 @@ export default function Providers({ children }: { children: ReactNode }) {
           nonce: undefined,
         }}
       >
-        {children}
+        <div id="providers-wrapper">
+          <ToastProvider>{children}</ToastProvider>
+        </div>
       </ThemeProvider>
     </SessionProvider>
   );

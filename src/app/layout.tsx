@@ -1,5 +1,4 @@
 import { type Metadata } from "next";
-import Script from "next/script";
 import { Prompt } from "next/font/google";
 import Providers from "./providers";
 
@@ -8,15 +7,15 @@ import "@/styles/ring.css";
 
 // 🎨 กำหนด Google Font Prompt
 const promptFont = Prompt({
-  subsets: ['latin', 'thai'],
-  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
-  style: ['normal', 'italic'],
-  display: 'swap',
-  variable: '--font-prompt',
+  subsets: ["latin", "thai"],
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--font-prompt",
 });
 
 // ใช้ static font class names เพื่อป้องกัน hydration mismatch
-const FONT_CLASSES = `${promptFont.variable} font-prompt antialiased`
+const FONT_CLASSES = `${promptFont.variable} font-prompt antialiased`;
 
 export const metadata: Metadata = {
   title: "Bun LINE T3 App",
@@ -30,35 +29,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html 
-      lang="th" 
+    <html
+      id="html-root"
+      lang="th"
       className={promptFont.variable}
       suppressHydrationWarning={true}
     >
-      <head>
-        <meta
-          name="theme-color"
-          media="(prefers-color-scheme: light)"
-          content="#2e026d"
-        />
-        <meta
-          name="theme-color"
-          media="(prefers-color-scheme: dark)"
-          content="#2e026d"
-        />
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-        <meta name="format-detection" content="telephone=no" />
-        
-        {/* Theme initialization script - runs before React hydration */}
-        <Script src="/theme-init.js" strategy="beforeInteractive" />
-      </head>
-      <body 
-        className={FONT_CLASSES} 
+      <body
+        id="body-main"
+        className={FONT_CLASSES}
         suppressHydrationWarning={true}
       >
         <Providers>
           <div id="modal-root"></div>
-          {children}
+          <main id="main-content">{children}</main>
         </Providers>
       </body>
     </html>

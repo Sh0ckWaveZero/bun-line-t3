@@ -96,46 +96,87 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
   if (!document) return null;
 
   const modalContent = (
-    <>
-      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-between">
-          <h3 id="modal-title" className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+    <div id="edit-attendance-modal-content">
+      <div 
+        id="modal-header"
+        className="px-6 py-4 border-b border-gray-200 dark:border-gray-700"
+      >
+        <div 
+          id="modal-header-content"
+          className="flex items-center justify-between"
+        >
+          <h3 
+            id="modal-title" 
+            className="text-lg font-semibold text-gray-900 dark:text-gray-100"
+          >
             แก้ไขเวลาเข้า-ออกงาน
           </h3>
           <button
+            id="modal-close-btn"
             type="button"
             onClick={onClose}
             disabled={updateLoading}
             className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="ปิดหน้าต่าง"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg 
+              id="close-icon"
+              className="w-5 h-5" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
-        <p id="modal-description" className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+        <p 
+          id="modal-description" 
+          className="text-sm text-gray-500 dark:text-gray-400 mt-2"
+        >
           วันที่: {dateFormatters.fullDate(editingRecord.workDate)}
         </p>
-        <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
-          <div className="flex items-start">
+        <div 
+          id="timezone-info"
+          className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700"
+        >
+          <div id="timezone-info-content" className="flex items-start">
             <div className="flex-shrink-0">
-              <svg className="h-4 w-4 text-blue-500 dark:text-blue-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+              <svg 
+                id="info-icon"
+                className="h-4 w-4 text-blue-500 dark:text-blue-400 mt-0.5" 
+                fill="currentColor" 
+                viewBox="0 0 20 20" 
+                aria-hidden="true"
+              >
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
             </div>
-            <div className="ml-2">
-              <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">เวลาที่แสดงเป็นเวลาประเทศไทย (UTC+7)</p>
-              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">ระบบจะบันทึกเวลาเป็น UTC โดยอัตโนมัติ</p>
+            <div id="timezone-info-text" className="ml-2">
+              <p 
+                id="timezone-main-text"
+                className="text-xs text-blue-700 dark:text-blue-300 font-medium"
+              >
+                เวลาที่แสดงเป็นเวลาประเทศไทย (UTC+7)
+              </p>
+              <p 
+                id="timezone-note"
+                className="text-xs text-blue-600 dark:text-blue-400 mt-1"
+              >
+                ระบบจะบันทึกเวลาเป็น UTC โดยอัตโนมัติ
+              </p>
             </div>
           </div>
         </div>
       </div>
       
-      <form onSubmit={handleSubmit} noValidate>
-        <div className="px-6 py-4 space-y-6">
-          <div>
-            <label htmlFor="edit-checkin" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+      <form id="edit-attendance-form" onSubmit={handleSubmit} noValidate>
+        <div id="form-content" className="px-6 py-4 space-y-6">
+          <div id="checkin-field">
+            <label 
+              htmlFor="edit-checkin" 
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
               เวลาเข้างาน <span className="text-red-500 dark:text-red-400" aria-label="จำเป็น">*</span>
             </label>
             <input
@@ -199,7 +240,7 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
           </button>
         </div>
       </form>
-    </>
+    </div>
   );
 
   return (
