@@ -15,8 +15,8 @@ export type {
   MonthSelectorProps,
   LoadingSpinnerProps,
   ErrorMessageProps,
-  UseAttendanceReportReturn
-} from './attendance';
+  UseAttendanceReportReturn,
+} from "./attendance";
 
 // Export AttendanceStatusType (both type and value)
-export { AttendanceStatusType } from './attendance';
+export { AttendanceStatusType } from "./attendance";

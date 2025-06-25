@@ -1,8 +1,13 @@
 // src/features/line/services/line-utils.ts
 // 🛡️ Utility สำหรับส่งข้อความ LINE (sendMessage, sendRequest, sendLoadingAnimation)
-import { env } from '@/env.mjs';
+import { env } from "@/env.mjs";
 
-export const sendRequest = async (url: string, method: string, headers: any, body: any) => {
+export const sendRequest = async (
+  url: string,
+  method: string,
+  headers: any,
+  body: any,
+) => {
   try {
     const response = await fetch(url, {
       method,
@@ -10,7 +15,7 @@ export const sendRequest = async (url: string, method: string, headers: any, bod
       body: JSON.stringify(body),
     });
     if (!response.ok) {
-      throw new Error('Failed to send request');
+      throw new Error("Failed to send request");
     }
     return response;
   } catch (err: any) {
@@ -21,24 +26,29 @@ export const sendRequest = async (url: string, method: string, headers: any, bod
 export const sendLoadingAnimation = async (req: any) => {
   const lineChannelAccessToken = env.LINE_CHANNEL_ACCESS;
   const lineHeader = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
     Authorization: `Bearer ${lineChannelAccessToken}`,
   };
-  return sendRequest('https://api.line.me/v2/bot/chat/loading/start', 'POST', lineHeader, {
-    chatId: req.body.events[0].source.userId,
-    loadingSeconds: 5
-  });
+  return sendRequest(
+    "https://api.line.me/v2/bot/chat/loading/start",
+    "POST",
+    lineHeader,
+    {
+      chatId: req.body.events[0].source.userId,
+      loadingSeconds: 5,
+    },
+  );
 };
 
 export const sendMessage = async (req: any, payload: any) => {
   const lineChannelAccessToken = env.LINE_CHANNEL_ACCESS;
   const lineHeader = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
     Authorization: `Bearer ${lineChannelAccessToken}`,
   };
   try {
     await sendLoadingAnimation(req);
-    return sendRequest(`${env.LINE_MESSAGING_API}/reply`, 'POST', lineHeader, {
+    return sendRequest(`${env.LINE_MESSAGING_API}/reply`, "POST", lineHeader, {
       replyToken: req.body.events[0].replyToken,
       messages: payload,
     });

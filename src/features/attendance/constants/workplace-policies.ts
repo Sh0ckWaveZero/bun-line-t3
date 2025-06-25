@@ -4,18 +4,18 @@
 export const WORKPLACE_POLICIES = {
   // วันทำงาน: จันทร์ถึงศุกร์ (1-5, โดยที่ วันอาทิตย์ = 0)
   WORKING_DAYS: [1, 2, 3, 4, 5] as const,
-  
+
   // เวลาทำงานแบบยืดหยุ่น: เริ่มงานตั้งแต่ 08:00 - 11:00
   // หมายเหตุ: อนุญาตให้เข้างานก่อนเวลาตั้งแต่ 00:01-07:59
   // โดยบันทึกเวลาเข้างานจริง แต่กำหนดเวลาออกงานเป็น 17:00 น.
   EARLIEST_CHECK_IN: { hour: 8, minute: 0 },
   LATEST_CHECK_IN: { hour: 11, minute: 0 },
-  
+
   // จำนวนชั่วโมงทำงานรวมเวลาพักกลางวัน
   TOTAL_HOURS_PER_DAY: 9,
   ACTUAL_WORKING_HOURS: 8, // ไม่รวมเวลาพักกลางวัน 1 ชั่วโมง
   LUNCH_BREAK_HOURS: 1,
-  
+
   // เขตเวลา
-  TIMEZONE: 'Asia/Bangkok'
+  TIMEZONE: "Asia/Bangkok",
 };

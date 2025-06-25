@@ -7,6 +7,7 @@ Hydration mismatch เป็นปัญหาที่เกิดขึ้น�
 ## 🚨 สาเหตุหลักของ Hydration Mismatch
 
 ### 1. 📅 Dynamic Timestamps
+
 ```typescript
 // ❌ ผิด - จะทำให้เกิด hydration mismatch
 function CurrentTime() {
@@ -22,6 +23,7 @@ function CurrentTime() {
 ```
 
 ### 2. 🎲 Random Values
+
 ```typescript
 // ❌ ผิด - Math.random() ให้ค่าต่างกันระหว่าง server/client
 function RandomMessage() {
@@ -40,6 +42,7 @@ function RandomMessage() {
 ```
 
 ### 3. 🌐 Browser-Only APIs
+
 ```typescript
 // ❌ ผิด - window object ไม่มีบน server
 function UserAgent() {
@@ -72,7 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="th">
       <head>...</head>
-      {/* 
+      {/*
         suppressHydrationWarning: แก้ไข hydration mismatch จาก browser extensions
         Browser extensions อาจแทรก attributes เข้าไปใน body element
       */}
@@ -111,15 +114,15 @@ import { useState, useEffect } from 'react'
 
 function SafeComponent() {
   const [mounted, setMounted] = useState(false)
-  
+
   useEffect(() => {
     setMounted(true)
   }, [])
-  
+
   if (!mounted) {
     return <div>Loading...</div> // Server fallback
   }
-  
+
   return <div>{window.location.href}</div> // Client content
 }
 ```
@@ -129,21 +132,21 @@ function SafeComponent() {
 ใช้ hooks ที่เราสร้างไว้:
 
 ```typescript
-import { 
-  useClientOnlyMounted, 
+import {
+  useClientOnlyMounted,
   useSafeHydration,
-  useSuppressHydrationWarning 
+  useSuppressHydrationWarning
 } from '~/hooks/useHydrationSafe'
 
 function SmartComponent() {
   const mounted = useClientOnlyMounted()
   const suppressWarning = useSuppressHydrationWarning(!mounted)
-  
+
   const content = useSafeHydration(
     'Server Content',
     () => 'Client Content'
   )
-  
+
   return (
     <div suppressHydrationWarning={suppressWarning}>
       {content}
@@ -160,22 +163,22 @@ function SmartComponent() {
 // ✅ Hook สำหรับตรวจจับ hydration issues
 export function useHydrationWarningDetector() {
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      const originalError = console.error
-      
+    if (process.env.NODE_ENV === "development") {
+      const originalError = console.error;
+
       console.error = (...args) => {
-        if (args[0]?.includes?.('Hydration')) {
-          console.warn('🚨 Hydration Mismatch Detected:', ...args)
+        if (args[0]?.includes?.("Hydration")) {
+          console.warn("🚨 Hydration Mismatch Detected:", ...args);
           // Optional: ส่งไปยัง error tracking service
         }
-        originalError(...args)
-      }
-      
+        originalError(...args);
+      };
+
       return () => {
-        console.error = originalError
-      }
+        console.error = originalError;
+      };
     }
-  }, [])
+  }, []);
 }
 ```
 
@@ -192,9 +195,9 @@ describe('SafeTimestamp', () => {
       value: undefined,
       writable: true
     })
-    
+
     const { container } = render(<SafeTimestamp />)
-    
+
     // Should render without hydration warnings
     expect(container.firstChild).toHaveAttribute('suppressHydrationWarning')
   })
@@ -226,11 +229,11 @@ describe('SafeTimestamp', () => {
 ```typescript
 function ConditionalHydration({ condition, children, fallback }) {
   const mounted = useClientOnlyMounted()
-  
+
   if (!mounted) {
     return fallback
   }
-  
+
   return (
     <div suppressHydrationWarning={condition}>
       {children}
@@ -244,12 +247,12 @@ function ConditionalHydration({ condition, children, fallback }) {
 ```typescript
 function ProgressiveComponent() {
   const [enhanced, setEnhanced] = useState(false)
-  
+
   useEffect(() => {
     // เปิดใช้ features เพิ่มเติมหลัง hydration
     setEnhanced(true)
   }, [])
-  
+
   return (
     <div>
       <div>Basic content (always visible)</div>
@@ -269,11 +272,11 @@ function ProgressiveComponent() {
 function SmartFallback({ children, fallback, condition }) {
   const mounted = useClientOnlyMounted()
   const shouldSuppress = useSuppressHydrationWarning(condition)
-  
+
   if (!mounted && fallback) {
     return <>{fallback}</>
   }
-  
+
   return (
     <div suppressHydrationWarning={shouldSuppress}>
       {children}
@@ -301,12 +304,14 @@ function SmartFallback({ children, fallback, condition }) {
 
 ```typescript
 // เพิ่มใน _app.tsx สำหรับ development
-if (process.env.NODE_ENV === 'development') {
+if (process.env.NODE_ENV === "development") {
   React.useEffect(() => {
-    import('~/components/common/HydrationDebugger').then(({ HydrationDebugger }) => {
-      // Mount debugger
-    })
-  }, [])
+    import("~/components/common/HydrationDebugger").then(
+      ({ HydrationDebugger }) => {
+        // Mount debugger
+      },
+    );
+  }, []);
 }
 ```
 

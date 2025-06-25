@@ -1,13 +1,262 @@
-````instructions
 # 🚀 Copilot Development Instructions
 
-> **Security-First Modern Web Development**
->
-> **🇹🇭 CRITICAL: Always respond in Thai language when communicating with users**
-> 
-> **📢 MANDATORY: Every response must be in Thai (ภาษาไทย) - No exceptions!**
-> 
-> **⚠️ IMPORTANT: User communication must always be in Thai regardless of the code language**
+## 1. Tailwind CSS Best Practices
+
+- Use Tailwind utility classes extensively in all templates/components
+- Leverage responsive utilities (sm:, md:, lg:) for mobile-first design
+- Use only Tailwind's color palette and spacing scale (no hardcoded values)
+- Extend the theme in tailwind.config.ts for custom colors/sizes if needed
+- Never use @apply in production (only for dev/test or special cases)
+
+---
+
+# Tailwind CSS Dark Mode Rules
+
+Tailwind CSS provides built-in support for dark mode, allowing you to style your application differently based on the user's system preferences or a custom toggle. Below are the rules and guidelines for using dark mode effectively.
+
+## 1. **Enabling Dark Mode**
+
+To enable dark mode, configure the `darkMode` option in your `tailwind.config.js` file. There are three supported strategies:
+
+- **Media Query (default)**: Uses the `prefers-color-scheme` media query to automatically apply dark mode based on system settings.
+  ```js
+  module.exports = {
+    darkMode: "media", // Default
+    // ...
+  };
+  ```
+- **Class-based**: Applies dark mode when a specific class (e.g., dark) is added to an ancestor element, typically <html> or <body>.
+  ```js
+  module.exports = {
+    darkMode: "class", // Enables class-based dark mode
+    // ...
+  };
+  ```
+- **Selector-based**: Uses a custom CSS selector to toggle dark mode (introduced in Tailwind CSS v3.4).
+  ```js
+  module.exports = {
+    darkMode: ["selector", '[data-theme="dark"]'], // Applies dark mode when the selector matches
+    // ...
+  };
+  ```
+
+## 2. Using the dark Variant
+
+Use the `dark:` variant to apply styles conditionally in dark mode.
+
+- **Syntax**: Prefix utility classes with `dark:` to apply them only in dark mode.
+  ```html
+  <div class="bg-white text-black dark:bg-gray-800 dark:text-white">
+    Content
+  </div>
+  ```
+- **Behavior**:
+  - With `darkMode: 'media'`, `dark:` styles apply when the system is in dark mode (`prefers-color-scheme: dark`).
+  - With `darkMode: 'class'`, `dark:` styles apply when the `dark` class is present on an ancestor (e.g., `<html class="dark">`).
+  - With `darkMode: ['selector', '[data-theme="dark"]']`, `dark:` styles apply when the specified selector is present.
+
+## 3. Toggling Dark Mode (Class-based)
+
+For class-based dark mode, manually toggle the `dark` class on an ancestor element via JavaScript.
+
+- **Example:**
+  ```html
+  <html class="dark">
+    <body>
+      <button onclick="document.documentElement.classList.toggle('dark')">
+        Toggle Dark Mode
+      </button>
+      <div class="bg-white dark:bg-gray-800">Content</div>
+    </body>
+  </html>
+  ```
+- **Local Storage Example (for persistence):**
+
+  ```js
+  function toggleDarkMode() {
+    document.documentElement.classList.toggle("dark");
+    localStorage.setItem(
+      "theme",
+      document.documentElement.classList.contains("dark") ? "dark" : "light",
+    );
+  }
+
+  if (localStorage.getItem("theme") === "dark") {
+    document.documentElement.classList.add("dark");
+  }
+  ```
+
+## 4. Using with Custom Selectors
+
+For the selector-based strategy, apply the specified selector to toggle dark mode.
+
+- **Example:**
+  ```js
+  module.exports = {
+    darkMode: ["selector", '[data-theme="dark"]'],
+    // ...
+  };
+  ```
+  ```html
+  <html data-theme="dark">
+    <body>
+      <div class="bg-white dark:bg-gray-800">Content</div>
+    </body>
+  </html>
+  ```
+- **Toggling:**
+  ```js
+  document.documentElement.setAttribute("data-theme", "dark"); // Enable dark mode
+  document.documentElement.removeAttribute("data-theme"); // Disable dark mode
+  ```
+
+## 5. Combining with Other Variants
+
+The `dark:` variant can be combined with other Tailwind variants like `hover:`, `focus:`, or responsive variants (e.g., `md:`).
+
+- **Example:**
+  ```html
+  <button
+    class="bg-blue-500 hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-800"
+  >
+    Click Me
+  </button>
+  ```
+  - In light mode: `bg-blue-500` applies, and `bg-blue-600` on hover.
+  - In dark mode: `dark:bg-blue-700` applies, and `dark:hover:bg-blue-800` on hover.
+
+## 6. Customizing Dark Mode Behavior
+
+- **Multiple Themes:** For apps with multiple themes (e.g., light, dark, sepia), use the selector-based strategy with different `data-theme` values or extend the theme in `tailwind.config.js`.
+  ```js
+  module.exports = {
+    darkMode: ["selector", '[data-theme="dark"]'],
+    theme: {
+      extend: {
+        colors: {
+          "dark-bg": "#1a202c",
+          "sepia-bg": "#f1c40f",
+        },
+      },
+    },
+  };
+  ```
+- **Custom Selectors:** Define multiple selectors for different themes.
+  ```js
+  module.exports = {
+    darkMode: ["selector", '[data-theme="dark"], [data-mode="dark"]'],
+  };
+  ```
+
+## 7. Best Practices
+
+- Test Across Browsers: Ensure dark mode works consistently, as `prefers-color-scheme` support may vary.
+- Accessibility: Use high-contrast colors in dark mode for readability (e.g., `text-white` on `bg-gray-800`).
+- Fallbacks: Provide fallback styles for browsers that don’t support `prefers-color-scheme` or when JavaScript is disabled.
+  ```html
+  <div class="bg-white dark:bg-gray-800">
+    <noscript
+      ><style>
+        .dark\:bg-gray-800 {
+          background: #fff;
+        }
+      </style></noscript
+    >
+  </div>
+  ```
+- Performance: Avoid excessive class toggling in large applications to prevent performance issues.
+
+## 8. Limitations
+
+- Media Query Dependency: The media strategy relies on system settings, which may not suit apps requiring manual theme switching.
+- No Default Toggle: Tailwind CSS does not provide a built-in UI for toggling dark mode; implement it manually.
+- Browser Support: The `prefers-color-scheme` media query is widely supported but may not work in older browsers.
+
+## 9. Example: Complete Implementation
+
+A full example combining configuration, HTML, and JavaScript for a class-based dark mode toggle:
+
+```js
+// tailwind.config.js
+module.exports = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "dark-bg": "#1a202c",
+      },
+    },
+  },
+};
+```
+
+```html
+<html class="dark">
+  <body>
+    <button onclick="document.documentElement.classList.toggle('dark')">
+      Toggle Dark Mode
+    </button>
+    <div class="bg-white dark:bg-gray-800">Content</div>
+  </body>
+</html>
+```
+
+---
+
+## 2. Copilot Agent Workflow
+
+- Never ask for permission/confirmation if you can take action directly
+- Always proceed to fulfill the user's request
+- Only ask for clarification if absolutely required to avoid errors
+
+## 3. User Communication (Critical)
+
+- All user communication must be in Thai (ภาษาไทย) — no exceptions
+- Explanations, error messages, and documentation for users must be in Thai
+- Never mix languages in user responses
+
+## 4. AI Logging & Progress Tracking
+
+- Always create a log file: logs/ai-task-[timestamp].md before starting work
+- Read the latest 3-5 logs before making changes
+- Run tests every time after code changes
+
+## 5. Accessibility & Color Guidelines
+
+- All UI must pass WCAG 2.1 AA contrast (4.5:1 for normal text, 3:1 for large text)
+- Never use hardcoded colors; use CSS variables or Tailwind tokens only
+- Use .text-high-contrast, .text-medium-contrast, .text-subtle-contrast for text
+- Use border-2 for cards/sections, never just border
+- Icon colors must be explicit (e.g., text-blue-600 dark:text-blue-400)
+- Test both dark/light mode for every color combination
+
+## 6. Common Mistakes to Avoid
+
+- Creating unnecessary files
+- Deleting files without checking dependencies
+- Duplicate code
+- Neglecting tests
+- Timezone issues
+- Modal/Dialog responsive issues
+- Color inconsistency
+- Neglecting accessibility
+
+## 7. Testing & Review Checklist
+
+- Check contrast in Light/Dark Mode (DevTools)
+- Test icon visibility in inactive states
+- Verify border visibility on cards/sections
+- Test hover/focus states
+- Validate with accessibility tools (aXe, Lighthouse)
+- Test with actual users if possible
+
+---
+
+## 🤖 Copilot Agent Workflow
+
+- Do not ask the user for permission or confirmation if you can take action directly.
+- Always proceed to take the necessary action to fulfill the user's request.
+- Only ask for clarification if absolutely required to avoid errors.
 
 ## 📝 AI Logging & Progress Tracking
 
@@ -26,45 +275,19 @@
 #### 🔍 Contrast Requirements
 
 **📊 Mandatory Contrast Ratios**
+
 - **Normal Text**: Minimum 4.5:1 contrast ratio
-- **Large Text (18pt+)**: Minimum 3:1 contrast ratio  
+- **Large Text (18pt+)**: Minimum 3:1 contrast ratio
 - **UI Components**: Minimum 3:1 contrast ratio
 - **Focus Indicators**: Minimum 3:1 contrast ratio
 - **Icons**: Minimum 3:1 contrast ratio against background
 
-#### 🎯 Color System Rules
-
-**✅ MUST Follow**
-- **Never use hardcoded colors** - Always use CSS variables or Tailwind tokens
-- **Test both Dark/Light modes** - Every color combination must work in both themes
-- **Use high-contrast utility classes** - `.text-high-contrast`, `.text-medium-contrast`, `.text-subtle-contrast`
-- **Add borders to cards/sections** - Use `border-2` instead of `border` for better visibility
-- **Icon colors must be explicit** - Never rely on default colors for icons
-- **Background colors need sufficient contrast** - Especially for cards and sections
-
-#### 🚨 Common Color Mistakes to Avoid
-
-**❌ Never Do**
-- `text-gray-500 dark:text-gray-500` (same color in both modes)
-- `text-gray-600 dark:text-gray-300` (insufficient contrast in dark mode) 
-- Icons without explicit color classes
-- Cards without visible borders in dark mode
-- Using `border` instead of `border-2` for important separators
-- Tabs without clear active/inactive distinction
-
-**✅ Always Do**
-- `text-high-contrast dark:text-high-contrast` (guaranteed contrast)
-- `text-medium-contrast dark:text-medium-contrast` (good contrast)
-- `text-blue-600 dark:text-blue-400` (explicit icon colors)
-- `border-2 border-gray-200 dark:border-gray-600` (visible borders)
-- Test with actual contrast checking tools
-- Provide hover states with better contrast
-
 #### 📋 UI Testing Checklist
 
 **Before Committing UI Changes**
+
 - [ ] Check contrast in Light Mode (use browser dev tools)
-- [ ] Check contrast in Dark Mode (use browser dev tools)  
+- [ ] Check contrast in Dark Mode (use browser dev tools)
 - [ ] Test icon visibility in inactive states
 - [ ] Verify border visibility on cards/sections
 - [ ] Test hover/focus states
@@ -74,12 +297,14 @@
 #### 🛠️ Recommended Tools
 
 **Contrast Checking**
+
 - Chrome DevTools Accessibility tab
 - WebAIM Contrast Checker
 - Colour Contrast Analyser (CCA)
 - axe DevTools extension
 
 **Testing Commands**
+
 ```bash
 # Test contrast after CSS changes
 bun run tailwind:build
@@ -90,7 +315,7 @@ bun run tailwind:build
 ### �🎯 Workflow | Required Steps
 
 1. 📝 Create log file
-2. 🔍 [ANALYSIS] Analyze and check ✅  
+2. 🔍 [ANALYSIS] Analyze and check ✅
 3. 📋 [PLANNING] Plan and check ✅
 4. 💻 [CODING] Implement and check ✅
 5. 🧪 [TESTING] Test and check ✅
@@ -102,18 +327,18 @@ Senior software engineer specializing in modern web development with **Security-
 
 ### 🛠️ Core Tech Stack
 
-| Tech | Tool | Purpose |
-|------|------|---------|
-| **Runtime** | Bun | JavaScript runtime and package manager |
-| **Language** | TypeScript | Type safety and modern JS features |
-| **Framework** | Next.js 15 | Full-stack React + App Router |
-| **UI Library** | React 19 | Server Components + modern patterns |
-| **UI Components** | Radix UI | Accessible component library |
-| **Styling** | Tailwind CSS | Utility-first CSS framework |
-| **Database** | MongoDB + Prisma | NoSQL database + type-safe ORM |
-| **Auth** | NextAuth.js | Session management and LINE OAuth |
-| **Validation** | Zod | Schema validation and type safety |
-| **APIs** | LINE, CMC, AirVisual | Bot messaging, crypto, air quality |
+| Tech              | Tool                 | Purpose                                |
+| ----------------- | -------------------- | -------------------------------------- |
+| **Runtime**       | Bun                  | JavaScript runtime and package manager |
+| **Language**      | TypeScript           | Type safety and modern JS features     |
+| **Framework**     | Next.js 15           | Full-stack React + App Router          |
+| **UI Library**    | React 19             | Server Components + modern patterns    |
+| **UI Components** | Radix UI             | Accessible component library           |
+| **Styling**       | Tailwind CSS         | Utility-first CSS framework            |
+| **Database**      | MongoDB + Prisma     | NoSQL database + type-safe ORM         |
+| **Auth**          | NextAuth.js          | Session management and LINE OAuth      |
+| **Validation**    | Zod                  | Schema validation and type safety      |
+| **APIs**          | LINE, CMC, AirVisual | Bot messaging, crypto, air quality     |
 
 ## 🔐 Security First
 
@@ -121,25 +346,27 @@ Senior software engineer specializing in modern web development with **Security-
 
 ### 🛡️ Security Principles
 
-| Principle | Description | Implementation |
-|-----------|-------------|----------------|
-| **Defense in Depth** | Create multiple layers of protection | Multiple validation points, redundant controls |
-| **Least Privilege** | Grant only necessary permissions | Role-based access, limited API keys |
-| **Zero Trust** | Verify everything, trust nothing | Validate all inputs, authenticate every request |
-| **Security by Design** | Build security from the start | Secure defaults, security review in planning |
-| **Input Validation** | Validate and sanitize all input | Zod schemas, prevent injection, XSS |
-| **Crypto Security** | Use proven encryption methods | Random generation, hashing, HMAC |
+| Principle              | Description                          | Implementation                                  |
+| ---------------------- | ------------------------------------ | ----------------------------------------------- |
+| **Defense in Depth**   | Create multiple layers of protection | Multiple validation points, redundant controls  |
+| **Least Privilege**    | Grant only necessary permissions     | Role-based access, limited API keys             |
+| **Zero Trust**         | Verify everything, trust nothing     | Validate all inputs, authenticate every request |
+| **Security by Design** | Build security from the start        | Secure defaults, security review in planning    |
+| **Input Validation**   | Validate and sanitize all input      | Zod schemas, prevent injection, XSS             |
+| **Crypto Security**    | Use proven encryption methods        | Random generation, hashing, HMAC                |
 
 ## 📋 Development Process
 
 ### 🔍 Analysis Phase
 
 **📚 Log Reading and Learning**
+
 - Read latest 3-5 logs to review past work
 - Analyze common problems and solutions
 - Check recently modified files for context
 
 **🎯 Threat Analysis**
+
 - Identify potential threats and vulnerabilities
 - Define data sensitivity levels: 🟢 Public | 🟡 Internal | 🟠 Confidential | 🔴 Restricted
 - Consider authentication and authorization requirements
@@ -147,17 +374,20 @@ Senior software engineer specializing in modern web development with **Security-
 ### 📋 Planning Phase
 
 **🔧 Technical Planning**
+
 - Break solution into logical and secure steps
 - Plan security controls for each step
 - Consider modularity and reusability
 
 **⚖️ Trade-off Assessment**
+
 - Evaluate alternatives with security trade-offs
 - Consider performance impact vs security
 
 ### 🚀 Implementation Phase
 
 **🏗️ Architecture Decisions**
+
 - Choose secure design patterns (Factory, Strategy, Observer)
 - Consider performance without compromising security
 - Plan error handling that prevents information leakage
@@ -182,6 +412,7 @@ Senior software engineer specializing in modern web development with **Security-
 #### 🎯 Communication Examples
 
 **✅ Correct Thai Communication:**
+
 ```
 ผมจะสร้างส่วนประกอบ React ใหม่สำหรับคุณ
 กำลังติดตั้ง dependencies ที่จำเป็น
@@ -189,6 +420,7 @@ Senior software engineer specializing in modern web development with **Security-
 ```
 
 **❌ Incorrect English Communication:**
+
 ```
 I'll create a new React component for you
 Installing required dependencies
@@ -231,83 +463,85 @@ Database connection error, please check connection string
 
 #### 🏗️ Core FP Principles
 
-| Principle | Description | Benefits |
-|-----------|-------------|----------|
-| **Immutability** | Data doesn't change after creation | Prevents side effects, easier debugging |
-| **Pure Functions** | Functions with no side effects | Easy to test, predictable |
-| **Function Composition** | Combine small functions into complex logic | Code reuse, modularity |
-| **Higher-Order Functions** | Functions that take or return other functions | Abstraction, flexibility |
-| **Declarative Style** | Describe "what" instead of "how" | Readable, understandable |
+| Principle                  | Description                                   | Benefits                                |
+| -------------------------- | --------------------------------------------- | --------------------------------------- |
+| **Immutability**           | Data doesn't change after creation            | Prevents side effects, easier debugging |
+| **Pure Functions**         | Functions with no side effects                | Easy to test, predictable               |
+| **Function Composition**   | Combine small functions into complex logic    | Code reuse, modularity                  |
+| **Higher-Order Functions** | Functions that take or return other functions | Abstraction, flexibility                |
+| **Declarative Style**      | Describe "what" instead of "how"              | Readable, understandable                |
 
 #### 🛡️ Security Benefits
 
-| Benefit | Description | Use Cases |
-|---------|-------------|-----------|
-| **Predictability** | Pure functions always give same results | Input validation, data transformation |
-| **Isolation** | No unexpected side effects | Authentication logic, data processing |
-| **Testability** | Easy and comprehensive testing | Security functions, validation logic |
-| **Thread Safety** | Immutable data safe in concurrent environments | Server-side processing |
+| Benefit            | Description                                    | Use Cases                             |
+| ------------------ | ---------------------------------------------- | ------------------------------------- |
+| **Predictability** | Pure functions always give same results        | Input validation, data transformation |
+| **Isolation**      | No unexpected side effects                     | Authentication logic, data processing |
+| **Testability**    | Easy and comprehensive testing                 | Security functions, validation logic  |
+| **Thread Safety**  | Immutable data safe in concurrent environments | Server-side processing                |
 
 #### 🎯 FP Patterns in TypeScript
 
 ```typescript
 // ✅ Immutable Data & Pure Functions
 interface User {
-  readonly id: string
-  readonly email: string
-  readonly permissions: readonly Permission[]
+  readonly id: string;
+  readonly email: string;
+  readonly permissions: readonly Permission[];
 }
 
 const validateUser = (user: unknown): Either<ValidationError, User> => {
-  const result = UserSchema.safeParse(user)
-  return result.success 
+  const result = UserSchema.safeParse(user);
+  return result.success
     ? right(result.data)
-    : left(new ValidationError(result.error.message))
-}
+    : left(new ValidationError(result.error.message));
+};
 
 // ✅ Function Composition & Higher-Order Functions
-const pipe = <T>(...fns: Array<(arg: T) => T>) => (value: T): T =>
-  fns.reduce((acc, fn) => fn(acc), value)
+const pipe =
+  <T>(...fns: Array<(arg: T) => T>) =>
+  (value: T): T =>
+    fns.reduce((acc, fn) => fn(acc), value);
 
-const withAuth = <T extends any[], R>(
-  fn: (...args: T) => Promise<R>
-) => async (...args: T): Promise<R> => {
-  await validateSession()
-  return fn(...args)
-}
+const withAuth =
+  <T extends any[], R>(fn: (...args: T) => Promise<R>) =>
+  async (...args: T): Promise<R> => {
+    await validateSession();
+    return fn(...args);
+  };
 ```
 
 ### 🏷️ Naming Conventions
 
-| Type | Pattern | Example | Notes |
-|------|---------|---------|-------|
-| **Variables** | Descriptive with auxiliary verbs | `isLoading`, `hasError`, `canAccess` | Use boolean prefixes |
-| **Event Handlers** | Start with "handle" | `handleClick`, `handleSubmit`, `handleAuth` | Consistency |
-| **Components** | Use named exports | `export const LoginForm`, `export const UserProfile` | Good for tree-shaking |
-| **Functions** | Use verb phrases, pure functions with prefix | `validateUser`, `parseInput`, `safeGetUser` | Clear intent |
-| **Higher-Order Functions** | "with/create/make" pattern | `withAuth`, `createValidator`, `makeSecure` | Shows abstraction |
+| Type                       | Pattern                                      | Example                                              | Notes                 |
+| -------------------------- | -------------------------------------------- | ---------------------------------------------------- | --------------------- |
+| **Variables**              | Descriptive with auxiliary verbs             | `isLoading`, `hasError`, `canAccess`                 | Use boolean prefixes  |
+| **Event Handlers**         | Start with "handle"                          | `handleClick`, `handleSubmit`, `handleAuth`          | Consistency           |
+| **Components**             | Use named exports                            | `export const LoginForm`, `export const UserProfile` | Good for tree-shaking |
+| **Functions**              | Use verb phrases, pure functions with prefix | `validateUser`, `parseInput`, `safeGetUser`          | Clear intent          |
+| **Higher-Order Functions** | "with/create/make" pattern                   | `withAuth`, `createValidator`, `makeSecure`          | Shows abstraction     |
 
 ### 🔧 TypeScript Best Practices
 
 ```typescript
 // ✅ Strict type checking with security focus
 interface SecureUserData {
-  readonly id: UserId              // Custom branded type
-  readonly email: EmailAddress     // Validated email type
-  readonly permissions: Permission[] // Enumerated permissions
-  readonly sessionToken?: SessionToken // Optional sensitive data
+  readonly id: UserId; // Custom branded type
+  readonly email: EmailAddress; // Validated email type
+  readonly permissions: Permission[]; // Enumerated permissions
+  readonly sessionToken?: SessionToken; // Optional sensitive data
 }
 
 // ✅ Runtime validation with Zod
 const UserSchema = z.object({
   id: z.string().uuid(),
   email: z.string().email(),
-  permissions: z.array(z.enum(['READ', 'WRITE', 'ADMIN'])),
-})
+  permissions: z.array(z.enum(["READ", "WRITE", "ADMIN"])),
+});
 
 // ✅ Branded types for sensitive data
-type UserId = string & { readonly brand: unique symbol }
-type SessionToken = string & { readonly brand: unique symbol }
+type UserId = string & { readonly brand: unique symbol };
+type SessionToken = string & { readonly brand: unique symbol };
 ```
 
 #### 📋 TypeScript Configuration
@@ -339,7 +573,7 @@ export default async function UserDashboard({ params }: UserDashboardProps) {
 
   const { userId } = await params
   const validatedUserId = validateUserId(userId)
-  
+
   if (!canAccessUser(session.user, validatedUserId)) notFound()
 
   const userData = await db.user.findUnique({
@@ -353,11 +587,11 @@ export default async function UserDashboard({ params }: UserDashboardProps) {
 
 #### 🔒 Security Considerations
 
-| Security Aspect | Action | Example |
-|------------------|--------|---------|
-| **Prevent XSS** | Properly escape dynamic content | Use React's built-in escaping, avoid `dangerouslySetInnerHTML` |
-| **Prevent CSRF** | Use CSRF tokens for state changes | Use Next.js built-in CSRF protection |
-| **Data Exposure** | Never expose sensitive server data to client | Filter sensitive fields before sending to client |
+| Security Aspect   | Action                                       | Example                                                        |
+| ----------------- | -------------------------------------------- | -------------------------------------------------------------- |
+| **Prevent XSS**   | Properly escape dynamic content              | Use React's built-in escaping, avoid `dangerouslySetInnerHTML` |
+| **Prevent CSRF**  | Use CSRF tokens for state changes            | Use Next.js built-in CSRF protection                           |
+| **Data Exposure** | Never expose sensitive server data to client | Filter sensitive fields before sending to client               |
 
 #### 🧩 Functional React Patterns
 
@@ -375,10 +609,10 @@ const withSecureAuth = <P extends object>(
   Component: React.ComponentType<P>
 ) => (props: P) => {
   const { user, isLoading } = useAuth()
-  
+
   if (isLoading) return <LoadingSpinner />
   if (!user) return <LoginPrompt />
-  
+
   return <Component {...props} />
 }
 
@@ -392,7 +626,7 @@ const useSecureData = <T>(
     loading: boolean
     error: string | null
   }>({ data: null, loading: true, error: null })
-  
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -406,10 +640,10 @@ const useSecureData = <T>(
         setState({ data: null, loading: false, error: 'Fetch failed' })
       }
     }
-  
+
     fetchData()
   }, [])
-  
+
   return state
 }
 ```
@@ -435,11 +669,11 @@ export function LoginForm() {
       {state.errors?.email && (
         <div id="email-error" role="alert">{state.errors.email}</div>
       )}
-  
+
       <button type="submit" disabled={isPending}>
         {isPending ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
       </button>
-  
+
       {state.message && (
         <div role="alert" className="error-message">{state.message}</div>
       )}
@@ -450,51 +684,52 @@ export function LoginForm() {
 
 #### 🔒 State Security Rules
 
-| Rule | Description | Action |
-|------|-------------|--------|
-| **Never store sensitive data in Client State** | Don't store sensitive data in client-side state | Use server sessions, secure cookies |
-| **Secure Session Management** | Use appropriate session expiration and renewal | Auto-logout when inactive, refresh tokens |
-| **Input Validation** | Validate all state changes | Zod schemas, sanitization functions |
+| Rule                                           | Description                                     | Action                                    |
+| ---------------------------------------------- | ----------------------------------------------- | ----------------------------------------- |
+| **Never store sensitive data in Client State** | Don't store sensitive data in client-side state | Use server sessions, secure cookies       |
+| **Secure Session Management**                  | Use appropriate session expiration and renewal  | Auto-logout when inactive, refresh tokens |
+| **Input Validation**                           | Validate all state changes                      | Zod schemas, sanitization functions       |
 
 ### 🌐 Async Request APIs
 
 ```typescript
 // ✅ Always use async versions of runtime APIs in App Router
-import { cookies, headers, draftMode } from 'next/headers'
+import { cookies, headers, draftMode } from "next/headers";
 
 export async function SecureApiRoute() {
-  const cookieStore = await cookies()
-  const headersList = await headers()
-  const { isEnabled } = await draftMode()
-  
-  const authorization = headersList.get('authorization')
-  const origin = headersList.get('origin')
-  
+  const cookieStore = await cookies();
+  const headersList = await headers();
+  const { isEnabled } = await draftMode();
+
+  const authorization = headersList.get("authorization");
+  const origin = headersList.get("origin");
+
   if (!isValidOrigin(origin)) {
-    throw new Error('Invalid origin')
+    throw new Error("Invalid origin");
   }
-  
-  return { success: true }
+
+  return { success: true };
 }
 
 // ✅ Functional API Pipeline Pattern
-const createApiHandler = <T, R>(
-  validator: (input: unknown) => Either<ValidationError, T>,
-  authenticator: (request: Request) => Promise<Either<AuthError, User>>,
-  processor: (data: T, user: User) => Promise<Either<ProcessError, R>>
-) => async (request: Request): Promise<Response> => {
-  
-  const result = await pipe(
-    parseRequestBody,
-    bindAsync(validator),
-    bindAsync(() => authenticator(request)),
-    bindAsync(({ user, data }) => processor(data, user))
-  )(request)
-  
-  return result.kind === 'right'
-    ? Response.json(result.value)
-    : handleApiError(result.value)
-}
+const createApiHandler =
+  <T, R>(
+    validator: (input: unknown) => Either<ValidationError, T>,
+    authenticator: (request: Request) => Promise<Either<AuthError, User>>,
+    processor: (data: T, user: User) => Promise<Either<ProcessError, R>>,
+  ) =>
+  async (request: Request): Promise<Response> => {
+    const result = await pipe(
+      parseRequestBody,
+      bindAsync(validator),
+      bindAsync(() => authenticator(request)),
+      bindAsync(({ user, data }) => processor(data, user)),
+    )(request);
+
+    return result.kind === "right"
+      ? Response.json(result.value)
+      : handleApiError(result.value);
+  };
 ```
 
 #### 📋 React Best Practices
@@ -555,10 +790,10 @@ const config: Config = {
           foreground: "hsl(var(--primary-foreground))",
         },
         // ...existing colors...
-      }
-    }
-  }
-}
+      },
+    },
+  },
+};
 ```
 
 #### 🌈 CSS Variables Pattern
@@ -571,7 +806,7 @@ const config: Config = {
     --foreground: 222.2 84% 4.9%;
     --primary: 222.2 47.4% 11.2%;
   }
-  
+
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
@@ -588,7 +823,7 @@ const config: Config = {
 // ✅ Dark mode classes pattern
 const ThemeAwareButton = () => (
   <button className="
-    bg-white dark:bg-gray-800 
+    bg-white dark:bg-gray-800
     text-gray-900 dark:text-gray-100
     border border-gray-200 dark:border-gray-700
     hover:bg-gray-50 dark:hover:bg-gray-700
@@ -604,7 +839,7 @@ const ThemeAwareButton = () => (
 // ✅ CSS Variables - Cleaner approach
 const ThemeAwareCard = () => (
   <div className="
-    bg-background 
+    bg-background
     text-foreground
     border border-border
     shadow-md
@@ -686,12 +921,14 @@ export const ThemeToggle = () => {
 ### 📋 Theme Development Checklist
 
 #### ✅ **For Every Component:**
+
 - [ ] Support both light and dark mode
 - [ ] Use CSS variables or Tailwind dark: classes
 - [ ] Test contrast to pass WCAG AA
 - [ ] No flicker when changing themes
 
 #### ✅ **For Every Page:**
+
 - [ ] Have accessible theme toggle
 - [ ] Support system preference detection
 - [ ] Store theme preference in localStorage
@@ -712,28 +949,42 @@ export const ThemeToggle = () => {
 #### 🔧 High-Contrast Utility Classes
 
 **Always use these classes for guaranteed accessibility:**
+
 ```css
 /* Primary text - highest contrast */
-.text-high-contrast { color: rgb(17 24 39); }
-.dark .dark\:text-high-contrast { color: rgb(243 244 246); }
+.text-high-contrast {
+  color: rgb(17 24 39);
+}
+.dark .dark\:text-high-contrast {
+  color: rgb(243 244 246);
+}
 
-/* Secondary text - good contrast */  
-.text-medium-contrast { color: rgb(55 65 81); }
-.dark .dark\:text-medium-contrast { color: rgb(209 213 219); }
+/* Secondary text - good contrast */
+.text-medium-contrast {
+  color: rgb(55 65 81);
+}
+.dark .dark\:text-medium-contrast {
+  color: rgb(209 213 219);
+}
 
 /* Subtle text - minimum contrast */
-.text-subtle-contrast { color: rgb(107 114 128); }
-.dark .dark\:text-subtle-contrast { color: rgb(156 163 175); }
+.text-subtle-contrast {
+  color: rgb(107 114 128);
+}
+.dark .dark\:text-subtle-contrast {
+  color: rgb(156 163 175);
+}
 ```
 
 #### 🎯 Icon Color Standards
 
 **✅ Required Icon Classes:**
+
 ```typescript
 // Primary icons (buttons, actions)
 <Settings className="text-blue-600 dark:text-blue-400" />
 
-// Secondary icons (navigation, info)  
+// Secondary icons (navigation, info)
 <Clock className="text-gray-700 dark:text-gray-200" />
 
 // Status icons with semantic colors
@@ -744,6 +995,7 @@ export const ThemeToggle = () => {
 #### 🃏 Card & Container Standards
 
 **✅ Required Card Styling:**
+
 ```typescript
 // Standard card with visible borders
 <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-lg">
@@ -755,13 +1007,14 @@ export const ThemeToggle = () => {
 #### 📑 Tab System Standards
 
 **✅ Required Tab Implementation:**
+
 ```typescript
 // TabsList with clear background
 <TabsList className="bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
 
 // TabsTrigger with active/inactive states
 <TabsTrigger className={
-  isActive 
+  isActive
     ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-600"
     : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
 }>
@@ -770,8 +1023,9 @@ export const ThemeToggle = () => {
 #### ⚠️ Mandatory Testing Rules
 
 **Before committing any UI component:**
+
 1. **Test Light Mode**: Check all text/icon contrast ratios
-2. **Test Dark Mode**: Verify visibility of borders and icons  
+2. **Test Dark Mode**: Verify visibility of borders and icons
 3. **Test Hover States**: Ensure interactive feedback is visible
 4. **Use DevTools**: Chrome Accessibility tab to verify contrast
 5. **Test Navigation**: Tab through all interactive elements
@@ -870,40 +1124,8 @@ bun test timezone            # Run specific test
 bun test tests/line-timezone.test.ts  # Run specific file
 ```
 
-### 💡 Bun Best Practices
+#### ✅ **Production**
 
-- ✅ **Always use Bun**: Instead of npm, yarn, or pnpm
-- ✅ **TypeScript Direct**: Run .ts files directly with `bun file.ts`
-- ✅ **Bunx for Tools**: Use `bunx` instead of `npx`
-- ✅ **Fast Hot Reload**: Bun has faster hot reload than alternatives
-- ✅ **ESM Native**: Bun supports ES modules natively
-- ❌ **Avoid Mixed PM**: Don't mix with npm/yarn in same project
-
-## 📋 Quick Start Guide
-
-### 🚀 Core Commands
-
-#### Development
-```bash
-bun run dev              # Run dev server (Port: 4325, HTTPS)
-bun run dev:clean        # Clear cache + run dev
-bun run tailwind:build   # Build CSS (src/input.css → src/output.css)
-```
-
-#### Database
-```bash
-bun run db:push          # Update schema (MongoDB - use instead of db:deploy)
-bun run db:generate      # Generate Prisma client
-```
-
-#### Testing
-```bash
-bun test                 # Run all tests
-bun test:timezone        # Test timezone
-bun test:line           # Test LINE integration
-```
-
-#### Production
 ```bash
 bun run build           # Build for production
 bun run start           # Run production server
@@ -912,6 +1134,7 @@ bun run start           # Run production server
 ### 🔧 Environment Variables
 
 #### Required
+
 ```bash
 DATABASE_URL="mongodb://..."    # MongoDB connection
 NEXTAUTH_SECRET="..."          # JWT secret
@@ -922,6 +1145,7 @@ LINE_CHANNEL_ACCESS="..."      # Messaging API
 ```
 
 #### Optional
+
 ```bash
 APP_DOMAIN="..."               # Production domain
 CMC_API_KEY="..."             # CoinMarketCap
@@ -930,10 +1154,10 @@ AIRVISUAL_API_KEY="..."       # Air quality
 
 ### 🌐 Application URLs
 
-| Environment | URL | Notes |
-|-------------|-----|-------|
+| Environment | URL                      | Notes                       |
+| ----------- | ------------------------ | --------------------------- |
 | Development | `https://localhost:4325` | HTTPS with self-signed cert |
-| Production | Per APP_DOMAIN | Use ENV variables |
+| Production  | Per APP_DOMAIN           | Use ENV variables           |
 
 ### 💡 Important Notes
 
@@ -960,22 +1184,22 @@ AIRVISUAL_API_KEY="..."       # Air quality
 ```typescript
 export async function POST(request: Request) {
   // 1. 🔐 Authenticate user
-  const session = await getServerSession(authOptions)
+  const session = await getServerSession(authOptions);
   if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   // 2. ✅ Validate input
-  const body = await request.json()
-  const validatedData = SecuritySchema.parse(body)
+  const body = await request.json();
+  const validatedData = SecuritySchema.parse(body);
 
   // 3. 🛡️ Authorize action
-  if (!hasPermission(session.user, 'CREATE_ATTENDANCE')) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!hasPermission(session.user, "CREATE_ATTENDANCE")) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   // 4. 🚀 Process securely
-  return await processSecurely(validatedData)
+  return await processSecurely(validatedData);
 }
 ```
 
@@ -992,31 +1216,31 @@ export async function POST(request: Request) {
 **Example: Secure Input Validation**
 
 ```typescript
-import { z } from 'zod'
+import { z } from "zod";
 
 const AttendanceSchema = z.object({
   userId: z.string().min(1).max(100),
   timestamp: z.date(),
   location: z.string().optional(),
   notes: z.string().max(500).optional(),
-})
+});
 
 // Always validate before processing
 const validateAttendanceInput = (input: unknown) => {
-  const result = AttendanceSchema.safeParse(input)
+  const result = AttendanceSchema.safeParse(input);
   if (!result.success) {
-    throw new SecurityError('Invalid input', result.error)
+    throw new SecurityError("Invalid input", result.error);
   }
-  return result.data
-}
+  return result.data;
+};
 
 // ✅ Functional Validation Pipeline
 const validateAndProcessInput = pipe(
   parseInput,
   validateSchema,
   sanitizeData,
-  transformData
-)
+  transformData,
+);
 ```
 
 ### 🔐 Cryptographic Security
@@ -1024,12 +1248,12 @@ const validateAndProcessInput = pipe(
 **Secure Random Generation**
 
 ```typescript
-import { selectRandomChar, CHARSETS } from '@/lib/crypto-random'
+import { selectRandomChar, CHARSETS } from "@/lib/crypto-random";
 
 // ✅ Use cryptographically secure random generation
-const apiKey = generateRandomString(32, CHARSETS.BASE64_URL_SAFE)
-const sessionToken = generateSessionToken(64)
-const otpCode = generateNumericCode(6)
+const apiKey = generateRandomString(32, CHARSETS.BASE64_URL_SAFE);
+const sessionToken = generateSessionToken(64);
+const otpCode = generateNumericCode(6);
 ```
 
 **Security Requirements**
@@ -1052,9 +1276,9 @@ const attendance = await db.attendance.create({
     checkInTime: new Date(),
     location: sanitizeLocation(validatedData.location),
     // Never store raw sensitive data
-    notes: encryptSensitiveData(validatedData.notes)
-  }
-})
+    notes: encryptSensitiveData(validatedData.notes),
+  },
+});
 ```
 
 **Security Practices**
@@ -1078,18 +1302,15 @@ const attendance = await db.attendance.create({
 **LINE Webhook Verification**
 
 ```typescript
-import crypto from 'crypto'
+import crypto from "crypto";
 
 function verifyLineSignature(body: string, signature: string): boolean {
   const hash = crypto
-    .createHmac('sha256', process.env.LINE_CHANNEL_SECRET!)
+    .createHmac("sha256", process.env.LINE_CHANNEL_SECRET!)
     .update(body)
-    .digest('base64')
-  
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(hash)
-  )
+    .digest("base64");
+
+  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(hash));
 }
 ```
 
@@ -1109,22 +1330,24 @@ function verifyLineSignature(body: string, signature: string): boolean {
 class SecurityError extends Error {
   constructor(
     message: string,
-    public readonly userMessage: string = 'An error occurred'
+    public readonly userMessage: string = "An error occurred",
   ) {
-    super(message)
-    this.name = 'SecurityError'
+    super(message);
+    this.name = "SecurityError";
   }
 }
 
 // 📝 Log security events without exposing sensitive data
 function logSecurityEvent(event: string, userId?: string, metadata?: object) {
-  console.log(JSON.stringify({
-    level: 'security',
-    event,
-    userId: userId ? hashUserId(userId) : undefined,
-    timestamp: new Date().toISOString(),
-    metadata: sanitizeLogData(metadata)
-  }))
+  console.log(
+    JSON.stringify({
+      level: "security",
+      event,
+      userId: userId ? hashUserId(userId) : undefined,
+      timestamp: new Date().toISOString(),
+      metadata: sanitizeLogData(metadata),
+    }),
+  );
 }
 ```
 
@@ -1222,19 +1445,23 @@ When trying to run dev server that's already running:
 
 ```typescript
 // Secure random generation
-import { selectRandomChar, CHARSETS, generateRandomString } from '@/lib/crypto-random'
+import {
+  selectRandomChar,
+  CHARSETS,
+  generateRandomString,
+} from "@/lib/crypto-random";
 
 // Input validation
-import { z } from 'zod'
+import { z } from "zod";
 
 // Database operations
-import { db } from '@/lib/database'
+import { db } from "@/lib/database";
 
 // Authentication
-import { getServerSession } from 'next-auth'
+import { getServerSession } from "next-auth";
 
 // Functional Programming utilities
-import { pipe, compose, curry, memoize } from '@/lib/functional'
+import { pipe, compose, curry, memoize } from "@/lib/functional";
 ```
 
 ### 🏗️ Project Structure Reference
@@ -1253,7 +1480,7 @@ import { pipe, compose, curry, memoize } from '@/lib/functional'
 │   └── tsconfig.json              # TypeScript configuration
 │
 ├── 🔐 Security & Certificates     # Security and certificates
-│   └── certificates/  
+│   └── certificates/
 │       ├── localhost.pem          # SSL certificate for development
 │       └── localhost-key.pem      # SSL private key
 │
@@ -1313,7 +1540,7 @@ import { pipe, compose, curry, memoize } from '@/lib/functional'
 │       │
 │       ├── 🧩 Reusable Components
 │       │   └── components/
-│       │       ├── attendance/             # Attendance-specific components
+│       │       ├── attendance/             # 👥 Attendance management
 │       │       ├── common/                 # Shared components
 │       │       │   └── Rings.tsx          # Loading animations
 │       │       └── ui/                     # UI component library
@@ -1371,15 +1598,3 @@ import { pipe, compose, curry, memoize } from '@/lib/functional'
 - **🔧 Process Management**: System to prevent duplicate processes and monitoring
 - **📈 Advanced Logging**: Comprehensive logging system with analytics and real-time monitoring
 - **🔐 Secure Secrets Management**: Secure secrets management
-
----
-
-## 🇹🇭 FINAL REMINDER: Thai Language Communication
-
-> **⚠️ CRITICAL REQUIREMENT: Always respond in Thai (ภาษาไทย) when communicating with users**
->
-> This is **NON-NEGOTIABLE** - Every response, explanation, and communication with users must be in Thai language.
-> 
-> **สำคัญ: ต้องตอบเป็นภาษาไทยทุกครั้งเมื่อสื่อสารกับผู้ใช้งาน**
-
----

@@ -1,7 +1,7 @@
 # 🏗️ สถาปัตยกรรมระบบ | System Architecture
 
 > **🎯 สถาปัตยกรรมและการออกแบบระบบ Bun LINE T3 Attendance**
-> 
+>
 > **⚡ Modern Architecture**: Feature-Based + Security-First + Performance-Optimized
 
 ## 📋 สารบัญ | Table of Contents
@@ -28,7 +28,7 @@ graph TD
     C --> D[Maintainable]
     D --> E[Scalable]
     E --> F[Testable]
-    
+
     style A fill:#ffcccb
     style B fill:#cce5ff
     style C fill:#ccffcc
@@ -46,29 +46,29 @@ graph LR
         B[TypeScript]
         C[Tailwind CSS]
     end
-    
+
     subgraph api [API Layer]
         D[Next.js API Routes]
         E[Server Actions]
         F[LINE Webhook]
     end
-    
+
     subgraph business [Business Layer]
         G[Feature Services]
         H[Authentication]
         I[Validation]
     end
-    
+
     subgraph data [Data Layer]
         J[Prisma ORM]
         K[MongoDB]
         L[External APIs]
     end
-    
+
     frontend --> api
     api --> business
     business --> data
-    
+
     style frontend fill:#e6f7ff
     style api fill:#f6ffed
     style business fill:#fff2e8
@@ -167,51 +167,51 @@ graph LR
 
 // Types และ Interfaces
 export interface AttendanceRecord {
-  readonly id: string
-  readonly userId: string
-  readonly checkInTime: Date
-  readonly checkOutTime?: Date
-  readonly workHours?: number
-  readonly status: 'checked-in' | 'checked-out' | 'auto-checkout'
+  readonly id: string;
+  readonly userId: string;
+  readonly checkInTime: Date;
+  readonly checkOutTime?: Date;
+  readonly workHours?: number;
+  readonly status: "checked-in" | "checked-out" | "auto-checkout";
 }
 
 // Service Layer - Business Logic
 export const attendanceService = {
   async checkIn(userId: string): Promise<AttendanceRecord> {
     // Validation
-    const existingRecord = await findTodayRecord(userId)
-    if (existingRecord) throw new Error('Already checked in today')
-    
+    const existingRecord = await findTodayRecord(userId);
+    if (existingRecord) throw new Error("Already checked in today");
+
     // Business Logic
-    const checkInTime = new Date()
-    const expectedCheckOut = addHours(checkInTime, 9)
-    
+    const checkInTime = new Date();
+    const expectedCheckOut = addHours(checkInTime, 9);
+
     // Database Operation
     return await db.attendance.create({
-      data: { userId, checkInTime, expectedCheckOut }
-    })
+      data: { userId, checkInTime, expectedCheckOut },
+    });
   },
-  
+
   async checkOut(userId: string): Promise<AttendanceRecord> {
     // Implementation...
-  }
-}
+  },
+};
 
 // API Layer - Route Handlers
 export async function POST(request: Request) {
   // 1. Authentication
-  const session = await getServerSession()
-  if (!session) return unauthorized()
-  
+  const session = await getServerSession();
+  if (!session) return unauthorized();
+
   // 2. Validation
-  const body = await request.json()
-  const data = AttendanceSchema.parse(body)
-  
+  const body = await request.json();
+  const data = AttendanceSchema.parse(body);
+
   // 3. Business Logic
-  const result = await attendanceService.checkIn(session.user.id)
-  
+  const result = await attendanceService.checkIn(session.user.id);
+
   // 4. Response
-  return Response.json(result)
+  return Response.json(result);
 }
 ```
 
@@ -220,25 +220,31 @@ export async function POST(request: Request) {
 ```typescript
 // ✅ Barrel Exports สำหรับ Clean Imports
 // src/features/attendance/index.ts
-export * from './services/attendance'
-export * from './types'
-export * from './utils'
+export * from "./services/attendance";
+export * from "./types";
+export * from "./utils";
 
 // ✅ Clean Import Pattern
-import { attendanceService, type AttendanceRecord } from '@/features/attendance'
-import { lineService } from '@/features/line'
-import { authService } from '@/features/auth'
+import {
+  attendanceService,
+  type AttendanceRecord,
+} from "@/features/attendance";
+import { lineService } from "@/features/line";
+import { authService } from "@/features/auth";
 
 // ✅ Cross-Feature Integration
 const handleCheckIn = async (userId: string) => {
   // Use attendance service
-  const record = await attendanceService.checkIn(userId)
-  
+  const record = await attendanceService.checkIn(userId);
+
   // Notify via LINE
-  await lineService.sendMessage(userId, `✅ เข้างานสำเร็จ ${format(record.checkInTime, 'HH:mm')}`)
-  
-  return record
-}
+  await lineService.sendMessage(
+    userId,
+    `✅ เข้างานสำเร็จ ${format(record.checkInTime, "HH:mm")}`,
+  );
+
+  return record;
+};
 ```
 
 ## 🔄 Data Flow และ State Management
@@ -253,7 +259,7 @@ sequenceDiagram
     participant V as Validation
     participant DB as Database
     participant EXT as External APIs
-    
+
     U->>API: Request
     API->>API: Authentication
     API->>V: Validate Input
@@ -274,7 +280,7 @@ sequenceDiagram
 const AttendanceReport = async ({ userId }: { userId: string }) => {
   // Server-side data fetching
   const data = await attendanceService.getMonthlyReport(userId)
-  
+
   return <ReportDisplay data={data} />
 }
 
@@ -287,7 +293,7 @@ const CheckInForm = () => {
   const [state, formAction, isPending] = useActionState(checkInAction, {
     message: '', success: false
   })
-  
+
   return (
     <form action={formAction}>
       <button type="submit" disabled={isPending}>
@@ -310,36 +316,36 @@ graph TD
         A2[Security Headers]
         A3[Rate Limiting]
     end
-    
+
     subgraph auth [Authentication Layer]
         B1[NextAuth.js]
         B2[LINE OAuth]
         B3[Session Management]
     end
-    
+
     subgraph validation [Validation Layer]
         C1[Zod Schemas]
         C2[Input Sanitization]
         C3[Type Safety]
     end
-    
+
     subgraph business [Business Layer]
         D1[Authorization Checks]
         D2[Data Filtering]
         D3[Audit Logging]
     end
-    
+
     subgraph data [Data Layer]
         E1[Encrypted Fields]
         E2[Parameterized Queries]
         E3[Access Controls]
     end
-    
+
     network --> auth
     auth --> validation
     validation --> business
     business --> data
-    
+
     style network fill:#e6f7ff
     style auth fill:#f6ffed
     style validation fill:#fff2e8
@@ -351,56 +357,57 @@ graph TD
 
 ```typescript
 // ✅ Input Validation με Zod
-const AttendanceSchema = z.object({
-  userId: z.string().uuid(),
-  timestamp: z.date(),
-  location: z.string().max(100).optional(),
-  notes: z.string().max(500).optional(),
-}).strict() // ปฏิเสธ unknown properties
+const AttendanceSchema = z
+  .object({
+    userId: z.string().uuid(),
+    timestamp: z.date(),
+    location: z.string().max(100).optional(),
+    notes: z.string().max(500).optional(),
+  })
+  .strict(); // ปฏิเสธ unknown properties
 
 // ✅ Secure API Handler Pattern
 export async function POST(request: Request) {
   try {
     // 1. 🔐 Authentication
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    
+
     // 2. ✅ Input Validation
-    const body = await request.json()
-    const validatedData = AttendanceSchema.parse(body)
-    
+    const body = await request.json();
+    const validatedData = AttendanceSchema.parse(body);
+
     // 3. 🛡️ Authorization
-    if (!hasPermission(session.user, 'CREATE_ATTENDANCE')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (!hasPermission(session.user, "CREATE_ATTENDANCE")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-    
+
     // 4. 🧠 Business Logic
-    const result = await attendanceService.create(validatedData)
-    
+    const result = await attendanceService.create(validatedData);
+
     // 5. 📝 Audit Logging
-    await auditLogger.log('ATTENDANCE_CREATED', {
+    await auditLogger.log("ATTENDANCE_CREATED", {
       userId: session.user.id,
-      recordId: result.id
-    })
-    
-    return NextResponse.json(result)
-    
+      recordId: result.id,
+    });
+
+    return NextResponse.json(result);
   } catch (error) {
     // 🚨 Secure Error Handling
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid input', details: error.errors },
-        { status: 400 }
-      )
+        { error: "Invalid input", details: error.errors },
+        { status: 400 },
+      );
     }
-    
+
     // Don't leak internal errors
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 ```
@@ -417,28 +424,28 @@ graph LR
         A3[Image Optimization]
         A4[Bundle Splitting]
     end
-    
+
     subgraph network [Network Performance]
         B1[Edge Deployment]
         B2[CDN Integration]
         B3[Compression]
         B4[Caching Headers]
     end
-    
+
     subgraph database [Database Performance]
         C1[Connection Pooling]
         C2[Query Optimization]
         C3[Indexing Strategy]
         C4[Aggregation Pipeline]
     end
-    
+
     subgraph runtime [Runtime Performance]
         D1[Bun Runtime]
         D2[Memory Management]
         D3[Async Operations]
         D4[Worker Threads]
     end
-    
+
     style frontend fill:#e6f7ff
     style network fill:#f6ffed
     style database fill:#fff2e8
@@ -455,7 +462,7 @@ const MonthlyReport = async ({ userId, month }: ReportProps) => {
     attendanceService.getMonthlyData(userId, month),
     attendanceService.getStatistics(userId, month)
   ])
-  
+
   return (
     <div className="space-y-6">
       <AttendanceChart data={attendanceData} />
@@ -499,7 +506,7 @@ export const withCache = <T>(
   if (cached && cached.expires > Date.now()) {
     return Promise.resolve(cached.data)
   }
-  
+
   return fn().then(data => {
     cache.set(key, { data, expires: Date.now() + ttl })
     return data
@@ -542,18 +549,18 @@ export const withCache = <T>(
 ```typescript
 // ✅ Standardized API Response Format
 interface ApiResponse<T = any> {
-  success: boolean
-  data?: T
+  success: boolean;
+  data?: T;
   error?: {
-    code: string
-    message: string
-    details?: any
-  }
+    code: string;
+    message: string;
+    details?: any;
+  };
   meta?: {
-    timestamp: string
-    requestId: string
-    version: string
-  }
+    timestamp: string;
+    requestId: string;
+    version: string;
+  };
 }
 
 // ✅ Success Response
@@ -563,20 +570,24 @@ const successResponse = <T>(data: T): ApiResponse<T> => ({
   meta: {
     timestamp: new Date().toISOString(),
     requestId: crypto.randomUUID(),
-    version: '1.0.0'
-  }
-})
+    version: "1.0.0",
+  },
+});
 
 // ✅ Error Response
-const errorResponse = (code: string, message: string, details?: any): ApiResponse => ({
+const errorResponse = (
+  code: string,
+  message: string,
+  details?: any,
+): ApiResponse => ({
   success: false,
   error: { code, message, details },
   meta: {
     timestamp: new Date().toISOString(),
     requestId: crypto.randomUUID(),
-    version: '1.0.0'
-  }
-})
+    version: "1.0.0",
+  },
+});
 ```
 
 ## 🗄️ Database Design
@@ -590,14 +601,14 @@ model User {
   email       String   @unique
   name        String?
   lineUserId  String?  @unique
-  
+
   // Relationships
   attendances Attendance[]
-  
+
   // Metadata
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   @@map("users")
 }
 
@@ -610,14 +621,14 @@ model Attendance {
   status          String    @default("checked-in")
   location        String?
   notes           String?
-  
+
   // Relations
   user            User      @relation(fields: [userId], references: [id])
-  
+
   // Metadata
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
-  
+
   // Indexes
   @@index([userId, checkInTime])
   @@map("attendances")
@@ -628,16 +639,16 @@ model Attendance {
 
 ```javascript
 // MongoDB Indexes สำหรับประสิทธิภาพ
-db.attendances.createIndex({ "userId": 1, "checkInTime": -1 })
-db.attendances.createIndex({ "checkInTime": 1 })
-db.attendances.createIndex({ "status": 1 })
+db.attendances.createIndex({ userId: 1, checkInTime: -1 });
+db.attendances.createIndex({ checkInTime: 1 });
+db.attendances.createIndex({ status: 1 });
 
 // Compound Index สำหรับการค้นหาที่ซับซ้อน
 db.attendances.createIndex({
-  "userId": 1,
-  "checkInTime": -1,
-  "status": 1
-})
+  userId: 1,
+  checkInTime: -1,
+  status: 1,
+});
 ```
 
 ## 🧪 Testing Architecture
@@ -651,26 +662,26 @@ graph TD
         B[Integration Tests]
         C[E2E Tests]
     end
-    
+
     subgraph security [Security Tests]
         D[Auth Tests]
         E[Validation Tests]
         F[XSS/CSRF Tests]
     end
-    
+
     subgraph performance [Performance Tests]
         G[Load Tests]
         H[Speed Tests]
         I[Memory Tests]
     end
-    
+
     A --> B
     B --> C
     D --> E
     E --> F
     G --> H
     H --> I
-    
+
     style testing fill:#e6f3ff
     style security fill:#ffe6e6
     style performance fill:#e6ffe6
@@ -680,57 +691,58 @@ graph TD
 
 ```typescript
 // ✅ Unit Test Example
-import { describe, test, expect } from 'bun:test'
-import { attendanceService } from '@/features/attendance'
+import { describe, test, expect } from "bun:test";
+import { attendanceService } from "@/features/attendance";
 
-describe('Attendance Service', () => {
-  test('should calculate work hours correctly', async () => {
-    const checkIn = new Date('2025-06-14T09:00:00Z')
-    const checkOut = new Date('2025-06-14T18:00:00Z')
-    
-    const workHours = attendanceService.calculateWorkHours(checkIn, checkOut)
-    
-    expect(workHours).toBe(9)
-  })
-  
-  test('should prevent duplicate check-ins', async () => {
-    const userId = 'test-user-id'
-    
+describe("Attendance Service", () => {
+  test("should calculate work hours correctly", async () => {
+    const checkIn = new Date("2025-06-14T09:00:00Z");
+    const checkOut = new Date("2025-06-14T18:00:00Z");
+
+    const workHours = attendanceService.calculateWorkHours(checkIn, checkOut);
+
+    expect(workHours).toBe(9);
+  });
+
+  test("should prevent duplicate check-ins", async () => {
+    const userId = "test-user-id";
+
     // Mock existing record
-    jest.spyOn(db.attendance, 'findFirst').mockResolvedValue({
-      id: 'existing-record',
+    jest.spyOn(db.attendance, "findFirst").mockResolvedValue({
+      id: "existing-record",
       userId,
       checkInTime: new Date(),
-      checkOutTime: null
-    })
-    
-    await expect(attendanceService.checkIn(userId))
-      .rejects.toThrow('Already checked in today')
-  })
-})
+      checkOutTime: null,
+    });
+
+    await expect(attendanceService.checkIn(userId)).rejects.toThrow(
+      "Already checked in today",
+    );
+  });
+});
 
 // ✅ Integration Test Example
-describe('Attendance API', () => {
-  test('POST /api/attendance should create attendance record', async () => {
-    const response = await fetch('/api/attendance', {
-      method: 'POST',
+describe("Attendance API", () => {
+  test("POST /api/attendance should create attendance record", async () => {
+    const response = await fetch("/api/attendance", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer valid-token'
+        "Content-Type": "application/json",
+        Authorization: "Bearer valid-token",
       },
       body: JSON.stringify({
-        action: 'check-in',
-        timestamp: new Date().toISOString()
-      })
-    })
-    
-    const data = await response.json()
-    
-    expect(response.status).toBe(200)
-    expect(data.success).toBe(true)
-    expect(data.data.checkInTime).toBeDefined()
-  })
-})
+        action: "check-in",
+        timestamp: new Date().toISOString(),
+      }),
+    });
+
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.success).toBe(true);
+    expect(data.data.checkInTime).toBeDefined();
+  });
+});
 ```
 
 ## 🚀 Deployment Architecture
@@ -744,19 +756,19 @@ graph LR
         A2[Docker Dev]
         A3[Staging]
     end
-    
+
     subgraph production [Production]
         B1[Vercel Edge]
         B2[Railway]
         B3[Docker Production]
     end
-    
+
     subgraph databases [Databases]
         C1[Local MongoDB]
         C2[MongoDB Atlas]
         C3[Production Cluster]
     end
-    
+
     A1 --> C1
     A2 --> C1
     A3 --> C2
@@ -786,14 +798,14 @@ jobs:
       - run: bun run lint
       - run: bun run type-check
       - run: bun test
-  
+
   security:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: bun audit
       - run: bunx prisma validate
-  
+
   deploy:
     needs: [test, security]
     runs-on: ubuntu-latest

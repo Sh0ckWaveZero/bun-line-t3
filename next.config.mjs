@@ -1,5 +1,5 @@
-import path from 'path'
-import { fileURLToPath } from 'url'
+import path from "path";
+import { fileURLToPath } from "url";
 
 /**
  * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially useful
@@ -8,37 +8,41 @@ import { fileURLToPath } from 'url'
 
 await import("./src/env.mjs");
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /** @type {import("next").NextConfig} */
 const config = {
   reactStrictMode: true,
   experimental: {
-    optimizePackageImports: ['date-fns', 'date-fns-tz', 'zod'],
+    optimizePackageImports: ["date-fns", "date-fns-tz", "zod"],
     optimizeServerReact: true,
   },
   typescript: {
     ignoreBuildErrors: false,
   },
-  ...(process.env.NODE_ENV === 'development' ? {
-    assetPrefix: '',
-    basePath: '',
-    devIndicators: { position: 'bottom-right' },
-    allowedDevOrigins: ['localhost', '127.0.0.1', '.localhost'],
-  } : {}),
-  ...(process.env.NODE_ENV === 'production' ? {
-    allowedDevOrigins: ["*.your-app.example.com"],
-  } : {}),
+  ...(process.env.NODE_ENV === "development"
+    ? {
+        assetPrefix: "",
+        basePath: "",
+        devIndicators: { position: "bottom-right" },
+        allowedDevOrigins: ["localhost", "127.0.0.1", ".localhost"],
+      }
+    : {}),
+  ...(process.env.NODE_ENV === "production"
+    ? {
+        allowedDevOrigins: ["*.your-app.example.com"],
+      }
+    : {}),
   output: "standalone",
   images: {
-    formats: ['image/avif', 'image/webp'],
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'profile.line-scdn.net',
-        port: '',
-        pathname: '/**',
+        protocol: "https",
+        hostname: "profile.line-scdn.net",
+        port: "",
+        pathname: "/**",
       },
     ],
   },
@@ -46,40 +50,47 @@ const config = {
     config.resolve = config.resolve || {};
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@': path.resolve(__dirname, './src'),
-      '@/app': path.resolve(__dirname, './src/app'),
-      '@/auth': path.resolve(__dirname, './src/lib/auth'),
-      '@/components': path.resolve(__dirname, './src/components'),
-      '@/constants': path.resolve(__dirname, './src/lib/constants'),
-      '@/database': path.resolve(__dirname, './src/lib/database'),
-      '@/features': path.resolve(__dirname, './src/features'),
-      '@/hooks': path.resolve(__dirname, './src/hooks'),
-      '@/lib': path.resolve(__dirname, './src/lib'),
-      '@/types': path.resolve(__dirname, './src/lib/types'),
-      '@/utils': path.resolve(__dirname, './src/lib/utils'),
-      '@/validation': path.resolve(__dirname, './src/lib/validation'),
-    }
+      "@": path.resolve(__dirname, "./src"),
+      "@/app": path.resolve(__dirname, "./src/app"),
+      "@/auth": path.resolve(__dirname, "./src/lib/auth"),
+      "@/components": path.resolve(__dirname, "./src/components"),
+      "@/constants": path.resolve(__dirname, "./src/lib/constants"),
+      "@/database": path.resolve(__dirname, "./src/lib/database"),
+      "@/features": path.resolve(__dirname, "./src/features"),
+      "@/hooks": path.resolve(__dirname, "./src/hooks"),
+      "@/lib": path.resolve(__dirname, "./src/lib"),
+      "@/types": path.resolve(__dirname, "./src/lib/types"),
+      "@/utils": path.resolve(__dirname, "./src/lib/utils"),
+      "@/validation": path.resolve(__dirname, "./src/lib/validation"),
+    };
     if (dev && !isServer) {
       if (config.devServer) {
         const allowedFromEnv = process.env.ALLOWED_DOMAINS
-          ? process.env.ALLOWED_DOMAINS.split(',').map(s => s.trim()).filter(Boolean)
-          : ['localhost', '127.0.0.1', '.localhost']
-        config.devServer.allowedHosts = allowedFromEnv
-        config.devServer.host = 'localhost'
-        config.devServer.port = 4325
+          ? process.env.ALLOWED_DOMAINS.split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
+          : ["localhost", "127.0.0.1", ".localhost"];
+        config.devServer.allowedHosts = allowedFromEnv;
+        config.devServer.host = "localhost";
+        config.devServer.port = 4325;
       }
     }
     config.module = config.module || {};
     config.module.rules = config.module.rules || [];
-    config.module.rules.push({ test: /scripts\/legacy\/.*\.ts$/, use: 'ignore-loader' })
-    config.module.rules.push({ test: /tests\/.*/, use: 'ignore-loader' })
-    config.module.rules.push({ test: /\.test\.(ts|tsx)$/, use: 'ignore-loader' })
-    return config
+    config.module.rules.push({
+      test: /scripts\/legacy\/.*\.ts$/,
+      use: "ignore-loader",
+    });
+    config.module.rules.push({ test: /tests\/.*/, use: "ignore-loader" });
+    config.module.rules.push({
+      test: /\.test\.(ts|tsx)$/,
+      use: "ignore-loader",
+    });
+    return config;
   },
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+    removeConsole: process.env.NODE_ENV === "production",
   },
 };
-
 
 export default config;

@@ -1,7 +1,7 @@
 // 🔐 Attendance System Types
 // Security-First Type Definitions for Attendance Management
 
-import { AttendanceStatusType } from '@/features/attendance/types/attendance-status';
+import { AttendanceStatusType } from "@/features/attendance/types/attendance-status";
 
 // 👤 Core User Interface
 export interface User {
@@ -86,22 +86,22 @@ export interface ErrorMessageProps {
 export interface UseAttendanceReportReturn {
   // Session
   session: any;
-  status: 'loading' | 'authenticated' | 'unauthenticated';
-  
+  status: "loading" | "authenticated" | "unauthenticated";
+
   // Report Data
   report: MonthlyAttendanceReport | null;
   loading: boolean;
   error: string | null;
   selectedMonth: string;
   setSelectedMonth: (month: string) => void;
-  
+
   // Edit Modal
   editModalOpen: boolean;
   editingRecord: AttendanceRecord | null;
   editData: EditAttendanceData;
   setEditData: (data: EditAttendanceData) => void;
   updateLoading: boolean;
-  
+
   // Functions
   fetchReport: () => Promise<void>;
   openEditModal: (record: AttendanceRecord) => void;
@@ -110,4 +110,4 @@ export interface UseAttendanceReportReturn {
 }
 
 // Re-export AttendanceStatusType for convenience (as both type and value)
-export { AttendanceStatusType } from '@/features/attendance/types/attendance-status';
+export { AttendanceStatusType } from "@/features/attendance/types/attendance-status";

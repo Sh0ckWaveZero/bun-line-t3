@@ -2,10 +2,10 @@
 // หากมีการเปลี่ยนแปลง schema ให้ sync ค่านี้กับฝั่ง server เสมอ
 
 export enum AttendanceStatusType {
-  CHECKED_IN_ON_TIME = 'CHECKED_IN_ON_TIME',
-  CHECKED_IN_LATE = 'CHECKED_IN_LATE', 
-  CHECKED_OUT = 'CHECKED_OUT',
-  AUTO_CHECKOUT_MIDNIGHT = 'AUTO_CHECKOUT_MIDNIGHT', // 🆕 เพิ่มสำหรับการออกงานอัตโนมัติ
+  CHECKED_IN_ON_TIME = "CHECKED_IN_ON_TIME",
+  CHECKED_IN_LATE = "CHECKED_IN_LATE",
+  CHECKED_OUT = "CHECKED_OUT",
+  AUTO_CHECKOUT_MIDNIGHT = "AUTO_CHECKOUT_MIDNIGHT", // 🆕 เพิ่มสำหรับการออกงานอัตโนมัติ
 }
 
 // Export สำหรับการใช้งานแบบ type-safe

@@ -1,6 +1,5 @@
-import { CmcList } from '../types/cmc.interface';
-import { cmcRepository } from './cmc.repository';
-
+import { CmcList } from "../types/cmc.interface";
+import { cmcRepository } from "./cmc.repository";
 
 export const cmcService = {
   async findOne(symbol: string) {

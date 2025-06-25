@@ -5,6 +5,7 @@ Simple และเฉพาะเจาะจง - ป้องกันกา�
 ## 🎯 Core Tools
 
 ### `simple-dev-server.ts` - Dev Server with Process Lock
+
 ป้องกันการรัน bun run dev ซ้ำ
 
 ```bash
@@ -13,6 +14,7 @@ bun run dev:force        # Force start dev server
 ```
 
 ### `simple-lock.ts` - Simple Process Lock
+
 ระบบป้องกันการรัน process ซ้ำ (สำหรับ dev server)
 
 ```bash
@@ -27,12 +29,12 @@ await withProcessLock('dev-server', async () => {
 
 ## 🛠️ Utility Scripts
 
-| Script | Purpose | Usage |
-|--------|---------|-------|
-| `generate-secrets.ts` | 🔑 Generate secure secrets | `bun scripts/generate-secrets.ts` |
+| Script                       | Purpose                      | Usage                                    |
+| ---------------------------- | ---------------------------- | ---------------------------------------- | ----- |
+| `generate-secrets.ts`        | 🔑 Generate secure secrets   | `bun scripts/generate-secrets.ts`        |
 | `generate-github-secrets.ts` | 🔐 GitHub secrets management | `bun scripts/generate-github-secrets.ts` |
-| `docker-entrypoint.sh` | 🐳 Docker container startup | Used in Dockerfile |
-| `switch-env.sh` | 🔀 Environment switcher | `./scripts/switch-env.sh dev|prod` |
+| `docker-entrypoint.sh`       | 🐳 Docker container startup  | Used in Dockerfile                       |
+| `switch-env.sh`              | 🔀 Environment switcher      | `./scripts/switch-env.sh dev             | prod` |
 
 ## 🎯 Quick Start
 

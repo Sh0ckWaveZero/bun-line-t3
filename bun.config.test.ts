@@ -9,7 +9,7 @@ export default {
     "**/*.test.ts",
     "**/*.test.js",
     "**/tests/**/*.ts",
-    "**/tests/**/*.js"
+    "**/tests/**/*.js",
   ],
 
   // Environment setup
@@ -22,7 +22,7 @@ export default {
       line: 80,
       function: 80,
       branch: 70,
-      statement: 80
+      statement: 80,
     },
     exclude: [
       "node_modules/**",
@@ -30,8 +30,8 @@ export default {
       "**/*.test.ts",
       "**/*.test.js",
       ".next/**",
-      "dist/**"
-    ]
+      "dist/**",
+    ],
   },
 
   // Test timeout
@@ -39,6 +39,6 @@ export default {
 
   // Test environment
   env: {
-    NODE_ENV: "test"
-  }
-}
+    NODE_ENV: "test",
+  },
+};

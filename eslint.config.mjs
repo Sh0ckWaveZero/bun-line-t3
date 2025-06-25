@@ -17,11 +17,12 @@ const eslintConfig = [
       "@typescript-eslint/no-unused-vars": [
         "error",
         {
-          "argsIgnorePattern": "^_",
-          "varsIgnorePattern": "^(_|AttendanceRecord|EditAttendanceData|MonthlyAttendanceReport|User|.*Props)$",
-          "ignoreRestSiblings": true,
-          "args": "after-used"
-        }
+          argsIgnorePattern: "^_",
+          varsIgnorePattern:
+            "^(_|AttendanceRecord|EditAttendanceData|MonthlyAttendanceReport|User|.*Props)$",
+          ignoreRestSiblings: true,
+          args: "after-used",
+        },
       ],
       "@typescript-eslint/ban-ts-comment": [
         "error",
@@ -30,11 +31,11 @@ const eslintConfig = [
           "ts-ignore": true,
           "ts-nocheck": true,
           "ts-check": false,
-          "minimumDescriptionLength": 0
-        }
-      ]
+          minimumDescriptionLength: 0,
+        },
+      ],
     },
-  }
+  },
 ];
 
 export default eslintConfig;

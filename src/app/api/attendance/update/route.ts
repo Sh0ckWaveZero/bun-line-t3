@@ -1,14 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth/auth';
-import { db } from '@/lib/database';
-import { z } from 'zod';
-import { AttendanceStatusType } from '@prisma/client';
-import { datetimeRequired, datetimeOptional, validateAndParseDateTime, DateTimeSecurity } from '@/lib/validation/datetime';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth/auth";
+import { db } from "@/lib/database";
+import { z } from "zod";
+import { AttendanceStatusType } from "@prisma/client";
+import {
+  datetimeRequired,
+  datetimeOptional,
+  validateAndParseDateTime,
+  DateTimeSecurity,
+} from "@/lib/validation/datetime";
 
 // Schema สำหรับ validation ข้อมูล
 const UpdateAttendanceSchema = z.object({
-  attendanceId: z.string().min(1, 'Attendance ID is required'),
+  attendanceId: z.string().min(1, "Attendance ID is required"),
   checkInTime: datetimeRequired,
   checkOutTime: datetimeOptional,
 });
@@ -19,26 +24,32 @@ export async function PUT(request: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json(
-        { error: 'Unauthorized - Please login first' },
-        { status: 401 }
+        { error: "Unauthorized - Please login first" },
+        { status: 401 },
       );
     }
 
     // Parse request body
     const body = await request.json();
-    
+
     // 📝 Log ข้อมูลที่รับมาเพื่อการ debug (ไม่แสดงข้อมูลสำคัญ)
-    console.log('Update attendance request:', {
+    console.log("Update attendance request:", {
       attendanceId: body.attendanceId,
-      checkInDate: DateTimeSecurity.toSafeLogString(validateAndParseDateTime(body.checkInTime)),
-      checkOutDate: body.checkOutTime ? DateTimeSecurity.toSafeLogString(validateAndParseDateTime(body.checkOutTime)) : null,
+      checkInDate: DateTimeSecurity.toSafeLogString(
+        validateAndParseDateTime(body.checkInTime),
+      ),
+      checkOutDate: body.checkOutTime
+        ? DateTimeSecurity.toSafeLogString(
+            validateAndParseDateTime(body.checkOutTime),
+          )
+        : null,
       userId: session.user.id,
       timestamp: new Date().toISOString(),
     });
-    
+
     // Validate input data
     const validatedData = UpdateAttendanceSchema.parse(body);
-    
+
     // ตรวจสอบว่า attendance record นี้เป็นของ user ที่ login อยู่หรือไม่
     const existingRecord = await db.workAttendance.findUnique({
       where: { id: validatedData.attendanceId },
@@ -47,53 +58,63 @@ export async function PUT(request: NextRequest) {
 
     if (!existingRecord) {
       return NextResponse.json(
-        { error: 'Attendance record not found' },
-        { status: 404 }
+        { error: "Attendance record not found" },
+        { status: 404 },
       );
     }
 
     if (existingRecord.userId !== session.user.id) {
       return NextResponse.json(
-        { error: 'Forbidden - You can only edit your own attendance records' },
-        { status: 403 }
+        { error: "Forbidden - You can only edit your own attendance records" },
+        { status: 403 },
       );
     }
 
     // แปลง string เป็น Date objects พร้อมจัดการ timezone และ security checks
     const checkInTime = validateAndParseDateTime(validatedData.checkInTime);
-    const checkOutTime = validatedData.checkOutTime ? validateAndParseDateTime(validatedData.checkOutTime) : null;
+    const checkOutTime = validatedData.checkOutTime
+      ? validateAndParseDateTime(validatedData.checkOutTime)
+      : null;
 
     // 🛡️ Security validations
     if (!DateTimeSecurity.isWithinAcceptableRange(checkInTime)) {
       return NextResponse.json(
-        { error: 'Check-in time is outside acceptable range' },
-        { status: 400 }
+        { error: "Check-in time is outside acceptable range" },
+        { status: 400 },
       );
     }
 
-    if (checkOutTime && !DateTimeSecurity.isWithinAcceptableRange(checkOutTime)) {
+    if (
+      checkOutTime &&
+      !DateTimeSecurity.isWithinAcceptableRange(checkOutTime)
+    ) {
       return NextResponse.json(
-        { error: 'Check-out time is outside acceptable range' },
-        { status: 400 }
+        { error: "Check-out time is outside acceptable range" },
+        { status: 400 },
       );
     }
 
     // ตรวจสอบว่าเวลาเข้างานต้องอยู่ก่อนเวลาออกงาน
     if (checkOutTime && checkInTime >= checkOutTime) {
       return NextResponse.json(
-        { error: 'Check-in time must be before check-out time' },
-        { status: 400 }
+        { error: "Check-in time must be before check-out time" },
+        { status: 400 },
       );
     }
 
     // คำนวณชั่วโมงทำงาน (สำหรับแสดงผลเท่านั้น)
-    const hoursWorked = checkOutTime 
-      ? Number(((checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60 * 60)).toFixed(2))
+    const hoursWorked = checkOutTime
+      ? Number(
+          (
+            (checkOutTime.getTime() - checkInTime.getTime()) /
+            (1000 * 60 * 60)
+          ).toFixed(2),
+        )
       : null;
 
     // กำหนดสถานะใหม่ตามเวลาเข้างาน
     let newStatus: AttendanceStatusType;
-    
+
     // ตรวจสอบเวลาเข้างาน (08:00 เป็นเวลามาตรฐาน)
     const checkInHour = checkInTime.getHours();
     const checkInMinute = checkInTime.getMinutes();
@@ -129,7 +150,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Attendance record updated successfully',
+      message: "Attendance record updated successfully",
       data: {
         id: updatedRecord.id,
         workDate: updatedRecord.workDate, // workDate เป็น String แล้ว
@@ -140,46 +161,45 @@ export async function PUT(request: NextRequest) {
         updatedAt: updatedRecord.updatedAt.toISOString(),
       },
     });
-
   } catch (error) {
-    console.error('Error updating attendance:', error);
+    console.error("Error updating attendance:", error);
 
     // Handle Zod validation errors
     if (error instanceof z.ZodError) {
-      console.error('Validation error details:', error.errors);
+      console.error("Validation error details:", error.errors);
       return NextResponse.json(
-        { 
-          error: 'Invalid input data',
-          details: error.errors.map(err => ({
-            field: err.path.join('.'),
+        {
+          error: "Invalid input data",
+          details: error.errors.map((err) => ({
+            field: err.path.join("."),
             message: err.message,
             code: err.code,
           })),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Handle database errors
-    if (error instanceof Error && error.message.includes('Unique constraint')) {
+    if (error instanceof Error && error.message.includes("Unique constraint")) {
       return NextResponse.json(
-        { error: 'Duplicate attendance record for this date' },
-        { status: 409 }
+        { error: "Duplicate attendance record for this date" },
+        { status: 409 },
       );
     }
 
     // Handle general errors
     if (error instanceof Error) {
-      console.error('Update attendance error:', error.message);
+      console.error("Update attendance error:", error.message);
       return NextResponse.json(
-        { error: 'Internal server error while updating attendance' },
-        { status: 500 }
+        { error: "Internal server error while updating attendance" },
+        { status: 500 },
       );
     }
 
     return NextResponse.json(
-      { error: 'Unknown error occurred' },
-      { status: 500 }
+      { error: "Unknown error occurred" },
+      { status: 500 },
     );
   }
 }
@@ -189,9 +209,9 @@ export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'PUT, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "PUT, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
     },
   });
 }

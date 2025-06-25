@@ -19,6 +19,7 @@ Modern LINE Bot application built with T3 Stack, featuring comprehensive attenda
 ## 🌟 Features
 
 ### 🏢 Attendance Management
+
 - **Smart Check-in/Check-out** - Automatic 9-hour work calculation
 - **Real-time Notifications** - Push notifications for attendance events
 - **🔔 Automated Checkout Reminders** - ✅ **Production Ready** - Docker Cron Jobs with security-first design
@@ -27,16 +28,19 @@ Modern LINE Bot application built with T3 Stack, featuring comprehensive attenda
 - **Early Check-in** - Flexible early arrival handling
 
 ### 💰 Cryptocurrency Tracking
+
 - **Real-time Prices** - Live cryptocurrency market data
 - **Multiple Exchanges** - Support for various trading platforms
 - **Price Alerts** - Customizable notification system
 
 ### 🌍 Air Quality Monitoring
+
 - **Real-time AQI** - Air quality index tracking
 - **Location-based** - Area-specific air quality data
 - **Health Recommendations** - Personalized suggestions based on AQI
 
 ### 🔐 Authentication & Security
+
 - **LINE OAuth** - Seamless LINE account integration
 - **NextAuth.js** - Secure session management
 - **Type Safety** - Full TypeScript implementation
@@ -79,6 +83,7 @@ For detailed architecture documentation, see [`BACKEND_ARCHITECTURE.md`](./docs/
 > **June 8, 2025** - Major security and documentation cleanup completed
 
 ### Key Improvements
+
 - ✅ **Cron Service Security**: Reduced environment variables from 15+ to 3 (-80%)
 - ✅ **Attack Surface Reduction**: Minimalist approach following Principle of Least Privilege
 - ✅ **Documentation Cleanup**: Organized from 28 to 22 files (-21.4%)
@@ -98,23 +103,27 @@ See [`SECURITY_OPTIMIZATION_COMPLETE.md`](./docs/SECURITY_OPTIMIZATION_COMPLETE.
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd bun-line-t3
    ```
 
 2. **Install dependencies**
+
    ```bash
    bun install
    ```
 
 3. **Environment setup**
+
    ```bash
    cp .env.example .env
    # Configure your environment variables (see Configuration section)
    ```
 
 4. **Database setup**
+
    ```bash
    bun run db:push
    ```
@@ -170,6 +179,7 @@ AIRVISUAL_API_KEY="your-airvisual-api-key"
 Comprehensive documentation is available in the `/docs` directory:
 
 ### 📖 Core Documentation
+
 - **[� Documentation Overview](./docs/README.md)** - Complete documentation index
 - **[🚀 Setup Guide](./docs/SETUP.md)** - Installation and configuration guide
 - **[🏗️ System Architecture](./docs/ARCHITECTURE.md)** - System design and architecture
@@ -177,6 +187,7 @@ Comprehensive documentation is available in the `/docs` directory:
 - **[🔐 Security Guide](./docs/SECURITY.md)** - Security best practices and implementation
 
 ### 🎯 Feature Documentation
+
 - **[🏢 Attendance System](./docs/ATTENDANCE_SYSTEM.md)** - Work time tracking features
 - **[💬 LINE Commands (Thai)](./docs/LINE_COMMANDS_THAI.md)** - คำสั่ง LINE Bot (ภาษาไทย)
 - **[💬 LINE Commands (English)](./docs/LINE_COMMANDS.md)** - LINE Bot commands reference
@@ -185,6 +196,7 @@ Comprehensive documentation is available in the `/docs` directory:
 - **[🌍 Air Quality](./docs/AIR_QUALITY.md)** - Environmental data monitoring
 
 ### 🛠️ Development & Deployment
+
 - **[🛠️ Development Guide](./docs/DEVELOPMENT.md)** - Development workflow and standards
 - **[� Deployment Guide](./docs/DEPLOYMENT.md)** - Production deployment instructions
 - **[🧪 Testing Guide](./docs/TESTING.md)** - Testing strategies and implementation
@@ -228,43 +240,49 @@ bun run scripts/test-attendance.ts
 ## 🔧 Tech Stack
 
 ### Core Framework
+
 - **[Next.js 15](https://nextjs.org)** - React framework with App Router
 - **[React 19](https://react.dev)** - Latest React with Server Components
 - **[TypeScript](https://typescriptlang.org)** - Type-safe JavaScript
 - **[Bun](https://bun.sh)** - Fast JavaScript runtime and package manager
 
 ### Database & ORM
+
 - **[Prisma](https://prisma.io)** - Type-safe database toolkit
 - **[MySQL](https://mysql.com)** - Relational database
 
 ### Authentication
+
 - **[NextAuth.js](https://next-auth.js.org)** - Authentication library
 - **[LINE Login](https://developers.line.biz/en/docs/line-login/)** - LINE OAuth provider
 
 ### Styling & UI
+
 - **[Tailwind CSS](https://tailwindcss.com)** - Utility-first CSS framework
 - **[PostCSS](https://postcss.org)** - CSS transformation tool
 
 ### Development Tools
+
 - **[ESLint](https://eslint.org)** - Code linting
 - **[Prettier](https://prettier.io)** - Code formatting
 - **[Zod](https://zod.dev)** - Schema validation
 
 ### External APIs
+
 - **[LINE Messaging API](https://developers.line.biz/en/services/messaging-api/)** - Bot messaging
 - **[CoinMarketCap API](https://coinmarketcap.com/api/)** - Cryptocurrency data
 - **[AirVisual API](https://www.iqair.com/air-pollution-data-api)** - Air quality data
 
 ## 📦 Scripts
 
-| Script | Description |
-|--------|-------------|
-| `bun run dev` | Start development server on port 4325 |
-| `bun run build` | Build production application |
-| `bun run start` | Start production server |
-| `bun run lint` | Run ESLint code analysis |
-| `bun run db:push` | Push Prisma schema to database |
-| `bun run seed:holidays` | Seed Thai holiday data for 2025 |
+| Script                  | Description                           |
+| ----------------------- | ------------------------------------- |
+| `bun run dev`           | Start development server on port 4325 |
+| `bun run build`         | Build production application          |
+| `bun run start`         | Start production server               |
+| `bun run lint`          | Run ESLint code analysis              |
+| `bun run db:push`       | Push Prisma schema to database        |
+| `bun run seed:holidays` | Seed Thai holiday data for 2025       |
 
 ## 🤝 Contributing
 

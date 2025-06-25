@@ -1,4 +1,7 @@
-import { getDeterministicRandom, getDeterministicAlpha } from '../utils/safe-random';
+import {
+  getDeterministicRandom,
+  getDeterministicAlpha,
+} from "../utils/safe-random";
 
 interface RandomColorOptions {
   seed?: number | string | null;
@@ -9,10 +12,10 @@ interface RandomColorOptions {
 }
 
 interface ColorInfo {
-  hueRange: [number, number],
-  lowerBounds: [number, number][],
-  saturationRange: [number, number],
-  brightnessRange: [number, number]
+  hueRange: [number, number];
+  lowerBounds: [number, number][];
+  saturationRange: [number, number];
+  brightnessRange: [number, number];
 }
 
 // Seed to get repeatable colors
@@ -24,15 +27,21 @@ const colorDictionary: any = {};
 // check if a range is taken
 const colorRanges: any[] = [];
 
-export default function randomColor(options: RandomColorOptions = {}): string | string[] {
+export default function randomColor(
+  options: RandomColorOptions = {},
+): string | string[] {
   let seed: number | null;
 
-  if (options.seed !== undefined && options.seed !== null && options.seed === parseInt(String(options.seed), 10)) {
+  if (
+    options.seed !== undefined &&
+    options.seed !== null &&
+    options.seed === parseInt(String(options.seed), 10)
+  ) {
     seed = options.seed as number;
-  } else if (typeof options.seed === 'string') {
+  } else if (typeof options.seed === "string") {
     seed = stringToInteger(options.seed);
   } else if (options.seed !== undefined && options.seed !== null) {
-    throw new TypeError('The seed value must be an integer or string');
+    throw new TypeError("The seed value must be an integer or string");
   } else {
     seed = null;
   }
@@ -72,7 +81,8 @@ const pickHue = (options: RandomColorOptions): number => {
   if (colorRanges.length > 0) {
     const hueRange: number[] = getRealHueRange(options.hue) as number[];
     let hue: number = randomWithin(hueRange as any);
-    const step: number = ((hueRange[1] as number) - (hueRange[0] as number)) / colorRanges.length;
+    const step: number =
+      ((hueRange[1] as number) - (hueRange[0] as number)) / colorRanges.length;
     let j: number = Math.floor((hue - (hueRange[0] as number)) / step);
 
     if (colorRanges[j] === true) {
@@ -102,15 +112,18 @@ const pickHue = (options: RandomColorOptions): number => {
   }
 };
 
-const pickSaturation = (hue: number, options: {
-  hue?: string;
-  luminosity?: 'bright' | 'dark' | 'light' | 'random';
-}): number => {
-  if (options.hue === 'monochrome') {
+const pickSaturation = (
+  hue: number,
+  options: {
+    hue?: string;
+    luminosity?: "bright" | "dark" | "light" | "random";
+  },
+): number => {
+  if (options.hue === "monochrome") {
     return 0;
   }
 
-  if (options.luminosity === 'random') {
+  if (options.luminosity === "random") {
     return randomWithin([0, 100]);
   }
 
@@ -120,32 +133,36 @@ const pickSaturation = (hue: number, options: {
   let sMax = saturationRange[1];
 
   switch (options.luminosity) {
-    case 'bright':
+    case "bright":
       sMin = 55;
       break;
-    case 'dark':
+    case "dark":
       sMin = sMax - 10;
       break;
-    case 'light':
+    case "light":
       sMax = 55;
       break;
   }
 
   return randomWithin([sMin, sMax]);
-}
+};
 
-const pickBrightness = (H: number, S: number, options: { luminosity: 'dark' | 'light' | 'random' }) => {
+const pickBrightness = (
+  H: number,
+  S: number,
+  options: { luminosity: "dark" | "light" | "random" },
+) => {
   let bMin = getMinimumBrightness(H, S);
   let bMax = 100;
 
   switch (options.luminosity) {
-    case 'dark':
+    case "dark":
       bMax = bMin + 20;
       break;
-    case 'light':
+    case "light":
       bMin = (bMax + bMin) / 2;
       break;
-    case 'random':
+    case "random":
       bMin = 0;
       bMax = 100;
       break;
@@ -154,44 +171,46 @@ const pickBrightness = (H: number, S: number, options: { luminosity: 'dark' | 'l
   return randomWithin([bMin, bMax]);
 };
 
-
-const setFormat = (hsv: number[], options: { format: string, alpha?: number }) => {
+const setFormat = (
+  hsv: number[],
+  options: { format: string; alpha?: number },
+) => {
   switch (options.format) {
-    case 'hsvArray':
+    case "hsvArray":
       return hsv;
 
-    case 'hslArray':
+    case "hslArray":
       return HSVtoHSL(hsv);
 
-    case 'hsl':
+    case "hsl":
       const hsl = HSVtoHSL(hsv);
       return `hsl(${hsl[0]}, ${hsl[1]}%, ${hsl[2]}%)`;
 
-    case 'hsla':
+    case "hsla":
       const hslColor = HSVtoHSL(hsv);
       const alpha = options.alpha || getDeterministicAlpha();
       return `hsla(${hslColor[0]}, ${hslColor[1]}%, ${hslColor[2]}%, ${alpha})`;
 
-    case 'rgbArray':
+    case "rgbArray":
       return HSVtoRGB(hsv as any);
 
-    case 'rgb':
+    case "rgb":
       const rgb = HSVtoRGB(hsv as any);
-      return `rgb(${rgb.join(', ')})`;
+      return `rgb(${rgb.join(", ")})`;
 
-    case 'rgba':
+    case "rgba":
       const rgbColor = HSVtoRGB(hsv as any);
       const alpha2 = options.alpha || getDeterministicAlpha();
-      return `rgba(${rgbColor.join(', ')}, ${alpha2})`;
+      return `rgba(${rgbColor.join(", ")}, ${alpha2})`;
 
     default:
       return HSVtoHex(hsv);
   }
-}
+};
 
 const getMinimumBrightness = (H: number, S: number): number => {
   const colorInfo = getColorInfo(H);
-  if (typeof colorInfo === 'string') {
+  if (typeof colorInfo === "string") {
     return 0;
   }
 
@@ -212,17 +231,15 @@ const getMinimumBrightness = (H: number, S: number): number => {
   return 0;
 };
 
-
-
 const getHueRange = (colorInput: string | number): [number, number] => {
-  if (typeof parseInt(colorInput.toString()) === 'number') {
+  if (typeof parseInt(colorInput.toString()) === "number") {
     const number = parseInt(colorInput.toString());
     if (number < 360 && number > 0) {
       return [number, number];
     }
   }
 
-  if (typeof colorInput === 'string') {
+  if (typeof colorInput === "string") {
     if (colorDictionary[colorInput]) {
       const color = colorDictionary[colorInput];
       if (color.hueRange) {
@@ -234,15 +251,15 @@ const getHueRange = (colorInput: string | number): [number, number] => {
     }
   }
   return [0, 360];
-}
+};
 
 const getSaturationRange = (hue: number): [number, number] => {
   const colorInfo = getColorInfo(hue);
-  if (typeof colorInfo === 'string') {
-    throw new Error('Color not found');
+  if (typeof colorInfo === "string") {
+    throw new Error("Color not found");
   }
   return colorInfo.saturationRange;
-}
+};
 
 const getColorInfo = (hue: number): ColorInfo | string => {
   // Maps red colors to make picking hue easier
@@ -252,12 +269,16 @@ const getColorInfo = (hue: number): ColorInfo | string => {
 
   for (const colorName in colorDictionary) {
     const color = colorDictionary[colorName];
-    if (color.hueRange && hue >= color.hueRange[0] && hue <= color.hueRange[1]) {
+    if (
+      color.hueRange &&
+      hue >= color.hueRange[0] &&
+      hue <= color.hueRange[1]
+    ) {
       return color;
     }
   }
-  return 'Color not found';
-}
+  return "Color not found";
+};
 
 const randomWithin = (range: [number, number]): number => {
   if (seed === null) {
@@ -275,22 +296,30 @@ const randomWithin = (range: [number, number]): number => {
     const rnd = seed / 233280.0;
     return Math.floor(min + rnd * (max - min));
   }
-}
+};
 
 const HSVtoHex = (hsv: number[]): string => {
   const rgb = HSVtoRGB(hsv as [number, number, number]);
 
   const componentToHex = (c: number): string => {
     const hex = c.toString(16);
-    return hex.length == 1 ? '0' + hex : hex;
+    return hex.length == 1 ? "0" + hex : hex;
   };
 
-  const hex = '#' + componentToHex(rgb[0]) + componentToHex(rgb[1]) + componentToHex(rgb[2]);
+  const hex =
+    "#" +
+    componentToHex(rgb[0]) +
+    componentToHex(rgb[1]) +
+    componentToHex(rgb[2]);
 
   return hex;
 };
 
-const defineColor = (name: string, hueRange: number[] | null, lowerBounds: any): void => {
+const defineColor = (
+  name: string,
+  hueRange: number[] | null,
+  lowerBounds: any,
+): void => {
   const sMin = lowerBounds[0][0];
   const sMax = lowerBounds[lowerBounds.length - 1][0];
   const bMin = lowerBounds[lowerBounds.length - 1][1];
@@ -300,57 +329,120 @@ const defineColor = (name: string, hueRange: number[] | null, lowerBounds: any):
     hueRange,
     lowerBounds,
     saturationRange: [sMin, sMax],
-    brightnessRange: [bMin, bMax]
+    brightnessRange: [bMin, bMax],
   };
 };
 
 const loadColorBounds = (): void => {
-  defineColor(
-    'monochrome',
-    null,
-    [[0, 0], [100, 0]]
-  );
+  defineColor("monochrome", null, [
+    [0, 0],
+    [100, 0],
+  ]);
 
   defineColor(
-    'red',
+    "red",
     [-26, 18],
-    [[20, 100], [30, 92], [40, 89], [50, 85], [60, 78], [70, 70], [80, 60], [90, 55], [100, 50]]
+    [
+      [20, 100],
+      [30, 92],
+      [40, 89],
+      [50, 85],
+      [60, 78],
+      [70, 70],
+      [80, 60],
+      [90, 55],
+      [100, 50],
+    ],
   );
 
   defineColor(
-    'orange',
+    "orange",
     [18, 46],
-    [[20, 100], [30, 93], [40, 88], [50, 86], [60, 85], [70, 70], [100, 70]]
+    [
+      [20, 100],
+      [30, 93],
+      [40, 88],
+      [50, 86],
+      [60, 85],
+      [70, 70],
+      [100, 70],
+    ],
   );
 
   defineColor(
-    'yellow',
+    "yellow",
     [46, 62],
-    [[25, 100], [40, 94], [50, 89], [60, 86], [70, 84], [80, 82], [90, 80], [100, 75]]
+    [
+      [25, 100],
+      [40, 94],
+      [50, 89],
+      [60, 86],
+      [70, 84],
+      [80, 82],
+      [90, 80],
+      [100, 75],
+    ],
   );
 
   defineColor(
-    'green',
+    "green",
     [62, 178],
-    [[30, 100], [40, 90], [50, 85], [60, 81], [70, 74], [80, 64], [90, 50], [100, 40]]
+    [
+      [30, 100],
+      [40, 90],
+      [50, 85],
+      [60, 81],
+      [70, 74],
+      [80, 64],
+      [90, 50],
+      [100, 40],
+    ],
   );
 
   defineColor(
-    'blue',
+    "blue",
     [178, 257],
-    [[20, 100], [30, 86], [40, 80], [50, 74], [60, 60], [70, 52], [80, 44], [90, 39], [100, 35]]
+    [
+      [20, 100],
+      [30, 86],
+      [40, 80],
+      [50, 74],
+      [60, 60],
+      [70, 52],
+      [80, 44],
+      [90, 39],
+      [100, 35],
+    ],
   );
 
   defineColor(
-    'purple',
+    "purple",
     [257, 282],
-    [[20, 100], [30, 87], [40, 79], [50, 70], [60, 65], [70, 59], [80, 52], [90, 45], [100, 42]]
+    [
+      [20, 100],
+      [30, 87],
+      [40, 79],
+      [50, 70],
+      [60, 65],
+      [70, 59],
+      [80, 52],
+      [90, 45],
+      [100, 42],
+    ],
   );
 
   defineColor(
-    'pink',
+    "pink",
     [282, 334],
-    [[20, 100], [30, 90], [40, 86], [60, 84], [80, 80], [90, 75], [100, 73]]
+    [
+      [20, 100],
+      [30, 90],
+      [40, 86],
+      [60, 84],
+      [80, 80],
+      [90, 75],
+      [100, 73],
+    ],
   );
 };
 
@@ -413,13 +505,17 @@ const HSVtoRGB = (hsv: [number, number, number]): [number, number, number] => {
       break;
   }
 
-  const result = [Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)];
+  const result = [
+    Math.floor(r * 255),
+    Math.floor(g * 255),
+    Math.floor(b * 255),
+  ];
   return result as [number, number, number];
 };
 
 const HexToHSB = (hex: string): [number, number, number] => {
-  hex = hex.replace(/^#/, '');
-  hex = hex.length === 3 ? hex.replace(/(.)/g, '$1$1') : hex;
+  hex = hex.replace(/^#/, "");
+  hex = hex.length === 3 ? hex.replace(/(.)/g, "$1$1") : hex;
 
   const red = parseInt(hex.substr(0, 2), 16) / 255;
   const green = parseInt(hex.substr(2, 2), 16) / 255;
@@ -427,16 +523,19 @@ const HexToHSB = (hex: string): [number, number, number] => {
 
   const cMax = Math.max(red, green, blue);
   const delta = cMax - Math.min(red, green, blue);
-  const saturation = cMax ? (delta / cMax) : 0;
+  const saturation = cMax ? delta / cMax : 0;
 
   switch (cMax) {
-    case red: return [60 * (((green - blue) / delta) % 6) || 0, saturation, cMax];
-    case green: return [60 * (((blue - red) / delta) + 2) || 0, saturation, cMax];
-    case blue: return [60 * (((red - green) / delta) + 4) || 0, saturation, cMax];
-    default: return [0, 0, 0]; // Provide a default return value
+    case red:
+      return [60 * (((green - blue) / delta) % 6) || 0, saturation, cMax];
+    case green:
+      return [60 * ((blue - red) / delta + 2) || 0, saturation, cMax];
+    case blue:
+      return [60 * ((red - green) / delta + 4) || 0, saturation, cMax];
+    default:
+      return [0, 0, 0]; // Provide a default return value
   }
-}
-
+};
 
 const HSVtoHSL = (hsv: any): number[] => {
   const h = hsv[0];
@@ -446,7 +545,7 @@ const HSVtoHSL = (hsv: any): number[] => {
 
   return [
     h,
-    Math.round((s * v) / (k < 1 ? k : 2 - k) * 10000) / 100,
+    Math.round(((s * v) / (k < 1 ? k : 2 - k)) * 10000) / 100,
     (k / 2) * 100,
   ];
 };
@@ -458,7 +557,7 @@ const stringToInteger = (string: string): number => {
     total += string.charCodeAt(i);
   }
   return total;
-}
+};
 
 // get The range of given hue when options.count!=0
 const getRealHueRange = (colorHue: any): number[] | undefined => {
@@ -468,7 +567,7 @@ const getRealHueRange = (colorHue: any): number[] | undefined => {
     if (number < 360 && number > 0) {
       return (getColorInfo(colorHue) as { hueRange: number[] }).hueRange;
     }
-  } else if (typeof colorHue === 'string') {
+  } else if (typeof colorHue === "string") {
     if (colorDictionary[colorHue]) {
       const color = colorDictionary[colorHue];
 
@@ -482,7 +581,6 @@ const getRealHueRange = (colorHue: any): number[] | undefined => {
   }
   return undefined;
 };
-
 
 // Populate the color dictionary
 loadColorBounds();

@@ -5,7 +5,7 @@
 
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 /**
  * 🎯 Hook สำหรับตรวจสอบว่า component ถูก mount บน client แล้วหรือยัง
@@ -36,11 +36,11 @@ export function useClientOnlyMounted() {
  */
 export function useIsBrowser() {
   const [isBrowser, setIsBrowser] = useState(false);
-  
+
   useEffect(() => {
-    setIsBrowser(typeof window !== 'undefined');
+    setIsBrowser(typeof window !== "undefined");
   }, []);
-  
+
   return isBrowser;
 }
 
@@ -48,44 +48,42 @@ export function useIsBrowser() {
  * 🎭 Hook สำหรับการป้องกัน hydration mismatch จาก dynamic content
  * เช่น timestamps, random values, หรือ user-specific data
  */
-export function useSafeHydration<T>(
-  serverValue: T,
-  clientValue: () => T
-): T {
+export function useSafeHydration<T>(serverValue: T, clientValue: () => T): T {
   const [value, setValue] = useState(serverValue);
   const mounted = useClientOnlyMounted();
-  
+
   useEffect(() => {
     if (mounted) {
       setValue(clientValue());
     }
   }, [mounted, clientValue]);
-  
+
   return value;
 }
 
 /**
  * 🚫 Hook สำหรับการ suppress hydration warning ใน cases ที่หลีกเลี่ยงไม่ได้
  * เช่น timestamps, user-specific content, หรือ browser-only features
- * 
+ *
  * @param condition - เงื่อนไขที่ควร suppress warning
  * @returns boolean สำหรับ suppressHydrationWarning prop
  */
 export function useSuppressHydrationWarning(condition?: boolean): boolean {
   const [shouldSuppress, setShouldSuppress] = useState(false);
-  
+
   useEffect(() => {
     if (condition !== undefined) {
       setShouldSuppress(condition);
     } else {
       // Auto-detect common hydration mismatch patterns
       setShouldSuppress(
-        typeof window !== 'undefined' && 
-        (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test')
+        typeof window !== "undefined" &&
+          (process.env.NODE_ENV === "development" ||
+            process.env.NODE_ENV === "test"),
       );
     }
   }, [condition]);
-  
+
   return shouldSuppress;
 }
 
@@ -96,16 +94,16 @@ export function useSuppressHydrationWarning(condition?: boolean): boolean {
 export function useSafeTimestamp(initialTimestamp?: Date) {
   const mounted = useClientOnlyMounted();
   const suppressWarning = useSuppressHydrationWarning(!mounted);
-  
+
   const timestamp = useSafeHydration(
     initialTimestamp || new Date(),
-    () => new Date()
+    () => new Date(),
   );
-  
+
   return {
     timestamp,
     suppressHydrationWarning: suppressWarning,
-    isHydrated: mounted
+    isHydrated: mounted,
   };
 }
 
@@ -114,31 +112,33 @@ export function useSafeTimestamp(initialTimestamp?: Date) {
  */
 export function useHydrationWarningDetector() {
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      const originalError = console.error
-      
+    if (process.env.NODE_ENV === "development") {
+      const originalError = console.error;
+
       console.error = (...args) => {
-        const message = args.join(' ')
-        if (message.includes('Hydration') || 
-            message.includes('hydrat') ||
-            message.includes('mismatch') ||
-            message.includes('Text content does not match')) {
-          console.warn('🚨 Hydration Mismatch Detected:', ...args)
+        const message = args.join(" ");
+        if (
+          message.includes("Hydration") ||
+          message.includes("hydrat") ||
+          message.includes("mismatch") ||
+          message.includes("Text content does not match")
+        ) {
+          console.warn("🚨 Hydration Mismatch Detected:", ...args);
           // Optional: ส่งไปยัง error tracking service
           if ((window as any).gtag) {
-            (window as any).gtag('event', 'hydration_mismatch', {
-              error_message: message.slice(0, 100)
-            })
+            (window as any).gtag("event", "hydration_mismatch", {
+              error_message: message.slice(0, 100),
+            });
           }
         }
-        originalError(...args)
-      }
-      
+        originalError(...args);
+      };
+
       return () => {
-        console.error = originalError
-      }
+        console.error = originalError;
+      };
     }
-  }, [])
+  }, []);
 }
 
 /**
@@ -147,11 +147,11 @@ export function useHydrationWarningDetector() {
 export function useSafePortal() {
   const mounted = useClientOnlyMounted();
   const isBrowser = useIsBrowser();
-  
-  const canUsePortal = mounted && isBrowser && typeof document !== 'undefined';
-  
+
+  const canUsePortal = mounted && isBrowser && typeof document !== "undefined";
+
   return {
     canUsePortal,
-    portalRoot: canUsePortal ? document.body : null
+    portalRoot: canUsePortal ? document.body : null,
   };
 }

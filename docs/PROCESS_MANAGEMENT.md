@@ -71,24 +71,24 @@ bun scripts/process-manager.ts kill <process-name>
 #### Programmatic Usage
 
 ```typescript
-import { runWithProcessManagement } from './scripts/process-manager'
+import { runWithProcessManagement } from "./scripts/process-manager";
 
 const result = await runWithProcessManagement(
-  'my-process',
+  "my-process",
   async (manager) => {
-    await manager.log('info', 'Starting task...')
-    
+    await manager.log("info", "Starting task...");
+
     // Your process logic here
-    const result = await executeTask()
-    
-    await manager.log('success', 'Task completed successfully')
-    return result
+    const result = await executeTask();
+
+    await manager.log("success", "Task completed successfully");
+    return result;
   },
   {
     healthMonitoring: true,
-    healthInterval: 30000 // 30 seconds
-  }
-)
+    healthInterval: 30000, // 30 seconds
+  },
+);
 ```
 
 ## 📊 Log Viewer
@@ -325,18 +325,18 @@ HEALTH_CHECK_INTERVAL=60000       # Health check interval in ms
 ```typescript
 const defaultProcesses: MonitoredProcess[] = [
   {
-    name: 'checkout-reminder',
-    command: 'bun scripts/enhanced-checkout-reminder.ts',
+    name: "checkout-reminder",
+    command: "bun scripts/enhanced-checkout-reminder.ts",
     enabled: true,
     autoRestart: true,
     maxRestarts: 3,
     restartWindow: 300000,
     healthCheck: async () => {
       // Custom health check logic
-      return true
-    }
-  }
-]
+      return true;
+    },
+  },
+];
 ```
 
 ## 🚨 Troubleshooting | การแก้ไขปัญหา

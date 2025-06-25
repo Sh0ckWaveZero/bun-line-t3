@@ -1,159 +1,156 @@
-import { CryptoInfo } from '@/features/crypto/types/crypto.interface';
-import randomColor from './randomColor';
-import { utils } from '.';
-import { IMAGE_GOLD_URLS, IMAGE_URLS } from '@/lib/constants/common.constant';
-import { env } from 'process';
-import {
-  formatHours,
-  formatPercentage
-} from '@/lib/utils/number';
-import { AttendanceStatusType } from '@prisma/client';
-import { timeBasedSelect } from '@/lib/utils/safe-random';
+import { CryptoInfo } from "@/features/crypto/types/crypto.interface";
+import randomColor from "./randomColor";
+import { utils } from ".";
+import { IMAGE_GOLD_URLS, IMAGE_URLS } from "@/lib/constants/common.constant";
+import { env } from "process";
+import { formatHours, formatPercentage } from "@/lib/utils/number";
+import { AttendanceStatusType } from "@prisma/client";
+import { timeBasedSelect } from "@/lib/utils/safe-random";
 
 const lottery = (infoItems: any[]) => {
   return infoItems.map((item) => {
     return {
-      "type": "bubble",
-      "size": "mega",
-      "header": {
-        "type": "box",
-        "layout": "vertical",
-        "contents": [
+      type: "bubble",
+      size: "mega",
+      header: {
+        type: "box",
+        layout: "vertical",
+        contents: [
           {
-            "type": "box",
-            "layout": "horizontal",
-            "contents": [
+            type: "box",
+            layout: "horizontal",
+            contents: [
               {
-                "type": "image",
-                "url": `${item.image}`,
-                "size": "full",
-                "aspectMode": "cover",
-                "aspectRatio": "4:3",
-                "gravity": "center",
-                "flex": 0
+                type: "image",
+                url: `${item.image}`,
+                size: "full",
+                aspectMode: "cover",
+                aspectRatio: "4:3",
+                gravity: "center",
+                flex: 0,
               },
               {
-                "type": "box",
-                "layout": "horizontal",
-                "contents": [
+                type: "box",
+                layout: "horizontal",
+                contents: [
                   {
-                    "type": "text",
-                    "text": "ผลการตรวจรางวัล",
-                    "size": "xs",
-                    "color": "#ffffff",
-                    "align": "center",
-                    "gravity": "center",
-                    "flex": 0
-                  }
+                    type: "text",
+                    text: "ผลการตรวจรางวัล",
+                    size: "xs",
+                    color: "#ffffff",
+                    align: "center",
+                    gravity: "center",
+                    flex: 0,
+                  },
                 ],
-                "backgroundColor": "#cc66ff",
-                "paddingAll": "2px",
-                "paddingStart": "4px",
-                "paddingEnd": "4px",
-                "position": "absolute",
-                "offsetStart": "18px",
-                "offsetTop": "18px",
-                "cornerRadius": "8px",
-                "height": "25px"
+                backgroundColor: "#cc66ff",
+                paddingAll: "2px",
+                paddingStart: "4px",
+                paddingEnd: "4px",
+                position: "absolute",
+                offsetStart: "18px",
+                offsetTop: "18px",
+                cornerRadius: "8px",
+                height: "25px",
               },
               {
-                "type": "box",
-                "layout": "horizontal",
-                "contents": [
+                type: "box",
+                layout: "horizontal",
+                contents: [
                   {
-                    "type": "text",
-                    "text": `${item.value}`,
-                    "size": "4xl",
-                    "color": "#ffffff",
-                    "align": "center",
-                    "gravity": "center",
-                    "flex": 0
-                  }
+                    type: "text",
+                    text: `${item.value}`,
+                    size: "4xl",
+                    color: "#ffffff",
+                    align: "center",
+                    gravity: "center",
+                    flex: 0,
+                  },
                 ],
-                "paddingAll": "2px",
-                "paddingStart": "4px",
-                "paddingEnd": "4px",
-                "position": "absolute",
-                "offsetStart": "60px",
-                "offsetTop": "90px",
-                "height": "70px",
-                "alignItems": "center",
-                "cornerRadius": "8px",
-                "background": {
-                  "type": "linearGradient",
-                  "angle": "0deg",
-                  "startColor": "#cc66ff",
-                  "endColor": "#15162c"
-                }
-              }
-            ]
-          }
+                paddingAll: "2px",
+                paddingStart: "4px",
+                paddingEnd: "4px",
+                position: "absolute",
+                offsetStart: "60px",
+                offsetTop: "90px",
+                height: "70px",
+                alignItems: "center",
+                cornerRadius: "8px",
+                background: {
+                  type: "linearGradient",
+                  angle: "0deg",
+                  startColor: "#cc66ff",
+                  endColor: "#15162c",
+                },
+              },
+            ],
+          },
         ],
-        "paddingAll": "0px"
+        paddingAll: "0px",
       },
-      "body": {
-        "type": "box",
-        "layout": "vertical",
-        "contents": [
+      body: {
+        type: "box",
+        layout: "vertical",
+        contents: [
           {
-            "type": "box",
-            "layout": "vertical",
-            "contents": [
+            type: "box",
+            layout: "vertical",
+            contents: [
               {
-                "type": "box",
-                "layout": "vertical",
-                "contents": [
+                type: "box",
+                layout: "vertical",
+                contents: [
                   {
-                    "type": "text",
-                    "contents": [],
-                    "size": "xl",
-                    "wrap": true,
-                    "text": "ประจำงวด",
-                    "color": "#ffffff",
-                    "weight": "bold"
+                    type: "text",
+                    contents: [],
+                    size: "xl",
+                    wrap: true,
+                    text: "ประจำงวด",
+                    color: "#ffffff",
+                    weight: "bold",
                   },
                   {
-                    "type": "text",
-                    "text": `${item.lottoAt}`,
-                    "color": "#ffffffcc",
-                    "size": "sm"
-                  }
+                    type: "text",
+                    text: `${item.lottoAt}`,
+                    color: "#ffffffcc",
+                    size: "sm",
+                  },
                 ],
-                "spacing": "sm"
+                spacing: "sm",
               },
               {
-                "type": "box",
-                "layout": "vertical",
-                "contents": [
+                type: "box",
+                layout: "vertical",
+                contents: [
                   {
-                    "type": "box",
-                    "layout": "vertical",
-                    "contents": [
+                    type: "box",
+                    layout: "vertical",
+                    contents: [
                       {
-                        "type": "text",
-                        "contents": [],
-                        "size": "md",
-                        "wrap": true,
-                        "margin": "xs",
-                        "color": "#ffffffde",
-                        "text": `${item.name}`,
-                        "align": "center"
-                      }
-                    ]
-                  }
+                        type: "text",
+                        contents: [],
+                        size: "md",
+                        wrap: true,
+                        margin: "xs",
+                        color: "#ffffffde",
+                        text: `${item.name}`,
+                        align: "center",
+                      },
+                    ],
+                  },
                 ],
-                "paddingAll": "13px",
-                "backgroundColor": "#ffffff1A",
-                "cornerRadius": "2px",
-                "margin": "xl"
-              }
-            ]
-          }
+                paddingAll: "13px",
+                backgroundColor: "#ffffff1A",
+                cornerRadius: "2px",
+                margin: "xl",
+              },
+            ],
+          },
         ],
-        "paddingAll": "20px",
-        "backgroundColor": "#7A8299"
-      }
-    }
+        paddingAll: "20px",
+        backgroundColor: "#7A8299",
+      },
+    };
   });
 };
 
@@ -161,138 +158,138 @@ const cryptoCurrency = (data: CryptoInfo): any => {
   let bubbleMessageTpl = {};
 
   const boxOne = data.highPrice
-    ? createBubbleBox('ราคาสูงสุด', data.highPrice)
-    : createBubbleBox('ปริมาณ 24ชม.', data.volume_24h);
+    ? createBubbleBox("ราคาสูงสุด", data.highPrice)
+    : createBubbleBox("ปริมาณ 24ชม.", data.volume_24h);
 
   const boxTwo = data.lowPrice
-    ? createBubbleBox('ราคาต่ำสุด', data.lowPrice)
-    : createBubbleBox('ลำดับที่', data.cmc_rank || '-');
+    ? createBubbleBox("ราคาต่ำสุด", data.lowPrice)
+    : createBubbleBox("ลำดับที่", data.cmc_rank || "-");
   const boxThree = createBubbleBox(
-    'ราคาเปลี่ยนแปลง',
+    "ราคาเปลี่ยนแปลง",
     data.volume_change_24h,
     data.priceChangeColor,
   );
 
   const colorHeader = randomColor({
-    luminosity: 'bright',
-    hue: 'hsla',
+    luminosity: "bright",
+    hue: "hsla",
   });
 
   bubbleMessageTpl = {
-    type: 'bubble',
-    size: 'mega',
+    type: "bubble",
+    size: "mega",
     header: {
-      type: 'box',
-      layout: 'baseline',
+      type: "box",
+      layout: "baseline",
       contents: [
         {
-          type: 'icon',
+          type: "icon",
           url: `${data.urlLogo}`,
-          size: '4xl',
+          size: "4xl",
         },
       ],
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingAll: 'lg',
-      offsetTop: 'lg',
+      justifyContent: "center",
+      alignItems: "center",
+      paddingAll: "lg",
+      offsetTop: "lg",
     },
     hero: {
-      type: 'box',
-      layout: 'vertical',
+      type: "box",
+      layout: "vertical",
       contents: [
         {
-          type: 'text',
+          type: "text",
           text: `${data.currencyName}`,
-          align: 'center',
-          size: 'xxl',
-          weight: 'bold',
-          color: '#FFFFFF',
+          align: "center",
+          size: "xxl",
+          weight: "bold",
+          color: "#FFFFFF",
         },
       ],
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: "center",
+      justifyContent: "center",
     },
     body: {
-      type: 'box',
-      layout: 'vertical',
+      type: "box",
+      layout: "vertical",
       contents: [
         {
-          type: 'box',
-          layout: 'baseline',
+          type: "box",
+          layout: "baseline",
           contents: [
             {
-              type: 'icon',
+              type: "icon",
               url: `${data.exchangeLogoUrl}`,
-              size: 'lg',
+              size: "lg",
             },
             {
-              type: 'text',
+              type: "text",
               text: `${data.exchange}`,
-              weight: 'bold',
-              size: 'lg',
-              offsetTop: '-10.5%',
+              weight: "bold",
+              size: "lg",
+              offsetTop: "-10.5%",
               color: `${data.textColor}`,
             },
           ],
-          spacing: 'md',
+          spacing: "md",
         },
         {
-          type: 'box',
-          layout: 'horizontal',
+          type: "box",
+          layout: "horizontal",
           contents: [
             {
-              type: 'text',
-              text: 'ราคาล่าสุด',
-              size: 'lg',
-              color: '#8c8c8c',
-              weight: 'bold',
-              margin: 'md',
+              type: "text",
+              text: "ราคาล่าสุด",
+              size: "lg",
+              color: "#8c8c8c",
+              weight: "bold",
+              margin: "md",
               flex: 0,
-              align: 'start',
+              align: "start",
             },
             {
-              type: 'text',
+              type: "text",
               text: `${data.lastPrice}`,
-              align: 'end',
-              weight: 'bold',
-              size: 'md',
+              align: "end",
+              weight: "bold",
+              size: "md",
             },
           ],
-          justifyContent: 'space-between',
+          justifyContent: "space-between",
         },
         boxOne,
         boxTwo,
         boxThree,
       ],
-      spacing: 'sm',
-      paddingAll: '13px',
+      spacing: "sm",
+      paddingAll: "13px",
     },
     footer: {
-      type: 'box',
-      layout: 'vertical',
+      type: "box",
+      layout: "vertical",
       contents: [
         {
-          type: 'box',
-          layout: 'horizontal',
+          type: "box",
+          layout: "horizontal",
           contents: [
             {
-              type: 'text',
-              text: 'วันที่',
-              size: 'xs',
-              color: '#aaaaaa',
-              margin: 'md',
+              type: "text",
+              text: "วันที่",
+              size: "xs",
+              color: "#aaaaaa",
+              margin: "md",
               flex: 0,
-              align: 'start',
+              align: "start",
             },
             {
-              type: 'text',
-              align: 'end',
-              size: 'xs',
+              type: "text",
+              align: "end",
+              size: "xs",
               text: `${data.last_updated}`,
-              color: '#aaaaaa',
+              color: "#aaaaaa",
             },
           ],
-          justifyContent: 'space-between',
+          justifyContent: "space-between",
         },
       ],
     },
@@ -312,35 +309,34 @@ const cryptoCurrency = (data: CryptoInfo): any => {
 };
 
 const createBubbleBox = (
-  text = '',
-  value = '',
-  priceChangeColor = '#454545',
+  text = "",
+  value = "",
+  priceChangeColor = "#454545",
 ): any => {
   return {
-    type: 'box',
-    layout: 'horizontal',
+    type: "box",
+    layout: "horizontal",
     contents: [
       {
-        type: 'text',
+        type: "text",
         text: `${text}`,
-        size: 'xs',
-        color: '#8c8c8c',
-        margin: 'md',
+        size: "xs",
+        color: "#8c8c8c",
+        margin: "md",
         flex: 0,
-        align: 'start',
+        align: "start",
       },
       {
-        type: 'text',
+        type: "text",
         text: `${value}`,
-        align: 'end',
-        size: 'xs',
+        align: "end",
+        size: "xs",
         color: `${priceChangeColor}`,
       },
     ],
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
   };
 };
-
 
 const gold = (data: any): any => {
   let bubbleMessageTpl = {};
@@ -348,272 +344,272 @@ const gold = (data: any): any => {
   const image2 = utils.randomItems(IMAGE_GOLD_URLS);
   const image3 = utils.randomItems(IMAGE_GOLD_URLS);
   bubbleMessageTpl = {
-    "type": "bubble",
-    "size": "mega",
-    "header": {
-      "type": "box",
-      "layout": "vertical",
-      "contents": [
+    type: "bubble",
+    size: "mega",
+    header: {
+      type: "box",
+      layout: "vertical",
+      contents: [
         {
-          "type": "box",
-          "layout": "horizontal",
-          "contents": [
+          type: "box",
+          layout: "horizontal",
+          contents: [
             {
-              "type": "image",
-              "url": `${image1}`,
-              "size": "full",
-              "aspectMode": "cover",
-              "aspectRatio": "150:196",
-              "gravity": "center",
-              "flex": 1
+              type: "image",
+              url: `${image1}`,
+              size: "full",
+              aspectMode: "cover",
+              aspectRatio: "150:196",
+              gravity: "center",
+              flex: 1,
             },
             {
-              "type": "box",
-              "layout": "vertical",
-              "contents": [
+              type: "box",
+              layout: "vertical",
+              contents: [
                 {
-                  "type": "image",
-                  "url": `${image2}`,
-                  "size": "full",
-                  "aspectMode": "cover",
-                  "aspectRatio": "150:98",
-                  "gravity": "center"
+                  type: "image",
+                  url: `${image2}`,
+                  size: "full",
+                  aspectMode: "cover",
+                  aspectRatio: "150:98",
+                  gravity: "center",
                 },
                 {
-                  "type": "image",
-                  "url": `${image3}`,
-                  "size": "full",
-                  "aspectMode": "cover",
-                  "aspectRatio": "150:98",
-                  "gravity": "center"
-                }
+                  type: "image",
+                  url: `${image3}`,
+                  size: "full",
+                  aspectMode: "cover",
+                  aspectRatio: "150:98",
+                  gravity: "center",
+                },
               ],
-              "flex": 1
+              flex: 1,
             },
             {
-              "type": "box",
-              "layout": "horizontal",
-              "contents": [
+              type: "box",
+              layout: "horizontal",
+              contents: [
                 {
-                  "type": "text",
-                  "text": "Gold",
-                  "size": "xs",
-                  "color": "#000000",
-                  "align": "center",
-                  "gravity": "center"
-                }
+                  type: "text",
+                  text: "Gold",
+                  size: "xs",
+                  color: "#000000",
+                  align: "center",
+                  gravity: "center",
+                },
               ],
-              "backgroundColor": "#FFD700",
-              "paddingAll": "2px",
-              "paddingStart": "4px",
-              "paddingEnd": "4px",
-              "flex": 0,
-              "position": "absolute",
-              "offsetStart": "18px",
-              "offsetTop": "18px",
-              "cornerRadius": "100px",
-              "width": "48px",
-              "height": "25px"
-            }
-          ]
-        }
+              backgroundColor: "#FFD700",
+              paddingAll: "2px",
+              paddingStart: "4px",
+              paddingEnd: "4px",
+              flex: 0,
+              position: "absolute",
+              offsetStart: "18px",
+              offsetTop: "18px",
+              cornerRadius: "100px",
+              width: "48px",
+              height: "25px",
+            },
+          ],
+        },
       ],
-      "paddingAll": "0px"
+      paddingAll: "0px",
     },
-    "body": {
-      "type": "box",
-      "layout": "vertical",
-      "contents": [
+    body: {
+      type: "box",
+      layout: "vertical",
+      contents: [
         {
-          "type": "box",
-          "layout": "vertical",
-          "contents": [
+          type: "box",
+          layout: "vertical",
+          contents: [
             {
-              "type": "box",
-              "layout": "vertical",
-              "contents": [
+              type: "box",
+              layout: "vertical",
+              contents: [
                 {
-                  "type": "text",
-                  "contents": [],
-                  "size": "xl",
-                  "wrap": true,
-                  "text": "🏅 ราคาทองวันนี้",
-                  "color": "#ffffff",
-                  "weight": "bold"
+                  type: "text",
+                  contents: [],
+                  size: "xl",
+                  wrap: true,
+                  text: "🏅 ราคาทองวันนี้",
+                  color: "#ffffff",
+                  weight: "bold",
                 },
                 {
-                  "type": "text",
-                  "text": "ความบริสุทธิ์ 96.5% ",
-                  "color": "#ffffffcc",
-                  "size": "sm"
-                }
+                  type: "text",
+                  text: "ความบริสุทธิ์ 96.5% ",
+                  color: "#ffffffcc",
+                  size: "sm",
+                },
               ],
-              "spacing": "sm"
+              spacing: "sm",
             },
             {
-              "type": "box",
-              "layout": "vertical",
-              "contents": [
+              type: "box",
+              layout: "vertical",
+              contents: [
                 {
-                  "type": "box",
-                  "layout": "horizontal",
-                  "contents": [
+                  type: "box",
+                  layout: "horizontal",
+                  contents: [
                     {
-                      "type": "text",
-                      "text": "ทองคำแท่ง",
-                      "size": "md",
-                      "weight": "bold",
-                      "offsetBottom": "none"
-                    }
+                      type: "text",
+                      text: "ทองคำแท่ง",
+                      size: "md",
+                      weight: "bold",
+                      offsetBottom: "none",
+                    },
                   ],
-                  "paddingTop": "sm",
-                  "paddingBottom": "sm"
+                  paddingTop: "sm",
+                  paddingBottom: "sm",
                 },
                 {
-                  "type": "box",
-                  "layout": "horizontal",
-                  "contents": [
+                  type: "box",
+                  layout: "horizontal",
+                  contents: [
                     {
-                      "type": "text",
-                      "text": "รับซื้อ",
-                      "align": "start"
+                      type: "text",
+                      text: "รับซื้อ",
+                      align: "start",
                     },
                     {
-                      "type": "text",
-                      "align": "end",
-                      "text": `${data.barSell}`,
-                      "color": `${data.barSellColor}`
-                    }
-                  ]
+                      type: "text",
+                      align: "end",
+                      text: `${data.barSell}`,
+                      color: `${data.barSellColor}`,
+                    },
+                  ],
                 },
                 {
-                  "type": "box",
-                  "layout": "horizontal",
-                  "contents": [
+                  type: "box",
+                  layout: "horizontal",
+                  contents: [
                     {
-                      "type": "text",
-                      "text": "ขายออก",
-                      "align": "start"
+                      type: "text",
+                      text: "ขายออก",
+                      align: "start",
                     },
                     {
-                      "type": "text",
-                      "align": "end",
-                      "text": `${data.barBuy}`,
-                      "color": `${data.barBuyColor}`
-                    }
-                  ]
-                }
+                      type: "text",
+                      align: "end",
+                      text: `${data.barBuy}`,
+                      color: `${data.barBuyColor}`,
+                    },
+                  ],
+                },
               ],
-              "paddingAll": "10px",
-              "backgroundColor": "#FFD700",
-              "cornerRadius": "5px",
-              "margin": "xl"
+              paddingAll: "10px",
+              backgroundColor: "#FFD700",
+              cornerRadius: "5px",
+              margin: "xl",
             },
             {
-              "type": "box",
-              "layout": "vertical",
-              "contents": [
+              type: "box",
+              layout: "vertical",
+              contents: [
                 {
-                  "type": "box",
-                  "layout": "horizontal",
-                  "contents": [
+                  type: "box",
+                  layout: "horizontal",
+                  contents: [
                     {
-                      "type": "text",
-                      "text": "ทองรูปพรรณ",
-                      "size": "md",
-                      "weight": "bold",
-                      "offsetBottom": "none"
-                    }
+                      type: "text",
+                      text: "ทองรูปพรรณ",
+                      size: "md",
+                      weight: "bold",
+                      offsetBottom: "none",
+                    },
                   ],
-                  "paddingTop": "sm",
-                  "paddingBottom": "sm"
+                  paddingTop: "sm",
+                  paddingBottom: "sm",
                 },
                 {
-                  "type": "box",
-                  "layout": "horizontal",
-                  "contents": [
+                  type: "box",
+                  layout: "horizontal",
+                  contents: [
                     {
-                      "type": "text",
-                      "text": "รับซื้อ",
-                      "align": "start"
+                      type: "text",
+                      text: "รับซื้อ",
+                      align: "start",
                     },
                     {
-                      "type": "text",
-                      "align": "end",
-                      "text": `${data.jewelrySell}`,
-                      "color": `${data.jewelrySellColor}`
-                    }
-                  ]
+                      type: "text",
+                      align: "end",
+                      text: `${data.jewelrySell}`,
+                      color: `${data.jewelrySellColor}`,
+                    },
+                  ],
                 },
                 {
-                  "type": "box",
-                  "layout": "horizontal",
-                  "contents": [
+                  type: "box",
+                  layout: "horizontal",
+                  contents: [
                     {
-                      "type": "text",
-                      "text": "ขายออก",
-                      "align": "start"
+                      type: "text",
+                      text: "ขายออก",
+                      align: "start",
                     },
                     {
-                      "type": "text",
-                      "align": "end",
-                      "text": `${data.jewelryBuy}`,
-                      "color": `${data.jewelryBuyColor}`
-                    }
-                  ]
-                }
+                      type: "text",
+                      align: "end",
+                      text: `${data.jewelryBuy}`,
+                      color: `${data.jewelryBuyColor}`,
+                    },
+                  ],
+                },
               ],
-              "paddingAll": "10px",
-              "backgroundColor": "#FFD700",
-              "cornerRadius": "5px",
-              "margin": "xl"
+              paddingAll: "10px",
+              backgroundColor: "#FFD700",
+              cornerRadius: "5px",
+              margin: "xl",
             },
             {
-              "type": "box",
-              "layout": "vertical",
-              "contents": [
+              type: "box",
+              layout: "vertical",
+              contents: [
                 {
-                  "type": "box",
-                  "layout": "horizontal",
-                  "contents": [
+                  type: "box",
+                  layout: "horizontal",
+                  contents: [
                     {
-                      "type": "text",
-                      "text": "วันนี้",
-                      "color": `${data.changeColor}`,
-                      "align": "start"
+                      type: "text",
+                      text: "วันนี้",
+                      color: `${data.changeColor}`,
+                      align: "start",
                     },
                     {
-                      "type": "text",
-                      "text": `${data.change}`,
-                      "weight": "bold",
-                      "align": "end",
-                      "color": `${data.changeColor}`
-                    }
+                      type: "text",
+                      text: `${data.change}`,
+                      weight: "bold",
+                      align: "end",
+                      color: `${data.changeColor}`,
+                    },
                   ],
-                  "paddingTop": "lg",
-                  "paddingEnd": "xs"
-                }
+                  paddingTop: "lg",
+                  paddingEnd: "xs",
+                },
               ],
-              "paddingAll": "md"
-            }
-          ]
-        }
+              paddingAll: "md",
+            },
+          ],
+        },
       ],
-      "paddingAll": "20px",
-      "backgroundColor": "#7A8299"
+      paddingAll: "20px",
+      backgroundColor: "#7A8299",
     },
-    "footer": {
-      "type": "box",
-      "layout": "horizontal",
-      "contents": [
+    footer: {
+      type: "box",
+      layout: "horizontal",
+      contents: [
         {
-          "type": "text",
-          "text": `${data.updateAt}`,
-          "align": "center",
-          "size": "xs",
-        }
-      ]
-    }
+          type: "text",
+          text: `${data.updateAt}`,
+          align: "center",
+          size: "xs",
+        },
+      ],
+    },
   };
   return bubbleMessageTpl;
 };
@@ -622,59 +618,59 @@ const signIn = () => {
   const image = utils.randomItems(IMAGE_URLS);
   const bubble = [
     {
-      type: 'bubble',
+      type: "bubble",
       hero: {
-        type: 'image',
-        size: 'full',
-        aspectRatio: '20:13',
-        aspectMode: 'cover',
+        type: "image",
+        size: "full",
+        aspectRatio: "20:13",
+        aspectMode: "cover",
         url: `${image}`,
       },
       body: {
-        type: 'box',
-        layout: 'vertical',
-        spacing: 'sm',
+        type: "box",
+        layout: "vertical",
+        spacing: "sm",
         contents: [
           {
-            type: 'text',
-            text: 'TO THE MOON 🚀 🌕',
+            type: "text",
+            text: "TO THE MOON 🚀 🌕",
             wrap: true,
-            weight: 'bold',
-            size: 'md',
-            color: '#B2A4FF',
+            weight: "bold",
+            size: "md",
+            color: "#B2A4FF",
           },
           {
-            type: 'box',
-            layout: 'baseline',
+            type: "box",
+            layout: "baseline",
             contents: [
               {
-                type: 'text',
-                text: '🫢 คุณยังไม่ได้ลงชื่อใช้งานหรือเซสชันหมด ช่วยลงชื่อเข้าใช้งานก่อนนะจ๊ะ',
+                type: "text",
+                text: "🫢 คุณยังไม่ได้ลงชื่อใช้งานหรือเซสชันหมด ช่วยลงชื่อเข้าใช้งานก่อนนะจ๊ะ",
                 wrap: true,
-                weight: 'bold',
-                size: 'sm',
+                weight: "bold",
+                size: "sm",
                 flex: 0,
-                margin: 'none',
+                margin: "none",
               },
             ],
-            margin: 'lg',
+            margin: "lg",
           },
         ],
       },
       footer: {
-        type: 'box',
-        layout: 'vertical',
-        spacing: 'sm',
+        type: "box",
+        layout: "vertical",
+        spacing: "sm",
         contents: [
           {
-            type: 'button',
-            style: 'primary',
+            type: "button",
+            style: "primary",
             action: {
-              type: 'uri',
-              label: '🔑 เข้าสู่ระบบ ',
+              type: "uri",
+              label: "🔑 เข้าสู่ระบบ ",
               uri: `${env.FRONTEND_URL}`,
             },
-            color: '#14C38E',
+            color: "#14C38E",
           },
         ],
       },
@@ -686,85 +682,85 @@ const signIn = () => {
 const notFound = () => {
   return [
     {
-      type: 'bubble',
-      size: 'giga',
+      type: "bubble",
+      size: "giga",
       body: {
-        type: 'box',
-        layout: 'vertical',
+        type: "box",
+        layout: "vertical",
         contents: [
           {
-            type: 'image',
-            url: 'https://cdn.dribbble.com/users/285475/screenshots/2083086/dribbble_1.gif',
-            size: 'full',
-            aspectMode: 'cover',
-            aspectRatio: '4:3',
-            gravity: 'top',
+            type: "image",
+            url: "https://cdn.dribbble.com/users/285475/screenshots/2083086/dribbble_1.gif",
+            size: "full",
+            aspectMode: "cover",
+            aspectRatio: "4:3",
+            gravity: "top",
             animated: true,
           },
           {
-            type: 'box',
-            layout: 'vertical',
+            type: "box",
+            layout: "vertical",
             contents: [
               {
-                type: 'box',
-                layout: 'vertical',
+                type: "box",
+                layout: "vertical",
                 contents: [
                   {
-                    type: 'text',
-                    text: '...ข่อยขอบอกอีหยั่งแน่',
-                    size: 'xl',
-                    color: '#383E56',
-                    weight: 'bold',
+                    type: "text",
+                    text: "...ข่อยขอบอกอีหยั่งแน่",
+                    size: "xl",
+                    color: "#383E56",
+                    weight: "bold",
                   },
                 ],
               },
               {
-                type: 'box',
-                layout: 'baseline',
+                type: "box",
+                layout: "baseline",
                 contents: [
                   {
-                    type: 'text',
-                    text: 'ตัวเจ้าเลือกเบิ่งมันบ่มีเด้อ!',
-                    color: '#383E56',
-                    size: 'sm',
+                    type: "text",
+                    text: "ตัวเจ้าเลือกเบิ่งมันบ่มีเด้อ!",
+                    color: "#383E56",
+                    size: "sm",
                     flex: 0,
                   },
                 ],
-                spacing: 'lg',
+                spacing: "lg",
               },
             ],
-            position: 'relative',
-            offsetBottom: '0px',
-            offsetStart: '0px',
-            offsetEnd: '0px',
-            backgroundColor: '#FABEA7',
-            paddingAll: '20px',
-            paddingTop: '18px',
+            position: "relative",
+            offsetBottom: "0px",
+            offsetStart: "0px",
+            offsetEnd: "0px",
+            backgroundColor: "#FABEA7",
+            paddingAll: "20px",
+            paddingTop: "18px",
           },
           {
-            type: 'box',
-            layout: 'vertical',
+            type: "box",
+            layout: "vertical",
             contents: [
               {
-                type: 'text',
-                text: '404',
-                color: '#ffffff',
-                align: 'center',
-                size: 'xs',
-                offsetTop: '3px',
-                weight: 'bold',
+                type: "text",
+                text: "404",
+                color: "#ffffff",
+                align: "center",
+                size: "xs",
+                offsetTop: "3px",
+                weight: "bold",
               },
             ],
-            position: 'absolute',
-            cornerRadius: '20px',
-            offsetTop: '18px',
-            backgroundColor: '#ff334b',
-            offsetStart: '18px',
-            height: '25px',
-            width: '53px',
+            position: "absolute",
+            cornerRadius: "20px",
+            offsetTop: "18px",
+            backgroundColor: "#ff334b",
+            offsetStart: "18px",
+            height: "25px",
+            width: "53px",
           },
         ],
-        paddingAll: '0px',
+        paddingAll: "0px",
       },
     },
   ];
@@ -773,96 +769,100 @@ const notFound = () => {
 const workCheckIn = () => {
   return [
     {
-      type: 'bubble',
-      size: 'giga',
+      type: "bubble",
+      size: "giga",
       header: {
-        type: 'box',
-        layout: 'vertical',
+        type: "box",
+        layout: "vertical",
         contents: [
           {
-            type: 'text',
-            text: '⏰ ระบบลงชื่อเข้างาน',
-            weight: 'bold',
-            size: 'xl',
-            color: '#ffffff',
-            align: 'center'
-          }
+            type: "text",
+            text: "⏰ ระบบลงชื่อเข้างาน",
+            weight: "bold",
+            size: "xl",
+            color: "#ffffff",
+            align: "center",
+          },
         ],
-        backgroundColor: '#7BB3A9',
-        paddingAll: '20px'
+        backgroundColor: "#7BB3A9",
+        paddingAll: "20px",
       },
       body: {
-        type: 'box',
-        layout: 'vertical',
+        type: "box",
+        layout: "vertical",
         contents: [
           {
-            type: 'text',
-            text: '📅 วันนี้คุณพร้อมทำงานแล้วใช่ไหม?',
-            weight: 'bold',
-            size: 'lg',
+            type: "text",
+            text: "📅 วันนี้คุณพร้อมทำงานแล้วใช่ไหม?",
+            weight: "bold",
+            size: "lg",
             wrap: true,
-            align: 'center',
-            margin: 'md'
+            align: "center",
+            margin: "md",
           },
           {
-            type: 'text',
-            text: 'นโยบายบริษัท: จันทร์-ศุกร์ เข้างาน 08:00-11:00 น.\nทำงาน 9 ชม./วัน (รวมพักกลางวัน 1 ชม.)',
+            type: "text",
+            text: "นโยบายบริษัท: จันทร์-ศุกร์ เข้างาน 08:00-11:00 น.\nทำงาน 9 ชม./วัน (รวมพักกลางวัน 1 ชม.)",
             wrap: true,
-            size: 'sm',
-            color: '#8A8A8A',
-            align: 'center',
-            margin: 'lg'
+            size: "sm",
+            color: "#8A8A8A",
+            align: "center",
+            margin: "lg",
           },
           {
-            type: 'separator',
-            margin: 'lg'
+            type: "separator",
+            margin: "lg",
           },
           {
-            type: 'text',
-            text: 'กดปุ่มด้านล่างเพื่อลงชื่อเข้างาน\nระบบจะคำนวณเวลาเลิกงานให้อัตโนมัติ',
+            type: "text",
+            text: "กดปุ่มด้านล่างเพื่อลงชื่อเข้างาน\nระบบจะคำนวณเวลาเลิกงานให้อัตโนมัติ",
             wrap: true,
-            size: 'sm',
-            color: '#8A8A8A',
-            align: 'center',
-            margin: 'lg'
-          }
+            size: "sm",
+            color: "#8A8A8A",
+            align: "center",
+            margin: "lg",
+          },
         ],
-        paddingAll: '20px'
+        paddingAll: "20px",
       },
       footer: {
-        type: 'box',
-        layout: 'vertical',
-        spacing: 'sm',
+        type: "box",
+        layout: "vertical",
+        spacing: "sm",
         contents: [
           {
-            type: 'button',
-            style: 'primary',
+            type: "button",
+            style: "primary",
             action: {
-              type: 'postback',
-              label: '🟢 เข้างาน',
-              data: 'action=checkin'
+              type: "postback",
+              label: "🟢 เข้างาน",
+              data: "action=checkin",
             },
-            color: '#7BB3A9',
-            height: 'md'
+            color: "#7BB3A9",
+            height: "md",
           },
           {
-            type: 'button',
-            style: 'secondary',
+            type: "button",
+            style: "secondary",
             action: {
-              type: 'postback',
-              label: '📊 ดูสถานะการทำงาน',
-              data: 'action=status'
+              type: "postback",
+              label: "📊 ดูสถานะการทำงาน",
+              data: "action=status",
             },
-            height: 'sm'
-          }
+            height: "sm",
+          },
         ],
-        paddingAll: '20px'
-      }
-    }
+        paddingAll: "20px",
+      },
+    },
   ];
 };
 
-import { formatThaiDate, formatTimeHM, calculateWorkDuration } from '@/lib/utils/thai-datetime';
+import {
+  formatThaiDate,
+  formatTimeHM,
+  calculateWorkDuration,
+} from "@/lib/utils/thai-datetime";
 
 const workCheckInSuccess = (checkInTime: Date, expectedCheckOutTime: Date) => {
   // ใช้ utilities สำหรับจัดการกับวันที่และเวลาไทย
@@ -874,297 +874,301 @@ const workCheckInSuccess = (checkInTime: Date, expectedCheckOutTime: Date) => {
 
   return [
     {
-      type: 'bubble',
-      size: 'giga',
+      type: "bubble",
+      size: "giga",
       header: {
-        type: 'box',
-        layout: 'vertical',
+        type: "box",
+        layout: "vertical",
         contents: [
           {
-            type: 'text',
-            text: '✅ ลงชื่อเข้างานสำเร็จ',
-            weight: 'bold',
-            size: 'xl',
-            color: '#ffffff',
-            align: 'center'
-          }
+            type: "text",
+            text: "✅ ลงชื่อเข้างานสำเร็จ",
+            weight: "bold",
+            size: "xl",
+            color: "#ffffff",
+            align: "center",
+          },
         ],
-        backgroundColor: '#7BB3A9',
-        paddingAll: '20px'
+        backgroundColor: "#7BB3A9",
+        paddingAll: "20px",
       },
       body: {
-        type: 'box',
-        layout: 'vertical',
+        type: "box",
+        layout: "vertical",
         contents: [
           {
-            type: 'text',
+            type: "text",
             text: `📅 ${dateStr}`,
-            weight: 'bold',
-            size: 'md',
+            weight: "bold",
+            size: "md",
             wrap: true,
-            align: 'center',
-            margin: 'md',
-            color: '#5A5A5A'
+            align: "center",
+            margin: "md",
+            color: "#5A5A5A",
           },
           {
-            type: 'separator',
-            margin: 'xl'
+            type: "separator",
+            margin: "xl",
           },
           {
-            type: 'box',
-            layout: 'vertical',
-            margin: 'xl',
-            spacing: 'sm',
+            type: "box",
+            layout: "vertical",
+            margin: "xl",
+            spacing: "sm",
             contents: [
               {
-                type: 'box',
-                layout: 'horizontal',
+                type: "box",
+                layout: "horizontal",
                 contents: [
                   {
-                    type: 'text',
-                    text: '🕐 เวลาเข้างาน:',
-                    size: 'sm',
-                    color: '#777777',
-                    flex: 0
+                    type: "text",
+                    text: "🕐 เวลาเข้างาน:",
+                    size: "sm",
+                    color: "#777777",
+                    flex: 0,
                   },
                   {
-                    type: 'text',
+                    type: "text",
                     text: checkInTimeStr,
-                    weight: 'bold',
-                    size: 'sm',
-                    color: '#7BB3A9',
-                    align: 'end'
-                  }
-                ]
+                    weight: "bold",
+                    size: "sm",
+                    color: "#7BB3A9",
+                    align: "end",
+                  },
+                ],
               },
               {
-                type: 'box',
-                layout: 'horizontal',
+                type: "box",
+                layout: "horizontal",
                 contents: [
                   {
-                    type: 'text',
-                    text: '🕔 เวลาเลิกงาน (คาด):',
-                    size: 'sm',
-                    color: '#777777',
-                    flex: 0
+                    type: "text",
+                    text: "🕔 เวลาเลิกงาน (คาด):",
+                    size: "sm",
+                    color: "#777777",
+                    flex: 0,
                   },
                   {
-                    type: 'text',
+                    type: "text",
                     text: checkOutTimeStr,
-                    weight: 'bold',
-                    size: 'sm',
-                    color: '#FFB366',
-                    align: 'end'
-                  }
-                ]
+                    weight: "bold",
+                    size: "sm",
+                    color: "#FFB366",
+                    align: "end",
+                  },
+                ],
               },
               {
-                type: 'box',
-                layout: 'horizontal',
+                type: "box",
+                layout: "horizontal",
                 contents: [
                   {
-                    type: 'text',
-                    text: '⏱️ ชั่วโมงทำงาน:',
-                    size: 'sm',
-                    color: '#777777',
-                    flex: 0
+                    type: "text",
+                    text: "⏱️ ชั่วโมงทำงาน:",
+                    size: "sm",
+                    color: "#777777",
+                    flex: 0,
                   },
                   {
-                    type: 'text',
-                    text: '9 ชั่วโมง',
-                    weight: 'bold',
-                    size: 'sm',
-                    color: '#6BB6FF',
-                    align: 'end'
-                  }
-                ]
-              }
-            ]
-          }
+                    type: "text",
+                    text: "9 ชั่วโมง",
+                    weight: "bold",
+                    size: "sm",
+                    color: "#6BB6FF",
+                    align: "end",
+                  },
+                ],
+              },
+            ],
+          },
         ],
-        paddingAll: '20px'
+        paddingAll: "20px",
       },
       footer: {
-        type: 'box',
-        layout: 'vertical',
-        spacing: 'sm',
+        type: "box",
+        layout: "vertical",
+        spacing: "sm",
         contents: [
           {
-            type: 'button',
-            style: 'secondary',
+            type: "button",
+            style: "secondary",
             action: {
-              type: 'postback',
-              label: '🔴 ออกงาน',
-              data: 'action=checkout'
+              type: "postback",
+              label: "🔴 ออกงาน",
+              data: "action=checkout",
             },
-            color: '#E57373'
-          }
+            color: "#E57373",
+          },
         ],
-        paddingAll: '20px'
-      }
-    }
+        paddingAll: "20px",
+      },
+    },
   ];
 };
 
-const workCheckInEarlySuccess = (actualCheckInTime: Date, recordedCheckInTime: Date, expectedCheckOutTime: Date) => {
+const workCheckInEarlySuccess = (
+  actualCheckInTime: Date,
+  recordedCheckInTime: Date,
+  expectedCheckOutTime: Date,
+) => {
   // ใช้ utilities สำหรับจัดการกับวันที่และเวลาไทย
   const actualTimeStr = formatTimeHM(actualCheckInTime);
   const recordedTimeStr = formatTimeHM(recordedCheckInTime);
   const checkOutTimeStr = formatTimeHM(expectedCheckOutTime);
-  
+
   // สร้างวันที่ในรูปแบบไทย
   const dateStr = formatThaiDate(actualCheckInTime);
 
   return [
     {
-      type: 'bubble',
-      size: 'giga',
+      type: "bubble",
+      size: "giga",
       header: {
-        type: 'box',
-        layout: 'vertical',
+        type: "box",
+        layout: "vertical",
         contents: [
           {
-            type: 'text',
-            text: '⏰ ลงชื่อเข้างานเร็ว',
-            weight: 'bold',
-            size: 'xl',
-            color: '#ffffff',
-            align: 'center'
-          }
+            type: "text",
+            text: "⏰ ลงชื่อเข้างานเร็ว",
+            weight: "bold",
+            size: "xl",
+            color: "#ffffff",
+            align: "center",
+          },
         ],
-        backgroundColor: '#FFB366',
-        paddingAll: '20px'
+        backgroundColor: "#FFB366",
+        paddingAll: "20px",
       },
       body: {
-        type: 'box',
-        layout: 'vertical',
+        type: "box",
+        layout: "vertical",
         contents: [
           {
-            type: 'text',
+            type: "text",
             text: dateStr,
-            size: 'sm',
-            color: '#8A8A8A',
-            align: 'center'
+            size: "sm",
+            color: "#8A8A8A",
+            align: "center",
           },
           {
-            type: 'separator',
-            margin: 'md'
+            type: "separator",
+            margin: "md",
           },
           {
-            type: 'box',
-            layout: 'vertical',
-            margin: 'lg',
-            spacing: 'sm',
+            type: "box",
+            layout: "vertical",
+            margin: "lg",
+            spacing: "sm",
             contents: [
               {
-                type: 'box',
-                layout: 'horizontal',
+                type: "box",
+                layout: "horizontal",
                 contents: [
                   {
-                    type: 'text',
-                    text: '🚪 มาถึงสำนักงาน:',
-                    size: 'sm',
-                    color: '#777777',
-                    flex: 3
+                    type: "text",
+                    text: "🚪 มาถึงสำนักงาน:",
+                    size: "sm",
+                    color: "#777777",
+                    flex: 3,
                   },
                   {
-                    type: 'text',
+                    type: "text",
                     text: `${actualTimeStr} น.`,
-                    size: 'sm',
-                    weight: 'bold',
-                    color: '#FFB366',
+                    size: "sm",
+                    weight: "bold",
+                    color: "#FFB366",
                     flex: 2,
-                    align: 'end'
-                  }
-                ]
+                    align: "end",
+                  },
+                ],
               },
               {
-                type: 'box',
-                layout: 'horizontal',
+                type: "box",
+                layout: "horizontal",
                 contents: [
                   {
-                    type: 'text',
-                    text: '⏰ เริ่มนับเวลาทำงาน:',
-                    size: 'sm',
-                    color: '#777777',
-                    flex: 3
+                    type: "text",
+                    text: "⏰ เริ่มนับเวลาทำงาน:",
+                    size: "sm",
+                    color: "#777777",
+                    flex: 3,
                   },
                   {
-                    type: 'text',
+                    type: "text",
                     text: `${recordedTimeStr} น.`,
-                    size: 'sm',
-                    weight: 'bold',
-                    color: '#7BB3A9',
+                    size: "sm",
+                    weight: "bold",
+                    color: "#7BB3A9",
                     flex: 2,
-                    align: 'end'
-                  }
-                ]
+                    align: "end",
+                  },
+                ],
               },
               {
-                type: 'box',
-                layout: 'horizontal',
+                type: "box",
+                layout: "horizontal",
                 contents: [
                   {
-                    type: 'text',
-                    text: '🏁 เลิกงาน:',
-                    size: 'sm',
-                    color: '#777777',
-                    flex: 3
+                    type: "text",
+                    text: "🏁 เลิกงาน:",
+                    size: "sm",
+                    color: "#777777",
+                    flex: 3,
                   },
                   {
-                    type: 'text',
+                    type: "text",
                     text: `${checkOutTimeStr} น.`,
-                    size: 'sm',
-                    weight: 'bold',
-                    color: '#6BB6FF',
+                    size: "sm",
+                    weight: "bold",
+                    color: "#6BB6FF",
                     flex: 2,
-                    align: 'end'
-                  }
-                ]
-              }
-            ]
+                    align: "end",
+                  },
+                ],
+              },
+            ],
           },
           {
-            type: 'separator',
-            margin: 'lg'
+            type: "separator",
+            margin: "lg",
           },
           {
-            type: 'box',
-            layout: 'vertical',
-            margin: 'lg',
-            backgroundColor: '#F5F5F5',
-            cornerRadius: '8px',
-            paddingAll: '12px',
+            type: "box",
+            layout: "vertical",
+            margin: "lg",
+            backgroundColor: "#F5F5F5",
+            cornerRadius: "8px",
+            paddingAll: "12px",
             contents: [
               {
-                type: 'text',
-                text: '📋 นโยบายบริษัท',
-                size: 'sm',
-                weight: 'bold',
-                color: '#5A5A5A',
-                align: 'center'
+                type: "text",
+                text: "📋 นโยบายบริษัท",
+                size: "sm",
+                weight: "bold",
+                color: "#5A5A5A",
+                align: "center",
               },
               {
-                type: 'text',
-                text: '• การเข้างานก่อน 08:00 น. จะนับเวลาทำงานตั้งแต่ 08:00 น.',
-                size: 'xs',
-                color: '#8A8A8A',
+                type: "text",
+                text: "• การเข้างานก่อน 08:00 น. จะนับเวลาทำงานตั้งแต่ 08:00 น.",
+                size: "xs",
+                color: "#8A8A8A",
                 wrap: true,
-                margin: 'sm'
+                margin: "sm",
               },
               {
-                type: 'text',
-                text: '• ทำงาน 9 ชั่วโมง (รวมพักเที่ยง 1 ชั่วโมง)',
-                size: 'xs',
-                color: '#8A8A8A',
-                wrap: true
-              }
-            ]
-          }
+                type: "text",
+                text: "• ทำงาน 9 ชั่วโมง (รวมพักเที่ยง 1 ชั่วโมง)",
+                size: "xs",
+                color: "#8A8A8A",
+                wrap: true,
+              },
+            ],
+          },
         ],
-        paddingAll: '20px'
-      }
-    }
+        paddingAll: "20px",
+      },
+    },
   ];
 };
 
@@ -1173,36 +1177,39 @@ const workCheckInEarlySuccess = (actualCheckInTime: Date, recordedCheckInTime: D
  * @param checkOutTime เวลาออกงาน
  * @returns array ของ component ที่แสดงเวลาออกงาน หรือ array ว่างถ้าไม่มีข้อมูล
  */
-const createCheckOutTimeContent = (checkOutTime?: Date, isAutoCheckout: boolean = false): any[] => {
+const createCheckOutTimeContent = (
+  checkOutTime?: Date,
+  isAutoCheckout: boolean = false,
+): any[] => {
   if (!checkOutTime) return [];
-  
+
   // คำนวณเวลาไทย (UTC+7) จาก UTC หรือใช้ formatTimeHM
   const checkOutTimeStr = formatTimeHM(checkOutTime);
-  const timeLabel = isAutoCheckout ? '🕛 ออกงานอัตโนมัติ:' : '🕐 เวลาออกงาน:';
-  const timeColor = isAutoCheckout ? '#FF9500' : '#7BB3A9';
-  
+  const timeLabel = isAutoCheckout ? "🕛 ออกงานอัตโนมัติ:" : "🕐 เวลาออกงาน:";
+  const timeColor = isAutoCheckout ? "#FF9500" : "#7BB3A9";
+
   return [
     {
-      type: 'box',
-      layout: 'horizontal',
+      type: "box",
+      layout: "horizontal",
       contents: [
         {
-          type: 'text',
+          type: "text",
           text: timeLabel,
-          size: 'sm',
-          color: '#777777',
-          flex: 0
+          size: "sm",
+          color: "#777777",
+          flex: 0,
         },
         {
-          type: 'text',
+          type: "text",
           text: checkOutTimeStr,
-          weight: 'bold',
-          size: 'sm',
+          weight: "bold",
+          size: "sm",
           color: timeColor,
-          align: 'end'
-        }
-      ]
-    }
+          align: "end",
+        },
+      ],
+    },
   ];
 };
 
@@ -1214,155 +1221,162 @@ const createCheckOutTimeContent = (checkOutTime?: Date, isAutoCheckout: boolean 
 const workStatus = (attendance: any) => {
   // ใช้ utilities สำหรับจัดการกับวันที่และเวลาไทย
   const checkInTimeStr = formatTimeHM(attendance.checkInTime);
-  
+
   // คำนวณเวลาออกงานที่คาดหวัง (+9 ชั่วโมง)
-  const expectedCheckOutTime = new Date(attendance.checkInTime.getTime() + 9 * 60 * 60 * 1000);
+  const expectedCheckOutTime = new Date(
+    attendance.checkInTime.getTime() + 9 * 60 * 60 * 1000,
+  );
   const expectedCheckOutTimeStr = formatTimeHM(expectedCheckOutTime);
 
   // สร้างวันที่ในรูปแบบไทย
   const dateStr = formatThaiDate(attendance.checkInTime);
 
-  const isCheckedOut = attendance.status === AttendanceStatusType.CHECKED_OUT || 
-                      attendance.status === AttendanceStatusType.AUTO_CHECKOUT_MIDNIGHT;
-  const isAutoCheckout = attendance.status === AttendanceStatusType.AUTO_CHECKOUT_MIDNIGHT;
-  
+  const isCheckedOut =
+    attendance.status === AttendanceStatusType.CHECKED_OUT ||
+    attendance.status === AttendanceStatusType.AUTO_CHECKOUT_MIDNIGHT;
+  const isAutoCheckout =
+    attendance.status === AttendanceStatusType.AUTO_CHECKOUT_MIDNIGHT;
+
   let statusText: string;
   let statusColor: string;
-  
+
   if (isAutoCheckout) {
-    statusText = '🕛 ออกงานอัตโนมัติ';
-    statusColor = '#FF9500'; // สีส้มสำหรับการออกงานอัตโนมัติ
+    statusText = "🕛 ออกงานอัตโนมัติ";
+    statusColor = "#FF9500"; // สีส้มสำหรับการออกงานอัตโนมัติ
   } else if (isCheckedOut) {
-    statusText = '✅ ออกงานแล้ว';
-    statusColor = '#7BB3A9';
+    statusText = "✅ ออกงานแล้ว";
+    statusColor = "#7BB3A9";
   } else {
-    statusText = '🟢 กำลังทำงาน';
-    statusColor = '#FFB366';
+    statusText = "🟢 กำลังทำงาน";
+    statusColor = "#FFB366";
   }
 
   // สร้าง content สำหรับแสดงเวลาออกงาน (ถ้ามี)
-  const checkOutTimeContent = isCheckedOut && attendance.checkOutTime 
-    ? createCheckOutTimeContent(attendance.checkOutTime, isAutoCheckout) 
-    : [];
+  const checkOutTimeContent =
+    isCheckedOut && attendance.checkOutTime
+      ? createCheckOutTimeContent(attendance.checkOutTime, isAutoCheckout)
+      : [];
 
   return [
     {
-      type: 'bubble',
-      size: 'giga',
+      type: "bubble",
+      size: "giga",
       header: {
-        type: 'box',
-        layout: 'vertical',
+        type: "box",
+        layout: "vertical",
         contents: [
           {
-            type: 'text',
-            text: '📊 สถานะการทำงาน',
-            weight: 'bold',
-            size: 'xl',
-            color: '#ffffff',
-            align: 'center'
-          }
+            type: "text",
+            text: "📊 สถานะการทำงาน",
+            weight: "bold",
+            size: "xl",
+            color: "#ffffff",
+            align: "center",
+          },
         ],
         backgroundColor: statusColor,
-        paddingAll: '20px'
+        paddingAll: "20px",
       },
       body: {
-        type: 'box',
-        layout: 'vertical',
+        type: "box",
+        layout: "vertical",
         contents: [
           {
-            type: 'text',
+            type: "text",
             text: statusText,
-            weight: 'bold',
-            size: 'lg',
-            align: 'center',
-            margin: 'md',
-            color: statusColor
+            weight: "bold",
+            size: "lg",
+            align: "center",
+            margin: "md",
+            color: statusColor,
           },
           {
-            type: 'text',
+            type: "text",
             text: `📅 ${dateStr}`,
-            size: 'sm',
+            size: "sm",
             wrap: true,
-            align: 'center',
-            color: '#8A8A8A'
+            align: "center",
+            color: "#8A8A8A",
           },
           {
-            type: 'separator',
-            margin: 'xl'
+            type: "separator",
+            margin: "xl",
           },
           {
-            type: 'box',
-            layout: 'vertical',
-            margin: 'xl',
-            spacing: 'sm',
+            type: "box",
+            layout: "vertical",
+            margin: "xl",
+            spacing: "sm",
             contents: [
               {
-                type: 'box',
-                layout: 'horizontal',
+                type: "box",
+                layout: "horizontal",
                 contents: [
                   {
-                    type: 'text',
-                    text: '🕐 เวลาเข้างาน:',
-                    size: 'sm',
-                    color: '#777777',
-                    flex: 0
+                    type: "text",
+                    text: "🕐 เวลาเข้างาน:",
+                    size: "sm",
+                    color: "#777777",
+                    flex: 0,
                   },
                   {
-                    type: 'text',
+                    type: "text",
                     text: checkInTimeStr,
-                    weight: 'bold',
-                    size: 'sm',
-                    color: '#7BB3A9',
-                    align: 'end'
-                  }
-                ]
+                    weight: "bold",
+                    size: "sm",
+                    color: "#7BB3A9",
+                    align: "end",
+                  },
+                ],
               },
               ...checkOutTimeContent,
               {
-                type: 'box',
-                layout: 'horizontal',
+                type: "box",
+                layout: "horizontal",
                 contents: [
                   {
-                    type: 'text',
-                    text: '🕔 เวลาเลิกงาน (คาด):',
-                    size: 'sm',
-                    color: '#777777',
-                    flex: 0
+                    type: "text",
+                    text: "🕔 เวลาเลิกงาน (คาด):",
+                    size: "sm",
+                    color: "#777777",
+                    flex: 0,
                   },
                   {
-                    type: 'text',
+                    type: "text",
                     text: expectedCheckOutTimeStr,
-                    weight: 'bold',
-                    size: 'sm',
-                    color: '#FFB366',
-                    align: 'end'
-                  }
-                ]
-              }
-            ]
-          }
+                    weight: "bold",
+                    size: "sm",
+                    color: "#FFB366",
+                    align: "end",
+                  },
+                ],
+              },
+            ],
+          },
         ],
-        paddingAll: '20px'
+        paddingAll: "20px",
       },
-      footer: !isCheckedOut ? {
-        type: 'box',
-        layout: 'vertical',
-        spacing: 'sm',
-        contents: [
-          {
-            type: 'button',
-            style: 'primary',
-            action: {
-              type: 'postback',
-              label: '🔴 ออกงาน',
-              data: 'action=checkout'
-            },
-            color: '#E57373'
+      footer: !isCheckedOut
+        ? {
+            type: "box",
+            layout: "vertical",
+            spacing: "sm",
+            contents: [
+              {
+                type: "button",
+                style: "primary",
+                action: {
+                  type: "postback",
+                  label: "🔴 ออกงาน",
+                  data: "action=checkout",
+                },
+                color: "#E57373",
+              },
+            ],
+            paddingAll: "20px",
           }
-        ],
-        paddingAll: '20px'
-      } : undefined
-    }
+        : undefined,
+    },
   ];
 };
 
@@ -1375,7 +1389,7 @@ const workAlreadyCheckedIn = (checkInTime: Date) => {
   return workStatus({
     checkInTime,
     status: AttendanceStatusType.CHECKED_IN_ON_TIME,
-    checkOutTime: null
+    checkOutTime: null,
   });
 };
 
@@ -1389,134 +1403,137 @@ const workCheckOutSuccess = (checkInTime: Date, checkOutTime: Date) => {
   // ใช้ utility functions สำหรับจัดการวันที่และเวลาไทย
   const checkInTimeStr = formatTimeHM(checkInTime);
   const checkOutTimeStr = formatTimeHM(checkOutTime);
-  
+
   // สร้างวันที่ในรูปแบบไทย
   const dateStr = formatThaiDate(checkInTime);
 
   // คำนวณชั่วโมงการทำงานจริง
-  const { hours: workHours, minutes: workMinutes } = calculateWorkDuration(checkInTime, checkOutTime);
+  const { hours: workHours, minutes: workMinutes } = calculateWorkDuration(
+    checkInTime,
+    checkOutTime,
+  );
 
   return [
     {
-      type: 'bubble',
-      size: 'giga',
+      type: "bubble",
+      size: "giga",
       header: {
-        type: 'box',
-        layout: 'vertical',
+        type: "box",
+        layout: "vertical",
         contents: [
           {
-            type: 'text',
-            text: '✅ ออกงานสำเร็จ',
-            weight: 'bold',
-            size: 'xl',
-            color: '#ffffff',
-            align: 'center'
-          }
+            type: "text",
+            text: "✅ ออกงานสำเร็จ",
+            weight: "bold",
+            size: "xl",
+            color: "#ffffff",
+            align: "center",
+          },
         ],
-        backgroundColor: '#7BB3A9',
-        paddingAll: '20px'
+        backgroundColor: "#7BB3A9",
+        paddingAll: "20px",
       },
       body: {
-        type: 'box',
-        layout: 'vertical',
+        type: "box",
+        layout: "vertical",
         contents: [
           {
-            type: 'text',
+            type: "text",
             text: `📅 ${dateStr}`,
-            weight: 'bold',
-            size: 'md',
+            weight: "bold",
+            size: "md",
             wrap: true,
-            align: 'center',
-            margin: 'md',
-            color: '#5A5A5A'
+            align: "center",
+            margin: "md",
+            color: "#5A5A5A",
           },
           {
-            type: 'text',
-            text: 'ขอบคุณสำหรับการทำงานวันนี้! 🎉',
-            size: 'sm',
+            type: "text",
+            text: "ขอบคุณสำหรับการทำงานวันนี้! 🎉",
+            size: "sm",
             wrap: true,
-            align: 'center',
-            color: '#8A8A8A'
+            align: "center",
+            color: "#8A8A8A",
           },
           {
-            type: 'separator',
-            margin: 'xl'
+            type: "separator",
+            margin: "xl",
           },
           {
-            type: 'box',
-            layout: 'vertical',
-            margin: 'xl',
-            spacing: 'sm',
+            type: "box",
+            layout: "vertical",
+            margin: "xl",
+            spacing: "sm",
             contents: [
               {
-                type: 'box',
-                layout: 'horizontal',
+                type: "box",
+                layout: "horizontal",
                 contents: [
                   {
-                    type: 'text',
-                    text: '🕐 เวลาเข้างาน:',
-                    size: 'sm',
-                    color: '#777777',
-                    flex: 0
+                    type: "text",
+                    text: "🕐 เวลาเข้างาน:",
+                    size: "sm",
+                    color: "#777777",
+                    flex: 0,
                   },
                   {
-                    type: 'text',
+                    type: "text",
                     text: checkInTimeStr,
-                    weight: 'bold',
-                    size: 'sm',
-                    color: '#7BB3A9',
-                    align: 'end'
-                  }
-                ]
+                    weight: "bold",
+                    size: "sm",
+                    color: "#7BB3A9",
+                    align: "end",
+                  },
+                ],
               },
               {
-                type: 'box',
-                layout: 'horizontal',
+                type: "box",
+                layout: "horizontal",
                 contents: [
                   {
-                    type: 'text',
-                    text: '🕔 เวลาออกงาน:',
-                    size: 'sm',
-                    color: '#777777',
-                    flex: 0
+                    type: "text",
+                    text: "🕔 เวลาออกงาน:",
+                    size: "sm",
+                    color: "#777777",
+                    flex: 0,
                   },
                   {
-                    type: 'text',
+                    type: "text",
                     text: checkOutTimeStr,
-                    weight: 'bold',
-                    size: 'sm',
-                    color: '#7BB3A9',
-                    align: 'end'
-                  }
-                ]
+                    weight: "bold",
+                    size: "sm",
+                    color: "#7BB3A9",
+                    align: "end",
+                  },
+                ],
               },
               {
-                type: 'box',
-                layout: 'horizontal',
+                type: "box",
+                layout: "horizontal",
                 contents: [
                   {
-                    type: 'text',
-                    text: '⏱️ ชั่วโมงทำงาน:',
-                    size: 'sm',
-                    color: '#777777',
-                    flex: 0
+                    type: "text",
+                    text: "⏱️ ชั่วโมงทำงาน:",
+                    size: "sm",
+                    color: "#777777",
+                    flex: 0,
                   },
                   {
-                    type: 'text',
+                    type: "text",
                     text: `${workHours} ชม. ${workMinutes} นาที`,
-                    weight: 'bold',
-                    size: 'sm',
-                    color: '#6BB6FF',
-                    align: 'end'
-                  }
-                ]
-              }
-            ]
-          }
+                    weight: "bold",
+                    size: "sm",
+                    color: "#6BB6FF",
+                    align: "end",
+                  },
+                ],
+              },
+            ],
+          },
         ],
-        paddingAll: '20px'
-      }
-    }
+        paddingAll: "20px",
+      },
+    },
   ];
 };
 
@@ -1528,58 +1545,58 @@ const workCheckOutSuccess = (checkInTime: Date, checkOutTime: Date) => {
 const workError = (message: string) => {
   return [
     {
-      type: 'bubble',
-      size: 'giga',
+      type: "bubble",
+      size: "giga",
       header: {
-        type: 'box',
-        layout: 'vertical',
+        type: "box",
+        layout: "vertical",
         contents: [
           {
-            type: 'text',
-            text: '⚠️ เกิดข้อผิดพลาด',
-            weight: 'bold',
-            size: 'xl',
-            color: '#ffffff',
-            align: 'center'
-          }
+            type: "text",
+            text: "⚠️ เกิดข้อผิดพลาด",
+            weight: "bold",
+            size: "xl",
+            color: "#ffffff",
+            align: "center",
+          },
         ],
-        backgroundColor: '#E57373',
-        paddingAll: '20px'
+        backgroundColor: "#E57373",
+        paddingAll: "20px",
       },
       body: {
-        type: 'box',
-        layout: 'vertical',
+        type: "box",
+        layout: "vertical",
         contents: [
           {
-            type: 'text',
+            type: "text",
             text: message,
             wrap: true,
-            size: 'md',
-            align: 'center',
-            margin: 'md',
-            color: '#E57373'
-          }
+            size: "md",
+            align: "center",
+            margin: "md",
+            color: "#E57373",
+          },
         ],
-        paddingAll: '20px'
+        paddingAll: "20px",
       },
       footer: {
-        type: 'box',
-        layout: 'vertical',
-        spacing: 'sm',
+        type: "box",
+        layout: "vertical",
+        spacing: "sm",
         contents: [
           {
-            type: 'button',
-            style: 'secondary',
+            type: "button",
+            style: "secondary",
             action: {
-              type: 'postback',
-              label: 'ลองใหม่',
-              data: 'action=checkin_menu'
-            }
-          }
+              type: "postback",
+              label: "ลองใหม่",
+              data: "action=checkin_menu",
+            },
+          },
         ],
-        paddingAll: '20px'
-      }
-    }
+        paddingAll: "20px",
+      },
+    },
   ];
 };
 
@@ -1591,59 +1608,59 @@ const workError = (message: string) => {
 const leaveError = (message: string) => {
   return [
     {
-      type: 'bubble',
-      size: 'giga',
+      type: "bubble",
+      size: "giga",
       header: {
-        type: 'box',
-        layout: 'vertical',
+        type: "box",
+        layout: "vertical",
         contents: [
           {
-            type: 'text',
-            text: '⚠️ เกิดข้อผิดพลาดการลา',
-            weight: 'bold',
-            size: 'xl',
-            color: '#ffffff',
-            align: 'center'
-          }
+            type: "text",
+            text: "⚠️ เกิดข้อผิดพลาดการลา",
+            weight: "bold",
+            size: "xl",
+            color: "#ffffff",
+            align: "center",
+          },
         ],
-        backgroundColor: '#E57373',
-        paddingAll: '20px'
+        backgroundColor: "#E57373",
+        paddingAll: "20px",
       },
       body: {
-        type: 'box',
-        layout: 'vertical',
+        type: "box",
+        layout: "vertical",
         contents: [
           {
-            type: 'text',
+            type: "text",
             text: message,
             wrap: true,
-            size: 'md',
-            align: 'center',
-            margin: 'md',
-            color: '#E57373'
-          }
+            size: "md",
+            align: "center",
+            margin: "md",
+            color: "#E57373",
+          },
         ],
-        paddingAll: '20px'
+        paddingAll: "20px",
       },
       footer: {
-        type: 'box',
-        layout: 'vertical',
-        spacing: 'sm',
+        type: "box",
+        layout: "vertical",
+        spacing: "sm",
         contents: [
           {
-            type: 'button',
-            style: 'primary',
+            type: "button",
+            style: "primary",
             action: {
-              type: 'uri',
-              label: 'เปิดหน้าลางาน',
-              uri: `${env.NEXTAUTH_URL}/leave`
+              type: "uri",
+              label: "เปิดหน้าลางาน",
+              uri: `${env.NEXTAUTH_URL}/leave`,
             },
-            color: '#5B7FD3'
-          }
+            color: "#5B7FD3",
+          },
         ],
-        paddingAll: '20px'
-      }
-    }
+        paddingAll: "20px",
+      },
+    },
   ];
 };
 
@@ -1653,93 +1670,93 @@ const leaveError = (message: string) => {
  */
 const monthlyReportMenu = () => {
   return {
-    "type": "bubble",
-    "size": "mega",
-    "header": {
-      "type": "box",
-      "layout": "vertical",
-      "contents": [
+    type: "bubble",
+    size: "mega",
+    header: {
+      type: "box",
+      layout: "vertical",
+      contents: [
         {
-          "type": "text",
-          "text": "📊 รายงานการเข้างานรายเดือน",
-          "weight": "bold",
-          "size": "xl",
-          "color": "#ffffff"
-        }
+          type: "text",
+          text: "📊 รายงานการเข้างานรายเดือน",
+          weight: "bold",
+          size: "xl",
+          color: "#ffffff",
+        },
       ],
-      "backgroundColor": "#8B7FE5",
-      "paddingAll": "20px"
+      backgroundColor: "#8B7FE5",
+      paddingAll: "20px",
     },
-    "body": {
-      "type": "box",
-      "layout": "vertical",
-      "contents": [
+    body: {
+      type: "box",
+      layout: "vertical",
+      contents: [
         {
-          "type": "text",
-          "text": "เลือกเดือนที่ต้องการดูรายงาน",
-          "size": "md",
-          "color": "#374151",
-          "margin": "md"
+          type: "text",
+          text: "เลือกเดือนที่ต้องการดูรายงาน",
+          size: "md",
+          color: "#374151",
+          margin: "md",
         },
         {
-          "type": "separator",
-          "margin": "xl"
+          type: "separator",
+          margin: "xl",
         },
         {
-          "type": "box",
-          "layout": "vertical",
-          "contents": [
+          type: "box",
+          layout: "vertical",
+          contents: [
             {
-              "type": "button",
-              "action": {
-                "type": "postback",
-                "label": "เดือนปัจจุบัน",
-                "data": "action=monthly_report&month=current"
+              type: "button",
+              action: {
+                type: "postback",
+                label: "เดือนปัจจุบัน",
+                data: "action=monthly_report&month=current",
               },
-              "style": "primary",
-              "color": "#8B7FE5",
-              "margin": "md"
+              style: "primary",
+              color: "#8B7FE5",
+              margin: "md",
             },
             {
-              "type": "button",
-              "action": {
-                "type": "postback",
-                "label": "เดือนที่แล้ว",
-                "data": "action=monthly_report&month=previous"
+              type: "button",
+              action: {
+                type: "postback",
+                label: "เดือนที่แล้ว",
+                data: "action=monthly_report&month=previous",
               },
-              "style": "secondary",
-              "margin": "md"
+              style: "secondary",
+              margin: "md",
             },
             {
-              "type": "button",
-              "action": {
-                "type": "uri",
-                "label": "รายงานแบบละเอียดพร้อมกราฟ",
-                "uri": `${env.NEXTAUTH_URL}/attendance-report`
+              type: "button",
+              action: {
+                type: "uri",
+                label: "รายงานแบบละเอียดพร้อมกราฟ",
+                uri: `${env.NEXTAUTH_URL}/attendance-report`,
               },
-              "style": "link",
-              "margin": "md",
-              "color": "#5FB691"
-            }
+              style: "link",
+              margin: "md",
+              color: "#5FB691",
+            },
           ],
-          "margin": "xl"
-        }
-      ]
-    },
-    "footer": {
-      "type": "box",
-      "layout": "vertical",
-      "contents": [
-        {
-          "type": "text",
-          "text": "สามารถดูรายงานย้อนหลังได้ที่เว็บไซต์",
-          "size": "xs",
-          "color": "#9ca3af",
-          "align": "center"
-        }
+          margin: "xl",
+        },
       ],
-      "margin": "sm"
-    }
+    },
+    footer: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "text",
+          text: "สามารถดูรายงานย้อนหลังได้ที่เว็บไซต์",
+          size: "xs",
+          color: "#9ca3af",
+          align: "center",
+        },
+      ],
+      margin: "sm",
+    },
   };
 };
 
@@ -1750,20 +1767,20 @@ const monthlyReportMenu = () => {
  */
 const createMonthlyReportHeader = (monthName: string) => {
   return {
-    "type": "box",
-    "layout": "vertical",
-    "contents": [
+    type: "box",
+    layout: "vertical",
+    contents: [
       {
-        "type": "text",
-        "text": `📊 รายงานประจำเดือน${monthName}`,
-        "weight": "bold",
-        "size": "lg",
-        "color": "#ffffff",
-        "wrap": true
-      }
+        type: "text",
+        text: `📊 รายงานประจำเดือน${monthName}`,
+        weight: "bold",
+        size: "lg",
+        color: "#ffffff",
+        wrap: true,
+      },
     ],
-    "backgroundColor": "#5FB691",
-    "paddingAll": "20px"
+    backgroundColor: "#5FB691",
+    paddingAll: "20px",
   };
 };
 
@@ -1775,27 +1792,27 @@ const createMonthlyReportHeader = (monthName: string) => {
 const monthlyReportSummary = (report: any) => {
   // 🛡️ Safe month formatting - ใช้ static mapping แทน toLocaleDateString
   const monthNames: Record<string, string> = {
-    '01': 'มกราคม',
-    '02': 'กุมภาพันธ์',
-    '03': 'มีนาคม',
-    '04': 'เมษายน',
-    '05': 'พฤษภาคม',
-    '06': 'มิถุนายน',
-    '07': 'กรกฎาคม',
-    '08': 'สิงหาคม',
-    '09': 'กันยายน',
-    '10': 'ตุลาคม',
-    '11': 'พฤศจิกายน',
-    '12': 'ธันวาคม'
+    "01": "มกราคม",
+    "02": "กุมภาพันธ์",
+    "03": "มีนาคม",
+    "04": "เมษายน",
+    "05": "พฤษภาคม",
+    "06": "มิถุนายน",
+    "07": "กรกฎาคม",
+    "08": "สิงหาคม",
+    "09": "กันยายน",
+    "10": "ตุลาคม",
+    "11": "พฤศจิกายน",
+    "12": "ธันวาคม",
   };
 
-  const [year, month] = report.month.split('-');
+  const [year, month] = report.month.split("-");
   const monthName = `${monthNames[month]} ${year}`;
 
   return {
-    "type": "bubble",
-    "size": "mega",
-    "header": createMonthlyReportHeader(monthName),
+    type: "bubble",
+    size: "mega",
+    header: createMonthlyReportHeader(monthName),
     /**
      * สร้าง info box สำหรับแสดงข้อมูลสถิติต่างๆ
      * @param label ชื่อหัวข้อ
@@ -1803,367 +1820,370 @@ const monthlyReportSummary = (report: any) => {
      * @param color สีของค่า
      * @returns object สำหรับแสดงข้อมูล
      */
-    "body": {
-      "type": "box",
-      "layout": "vertical",
-      "contents": [
+    body: {
+      type: "box",
+      layout: "vertical",
+      contents: [
         {
-          "type": "box",
-          "layout": "horizontal",
-          "contents": [
+          type: "box",
+          layout: "horizontal",
+          contents: [
             {
-              "type": "box",
-              "layout": "vertical",
-              "contents": [
+              type: "box",
+              layout: "vertical",
+              contents: [
                 {
-                  "type": "text",
-                  "text": "วันที่ทำงาน",
-                  "size": "sm",
-                  "color": "#6b7280"
+                  type: "text",
+                  text: "วันที่ทำงาน",
+                  size: "sm",
+                  color: "#6b7280",
                 },
                 {
-                  "type": "text",
-                  "text": `${report.totalDaysWorked} วัน`,
-                  "weight": "bold",
-                  "size": "xl",
-                  "color": "#5FB691"
-                }
+                  type: "text",
+                  text: `${report.totalDaysWorked} วัน`,
+                  weight: "bold",
+                  size: "xl",
+                  color: "#5FB691",
+                },
               ],
-              "flex": 1
+              flex: 1,
             },
             {
-              "type": "box",
-              "layout": "vertical",
-              "contents": [
+              type: "box",
+              layout: "vertical",
+              contents: [
                 {
-                  "type": "text",
-                  "text": "ชั่วโมงรวม",
-                  "size": "sm",
-                  "color": "#6b7280"
+                  type: "text",
+                  text: "ชั่วโมงรวม",
+                  size: "sm",
+                  color: "#6b7280",
                 },
                 {
-                  "type": "text",
-                  "text": formatHours(report.totalHoursWorked),
-                  "weight": "bold",
-                  "size": "xl",
-                  "color": "#5FB691"
-                }
+                  type: "text",
+                  text: formatHours(report.totalHoursWorked),
+                  weight: "bold",
+                  size: "xl",
+                  color: "#5FB691",
+                },
               ],
-              "flex": 1
-            }
+              flex: 1,
+            },
           ],
-          "margin": "lg"
+          margin: "lg",
         },
         {
-          "type": "separator",
-          "margin": "xl"
+          type: "separator",
+          margin: "xl",
         },
         {
-          "type": "box",
-          "layout": "horizontal",
-          "contents": [
+          type: "box",
+          layout: "horizontal",
+          contents: [
             {
-              "type": "box",
-              "layout": "vertical",
-              "contents": [
+              type: "box",
+              layout: "vertical",
+              contents: [
                 {
-                  "type": "text",
-                  "text": "เปอร์เซ็นต์การเข้างาน",
-                  "size": "sm",
-                  "color": "#6b7280"
+                  type: "text",
+                  text: "เปอร์เซ็นต์การเข้างาน",
+                  size: "sm",
+                  color: "#6b7280",
                 },
                 {
-                  "type": "text",
-                  "text": formatPercentage(report.attendanceRate),
-                  "weight": "bold",
-                  "size": "xl",
-                  "color": "#dc2626"
-                }
+                  type: "text",
+                  text: formatPercentage(report.attendanceRate),
+                  weight: "bold",
+                  size: "xl",
+                  color: "#dc2626",
+                },
               ],
-              "flex": 1
+              flex: 1,
             },
             {
-              "type": "box",
-              "layout": "vertical",
-              "contents": [
+              type: "box",
+              layout: "vertical",
+              contents: [
                 {
-                  "type": "text",
-                  "text": "ชั่วโมงเฉลี่ย/วัน",
-                  "size": "sm",
-                  "color": "#6b7280"
+                  type: "text",
+                  text: "ชั่วโมงเฉลี่ย/วัน",
+                  size: "sm",
+                  color: "#6b7280",
                 },
                 {
-                  "type": "text",
-                  "text": formatHours(report.averageHoursPerDay),
-                  "weight": "bold",
-                  "size": "xl",
-                  "color": "#dc2626"
-                }
+                  type: "text",
+                  text: formatHours(report.averageHoursPerDay),
+                  weight: "bold",
+                  size: "xl",
+                  color: "#dc2626",
+                },
               ],
-              "flex": 1
-            }
+              flex: 1,
+            },
           ],
-          "margin": "xl"
+          margin: "xl",
         },
         {
-          "type": "separator",
-          "margin": "xl"
+          type: "separator",
+          margin: "xl",
         },
         {
-          "type": "box",
-          "layout": "vertical",
-          "contents": [
+          type: "box",
+          layout: "vertical",
+          contents: [
             {
-              "type": "text",
-              "text": "อัตราการทำงานครบเวลา",
-              "size": "sm",
-              "color": "#6b7280",
-              "align": "center"
+              type: "text",
+              text: "อัตราการทำงานครบเวลา",
+              size: "sm",
+              color: "#6b7280",
+              align: "center",
             },
             {
-              "type": "text",
-              "text": `${formatPercentage(report.complianceRate)} (${report.completeDays} วัน ครบ 9 ชม.)`,
-              "weight": "bold",
-              "size": "md",
-              "color": "#0891b2",
-              "align": "center"
-            }
+              type: "text",
+              text: `${formatPercentage(report.complianceRate)} (${report.completeDays} วัน ครบ 9 ชม.)`,
+              weight: "bold",
+              size: "md",
+              color: "#0891b2",
+              align: "center",
+            },
           ],
-          "margin": "lg"
-        }
-      ]
+          margin: "lg",
+        },
+      ],
     },
     /**
      * สร้าง footer สำหรับ bubble ที่มีปุ่มลิงก์ไปยังหน้ารายละเอียด
      */
-    "footer": {
-      "type": "box",
-      "layout": "vertical",
-      "contents": [
+    footer: {
+      type: "box",
+      layout: "vertical",
+      contents: [
         {
-          "type": "button",
-          "action": {
-            "type": "uri",
-            "label": "ดูรายละเอียดทั้งหมด",
-            "uri": `${env.NEXTAUTH_URL}/attendance-report?month=${report.month}`
+          type: "button",
+          action: {
+            type: "uri",
+            label: "ดูรายละเอียดทั้งหมด",
+            uri: `${env.NEXTAUTH_URL}/attendance-report?month=${report.month}`,
           },
-          "style": "primary",
-          "color": "#5FB691"
-        }
-      ]
-    }
+          style: "primary",
+          color: "#5FB691",
+        },
+      ],
+    },
   };
 };
 
 const workplacePolicyInfo = () => {
   return {
-    type: 'bubble',
-    size: 'giga',
+    type: "bubble",
+    size: "giga",
     header: {
-      type: 'box',
-      layout: 'vertical',
+      type: "box",
+      layout: "vertical",
       contents: [
         {
-          type: 'text',
-          text: '📋 นโยบายการทำงานบริษัท',
-          weight: 'bold',
-          size: 'xl',
-          color: '#ffffff',
-          align: 'center'
-        }
+          type: "text",
+          text: "📋 นโยบายการทำงานบริษัท",
+          weight: "bold",
+          size: "xl",
+          color: "#ffffff",
+          align: "center",
+        },
       ],
-      backgroundColor: '#5B7FD3',
-      paddingAll: '20px'
+      backgroundColor: "#5B7FD3",
+      paddingAll: "20px",
     },
     body: {
-      type: 'box',
-      layout: 'vertical',
+      type: "box",
+      layout: "vertical",
       contents: [
         {
-          type: 'box',
-          layout: 'vertical',
+          type: "box",
+          layout: "vertical",
           contents: [
             {
-              type: 'text',
-              text: '1. การเข้าสำนักงาน',
-              weight: 'bold',
-              size: 'md',
-              color: '#5B7FD3',
-              margin: 'md'
+              type: "text",
+              text: "1. การเข้าสำนักงาน",
+              weight: "bold",
+              size: "md",
+              color: "#5B7FD3",
+              margin: "md",
             },
             {
-              type: 'text',
-              text: '• จันทร์ ถึง ศุกร์ (5 วันต่อสัปดาห์)\n• ทุกกลุ่มงานและทุกระดับงาน',
+              type: "text",
+              text: "• จันทร์ ถึง ศุกร์ (5 วันต่อสัปดาห์)\n• ทุกกลุ่มงานและทุกระดับงาน",
               wrap: true,
-              size: 'sm',
-              color: '#374151',
-              margin: 'sm'
-            }
-          ]
+              size: "sm",
+              color: "#374151",
+              margin: "sm",
+            },
+          ],
         },
         {
-          type: 'separator',
-          margin: 'lg'
+          type: "separator",
+          margin: "lg",
         },
         {
-          type: 'box',
-          layout: 'vertical',
+          type: "box",
+          layout: "vertical",
           contents: [
             {
-              type: 'text',
-              text: '2. เวลาทำงาน',
-              weight: 'bold',
-              size: 'md',
-              color: '#5B7FD3',
-              margin: 'md'
+              type: "text",
+              text: "2. เวลาทำงาน",
+              weight: "bold",
+              size: "md",
+              color: "#5B7FD3",
+              margin: "md",
             },
             {
-              type: 'text',
-              text: '• รวม 9 ชั่วโมงต่อวัน (รวมพักกลางวัน 1 ชม.)\n• เวลาปฏิบัติงานจริง 8 ชั่วโมงต่อวัน\n• เวลาเข้างานยืดหยุ่น: 08:00 - 11:00 น.',
+              type: "text",
+              text: "• รวม 9 ชั่วโมงต่อวัน (รวมพักกลางวัน 1 ชม.)\n• เวลาปฏิบัติงานจริง 8 ชั่วโมงต่อวัน\n• เวลาเข้างานยืดหยุ่น: 08:00 - 11:00 น.",
               wrap: true,
-              size: 'sm',
-              color: '#374151',
-              margin: 'sm'
-            }
-          ]
+              size: "sm",
+              color: "#374151",
+              margin: "sm",
+            },
+          ],
         },
         {
-          type: 'separator',
-          margin: 'lg'
+          type: "separator",
+          margin: "lg",
         },
         {
-          type: 'box',
-          layout: 'vertical',
+          type: "box",
+          layout: "vertical",
           contents: [
             {
-              type: 'text',
-              text: '3. การบันทึกเวลา',
-              weight: 'bold',
-              size: 'md',
-              color: '#5B7FD3',
-              margin: 'md'
+              type: "text",
+              text: "3. การบันทึกเวลา",
+              weight: "bold",
+              size: "md",
+              color: "#5B7FD3",
+              margin: "md",
             },
             {
-              type: 'text',
-              text: '• บันทึกเข้า-ออกงานที่เครื่องบันทึกเวลา\n• หน้าประตูทางเข้า-ออก (ประตูใหญ่)\n• ระบบนับ 9 ชั่วโมงรวมพัก 1 ชั่วโมง',
+              type: "text",
+              text: "• บันทึกเข้า-ออกงานที่เครื่องบันทึกเวลา\n• หน้าประตูทางเข้า-ออก (ประตูใหญ่)\n• ระบบนับ 9 ชั่วโมงรวมพัก 1 ชั่วโมง",
               wrap: true,
-              size: 'sm',
-              color: '#374151',
-              margin: 'sm'
-            }
-          ]
-        }
+              size: "sm",
+              color: "#374151",
+              margin: "sm",
+            },
+          ],
+        },
       ],
-      paddingAll: '20px'
+      paddingAll: "20px",
     },
     footer: {
-      type: 'box',
-      layout: 'vertical',
+      type: "box",
+      layout: "vertical",
       contents: [
         {
-          type: 'button',
-          style: 'primary',
+          type: "button",
+          style: "primary",
           action: {
-            type: 'postback',
-            label: '📝 ลงชื่อเข้างาน',
-            data: 'action=checkin_menu'
+            type: "postback",
+            label: "📝 ลงชื่อเข้างาน",
+            data: "action=checkin_menu",
           },
-          color: '#5B7FD3'
-        }
+          color: "#5B7FD3",
+        },
       ],
-      paddingAll: '20px'
-    }
+      paddingAll: "20px",
+    },
   };
 };
 
 const workPublicHoliday = (holidayMessage: string) => {
   return [
     {
-      type: 'bubble',
-      size: 'giga',
+      type: "bubble",
+      size: "giga",
       header: {
-        type: 'box',
-        layout: 'vertical',
+        type: "box",
+        layout: "vertical",
         contents: [
           {
-            type: 'text',
-            text: '🗓️ วันหยุดประจำปี',
-            weight: 'bold',
-            size: 'xl',
-            color: '#ffffff',
-            align: 'center'
+            type: "text",
+            text: "🗓️ วันหยุดประจำปี",
+            weight: "bold",
+            size: "xl",
+            color: "#ffffff",
+            align: "center",
           },
           {
-            type: 'text',
-            text: 'Public Holiday',
-            size: 'sm',
-            color: '#ffffff',
-            align: 'center',
-            margin: 'xs'
-          }
+            type: "text",
+            text: "Public Holiday",
+            size: "sm",
+            color: "#ffffff",
+            align: "center",
+            margin: "xs",
+          },
         ],
-        backgroundColor: '#ff9800',
-        paddingAll: '20px'
+        backgroundColor: "#ff9800",
+        paddingAll: "20px",
       },
       body: {
-        type: 'box',
-        layout: 'vertical',
+        type: "box",
+        layout: "vertical",
         contents: [
           {
-            type: 'text',
+            type: "text",
             text: holidayMessage,
             wrap: true,
-            size: 'md',
-            align: 'center',
-            margin: 'md',
-            color: '#ff9800',
-            weight: 'bold'
+            size: "md",
+            align: "center",
+            margin: "md",
+            color: "#ff9800",
+            weight: "bold",
           },
           {
-            type: 'separator',
-            margin: 'xl'
+            type: "separator",
+            margin: "xl",
           },
           {
-            type: 'text',
-            text: '📅 วันทำงาน: จันทร์ - ศุกร์',
-            size: 'sm',
-            color: '#8A8A8A',
-            align: 'center',
-            margin: 'lg'
+            type: "text",
+            text: "📅 วันทำงาน: จันทร์ - ศุกร์",
+            size: "sm",
+            color: "#8A8A8A",
+            align: "center",
+            margin: "lg",
           },
           {
-            type: 'text',
-            text: '⏰ เวลาทำงาน: 08:00 - 17:00 น.',
-            size: 'sm',
-            color: '#8A8A8A',
-            align: 'center'
-          }
+            type: "text",
+            text: "⏰ เวลาทำงาน: 08:00 - 17:00 น.",
+            size: "sm",
+            color: "#8A8A8A",
+            align: "center",
+          },
         ],
-        paddingAll: '20px'
+        paddingAll: "20px",
       },
       footer: {
-        type: 'box',
-        layout: 'vertical',
-        spacing: 'sm',
+        type: "box",
+        layout: "vertical",
+        spacing: "sm",
         contents: [
           {
-            type: 'button',
-            style: 'secondary',
+            type: "button",
+            style: "secondary",
             action: {
-              type: 'postback',
-              label: '📋 ดูนโยบายการทำงาน',
-              data: 'action=work_policy'
+              type: "postback",
+              label: "📋 ดูนโยบายการทำงาน",
+              data: "action=work_policy",
             },
-            color: '#ff9800'
-          }
+            color: "#ff9800",
+          },
         ],
-        paddingAll: '20px'
-      }
-    }
+        paddingAll: "20px",
+      },
+    },
   ];
 };
 
-const workCheckInLateSuccess = (checkInTime: Date, expectedCheckOutTime: Date) => {
+const workCheckInLateSuccess = (
+  checkInTime: Date,
+  expectedCheckOutTime: Date,
+) => {
   // ใช้ utilities สำหรับจัดการกับวันที่และเวลาไทย
   const checkInTimeStr = formatTimeHM(checkInTime);
   const expectedCheckOutStr = formatTimeHM(expectedCheckOutTime);
@@ -2173,16 +2193,16 @@ const workCheckInLateSuccess = (checkInTime: Date, expectedCheckOutTime: Date) =
 
   // Random header messages สำหรับ bubble แรก
   const randomHeaders = [
-    '⚠️ ลงชื่อเข้างานสาย',
-    '😅 มาสายแล้วค่ะ!',
-    '⏰ ตื่นมาช้าใช่ไหม?',
-    '🌞 บ่ายโมงก็มาได้!',
-    '🚨 สายจัง!!',
-    '😴 นอนหลับสบายมาก?',
-    '🐢 มาช้าแต่มา!',
-    '⭐ ยินดีต้อนรับสายๆ',
-    '🎭 มาแล้วจ้า!',
-    '🔥 สายเป็นไฟ!'
+    "⚠️ ลงชื่อเข้างานสาย",
+    "😅 มาสายแล้วค่ะ!",
+    "⏰ ตื่นมาช้าใช่ไหม?",
+    "🌞 บ่ายโมงก็มาได้!",
+    "🚨 สายจัง!!",
+    "😴 นอนหลับสบายมาก?",
+    "🐢 มาช้าแต่มา!",
+    "⭐ ยินดีต้อนรับสายๆ",
+    "🎭 มาแล้วจ้า!",
+    "🔥 สายเป็นไฟ!",
   ] as const;
 
   // Random body messages สำหรับ bubble แรก - ข้อความสนุกๆ หลากหลาย
@@ -2202,7 +2222,7 @@ const workCheckInLateSuccess = (checkInTime: Date, expectedCheckOutTime: Date) =
     `💪 สู้ๆ วันนี้นะ!\nแม้จะมาช้า แต่ยังมีเวลาทำงาน! 🚀\nไฟท์ติ้งค่ะ!`,
     `✨ เริ่มต้นวันใหม่แล้ว\nช้าไปหน่อย แต่ยังทันทำงาน! 🌈\nขอให้มีความสุขกับการทำงาน`,
     `😊 มาแล้วจ้า! อิอิ\nยิ้มๆ ไว้นะ แม้จะมาช้า! 😄\nวันนี้จะเป็นวันที่ดี!`,
-    `🚀 พร้อมทำงานแล้ว!\nมาช้า แต่มาพร้อม! 💯\nขอให้ประสบความสำเร็จ!`
+    `🚀 พร้อมทำงานแล้ว!\nมาช้า แต่มาพร้อม! 💯\nขอให้ประสบความสำเร็จ!`,
   ] as const;
 
   // 🛡️ เลือกข้อความแบบ time-based แทน Math.random() เพื่อป้องกัน hydration mismatch
@@ -2211,178 +2231,178 @@ const workCheckInLateSuccess = (checkInTime: Date, expectedCheckOutTime: Date) =
 
   return [
     {
-      type: 'bubble',
-      size: 'giga',
+      type: "bubble",
+      size: "giga",
       header: {
-        type: 'box',
-        layout: 'vertical',
+        type: "box",
+        layout: "vertical",
         contents: [
           {
-            type: 'text',
+            type: "text",
             text: randomHeader,
-            weight: 'bold',
-            size: 'xl',
-            color: '#ffffff',
-            align: 'center'
-          }
+            weight: "bold",
+            size: "xl",
+            color: "#ffffff",
+            align: "center",
+          },
         ],
-        backgroundColor: '#FFB84D',
-        paddingAll: '20px'
+        backgroundColor: "#FFB84D",
+        paddingAll: "20px",
       },
       body: {
-        type: 'box',
-        layout: 'vertical',
+        type: "box",
+        layout: "vertical",
         contents: [
           {
-            type: 'text',
+            type: "text",
             text: randomBodyMessage,
-            weight: 'bold',
-            size: 'lg',
+            weight: "bold",
+            size: "lg",
             wrap: true,
-            align: 'center',
-            margin: 'md',
-            color: '#5A5A5A'
+            align: "center",
+            margin: "md",
+            color: "#5A5A5A",
           },
           {
-            type: 'text',
+            type: "text",
             text: `📅 ${dateStr}`,
-            weight: 'bold',
-            size: 'md',
+            weight: "bold",
+            size: "md",
             wrap: true,
-            align: 'center',
-            margin: 'sm',
-            color: '#999999'
-          }
+            align: "center",
+            margin: "sm",
+            color: "#999999",
+          },
         ],
-        paddingAll: '20px'
-      }
+        paddingAll: "20px",
+      },
     },
     {
-      type: 'bubble',
-      size: 'giga',
+      type: "bubble",
+      size: "giga",
       header: {
-        type: 'box',
-        layout: 'vertical',
+        type: "box",
+        layout: "vertical",
         contents: [
           {
-            type: 'text',
-            text: '🕐 รายละเอียดเวลาทำงาน',
-            weight: 'bold',
-            size: 'lg',
-            color: '#ffffff',
-            align: 'center'
-          }
+            type: "text",
+            text: "🕐 รายละเอียดเวลาทำงาน",
+            weight: "bold",
+            size: "lg",
+            color: "#ffffff",
+            align: "center",
+          },
         ],
-        backgroundColor: '#4CAF50',
-        paddingAll: '20px'
+        backgroundColor: "#4CAF50",
+        paddingAll: "20px",
       },
       body: {
-        type: 'box',
-        layout: 'vertical',
+        type: "box",
+        layout: "vertical",
         contents: [
           {
-            type: 'box',
-            layout: 'vertical',
-            margin: 'md',
-            spacing: 'sm',
+            type: "box",
+            layout: "vertical",
+            margin: "md",
+            spacing: "sm",
             contents: [
               {
-                type: 'box',
-                layout: 'horizontal',
+                type: "box",
+                layout: "horizontal",
                 contents: [
                   {
-                    type: 'text',
-                    text: '🕐',
-                    size: 'md',
-                    color: '#FFB84D',
-                    weight: 'bold',
-                    flex: 0
+                    type: "text",
+                    text: "🕐",
+                    size: "md",
+                    color: "#FFB84D",
+                    weight: "bold",
+                    flex: 0,
                   },
                   {
-                    type: 'text',
-                    text: 'เวลาเข้างาน',
-                    size: 'md',
-                    color: '#333333',
-                    weight: 'bold',
-                    margin: 'sm'
+                    type: "text",
+                    text: "เวลาเข้างาน",
+                    size: "md",
+                    color: "#333333",
+                    weight: "bold",
+                    margin: "sm",
                   },
                   {
-                    type: 'text',
+                    type: "text",
                     text: `${checkInTimeStr} น.`,
-                    size: 'md',
-                    color: '#FFB84D',
-                    weight: 'bold',
-                    align: 'end'
-                  }
-                ]
+                    size: "md",
+                    color: "#FFB84D",
+                    weight: "bold",
+                    align: "end",
+                  },
+                ],
               },
               {
-                type: 'box',
-                layout: 'horizontal',
+                type: "box",
+                layout: "horizontal",
                 contents: [
                   {
-                    type: 'text',
-                    text: '🕔',
-                    size: 'md',
-                    color: '#4CAF50',
-                    weight: 'bold',
-                    flex: 0
+                    type: "text",
+                    text: "🕔",
+                    size: "md",
+                    color: "#4CAF50",
+                    weight: "bold",
+                    flex: 0,
                   },
                   {
-                    type: 'text',
-                    text: 'เวลาเลิกงาน',
-                    size: 'md',
-                    color: '#333333',
-                    weight: 'bold',
-                    margin: 'sm'
+                    type: "text",
+                    text: "เวลาเลิกงาน",
+                    size: "md",
+                    color: "#333333",
+                    weight: "bold",
+                    margin: "sm",
                   },
                   {
-                    type: 'text',
+                    type: "text",
                     text: `${expectedCheckOutStr} น.`,
-                    size: 'md',
-                    color: '#4CAF50',
-                    weight: 'bold',
-                    align: 'end'
-                  }
-                ]
-              }
-            ]
+                    size: "md",
+                    color: "#4CAF50",
+                    weight: "bold",
+                    align: "end",
+                  },
+                ],
+              },
+            ],
           },
           {
-            type: 'separator',
-            margin: 'xl'
+            type: "separator",
+            margin: "xl",
           },
           {
-            type: 'text',
-            text: '💼 ทำงานหนักๆ ชดเชยความสายนะครับ!',
-            size: 'sm',
-            color: '#999999',
-            align: 'center',
-            margin: 'xl',
-            wrap: true
-          }
+            type: "text",
+            text: "💼 ทำงานหนักๆ ชดเชยความสายนะครับ!",
+            size: "sm",
+            color: "#999999",
+            align: "center",
+            margin: "xl",
+            wrap: true,
+          },
         ],
-        paddingAll: '20px'
+        paddingAll: "20px",
       },
       footer: {
-        type: 'box',
-        layout: 'horizontal',
-        spacing: 'sm',
+        type: "box",
+        layout: "horizontal",
+        spacing: "sm",
         contents: [
           {
-            type: 'button',
-            style: 'secondary',
+            type: "button",
+            style: "secondary",
             action: {
-              type: 'postback',
-              label: '🔴 ออกงาน',
-              data: 'action=checkout'
+              type: "postback",
+              label: "🔴 ออกงาน",
+              data: "action=checkout",
             },
-            color: '#E57373'
-          }
+            color: "#E57373",
+          },
         ],
-        paddingAll: '20px'
-      }
-    }
+        paddingAll: "20px",
+      },
+    },
   ];
 };
 
@@ -2404,5 +2424,5 @@ export const bubbleTemplate = {
   monthlyReportSummary,
   workplacePolicyInfo,
   workPublicHoliday,
-  leaveError
+  leaveError,
 };

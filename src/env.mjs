@@ -12,7 +12,7 @@ export const env = createEnv({
       .url()
       .refine(
         (str) => !str.includes("YOUR_MYSQL_URL_HERE"),
-        "You forgot to change the default URL"
+        "You forgot to change the default URL",
       ),
     APP_ENV: z
       .enum(["development", "test", "production"])
@@ -37,7 +37,7 @@ export const env = createEnv({
     CRON_SECRET: z.string().optional(),
     // 🔐 Security: Domain configuration through environment (NO DEFAULTS - must be explicitly set)
     APP_DOMAIN: z.string().url(),
-    ALLOWED_DOMAINS: z.string().min(1)
+    ALLOWED_DOMAINS: z.string().min(1),
   },
 
   /**
@@ -71,7 +71,7 @@ export const env = createEnv({
     INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
     CRON_SECRET: process.env.CRON_SECRET,
     APP_DOMAIN: process.env.APP_DOMAIN,
-    ALLOWED_DOMAINS: process.env.ALLOWED_DOMAINS
+    ALLOWED_DOMAINS: process.env.ALLOWED_DOMAINS,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

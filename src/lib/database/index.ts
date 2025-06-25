@@ -1,2 +1,2 @@
 // Database utilities
-export { db } from './db';
+export { db } from "./db";

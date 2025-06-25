@@ -3,12 +3,12 @@
  * Custom hook for accessing typography classes with theme support
  */
 
-import { useTheme } from 'next-themes';
-import { TYPOGRAPHY, type TypographyLevel } from '@/lib/constants/typography';
+import { useTheme } from "next-themes";
+import { TYPOGRAPHY, type TypographyLevel } from "@/lib/constants/typography";
 
 export const useTypography = () => {
   const { theme } = useTheme();
-  const isDark = theme === 'dark';
+  const isDark = theme === "dark";
 
   // 🎯 Get typography class with automatic theme detection
   const getClass = (colors: TypographyLevel): string => {
@@ -18,7 +18,7 @@ export const useTypography = () => {
   // 🃏 Get card typography classes
   const getCardClass = (
     cardType: keyof typeof TYPOGRAPHY.cards,
-    level: 'header' | 'number' | 'subtext'
+    level: "header" | "number" | "subtext",
   ): string => {
     return TYPOGRAPHY.utils.getCardClass(cardType, level, isDark);
   };
@@ -28,7 +28,7 @@ export const useTypography = () => {
     primary: getClass(TYPOGRAPHY.base.primary),
     secondary: getClass(TYPOGRAPHY.base.secondary),
     muted: getClass(TYPOGRAPHY.base.muted),
-    subtle: getClass(TYPOGRAPHY.base.subtle)
+    subtle: getClass(TYPOGRAPHY.base.subtle),
   };
 
   // 🚨 Get status typography classes
@@ -36,14 +36,14 @@ export const useTypography = () => {
     success: getClass(TYPOGRAPHY.status.success),
     warning: getClass(TYPOGRAPHY.status.warning),
     error: getClass(TYPOGRAPHY.status.error),
-    info: getClass(TYPOGRAPHY.status.info)
+    info: getClass(TYPOGRAPHY.status.info),
   };
 
   // 🃏 Get all card classes for a specific card type
   const getCardClasses = (cardType: keyof typeof TYPOGRAPHY.cards) => ({
-    header: getCardClass(cardType, 'header'),
-    number: getCardClass(cardType, 'number'),
-    subtext: getCardClass(cardType, 'subtext')
+    header: getCardClass(cardType, "header"),
+    number: getCardClass(cardType, "number"),
+    subtext: getCardClass(cardType, "subtext"),
   });
 
   return {
@@ -51,15 +51,15 @@ export const useTypography = () => {
     classes: TYPOGRAPHY.classes,
     base,
     status,
-    
+
     // Utility functions
     getClass,
     getCardClass,
     getCardClasses,
-    
+
     // Theme info
     isDark,
-    theme
+    theme,
   };
 };
 

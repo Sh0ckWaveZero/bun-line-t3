@@ -1,7 +1,7 @@
 # 🚀 คู่มือการติดตั้งและการกำหนดค่า | Setup Guide
 
 > **🎯 คู่มือการติดตั้งโปรเจกต์ Bun LINE T3 Attendance System**
-> 
+>
 > **⚡ ใช้เทคโนโลยี**: Bun + Next.js 15 + React 19 + TypeScript + MongoDB
 
 ## 📋 สารบัญ | Table of Contents
@@ -20,12 +20,12 @@
 
 ### ✅ ซอฟต์แวร์ที่จำเป็น
 
-| เครื่องมือ | เวอร์ชันขั้นต่ำ | แนะนำ | วัตถุประสงค์ |
-|-----------|--------------|-------|-------------|
-| **[Bun](https://bun.sh)** | 1.0.0+ | 1.1.34+ | JavaScript runtime และ package manager |
-| **[Node.js](https://nodejs.org)** | 18.0.0+ | 20.11+ | สำหรับ fallback และ compatibility |
-| **[Git](https://git-scm.com)** | 2.25+ | latest | Version control |
-| **MongoDB** | 6.0+ | 7.0+ | ฐานข้อมูลหลัก |
+| เครื่องมือ                        | เวอร์ชันขั้นต่ำ | แนะนำ   | วัตถุประสงค์                           |
+| --------------------------------- | --------------- | ------- | -------------------------------------- |
+| **[Bun](https://bun.sh)**         | 1.0.0+          | 1.1.34+ | JavaScript runtime และ package manager |
+| **[Node.js](https://nodejs.org)** | 18.0.0+         | 20.11+  | สำหรับ fallback และ compatibility      |
+| **[Git](https://git-scm.com)**    | 2.25+           | latest  | Version control                        |
+| **MongoDB**                       | 6.0+            | 7.0+    | ฐานข้อมูลหลัก                          |
 
 ### 🔍 ตรวจสอบการติดตั้ง | Verification
 
@@ -283,11 +283,13 @@ bunx prisma studio
 ### 2. กำหนดค่าพื้นฐาน
 
 #### Basic Settings
+
 - **Channel name**: ชื่อ Bot ของคุณ
 - **Channel description**: คำอธิบาย Bot
 - **Channel icon**: รูปไอคอน Bot
 
 #### Messaging API Settings
+
 ```bash
 # ใน LINE Developers Console
 Webhook URL: https://your-domain.com/api/line
@@ -525,11 +527,13 @@ DEBUG=* bun run dev
 ### 📊 System Requirements
 
 #### Minimum Requirements
+
 - **RAM**: 2 GB
 - **Disk**: 1 GB free space
 - **Network**: Stable internet connection
 
 #### Recommended Requirements
+
 - **RAM**: 4 GB+
 - **Disk**: 5 GB+ free space
 - **CPU**: 2+ cores
@@ -538,11 +542,13 @@ DEBUG=* bun run dev
 ### 🆘 การขอความช่วยเหลือ | Getting Help
 
 #### 📚 เอกสารเพิ่มเติม
+
 - **[Development Guide](./DEVELOPMENT.md)** - คู่มือการพัฒนา
 - **[API Documentation](./API.md)** - เอกสาร API
 - **[Security Guide](./SECURITY.md)** - แนวทางความปลอดภัย
 
 #### 🐛 รายงานปัญหา
+
 1. ตรวจสอบ [Issues](https://github.com/your-repo/issues) ที่มีอยู่
 2. สร้าง issue ใหม่พร้อมรายละเอียด:
    - เวอร์ชัน OS และ Node.js
@@ -551,6 +557,7 @@ DEBUG=* bun run dev
    - Environment configuration (ไม่รวม secrets)
 
 #### 💬 Community Support
+
 - **GitHub Discussions** - สำหรับคำถามทั่วไป
 - **Discord/Slack** - สำหรับการสนทนาแบบ real-time
 - **Stack Overflow** - tag: `bun-line-t3`

@@ -5,9 +5,7 @@
     // https://github.com/ppl-ai/modelcontextprotocol/
     "browsermcp": {
       "command": "bunx",
-      "args": [
-        "@browsermcp/mcp@latest"
-      ]
+      "args": ["@browsermcp/mcp@latest"]
     }
   }
 }

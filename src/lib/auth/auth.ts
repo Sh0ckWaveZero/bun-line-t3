@@ -5,11 +5,9 @@ import {
   type NextAuthOptions,
 } from "next-auth";
 import LineProvider from "next-auth/providers/line";
-import { PrismaAdapter } from "@auth/prisma-adapter"
+import { PrismaAdapter } from "@auth/prisma-adapter";
 import { env } from "@/env.mjs";
-import { db } from '../database/db';
-
-
+import { db } from "../database/db";
 
 declare module "next-auth" {
   interface Session extends DefaultSession {

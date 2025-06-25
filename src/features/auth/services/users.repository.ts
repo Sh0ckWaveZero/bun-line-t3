@@ -1,11 +1,9 @@
-import { env } from '@/env.mjs';
+import { env } from "@/env.mjs";
 import { db } from "@/lib/database/db";
 
 export class UsersRepository {
   expiresIn = 0;
-  constructor(
-
-  ) {
+  constructor() {
     this.expiresIn = Number(env.JWT_EXPIRES_IN);
   }
 

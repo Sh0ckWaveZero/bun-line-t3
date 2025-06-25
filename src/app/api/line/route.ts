@@ -1,8 +1,8 @@
-import crypto from 'node:crypto';
+import crypto from "node:crypto";
 import { env } from "@/env.mjs";
-import { lineService } from '@/features/line/services/line';
-import { utils } from '@/lib/validation';
-import { NextRequest } from 'next/server';
+import { lineService } from "@/features/line/services/line";
+import { utils } from "@/lib/validation";
+import { NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,20 +11,20 @@ export async function POST(req: NextRequest) {
 
     const secret = env.LINE_CHANNEL_SECRET;
     const signature = crypto
-      .createHmac('SHA256', secret as string)
+      .createHmac("SHA256", secret as string)
       .update(data as string)
-      .digest('base64')
+      .digest("base64")
       .toString();
 
     // Compare your signature and header's signature
-    const lineSignature = req.headers.get('x-line-signature');
+    const lineSignature = req.headers.get("x-line-signature");
     if (signature !== lineSignature) {
-      return Response.json({ message: 'Unauthorized' }, { status: 401 });
+      return Response.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     // set webhook
     if (utils.isEmpty(body?.events)) {
-      return Response.json({ message: 'ok' }, { status: 200 });
+      return Response.json({ message: "ok" }, { status: 200 });
     }
 
     // Create a more complete compatible request object for lineService
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       // Add missing properties that might be used
       query: {},
       cookies: {},
-      method: 'POST',
+      method: "POST",
       url: req.url,
     } as any;
 
@@ -50,16 +50,16 @@ export async function POST(req: NextRequest) {
         },
       }),
       json: (data: any) => {
-        console.log('Response:', data);
+        console.log("Response:", data);
         return data;
       },
     } as any;
 
     await lineService.handleEvent(compatibleReq, compatibleRes);
-    
-    return Response.json({ message: 'ok' }, { status: 200 });
+
+    return Response.json({ message: "ok" }, { status: 200 });
   } catch (error) {
-    console.error('LINE API error:', error);
-    return Response.json({ message: 'Internal server error' }, { status: 500 });
+    console.error("LINE API error:", error);
+    return Response.json({ message: "Internal server error" }, { status: 500 });
   }
 }

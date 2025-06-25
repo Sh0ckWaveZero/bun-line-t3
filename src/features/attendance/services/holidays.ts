@@ -5,7 +5,7 @@ export interface PublicHolidayData {
   nameEnglish: string;
   nameThai: string;
   year: number;
-  type?: 'national' | 'royal' | 'religious' | 'special';
+  type?: "national" | "royal" | "religious" | "special";
   description?: string;
 }
 
@@ -14,18 +14,18 @@ export interface PublicHolidayData {
  */
 export const isPublicHoliday = async (date: Date): Promise<boolean> => {
   try {
-    const dateString = date.toISOString().split('T')[0] || '';
-    
+    const dateString = date.toISOString().split("T")[0] || "";
+
     const holiday = await db.publicHoliday.findFirst({
       where: {
         date: dateString,
-        isActive: true
-      }
+        isActive: true,
+      },
     });
 
     return !!holiday;
   } catch (error) {
-    console.error('Error checking if date is public holiday:', error);
+    console.error("Error checking if date is public holiday:", error);
     return false;
   }
 };
@@ -35,23 +35,23 @@ export const isPublicHoliday = async (date: Date): Promise<boolean> => {
  */
 export const getHolidayInfo = async (date: Date) => {
   try {
-    const dateString = date.toISOString().split('T')[0] || '';
-    
+    const dateString = date.toISOString().split("T")[0] || "";
+
     const holiday = await db.publicHoliday.findFirst({
       where: {
         date: dateString,
-        isActive: true
-      }
+        isActive: true,
+      },
     });
 
     return holiday;
   } catch (error) {
-    console.error('Error getting holiday info:', error);
+    console.error("Error getting holiday info:", error);
     return null;
   }
 };
 
 export const holidayService = {
   isPublicHoliday,
-  getHolidayInfo
+  getHolidayInfo,
 };

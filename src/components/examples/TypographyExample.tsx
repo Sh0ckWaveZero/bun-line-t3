@@ -5,26 +5,32 @@
 
 "use client";
 
-import React from 'react';
-import { useTypography } from '@/hooks/useTypography';
+import React from "react";
+import { useTypography } from "@/hooks/useTypography";
 
 export const TypographyExample: React.FC = () => {
   const typography = useTypography();
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="space-y-8 p-6">
       <div>
-        <h2 className={`${typography.classes.h2} ${typography.base.primary} mb-4`}>
+        <h2
+          className={`${typography.classes.h2} ${typography.base.primary} mb-4`}
+        >
           🎨 Global Typography System
         </h2>
-        <p className={`${typography.classes.body} ${typography.base.secondary}`}>
+        <p
+          className={`${typography.classes.body} ${typography.base.secondary}`}
+        >
           ระบบ Typography แบบรวมศูนย์ที่รองรับ light/dark theme
         </p>
       </div>
 
       {/* 📝 Base Typography */}
       <section>
-        <h3 className={`${typography.classes.h3} ${typography.base.primary} mb-3`}>
+        <h3
+          className={`${typography.classes.h3} ${typography.base.primary} mb-3`}
+        >
           Base Typography
         </h3>
         <div className="space-y-2">
@@ -37,7 +43,9 @@ export const TypographyExample: React.FC = () => {
 
       {/* 🚨 Status Typography */}
       <section>
-        <h3 className={`${typography.classes.h3} ${typography.base.primary} mb-3`}>
+        <h3
+          className={`${typography.classes.h3} ${typography.base.primary} mb-3`}
+        >
           Status Typography
         </h3>
         <div className="space-y-2">
@@ -50,46 +58,66 @@ export const TypographyExample: React.FC = () => {
 
       {/* 🃏 Card Typography */}
       <section>
-        <h3 className={`${typography.classes.h3} ${typography.base.primary} mb-3`}>
+        <h3
+          className={`${typography.classes.h3} ${typography.base.primary} mb-3`}
+        >
           Card Typography Examples
         </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {/* Blue Card */}
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
-            <h4 className={`${typography.classes.cardHeader} ${typography.getCardClass('blue', 'header')}`}>
+          <div className="rounded-lg border border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100 p-4 dark:border-blue-700 dark:from-blue-900/30 dark:to-blue-800/30">
+            <h4
+              className={`${typography.classes.cardHeader} ${typography.getCardClass("blue", "header")}`}
+            >
               Blue Card Header
             </h4>
-            <p className={`${typography.classes.cardNumber} ${typography.getCardClass('blue', 'number')}`}>
+            <p
+              className={`${typography.classes.cardNumber} ${typography.getCardClass("blue", "number")}`}
+            >
               123
             </p>
-            <p className={`${typography.classes.cardSubtext} ${typography.getCardClass('blue', 'subtext')} mt-1`}>
+            <p
+              className={`${typography.classes.cardSubtext} ${typography.getCardClass("blue", "subtext")} mt-1`}
+            >
               Blue subtext
             </p>
           </div>
 
           {/* Teal Card */}
-          <div className="bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/30 dark:to-teal-800/30 p-4 rounded-lg border border-teal-200 dark:border-teal-700">
-            <h4 className={`${typography.classes.cardHeader} ${typography.getCardClass('teal', 'header')}`}>
+          <div className="rounded-lg border border-teal-200 bg-gradient-to-br from-teal-50 to-teal-100 p-4 dark:border-teal-700 dark:from-teal-900/30 dark:to-teal-800/30">
+            <h4
+              className={`${typography.classes.cardHeader} ${typography.getCardClass("teal", "header")}`}
+            >
               Teal Card Header
             </h4>
-            <p className={`${typography.classes.cardNumber} ${typography.getCardClass('teal', 'number')}`}>
+            <p
+              className={`${typography.classes.cardNumber} ${typography.getCardClass("teal", "number")}`}
+            >
               456
             </p>
-            <p className={`${typography.classes.cardSubtext} ${typography.getCardClass('teal', 'subtext')} mt-1`}>
+            <p
+              className={`${typography.classes.cardSubtext} ${typography.getCardClass("teal", "subtext")} mt-1`}
+            >
               Teal subtext
             </p>
           </div>
 
           {/* Emerald Card */}
-          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/30 p-4 rounded-lg border border-emerald-200 dark:border-emerald-700">
-            <h4 className={`${typography.classes.cardHeader} ${typography.getCardClass('emerald', 'header')}`}>
+          <div className="rounded-lg border border-emerald-200 bg-gradient-to-br from-emerald-50 to-emerald-100 p-4 dark:border-emerald-700 dark:from-emerald-900/30 dark:to-emerald-800/30">
+            <h4
+              className={`${typography.classes.cardHeader} ${typography.getCardClass("emerald", "header")}`}
+            >
               Emerald Card Header
             </h4>
-            <p className={`${typography.classes.cardNumber} ${typography.getCardClass('emerald', 'number')}`}>
+            <p
+              className={`${typography.classes.cardNumber} ${typography.getCardClass("emerald", "number")}`}
+            >
               789
             </p>
-            <p className={`${typography.classes.cardSubtext} ${typography.getCardClass('emerald', 'subtext')} mt-1`}>
+            <p
+              className={`${typography.classes.cardSubtext} ${typography.getCardClass("emerald", "subtext")} mt-1`}
+            >
               Emerald subtext
             </p>
           </div>
@@ -98,12 +126,16 @@ export const TypographyExample: React.FC = () => {
 
       {/* 📚 Usage Guide */}
       <section>
-        <h3 className={`${typography.classes.h3} ${typography.base.primary} mb-3`}>
+        <h3
+          className={`${typography.classes.h3} ${typography.base.primary} mb-3`}
+        >
           วิธีใช้งาน (Usage)
         </h3>
-        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-          <pre className={`${typography.classes.small} ${typography.base.muted}`}>
-{`// 1. Import hook
+        <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+          <pre
+            className={`${typography.classes.small} ${typography.base.muted}`}
+          >
+            {`// 1. Import hook
 const typography = useTypography();
 
 // 2. Use base typography
@@ -125,7 +157,8 @@ const typography = useTypography();
 
       <div className="border-t pt-4">
         <p className={`${typography.classes.small} ${typography.base.muted}`}>
-          📱 Current theme: <strong>{typography.isDark ? 'Dark' : 'Light'}</strong>
+          📱 Current theme:{" "}
+          <strong>{typography.isDark ? "Dark" : "Light"}</strong>
         </p>
       </div>
     </div>

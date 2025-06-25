@@ -3,59 +3,64 @@
  * Components สำหรับป้องกันและจัดการ hydration mismatch errors
  */
 
-import React from 'react';
-import { useSafeTimestamp, useSuppressHydrationWarning, useClientOnlyMounted } from '@/hooks/useHydrationSafe';
+import React from "react";
+import {
+  useSafeTimestamp,
+  useSuppressHydrationWarning,
+  useClientOnlyMounted,
+} from "@/hooks/useHydrationSafe";
 
 /**
  * 📅 SafeTimestamp Component
  * แสดงเวลาที่ปลอดภัยจาก hydration mismatch
  */
 interface SafeTimestampProps {
-  format?: 'full' | 'date' | 'time';
+  format?: "full" | "date" | "time";
   className?: string;
   initialTime?: Date;
 }
 
-export function SafeTimestamp({ 
-  format = 'full', 
-  className = '',
-  initialTime 
+export function SafeTimestamp({
+  format = "full",
+  className = "",
+  initialTime,
 }: SafeTimestampProps) {
-  const { timestamp, suppressHydrationWarning, isHydrated } = useSafeTimestamp(initialTime);
-  
+  const { timestamp, suppressHydrationWarning, isHydrated } =
+    useSafeTimestamp(initialTime);
+
   const formatTime = (date: Date) => {
     if (!isHydrated) {
       // Return safe server-side format
-      return date.toISOString().split('T')[0]; // YYYY-MM-DD
+      return date.toISOString().split("T")[0]; // YYYY-MM-DD
     }
-    
+
     // Client-side formatting with Intl API
     switch (format) {
-      case 'date':
-        return new Intl.DateTimeFormat('th-TH', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
+      case "date":
+        return new Intl.DateTimeFormat("th-TH", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
         }).format(date);
-      case 'time':
-        return new Intl.DateTimeFormat('th-TH', {
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit'
+      case "time":
+        return new Intl.DateTimeFormat("th-TH", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
         }).format(date);
       default:
-        return new Intl.DateTimeFormat('th-TH', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
+        return new Intl.DateTimeFormat("th-TH", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
         }).format(date);
     }
   };
 
   return (
-    <time 
+    <time
       dateTime={timestamp.toISOString()}
       className={className}
       suppressHydrationWarning={suppressHydrationWarning}
@@ -75,24 +80,21 @@ interface SafeRandomContentProps {
   fallback?: string;
 }
 
-export function SafeRandomContent({ 
-  items, 
-  className = '',
-  fallback = 'Loading...' 
+export function SafeRandomContent({
+  items,
+  className = "",
+  fallback = "Loading...",
 }: SafeRandomContentProps) {
   const mounted = useClientOnlyMounted();
   const suppressWarning = useSuppressHydrationWarning(!mounted);
-  
+
   // Use deterministic selection on server, random on client
-  const selectedItem = mounted 
+  const selectedItem = mounted
     ? items[Math.floor(Math.random() * items.length)]
     : fallback;
 
   return (
-    <span 
-      className={className}
-      suppressHydrationWarning={suppressWarning}
-    >
+    <span className={className} suppressHydrationWarning={suppressWarning}>
       {selectedItem}
     </span>
   );
@@ -108,19 +110,15 @@ interface ClientOnlyWrapperProps {
   className?: string;
 }
 
-export function ClientOnlyWrapper({ 
-  children, 
+export function ClientOnlyWrapper({
+  children,
   fallback = null,
-  className = '' 
+  className = "",
 }: ClientOnlyWrapperProps) {
   const mounted = useClientOnlyMounted();
-  
+
   if (!mounted) {
-    return fallback ? (
-      <div className={className}>
-        {fallback}
-      </div>
-    ) : null;
+    return fallback ? <div className={className}>{fallback}</div> : null;
   }
 
   return (
@@ -140,19 +138,16 @@ interface UserSpecificContentProps {
   className?: string;
 }
 
-export function UserSpecificContent({ 
-  serverContent, 
+export function UserSpecificContent({
+  serverContent,
   clientContent,
-  className = '' 
+  className = "",
 }: UserSpecificContentProps) {
   const mounted = useClientOnlyMounted();
   const suppressWarning = useSuppressHydrationWarning();
-  
+
   return (
-    <div 
-      className={className}
-      suppressHydrationWarning={suppressWarning}
-    >
+    <div className={className} suppressHydrationWarning={suppressWarning}>
       {mounted ? clientContent() : serverContent}
     </div>
   );
@@ -168,16 +163,13 @@ interface ConditionalSuppressionProps {
   className?: string;
 }
 
-export function ConditionalSuppression({ 
-  children, 
+export function ConditionalSuppression({
+  children,
   condition,
-  className = '' 
+  className = "",
 }: ConditionalSuppressionProps) {
   return (
-    <div 
-      className={className}
-      suppressHydrationWarning={condition}
-    >
+    <div className={className} suppressHydrationWarning={condition}>
       {children}
     </div>
   );
@@ -190,43 +182,47 @@ export function HydrationExamples() {
   return (
     <div className="space-y-4 p-4">
       <h2 className="text-xl font-bold">🛡️ Hydration Safe Components</h2>
-      
+
       {/* ✅ Safe Timestamp */}
       <div>
-        <strong>เวลาปัจจุบัน:</strong>{' '}
+        <strong>เวลาปัจจุบัน:</strong>{" "}
         <SafeTimestamp format="full" className="text-blue-600" />
       </div>
-      
+
       {/* ✅ Safe Random Content */}
       <div>
-        <strong>ข้อความสุ่ม:</strong>{' '}
-        <SafeRandomContent 
-          items={['🎉 ยินดีต้อนรับ!', '🚀 เริ่มต้นใหม่!', '✨ วันนี้เป็นวันที่ดี!']}
+        <strong>ข้อความสุ่ม:</strong>{" "}
+        <SafeRandomContent
+          items={[
+            "🎉 ยินดีต้อนรับ!",
+            "🚀 เริ่มต้นใหม่!",
+            "✨ วันนี้เป็นวันที่ดี!",
+          ]}
           className="text-green-600"
           fallback="กำลังโหลด..."
         />
       </div>
-      
+
       {/* ✅ Client Only Content */}
       <ClientOnlyWrapper fallback={<div>กำลังโหลด...</div>}>
-        <div className="p-2 bg-yellow-100 rounded">
+        <div className="rounded bg-yellow-100 p-2">
           <strong>เนื้อหาเฉพาะ Client:</strong> {window.location.href}
         </div>
       </ClientOnlyWrapper>
-      
+
       {/* ✅ User Specific Content */}
       <UserSpecificContent
         serverContent={<div>เนื้อหาสำหรับ Server</div>}
         clientContent={() => (
-          <div className="p-2 bg-purple-100 rounded">
+          <div className="rounded bg-purple-100 p-2">
             User Agent: {navigator.userAgent.slice(0, 50)}...
           </div>
         )}
       />
-      
+
       {/* ✅ Conditional Suppression */}
       <ConditionalSuppression condition={true}>
-        <div className="p-2 bg-red-100 rounded">
+        <div className="rounded bg-red-100 p-2">
           เนื้อหาที่อาจมี hydration mismatch แต่ถูก suppress แล้ว
         </div>
       </ConditionalSuppression>
