@@ -39,7 +39,7 @@ RUN apk update && apk add --no-cache \
 
 # 🚀 OPTIMIZATION: คัดลอกไฟล์ dependency เพื่อใช้ Docker layer caching
 # ✅ SECURITY: คัดลอก lockfile เพื่อ ensure consistency
-COPY package.json bun.lockb ./
+COPY package.json bun.lock ./
 
 # 🔐 SECURITY: คัดลอก Prisma schema ก่อนติดตั้ง dependencies เพื่อให้ postinstall script ทำงานได้
 COPY prisma ./prisma
