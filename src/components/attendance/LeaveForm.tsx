@@ -69,7 +69,9 @@ export const LeaveForm = ({ onSubmit }: LeaveFormProps) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ date, type, reason }),
       });
-      const isJson = res.headers.get("content-type")?.includes("application/json");
+      const isJson = res.headers
+        .get("content-type")
+        ?.includes("application/json");
       const data = isJson ? await res.json().catch(() => ({})) : {};
       if (!res.ok || (data && data.success === false)) {
         // ใช้ message จาก API เป็นหลัก
@@ -81,7 +83,8 @@ export const LeaveForm = ({ onSubmit }: LeaveFormProps) => {
         if (msg === "กรุณาเข้าสู่ระบบ") {
           setTimeout(() => {
             if (typeof window !== "undefined") {
-              const callbackUrl = window.location.pathname + window.location.search;
+              const callbackUrl =
+                window.location.pathname + window.location.search;
               window.location.href = `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`;
             }
           }, 1200);
@@ -94,7 +97,10 @@ export const LeaveForm = ({ onSubmit }: LeaveFormProps) => {
       showToast({ title: "บันทึกวันลาสำเร็จ", type: "success" });
       onSubmit?.();
     } catch {
-      showToast({ title: "ไม่สามารถบันทึกวันลาได้ กรุณาลองใหม่อีกครั้ง", type: "error" });
+      showToast({
+        title: "ไม่สามารถบันทึกวันลาได้ กรุณาลองใหม่อีกครั้ง",
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -103,7 +109,7 @@ export const LeaveForm = ({ onSubmit }: LeaveFormProps) => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="animate-fade-in mx-auto mt-2 flex w-full max-w-md sm:max-w-lg md:max-w-xl flex-col gap-4 px-4 py-6 sm:py-12 md:py-16 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 shadow-lg"
+      className="animate-fade-in mx-auto mt-2 flex w-full max-w-md flex-col gap-4 rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-6 shadow-lg dark:border-gray-700 dark:bg-gray-900 sm:max-w-lg sm:py-12 md:max-w-xl md:py-16"
       style={{ minWidth: 0 }}
     >
       <h2 className="text-high-contrast dark:text-high-contrast mb-2 text-center text-xl font-bold sm:text-2xl">
@@ -122,7 +128,7 @@ export const LeaveForm = ({ onSubmit }: LeaveFormProps) => {
           value={date}
           onChange={(e) => setDate(e.target.value)}
           required
-          className="w-full rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-background text-foreground px-3 py-2 transition focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full rounded-lg border-2 border-gray-200 bg-background px-3 py-2 text-foreground transition focus:outline-none focus:ring-2 focus:ring-primary dark:border-gray-600"
         />
       </div>
       <div className="flex flex-col gap-1">
@@ -136,7 +142,7 @@ export const LeaveForm = ({ onSubmit }: LeaveFormProps) => {
           id="leave-type"
           value={type}
           onChange={(e) => setType(e.target.value)}
-          className="w-full rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-background text-foreground px-3 py-2 transition focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full rounded-lg border-2 border-gray-200 bg-background px-3 py-2 text-foreground transition focus:outline-none focus:ring-2 focus:ring-primary dark:border-gray-600"
         >
           <option value="personal">ลากิจ</option>
           <option value="sick">ลาป่วย</option>
@@ -155,14 +161,14 @@ export const LeaveForm = ({ onSubmit }: LeaveFormProps) => {
           type="text"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          className="w-full rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-background text-foreground px-3 py-2 transition focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full rounded-lg border-2 border-gray-200 bg-background px-3 py-2 text-foreground transition focus:outline-none focus:ring-2 focus:ring-primary dark:border-gray-600"
           placeholder="ระบุเหตุผล (ถ้ามี)"
         />
       </div>
       <button
         type="submit"
         disabled={loading}
-        className="mt-2 w-full rounded-lg border-2 border-primary dark:border-primary bg-primary px-4 py-2 font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-60 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/80"
+        className="mt-2 w-full rounded-lg border-2 border-primary bg-primary px-4 py-2 font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-60 dark:border-primary dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/80"
       >
         {loading ? "กำลังบันทึก..." : "บันทึกวันลา"}
       </button>

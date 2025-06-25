@@ -103,9 +103,9 @@ const Rings: React.FC<RingProps> = ({ count, id }) => {
   }, [UPDATE]);
 
   return (
-    <div 
+    <div
       id={id}
-      className="rings" 
+      className="rings"
       style={{ "--count": count } as React.CSSProperties}
     >
       {Array.from({ length: count }, (_, i) => (

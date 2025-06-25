@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "es2020",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "checkJs": true,
     "skipLibCheck": true,
@@ -22,51 +18,26 @@
     "noUncheckedIndexedAccess": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@/features/*": [
-        "./src/features/*"
-      ],
-      "@/lib/*": [
-        "./src/lib/*"
-      ],
-      "@/components/*": [
-        "./src/components/*"
-      ],
-      "@/hooks/*": [
-        "./src/hooks/*"
-      ],
-      "@/styles/*": [
-        "./src/styles/*"
-      ],
-      "@/app/*": [
-        "./src/app/*"
-      ],
-      "@/utils/*": [
-        "./src/lib/utils/*"
-      ],
-      "@/types/*": [
-        "./src/lib/types/*"
-      ],
-      "@/constants/*": [
-        "./src/lib/constants/*"
-      ],
-      "@/auth/*": [
-        "./src/lib/auth/*"
-      ],
-      "@/database/*": [
-        "./src/lib/database/*"
-      ],
-      "@/validation/*": [
-        "./src/lib/validation/*"
-      ]
+      "@/*": ["./src/*"],
+      "@/features/*": ["./src/features/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/styles/*": ["./src/styles/*"],
+      "@/app/*": ["./src/app/*"],
+      "@/utils/*": ["./src/lib/utils/*"],
+      "@/types/*": ["./src/lib/types/*"],
+      "@/constants/*": ["./src/lib/constants/*"],
+      "@/auth/*": ["./src/lib/auth/*"],
+      "@/database/*": ["./src/lib/database/*"],
+      "@/validation/*": ["./src/lib/validation/*"]
     },
     "plugins": [
       {
         "name": "next"
       }
-    ]
+    ],
+    "types": ["bun-types"]
   },
   "include": [
     "**/*.cjs",
@@ -77,11 +48,8 @@
     "next-env.d.ts",
     "next.config.mjs",
     ".next/types/**/*.ts",
+    "tests/**/*.ts",
+    "tests/**/*.tsx"
   ],
-  "exclude": [
-    "node_modules",
-    "tests",
-    "**/*.test.ts",
-    "**/*.test.tsx"
-  ]
+  "exclude": ["node_modules", "tests", "**/*.test.ts", "**/*.test.tsx"]
 }

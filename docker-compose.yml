@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 # 🛡️ SECURITY-FIRST Docker Compose สำหรับ Bun + Next.js + Prisma
 # ปรับปรุงตาม Docker Security Best Practices
@@ -29,11 +29,11 @@ services:
       shm_size: 512m
     container_name: bun-line-t3-app
     ports:
-      - "${PORT:-12914}:${PORT:-12914}"  # ใช้ PORT จาก environment หรือ default 12914
-    
+      - "${PORT:-12914}:${PORT:-12914}" # ใช้ PORT จาก environment หรือ default 12914
+
     # 🔐 SECURITY: ใช้เฉพาะ GitHub Secrets (ไม่ต้องพึ่งไฟล์ .env.prod)
     # GitHub Actions จะ inject environment variables ทั้งหมดจาก repository secrets
-    
+
     # 🛡️ PRODUCTION: Environment variables จาก GitHub Secrets เท่านั้น
     # ค่าทั้งหมดมาจาก GitHub Actions environment injection (16 secrets + static configs)
     environment:
@@ -46,7 +46,7 @@ services:
       - HOSTNAME=0.0.0.0
       - PORT=${PORT:-12914}
       - FRONTEND_URL=${NEXTAUTH_URL}/
-      
+
       # =============================================================================
       # Authentication & Security (GitHub Secrets)
       # =============================================================================
@@ -56,7 +56,7 @@ services:
       - JWT_EXPIRES_IN=18144000000
       - INTERNAL_API_KEY=${INTERNAL_API_KEY}
       - CRON_SECRET=${CRON_SECRET}
-      
+
       # =============================================================================
       # LINE Integration (6 GitHub Secrets)
       # =============================================================================
@@ -65,27 +65,27 @@ services:
       - LINE_CLIENT_SECRET=${LINE_CLIENT_SECRET}
       - LINE_LOGIN_CHANNEL_ID=${LINE_LOGIN_CHANNEL_ID}
       - LINE_LOGIN_CHANNEL_SECRET=${LINE_LOGIN_CHANNEL_SECRET}
-      
+
       # LINE Messaging API
       - LINE_CHANNEL_ACCESS=${LINE_CHANNEL_ACCESS}
       - LINE_MESSAGING_API=https://api.line.me/v2/bot/message
       - LINE_GET_CONTENT=https://api-data.line.me/v2/bot/message
       - LINE_CHANNEL_SECRET=${LINE_CHANNEL_SECRET}
-      
+
       # =============================================================================
       # Database Configuration (GitHub Secrets)
       # =============================================================================
       - DATABASE_URL=${DATABASE_URL}
       - MONGODB_URI=${DATABASE_URL}
       - DB_NAME=linebot
-      
+
       # =============================================================================
       # External API Keys (3 GitHub Secrets)
       # =============================================================================
       - AIRVISUAL_API_KEY=${AIRVISUAL_API_KEY}
       - CMC_API_KEY=${CMC_API_KEY}
       - CMC_URL=https://pro-api.coinmarketcap.com
-      
+
       # =============================================================================
       # Domain Security Configuration (GitHub Secrets)
       # =============================================================================
@@ -93,29 +93,28 @@ services:
       - ALLOWED_DOMAINS=${ALLOWED_DOMAINS}
     # 🔄 AUTO-RESTART: เริ่มต้นอัตโนมัติหลังเปิดเครื่อง และ restart เมื่อ crash
     restart: always
-    
+
     # 🔧 RASPBERRY PI OPTIMIZATION: จำกัด memory usage runtime
     mem_limit: 1.5g
     mem_reservation: 512m
-    cpus: 2.0  # จำกัด CPU cores ที่ใช้
-    
+    cpus: 2.0 # จำกัด CPU cores ที่ใช้
+
     # 🛡️ SECURITY: Health check ที่ปลอดภัยสำหรับตรวจสอบสถานะแอปพลิเคชัน
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:12914/api/health || exit 1"]
       interval: 60s
       timeout: 10s
       retries: 5
-      start_period: 60s  # เพิ่มเวลาสำหรับ Pi ที่ช้ากว่า
-    
+      start_period: 60s # เพิ่มเวลาสำหรับ Pi ที่ช้ากว่า
+
     # 🔐 SECURITY: Security และ resource limits
     security_opt:
       - no-new-privileges:true
-    read_only: false  # Next.js standalone ต้องเขียนไฟล์ชั่วคราว
+    read_only: false # Next.js standalone ต้องเขียนไฟล์ชั่วคราว
     tmpfs:
       - /tmp:rw,size=100m,mode=1777
       - /var/tmp:rw,size=50m,mode=1777
 
-    
     # 🔐 SECURITY: Network isolation - ใช้ yadom network ที่มีอยู่แล้ว
     networks:
       - yadom
@@ -129,10 +128,10 @@ services:
         # 🔧 RASPBERRY PI: Memory optimization สำหรับ cron build
         - NODE_OPTIONS=--max_old_space_size=1024
     container_name: bun-line-t3-cron
-    
+
     # 🔐 SECURITY: ใช้เฉพาะ GitHub Secrets (ไม่ต้องพึ่งไฟล์ .env.prod)
     # Cron service รับ environment variables จาก GitHub Actions
-    
+
     # 🛡️ PRODUCTION: Environment variables จาก GitHub Secrets เท่านั้น (cron service)
     # ✅ MINIMALIST: Cron service ใช้แค่ CRON_SECRET เพื่อเรียก API endpoints
     environment:
@@ -141,32 +140,32 @@ services:
       # =============================================================================
       - NODE_ENV=production
       - TZ=Asia/Bangkok
-      
+
       # =============================================================================
       # Security: เฉพาะ CRON_SECRET ที่จำเป็นสำหรับ API calls
       # =============================================================================
       - CRON_SECRET=${CRON_SECRET}
     # 🔄 AUTO-RESTART: เริ่มต้นอัตโนมัติหลังเปิดเครื่อง และ restart เมื่อ crash
     restart: always
-    
+
     # 🔧 RASPBERRY PI OPTIMIZATION: จำกัด memory สำหรับ cron service
     mem_limit: 512m
     mem_reservation: 128m
     cpus: 1.0
-    
+
     # 🛡️ SECURITY: รอให้ app service ผ่าน health check ก่อนเริ่ม cron
     depends_on:
       app:
         condition: service_healthy
-    
+
     # ⏰ CRON HEALTH CHECK: ตรวจสอบว่า cron service ยังทำงานอยู่
     healthcheck:
       test: ["CMD-SHELL", "pgrep -f 'node.*cron' || exit 1"]
-      interval: 300s  # ตรวจสอบทุก 5 นาที
+      interval: 300s # ตรวจสอบทุก 5 นาที
       timeout: 10s
       retries: 3
       start_period: 60s
-    
+
     # 🔐 SECURITY: Security สำหรับ cron service
     security_opt:
       - no-new-privileges:true
@@ -181,4 +180,4 @@ services:
 # 🔐 SECURITY: Network configuration สำหรับ Raspberry Pi deployment
 networks:
   yadom:
-    external: true  # ใช้ network yadom ที่มีอยู่แล้วในระบบ
+    external: true # ใช้ network yadom ที่มีอยู่แล้วในระบบ

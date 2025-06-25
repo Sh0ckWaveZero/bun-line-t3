@@ -16,6 +16,7 @@ Calendar component ที่สร้างขึ้นด้วย `react-day-p
 ## 🚀 Installation | การติดตั้ง
 
 Dependencies ที่จำเป็น:
+
 ```bash
 bun add react-day-picker lucide-react clsx tailwind-merge
 bun add @radix-ui/react-slot @radix-ui/react-popover class-variance-authority
@@ -26,9 +27,13 @@ bun add @radix-ui/react-slot @radix-ui/react-popover class-variance-authority
 ### 1. Import Components
 
 ```typescript
-import { Calendar } from "@/components/ui/calendar"
-import { Button } from "@/components/ui/button"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 ```
 
 ### 2. Simple Calendar
@@ -127,20 +132,26 @@ Component รองรับ dark mode โดยอัตโนมัติผ�
 
 ### Calendar Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `mode` | `"single" \| "multiple" \| "range"` | `"single"` | โหมดการเลือกวันที่ |
-| `selected` | `Date \| Date[] \| DateRange` | `undefined` | วันที่ที่เลือก |
-| `onSelect` | `(date: Date \| undefined) => void` | `undefined` | Callback เมื่อเลือกวันที่ |
-| `showOutsideDays` | `boolean` | `true` | แสดงวันที่นอกเดือน |
-| `className` | `string` | `undefined` | CSS class เพิ่มเติม |
-| `classNames` | `object` | `undefined` | Custom class names |
+| Prop              | Type                                | Default     | Description               |
+| ----------------- | ----------------------------------- | ----------- | ------------------------- |
+| `mode`            | `"single" \| "multiple" \| "range"` | `"single"`  | โหมดการเลือกวันที่        |
+| `selected`        | `Date \| Date[] \| DateRange`       | `undefined` | วันที่ที่เลือก            |
+| `onSelect`        | `(date: Date \| undefined) => void` | `undefined` | Callback เมื่อเลือกวันที่ |
+| `showOutsideDays` | `boolean`                           | `true`      | แสดงวันที่นอกเดือน        |
+| `className`       | `string`                            | `undefined` | CSS class เพิ่มเติม       |
+| `classNames`      | `object`                            | `undefined` | Custom class names        |
 
 ### Button Variants
 
 ```typescript
-type ButtonVariant = "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
-type ButtonSize = "default" | "sm" | "lg" | "icon"
+type ButtonVariant =
+  | "default"
+  | "destructive"
+  | "outline"
+  | "secondary"
+  | "ghost"
+  | "link";
+type ButtonSize = "default" | "sm" | "lg" | "icon";
 ```
 
 ## 📱 Example Components | ตัวอย่าง Components

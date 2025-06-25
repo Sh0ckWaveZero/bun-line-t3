@@ -1,8 +1,8 @@
 "use client";
 
-import React from 'react';
-import { createPortal } from 'react-dom';
-import { useSafePortal } from '@/hooks/useHydrationSafe';
+import React from "react";
+import { createPortal } from "react-dom";
+import { useSafePortal } from "@/hooks/useHydrationSafe";
 
 interface CenteredModalProps {
   isOpen: boolean;
@@ -11,11 +11,11 @@ interface CenteredModalProps {
   className?: string;
 }
 
-export const CenteredModal: React.FC<CenteredModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  children, 
-  className = "" 
+export const CenteredModal: React.FC<CenteredModalProps> = ({
+  isOpen,
+  onClose,
+  children,
+  className = "",
 }) => {
   // 🛡️ ป้องกัน hydration mismatch ด้วย safe portal hook
   const { canUsePortal, portalRoot } = useSafePortal();
@@ -23,20 +23,20 @@ export const CenteredModal: React.FC<CenteredModalProps> = ({
   // 🎯 Handle escape key and body scroll - only when portal is ready
   React.useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         onClose();
       }
     };
 
     if (isOpen && canUsePortal) {
-      document.addEventListener('keydown', handleEscape);
-      document.body.classList.add('modal-open');
+      document.addEventListener("keydown", handleEscape);
+      document.body.classList.add("modal-open");
     }
 
     return () => {
       if (canUsePortal) {
-        document.removeEventListener('keydown', handleEscape);
-        document.body.classList.remove('modal-open');
+        document.removeEventListener("keydown", handleEscape);
+        document.body.classList.remove("modal-open");
       }
     };
   }, [isOpen, onClose, canUsePortal]);
@@ -44,7 +44,7 @@ export const CenteredModal: React.FC<CenteredModalProps> = ({
   // 🔍 Debug logging
   React.useEffect(() => {
     if (isOpen && canUsePortal) {
-      console.log('CenteredModal opened - Perfect centering active');
+      console.log("CenteredModal opened - Perfect centering active");
     }
   }, [isOpen, canUsePortal]);
 
@@ -59,7 +59,7 @@ export const CenteredModal: React.FC<CenteredModalProps> = ({
   };
 
   const modalContent = (
-    <div 
+    <div
       className="modal-grid-center"
       onClick={handleBackgroundClick}
       role="dialog"
@@ -69,37 +69,37 @@ export const CenteredModal: React.FC<CenteredModalProps> = ({
       style={{
         /* ✅ รับประกันการแสดงผลที่ชัดเจน */
         zIndex: 10000,
-        position: 'fixed',
-        inset: 0
+        position: "fixed",
+        inset: 0,
       }}
     >
-      <div 
-        className={`modal-content bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 ${className}`}
+      <div
+        className={`modal-content border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 ${className}`}
         onClick={(e) => e.stopPropagation()}
         style={{
-          animation: 'modal-enter 0.2s ease-out',
+          animation: "modal-enter 0.2s ease-out",
           /* ✅ ปรับปรุงการจัดการขนาดและ layout */
-          width: 'min(600px, 90vw)',
-          maxHeight: 'calc(100vh - 4rem)',
-          display: 'flex',
-          flexDirection: 'column',
+          width: "min(600px, 90vw)",
+          maxHeight: "calc(100vh - 4rem)",
+          display: "flex",
+          flexDirection: "column",
           /* ✅ ป้องกัน content overflow */
-          overflow: 'hidden',
+          overflow: "hidden",
           /* ✅ รับประกันการมองเห็น */
           zIndex: 10001,
-          position: 'relative',
-          margin: 'auto'
+          position: "relative",
+          margin: "auto",
         }}
       >
         {/* ✅ Wrap children ใน scrollable container */}
-        <div 
+        <div
           className="modal-body"
           style={{
             flex: 1,
-            overflowY: 'auto',
-            overflowX: 'hidden',
-            scrollBehavior: 'smooth',
-            WebkitOverflowScrolling: 'touch'
+            overflowY: "auto",
+            overflowX: "hidden",
+            scrollBehavior: "smooth",
+            WebkitOverflowScrolling: "touch",
           }}
         >
           {children}

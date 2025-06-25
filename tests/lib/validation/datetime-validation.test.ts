@@ -3,199 +3,202 @@
  * ทดสอบการทำงานของ datetime transformer และ security features
  */
 
-import { describe, expect, test } from 'bun:test';
-import { z } from 'zod';
-import { 
-  datetimeTransformer, 
-  datetimeRequired, 
+import { describe, expect, test } from "bun:test";
+import { z } from "zod";
+import {
+  datetimeTransformer,
+  datetimeRequired,
   datetimeOptional,
   parseDateTime,
   validateAndParseDateTime,
   DateTimeSecurity,
-  DateTimeSchemas
-} from '@/lib/validation/datetime';
+  DateTimeSchemas,
+} from "@/lib/validation/datetime";
 
-describe('🔐 Datetime Validation Security Tests', () => {
-  
-  describe('datetimeTransformer', () => {
-    test('✅ should accept datetime-local format', () => {
+describe("🔐 Datetime Validation Security Tests", () => {
+  describe("datetimeTransformer", () => {
+    test("✅ should accept datetime-local format", () => {
       const schema = z.object({ time: datetimeTransformer });
-      const result = schema.parse({ time: '2025-06-11T08:30' });
-      expect(result.time).toBe('2025-06-11T08:30:00.000Z');
+      const result = schema.parse({ time: "2025-06-11T08:30" });
+      expect(result.time).toBe("2025-06-11T08:30:00.000Z");
     });
 
-    test('✅ should accept ISO 8601 format', () => {
+    test("✅ should accept ISO 8601 format", () => {
       const schema = z.object({ time: datetimeTransformer });
-      const result = schema.parse({ time: '2025-06-11T08:30:00.000Z' });
-      expect(result.time).toBe('2025-06-11T08:30:00.000Z');
+      const result = schema.parse({ time: "2025-06-11T08:30:00.000Z" });
+      expect(result.time).toBe("2025-06-11T08:30:00.000Z");
     });
 
-    test('❌ should reject invalid datetime', () => {
+    test("❌ should reject invalid datetime", () => {
       const schema = z.object({ time: datetimeTransformer });
-      expect(() => schema.parse({ time: 'invalid-date' }))
-        .toThrow();
+      expect(() => schema.parse({ time: "invalid-date" })).toThrow();
     });
 
-    test('❌ should reject malformed datetime-local', () => {
+    test("❌ should reject malformed datetime-local", () => {
       const schema = z.object({ time: datetimeTransformer });
-      expect(() => schema.parse({ time: '2025-13-45T25:70' }))
-        .toThrow();
+      expect(() => schema.parse({ time: "2025-13-45T25:70" })).toThrow();
     });
   });
 
-  describe('parseDateTime', () => {
-    test('✅ should parse datetime-local as Thailand time', () => {
-      const result = parseDateTime('2025-06-11T08:30');
+  describe("parseDateTime", () => {
+    test("✅ should parse datetime-local as Thailand time", () => {
+      const result = parseDateTime("2025-06-11T08:30");
       // 08:30 Thailand time = 01:30 UTC
-      expect(result.toISOString()).toBe('2025-06-11T01:30:00.000Z');
+      expect(result.toISOString()).toBe("2025-06-11T01:30:00.000Z");
     });
 
-    test('✅ should parse ISO format correctly', () => {
-      const result = parseDateTime('2025-06-11T08:30:00+07:00');
-      expect(result.toISOString()).toBe('2025-06-11T01:30:00.000Z');
+    test("✅ should parse ISO format correctly", () => {
+      const result = parseDateTime("2025-06-11T08:30:00+07:00");
+      expect(result.toISOString()).toBe("2025-06-11T01:30:00.000Z");
     });
 
-    test('✅ should handle UTC time', () => {
-      const result = parseDateTime('2025-06-11T01:30:00.000Z');
-      expect(result.toISOString()).toBe('2025-06-11T01:30:00.000Z');
+    test("✅ should handle UTC time", () => {
+      const result = parseDateTime("2025-06-11T01:30:00.000Z");
+      expect(result.toISOString()).toBe("2025-06-11T01:30:00.000Z");
     });
   });
 
-  describe('validateAndParseDateTime', () => {
-    test('✅ should validate and parse correct datetime', () => {
-      const result = validateAndParseDateTime('2025-06-11T08:30');
+  describe("validateAndParseDateTime", () => {
+    test("✅ should validate and parse correct datetime", () => {
+      const result = validateAndParseDateTime("2025-06-11T08:30");
       expect(result).toBeInstanceOf(Date);
-      expect(result.toISOString()).toBe('2025-06-11T01:30:00.000Z');
+      expect(result.toISOString()).toBe("2025-06-11T01:30:00.000Z");
     });
 
-    test('❌ should throw error for invalid datetime', () => {
-      expect(() => validateAndParseDateTime('invalid-date'))
-        .toThrow('Invalid datetime format: invalid-date');
+    test("❌ should throw error for invalid datetime", () => {
+      expect(() => validateAndParseDateTime("invalid-date")).toThrow(
+        "Invalid datetime format: invalid-date",
+      );
     });
   });
 
-  describe('🛡️ DateTimeSecurity', () => {
-    describe('isWithinAcceptableRange', () => {
-      test('✅ should accept recent dates', () => {
+  describe("🛡️ DateTimeSecurity", () => {
+    describe("isWithinAcceptableRange", () => {
+      test("✅ should accept recent dates", () => {
         const recentDate = new Date();
         recentDate.setDate(recentDate.getDate() - 30); // 30 days ago
-        
+
         expect(DateTimeSecurity.isWithinAcceptableRange(recentDate)).toBe(true);
       });
 
-      test('❌ should reject dates too far in the past', () => {
+      test("❌ should reject dates too far in the past", () => {
         const oldDate = new Date();
         oldDate.setFullYear(oldDate.getFullYear() - 2); // 2 years ago
-        
+
         expect(DateTimeSecurity.isWithinAcceptableRange(oldDate)).toBe(false);
       });
 
-      test('❌ should reject dates too far in the future', () => {
+      test("❌ should reject dates too far in the future", () => {
         const futureDate = new Date();
         futureDate.setDate(futureDate.getDate() + 60); // 60 days in future
-        
-        expect(DateTimeSecurity.isWithinAcceptableRange(futureDate)).toBe(false);
+
+        expect(DateTimeSecurity.isWithinAcceptableRange(futureDate)).toBe(
+          false,
+        );
       });
 
-      test('✅ should accept custom range limits', () => {
+      test("✅ should accept custom range limits", () => {
         const testDate = new Date();
         testDate.setDate(testDate.getDate() - 10); // 10 days ago
-        
-        expect(DateTimeSecurity.isWithinAcceptableRange(testDate, 30, 30)).toBe(true);
-        expect(DateTimeSecurity.isWithinAcceptableRange(testDate, 5, 30)).toBe(false);
+
+        expect(DateTimeSecurity.isWithinAcceptableRange(testDate, 30, 30)).toBe(
+          true,
+        );
+        expect(DateTimeSecurity.isWithinAcceptableRange(testDate, 5, 30)).toBe(
+          false,
+        );
       });
     });
 
-    describe('isWorkingHours', () => {
-      test('✅ should accept working hours on weekdays', () => {
+    describe("isWorkingHours", () => {
+      test("✅ should accept working hours on weekdays", () => {
         // Monday 2025-06-09 at 09:00 Thailand time
-        const workingDay = new Date('2025-06-09T02:00:00.000Z'); // 09:00 Thailand
+        const workingDay = new Date("2025-06-09T02:00:00.000Z"); // 09:00 Thailand
         expect(DateTimeSecurity.isWorkingHours(workingDay)).toBe(true);
       });
 
-      test('❌ should reject weekend days', () => {
-        // Sunday 2025-06-08 at 09:00 Thailand time  
-        const weekend = new Date('2025-06-08T02:00:00.000Z'); // 09:00 Thailand
+      test("❌ should reject weekend days", () => {
+        // Sunday 2025-06-08 at 09:00 Thailand time
+        const weekend = new Date("2025-06-08T02:00:00.000Z"); // 09:00 Thailand
         expect(DateTimeSecurity.isWorkingHours(weekend)).toBe(false);
       });
 
-      test('❌ should reject outside working hours', () => {
+      test("❌ should reject outside working hours", () => {
         // Monday 2025-06-09 at 05:00 Thailand time (too early)
-        const tooEarly = new Date('2025-06-08T22:00:00.000Z'); // 05:00 Thailand next day
+        const tooEarly = new Date("2025-06-08T22:00:00.000Z"); // 05:00 Thailand next day
         expect(DateTimeSecurity.isWorkingHours(tooEarly)).toBe(false);
       });
     });
 
-    describe('toSafeLogString', () => {
-      test('✅ should return only date part', () => {
-        const testDate = new Date('2025-06-11T08:30:45.123Z');
+    describe("toSafeLogString", () => {
+      test("✅ should return only date part", () => {
+        const testDate = new Date("2025-06-11T08:30:45.123Z");
         const result = DateTimeSecurity.toSafeLogString(testDate);
-        expect(result).toBe('2025-06-11');
+        expect(result).toBe("2025-06-11");
       });
 
-      test('✅ should handle edge cases', () => {
-        const newYear = new Date('2025-01-01T00:00:00.000Z');
+      test("✅ should handle edge cases", () => {
+        const newYear = new Date("2025-01-01T00:00:00.000Z");
         const result = DateTimeSecurity.toSafeLogString(newYear);
-        expect(result).toBe('2025-01-01');
+        expect(result).toBe("2025-01-01");
       });
     });
   });
 
-  describe('📋 DateTimeSchemas', () => {
-    describe('attendance schema', () => {
-      test('✅ should validate attendance data', () => {
+  describe("📋 DateTimeSchemas", () => {
+    describe("attendance schema", () => {
+      test("✅ should validate attendance data", () => {
         const validData = {
-          checkInTime: '2025-06-11T08:30',
-          checkOutTime: '2025-06-11T17:30'
+          checkInTime: "2025-06-11T08:30",
+          checkOutTime: "2025-06-11T17:30",
         };
-        
+
         const result = DateTimeSchemas.attendance.parse(validData);
-        expect(result.checkInTime).toBe('2025-06-11T08:30:00.000Z');
-        expect(result.checkOutTime).toBe('2025-06-11T17:30:00.000Z');
+        expect(result.checkInTime).toBe("2025-06-11T08:30:00.000Z");
+        expect(result.checkOutTime).toBe("2025-06-11T17:30:00.000Z");
       });
 
-      test('✅ should handle null checkOutTime', () => {
+      test("✅ should handle null checkOutTime", () => {
         const validData = {
-          checkInTime: '2025-06-11T08:30',
-          checkOutTime: null
+          checkInTime: "2025-06-11T08:30",
+          checkOutTime: null,
         };
-        
+
         const result = DateTimeSchemas.attendance.parse(validData);
-        expect(result.checkInTime).toBe('2025-06-11T08:30:00.000Z');
+        expect(result.checkInTime).toBe("2025-06-11T08:30:00.000Z");
         expect(result.checkOutTime).toBe(null);
       });
     });
 
-    describe('dateRange schema', () => {
-      test('✅ should validate correct date range', () => {
+    describe("dateRange schema", () => {
+      test("✅ should validate correct date range", () => {
         const validRange = {
-          startDate: '2025-06-01T00:00',
-          endDate: '2025-06-30T23:59'
+          startDate: "2025-06-01T00:00",
+          endDate: "2025-06-30T23:59",
         };
-        
+
         const result = DateTimeSchemas.dateRange.parse(validRange);
-        expect(result.startDate).toBe('2025-06-01T00:00:00.000Z');
-        expect(result.endDate).toBe('2025-06-30T23:59:00.000Z');
+        expect(result.startDate).toBe("2025-06-01T00:00:00.000Z");
+        expect(result.endDate).toBe("2025-06-30T23:59:00.000Z");
       });
 
-      test('❌ should reject invalid date range', () => {
+      test("❌ should reject invalid date range", () => {
         const invalidRange = {
-          startDate: '2025-06-30T00:00',
-          endDate: '2025-06-01T23:59'
+          startDate: "2025-06-30T00:00",
+          endDate: "2025-06-01T23:59",
         };
-        
-        expect(() => DateTimeSchemas.dateRange.parse(invalidRange))
-          .toThrow();
+
+        expect(() => DateTimeSchemas.dateRange.parse(invalidRange)).toThrow();
       });
     });
   });
 
-  describe('🔄 Integration Tests', () => {
-    test('✅ should handle real-world attendance update payload', () => {
+  describe("🔄 Integration Tests", () => {
+    test("✅ should handle real-world attendance update payload", () => {
       const attendancePayload = {
-        attendanceId: 'att_123456789',
-        checkInTime: '2025-06-11T08:30',
-        checkOutTime: '2025-06-11T17:30'
+        attendanceId: "att_123456789",
+        checkInTime: "2025-06-11T08:30",
+        checkOutTime: "2025-06-11T17:30",
       };
 
       const schema = z.object({
@@ -205,31 +208,31 @@ describe('🔐 Datetime Validation Security Tests', () => {
       });
 
       const result = schema.parse(attendancePayload);
-      
-      expect(result.attendanceId).toBe('att_123456789');
-      expect(result.checkInTime).toBe('2025-06-11T08:30:00.000Z');
-      expect(result.checkOutTime).toBe('2025-06-11T17:30:00.000Z');
+
+      expect(result.attendanceId).toBe("att_123456789");
+      expect(result.checkInTime).toBe("2025-06-11T08:30:00.000Z");
+      expect(result.checkOutTime).toBe("2025-06-11T17:30:00.000Z");
 
       // Test parsing to Date objects
       const checkInDate = parseDateTime(result.checkInTime);
-      
+
       // 🔐 Type-safe parsing สำหรับ optional checkOutTime
       expect(result.checkOutTime).not.toBeNull(); // ตรวจสอบว่าไม่เป็น null
       const checkOutDate = parseDateTime(result.checkOutTime!); // Non-null assertion หลังจากตรวจสอบแล้ว
 
-      expect(checkInDate.toISOString()).toBe('2025-06-11T08:30:00.000Z');
-      expect(checkOutDate.toISOString()).toBe('2025-06-11T17:30:00.000Z');
+      expect(checkInDate.toISOString()).toBe("2025-06-11T08:30:00.000Z");
+      expect(checkOutDate.toISOString()).toBe("2025-06-11T17:30:00.000Z");
 
       // Test security validations
       expect(DateTimeSecurity.isWithinAcceptableRange(checkInDate)).toBe(true);
       expect(DateTimeSecurity.isWithinAcceptableRange(checkOutDate)).toBe(true);
     });
 
-    test('✅ should handle attendance payload with null checkOutTime safely', () => {
+    test("✅ should handle attendance payload with null checkOutTime safely", () => {
       const attendancePayload = {
-        attendanceId: 'att_987654321',
-        checkInTime: '2025-06-11T08:30',
-        checkOutTime: null
+        attendanceId: "att_987654321",
+        checkInTime: "2025-06-11T08:30",
+        checkOutTime: null,
       };
 
       const schema = z.object({
@@ -239,39 +242,45 @@ describe('🔐 Datetime Validation Security Tests', () => {
       });
 
       const result = schema.parse(attendancePayload);
-      
-      expect(result.attendanceId).toBe('att_987654321');
-      expect(result.checkInTime).toBe('2025-06-11T08:30:00.000Z');
+
+      expect(result.attendanceId).toBe("att_987654321");
+      expect(result.checkInTime).toBe("2025-06-11T08:30:00.000Z");
       expect(result.checkOutTime).toBe(null);
 
       // Test parsing to Date objects
       const checkInDate = parseDateTime(result.checkInTime);
-      expect(checkInDate.toISOString()).toBe('2025-06-11T08:30:00.000Z');
+      expect(checkInDate.toISOString()).toBe("2025-06-11T08:30:00.000Z");
 
       // 🔐 Safe handling of null checkOutTime
-      const checkOutDate = result.checkOutTime ? parseDateTime(result.checkOutTime) : null;
+      const checkOutDate = result.checkOutTime
+        ? parseDateTime(result.checkOutTime)
+        : null;
       expect(checkOutDate).toBe(null);
 
       // Test security validations
       expect(DateTimeSecurity.isWithinAcceptableRange(checkInDate)).toBe(true);
     });
 
-    test('🛡️ should prevent security vulnerabilities', () => {
+    test("🛡️ should prevent security vulnerabilities", () => {
       // Test SQL injection attempt
-      expect(() => validateAndParseDateTime("'; DROP TABLE users; --"))
-        .toThrow();
+      expect(() =>
+        validateAndParseDateTime("'; DROP TABLE users; --"),
+      ).toThrow();
 
-      // Test XSS attempt  
-      expect(() => validateAndParseDateTime('<script>alert("xss")</script>'))
-        .toThrow();
+      // Test XSS attempt
+      expect(() =>
+        validateAndParseDateTime('<script>alert("xss")</script>'),
+      ).toThrow();
 
       // Test extremely old date
-      const veryOldDate = new Date('1900-01-01T00:00:00.000Z');
+      const veryOldDate = new Date("1900-01-01T00:00:00.000Z");
       expect(DateTimeSecurity.isWithinAcceptableRange(veryOldDate)).toBe(false);
 
       // Test extremely future date
-      const veryFutureDate = new Date('2030-01-01T00:00:00.000Z');
-      expect(DateTimeSecurity.isWithinAcceptableRange(veryFutureDate)).toBe(false);
+      const veryFutureDate = new Date("2030-01-01T00:00:00.000Z");
+      expect(DateTimeSecurity.isWithinAcceptableRange(veryFutureDate)).toBe(
+        false,
+      );
     });
   });
 });

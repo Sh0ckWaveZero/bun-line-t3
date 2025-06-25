@@ -3,7 +3,7 @@
  */
 
 // คอนสแตนต์
-export * from './workplace-policies';
+export * from "./workplace-policies";
 
 // ไทป์
-export * from '../types/attendance';
+export * from "../types/attendance";

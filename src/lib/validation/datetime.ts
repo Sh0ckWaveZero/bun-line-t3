@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * 🔐 Secure Datetime Validation Utilities
@@ -15,17 +15,17 @@ export const datetimeTransformer = z.string().transform((val, ctx) => {
   if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(val)) {
     val = `${val}:00.000Z`; // แปลงเป็น ISO 8601 พร้อม timezone
   }
-  
+
   // ตรวจสอบว่าเป็น valid date หรือไม่
   const date = new Date(val);
   if (isNaN(date.getTime())) {
     ctx.addIssue({
       code: z.ZodIssueCode.invalid_date,
-      message: 'Invalid datetime format',
+      message: "Invalid datetime format",
     });
     return z.NEVER;
   }
-  
+
   return val;
 });
 
@@ -51,7 +51,7 @@ export const parseDateTime = (dateString: string): Date => {
     // เพิ่ม timezone offset สำหรับประเทศไทย (+07:00)
     return new Date(`${dateString}:00+07:00`);
   }
-  
+
   // ถ้าเป็น ISO format แล้ว ใช้โดยตรง
   return new Date(dateString);
 };
@@ -65,11 +65,11 @@ export const parseDateTime = (dateString: string): Date => {
  */
 export const validateAndParseDateTime = (dateString: string): Date => {
   const parsed = parseDateTime(dateString);
-  
+
   if (isNaN(parsed.getTime())) {
     throw new Error(`Invalid datetime format: ${dateString}`);
   }
-  
+
   return parsed;
 };
 
@@ -82,23 +82,25 @@ export const DateTimeSchemas = {
     checkInTime: datetimeRequired,
     checkOutTime: datetimeOptional,
   }),
-  
+
   // สำหรับ date range queries
-  dateRange: z.object({
-    startDate: datetimeRequired,
-    endDate: datetimeRequired,
-  }).refine(
-    (data) => {
-      const start = new Date(data.startDate);
-      const end = new Date(data.endDate);
-      return start <= end;
-    },
-    {
-      message: 'Start date must be before or equal to end date',
-      path: ['endDate'],
-    }
-  ),
-  
+  dateRange: z
+    .object({
+      startDate: datetimeRequired,
+      endDate: datetimeRequired,
+    })
+    .refine(
+      (data) => {
+        const start = new Date(data.startDate);
+        const end = new Date(data.endDate);
+        return start <= end;
+      },
+      {
+        message: "Start date must be before or equal to end date",
+        path: ["endDate"],
+      },
+    ),
+
   // สำหรับ scheduled tasks
   schedule: z.object({
     scheduledAt: datetimeRequired,
@@ -113,32 +115,40 @@ export const DateTimeSecurity = {
   /**
    * ตรวจสอบว่า datetime อยู่ในช่วงที่ยอมรับได้หรือไม่
    */
-  isWithinAcceptableRange: (date: Date, maxPastDays = 365, maxFutureDays = 30): boolean => {
+  isWithinAcceptableRange: (
+    date: Date,
+    maxPastDays = 365,
+    maxFutureDays = 30,
+  ): boolean => {
     const now = new Date();
-    const maxPast = new Date(now.getTime() - (maxPastDays * 24 * 60 * 60 * 1000));
-    const maxFuture = new Date(now.getTime() + (maxFutureDays * 24 * 60 * 60 * 1000));
-    
+    const maxPast = new Date(now.getTime() - maxPastDays * 24 * 60 * 60 * 1000);
+    const maxFuture = new Date(
+      now.getTime() + maxFutureDays * 24 * 60 * 60 * 1000,
+    );
+
     return date >= maxPast && date <= maxFuture;
   },
-  
+
   /**
    * ตรวจสอบว่า datetime เป็นเวลาทำงานหรือไม่ (ตาม timezone ไทย)
    */
   isWorkingHours: (date: Date): boolean => {
-    // แปลงเป็นเวลาไทย (UTC+7) 
-    const thailandTime = new Date(date.toLocaleString("en-US", {timeZone: "Asia/Bangkok"}));
+    // แปลงเป็นเวลาไทย (UTC+7)
+    const thailandTime = new Date(
+      date.toLocaleString("en-US", { timeZone: "Asia/Bangkok" }),
+    );
     const hours = thailandTime.getHours();
     const day = thailandTime.getDay(); // 0 = Sunday, 6 = Saturday
-    
+
     // จันทร์-ศุกร์ เวลา 06:00-22:00 (เวลาไทย)
     return day >= 1 && day <= 5 && hours >= 6 && hours <= 22;
   },
-  
+
   /**
    * สร้าง safe datetime string สำหรับ logging
    */
   toSafeLogString: (date: Date): string => {
-    const dateOnly = date.toISOString().split('T')[0];
+    const dateOnly = date.toISOString().split("T")[0];
     return dateOnly || date.toDateString(); // fallback ถ้า split ไม่สำเร็จ
   },
 } as const;

@@ -9,7 +9,11 @@ interface LineLoginButtonProps {
   children?: React.ReactNode;
 }
 
-export const LineLoginButton: React.FC<LineLoginButtonProps> = ({ callbackUrl, className = "", children }) => (
+export const LineLoginButton: React.FC<LineLoginButtonProps> = ({
+  callbackUrl,
+  className = "",
+  children,
+}) => (
   <button
     id="btn-login-line"
     onClick={() => signIn("line", callbackUrl ? { callbackUrl } : undefined)}

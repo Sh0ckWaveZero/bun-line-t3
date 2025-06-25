@@ -1,49 +1,55 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { AttendanceRecord, MonthlyAttendanceReport, EditAttendanceData } from '@/lib/types';
-import { 
-  formatTimeOnly, 
-  combineOriginalDateWithNewTime 
-} from '@/lib/utils/date-time';
+import { useState, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import {
+  AttendanceRecord,
+  MonthlyAttendanceReport,
+  EditAttendanceData,
+} from "@/lib/types";
+import {
+  formatTimeOnly,
+  combineOriginalDateWithNewTime,
+} from "@/lib/utils/date-time";
 
 export const useAttendanceReport = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
-  
+
   // Report States
   const [report, setReport] = useState<MonthlyAttendanceReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedMonth, setSelectedMonth] = useState('');
+  const [selectedMonth, setSelectedMonth] = useState("");
 
   // 🛡️ Initialize selectedMonth safely after hydration
   useEffect(() => {
     if (!selectedMonth) {
       const now = new Date();
-      const defaultMonth = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+      const defaultMonth = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, "0")}`;
       setSelectedMonth(defaultMonth);
     }
   }, [selectedMonth]);
 
   // Edit Modal States
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<AttendanceRecord | null>(null);
+  const [editingRecord, setEditingRecord] = useState<AttendanceRecord | null>(
+    null,
+  );
   const [editData, setEditData] = useState<EditAttendanceData>({
-    checkInTime: '',
-    checkOutTime: ''
+    checkInTime: "",
+    checkOutTime: "",
   });
   const [updateLoading, setUpdateLoading] = useState(false);
 
-  const userId = session?.user?.id || '';
+  const userId = session?.user?.id || "";
 
   // 🔐 SECURITY: Redirect to login if not authenticated
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      sessionStorage.setItem('returnUrl', '/attendance-report');
-      router.push('/');
+    if (status === "unauthenticated") {
+      sessionStorage.setItem("returnUrl", "/attendance-report");
+      router.push("/");
     }
   }, [status, router]);
 
@@ -63,16 +69,18 @@ export const useAttendanceReport = () => {
     setError(null);
 
     try {
-      const response = await fetch(`/api/attendance-report?userId=${encodeURIComponent(userId)}&month=${encodeURIComponent(selectedMonth)}`);
+      const response = await fetch(
+        `/api/attendance-report?userId=${encodeURIComponent(userId)}&month=${encodeURIComponent(selectedMonth)}`,
+      );
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch report');
+        throw new Error(data.error || "Failed to fetch report");
       }
 
       setReport(data.data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -83,7 +91,9 @@ export const useAttendanceReport = () => {
     setEditingRecord(record);
     setEditData({
       checkInTime: formatTimeOnly(new Date(record.checkInTime)),
-      checkOutTime: record.checkOutTime ? formatTimeOnly(new Date(record.checkOutTime)) : ''
+      checkOutTime: record.checkOutTime
+        ? formatTimeOnly(new Date(record.checkOutTime))
+        : "",
     });
     setEditModalOpen(true);
   }, []);
@@ -91,7 +101,7 @@ export const useAttendanceReport = () => {
   const closeEditModal = useCallback(() => {
     setEditModalOpen(false);
     setEditingRecord(null);
-    setEditData({ checkInTime: '', checkOutTime: '' });
+    setEditData({ checkInTime: "", checkOutTime: "" });
   }, []);
 
   // 🔐 SECURITY: Secure update function with validation
@@ -102,46 +112,48 @@ export const useAttendanceReport = () => {
     try {
       // 🔐 SECURITY: สร้าง datetime ใหม่โดยใช้วันเดิม + เวลาใหม่
       const newCheckInDateTime = combineOriginalDateWithNewTime(
-        new Date(editingRecord.checkInTime), 
-        editData.checkInTime
+        new Date(editingRecord.checkInTime),
+        editData.checkInTime,
       );
-      
-      const newCheckOutDateTime = editData.checkOutTime && editingRecord.checkOutTime
-        ? combineOriginalDateWithNewTime(
-            new Date(editingRecord.checkInTime), // 🔧 FIX: ใช้ checkInTime เป็น base date เพื่อให้อยู่วันเดียวกัน
-            editData.checkOutTime
-          )
-        : null;
-      
+
+      const newCheckOutDateTime =
+        editData.checkOutTime && editingRecord.checkOutTime
+          ? combineOriginalDateWithNewTime(
+              new Date(editingRecord.checkInTime), // 🔧 FIX: ใช้ checkInTime เป็น base date เพื่อให้อยู่วันเดียวกัน
+              editData.checkOutTime,
+            )
+          : null;
+
       if (!newCheckInDateTime) {
-        throw new Error('เวลาเข้างานไม่ถูกต้อง');
+        throw new Error("เวลาเข้างานไม่ถูกต้อง");
       }
-      
-      const response = await fetch('/api/attendance/update', {
-        method: 'PUT',
+
+      const response = await fetch("/api/attendance/update", {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           attendanceId: editingRecord.id,
           checkInTime: newCheckInDateTime.toISOString(),
-          checkOutTime: newCheckOutDateTime ? newCheckOutDateTime.toISOString() : null,
+          checkOutTime: newCheckOutDateTime
+            ? newCheckOutDateTime.toISOString()
+            : null,
         }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to update attendance');
+        throw new Error(result.error || "Failed to update attendance");
       }
 
       await fetchReport();
       closeEditModal();
-      
-      alert('อัพเดทข้อมูลการลงเวลาเรียบร้อยแล้ว');
-      
+
+      alert("อัพเดทข้อมูลการลงเวลาเรียบร้อยแล้ว");
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการอัพเดท');
+      alert(err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการอัพเดท");
     } finally {
       setUpdateLoading(false);
     }
@@ -151,21 +163,21 @@ export const useAttendanceReport = () => {
     // Session
     session,
     status,
-    
+
     // Report Data
     report,
     loading,
     error,
     selectedMonth,
     setSelectedMonth,
-    
+
     // Edit Modal
     editModalOpen,
     editingRecord,
     editData,
     setEditData,
     updateLoading,
-    
+
     // Functions
     fetchReport,
     openEditModal,

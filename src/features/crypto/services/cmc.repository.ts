@@ -17,4 +17,4 @@ function addMany(items: any[]) {
 export const cmcRepository = {
   findBySymbol,
   addMany,
-}
+};

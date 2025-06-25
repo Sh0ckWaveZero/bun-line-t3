@@ -4,8 +4,29 @@
  */
 
 // ชื่อวันและเดือนในภาษาไทย
-export const thaiDays = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
-export const thaiMonths = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+export const thaiDays = [
+  "อาทิตย์",
+  "จันทร์",
+  "อังคาร",
+  "พุธ",
+  "พฤหัสบดี",
+  "ศุกร์",
+  "เสาร์",
+];
+export const thaiMonths = [
+  "มกราคม",
+  "กุมภาพันธ์",
+  "มีนาคม",
+  "เมษายน",
+  "พฤษภาคม",
+  "มิถุนายน",
+  "กรกฎาคม",
+  "สิงหาคม",
+  "กันยายน",
+  "ตุลาคม",
+  "พฤศจิกายน",
+  "ธันวาคม",
+];
 
 /**
  * แปลงเวลา UTC เป็นเวลาไทย (UTC+7)
@@ -25,12 +46,12 @@ export const convertToThaiTime = (utcTime: Date): Date => {
  */
 export const formatThaiDate = (date: Date): string => {
   const thaiDate = convertToThaiTime(date);
-  
+
   const day = thaiDate.getUTCDate();
   const month = thaiDate.getUTCMonth();
   const year = thaiDate.getUTCFullYear() + 543; // แปลงเป็นปีพุทธศักราช
   const dayOfWeek = thaiDate.getUTCDay(); // 0 = อาทิตย์, 1 = จันทร์, ...
-  
+
   return `วัน${thaiDays[dayOfWeek]}ที่ ${day} ${thaiMonths[month]} ${year}`;
 };
 
@@ -42,17 +63,17 @@ export const formatThaiDate = (date: Date): string => {
  */
 export const formatTimeHM = (date: Date, useThaiTime = true): string => {
   let hours: number;
-  
+
   if (useThaiTime) {
     // ใช้ getUTCHours แล้วบวก 7 ชั่วโมงสำหรับเวลาไทย (UTC+7)
     hours = (date.getUTCHours() + 7) % 24;
   } else {
     hours = date.getHours();
   }
-  
+
   const minutes = useThaiTime ? date.getUTCMinutes() : date.getMinutes();
-  
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
+  return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
 };
 
 /**
@@ -79,14 +100,16 @@ export const calculateExpectedCheckOutTime = (checkInTime: Date): Date => {
  * @param endTime เวลาสิ้นสุด
  * @returns ข้อความแสดงระยะเวลาในรูปแบบ "X ชั่วโมง Y นาที"
  */
-export const calculateWorkDuration = (startTime: Date, endTime: Date): { hours: number; minutes: number; formatted: string } => {
+export const calculateWorkDuration = (
+  startTime: Date,
+  endTime: Date,
+): { hours: number; minutes: number; formatted: string } => {
   const durationMs = endTime.getTime() - startTime.getTime();
   const hours = Math.floor(durationMs / (1000 * 60 * 60));
   const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
-  
-  const formatted = hours > 0
-    ? `${hours} ชั่วโมง ${minutes} นาที`
-    : `${minutes} นาที`;
-  
+
+  const formatted =
+    hours > 0 ? `${hours} ชั่วโมง ${minutes} นาที` : `${minutes} นาที`;
+
   return { hours, minutes, formatted };
 };

@@ -5,15 +5,29 @@ import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { LineLoginButton } from "@/components/ui/LineLoginButton";
 
-function CallbackUrlWrapper({ status, children }: { status: string; children: (callbackUrl: string) => React.ReactNode }) {
+function CallbackUrlWrapper({
+  status,
+  children,
+}: {
+  status: string;
+  children: (callbackUrl: string) => React.ReactNode;
+}) {
   return (
-    <Suspense fallback={<div className="text-center text-gray-500">กำลังโหลด...</div>}>
+    <Suspense
+      fallback={<div className="text-center text-gray-500">กำลังโหลด...</div>}
+    >
       <CallbackUrlInner status={status}>{children}</CallbackUrlInner>
     </Suspense>
   );
 }
 
-function CallbackUrlInner({ status, children }: { status: string; children: (callbackUrl: string) => React.ReactNode }) {
+function CallbackUrlInner({
+  status,
+  children,
+}: {
+  status: string;
+  children: (callbackUrl: string) => React.ReactNode;
+}) {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
 
@@ -58,7 +72,9 @@ export default function LoginPage() {
               {/* Header */}
               <div className="mb-8 text-center">
                 {/* Logo */}
-                <div className="mb-6 text-8xl sm:text-9xl lg:text-[10rem]">🦦</div>
+                <div className="mb-6 text-8xl sm:text-9xl lg:text-[10rem]">
+                  🦦
+                </div>
 
                 <h1 className="mb-2 text-2xl font-bold text-gray-700 dark:text-gray-300 sm:text-3xl lg:text-4xl">
                   เข้าสู่ระบบ

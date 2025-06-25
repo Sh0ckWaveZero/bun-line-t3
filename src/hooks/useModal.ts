@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from "react";
 
 interface UseModalOptions {
   closeOnEscape?: boolean;
@@ -26,7 +26,7 @@ export const useModal = (options: UseModalOptions = {}) => {
   }, []);
 
   const toggleModal = useCallback(() => {
-    setIsOpen(prev => !prev);
+    setIsOpen((prev) => !prev);
   }, []);
 
   // 🔐 SECURITY: Handle escape key
@@ -34,13 +34,13 @@ export const useModal = (options: UseModalOptions = {}) => {
     if (!isOpen || !closeOnEscape) return;
 
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         closeModal();
       }
     };
 
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen, closeOnEscape, closeModal]);
 
   // 🎯 Prevent body scroll when modal is open
@@ -49,8 +49,8 @@ export const useModal = (options: UseModalOptions = {}) => {
 
     if (isOpen) {
       const originalStyle = window.getComputedStyle(document.body).overflow;
-      document.body.style.overflow = 'hidden';
-      
+      document.body.style.overflow = "hidden";
+
       return () => {
         document.body.style.overflow = originalStyle;
       };
@@ -58,11 +58,14 @@ export const useModal = (options: UseModalOptions = {}) => {
   }, [isOpen, preventBodyScroll]);
 
   // 🎯 Handle backdrop click
-  const handleBackdropClick = useCallback((event: React.MouseEvent) => {
-    if (closeOnBackdropClick && event.target === event.currentTarget) {
-      closeModal();
-    }
-  }, [closeOnBackdropClick, closeModal]);
+  const handleBackdropClick = useCallback(
+    (event: React.MouseEvent) => {
+      if (closeOnBackdropClick && event.target === event.currentTarget) {
+        closeModal();
+      }
+    },
+    [closeOnBackdropClick, closeModal],
+  );
 
   return {
     isOpen,

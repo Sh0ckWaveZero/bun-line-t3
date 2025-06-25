@@ -1,10 +1,14 @@
 "use client";
 
-import React from 'react';
-import type { AttendanceRecord, EditAttendanceData, EditAttendanceModalProps } from '@/lib/types';
-import { CenteredModal } from '@/components/common/CenteredModal';
-import { MobileModal } from '@/components/common/MobileModal';
-import { dateFormatters } from '@/lib/utils/date-formatting';
+import React from "react";
+import type {
+  AttendanceRecord,
+  EditAttendanceData,
+  EditAttendanceModalProps,
+} from "@/lib/types";
+import { CenteredModal } from "@/components/common/CenteredModal";
+import { MobileModal } from "@/components/common/MobileModal";
+import { dateFormatters } from "@/lib/utils/date-formatting";
 
 export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
   isOpen,
@@ -13,30 +17,43 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
   updateLoading,
   onClose,
   onEditDataChange,
-  onUpdate
+  onUpdate,
 }) => {
   // 🎯 Detect mobile device - must be called before any early returns
   const [isMobile, setIsMobile] = React.useState(false);
-  
+
   React.useEffect(() => {
     const checkMobile = () => {
-      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-      
+      const userAgent =
+        navigator.userAgent || navigator.vendor || (window as any).opera;
+
       // ✅ ปรับปรุง mobile detection ให้แม่นยำขึ้น
-      const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i.test(userAgent.toLowerCase());
-      const isTablet = /ipad|tablet|playbook|silk/i.test(userAgent.toLowerCase());
+      const isMobileDevice =
+        /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i.test(
+          userAgent.toLowerCase(),
+        );
+      const isTablet = /ipad|tablet|playbook|silk/i.test(
+        userAgent.toLowerCase(),
+      );
       const isSmallScreen = window.innerWidth <= 768; // ปรับเป็น 768px
-      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      
+      const isTouchDevice =
+        "ontouchstart" in window || navigator.maxTouchPoints > 0;
+
       // ✅ เพิ่มการตรวจสอบ user agent strings ที่เฉพาะเจาะจง
-      const mobileKeywords = /mobile|android|iphone|ipad|phone|tablet/i.test(userAgent);
-      
+      const mobileKeywords = /mobile|android|iphone|ipad|phone|tablet/i.test(
+        userAgent,
+      );
+
       // ✅ Force mobile สำหรับ screen ขนาดเล็ก
-      const mobile = isMobileDevice || isTablet || isSmallScreen || (isTouchDevice && mobileKeywords);
+      const mobile =
+        isMobileDevice ||
+        isTablet ||
+        isSmallScreen ||
+        (isTouchDevice && mobileKeywords);
       setIsMobile(mobile);
-      
+
       // Enhanced debug logging
-      console.log('🔍 Mobile Detection Details:', {
+      console.log("🔍 Mobile Detection Details:", {
         userAgent: userAgent.substring(0, 80),
         isMobileDevice,
         isTablet,
@@ -47,17 +64,17 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
         windowHeight: window.innerHeight,
         maxTouchPoints: navigator.maxTouchPoints,
         finalResult: mobile,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     };
-    
+
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    window.addEventListener('orientationchange', checkMobile);
-    
+    window.addEventListener("resize", checkMobile);
+    window.addEventListener("orientationchange", checkMobile);
+
     return () => {
-      window.removeEventListener('resize', checkMobile);
-      window.removeEventListener('orientationchange', checkMobile);
+      window.removeEventListener("resize", checkMobile);
+      window.removeEventListener("orientationchange", checkMobile);
     };
   }, []);
 
@@ -77,19 +94,19 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
     try {
       await onUpdate();
     } catch (error) {
-      console.error('Update error:', error);
+      console.error("Update error:", error);
     }
   };
 
   // 🎯 ใช้ modal ที่เหมาะสมกับ device
   const ModalComponent = isMobile ? MobileModal : CenteredModal;
-  
-  console.log('🚀 Rendering EditAttendanceModal:', { 
-    isOpen, 
-    isMobile, 
+
+  console.log("🚀 Rendering EditAttendanceModal:", {
+    isOpen,
+    isMobile,
     editingRecord: !!editingRecord,
-    ModalComponent: isMobile ? 'MobileModal' : 'CenteredModal',
-    windowWidth: typeof window !== 'undefined' ? window.innerWidth : 'unknown'
+    ModalComponent: isMobile ? "MobileModal" : "CenteredModal",
+    windowWidth: typeof window !== "undefined" ? window.innerWidth : "unknown",
   });
 
   // 🔐 SECURITY: ใช้ React.Portal เพื่อ render ที่ body level เสมอ
@@ -97,16 +114,16 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
 
   const modalContent = (
     <div id="edit-attendance-modal-content">
-      <div 
+      <div
         id="modal-header"
-        className="px-6 py-4 border-b border-gray-200 dark:border-gray-700"
+        className="border-b border-gray-200 px-6 py-4 dark:border-gray-700"
       >
-        <div 
+        <div
           id="modal-header-content"
           className="flex items-center justify-between"
         >
-          <h3 
-            id="modal-title" 
+          <h3
+            id="modal-title"
             className="text-lg font-semibold text-gray-900 dark:text-gray-100"
           >
             แก้ไขเวลาเข้า-ออกงาน
@@ -116,52 +133,61 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
             type="button"
             onClick={onClose}
             disabled={updateLoading}
-            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-300"
             aria-label="ปิดหน้าต่าง"
           >
-            <svg 
+            <svg
               id="close-icon"
-              className="w-5 h-5" 
-              fill="none" 
-              stroke="currentColor" 
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
-        <p 
-          id="modal-description" 
-          className="text-sm text-gray-500 dark:text-gray-400 mt-2"
+        <p
+          id="modal-description"
+          className="mt-2 text-sm text-gray-500 dark:text-gray-400"
         >
           วันที่: {dateFormatters.fullDate(editingRecord.workDate)}
         </p>
-        <div 
+        <div
           id="timezone-info"
-          className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700"
+          className="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-700 dark:bg-blue-900/20"
         >
           <div id="timezone-info-content" className="flex items-start">
             <div className="flex-shrink-0">
-              <svg 
+              <svg
                 id="info-icon"
-                className="h-4 w-4 text-blue-500 dark:text-blue-400 mt-0.5" 
-                fill="currentColor" 
-                viewBox="0 0 20 20" 
+                className="mt-0.5 h-4 w-4 text-blue-500 dark:text-blue-400"
+                fill="currentColor"
+                viewBox="0 0 20 20"
                 aria-hidden="true"
               >
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clipRule="evenodd"
+                />
               </svg>
             </div>
             <div id="timezone-info-text" className="ml-2">
-              <p 
+              <p
                 id="timezone-main-text"
-                className="text-xs text-blue-700 dark:text-blue-300 font-medium"
+                className="text-xs font-medium text-blue-700 dark:text-blue-300"
               >
                 เวลาที่แสดงเป็นเวลาประเทศไทย (UTC+7)
               </p>
-              <p 
+              <p
                 id="timezone-note"
-                className="text-xs text-blue-600 dark:text-blue-400 mt-1"
+                className="mt-1 text-xs text-blue-600 dark:text-blue-400"
               >
                 ระบบจะบันทึกเวลาเป็น UTC โดยอัตโนมัติ
               </p>
@@ -169,33 +195,45 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
           </div>
         </div>
       </div>
-      
+
       <form id="edit-attendance-form" onSubmit={handleSubmit} noValidate>
-        <div id="form-content" className="px-6 py-4 space-y-6">
+        <div id="form-content" className="space-y-6 px-6 py-4">
           <div id="checkin-field">
-            <label 
-              htmlFor="edit-checkin" 
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            <label
+              htmlFor="edit-checkin"
+              className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
-              เวลาเข้างาน <span className="text-red-500 dark:text-red-400" aria-label="จำเป็น">*</span>
+              เวลาเข้างาน{" "}
+              <span
+                className="text-red-500 dark:text-red-400"
+                aria-label="จำเป็น"
+              >
+                *
+              </span>
             </label>
             <input
               id="edit-checkin"
               type="time"
               value={editData.checkInTime}
               onChange={(e) => handleCheckInChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:disabled:bg-gray-700"
               required
               disabled={updateLoading}
               aria-describedby="checkin-help"
             />
-            <p id="checkin-help" className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+            <p
+              id="checkin-help"
+              className="mt-2 text-xs text-gray-500 dark:text-gray-400"
+            >
               กรุณาเลือกเวลาเข้างาน (เฉพาะเวลา ไม่สามารถเปลี่ยนวันได้)
             </p>
           </div>
-          
+
           <div>
-            <label htmlFor="edit-checkout" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              htmlFor="edit-checkout"
+              className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               เวลาออกงาน
             </label>
             <input
@@ -203,39 +241,45 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
               type="time"
               value={editData.checkOutTime}
               onChange={(e) => handleCheckOutChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:disabled:bg-gray-700"
               disabled={updateLoading}
               aria-describedby="checkout-help"
             />
-            <p id="checkout-help" className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+            <p
+              id="checkout-help"
+              className="mt-2 text-xs text-gray-500 dark:text-gray-400"
+            >
               หากไม่ได้ออกงานให้เว้นว่างไว้ (เฉพาะเวลา ไม่สามารถเปลี่ยนวันได้)
             </p>
           </div>
         </div>
-        
-        <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900 flex flex-col-reverse sm:flex-row justify-end gap-3 rounded-b-xl">
+
+        <div className="flex flex-col-reverse justify-end gap-3 rounded-b-xl bg-gray-50 px-6 py-4 dark:bg-gray-900 sm:flex-row">
           <button
             type="button"
             onClick={onClose}
             disabled={updateLoading}
-            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
-            style={{ minHeight: '44px' }}
+            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 sm:w-auto"
+            style={{ minHeight: "44px" }}
           >
             ยกเลิก
           </button>
           <button
             type="submit"
             disabled={updateLoading || !editData.checkInTime}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto flex items-center justify-center"
-            style={{ minHeight: '44px' }}
+            className="flex w-full items-center justify-center rounded-lg border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+            style={{ minHeight: "44px" }}
           >
             {updateLoading ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white mr-2" aria-hidden="true"></div>
+                <div
+                  className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"
+                  aria-hidden="true"
+                ></div>
                 <span>กำลังอัพเดท...</span>
               </>
             ) : (
-              'บันทึกการแก้ไข'
+              "บันทึกการแก้ไข"
             )}
           </button>
         </div>
@@ -244,17 +288,17 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
   );
 
   return (
-    <ModalComponent 
+    <ModalComponent
       isOpen={isOpen}
       onClose={onClose}
       className="edit-attendance-modal" // ✅ เพิ่ม specific class name
     >
-      <div 
+      <div
         className="edit-attendance-modal-content"
-        style={{ 
+        style={{
           /* ✅ ป้องกัน content overflow และรับประกันการแสดงผลที่สมบูรณ์ */
-          minHeight: 'fit-content',
-          width: '100%'
+          minHeight: "fit-content",
+          width: "100%",
         }}
       >
         {modalContent}

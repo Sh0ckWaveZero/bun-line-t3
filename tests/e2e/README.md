@@ -5,8 +5,9 @@
 ## 📁 โครงสร้าง
 
 E2E tests สำหรับทดสอบ:
+
 - Complete user workflows
-- Cross-browser compatibility  
+- Cross-browser compatibility
 - Mobile responsiveness
 - Real-world scenarios
 

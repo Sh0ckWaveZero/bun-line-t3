@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -11,9 +11,9 @@ import {
   ArcElement,
   Tooltip,
   Legend,
-  Filler
-} from 'chart.js';
-import { 
+  Filler,
+} from "chart.js";
+import {
   EditAttendanceModal,
   AttendanceSummaryCards,
   AttendanceCharts,
@@ -23,10 +23,10 @@ import {
   AuthLoadingScreen,
   LoginPrompt,
   ErrorMessage,
-  MonthSelector
-} from '@/components/attendance';
-import { useAttendanceReport } from '@/hooks/useAttendanceReport';
-import { ThemeToggle } from '@/components/ui/theme-toggle-simple';
+  MonthSelector,
+} from "@/components/attendance";
+import { useAttendanceReport } from "@/hooks/useAttendanceReport";
+import { ThemeToggle } from "@/components/ui/theme-toggle-simple";
 
 // Register Chart.js components
 ChartJS.register(
@@ -38,11 +38,11 @@ ChartJS.register(
   ArcElement,
   Tooltip,
   Legend,
-  Filler
+  Filler,
 );
 
 // 🎯 Configure Chart.js to use Prompt font globally
-ChartJS.defaults.font.family = 'Prompt, sans-serif';
+ChartJS.defaults.font.family = "Prompt, sans-serif";
 ChartJS.defaults.font.size = 12;
 
 export default function AttendanceReportPage() {
@@ -65,33 +65,33 @@ export default function AttendanceReportPage() {
   } = useAttendanceReport();
 
   // 🔐 SECURITY: Show loading while checking authentication
-  if (status === 'loading') {
+  if (status === "loading") {
     return <AuthLoadingScreen />;
   }
 
   // 🔐 SECURITY: Show login prompt if not authenticated
-  if (status === 'unauthenticated') {
+  if (status === "unauthenticated") {
     return <LoginPrompt />;
   }
 
   return (
-    <div 
+    <div
       id="attendance-report-page"
       className="min-h-screen bg-white dark:bg-gray-900"
     >
-      <div 
+      <div
         id="attendance-report-container"
-        className="max-w-4xl mx-auto px-4 py-8"
+        className="mx-auto max-w-4xl px-4 py-8"
       >
-        <div 
+        <div
           id="attendance-report-card"
-          className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-6"
+          className="rounded-lg border border-gray-200 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800"
         >
-          <div 
+          <div
             id="attendance-report-header"
-            className="flex justify-between items-center mb-6"
+            className="mb-6 flex items-center justify-between"
           >
-            <h1 
+            <h1
               id="attendance-report-title"
               className="text-3xl font-bold text-gray-800 dark:text-gray-100"
             >
@@ -99,15 +99,15 @@ export default function AttendanceReportPage() {
             </h1>
             <ThemeToggle />
           </div>
-          <p 
+          <p
             id="attendance-report-description"
-            className="text-gray-700 dark:text-gray-400 mb-6"
+            className="mb-6 text-gray-700 dark:text-gray-400"
           >
             ติดตามและจัดการเวลาการทำงานของคุณ
           </p>
-          
+
           {/* Month Selector */}
-          <MonthSelector 
+          <MonthSelector
             selectedMonth={selectedMonth}
             onMonthChange={setSelectedMonth}
           />
@@ -136,7 +136,7 @@ export default function AttendanceReportPage() {
 
               {/* Detailed Table */}
               <div id="table-section">
-                <AttendanceTable 
+                <AttendanceTable
                   records={report.attendanceRecords}
                   onEditRecord={openEditModal}
                 />

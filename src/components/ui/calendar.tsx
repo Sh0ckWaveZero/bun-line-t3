@@ -70,7 +70,7 @@ function MonthPicker({
   return (
     <div id={id} className={cn("w-full max-w-sm p-4", className)}>
       {/* Year Navigation */}
-      <div 
+      <div
         id={id ? `${id}-year-nav` : undefined}
         className="mb-4 flex items-center justify-between"
       >
@@ -85,7 +85,7 @@ function MonthPicker({
           <ChevronLeft className="h-4 w-4" />
         </button>
 
-        <h2 
+        <h2
           id={id ? `${id}-year-display` : undefined}
           className="text-lg font-semibold"
         >
@@ -105,7 +105,7 @@ function MonthPicker({
       </div>
 
       {/* Month Grid */}
-      <div 
+      <div
         id={id ? `${id}-month-grid` : undefined}
         className="grid grid-cols-3 gap-2"
       >

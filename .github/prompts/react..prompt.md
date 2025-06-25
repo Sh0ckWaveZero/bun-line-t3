@@ -1,6 +1,7 @@
 ---
 applyTo: "**/*.ts,**/*.tsx"
 ---
+
 # Project coding standards for TypeScript and React
 
 Apply the [general coding guidelines](./general-coding.instructions.md) to all code.
@@ -26,6 +27,7 @@ Apply the [general coding guidelines](./general-coding.instructions.md) to all c
 React Hooks must follow these strict rules:
 
 #### 1. Only Call Hooks at the Top Level
+
 - **Always call React Hooks at the top level of your React function components**
 - **Never call hooks inside conditions, loops, or nested functions**
 - This ensures hooks are called in the same order on every render
@@ -50,21 +52,24 @@ function MyComponent(props) {
   useEffect(() => {
     // Effect logic here
   }, []);
-  
+
   // ...
 }
 ```
 
 #### 2. Only Call Hooks from React Functions
+
 - Call hooks from React function components
 - Call hooks from custom hooks (functions starting with "use")
 - Don't call hooks from regular JavaScript functions
 
 #### 3. Hook Order Must Be Consistent
+
 - Hooks must be called in the same order every time the component renders
 - Use ESLint plugin `eslint-plugin-react-hooks` to catch violations
 
 #### 4. Common Hook Patterns
+
 - State hooks: `useState`, `useReducer`
 - Effect hooks: `useEffect`, `useLayoutEffect`
 - Context hooks: `useContext`
@@ -72,6 +77,7 @@ function MyComponent(props) {
 - Ref hooks: `useRef`
 
 #### 5. Custom Hooks
+
 - Extract component logic into custom hooks for reusability
 - Custom hooks must start with "use" prefix
 - Custom hooks can call other hooks
@@ -80,11 +86,11 @@ function MyComponent(props) {
 // ✅ Custom hook example
 function useCounter(initialValue = 0) {
   const [count, setCount] = useState(initialValue);
-  
+
   const increment = useCallback(() => {
-    setCount(prev => prev + 1);
+    setCount((prev) => prev + 1);
   }, []);
-  
+
   return { count, increment };
 }
 ```
@@ -92,6 +98,7 @@ function useCounter(initialValue = 0) {
 ### Performance Best Practices
 
 #### Memoization
+
 - Use `useMemo` for expensive calculations
 - Use `useCallback` for function references passed to child components
 - Use `React.memo` for component memoization
@@ -103,15 +110,19 @@ const ExpensiveComponent = React.memo(({ data, onUpdate }) => {
     return heavyCalculation(data);
   }, [data]);
 
-  const handleUpdate = useCallback((newValue) => {
-    onUpdate(newValue);
-  }, [onUpdate]);
+  const handleUpdate = useCallback(
+    (newValue) => {
+      onUpdate(newValue);
+    },
+    [onUpdate],
+  );
 
   return <div>{expensiveValue}</div>;
 });
 ```
 
 #### State Management
+
 - Keep state as close to where it's used as possible
 - Use `useReducer` for complex state logic
 - Avoid unnecessary re-renders by proper dependency arrays
@@ -119,6 +130,7 @@ const ExpensiveComponent = React.memo(({ data, onUpdate }) => {
 ### Security Guidelines
 
 #### Input Validation
+
 - Always validate props and user inputs
 - Use TypeScript interfaces for type safety
 - Sanitize data before rendering
@@ -149,6 +161,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
 ```
 
 #### XSS Prevention
+
 - Never use `dangerouslySetInnerHTML` unless absolutely necessary
 - Sanitize HTML content when required
 - Use proper escaping for dynamic content
@@ -156,6 +169,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
 ### Error Handling
 
 #### Error Boundaries
+
 - Implement error boundaries for graceful error handling
 - Use try-catch in async operations
 - Provide meaningful error messages
@@ -173,7 +187,7 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
+    console.error("Error caught by boundary:", error, errorInfo);
   }
 
   render() {

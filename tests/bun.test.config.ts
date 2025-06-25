@@ -9,10 +9,10 @@ export default {
     "**/tests/**/*.test.{ts,tsx,js,jsx}",
     "**/tests/**/*.spec.{ts,tsx,js,jsx}",
   ],
-  
+
   // Test environment setup
   setupFilesAfterEnv: ["<rootDir>/tests/setup.ts"],
-  
+
   // Coverage configuration
   coverageDirectory: "coverage",
   collectCoverageFrom: [
@@ -20,19 +20,19 @@ export default {
     "!src/**/*.d.ts",
     "!src/**/*.stories.{ts,tsx}",
   ],
-  
+
   // Module path mapping
   moduleNameMapping: {
     "^@/(.*)$": "<rootDir>/src/$1",
     "^@tests/(.*)$": "<rootDir>/tests/$1",
   },
-  
+
   // Test timeout
   testTimeout: 10000,
-  
+
   // Security-focused test patterns
   globals: {
-    "NODE_ENV": "test",
-    "FORCE_COLOR": "1",
+    NODE_ENV: "test",
+    FORCE_COLOR: "1",
   },
 };

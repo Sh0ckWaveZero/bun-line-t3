@@ -3,8 +3,9 @@
 ## 🐛 ปัญหาที่พบ | Problem Identified
 
 จากภาพหน้าจอที่ส่งมา พบว่า:
+
 - Calendar component เปิดได้ปกติ ✅
-- แสดงปีพุทธศักราช "มิถุนายน 2568" ถูกต้อง ✅  
+- แสดงปีพุทธศักราช "มิถุนายน 2568" ถูกต้อง ✅
 - **แต่เลือกวันที่แล้วไม่เกิดอะไรขึ้น** ❌
 
 ## 🔍 Root Cause Analysis | การวิเคราะห์สาเหตุ
@@ -12,10 +13,12 @@
 ### ปัญหาที่พบ:
 
 1. **🔒 Popover ไม่ปิดหลังเลือกวันที่**
+
    - ไม่มี state control สำหรับ Popover
    - User เลือกแล้วแต่ calendar ยังเปิดอยู่
 
 2. **🔄 ไม่มี State Synchronization**
+
    - Local state ไม่ sync กับ props ที่เปลี่ยน
    - อาจทำให้แสดงผลไม่ถูกต้อง
 
@@ -28,6 +31,7 @@
 ### 🔧 Changes Made:
 
 #### 1. เพิ่ม Popover State Control
+
 ```tsx
 // เพิ่ม state สำหรับ control Popover
 const [isOpen, setIsOpen] = useState(false);
@@ -37,10 +41,16 @@ const [isOpen, setIsOpen] = useState(false);
 ```
 
 #### 2. เพิ่ม Auto-close หลังเลือกวันที่
+
 ```tsx
 const handleDateSelect = (date: Date | undefined) => {
   if (date) {
-    console.log('📅 Date selected:', date, 'Formatted:', formatToMonthString(date));
+    console.log(
+      "📅 Date selected:",
+      date,
+      "Formatted:",
+      formatToMonthString(date),
+    );
     setSelectedDate(date);
     onMonthChange(formatToMonthString(date));
     setIsOpen(false); // 🔥 ปิด Popover หลังเลือก
@@ -49,6 +59,7 @@ const handleDateSelect = (date: Date | undefined) => {
 ```
 
 #### 3. เพิ่ม useEffect สำหรับ Prop Sync
+
 ```tsx
 // Sync selectedDate เมื่อ selectedMonth prop เปลี่ยน
 React.useEffect(() => {
@@ -57,8 +68,9 @@ React.useEffect(() => {
 ```
 
 #### 4. เพิ่ม Debugging Logs
+
 ```tsx
-console.log('📅 Date selected:', date, 'Formatted:', formatToMonthString(date));
+console.log("📅 Date selected:", date, "Formatted:", formatToMonthString(date));
 ```
 
 ## 🧪 Testing Coverage | การทดสอบ
@@ -66,11 +78,11 @@ console.log('📅 Date selected:', date, 'Formatted:', formatToMonthString(date)
 เพิ่มเทสสำหรับฟังก์ชันใหม่:
 
 ```typescript
-test('handleDateSelect should call onMonthChange with correct format', () => {
+test("handleDateSelect should call onMonthChange with correct format", () => {
   // ทดสอบ callback function
 });
 
-test('Calendar state should sync with props', () => {
+test("Calendar state should sync with props", () => {
   // ทดสอบ prop synchronization
 });
 ```
@@ -100,17 +112,20 @@ test('Calendar state should sync with props', () => {
 ## 🔧 Technical Details | รายละเอียดเทคนิค
 
 ### State Management:
+
 - `isOpen` - ควบคุมการเปิด/ปิด Popover
 - `selectedDate` - วันที่ที่เลือกใน Calendar
 - `useEffect` - sync กับ `selectedMonth` prop
 
 ### Event Flow:
+
 ```
-User clicks date → handleDateSelect → 
+User clicks date → handleDateSelect →
 setSelectedDate → onMonthChange → setIsOpen(false)
 ```
 
 ### Debugging:
+
 - Console logs จะแสดงทุกครั้งที่เลือกวันที่
 - Format: `📅 Date selected: [Date object] Formatted: YYYY-MM`
 

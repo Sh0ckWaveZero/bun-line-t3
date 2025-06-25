@@ -1,51 +1,58 @@
 "use client";
 
-import React from 'react';
-import Image from 'next/image';
+import React from "react";
+import Image from "next/image";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { signIn } from 'next-auth/react';
-import type { User, UserInfoCardProps, LoadingSpinnerProps, ErrorMessageProps, MonthSelectorProps } from '@/lib/types';
-import { useState } from 'react';
-import { Calendar as CalendarIcon } from 'lucide-react';
-import { MonthPicker } from '@/components/ui/calendar';
-import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
+import { signIn } from "next-auth/react";
+import type {
+  User,
+  UserInfoCardProps,
+  LoadingSpinnerProps,
+  ErrorMessageProps,
+  MonthSelectorProps,
+} from "@/lib/types";
+import { useState } from "react";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { MonthPicker } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import { LineLoginButton } from "@/components/ui/LineLoginButton";
 
 export const UserInfoCard: React.FC<UserInfoCardProps> = ({ user }) => (
-  <div 
+  <div
     id="user-info-card"
-    className="mb-6 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700"
+    className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-700 dark:bg-blue-900/20"
   >
-    <h3 
+    <h3
       id="user-info-title"
-      className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-2"
+      className="mb-2 text-sm font-medium text-blue-600 dark:text-blue-400"
     >
       ข้อมูลผู้ใช้
     </h3>
     <div id="user-info-content" className="flex items-center gap-3">
       {user.image && (
-        <Image 
+        <Image
           id="user-profile-image"
-          src={user.image} 
-          alt="Profile" 
+          src={user.image}
+          alt="Profile"
           width={40}
           height={40}
-          className="w-10 h-10 rounded-full border border-blue-200 dark:border-blue-600"
+          className="h-10 w-10 rounded-full border border-blue-200 dark:border-blue-600"
         />
       )}
       <div id="user-details">
-        <p 
+        <p
           id="user-name"
           className="text-sm font-medium text-gray-900 dark:text-gray-100"
         >
           {user.name}
         </p>
-        <p 
-          id="user-id"
-          className="text-xs text-gray-500 dark:text-gray-400"
-        >
+        <p id="user-id" className="text-xs text-gray-500 dark:text-gray-400">
           ID: {user.id}
         </p>
       </div>
@@ -53,34 +60,31 @@ export const UserInfoCard: React.FC<UserInfoCardProps> = ({ user }) => (
   </div>
 );
 
-export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
-  message = "กำลังโหลดข้อมูล..." 
+export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
+  message = "กำลังโหลดข้อมูล...",
 }) => (
-  <div id="loading-spinner-container" className="text-center py-8">
-    <div 
+  <div id="loading-spinner-container" className="py-8 text-center">
+    <div
       id="loading-spinner"
-      className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400"
+      className="inline-block h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600 dark:border-blue-400"
     ></div>
-    <p 
-      id="loading-message"
-      className="mt-2 text-gray-600 dark:text-gray-400"
-    >
+    <p id="loading-message" className="mt-2 text-gray-600 dark:text-gray-400">
       {message}
     </p>
   </div>
 );
 
 export const AuthLoadingScreen: React.FC = () => (
-  <div 
+  <div
     id="auth-loading-screen"
-    className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center"
+    className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900"
   >
     <div id="auth-loading-content" className="text-center">
-      <div 
+      <div
         id="auth-loading-spinner"
-        className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"
+        className="inline-block h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600 dark:border-blue-400"
       ></div>
-      <p 
+      <p
         id="auth-loading-message"
         className="mt-4 text-gray-600 dark:text-gray-400"
       >
@@ -100,24 +104,24 @@ export const LoginPrompt: React.FC = () => {
   }, []);
 
   return (
-    <div 
+    <div
       id="login-prompt-screen"
-      className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center"
+      className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900"
     >
-      <div 
+      <div
         id="login-prompt-card"
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 max-w-md mx-4 border border-gray-200 dark:border-gray-700"
+        className="mx-4 max-w-md rounded-lg border border-gray-200 bg-white p-8 shadow-md dark:border-gray-700 dark:bg-gray-800"
       >
         <div id="login-prompt-content" className="text-center">
-          <h1 
+          <h1
             id="login-prompt-title"
-            className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4"
+            className="mb-4 text-2xl font-bold text-gray-900 dark:text-gray-100"
           >
             รายงานการเข้างานรายเดือน
           </h1>
-          <p 
+          <p
             id="login-prompt-description"
-            className="text-gray-600 dark:text-gray-400 mb-6"
+            className="mb-6 text-gray-600 dark:text-gray-400"
           >
             กรุณาเข้าสู่ระบบเพื่อดูรายงานการเข้างาน
           </p>
@@ -129,38 +133,41 @@ export const LoginPrompt: React.FC = () => {
 };
 
 export const ErrorMessage: React.FC<ErrorMessageProps> = ({ message }) => (
-  <div 
+  <div
     id="error-message"
-    className="bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-400 px-4 py-3 rounded mb-6"
+    className="mb-6 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700 dark:border-red-700 dark:bg-red-900/20 dark:text-red-400"
   >
     {message}
   </div>
 );
 
-export const MonthSelector: React.FC<MonthSelectorProps> = ({ selectedMonth, onMonthChange }) => {
+export const MonthSelector: React.FC<MonthSelectorProps> = ({
+  selectedMonth,
+  onMonthChange,
+}) => {
   // Parse selected month string (YYYY-MM) to Date
   const parseMonthString = (monthStr: string): Date => {
-    const parts = monthStr.split('-');
+    const parts = monthStr.split("-");
     if (parts.length !== 2) {
       return new Date(); // Return current date as fallback
     }
-    
+
     const [yearStr, monthStr2] = parts;
-    const year = parseInt(yearStr || '', 10);
-    const month = parseInt(monthStr2 || '', 10);
-    
+    const year = parseInt(yearStr || "", 10);
+    const month = parseInt(monthStr2 || "", 10);
+
     // Validate parsed values
     if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
       return new Date(); // Return current date as fallback
     }
-    
+
     return new Date(year, month - 1); // month is 0-indexed in Date
   };
 
   // Format Date to month string (YYYY-MM)
   const formatToMonthString = (date: Date): string => {
     const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
     return `${year}-${month}`;
   };
 
@@ -169,14 +176,26 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({ selectedMonth, onM
     const gregorianYear = date.getFullYear();
     const buddhistYear = gregorianYear + 543;
     const monthNames = [
-      "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
-      "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+      "มกราคม",
+      "กุมภาพันธ์",
+      "มีนาคม",
+      "เมษายน",
+      "พฤษภาคม",
+      "มิถุนายน",
+      "กรกฎาคม",
+      "สิงหาคม",
+      "กันยายน",
+      "ตุลาคม",
+      "พฤศจิกายน",
+      "ธันวาคม",
     ];
     const month = monthNames[date.getMonth()];
     return `${month} ${buddhistYear}`;
   };
 
-  const [selectedDate, setSelectedDate] = useState<Date>(parseMonthString(selectedMonth));
+  const [selectedDate, setSelectedDate] = useState<Date>(
+    parseMonthString(selectedMonth),
+  );
   const [isOpen, setIsOpen] = useState(false);
 
   // Sync selectedDate when selectedMonth prop changes
@@ -186,7 +205,12 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({ selectedMonth, onM
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
-      console.log('📅 Date selected:', date, 'Formatted:', formatToMonthString(date));
+      console.log(
+        "📅 Date selected:",
+        date,
+        "Formatted:",
+        formatToMonthString(date),
+      );
       setSelectedDate(date);
       onMonthChange(formatToMonthString(date));
       setIsOpen(false); // Close popover after selection
@@ -194,12 +218,12 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({ selectedMonth, onM
   };
 
   return (
-    <div 
+    <div
       id="month-selector-container"
-      className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-6"
+      className="mb-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
     >
       <div id="month-selector-content" className="flex items-center gap-4">
-        <span 
+        <span
           id="month-selector-label"
           className="text-base font-semibold text-gray-700 dark:text-gray-300"
         >
@@ -211,29 +235,29 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({ selectedMonth, onM
               id="month-selector-button"
               variant="outline"
               className={cn(
-                "w-[240px] h-12 justify-start text-left font-medium bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors",
-                !selectedDate && "text-muted-foreground"
+                "h-12 w-[240px] justify-start border-gray-300 bg-gray-50 text-left font-medium text-gray-900 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600",
+                !selectedDate && "text-muted-foreground",
               )}
             >
-              <CalendarIcon 
+              <CalendarIcon
                 id="calendar-icon"
-                className="mr-3 h-5 w-5 text-blue-600 dark:text-blue-400" 
+                className="mr-3 h-5 w-5 text-blue-600 dark:text-blue-400"
               />
               <span id="selected-month-display">
                 {selectedDate ? formatBuddhistDate(selectedDate) : "เลือกเดือน"}
               </span>
             </Button>
           </PopoverTrigger>
-          <PopoverContent 
+          <PopoverContent
             id="month-selector-popover"
-            className="w-auto p-0 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 shadow-xl" 
+            className="w-auto border-gray-300 bg-white p-0 shadow-xl dark:border-gray-600 dark:bg-gray-800"
             align="start"
           >
             <MonthPicker
               id="month-picker"
               selected={selectedDate}
               onSelect={handleDateSelect}
-              className="p-4 pointer-events-auto"
+              className="pointer-events-auto p-4"
             />
           </PopoverContent>
         </Popover>
