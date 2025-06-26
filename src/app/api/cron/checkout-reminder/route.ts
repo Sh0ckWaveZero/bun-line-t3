@@ -1,70 +1,18 @@
 import { NextRequest } from "next/server";
-import { headers } from "next/headers";
-import { env } from "@/env.mjs";
-import { bubbleTemplate } from "@/lib/validation/line";
 import { attendanceService } from "@/features/attendance/services/attendance";
+import { bubbleTemplate } from "@/lib/validation/line";
 import { db } from "@/lib/database/db";
+import { flexMessage } from "@/lib/utils/line-message-utils";
 import { roundToOneDecimal } from "@/lib/utils/number";
-
-// Helper function to send push message
-const sendPushMessage = async (userId: string, messages: any[]) => {
-  const lineChannelAccessToken = env.LINE_CHANNEL_ACCESS;
-  const lineHeader = {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${lineChannelAccessToken}`,
-  };
-
-  try {
-    const response = await fetch(`${env.LINE_MESSAGING_API}/push`, {
-      method: "POST",
-      headers: lineHeader,
-      body: JSON.stringify({
-        to: userId,
-        messages: messages,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to send push message");
-    }
-
-    return response;
-  } catch (err: any) {
-    console.error("Error sending push message:", err.message);
-    throw err;
-  }
-};
-
-const flexMessage = (bubbleItems: any[]) => {
-  return [
-    {
-      type: "flex",
-      altText: "Work Attendance System",
-      contents: {
-        type: "carousel",
-        contents: bubbleItems,
-      },
-    },
-  ];
-};
+import { sendPushMessage } from "@/lib/utils/line-push";
 
 /**
  * Vercel Cron Job for automated checkout reminders
  * This endpoint is called by Vercel's cron scheduler at 16:30 on weekdays
  * It finds all users who checked in but haven't checked out and sends them reminders
  */
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
-    const headersList = await headers();
-
-    // Verify that this request is coming from Vercel Cron
-    const authHeader = headersList.get("authorization");
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    console.log("🔔 Vercel Cron: Running checkout reminder job...");
-
     // Get all users who need checkout reminders
     const usersNeedingReminder =
       await attendanceService.getUsersWithPendingCheckout();
