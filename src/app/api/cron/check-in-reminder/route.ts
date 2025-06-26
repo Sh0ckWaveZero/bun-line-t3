@@ -11,7 +11,7 @@ import { sendPushMessage } from "@/lib/utils/line-push";
  * This endpoint sends friendly reminders to all users at 8:00 AM on weekdays
  * to encourage them to check in for work
  */
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     // Check if today is a working day (including MongoDB holiday check)
     const currentBangkokTime = attendanceService.getCurrentBangkokTime();
