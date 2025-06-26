@@ -11,7 +11,7 @@ import { sendPushMessage } from "@/lib/utils/line-push";
  * This endpoint is called by Vercel's cron scheduler at 16:30 on weekdays
  * It finds all users who checked in but haven't checked out and sends them reminders
  */
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     // Get all users who need checkout reminders
     const usersNeedingReminder =
