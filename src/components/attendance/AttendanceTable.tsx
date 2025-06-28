@@ -1,9 +1,10 @@
 "use client";
 
 import React from "react";
-import type { AttendanceRecord, AttendanceTableProps } from "@/lib/types";
+
 import { AttendanceStatusType } from "@/features/attendance/types/attendance-status";
 import { dateFormatters, formatHoursSafe } from "@/lib/utils/date-formatting";
+import { AttendanceRecord, AttendanceTableProps } from "@/lib/types/attendance";
 
 export const AttendanceTable: React.FC<AttendanceTableProps> = ({
   records,

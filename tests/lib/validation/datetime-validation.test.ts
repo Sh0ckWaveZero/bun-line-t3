@@ -7,13 +7,13 @@ import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import {
   datetimeTransformer,
-  datetimeRequired,
-  datetimeOptional,
   parseDateTime,
   validateAndParseDateTime,
   DateTimeSecurity,
   DateTimeSchemas,
-} from "@/lib/validation/datetime";
+  datetimeRequired,
+  datetimeOptional,
+} from "../../../src/lib/validation/datetime";
 
 describe("🔐 Datetime Validation Security Tests", () => {
   describe("datetimeTransformer", () => {

@@ -81,12 +81,13 @@ export class RateLimiter {
   /**
    * Middleware for rate limiting cron endpoints
    */
-  static async checkCronRateLimit(
+  static async checkRequestRateLimit(
     request: NextRequest,
+    maxRequests: number = MAX_REQUESTS_PER_WINDOW,
   ): Promise<NextResponse | null> {
     try {
       const identifier = await this.getIdentifier(request);
-      const result = this.checkRateLimit(identifier);
+      const result = this.checkRateLimit(identifier, maxRequests);
 
       if (!result.allowed) {
         return NextResponse.json(
@@ -98,7 +99,7 @@ export class RateLimiter {
           {
             status: 429,
             headers: {
-              "X-RateLimit-Limit": MAX_REQUESTS_PER_WINDOW.toString(),
+              "X-RateLimit-Limit": maxRequests.toString(),
               "X-RateLimit-Remaining": "0",
               "X-RateLimit-Reset": Math.ceil(
                 result.resetTime / 1000,
@@ -118,6 +119,12 @@ export class RateLimiter {
       // Allow request if rate limiting fails
       return null;
     }
+  }
+
+  static async checkCronRateLimit(
+    request: NextRequest,
+  ): Promise<NextResponse | null> {
+    return this.checkRequestRateLimit(request, MAX_REQUESTS_PER_WINDOW);
   }
 
   /**
@@ -174,7 +181,10 @@ export function withRateLimit(
 ) {
   return async (request: NextRequest): Promise<NextResponse> => {
     // Check rate limit
-    const rateLimitResponse = await RateLimiter.checkCronRateLimit(request);
+    const rateLimitResponse = await RateLimiter.checkRequestRateLimit(
+      request,
+      maxRequests,
+    );
     if (rateLimitResponse) {
       return rateLimitResponse;
     }

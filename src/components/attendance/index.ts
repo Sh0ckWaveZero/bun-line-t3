@@ -13,12 +13,3 @@ export {
   ErrorMessage,
   MonthSelector,
 } from "./AttendanceUI";
-
-// Export types for TypeScript (re-export from lib/types)
-export type {
-  AttendanceRecord,
-  MonthlyAttendanceReport,
-  EditAttendanceData,
-  User,
-  AttendanceStatusType,
-} from "@/lib/types";

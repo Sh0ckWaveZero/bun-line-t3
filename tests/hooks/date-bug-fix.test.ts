@@ -1,18 +1,7 @@
-import { describe, it, expect, beforeEach, mock } from "bun:test";
-
-// Mock the date-time utils
-const mockCombineOriginalDateWithNewTime = mock();
-
-mock.module("@/lib/utils/date-time", () => ({
-  combineOriginalDateWithNewTime: mockCombineOriginalDateWithNewTime,
-  formatTimeOnly: (date: Date) => date.toTimeString().slice(0, 5),
-}));
+import { describe, it, expect } from "bun:test";
+import { combineOriginalDateWithNewTime } from "../../src/lib/utils/date-time";
 
 describe("Date Bug Fix - Checkout Time", () => {
-  beforeEach(() => {
-    mockCombineOriginalDateWithNewTime.mockClear();
-  });
-
   it("should use checkInTime as base date for both checkIn and checkOut", () => {
     // Arrange: มีข้อมูลที่ checkOut อยู่วันถัดไป (midnight shift scenario)
     const editingRecord = {
@@ -26,42 +15,28 @@ describe("Date Bug Fix - Checkout Time", () => {
       checkOutTime: "18:00", // เปลี่ยนเวลาออก
     };
 
-    // Mock ผลลัพธ์จาก combineOriginalDateWithNewTime
-    mockCombineOriginalDateWithNewTime
-      .mockReturnValueOnce(new Date("2025-06-06T09:00:00.000Z")) // checkIn
-      .mockReturnValueOnce(new Date("2025-06-06T18:00:00.000Z")); // checkOut
-
     // Act: เรียกใช้ logic การอัปเดต (ส่วนที่เราแก้ไข)
-    const newCheckInDateTime = mockCombineOriginalDateWithNewTime(
+    const newCheckInDateTime = combineOriginalDateWithNewTime(
       new Date(editingRecord.checkInTime),
       editData.checkInTime,
     );
 
-    const newCheckOutDateTime = mockCombineOriginalDateWithNewTime(
+    const newCheckOutDateTime = combineOriginalDateWithNewTime(
       new Date(editingRecord.checkInTime), // ใช้ checkInTime แทน checkOutTime
       editData.checkOutTime,
     );
 
-    // Assert: ตรวจสอบว่า base date ถูกต้อง
-    expect(mockCombineOriginalDateWithNewTime).toHaveBeenCalledTimes(2);
-
-    // ครั้งแรก: checkIn ใช้ checkInTime เป็น base
-    expect(mockCombineOriginalDateWithNewTime).toHaveBeenNthCalledWith(
-      1,
-      new Date("2025-06-06T08:00:00.000Z"),
-      "09:00",
-    );
-
-    // ครั้งที่สอง: checkOut ใช้ checkInTime เป็น base (ไม่ใช่ checkOutTime)
-    expect(mockCombineOriginalDateWithNewTime).toHaveBeenNthCalledWith(
-      2,
-      new Date("2025-06-06T08:00:00.000Z"), // checkInTime base date
-      "18:00",
-    );
+    // Assert: ตรวจสอบว่าผลลัพธ์ถูกต้อง
+    expect(newCheckInDateTime).not.toBeNull();
+    expect(newCheckOutDateTime).not.toBeNull();
 
     // ผลลัพธ์: ทั้งคู่ควรอยู่วันเดียวกัน (6 มิถุนายน)
-    expect(newCheckInDateTime.toISOString()).toMatch(/^2025-06-06T/);
-    expect(newCheckOutDateTime.toISOString()).toMatch(/^2025-06-06T/);
+    expect(newCheckInDateTime!.toISOString()).toMatch(/^2025-06-06T09:00/);
+    expect(newCheckOutDateTime!.toISOString()).toMatch(/^2025-06-06T18:00/);
+
+    // ตรวจสอบว่าทั้งคู่อยู่วันเดียวกัน
+    expect(newCheckInDateTime!.getDate()).toBe(6);
+    expect(newCheckOutDateTime!.getDate()).toBe(6);
   });
 
   it("should handle normal same-day scenario correctly", () => {
@@ -77,23 +52,21 @@ describe("Date Bug Fix - Checkout Time", () => {
       checkOutTime: "17:30",
     };
 
-    mockCombineOriginalDateWithNewTime
-      .mockReturnValueOnce(new Date("2025-06-06T08:30:00.000Z"))
-      .mockReturnValueOnce(new Date("2025-06-06T17:30:00.000Z"));
-
     // Act
-    const newCheckInDateTime = mockCombineOriginalDateWithNewTime(
+    const newCheckInDateTime = combineOriginalDateWithNewTime(
       new Date(editingRecord.checkInTime),
       editData.checkInTime,
     );
 
-    const newCheckOutDateTime = mockCombineOriginalDateWithNewTime(
+    const newCheckOutDateTime = combineOriginalDateWithNewTime(
       new Date(editingRecord.checkInTime), // ยังคงใช้ checkInTime เป็น base
       editData.checkOutTime,
     );
 
     // Assert: ทั้งคู่ยังคงอยู่วันเดียวกัน
-    expect(newCheckInDateTime.toISOString()).toMatch(/^2025-06-06T/);
-    expect(newCheckOutDateTime.toISOString()).toMatch(/^2025-06-06T/);
+    expect(newCheckInDateTime).not.toBeNull();
+    expect(newCheckOutDateTime).not.toBeNull();
+    expect(newCheckInDateTime!.toISOString()).toMatch(/^2025-06-06T08:30/);
+    expect(newCheckOutDateTime!.toISOString()).toMatch(/^2025-06-06T17:30/);
   });
 });

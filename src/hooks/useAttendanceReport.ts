@@ -7,7 +7,7 @@ import {
   AttendanceRecord,
   MonthlyAttendanceReport,
   EditAttendanceData,
-} from "@/lib/types";
+} from "@/lib/types/attendance";
 import {
   formatTimeOnly,
   combineOriginalDateWithNewTime,

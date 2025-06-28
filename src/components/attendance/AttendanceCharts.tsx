@@ -4,12 +4,13 @@ import React from "react";
 import { Line, Bar, Doughnut } from "react-chartjs-2";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
-import type {
+
+import { useChartTheme } from "@/hooks/useChartTheme";
+import {
+  AttendanceChartsProps,
   AttendanceRecord,
   MonthlyAttendanceReport,
-  AttendanceChartsProps,
-} from "@/lib/types";
-import { useChartTheme } from "@/hooks/useChartTheme";
+} from "@/lib/types/attendance";
 
 export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({
   report,

@@ -1,14 +1,11 @@
 "use client";
 
 import React from "react";
-import type {
-  AttendanceRecord,
-  EditAttendanceData,
-  EditAttendanceModalProps,
-} from "@/lib/types";
+
 import { CenteredModal } from "@/components/common/CenteredModal";
 import { MobileModal } from "@/components/common/MobileModal";
 import { dateFormatters } from "@/lib/utils/date-formatting";
+import { EditAttendanceModalProps } from "@/lib/types/attendance";
 
 export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
   isOpen,

@@ -188,6 +188,36 @@ export const formatForDateTimeLocal = (
 };
 
 /**
+ * 🔄 แปลง datetime-local string เป็น Date object
+ *
+ * @param datetimeLocal - String in YYYY-MM-DDTHH:MM format
+ * @returns Date object or null if invalid
+ *
+ * @example
+ * parseDateTimeLocal('2025-06-15T08:30') // Date object
+ * parseDateTimeLocal('invalid') // null
+ */
+export const parseDateTimeLocal = (
+  datetimeLocal: string | null | undefined,
+): Date | null => {
+  if (!datetimeLocal) return null;
+
+  try {
+    const date = new Date(datetimeLocal);
+
+    if (isNaN(date.getTime())) {
+      console.warn("Invalid datetime-local string:", datetimeLocal);
+      return null;
+    }
+
+    return date;
+  } catch (error) {
+    console.warn("Error parsing datetime-local:", error);
+    return null;
+  }
+};
+
+/**
  * ⏰ ตรวจสอบว่าเวลาถูกต้องหรือไม่
  *
  * @param timeString - เวลาในรูปแบบ HH:MM
@@ -218,36 +248,6 @@ export const isValidTime = (timeString: string | null | undefined): boolean => {
     return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59;
   } catch {
     return false;
-  }
-};
-
-/**
- * 🔄 แปลง datetime-local string เป็น Date object
- *
- * @param datetimeLocal - String in YYYY-MM-DDTHH:MM format
- * @returns Date object or null if invalid
- *
- * @example
- * parseDateTimeLocal('2025-06-15T08:30') // Date object
- * parseDateTimeLocal('invalid') // null
- */
-export const parseDateTimeLocal = (
-  datetimeLocal: string | null | undefined,
-): Date | null => {
-  if (!datetimeLocal) return null;
-
-  try {
-    const date = new Date(datetimeLocal);
-
-    if (isNaN(date.getTime())) {
-      console.warn("Invalid datetime-local string:", datetimeLocal);
-      return null;
-    }
-
-    return date;
-  } catch (error) {
-    console.warn("Error parsing datetime-local:", error);
-    return null;
   }
 };
 

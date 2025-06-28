@@ -12,6 +12,7 @@ const MonitoringRequestSchema = z.object({
   includeDetails: z.boolean().optional(),
   components: z
     .array(z.enum(["health", "metrics", "logs", "alerts", "processes"]))
+    .max(10) // Limit array size to prevent DoS
     .optional(),
 });
 
@@ -126,9 +127,14 @@ async function secureMonitoringHandler(
       return NextResponse.json(
         {
           error: "Invalid request parameters",
-          details: validationResult.error.errors,
+          message: "Request contains invalid parameters",
         },
-        { status: 400 },
+        {
+          status: 400,
+          headers: {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+          },
+        },
       );
     }
 
@@ -225,11 +231,17 @@ async function secureMonitoringHandler(
   } catch (error) {
     console.error("Monitoring dashboard data error:", error);
 
+    // Don't leak error details in production
+    const isProduction = process.env.NODE_ENV === "production";
     return NextResponse.json(
       {
         error: "Failed to fetch monitoring data",
         timestamp: new Date().toISOString(),
-        details: error instanceof Error ? error.message : "Unknown error",
+        message: isProduction
+          ? "Internal server error"
+          : error instanceof Error
+            ? error.message
+            : "Unknown error",
       },
       {
         status: 500,

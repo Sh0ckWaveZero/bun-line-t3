@@ -5,14 +5,16 @@
  */
 
 import { describe, test, expect } from "bun:test";
-import {
+import * as dateTimeUtils from "../../../src/lib/utils/date-time";
+
+const {
   formatTimeOnly,
   combineOriginalDateWithNewTime,
-  isValidTime,
   formatForDateTimeLocal,
   parseDateTimeLocal,
   createTimeChangeSummary,
-} from "@/lib/utils/date-time";
+  isValidTime,
+} = dateTimeUtils;
 
 describe("Date Time Utilities", () => {
   describe("formatTimeOnly", () => {

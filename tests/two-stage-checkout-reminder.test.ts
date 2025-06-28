@@ -1,10 +1,12 @@
 // Test สำหรับระบบแจ้งเตือน 2 ครั้งต่อคน
+import { describe, test, expect } from "bun:test";
 import {
+  calculateUserCompletionTime,
+  calculateUserReminderTime,
   shouldReceive10MinReminder,
   shouldReceiveFinalReminder,
-  calculateUserReminderTime,
-  calculateUserCompletionTime,
-} from "@/features/attendance/helpers/utils";
+} from "../src/features/attendance/helpers";
+import { convertUTCToBangkok } from "../src/lib/utils/datetime";
 
 describe("Two-Stage Checkout Reminder System", () => {
   test("should calculate both 10min and final reminder times correctly", () => {
@@ -13,12 +15,14 @@ describe("Two-Stage Checkout Reminder System", () => {
 
     const reminderTime = calculateUserReminderTime(checkInTime); // 17:50
     const completionTime = calculateUserCompletionTime(checkInTime); // 18:00
+    const reminderBangkok = convertUTCToBangkok(reminderTime);
+    const completionBangkok = convertUTCToBangkok(completionTime);
 
-    expect(reminderTime.getHours()).toBe(17);
-    expect(reminderTime.getMinutes()).toBe(50);
+    expect(reminderBangkok.getHours()).toBe(17); // 17:50 Bangkok
+    expect(reminderBangkok.getMinutes()).toBe(50);
 
-    expect(completionTime.getHours()).toBe(18);
-    expect(completionTime.getMinutes()).toBe(0);
+    expect(completionBangkok.getHours()).toBe(18); // 18:00 Bangkok
+    expect(completionBangkok.getMinutes()).toBe(0);
 
     // ความต่างควรเป็น 10 นาที
     const diffMinutes =
@@ -27,10 +31,9 @@ describe("Two-Stage Checkout Reminder System", () => {
   });
 
   test("should trigger 10min reminder at correct time", () => {
-    // เข้างาน 08:00, ตรวจสอบที่ 16:50 (10 นาทีก่อนครบ 9 ชั่วโมง)
+    // เข้างาน 08:00 Bangkok (01:00 UTC), reminder ที่ 09:50 UTC (18:50 Bangkok)
     const checkInTime = new Date("2025-06-18T01:00:00.000Z"); // 08:00 Bangkok
-    // ปรับเวลาให้ตรงกับ Bangkok time โดยคิดจาก UTC
-    const currentTime = new Date("2025-06-18T10:50:00.000Z"); // 17:50 Bangkok (not 16:50)
+    const currentTime = new Date("2025-06-18T09:50:00.000Z"); // 18:50 Bangkok
 
     const should10Min = shouldReceive10MinReminder(checkInTime, currentTime);
     const shouldFinal = shouldReceiveFinalReminder(checkInTime, currentTime);
@@ -40,9 +43,9 @@ describe("Two-Stage Checkout Reminder System", () => {
   });
 
   test("should trigger final reminder at completion time", () => {
-    // เข้างาน 08:00, ตรวจสอบที่ 17:00 (ครบ 9 ชั่วโมงพอดี)
+    // เข้างาน 08:00 Bangkok (01:00 UTC), completion ที่ 10:00 UTC (19:00 Bangkok)
     const checkInTime = new Date("2025-06-18T01:00:00.000Z"); // 08:00 Bangkok
-    const currentTime = new Date("2025-06-18T11:00:00.000Z"); // 18:00 Bangkok (not 17:00)
+    const currentTime = new Date("2025-06-18T10:00:00.000Z"); // 19:00 Bangkok
 
     const should10Min = shouldReceive10MinReminder(checkInTime, currentTime);
     const shouldFinal = shouldReceiveFinalReminder(checkInTime, currentTime);
@@ -69,23 +72,25 @@ describe("Two-Stage Checkout Reminder System", () => {
 
     const reminderTime = calculateUserReminderTime(checkInTime);
     const completionTime = calculateUserCompletionTime(checkInTime);
+    const reminderBangkok = convertUTCToBangkok(reminderTime);
+    const completionBangkok = convertUTCToBangkok(completionTime);
 
-    expect(reminderTime.getHours()).toBe(19);
-    expect(reminderTime.getMinutes()).toBe(20);
+    expect(reminderBangkok.getHours()).toBe(19); // 19:20 Bangkok
+    expect(reminderBangkok.getMinutes()).toBe(20);
 
-    expect(completionTime.getHours()).toBe(19);
-    expect(completionTime.getMinutes()).toBe(30);
+    expect(completionBangkok.getHours()).toBe(19); // 19:30 Bangkok
+    expect(completionBangkok.getMinutes()).toBe(30);
   });
 
   test("should work with 2-minute tolerance window", () => {
     // ทดสอบ tolerance 2 นาที (ค่า default)
     const checkInTime = new Date("2025-06-18T01:00:00.000Z"); // 08:00 Bangkok
 
-    // ทดสอบขอบเขต tolerance สำหรับ 10min reminder (17:48-17:52 Bangkok)
-    const earlyTime = new Date("2025-06-18T10:48:00.000Z"); // 17:48 Bangkok
-    const onTime = new Date("2025-06-18T10:50:00.000Z"); // 17:50 Bangkok
-    const lateTime = new Date("2025-06-18T10:52:00.000Z"); // 17:52 Bangkok
-    const tooLate = new Date("2025-06-18T10:54:00.000Z"); // 17:54 Bangkok
+    // ทดสอบขอบเขต tolerance สำหรับ 10min reminder (09:48-09:52 UTC = 18:48-18:52 Bangkok)
+    const earlyTime = new Date("2025-06-18T09:48:00.000Z"); // 18:48 Bangkok
+    const onTime = new Date("2025-06-18T09:50:00.000Z"); // 18:50 Bangkok
+    const lateTime = new Date("2025-06-18T09:52:00.000Z"); // 18:52 Bangkok
+    const tooLate = new Date("2025-06-18T09:54:00.000Z"); // 18:54 Bangkok
 
     expect(shouldReceive10MinReminder(checkInTime, earlyTime)).toBe(true);
     expect(shouldReceive10MinReminder(checkInTime, onTime)).toBe(true);

@@ -25,6 +25,18 @@ export default {
   moduleNameMapping: {
     "^@/(.*)$": "<rootDir>/src/$1",
     "^@tests/(.*)$": "<rootDir>/tests/$1",
+    "^@features/(.*)$": "<rootDir>/src/features/$1",
+    "^@lib/(.*)$": "<rootDir>/src/lib/$1",
+    "^@components/(.*)$": "<rootDir>/src/components/$1",
+    "^@hooks/(.*)$": "<rootDir>/src/hooks/$1",
+    "^@styles/(.*)$": "<rootDir>/src/styles/$1",
+    "^@app/(.*)$": "<rootDir>/src/app/$1",
+    "^@utils/(.*)$": "<rootDir>/src/lib/utils/$1",
+    "^@types/(.*)$": "<rootDir>/src/lib/types/$1",
+    "^@constants/(.*)$": "<rootDir>/src/lib/constants/$1",
+    "^@auth/(.*)$": "<rootDir>/src/lib/auth/$1",
+    "^@database/(.*)$": "<rootDir>/src/lib/database/$1",
+    "^@validation/(.*)$": "<rootDir>/src/lib/validation/$1",
   },
 
   // Test timeout

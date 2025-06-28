@@ -4,7 +4,7 @@
  * รองรับ Raspberry Pi monitoring
  */
 import { NextResponse } from "next/server";
-import { db } from "@/lib/database";
+import { db } from "@/lib/database/db";
 
 interface HealthCheckResponse {
   status: "healthy" | "unhealthy" | "degraded";

@@ -18,12 +18,26 @@ const detectEnvironment = (): Environment => {
   return process.env.NODE_ENV === "production" ? "production" : "development";
 };
 
+// เพิ่ม helper สำหรับอ่าน ALLOWED_DOMAINS สด
+function getAllowedDomains(): string[] {
+  if (process.env.ALLOWED_DOMAINS) {
+    return process.env.ALLOWED_DOMAINS.split(",").map((d) => d.trim());
+  }
+  // fallback เดิม
+  return ["localhost", "127.0.0.1"];
+}
+
 // ✅ Host validation function
 export const isAllowedHost = (
   hostname: string,
   env: Environment = detectEnvironment(),
 ): boolean => {
-  const allowedHosts = [...ALLOWED_HOSTS[env]] as string[];
+  let allowedHosts: string[];
+  if (env === "production") {
+    allowedHosts = getAllowedDomains();
+  } else {
+    allowedHosts = ["localhost", "127.0.0.1"];
+  }
 
   // 🔍 Exact match for allowed hosts
   if (allowedHosts.includes(hostname)) {

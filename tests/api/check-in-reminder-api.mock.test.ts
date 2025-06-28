@@ -43,7 +43,10 @@ const mockAttendanceService = {
     return mockDate;
   },
   isWorkingDay: async () => true,
-  getActiveLineUserIdsForCheckinReminder: async () => ["test-user-1", "test-user-2"],
+  getActiveLineUserIdsForCheckinReminder: async () => [
+    "test-user-1",
+    "test-user-2",
+  ],
 };
 
 mock.module("@/features/attendance/services/attendance", () => ({
@@ -58,8 +61,12 @@ describe("Unit Test: API Route /api/cron/check-in-reminder", () => {
   });
 
   it("should send reminders to active users on a working day", async () => {
-    // The actual request object can be simple, as we mock the header logic
-    const request = new Request("http://localhost/api/cron/check-in-reminder");
+    // The actual request object needs authorization header
+    const request = new Request("http://localhost/api/cron/check-in-reminder", {
+      headers: {
+        Authorization: `Bearer ${process.env.CRON_SECRET || "test-secret"}`,
+      },
+    });
 
     const response = await GET(request as NextRequest);
     const data = await response.json();

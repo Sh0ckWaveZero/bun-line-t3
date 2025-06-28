@@ -12,7 +12,7 @@ import {
   SUCCESS_CHECKIN_MESSAGES,
   SUCCESS_CHECKOUT_MESSAGES,
   WEEKEND_MESSAGES,
-} from '@/lib/constants/attendance-messages';
+} from "@/lib/constants/attendance-messages";
 import type {
   AttendanceRecord,
   CheckInResult,
@@ -23,7 +23,7 @@ import {
   calculatePercentage,
   roundToOneDecimal,
   roundToTwoDecimals,
-} from '@/lib/utils/number';
+} from "@/lib/utils/number";
 import {
   calculateExpectedCheckOutTime,
   calculateUserReminderTime,
@@ -43,11 +43,11 @@ import {
   getCurrentBangkokTime,
   getCurrentUTCTime,
   getTodayDateString,
-} from '@/lib/utils/datetime';
+} from "@/lib/utils/datetime";
 import { AttendanceStatusType } from "@prisma/client";
 import { WORKPLACE_POLICIES } from "../constants/workplace-policies";
-import { db } from '@/lib/database';
-import { selectRandomElement } from '@/lib/crypto-random';
+import { db } from "@/lib/database";
+import { selectRandomElement } from "@/lib/crypto-random";
 
 const { holidayService } = await import("../services/holidays");
 
@@ -69,16 +69,26 @@ async function isWorkingDay(date: Date): Promise<boolean> {
  * @param todayString วันที่รูปแบบ YYYY-MM-DD (Bangkok)
  * @returns string[] LINE userId
  */
-async function getActiveLineUserIdsForCheckinReminder(todayString: string): Promise<string[]> {
+async function getActiveLineUserIdsForCheckinReminder(
+  todayString: string,
+): Promise<string[]> {
   const users = await db.user.findMany({
     select: {
-      accounts: { where: { provider: "line" }, select: { providerAccountId: true } },
-      leaves: { where: { date: todayString, isActive: true }, select: { id: true } },
+      accounts: {
+        where: { provider: "line" },
+        select: { providerAccountId: true },
+      },
+      leaves: {
+        where: { date: todayString, isActive: true },
+        select: { id: true },
+      },
     },
   });
   return users
-    .filter(u => u.accounts.length > 0 && u.leaves.length === 0 && u.accounts[0])
-    .map(u => u.accounts[0]?.providerAccountId)
+    .filter(
+      (u) => u.accounts.length > 0 && u.leaves.length === 0 && u.accounts[0],
+    )
+    .map((u) => u.accounts[0]?.providerAccountId)
     .filter((id): id is string => typeof id === "string");
 }
 
@@ -116,7 +126,9 @@ const checkIn = async (userId: string): Promise<CheckInResult> => {
           message: randomMessage,
         };
       }
-      const randomMessage = selectRandomElement(WEEKEND_MESSAGES.map(fn => fn(dayName)));
+      const randomMessage = selectRandomElement(
+        WEEKEND_MESSAGES.map((fn) => fn(dayName)),
+      );
       return {
         success: false,
         message: randomMessage,
@@ -170,7 +182,8 @@ const checkIn = async (userId: string): Promise<CheckInResult> => {
     if (existingAttendance) {
       if (
         existingAttendance.status === AttendanceStatusType.CHECKED_OUT ||
-        existingAttendance.status === AttendanceStatusType.AUTO_CHECKOUT_MIDNIGHT
+        existingAttendance.status ===
+          AttendanceStatusType.AUTO_CHECKOUT_MIDNIGHT
       ) {
         await db.workAttendance.update({
           where: { id: existingAttendance.id },
@@ -219,7 +232,9 @@ const checkIn = async (userId: string): Promise<CheckInResult> => {
     const checkInTimeStr = formatThaiTimeOnly(bangkokCheckInForDisplay);
     const expectedCheckOutStr = formatThaiTimeOnly(bangkokCheckOutForDisplay);
     let message = selectRandomElement(
-      SUCCESS_CHECKIN_MESSAGES.map(fn => fn(checkInTimeStr, expectedCheckOutStr)),
+      SUCCESS_CHECKIN_MESSAGES.map((fn) =>
+        fn(checkInTimeStr, expectedCheckOutStr),
+      ),
     );
     if (timeValidation.isEarlyCheckIn) {
       const hour = bangkokCheckInForDisplay.getHours();
@@ -228,12 +243,16 @@ const checkIn = async (userId: string): Promise<CheckInResult> => {
       if (hour < 1) {
         message += `\n🌙 มาถึงสำนักงานหลังเที่ยงคืน ${checkInStr} น. (เลิกงาน ${checkOutStr})`;
       } else {
-        message += selectRandomElement(EARLY_CHECKIN_MESSAGES.map(fn => fn(checkInStr, checkOutStr)));
+        message += selectRandomElement(
+          EARLY_CHECKIN_MESSAGES.map((fn) => fn(checkInStr, checkOutStr)),
+        );
       }
     } else if (timeValidation.isLateCheckIn) {
       const checkInStr = checkInTimeStr;
       const checkOutStr = expectedCheckOutStr;
-      message += selectRandomElement(LATE_CHECKIN_MESSAGES.map(fn => fn(checkInStr, checkOutStr)));
+      message += selectRandomElement(
+        LATE_CHECKIN_MESSAGES.map((fn) => fn(checkInStr, checkOutStr)),
+      );
     }
     return {
       success: true,
@@ -288,7 +307,9 @@ const checkOut = async (userId: string): Promise<CheckInResult> => {
         storedCheckOutTime.getTime() - attendance.checkInTime.getTime();
       const workingHours = workingHoursMs / (1000 * 60 * 60);
       const workHours = roundToOneDecimal(workingHours);
-      const randomMessage = selectRandomElement(ALREADY_CHECKED_OUT_MESSAGES.map(fn => fn(workHours.toString())));
+      const randomMessage = selectRandomElement(
+        ALREADY_CHECKED_OUT_MESSAGES.map((fn) => fn(workHours.toString())),
+      );
       return {
         success: false,
         message: randomMessage,
@@ -322,7 +343,7 @@ const checkOut = async (userId: string): Promise<CheckInResult> => {
     if (!isCompleteWorkDay) {
       const shortHours = WORKPLACE_POLICIES.TOTAL_HOURS_PER_DAY - workingHours;
       const shortHoursStr = roundToOneDecimal(shortHours);
-      message += `\n${selectRandomElement(SHORT_WORK_MESSAGES.map(fn => fn(shortHoursStr.toString())))}`;
+      message += `\n${selectRandomElement(SHORT_WORK_MESSAGES.map((fn) => fn(shortHoursStr.toString())))}`;
     } else {
       message += `\n${selectRandomElement(COMPLETE_WORK_MESSAGES)}`;
     }

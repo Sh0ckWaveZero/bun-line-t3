@@ -1,0 +1,24 @@
+# Bun configuration file for test runner
+[test]
+root = "."
+preload = ["./tests/bun.test.config.ts"]
+coverage = false
+
+# Path aliases for the entire project (affects tests too)
+[install]
+# If using workspace setup
+[install.scopes]
+"@" = "./src"
+"@components" = "./src/components"
+"@utils" = "./src/utils"
+"@test" = "./test"
+"@features" = "./src/features"
+"@lib" = "./src/lib"
+"@hooks" = "./src/hooks"
+"@styles" = "./src/styles"
+"@app" = "./src/app"
+"@types" = "./src/lib/types"
+"@constants" = "./src/lib/constants"
+"@auth" = "./src/lib/auth"
+"@database" = "./src/lib/database"
+"@validation" = "./src/lib/validation"

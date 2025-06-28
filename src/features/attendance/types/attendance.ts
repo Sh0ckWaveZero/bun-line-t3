@@ -38,7 +38,7 @@ export interface MonthlyAttendanceReport {
 export interface AttendanceRecord {
   id: string;
   workDate: string;
-  checkInTime: Date;
+  checkInTime: Date | null;
   checkOutTime: Date | null;
   status: string;
   hoursWorked: number | null;

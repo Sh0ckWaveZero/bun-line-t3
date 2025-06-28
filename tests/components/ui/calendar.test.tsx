@@ -1,6 +1,6 @@
 import { test, expect } from "bun:test";
 import React from "react";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar } from "../../../src/components/ui/calendar";
 
 test("Calendar component is defined and exports correctly", () => {
   expect(Calendar).toBeDefined();

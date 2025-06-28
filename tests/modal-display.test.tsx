@@ -1,7 +1,7 @@
 import { describe, it, expect, mock } from "bun:test";
-import type { AttendanceRecord, EditAttendanceData } from "@/lib/types";
-import { AttendanceStatusType } from "@/features/attendance/types/attendance-status";
-
+import { AttendanceRecord } from "../src/features/attendance/types/attendance.ts";
+import { ATTENDANCE_STATUS } from "../src/features/attendance/types/attendance-status.ts";
+import { EditAttendanceData } from "../src/lib/types/index.ts";
 // Mock window object สำหรับ mobile detection
 const mockWindow = {
   innerWidth: 1024,
@@ -24,9 +24,9 @@ describe("EditAttendanceModal - Configuration Tests", () => {
   const mockRecord: AttendanceRecord = {
     id: "test-1",
     workDate: "2025-06-19",
-    checkInTime: "2025-06-19T09:00:00.000Z",
-    checkOutTime: "2025-06-19T17:00:00.000Z",
-    status: AttendanceStatusType.CHECKED_OUT,
+    checkInTime: new Date("2025-06-19T09:00:00.000Z"),
+    checkOutTime: new Date("2025-06-19T17:00:00.000Z"),
+    status: ATTENDANCE_STATUS.CHECKED_OUT,
     hoursWorked: 8,
   };
 
@@ -51,7 +51,7 @@ describe("EditAttendanceModal - Configuration Tests", () => {
     // ✅ ตรวจสอบ AttendanceRecord structure
     expect(props.editingRecord.id).toBe("test-1");
     expect(props.editingRecord.workDate).toBe("2025-06-19");
-    expect(props.editingRecord.status).toBe(AttendanceStatusType.CHECKED_OUT);
+    expect(props.editingRecord.status).toBe(ATTENDANCE_STATUS.CHECKED_OUT);
     expect(props.editingRecord.hoursWorked).toBe(8);
 
     // ✅ ตรวจสอบ EditAttendanceData structure

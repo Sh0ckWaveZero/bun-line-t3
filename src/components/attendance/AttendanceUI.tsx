@@ -4,13 +4,7 @@ import React from "react";
 import Image from "next/image";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { signIn } from "next-auth/react";
-import type {
-  User,
-  UserInfoCardProps,
-  LoadingSpinnerProps,
-  ErrorMessageProps,
-  MonthSelectorProps,
-} from "@/lib/types";
+
 import { useState } from "react";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { MonthPicker } from "@/components/ui/calendar";
@@ -22,6 +16,12 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { LineLoginButton } from "@/components/ui/LineLoginButton";
+import {
+  UserInfoCardProps,
+  LoadingSpinnerProps,
+  ErrorMessageProps,
+  MonthSelectorProps,
+} from "@/lib/types/attendance";
 
 export const UserInfoCard: React.FC<UserInfoCardProps> = ({ user }) => (
   <div
