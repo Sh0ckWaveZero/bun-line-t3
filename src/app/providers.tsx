@@ -11,11 +11,11 @@ export default function Providers({ children }: { children: ReactNode }) {
       <ThemeProvider
         attribute="class"
         defaultTheme="light"
-        enableSystem={false}
+        enableSystem={true}
         disableTransitionOnChange={false}
         storageKey="theme-preference"
         forcedTheme={undefined}
-        themes={["light", "dark"]}
+        themes={["light", "dark", "system"]}
         nonce={undefined}
         scriptProps={{
           nonce: undefined,

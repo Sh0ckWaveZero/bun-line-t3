@@ -1,9 +1,9 @@
 import { type Metadata } from "next";
 import { Prompt } from "next/font/google";
 import Providers from "./providers";
+import Header from "@/components/common/Header";
 
 import "@/styles/globals.css";
-import "@/styles/ring.css";
 
 // 🎨 กำหนด Google Font Prompt
 const promptFont = Prompt({
@@ -37,11 +37,12 @@ export default function RootLayout({
     >
       <body
         id="body-main"
-        className={FONT_CLASSES}
+        className={`${FONT_CLASSES} min-h-screen bg-background text-foreground transition-colors duration-300`}
         suppressHydrationWarning={true}
       >
         <Providers>
           <div id="modal-root"></div>
+          <Header />
           <main id="main-content">{children}</main>
         </Providers>
       </body>

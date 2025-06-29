@@ -25,7 +25,6 @@ import {
   Clock,
   Users,
 } from "lucide-react";
-import { ThemeToggle } from "@/components/ui/theme-toggle-simple";
 import {
   AuthLoadingScreen,
   LoginPrompt,
@@ -230,23 +229,23 @@ export default function MonitoringDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen">
         <LoadingSpinner message="กำลังโหลดข้อมูลการตรวจสอบ..." />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen">
       {/* Header */}
       <header className="border-b border-gray-200 bg-white shadow dark:border-gray-700 dark:bg-gray-800">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <h1 className="text-2xl font-bold text-white">
                 📊 System Monitoring Dashboard
               </h1>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p className="mt-1 text-sm text-gray-100">
                 Real-time system health and performance monitoring
               </p>
             </div>
@@ -273,7 +272,6 @@ export default function MonitoringDashboardPage() {
                 />
                 Auto-refresh
               </label>
-              <ThemeToggle />
             </div>
           </div>
         </div>
@@ -295,7 +293,7 @@ export default function MonitoringDashboardPage() {
           <>
             {/* System Health Overview */}
             <div className="mb-8">
-              <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-gray-100">
+              <h2 className="mb-4 text-xl font-semibold text-white">
                 System Health Overview
               </h2>
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">

@@ -22,6 +22,8 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
         return "bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400 border border-blue-200 dark:border-blue-700";
       case AttendanceStatusType.AUTO_CHECKOUT_MIDNIGHT:
         return "bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-400 border border-orange-200 dark:border-orange-700";
+      case AttendanceStatusType.LEAVE:
+        return "bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-400 border border-purple-200 dark:border-purple-700";
       default:
         return "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-400 border border-gray-200 dark:border-gray-700";
     }
@@ -37,19 +39,32 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
         return "ออกงานแล้ว";
       case AttendanceStatusType.AUTO_CHECKOUT_MIDNIGHT:
         return "ออกงานอัตโนมัติ";
+      case AttendanceStatusType.LEAVE:
+        return "ลา";
       default:
         return status;
     }
   };
 
-  const EditButton: React.FC<{ record: AttendanceRecord }> = ({ record }) => (
-    <button
-      id={`edit-btn-${record.id}`}
-      onClick={() => onEditRecord(record)}
-      className="inline-flex items-center rounded-md border border-orange-200 bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700 transition-colors hover:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 dark:border-orange-700 dark:bg-orange-900/20 dark:text-orange-400 dark:hover:bg-orange-900/30 dark:focus:ring-orange-400"
-      aria-label={`แก้ไขข้อมูลการเข้างานวันที่ ${dateFormatters.fullDate(record.workDate)}`}
-    >
-      <svg
+  const EditButton: React.FC<{ record: AttendanceRecord }> = ({ record }) => {
+    const isLeaveDay = record.status === AttendanceStatusType.LEAVE;
+    
+    return (
+      <button
+        id={`edit-btn-${record.id}`}
+        onClick={() => !isLeaveDay && onEditRecord(record)}
+        disabled={isLeaveDay}
+        className={`inline-flex items-center rounded-lg border px-3 py-1 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+          isLeaveDay 
+            ? "cursor-not-allowed border-gray-300 bg-gray-100 text-gray-400 opacity-60 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-500"
+            : "cursor-pointer border-orange-200 bg-orange-100 text-orange-700 hover:bg-orange-200 focus:ring-orange-500 dark:border-orange-700 dark:bg-orange-900/20 dark:text-orange-400 dark:hover:bg-orange-900/30 dark:focus:ring-orange-400"
+        }`}
+        aria-label={isLeaveDay 
+          ? `ไม่สามารถแก้ไขข้อมูลวันลาได้ วันที่ ${dateFormatters.fullDate(record.workDate)}`
+          : `แก้ไขข้อมูลการเข้างานวันที่ ${dateFormatters.fullDate(record.workDate)}`
+        }
+      >
+        <svg
         id={`edit-icon-${record.id}`}
         className="mr-1 h-3 w-3"
         fill="none"
@@ -63,9 +78,10 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
           d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
         />
       </svg>
-      <span id={`edit-text-${record.id}`}>แก้ไข</span>
-    </button>
-  );
+        <span id={`edit-text-${record.id}`}>แก้ไข</span>
+      </button>
+    );
+  };
 
   const EmptyTableMessage = () => (
     <div
@@ -149,13 +165,17 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                   id={`checkin-${record.id}`}
                   className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-gray-100"
                 >
-                  {dateFormatters.time24(record.checkInTime)}
+                  {record.status === AttendanceStatusType.LEAVE
+                    ? "-"
+                    : dateFormatters.time24(record.checkInTime)}
                 </td>
                 <td
                   id={`checkout-${record.id}`}
                   className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-gray-100"
                 >
-                  {record.checkOutTime
+                  {record.status === AttendanceStatusType.LEAVE
+                    ? "-"
+                    : record.checkOutTime
                     ? dateFormatters.time24(record.checkOutTime)
                     : "-"}
                 </td>
@@ -163,7 +183,9 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                   id={`hours-${record.id}`}
                   className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-gray-100"
                 >
-                  {formatHoursSafe(record.hoursWorked)}
+                  {record.status === AttendanceStatusType.LEAVE
+                    ? "-"
+                    : formatHoursSafe(record.hoursWorked)}
                 </td>
                 <td
                   id={`status-${record.id}`}
@@ -171,14 +193,14 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                 >
                   <span
                     id={`status-badge-${record.id}`}
-                    className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getStatusColor(record.status)}`}
+                    className={`inline-flex rounded-xl px-2 py-1 text-xs font-semibold ${getStatusColor(record.status)}`}
                   >
                     {getStatusText(record.status)}
                   </span>
                 </td>
                 <td
                   id={`actions-${record.id}`}
-                  className="whitespace-nowrap px-6 py-4 text-sm"
+                  className="whitespace-nowrap  px-6 py-4 text-sm"
                 >
                   <EditButton record={record} />
                 </td>

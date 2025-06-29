@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Rings from "@/components/common/Rings";
+import "@/styles/ring.css";
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -24,7 +25,7 @@ export default function Home() {
   return (
     <main
       id="page-home"
-      className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]"
+      className="flex min-h-screen flex-col items-center justify-center relative"
     >
       <div
         id="container-main"
@@ -32,9 +33,9 @@ export default function Home() {
       >
         <h1
           id="title-main"
-          className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]"
+          className="text-5xl font-extrabold tracking-tight text-white dark:text-gray-100 sm:text-[5rem]"
         >
-          Bun LINE <span className="text-[hsl(280,100%,70%)]">T3</span> App
+          Bun LINE <span className="text-[hsl(280,100%,70%)] dark:text-purple-400">T3</span> App
         </h1>
         {!session ? (
           <button

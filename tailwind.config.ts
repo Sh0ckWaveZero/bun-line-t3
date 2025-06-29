@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import defaultTheme from "tailwindcss/defaultTheme";
 
 const config: Config = {
   darkMode: "class",
@@ -19,38 +20,38 @@ const config: Config = {
     extend: {
       // 🎨 Shadcn UI Color System
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        border: "var(--border)",
+        input: "var(--input)",
+        ring: "var(--ring)",
+        background: "var(--background)",
+        foreground: "var(--foreground)",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+          DEFAULT: "var(--primary)",
+          foreground: "var(--primary-foreground)",
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
+          DEFAULT: "var(--secondary)",
+          foreground: "var(--secondary-foreground)",
         },
         destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
+          DEFAULT: "var(--destructive)",
+          foreground: "var(--destructive-foreground)",
         },
         muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+          DEFAULT: "var(--muted)",
+          foreground: "var(--muted-foreground)",
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: "var(--accent)",
+          foreground: "var(--accent-foreground)",
         },
         popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
+          DEFAULT: "var(--popover)",
+          foreground: "var(--popover-foreground)",
         },
         card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
+          DEFAULT: "var(--card)",
+          foreground: "var(--card-foreground)",
         },
 
         // 🌈 Modern Vibrant Color System สำหรับ Attendance Cards และ UI Components
@@ -245,14 +246,22 @@ const config: Config = {
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        ...defaultTheme.borderRadius, // รองรับทุก key ของ Tailwind (รวม directional)
+        DEFAULT: "var(--radius-3)",
+        none: "0px",
+        xs: "var(--radius-1)", // 0.125rem (2px)
+        sm: "var(--radius-2)", // 0.25rem (4px)
+        md: "var(--radius-3)", // 0.375rem (6px)
+        lg: "var(--radius-4)", // 0.5rem (8px)
+        xl: "var(--radius-5)", // 0.75rem (12px)
+        "2xl": "var(--radius-6)", // 1rem (16px)
+        "3xl": "var(--radius-7)", // 1.5rem (24px)
+        "4xl": "var(--radius-8)", // 2rem (32px)
+        full: "var(--radius-full)", // 9999px
       },
-      // 🎨 Font Families - Prompt Font สำหรับทั้ง Project
+      // 🎨 Font Families - Updated Theme Fonts
       fontFamily: {
         prompt: ["Prompt", "sans-serif"],
-        sans: ["Prompt", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       // 🔤 Font Weights - รองรับทุก weight ของ Prompt
       fontWeight: {

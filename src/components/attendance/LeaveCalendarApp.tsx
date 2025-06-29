@@ -373,9 +373,9 @@ export default function LeaveCalendarApp() {
   };
 
   return (
-    <div className="flex h-full min-h-screen w-full flex-1 flex-col items-center justify-center overflow-hidden rounded-lg border-2 border-gray-200 bg-background/80 p-4 shadow-2xl transition-all duration-300 dark:border-gray-700 sm:p-6 md:p-8">
+    <div className="flex h-full min-h-screen w-full flex-1 flex-col items-center justify-center overflow-hidden rounded-lg border-2 border-border bg-card p-4 shadow-2xl transition-all duration-300 sm:p-6 md:p-8">
       {loading ? (
-        <div className="animate-pulse py-8 text-center text-base text-gray-300 dark:text-gray-400 sm:text-lg">
+        <div className="animate-pulse py-8 text-center text-base text-muted-foreground sm:text-lg">
           กำลังโหลดข้อมูลวันลา...
         </div>
       ) : (

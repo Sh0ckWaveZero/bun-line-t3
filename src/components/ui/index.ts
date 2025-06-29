@@ -11,6 +11,8 @@ export { Popover, PopoverTrigger, PopoverContent } from "./popover";
 
 export { Switch } from "./switch";
 
+export { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs";
+
 export { ThemeToggle } from "./theme-toggle-simple";
 
 // Note: CalendarExample ไม่ export เพราะเป็นเพียงตัวอย่าง

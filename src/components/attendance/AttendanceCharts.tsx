@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { th } from "date-fns/locale";
 
 import { useChartTheme } from "@/hooks/useChartTheme";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   AttendanceChartsProps,
   AttendanceRecord,
@@ -255,146 +256,167 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({
         กราฟวิเคราะห์การทำงาน
       </h2>
 
-      <div className="mb-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
-        {/* Hours worked per day chart */}
-        <div className="bg-card-base border-theme-primary rounded-lg border p-4 shadow">
-          <h3 className="mb-4 text-sm font-medium text-gray-600 dark:text-gray-400">
-            ชั่วโมงทำงานรายวัน
-          </h3>
-          <div className="h-64">
-            {report.attendanceRecords.length > 0 ? (
-              <Line
-                data={prepareHoursChartData(report.attendanceRecords)}
-                options={getChartOptions({
-                  scales: {
-                    y: {
-                      min: 0,
-                      max: Math.max(
-                        10,
-                        ...report.attendanceRecords.map(
-                          (r) => r.hoursWorked || 0,
-                        ),
-                      ),
-                    },
-                  },
-                })}
-              />
-            ) : (
-              <EmptyChartPlaceholder />
-            )}
-          </div>
-        </div>
+      <Tabs defaultValue="working-hours" className="w-full">
+        <TabsList className="mb-6 grid w-full grid-cols-2 rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
+          <TabsTrigger 
+            value="working-hours" 
+            className="flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:data-[state=active]:bg-blue-600"
+          >
+            📊 ชั่วโมงการทำงาน
+          </TabsTrigger>
+          <TabsTrigger 
+            value="statistics" 
+            className="flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 data-[state=active]:bg-green-500 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-green-50 dark:hover:bg-green-900/20 dark:data-[state=active]:bg-green-600"
+          >
+            📈 สถิติการเข้างาน
+          </TabsTrigger>
+        </TabsList>
 
-        {/* Average hours by day of week */}
-        <div className="bg-card-base border-theme-primary rounded-lg border p-4 shadow">
-          <h3 className="mb-4 text-sm font-medium text-gray-600 dark:text-gray-400">
-            ชั่วโมงทำงานเฉลี่ยตามวัน
-          </h3>
-          <div className="h-64">
-            {report.attendanceRecords.length > 0 ? (
-              <Bar
-                data={prepareDailyHoursBarData(report.attendanceRecords)}
-                options={getChartOptions({
-                  plugins: {
-                    legend: {
-                      display: false,
-                    },
-                  },
-                  scales: {
-                    y: {
-                      beginAtZero: true,
-                      max: 10,
-                    },
-                  },
-                })}
-              />
-            ) : (
-              <EmptyChartPlaceholder />
-            )}
-          </div>
-        </div>
-      </div>
+        <TabsContent value="working-hours">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {/* Hours worked per day chart */}
+            <div className="bg-card-base border-theme-primary rounded-lg border p-4 shadow">
+              <h3 className="mb-4 text-sm font-medium text-gray-600 dark:text-gray-400">
+                ชั่วโมงทำงานรายวัน
+              </h3>
+              <div className="h-64">
+                {report.attendanceRecords.length > 0 ? (
+                  <Line
+                    data={prepareHoursChartData(report.attendanceRecords)}
+                    options={getChartOptions({
+                      scales: {
+                        y: {
+                          min: 0,
+                          max: Math.max(
+                            10,
+                            ...report.attendanceRecords.map(
+                              (r) => r.hoursWorked || 0,
+                            ),
+                          ),
+                        },
+                      },
+                    })}
+                  />
+                ) : (
+                  <EmptyChartPlaceholder />
+                )}
+              </div>
+            </div>
 
-      <div className="mb-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
-        {/* Attendance donut chart */}
-        <div className="bg-card-base border-theme-primary rounded-lg border p-4 shadow">
-          <h3 className="mb-4 text-sm font-medium text-gray-600 dark:text-gray-400">
-            สัดส่วนการมาทำงาน
-          </h3>
-          <div className="flex h-64 flex-col justify-center">
-            {/* 🎯 แสดงข้อความพิเศษสำหรับการเข้างานครบ */}
-            {report.workingDaysInMonth - report.totalDaysWorked === 0 ? (
-              <div className="text-center">
-                <div className="mb-4 text-4xl">🏆</div>
-                <h4 className="mb-2 text-lg font-bold text-green-600 dark:text-green-400">
-                  ยอดเยี่ยม!
-                </h4>
-                <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-                  เข้างานครบทุกวันในเดือนนี้
-                </p>
-                <div className="rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-700 dark:bg-green-900/20">
-                  <p className="text-sm text-green-800 dark:text-green-300">
-                    <strong>{report.totalDaysWorked}</strong> วัน จาก{" "}
-                    <strong>{report.workingDaysInMonth}</strong> วันทำงาน
-                  </p>
-                  <p className="mt-1 text-xs text-green-600 dark:text-green-400">
-                    อัตราการเข้างาน: {report.attendanceRate}%
-                  </p>
-                </div>
+            {/* Average hours by day of week */}
+            <div className="bg-card-base border-theme-primary rounded-lg border p-4 shadow">
+              <h3 className="mb-4 text-sm font-medium text-gray-600 dark:text-gray-400">
+                ชั่วโมงทำงานเฉลี่ยตามวัน
+              </h3>
+              <div className="h-64">
+                {report.attendanceRecords.length > 0 ? (
+                  <Bar
+                    data={prepareDailyHoursBarData(report.attendanceRecords)}
+                    options={getChartOptions({
+                      plugins: {
+                        legend: {
+                          display: false,
+                        },
+                      },
+                      scales: {
+                        y: {
+                          beginAtZero: true,
+                          max: 10,
+                        },
+                      },
+                    })}
+                  />
+                ) : (
+                  <EmptyChartPlaceholder />
+                )}
               </div>
-            ) : (
-              <div
-                style={{ width: "250px", height: "250px", margin: "0 auto" }}
-              >
-                <Doughnut
-                  data={prepareAttendanceDonutData(report)}
-                  options={getDoughnutOptions()}
-                />
-              </div>
-            )}
+            </div>
           </div>
-        </div>
+        </TabsContent>
 
-        {/* Compliance donut chart */}
-        <div className="bg-card-base border-theme-primary rounded-lg border p-4 shadow">
-          <h3 className="mb-4 text-sm font-medium text-gray-600 dark:text-gray-400">
-            การทำงานครบตามเวลา (9 ชม.)
-          </h3>
-          <div className="flex h-64 flex-col justify-center">
-            {/* 🎯 แสดงข้อความพิเศษสำหรับการทำงานครบเวลาทุกวัน */}
-            {report.totalDaysWorked > 0 &&
-            report.completeDays === report.totalDaysWorked ? (
-              <div className="text-center">
-                <div className="mb-4 text-4xl">💪</div>
-                <h4 className="mb-2 text-lg font-bold text-purple-600 dark:text-purple-400">
-                  สุดยอด!
-                </h4>
-                <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-                  ทำงานครบ 9 ชั่วโมงทุกวัน
-                </p>
-                <div className="rounded-lg border border-purple-200 bg-purple-50 p-3 dark:border-purple-700 dark:bg-purple-900/20">
-                  <p className="text-sm text-purple-800 dark:text-purple-300">
-                    <strong>{report.completeDays}</strong> วัน จาก{" "}
-                    <strong>{report.totalDaysWorked}</strong> วันที่ทำงาน
-                  </p>
-                  <p className="mt-1 text-xs text-purple-600 dark:text-purple-400">
-                    อัตราการทำงานครบเวลา: {report.complianceRate}%
-                  </p>
-                </div>
+        <TabsContent value="statistics">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {/* Attendance donut chart */}
+            <div className="bg-card-base border-theme-primary rounded-lg border p-4 shadow">
+              <h3 className="mb-4 text-sm font-medium text-gray-600 dark:text-gray-400">
+                สัดส่วนการมาทำงาน
+              </h3>
+              <div className="flex h-64 flex-col justify-center">
+                {/* 🎯 แสดงข้อความพิเศษสำหรับการเข้างานครบ */}
+                {report.workingDaysInMonth - report.totalDaysWorked === 0 ? (
+                  <div className="text-center">
+                    <div className="mb-4 text-4xl">🏆</div>
+                    <h4 className="mb-2 text-lg font-bold text-green-600 dark:text-green-400">
+                      ยอดเยี่ยม!
+                    </h4>
+                    <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+                      เข้างานครบทุกวันในเดือนนี้
+                    </p>
+                    <div className="rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-700 dark:bg-green-900/20">
+                      <p className="text-sm text-green-800 dark:text-green-300">
+                        <strong>{report.totalDaysWorked}</strong> วัน จาก{" "}
+                        <strong>{report.workingDaysInMonth}</strong> วันทำงาน
+                      </p>
+                      <p className="mt-1 text-xs text-green-600 dark:text-green-400">
+                        อัตราการเข้างาน: {report.attendanceRate}%
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    style={{ width: "250px", height: "250px", margin: "0 auto" }}
+                  >
+                    <Doughnut
+                      data={prepareAttendanceDonutData(report)}
+                      options={getDoughnutOptions()}
+                    />
+                  </div>
+                )}
               </div>
-            ) : (
-              <div
-                style={{ width: "250px", height: "250px", margin: "0 auto" }}
-              >
-                <Doughnut
-                  data={prepareComplianceDonutData(report)}
-                  options={getDoughnutOptions()}
-                />
+            </div>
+
+            {/* Compliance donut chart */}
+            <div className="bg-card-base border-theme-primary rounded-lg border p-4 shadow">
+              <h3 className="mb-4 text-sm font-medium text-gray-600 dark:text-gray-400">
+                การทำงานครบตามเวลา (9 ชม.)
+              </h3>
+              <div className="flex h-64 flex-col justify-center">
+                {/* 🎯 แสดงข้อความพิเศษสำหรับการทำงานครบเวลาทุกวัน */}
+                {report.totalDaysWorked > 0 &&
+                report.completeDays === report.totalDaysWorked ? (
+                  <div className="text-center">
+                    <div className="mb-4 text-4xl">💪</div>
+                    <h4 className="mb-2 text-lg font-bold text-purple-600 dark:text-purple-400">
+                      สุดยอด!
+                    </h4>
+                    <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+                      ทำงานครบ 9 ชั่วโมงทุกวัน
+                    </p>
+                    <div className="rounded-lg border border-purple-200 bg-purple-50 p-3 dark:border-purple-700 dark:bg-purple-900/20">
+                      <p className="text-sm text-purple-800 dark:text-purple-300">
+                        <strong>{report.completeDays}</strong> วัน จาก{" "}
+                        <strong>{report.totalDaysWorked}</strong> วันที่ทำงาน
+                      </p>
+                      <p className="mt-1 text-xs text-purple-600 dark:text-purple-400">
+                        อัตราการทำงานครบเวลา: {report.complianceRate}%
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    style={{ width: "250px", height: "250px", margin: "0 auto" }}
+                  >
+                    <Doughnut
+                      data={prepareComplianceDonutData(report)}
+                      options={getDoughnutOptions()}
+                    />
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

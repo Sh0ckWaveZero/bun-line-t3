@@ -68,18 +68,18 @@ function MonthPicker({
   const buddhistYear = currentYear + 543;
 
   return (
-    <div id={id} className={cn("w-full max-w-sm p-4", className)}>
+    <div id={id} className={cn("w-full max-w-sm p-4 landscape:max-w-lg landscape:p-2 portrait:mx-auto portrait:text-center", className)}>
       {/* Year Navigation */}
       <div
         id={id ? `${id}-year-nav` : undefined}
-        className="mb-4 flex items-center justify-between"
+        className="rounded-lg mb-4 flex items-center justify-between"
       >
         <button
           id={id ? `${id}-prev-year` : undefined}
           onClick={() => navigateYear("prev")}
           className={cn(
             buttonVariants({ variant: "outline" }),
-            "h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100",
+            "rounded-lg h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100",
           )}
         >
           <ChevronLeft className="h-4 w-4" />
@@ -97,7 +97,7 @@ function MonthPicker({
           onClick={() => navigateYear("next")}
           className={cn(
             buttonVariants({ variant: "outline" }),
-            "h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100",
+            "rounded-lg h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100",
           )}
         >
           <ChevronRight className="h-4 w-4" />
@@ -107,7 +107,7 @@ function MonthPicker({
       {/* Month Grid */}
       <div
         id={id ? `${id}-month-grid` : undefined}
-        className="grid grid-cols-3 gap-2"
+        className="grid grid-cols-3 gap-2 landscape:grid-cols-4 landscape:gap-1 portrait:justify-items-center"
       >
         {Array.from({ length: 12 }, (_, i) => (
           <button
@@ -115,7 +115,7 @@ function MonthPicker({
             id={id ? `${id}-month-${i}` : undefined}
             onClick={() => handleMonthSelect(i)}
             className={cn(
-              "rounded-md border p-3 text-sm transition-colors",
+              "rounded-lg border p-3 text-sm transition-colors landscape:p-2 landscape:text-xs",
               isMonthSelected(i)
                 ? "border-primary bg-primary text-primary-foreground"
                 : "border-input bg-background hover:bg-accent hover:text-accent-foreground",
