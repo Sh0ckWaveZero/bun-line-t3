@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bun test:*)",
+      "Bash(bun run:*)",
+      "Bash(node:*)",
+      "Bash(grep:*)",
+      "Bash(rm:*)",
+      "Bash(pkill:*)",
+      "Bash(rg:*)",
+      "Bash(find:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run:*)",
+      "Bash(sed:*)",
+      "WebFetch(domain:tailwindcss.com)",
+      "Bash(bunx shadcn@latest add:*)",
+      "Bash(git checkout:*)",
+      "Bash(bun remove:*)",
+      "Bash(true)",
+      "Bash(npm test)",
+      "Bash(ls:*)",
+      "Bash(bun audit:*)",
+      "Bash(eslint:*)",
+      "Bash(mkdir:*)"
+    ],
+    "deny": []
+  }
+}

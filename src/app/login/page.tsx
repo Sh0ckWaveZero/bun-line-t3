@@ -45,7 +45,7 @@ export default function LoginPage() {
 
   if (status === "loading") {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <main className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <div className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
           <p className="text-lg font-medium text-gray-600 dark:text-gray-300">
@@ -59,7 +59,7 @@ export default function LoginPage() {
   return (
     <CallbackUrlWrapper status={status}>
       {(callbackUrl) => (
-        <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] p-4 sm:p-6 lg:p-8">
+        <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
           {/* Background decoration */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             <div className="absolute -right-40 -top-40 h-80 w-80 rounded-full bg-gradient-to-br from-purple-400/20 to-pink-600/20 blur-3xl"></div>

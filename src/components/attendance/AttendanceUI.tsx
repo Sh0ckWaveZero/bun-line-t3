@@ -2,15 +2,6 @@
 
 import React from "react";
 import Image from "next/image";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { signIn } from "next-auth/react";
-import type {
-  User,
-  UserInfoCardProps,
-  LoadingSpinnerProps,
-  ErrorMessageProps,
-  MonthSelectorProps,
-} from "@/lib/types";
 import { useState } from "react";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { MonthPicker } from "@/components/ui/calendar";
@@ -22,6 +13,12 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { LineLoginButton } from "@/components/ui/LineLoginButton";
+import {
+  UserInfoCardProps,
+  LoadingSpinnerProps,
+  ErrorMessageProps,
+  MonthSelectorProps,
+} from "@/lib/types/attendance";
 
 export const UserInfoCard: React.FC<UserInfoCardProps> = ({ user }) => (
   <div
@@ -220,12 +217,12 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({
   return (
     <div
       id="month-selector-container"
-      className="mb-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+      className="mb-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800 landscape:mb-3 landscape:p-4"
     >
-      <div id="month-selector-content" className="flex items-center gap-4">
+      <div id="month-selector-content" className="flex items-center gap-4 landscape:gap-2">
         <span
           id="month-selector-label"
-          className="text-base font-semibold text-gray-700 dark:text-gray-300"
+          className="text-base font-semibold text-gray-700 dark:text-gray-300 landscape:text-sm"
         >
           เลือกเดือน
         </span>
@@ -235,7 +232,7 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({
               id="month-selector-button"
               variant="outline"
               className={cn(
-                "h-12 w-[240px] justify-start border-gray-300 bg-gray-50 text-left font-medium text-gray-900 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600",
+                "h-12 w-[240px] justify-start rounded-lg border-gray-300 bg-gray-50 text-left font-medium text-gray-900 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600 landscape:h-10 landscape:w-[200px] landscape:text-sm",
                 !selectedDate && "text-muted-foreground",
               )}
             >
@@ -250,8 +247,8 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({
           </PopoverTrigger>
           <PopoverContent
             id="month-selector-popover"
-            className="w-auto border-gray-300 bg-white p-0 shadow-xl dark:border-gray-600 dark:bg-gray-800"
-            align="start"
+            className="w-auto rounded-lg border-gray-300 bg-white p-0 shadow-xl dark:border-gray-600 dark:bg-gray-800 portrait:mx-auto"
+            align="center"
           >
             <MonthPicker
               id="month-picker"

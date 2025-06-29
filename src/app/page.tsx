@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Rings from "@/components/common/Rings";
+import "@/styles/ring.css";
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -24,7 +25,7 @@ export default function Home() {
   return (
     <main
       id="page-home"
-      className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]"
+      className="flex min-h-screen flex-col items-center justify-center relative"
     >
       <div
         id="container-main"
@@ -32,15 +33,15 @@ export default function Home() {
       >
         <h1
           id="title-main"
-          className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]"
+          className="text-5xl font-extrabold tracking-tight text-white dark:text-gray-100 sm:text-[5rem]"
         >
-          Bun LINE <span className="text-[hsl(280,100%,70%)]">T3</span> App
+          Bun LINE <span className="text-[hsl(280,100%,70%)] dark:text-purple-400">T3</span> App
         </h1>
         {!session ? (
           <button
             id="btn-login"
             onClick={() => signIn()}
-            className="flex w-full max-w-[14rem] flex-row items-center justify-start gap-4 rounded-md bg-[#06C755] px-4 py-1 text-center text-white  transition duration-300 ease-in-out hover:bg-[#06C755] hover:bg-opacity-90"
+            className="flex w-full max-w-[14rem] flex-row items-center justify-start gap-4 rounded-md bg-[#07b53b] px-4 py-1 text-center text-white  transition duration-300 ease-in-out hover:bg-[#07b53b] hover:bg-opacity-90"
           >
             <svg
               id="icon-line-login"

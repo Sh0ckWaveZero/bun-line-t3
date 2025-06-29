@@ -45,15 +45,15 @@ export default function MobileModalTestPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 dark:bg-gray-900">
+    <div className="min-h-screen p-4">
       <div className="mx-auto max-w-md rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
-        <h1 className="mb-6 text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <h1 className="mb-6 text-2xl font-bold text-white">
           🧪 Mobile Modal Test
         </h1>
 
         {/* Debug Information */}
         <div className="mb-6 rounded-lg bg-gray-100 p-4 dark:bg-gray-700">
-          <h2 className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+          <h2 className="mb-2 text-sm font-semibold text-white">
             🔍 Debug Info:
           </h2>
           <div className="space-y-1 text-xs text-gray-600 dark:text-gray-400">
@@ -73,7 +73,7 @@ export default function MobileModalTestPage() {
           🔧 เปิด Edit Modal
         </button>
 
-        <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
+        <p className="mt-4 text-center text-sm text-gray-100">
           กดปุ่มด้านบนเพื่อทดสอบ Modal บนมือถือ
         </p>
 

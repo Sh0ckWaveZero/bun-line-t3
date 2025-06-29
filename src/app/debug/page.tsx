@@ -89,13 +89,13 @@ export default function DebugPage() {
 
   return (
     <div className="container mx-auto max-w-4xl p-8">
-      <h1 className="mb-8 text-center text-3xl font-bold">
+      <h1 className="mb-8 text-center text-3xl font-bold text-white">
         🔍 Development Debug Console
       </h1>
 
       {/* Environment Information */}
       <div className="mb-6 rounded-lg bg-gray-100 p-6">
-        <h2 className="mb-4 text-xl font-semibold text-gray-800">
+        <h2 className="mb-4 text-xl font-semibold text-white">
           🌐 Environment Information
         </h2>
         {envInfo && (
@@ -124,7 +124,7 @@ export default function DebugPage() {
 
       {/* WebSocket Status */}
       <div className="mb-6 rounded-lg bg-gray-100 p-6">
-        <h2 className="mb-4 text-xl font-semibold text-gray-800">
+        <h2 className="mb-4 text-xl font-semibold text-white">
           🔌 WebSocket HMR Status
         </h2>
         {wsStatus && (
@@ -148,7 +148,7 @@ export default function DebugPage() {
 
       {/* Browser Information */}
       <div className="mb-6 rounded-lg bg-gray-100 p-6">
-        <h2 className="mb-4 text-xl font-semibold text-gray-800">
+        <h2 className="mb-4 text-xl font-semibold text-white">
           🌐 Browser Information
         </h2>
         {envInfo && (

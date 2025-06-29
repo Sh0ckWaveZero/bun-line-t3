@@ -196,7 +196,7 @@ export default function HelpPage() {
     .filter((category) => category.commands.length > 0);
 
   return (
-    <div className="prompt-text min-h-screen bg-gray-50 font-sans">
+    <div className="prompt-text min-h-screen font-sans">
       <Head>
         <title>LINE Bot คำสั่งทั้งหมด | Bun LINE T3</title>
         <meta
@@ -208,10 +208,10 @@ export default function HelpPage() {
 
       <div className="mx-auto max-w-6xl px-4 py-8">
         <header className="mb-10 text-center">
-          <h1 className="mb-4 text-4xl font-bold leading-tight tracking-tight text-gray-800">
+          <h1 className="mb-4 text-4xl font-bold leading-tight tracking-tight text-white">
             คำสั่งทั้งหมดของ LINE Bot
           </h1>
-          <p className="mb-6 text-lg font-light leading-relaxed text-gray-600">
+          <p className="mb-6 text-lg font-light leading-relaxed text-gray-100">
             รวมทุกคำสั่งที่ใช้ได้กับบอท LINE พร้อมคำอธิบายและตัวอย่าง
           </p>
 

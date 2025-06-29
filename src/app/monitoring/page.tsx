@@ -25,7 +25,6 @@ import {
   Clock,
   Users,
 } from "lucide-react";
-import { ThemeToggle } from "@/components/ui/theme-toggle-simple";
 import {
   AuthLoadingScreen,
   LoginPrompt,
@@ -230,7 +229,7 @@ export default function MonitoringDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen">
         <LoadingSpinner message="กำลังโหลดข้อมูลการตรวจสอบ..." />
       </div>
     );
@@ -243,10 +242,10 @@ export default function MonitoringDashboardPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                 📊 System Monitoring Dashboard
               </h1>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
                 Real-time system health and performance monitoring
               </p>
             </div>
@@ -264,7 +263,7 @@ export default function MonitoringDashboardPage() {
               >
                 <RefreshCw className="h-5 w-5" />
               </button>
-              <label className="flex items-center gap-2 text-sm">
+              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                 <input
                   type="checkbox"
                   checked={autoRefresh}
@@ -273,7 +272,6 @@ export default function MonitoringDashboardPage() {
                 />
                 Auto-refresh
               </label>
-              <ThemeToggle />
             </div>
           </div>
         </div>
@@ -295,7 +293,7 @@ export default function MonitoringDashboardPage() {
           <>
             {/* System Health Overview */}
             <div className="mb-8">
-              <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-gray-100">
+              <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
                 System Health Overview
               </h2>
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">

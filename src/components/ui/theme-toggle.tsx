@@ -24,23 +24,35 @@ const ThemeToggle = () => {
   if (!mounted) {
     // Show skeleton with exact same structure
     return (
-      <div
-        id="theme-toggle-skeleton"
-        className="flex items-center space-x-3"
-        suppressHydrationWarning
-      >
-        <Sun id="theme-icon-sun-skeleton" className="h-4 w-4 text-gray-600" />
+      <>
+        {/* Mobile skeleton - icon only */}
         <div
-          id="theme-switch-skeleton"
-          className="flex h-6 w-11 items-center justify-start rounded-full border-2 border-transparent bg-gray-200 p-0.5"
+          id="theme-toggle-skeleton-mobile"
+          className="sm:hidden p-2 rounded-md"
+          suppressHydrationWarning
         >
-          <div
-            id="theme-switch-handle-skeleton"
-            className="h-5 w-5 rounded-full bg-white shadow-md"
-          />
+          <Sun id="theme-icon-skeleton-mobile" className="h-5 w-5 text-gray-400" />
         </div>
-        <Moon id="theme-icon-moon-skeleton" className="h-4 w-4 text-gray-600" />
-      </div>
+        
+        {/* Desktop skeleton - full switch */}
+        <div
+          id="theme-toggle-skeleton-desktop"
+          className="hidden sm:flex items-center space-x-3"
+          suppressHydrationWarning
+        >
+          <Sun id="theme-icon-sun-skeleton" className="h-4 w-4 text-gray-600" />
+          <div
+            id="theme-switch-skeleton"
+            className="flex h-6 w-11 items-center justify-start rounded-full border-2 border-transparent bg-gray-200 p-0.5"
+          >
+            <div
+              id="theme-switch-handle-skeleton"
+              className="h-5 w-5 rounded-full bg-white shadow-md"
+            />
+          </div>
+          <Moon id="theme-icon-moon-skeleton" className="h-4 w-4 text-gray-600" />
+        </div>
+      </>
     );
   }
 
@@ -88,27 +100,44 @@ const ThemeToggle = () => {
   };
 
   return (
-    <div id="theme-toggle-container" className="flex items-center space-x-3">
-      <Sun
-        id="theme-icon-sun"
-        className={`h-4 w-4 transition-colors ${
-          isDark ? "text-gray-500" : "text-yellow-600"
-        }`}
-      />
-      <Switch
-        id="theme-switch"
-        checked={isDark}
-        onCheckedChange={handleToggle}
+    <>
+      {/* Mobile version - icon only */}
+      <button
+        id="theme-toggle-button-mobile"
+        onClick={() => handleToggle(!isDark)}
+        className="sm:hidden p-2 rounded-md hover:bg-muted/50 transition-colors"
         aria-label="Toggle theme"
-        className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-300"
-      />
-      <Moon
-        id="theme-icon-moon"
-        className={`h-4 w-4 transition-colors ${
-          isDark ? "text-blue-400" : "text-gray-500"
-        }`}
-      />
-    </div>
+      >
+        {isDark ? (
+          <Sun id="theme-icon-sun-mobile" className="h-5 w-5 text-yellow-500" />
+        ) : (
+          <Moon id="theme-icon-moon-mobile" className="h-5 w-5 text-slate-600" />
+        )}
+      </button>
+
+      {/* Desktop version - full switch */}
+      <div id="theme-toggle-container-desktop" className="hidden sm:flex items-center space-x-3">
+        <Sun
+          id="theme-icon-sun-desktop"
+          className={`h-4 w-4 transition-colors ${
+            isDark ? "text-gray-500" : "text-yellow-600"
+          }`}
+        />
+        <Switch
+          id="theme-switch-desktop"
+          checked={isDark}
+          onCheckedChange={handleToggle}
+          aria-label="Toggle theme"
+          className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-300"
+        />
+        <Moon
+          id="theme-icon-moon-desktop"
+          className={`h-4 w-4 transition-colors ${
+            isDark ? "text-blue-400" : "text-gray-500"
+          }`}
+        />
+      </div>
+    </>
   );
 };
 

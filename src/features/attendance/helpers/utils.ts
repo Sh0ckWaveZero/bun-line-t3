@@ -1,8 +1,5 @@
 // Helper functions for attendance module
-import {
-  getTodayDateString,
-  convertUTCToBangkok,
-} from "../../../lib/utils/datetime";
+import { getTodayDateString } from "../../../lib/utils/datetime";
 import { db } from "../../../lib/database/db";
 import { AttendanceStatusType } from "@prisma/client";
 
@@ -39,19 +36,22 @@ export const getUsersWithPendingCheckout = async (): Promise<string[]> => {
 };
 
 /**
- * Calculate dynamic reminder time for each user (30 minutes before 9-hour completion)
+ * Calculate dynamic reminder time for each user (offset ก่อนครบ 9 ชั่วโมง)
+ * @param checkInTime เวลาเข้างาน (UTC)
+ * @param offsetMinutes จำนวน (นาที) ที่ต้องการลบจากเวลาครบ 9 ชั่วโมง (default = 10)
+ * คืนค่า Date ที่เป็น UTC (ไม่แปลงเป็น Bangkok)
  */
-export const calculateUserReminderTime = (checkInTime: Date): Date => {
-  const checkInBangkok = convertUTCToBangkok(checkInTime);
-
-  // Calculate 9 hours work completion time (including lunch break as per WORKPLACE_POLICIES)
-  const completionTime = new Date(checkInBangkok);
+export const calculateUserReminderTime = (
+  checkInTime: Date,
+  offsetMinutes: number = 10,
+): Date => {
+  // คำนวณเวลาสิ้นสุด 9 ชั่วโมง (UTC)
+  const completionTime = new Date(checkInTime);
   completionTime.setHours(completionTime.getHours() + 9);
-
-  // Calculate reminder time (30 minutes before completion)
+  // ลบ offsetMinutes (default 10 นาที)
   const reminderTime = new Date(completionTime);
-  reminderTime.setMinutes(reminderTime.getMinutes() - 30);
-
+  reminderTime.setMinutes(reminderTime.getMinutes() - offsetMinutes);
+  // คืนค่าเป็น UTC ตรง ๆ ไม่แปลงเป็น Bangkok
   return reminderTime;
 };
 
@@ -59,12 +59,9 @@ export const calculateUserReminderTime = (checkInTime: Date): Date => {
  * Calculate exact 9-hour completion time for final reminder
  */
 export const calculateUserCompletionTime = (checkInTime: Date): Date => {
-  const checkInBangkok = convertUTCToBangkok(checkInTime);
-
-  // Calculate 9 hours work completion time (including lunch break)
-  const completionTime = new Date(checkInBangkok);
+  // ไม่ต้องแปลง checkInTime เป็น Bangkok ใช้ UTC ตรง ๆ
+  const completionTime = new Date(checkInTime);
   completionTime.setHours(completionTime.getHours() + 9);
-
   return completionTime;
 };
 
@@ -77,10 +74,9 @@ export const shouldReceive10MinReminder = (
   toleranceMinutes: number = 2,
 ): boolean => {
   const reminderTime = calculateUserReminderTime(checkInTime);
-  const currentBangkok = currentTime;
-
+  // ใช้ currentTime ตรง ๆ (UTC) ไม่ต้องแปลงซ้ำ
   const timeDiffMinutes = Math.abs(
-    (currentBangkok.getTime() - reminderTime.getTime()) / (1000 * 60),
+    (currentTime.getTime() - reminderTime.getTime()) / (1000 * 60),
   );
   return timeDiffMinutes <= toleranceMinutes;
 };
@@ -94,23 +90,27 @@ export const shouldReceiveFinalReminder = (
   toleranceMinutes: number = 2,
 ): boolean => {
   const completionTime = calculateUserCompletionTime(checkInTime);
-  const currentBangkok = currentTime;
-
+  // ใช้ currentTime ตรง ๆ (UTC) ไม่ต้องแปลงซ้ำ
   const timeDiffMinutes = Math.abs(
-    (currentBangkok.getTime() - completionTime.getTime()) / (1000 * 60),
+    (currentTime.getTime() - completionTime.getTime()) / (1000 * 60),
   );
   return timeDiffMinutes <= toleranceMinutes;
 };
 
 /**
- * Check if user should receive reminder now (alias for shouldReceive10MinReminder for backward compatibility)
+ * Check if user should receive reminder now (รองรับ offset)
  */
 export const shouldReceiveReminderNow = (
   checkInTime: Date,
   currentTime: Date,
   toleranceMinutes: number = 2,
+  offsetMinutes: number = 10,
 ): boolean => {
-  return shouldReceive10MinReminder(checkInTime, currentTime, toleranceMinutes);
+  const reminderTime = calculateUserReminderTime(checkInTime, offsetMinutes);
+  const timeDiffMinutes = Math.abs(
+    (currentTime.getTime() - reminderTime.getTime()) / (1000 * 60),
+  );
+  return timeDiffMinutes <= toleranceMinutes;
 };
 
 /**

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/auth";
-import { db } from "@/lib/database";
+import { db } from "@/lib/database/db";
 import { z } from "zod";
 import { AttendanceStatusType } from "@prisma/client";
 import {

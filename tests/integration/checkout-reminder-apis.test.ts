@@ -2,10 +2,12 @@ import { describe, it, expect } from "bun:test";
 
 describe("Checkout Reminder APIs Comparison", () => {
   it("should have consistent logic between standard and enhanced APIs", async () => {
-    // Import both APIs
-    const standardAPI = await import("@/app/api/checkout-reminder/route");
+    // Import both APIs (ใช้ relative path เพื่อแก้ปัญหา alias path)
+    const standardAPI = await import(
+      "../../src/app/api/checkout-reminder/route"
+    );
     const enhancedAPI = await import(
-      "@/app/api/cron/enhanced-checkout-reminder/route"
+      "../../src/app/api/cron/enhanced-checkout-reminder/route"
     );
 
     // Both should export GET functions
@@ -15,14 +17,14 @@ describe("Checkout Reminder APIs Comparison", () => {
 
   it("should use same reminder timing logic", async () => {
     const { shouldReceiveReminderNow, calculateUserReminderTime } =
-      await import("@/features/attendance/services/attendance");
+      await import("../../src/features/attendance/helpers");
 
     // Test reminder timing calculation
     const checkInTime = new Date("2025-06-17T02:00:00.000Z"); // 9:00 AM Bangkok
-    const reminderTime = calculateUserReminderTime(checkInTime);
+    const reminderTime = calculateUserReminderTime(checkInTime, 30);
 
-    // Should be 17:30 Bangkok time (30 minutes before 18:00 completion)
-    expect(reminderTime.getHours()).toBe(17);
+    // Function returns UTC time: 02:00 + 9 - 0:30 = 10:30 UTC (17:30 Bangkok)
+    expect(reminderTime.getHours()).toBe(10);
     expect(reminderTime.getMinutes()).toBe(30);
 
     // Test shouldReceiveReminderNow function

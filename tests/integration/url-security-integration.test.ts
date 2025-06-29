@@ -7,7 +7,7 @@ import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import {
   validateNextAuthUrl,
   getSafeRedirectUrl,
-} from "@/lib/security/url-validator";
+} from "../../src/lib/security/url-validator";
 
 // ✅ Set up test environment with example domains
 beforeAll(() => {

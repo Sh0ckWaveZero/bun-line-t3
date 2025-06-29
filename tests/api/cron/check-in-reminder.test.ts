@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from "bun:test";
-import { GET } from "@/app/api/cron/check-in-reminder/route";
-import { selectRandomElement } from "@/lib/crypto-random";
+import { describe, it, expect } from "bun:test";
+import { selectRandomElement } from "../../../src/lib/crypto-random";
+
 // Note: In real tests, we would mock holidayService and db calls
 
 describe("Check-in Reminder API", () => {
@@ -118,6 +118,10 @@ describe("Check-in Reminder API", () => {
       // จำลองการจัดการข้อผิดพลาดจาก database
       const mockError = new Error("Database connection failed");
 
+      // Suppress console.error during test to avoid confusing output
+      const originalConsoleError = console.error;
+      console.error = () => {}; // Temporarily suppress console.error
+
       // ฟังก์ชันควรคืนค่า false เมื่อเกิดข้อผิดพลาด
       const handleDatabaseError = (error: Error): boolean => {
         console.error("Error checking if date is public holiday:", error);
@@ -125,6 +129,10 @@ describe("Check-in Reminder API", () => {
       };
 
       const result = handleDatabaseError(mockError);
+
+      // Restore console.error
+      console.error = originalConsoleError;
+
       expect(result).toBe(false);
     });
   });

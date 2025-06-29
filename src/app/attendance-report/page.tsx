@@ -26,7 +26,6 @@ import {
   MonthSelector,
 } from "@/components/attendance";
 import { useAttendanceReport } from "@/hooks/useAttendanceReport";
-import { ThemeToggle } from "@/components/ui/theme-toggle-simple";
 
 // Register Chart.js components
 ChartJS.register(
@@ -77,15 +76,15 @@ export default function AttendanceReportPage() {
   return (
     <div
       id="attendance-report-page"
-      className="min-h-screen bg-white dark:bg-gray-900"
+      className="min-h-screen w-full"
     >
       <div
         id="attendance-report-container"
-        className="mx-auto max-w-4xl px-4 py-8"
+        className="mx-auto max-w-full px-4 py-8"
       >
         <div
           id="attendance-report-card"
-          className="rounded-lg border border-gray-200 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800"
+          className="rounded-lg border border-border bg-card p-6 shadow-lg"
         >
           <div
             id="attendance-report-header"
@@ -93,49 +92,71 @@ export default function AttendanceReportPage() {
           >
             <h1
               id="attendance-report-title"
-              className="text-3xl font-bold text-gray-800 dark:text-gray-100"
+              className="text-3xl font-bold text-foreground"
             >
               รายงานการเข้างานรายเดือน
             </h1>
-            <ThemeToggle />
           </div>
           <p
             id="attendance-report-description"
-            className="mb-6 text-gray-700 dark:text-gray-400"
+            className="mb-6 text-muted-foreground"
           >
             ติดตามและจัดการเวลาการทำงานของคุณ
           </p>
 
           {/* Month Selector */}
-          <MonthSelector
-            selectedMonth={selectedMonth}
-            onMonthChange={setSelectedMonth}
-          />
+          <div id="month-selector-section" className="mb-6">
+            <MonthSelector
+              selectedMonth={selectedMonth}
+              onMonthChange={setSelectedMonth}
+            />
+          </div>
 
           {/* User Information */}
-          {session?.user && <UserInfoCard user={session.user} />}
+          {session?.user && (
+            <div id="user-info-section" className="mb-6">
+              <UserInfoCard user={session.user} />
+            </div>
+          )}
 
           {/* Loading State */}
-          {loading && <LoadingSpinner />}
+          {loading && (
+            <div id="loading-section">
+              <LoadingSpinner />
+            </div>
+          )}
 
           {/* Error State */}
-          {error && <ErrorMessage message={error} />}
+          {error && (
+            <div id="error-section">
+              <ErrorMessage message={error} />
+            </div>
+          )}
 
           {/* Report Content */}
           {report && !loading && (
-            <div id="report-content">
+            <div id="report-content" className="space-y-6">
               {/* Summary Cards */}
-              <div id="summary-cards-section">
+              <div id="summary-cards-section" className="mb-8">
+                <h2 id="summary-cards-title" className="text-xl font-semibold text-foreground mb-4">
+                  สรุปรายงาน
+                </h2>
                 <AttendanceSummaryCards report={report} />
               </div>
 
               {/* Charts */}
-              <div id="charts-section">
+              <div id="charts-section" className="mb-8">
+                <h2 id="charts-title" className="text-xl font-semibold text-foreground mb-4">
+                  กราฟแสดงผล
+                </h2>
                 <AttendanceCharts report={report} />
               </div>
 
               {/* Detailed Table */}
-              <div id="table-section">
+              <div id="table-section" className="mb-4">
+                <h2 id="table-title" className="text-xl font-semibold text-foreground mb-4">
+                  รายละเอียดการเข้างาน
+                </h2>
                 <AttendanceTable
                   records={report.attendanceRecords}
                   onEditRecord={openEditModal}
@@ -146,15 +167,17 @@ export default function AttendanceReportPage() {
         </div>
 
         {/* Edit Modal */}
-        <EditAttendanceModal
-          isOpen={editModalOpen}
-          editingRecord={editingRecord}
-          editData={editData}
-          updateLoading={updateLoading}
-          onClose={closeEditModal}
-          onEditDataChange={setEditData}
-          onUpdate={updateAttendance}
-        />
+        <div id="edit-modal-container">
+          <EditAttendanceModal
+            isOpen={editModalOpen}
+            editingRecord={editingRecord}
+            editData={editData}
+            updateLoading={updateLoading}
+            onClose={closeEditModal}
+            onEditDataChange={setEditData}
+            onUpdate={updateAttendance}
+          />
+        </div>
       </div>
     </div>
   );

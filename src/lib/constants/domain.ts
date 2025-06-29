@@ -37,12 +37,45 @@ export const buildSecureUrl = (path: string): string => {
 
 /**
  * 🔍 Check if domain is allowed | ตรวจสอบว่า domain ได้รับอนุญาต
+ * 🛡️ Enhanced security: Prevents subdomain hijacking and various domain-based attacks
  */
 export const isAllowedDomain = (domain: string): boolean => {
-  return ALLOWED_DOMAINS.some(
-    (allowedDomain) =>
-      domain === allowedDomain || domain.endsWith(`.${allowedDomain}`),
-  );
+  // 🚨 Security: Validate input
+  if (!domain || typeof domain !== 'string' || domain.trim().length === 0) {
+    return false;
+  }
+
+  // 🧹 Normalize domain (lowercase, trim)
+  const normalizedDomain = domain.toLowerCase().trim();
+  
+  // 🚫 Security: Reject domains with suspicious characters
+  if (normalizedDomain.includes('..') || normalizedDomain.includes('/') || 
+      normalizedDomain.includes('\\') || normalizedDomain.includes(' ')) {
+    return false;
+  }
+
+  // 🔍 Check against allowed domains with strict validation
+  return ALLOWED_DOMAINS.some((allowedDomain) => {
+    // 🚨 Security: Skip empty allowed domains
+    if (!allowedDomain || allowedDomain.trim().length === 0) {
+      return false;
+    }
+
+    const normalizedAllowed = allowedDomain.toLowerCase().trim();
+    
+    // ✅ Exact match
+    if (normalizedDomain === normalizedAllowed) {
+      return true;
+    }
+    
+    // ✅ Valid subdomain check (must have dot separator)
+    if (normalizedDomain.endsWith(`.${normalizedAllowed}`) && 
+        normalizedDomain.length > normalizedAllowed.length + 1) {
+      return true;
+    }
+    
+    return false;
+  });
 };
 
 /**

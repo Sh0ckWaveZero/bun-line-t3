@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { headers } from "next/headers";
 
 // Rate limiting configuration
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
@@ -64,29 +63,34 @@ export class RateLimiter {
   /**
    * Get identifier for rate limiting (IP + User-Agent hash)
    */
-  static async getIdentifier(_request: NextRequest): Promise<string> {
-    const headersList = await headers();
-    const ip =
-      headersList.get("x-forwarded-for") ||
-      headersList.get("x-real-ip") ||
-      "unknown";
-    const userAgent = headersList.get("user-agent") || "unknown";
+  static async getIdentifier(request: NextRequest): Promise<string> {
+    try {
+      const ip =
+        request.headers.get("x-forwarded-for") ||
+        request.headers.get("x-real-ip") ||
+        "unknown";
+      const userAgent = request.headers.get("user-agent") || "unknown";
 
-    // Create simple hash for user agent
-    const userAgentHash = Buffer.from(userAgent).toString("base64").slice(0, 8);
+      // Create simple hash for user agent
+      const userAgentHash = Buffer.from(userAgent).toString("base64").slice(0, 8);
 
-    return `${ip}:${userAgentHash}`;
+      return `${ip}:${userAgentHash}`;
+    } catch (error) {
+      console.error("Error getting rate limit identifier:", error);
+      return "unknown:unknown";
+    }
   }
 
   /**
    * Middleware for rate limiting cron endpoints
    */
-  static async checkCronRateLimit(
+  static async checkRequestRateLimit(
     request: NextRequest,
+    maxRequests: number = MAX_REQUESTS_PER_WINDOW,
   ): Promise<NextResponse | null> {
     try {
       const identifier = await this.getIdentifier(request);
-      const result = this.checkRateLimit(identifier);
+      const result = this.checkRateLimit(identifier, maxRequests);
 
       if (!result.allowed) {
         return NextResponse.json(
@@ -98,7 +102,7 @@ export class RateLimiter {
           {
             status: 429,
             headers: {
-              "X-RateLimit-Limit": MAX_REQUESTS_PER_WINDOW.toString(),
+              "X-RateLimit-Limit": maxRequests.toString(),
               "X-RateLimit-Remaining": "0",
               "X-RateLimit-Reset": Math.ceil(
                 result.resetTime / 1000,
@@ -118,6 +122,12 @@ export class RateLimiter {
       // Allow request if rate limiting fails
       return null;
     }
+  }
+
+  static async checkCronRateLimit(
+    request: NextRequest,
+  ): Promise<NextResponse | null> {
+    return this.checkRequestRateLimit(request, MAX_REQUESTS_PER_WINDOW);
   }
 
   /**
@@ -174,7 +184,10 @@ export function withRateLimit(
 ) {
   return async (request: NextRequest): Promise<NextResponse> => {
     // Check rate limit
-    const rateLimitResponse = await RateLimiter.checkCronRateLimit(request);
+    const rateLimitResponse = await RateLimiter.checkRequestRateLimit(
+      request,
+      maxRequests,
+    );
     if (rateLimitResponse) {
       return rateLimitResponse;
     }

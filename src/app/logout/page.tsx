@@ -12,8 +12,8 @@ export default function LogoutPage() {
   }, [router]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
-      <span className="mt-2 text-lg font-medium text-gray-700 dark:text-gray-300">
+    <div className="flex min-h-screen flex-col items-center justify-center">
+      <span className="mt-2 text-lg font-medium text-white">
         กำลังออกจากระบบ กรุณารอสักครู่...
       </span>
     </div>
