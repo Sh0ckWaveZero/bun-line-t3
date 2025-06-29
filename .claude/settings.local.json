@@ -17,7 +17,11 @@
       "Bash(git checkout:*)",
       "Bash(bun remove:*)",
       "Bash(true)",
-      "Bash(npm test)"
+      "Bash(npm test)",
+      "Bash(ls:*)",
+      "Bash(bun audit:*)",
+      "Bash(eslint:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": []
   }
