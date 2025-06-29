@@ -2,8 +2,6 @@
 
 import React from "react";
 import Image from "next/image";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-
 import { useState } from "react";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { MonthPicker } from "@/components/ui/calendar";

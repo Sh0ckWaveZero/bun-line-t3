@@ -12,7 +12,12 @@
       "Bash(npm run build:*)",
       "Bash(npm run:*)",
       "Bash(sed:*)",
-      "WebFetch(domain:tailwindcss.com)"
+      "WebFetch(domain:tailwindcss.com)",
+      "Bash(bunx shadcn@latest add:*)",
+      "Bash(git checkout:*)",
+      "Bash(bun remove:*)",
+      "Bash(true)",
+      "Bash(npm test)"
     ],
     "deny": []
   }

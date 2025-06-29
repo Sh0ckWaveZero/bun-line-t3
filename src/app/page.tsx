@@ -41,7 +41,7 @@ export default function Home() {
           <button
             id="btn-login"
             onClick={() => signIn()}
-            className="flex w-full max-w-[14rem] flex-row items-center justify-start gap-4 rounded-md bg-[#06C755] px-4 py-1 text-center text-white  transition duration-300 ease-in-out hover:bg-[#06C755] hover:bg-opacity-90"
+            className="flex w-full max-w-[14rem] flex-row items-center justify-start gap-4 rounded-md bg-[#07b53b] px-4 py-1 text-center text-white  transition duration-300 ease-in-out hover:bg-[#07b53b] hover:bg-opacity-90"
           >
             <svg
               id="icon-line-login"

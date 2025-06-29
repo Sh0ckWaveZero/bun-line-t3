@@ -18,7 +18,7 @@ export const LineLoginButton: React.FC<LineLoginButtonProps> = ({
     id="btn-login-line"
     onClick={() => signIn("line", callbackUrl ? { callbackUrl } : undefined)}
     className={
-      "flex w-full items-center justify-center gap-4 rounded-md bg-[#06C755] px-4 py-3 text-center text-white transition duration-300 ease-in-out hover:bg-[#06C755] hover:bg-opacity-90 " +
+      "flex w-full items-center justify-center gap-4 rounded-md bg-[#07b53b] px-4 py-3 text-center text-white transition duration-300 ease-in-out hover:bg-[#07b53b] hover:bg-opacity-90 " +
       className
     }
     type="button"

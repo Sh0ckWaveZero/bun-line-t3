@@ -55,6 +55,13 @@ const config: Config = {
         },
 
         // 🌈 Modern Vibrant Color System สำหรับ Attendance Cards และ UI Components
+        
+        // LINE Brand Colors - Official Brand Guidelines
+        line: {
+          green: "#07b53b", // Official LINE green from brand guidelines
+          "green-dark": "#06a033", // Darker variant for hover states
+          "green-light": "#08c540", // Lighter variant
+        },
 
         // Modern Ocean Blue - สีน้ำเงินมหาสมุทรสไตล์โมเดิร์น
         ocean: {

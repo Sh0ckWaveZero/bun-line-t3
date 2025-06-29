@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { headers } from "next/headers";
 
 // Rate limiting configuration
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
@@ -64,18 +63,22 @@ export class RateLimiter {
   /**
    * Get identifier for rate limiting (IP + User-Agent hash)
    */
-  static async getIdentifier(_request: NextRequest): Promise<string> {
-    const headersList = await headers();
-    const ip =
-      headersList.get("x-forwarded-for") ||
-      headersList.get("x-real-ip") ||
-      "unknown";
-    const userAgent = headersList.get("user-agent") || "unknown";
+  static async getIdentifier(request: NextRequest): Promise<string> {
+    try {
+      const ip =
+        request.headers.get("x-forwarded-for") ||
+        request.headers.get("x-real-ip") ||
+        "unknown";
+      const userAgent = request.headers.get("user-agent") || "unknown";
 
-    // Create simple hash for user agent
-    const userAgentHash = Buffer.from(userAgent).toString("base64").slice(0, 8);
+      // Create simple hash for user agent
+      const userAgentHash = Buffer.from(userAgent).toString("base64").slice(0, 8);
 
-    return `${ip}:${userAgentHash}`;
+      return `${ip}:${userAgentHash}`;
+    } catch (error) {
+      console.error("Error getting rate limit identifier:", error);
+      return "unknown:unknown";
+    }
   }
 
   /**

@@ -1,6 +1,8 @@
 // UI Components Export
 // ส่งออก UI Components สำหรับการใช้งาน
 
+export { Avatar, AvatarImage, AvatarFallback } from "./avatar";
+
 export { Button, buttonVariants } from "./button";
 export type { ButtonProps } from "./button";
 

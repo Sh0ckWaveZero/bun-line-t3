@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { headers } from "next/headers";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/auth";
 import { db } from "@/lib/database/db";
@@ -119,7 +118,20 @@ async function secureMonitoringHandler(
 
     // 🛡️ Step 2: Validate request parameters
     const url = new URL(request.url);
-    const queryParams = Object.fromEntries(url.searchParams);
+    const queryParams: any = {};
+    
+    // Parse query parameters correctly
+    for (const [key, value] of url.searchParams) {
+      if (key === 'components') {
+        // Handle array parameters
+        queryParams[key] = value.split(',').filter(Boolean);
+      } else if (key === 'includeDetails') {
+        // Handle boolean parameters
+        queryParams[key] = value === 'true';
+      } else {
+        queryParams[key] = value;
+      }
+    }
 
     // Parse and validate query parameters
     const validationResult = MonitoringRequestSchema.safeParse(queryParams);
@@ -139,8 +151,7 @@ async function secureMonitoringHandler(
     }
 
     // 🔍 Step 3: Validate request headers for security
-    const headersList = await headers();
-    const userAgent = headersList.get("user-agent");
+    const userAgent = request.headers.get("user-agent");
 
     // Basic security checks
     if (!userAgent || userAgent.length < 10) {

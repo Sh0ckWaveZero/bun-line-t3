@@ -236,16 +236,16 @@ export default function MonitoringDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <header className="border-b border-gray-200 bg-white shadow dark:border-gray-700 dark:bg-gray-800">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-4">
             <div>
-              <h1 className="text-2xl font-bold text-white">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                 📊 System Monitoring Dashboard
               </h1>
-              <p className="mt-1 text-sm text-gray-100">
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
                 Real-time system health and performance monitoring
               </p>
             </div>
@@ -263,7 +263,7 @@ export default function MonitoringDashboardPage() {
               >
                 <RefreshCw className="h-5 w-5" />
               </button>
-              <label className="flex items-center gap-2 text-sm">
+              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                 <input
                   type="checkbox"
                   checked={autoRefresh}
@@ -293,7 +293,7 @@ export default function MonitoringDashboardPage() {
           <>
             {/* System Health Overview */}
             <div className="mb-8">
-              <h2 className="mb-4 text-xl font-semibold text-white">
+              <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
                 System Health Overview
               </h2>
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">

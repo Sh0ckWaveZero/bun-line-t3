@@ -76,15 +76,15 @@ export default function AttendanceReportPage() {
   return (
     <div
       id="attendance-report-page"
-      className="min-h-screen"
+      className="min-h-screen w-full"
     >
       <div
         id="attendance-report-container"
-        className="mx-auto max-w-4xl px-4 py-8"
+        className="mx-auto max-w-full px-4 py-8"
       >
         <div
           id="attendance-report-card"
-          className="rounded-3xl border border-border bg-card p-6 shadow-lg"
+          className="rounded-lg border border-border bg-card p-6 shadow-lg"
         >
           <div
             id="attendance-report-header"
