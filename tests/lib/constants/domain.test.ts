@@ -16,7 +16,7 @@ import {
   isDevelopment,
   isProduction,
   getDomainConfig,
-} from "@/lib/constants/domain";
+} from "../../../src/lib/constants/domain";
 
 describe("🔐 Domain Security Configuration", () => {
   describe("🌐 Basic Domain Configuration", () => {
@@ -54,17 +54,59 @@ describe("🔐 Domain Security Configuration", () => {
       // Test with exact domain match
       if (ALLOWED_DOMAINS.includes("localhost")) {
         expect(isAllowedDomain("localhost")).toBe(true);
+        expect(isAllowedDomain("LOCALHOST")).toBe(true); // Case insensitive
       }
 
       // Test with subdomain
       if (ALLOWED_DOMAINS.includes("example.com")) {
         expect(isAllowedDomain("api.example.com")).toBe(true);
         expect(isAllowedDomain("staging.example.com")).toBe(true);
+        expect(isAllowedDomain("API.EXAMPLE.COM")).toBe(true); // Case insensitive
       }
 
       // Test with invalid domain
       expect(isAllowedDomain("evil.com")).toBe(false);
       expect(isAllowedDomain("malicious.example.com")).toBe(false);
+    });
+
+    it("should prevent domain-based security attacks", () => {
+      // 🚨 Security: Test against various attack vectors
+      const maliciousDomains = [
+        "", // Empty string
+        " ", // Whitespace only
+        "evil.com", // Unauthorized domain
+        "example.com.evil.com", // Subdomain hijacking attempt
+        "fakeexample.com", // Typosquatting
+        "example.com/malicious", // Path injection
+        "example.com\\malicious", // Backslash injection
+        "example..com", // Double dot attack
+        "sub.sub.example.com", // Deep subdomain (should be allowed if example.com is allowed)
+        null as any, // Null input
+        undefined as any, // Undefined input
+        123 as any, // Non-string input
+      ];
+
+      maliciousDomains.forEach((domain) => {
+        if (domain === "sub.sub.example.com" && ALLOWED_DOMAINS.includes("example.com")) {
+          expect(isAllowedDomain(domain)).toBe(true); // This should be allowed
+        } else {
+          expect(isAllowedDomain(domain)).toBe(false);
+        }
+      });
+    });
+
+    it("should handle edge cases gracefully", () => {
+      // Test with whitespace
+      if (ALLOWED_DOMAINS.includes("example.com")) {
+        expect(isAllowedDomain(" example.com ")).toBe(true);
+        expect(isAllowedDomain(" api.example.com ")).toBe(true);
+      }
+
+      // Test with mixed case
+      if (ALLOWED_DOMAINS.includes("localhost")) {
+        expect(isAllowedDomain("LocalHost")).toBe(true);
+        expect(isAllowedDomain("LOCALHOST")).toBe(true);
+      }
     });
   });
 
