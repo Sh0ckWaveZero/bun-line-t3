@@ -129,7 +129,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                   bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700
                   border-r border-gray-200 dark:border-gray-600
                   before:absolute before:right-0 before:top-0 before:bottom-0 before:w-px 
-                  before:bg-gray-200 dark:before:bg-gray-600 before:shadow-sm"
+                  before:bg-gray-200 dark:before:bg-gray-600"
                 style={{ position: 'sticky', left: 0 }}
               >
                 📅 วันที่
@@ -187,13 +187,13 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                   className={`sticky left-0 z-10 whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-gray-100
                     border-r border-gray-200 dark:border-gray-600
                     before:absolute before:right-0 before:top-0 before:bottom-0 before:w-px 
-                    before:bg-gray-200 dark:before:bg-gray-600 before:shadow-sm
-                    bg-gray-50 dark:bg-gray-800 ${isToday ? "font-bold shadow-md" : ""}`}
+                    before:bg-gray-200 dark:before:bg-gray-600
+                    bg-gray-50 dark:bg-gray-800 ${isToday ? "font-bold" : ""}`}
                   style={{ position: 'sticky', left: 0 }}
                 >
                   <div className="flex items-center space-x-2">
                     <span className={`font-medium ${isToday ? 
-                      "bg-gradient-to-r from-blue-500 to-purple-600 dark:from-blue-400 dark:to-purple-500 bg-clip-text text-transparent font-bold" : 
+                      "bg-gradient-to-r from-blue-500 to-purple-600 dark:from-blue-400 dark:to-purple-500 bg-clip-text text-transparent font-bold animate-pulse [animation-duration:5s]" : 
                       ""}`}>
                       {formatDateSafe(record.workDate, {
                         day: "2-digit",
@@ -203,7 +203,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                       })}
                     </span>
                     {isToday && (
-                      <span className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-500 to-purple-600 px-2 py-0.5 text-xs font-medium text-white shadow-sm">
+                      <span className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-500 to-purple-600 px-2 py-0.5 text-xs font-medium text-white shadow-sm animate-bounce [animation-duration:5s]">
                         วันนี้
                       </span>
                     )}
