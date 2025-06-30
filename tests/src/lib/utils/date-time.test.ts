@@ -5,7 +5,7 @@
  */
 
 import { describe, test, expect } from "bun:test";
-import * as dateTimeUtils from "../../../src/lib/utils/date-time";
+import * as dateTimeUtils from "@/lib/utils/date-time";
 
 const {
   formatTimeOnly,

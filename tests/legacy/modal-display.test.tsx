@@ -1,7 +1,7 @@
 import { describe, it, expect, mock } from "bun:test";
-import { AttendanceRecord } from "../src/features/attendance/types/attendance.ts";
-import { ATTENDANCE_STATUS } from "../src/features/attendance/types/attendance-status.ts";
-import { EditAttendanceData } from "../src/lib/types/index.ts";
+import { AttendanceRecord } from "../../src/features/attendance/types/attendance.ts";
+import { ATTENDANCE_STATUS } from "../../src/features/attendance/types/attendance-status.ts";
+import { EditAttendanceData } from "../../src/lib/types/index.ts";
 // Mock window object สำหรับ mobile detection
 const mockWindow = {
   innerWidth: 1024,
