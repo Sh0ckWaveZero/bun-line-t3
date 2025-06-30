@@ -193,7 +193,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                 >
                   <div className="flex items-center space-x-2">
                     <span className={`font-medium ${isToday ? 
-                      "bg-gradient-to-r from-blue-500 to-purple-600 dark:from-blue-400 dark:to-purple-500 bg-clip-text text-transparent font-bold animate-pulse [animation-duration:5s]" : 
+                      "bg-gradient-to-r from-blue-500 to-purple-600 dark:from-blue-400 dark:to-purple-500 bg-clip-text text-transparent font-bold animate-pulse" : 
                       ""}`}>
                       {formatDateSafe(record.workDate, {
                         day: "2-digit",
@@ -203,7 +203,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                       })}
                     </span>
                     {isToday && (
-                      <span className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-500 to-purple-600 px-2 py-0.5 text-xs font-medium text-white shadow-sm animate-bounce [animation-duration:5s]">
+                      <span className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-500 to-purple-600 px-2 py-0.5 text-xs font-medium text-white shadow-sm animate-bounce">
                         วันนี้
                       </span>
                     )}
