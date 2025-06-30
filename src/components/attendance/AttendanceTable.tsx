@@ -118,14 +118,19 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
       </div>
       <div
         id="attendance-table-wrapper"
-        className="bg-card-base border-theme-primary overflow-x-auto rounded-lg border shadow"
+        className="bg-card-base border-theme-primary rounded-lg border shadow overflow-x-auto"
       >
-        <table id="attendance-table" className="min-w-full">
+        <table id="attendance-table" className="min-w-full relative">
           <thead id="attendance-table-header" className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border-b-2 border-gray-200 dark:border-gray-600">
             <tr id="attendance-table-header-row">
               <th
                 id="header-date"
-                className="px-6 py-4 text-left text-sm font-bold text-gray-900 dark:text-gray-100 tracking-wide"
+                className="sticky left-0 z-20 px-6 py-4 text-left text-sm font-bold text-gray-900 dark:text-gray-100 tracking-wide
+                  bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700
+                  border-r border-gray-200 dark:border-gray-600
+                  before:absolute before:right-0 before:top-0 before:bottom-0 before:w-px 
+                  before:bg-gray-200 dark:before:bg-gray-600 before:shadow-sm"
+                style={{ position: 'sticky', left: 0 }}
               >
                 📅 วันที่
               </th>
@@ -173,18 +178,23 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                 id={`record-row-${record.id}`}
                 className={`transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
                   isToday 
-                    ? "bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 dark:border-blue-400" 
+                    ? "bg-blue-50 dark:bg-blue-900/20" 
                     : ""
                 }`}
               >
                 <td
                   id={`date-${record.id}`}
-                  className={`whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-gray-100 ${
-                    isToday ? "font-bold text-blue-700 dark:text-blue-300" : ""
-                  }`}
+                  className={`sticky left-0 z-10 whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-gray-100
+                    border-r border-gray-200 dark:border-gray-600
+                    before:absolute before:right-0 before:top-0 before:bottom-0 before:w-px 
+                    before:bg-gray-200 dark:before:bg-gray-600 before:shadow-sm
+                    bg-gray-50 dark:bg-gray-800 ${isToday ? "font-bold shadow-md" : ""}`}
+                  style={{ position: 'sticky', left: 0 }}
                 >
                   <div className="flex items-center space-x-2">
-                    <span className="font-medium">
+                    <span className={`font-medium ${isToday ? 
+                      "bg-gradient-to-r from-blue-500 to-purple-600 dark:from-blue-400 dark:to-purple-500 bg-clip-text text-transparent font-bold" : 
+                      ""}`}>
                       {formatDateSafe(record.workDate, {
                         day: "2-digit",
                         month: "2-digit", 
@@ -193,7 +203,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                       })}
                     </span>
                     {isToday && (
-                      <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                      <span className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-500 to-purple-600 px-2 py-0.5 text-xs font-medium text-white shadow-sm">
                         วันนี้
                       </span>
                     )}
