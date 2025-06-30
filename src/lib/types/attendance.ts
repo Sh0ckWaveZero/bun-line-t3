@@ -11,6 +11,14 @@ export interface User {
   image?: string | null;
 }
 
+// 📊 Leave Information Interface
+export interface LeaveInfo {
+  id: string;
+  type: string;
+  reason?: string | null;
+  createdAt: string;
+}
+
 // 📊 Attendance Record Interface
 export interface AttendanceRecord {
   id: string;
@@ -19,6 +27,7 @@ export interface AttendanceRecord {
   checkOutTime: string | null;
   status: AttendanceStatusType;
   hoursWorked: number | null;
+  leaveInfo?: LeaveInfo | null;
 }
 
 // 📈 Monthly Report Interface

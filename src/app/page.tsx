@@ -25,23 +25,23 @@ export default function Home() {
   return (
     <main
       id="page-home"
-      className="flex min-h-screen flex-col items-center justify-center relative"
+      className="flex min-h-screen flex-col items-center justify-center relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-indigo-900 dark:to-purple-900"
     >
       <div
         id="container-main"
-        className="container flex flex-col items-center justify-center gap-12 px-4 py-16 "
+        className="container flex flex-col items-center justify-center gap-12 px-4 py-16 relative z-10"
       >
         <h1
           id="title-main"
-          className="text-5xl font-extrabold tracking-tight text-white dark:text-gray-100 sm:text-[5rem]"
+          className="text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-[5rem]"
         >
-          Bun LINE <span className="text-[hsl(280,100%,70%)] dark:text-purple-400">T3</span> App
+          Bun <span className="text-[#07b53b]">LINE</span> <span className="text-[hsl(280,100%,70%)] dark:text-purple-400">T3</span> App
         </h1>
         {!session ? (
           <button
             id="btn-login"
             onClick={() => signIn()}
-            className="flex w-full max-w-[14rem] flex-row items-center justify-start gap-4 rounded-md bg-[#07b53b] px-4 py-1 text-center text-white  transition duration-300 ease-in-out hover:bg-[#07b53b] hover:bg-opacity-90"
+            className="flex w-full max-w-[14rem] flex-row items-center justify-start gap-4 rounded-md bg-[#07b53b] px-4 py-1 text-center text-white transition duration-300 ease-in-out hover:bg-[#07b53b] hover:bg-opacity-90"
           >
             <svg
               id="icon-line-login"
@@ -88,7 +88,7 @@ export default function Home() {
             </div>
             <div
               id="user-info-card"
-              className="flex max-w-xs flex-col  items-center justify-center gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
+              className="flex max-w-xs flex-col items-center justify-center gap-4 rounded-xl bg-gray-900/10 dark:bg-white/10 p-4 text-gray-900 dark:text-white hover:bg-gray-900/20 dark:hover:bg-white/20"
             >
               <h3 id="user-greeting" className="text-2xl font-bold">
                 {session && <span>เข้าสู่ระบบด้วย →</span>}
@@ -99,7 +99,7 @@ export default function Home() {
             </div>
             <button
               id="btn-logout"
-              className="flex w-full max-w-[14rem] flex-row items-center justify-start gap-4 rounded-md bg-[hsl(280,100%,70%)] px-4 py-1 text-center text-white  transition duration-300 ease-in-out hover:bg-[hsl(280,100%,70%)] hover:bg-opacity-90"
+              className="flex w-full max-w-[14rem] flex-row items-center justify-start gap-4 rounded-md bg-[hsl(280,100%,70%)] px-4 py-1 text-center text-white transition duration-300 ease-in-out hover:bg-[hsl(280,100%,70%)] hover:bg-opacity-90"
               onClick={() => signOut()}
             >
               <svg
@@ -124,7 +124,9 @@ export default function Home() {
         )}
       </div>
 
-      <Rings id="rings-animation" count={20} />
+      <div className="absolute inset-0 z-0 flex items-center justify-center">
+        <Rings id="rings-animation" count={15} />
+      </div>
     </main>
   );
 }

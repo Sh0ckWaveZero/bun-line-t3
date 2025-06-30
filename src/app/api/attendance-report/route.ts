@@ -35,8 +35,8 @@ export async function GET(req: NextRequest) {
 
     // ดึงวันลาของ user ในเดือนนั้น
     const leaves = await leaveService.getUserLeavesInMonth(userId, month);
-    // สร้าง set ของวันที่ลา
-    const leaveDates = new Set(leaves.map((l) => l.date));
+    // สร้าง map ของวันที่ลาพร้อมข้อมูล leave
+    const leaveMap = new Map(leaves.map((leave) => [leave.date, leave]));
     // สร้างรายงานใหม่โดยนับวันที่ลาเป็น "ไม่ขาดงาน"
     if (report) {
       // เพิ่ม attendanceRecords สำหรับวันลาที่ไม่มีบันทึกเข้างาน
@@ -46,18 +46,43 @@ export async function GET(req: NextRequest) {
       ]);
       const recordsWithLeave = Array.from(allDates)
         .map((date) => {
-          const found = report.attendanceRecords.find(
+          const existingRecord = report.attendanceRecords.find(
             (r) => r.workDate === date,
           );
-          if (found) return found;
-          if (leaveDates.has(date)) {
+          const leaveRecord = leaveMap.get(date);
+          
+          if (existingRecord) {
+            // เพิ่มข้อมูล leave ให้กับ record ที่มีอยู่ (ถ้าเป็นวันลา)
+            if (leaveRecord) {
+              return {
+                ...existingRecord,
+                leaveInfo: {
+                  id: leaveRecord.id,
+                  type: leaveRecord.type,
+                  reason: leaveRecord.reason,
+                  createdAt: leaveRecord.createdAt.toISOString(),
+                }
+              };
+            }
+            return existingRecord;
+          }
+          
+          // สร้าง record ใหม่สำหรับวันลา (Auto-Stamp System)
+          // Check-in: 01:00 UTC (08:00 Bangkok), Check-out: 10:00 UTC (17:00 Bangkok)
+          if (leaveRecord) {
             return {
               id: `leave-${date}`,
               workDate: date,
-              checkInTime: null,
-              checkOutTime: null,
+              checkInTime: `${date}T01:00:00.000Z`, // Auto-stamped leave check-in
+              checkOutTime: `${date}T10:00:00.000Z`, // Auto-stamped leave check-out
               status: "LEAVE",
-              hoursWorked: null,
+              hoursWorked: 9.0, // Standard work hours for leave days
+              leaveInfo: {
+                id: leaveRecord.id,
+                type: leaveRecord.type,
+                reason: leaveRecord.reason,
+                createdAt: leaveRecord.createdAt.toISOString(),
+              }
             };
           }
           return null;

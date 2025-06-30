@@ -107,7 +107,7 @@ function MonthPicker({
       {/* Month Grid */}
       <div
         id={id ? `${id}-month-grid` : undefined}
-        className="grid grid-cols-3 gap-2 landscape:grid-cols-4 landscape:gap-1 portrait:justify-items-center"
+        className="grid grid-cols-3 gap-2 landscape:grid-cols-4 landscape:gap-1"
       >
         {Array.from({ length: 12 }, (_, i) => (
           <button
@@ -115,7 +115,8 @@ function MonthPicker({
             id={id ? `${id}-month-${i}` : undefined}
             onClick={() => handleMonthSelect(i)}
             className={cn(
-              "rounded-lg border p-3 text-sm transition-colors landscape:p-2 landscape:text-xs",
+              "w-full min-w-0 rounded-lg border p-3 text-sm transition-colors landscape:p-2 landscape:text-xs",
+              "flex items-center justify-center text-center",
               isMonthSelected(i)
                 ? "border-primary bg-primary text-primary-foreground"
                 : "border-input bg-background hover:bg-accent hover:text-accent-foreground",
