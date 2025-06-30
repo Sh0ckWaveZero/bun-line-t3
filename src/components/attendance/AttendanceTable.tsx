@@ -3,7 +3,7 @@
 import React from "react";
 
 import { AttendanceStatusType } from "@/features/attendance/types/attendance-status";
-import { dateFormatters, formatHoursSafe } from "@/lib/utils/date-formatting";
+import { dateFormatters, formatHoursSafe, formatDateSafe } from "@/lib/utils/date-formatting";
 import { AttendanceRecord, AttendanceTableProps } from "@/lib/types/attendance";
 
 export const AttendanceTable: React.FC<AttendanceTableProps> = ({
@@ -60,8 +60,8 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
             : "cursor-pointer border-orange-200 bg-orange-100 text-orange-700 hover:bg-orange-200 focus:ring-orange-500 dark:border-orange-700 dark:bg-orange-900/20 dark:text-orange-400 dark:hover:bg-orange-900/30 dark:focus:ring-orange-400"
         }`}
         aria-label={isLeaveDay 
-          ? `ไม่สามารถแก้ไขข้อมูลวันลาได้ วันที่ ${dateFormatters.fullDate(record.workDate)}`
-          : `แก้ไขข้อมูลการเข้างานวันที่ ${dateFormatters.fullDate(record.workDate)}`
+          ? `ไม่สามารถแก้ไขข้อมูลวันลาได้ วันที่ ${dateFormatters.shortDate(record.workDate)}`
+          : `แก้ไขข้อมูลการเข้างานวันที่ ${dateFormatters.shortDate(record.workDate)}`
         }
       >
         <svg
@@ -92,56 +92,70 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
     </div>
   );
 
+  // Sort records to show latest first (descending order by workDate)
+  const sortedRecords = [...records].sort((a, b) => 
+    new Date(b.workDate).getTime() - new Date(a.workDate).getTime()
+  );
+
+  // Get today's date in YYYY-MM-DD format for comparison
+  const today = new Date().toISOString().split('T')[0];
+  const todayFormatted = new Date().toISOString();
+
   return (
     <div id="attendance-table-container" className="mb-6">
-      <h2
-        id="attendance-table-title"
-        className="mb-4 text-xl font-bold text-gray-900 dark:text-gray-100"
-      >
-        ตารางบันทึกการลงเวลา
-      </h2>
+      <div className="mb-4">
+        <h2
+          id="attendance-table-title"
+          className="text-2xl font-bold text-gray-900 dark:text-gray-100"
+        >
+          ตารางบันทึกการลงเวลา
+        </h2>
+        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+          วันที่ {dateFormatters.fullDate(todayFormatted)} • รายการทั้งหมด {sortedRecords.length} รายการ
+        </p>
+      </div>
       <div
         id="attendance-table-wrapper"
         className="bg-card-base border-theme-primary overflow-x-auto rounded-lg border shadow"
       >
         <table id="attendance-table" className="min-w-full">
-          <thead id="attendance-table-header" className="bg-table-header">
+          <thead id="attendance-table-header" className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border-b-2 border-gray-200 dark:border-gray-600">
             <tr id="attendance-table-header-row">
               <th
                 id="header-date"
-                className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                className="px-6 py-4 text-left text-sm font-bold text-gray-900 dark:text-gray-100 tracking-wide"
               >
-                วันที่
+                📅 วันที่
               </th>
               <th
                 id="header-checkin"
-                className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                className="px-6 py-4 text-left text-sm font-bold text-gray-900 dark:text-gray-100 tracking-wide"
               >
-                เวลาเข้างาน
+                🕐 เวลาเข้างาน
               </th>
               <th
                 id="header-checkout"
-                className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                className="px-6 py-4 text-left text-sm font-bold text-gray-900 dark:text-gray-100 tracking-wide"
               >
-                เวลาออกงาน
+                🕕 เวลาออกงาน
               </th>
               <th
                 id="header-hours"
-                className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                className="px-6 py-4 text-left text-sm font-bold text-gray-900 dark:text-gray-100 tracking-wide"
               >
-                ชั่วโมงทำงาน
+                ⏱️ ชั่วโมงทำงาน
               </th>
               <th
                 id="header-status"
-                className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                className="px-6 py-4 text-left text-sm font-bold text-gray-900 dark:text-gray-100 tracking-wide"
               >
-                สถานะ
+                🏷️ สถานะ
               </th>
               <th
                 id="header-actions"
-                className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                className="px-6 py-4 text-left text-sm font-bold text-gray-900 dark:text-gray-100 tracking-wide"
               >
-                การจัดการ
+                ⚙️ การจัดการ
               </th>
             </tr>
           </thead>
@@ -149,17 +163,39 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
             id="attendance-table-body"
             className="bg-card-base divide-theme-table"
           >
-            {records.map((record) => (
+            {sortedRecords.map((record) => {
+              const isToday = record.workDate === today;
+              return (
               <tr
                 key={record.id}
                 id={`record-row-${record.id}`}
-                className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                className={`transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
+                  isToday 
+                    ? "bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 dark:border-blue-400" 
+                    : ""
+                }`}
               >
                 <td
                   id={`date-${record.id}`}
-                  className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-gray-100"
+                  className={`whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-gray-100 ${
+                    isToday ? "font-bold text-blue-700 dark:text-blue-300" : ""
+                  }`}
                 >
-                  {dateFormatters.fullDate(record.workDate)}
+                  <div className="flex items-center space-x-2">
+                    <span className="font-medium">
+                      {formatDateSafe(record.workDate, {
+                        day: "2-digit",
+                        month: "2-digit", 
+                        year: "numeric",
+                        calendar: "buddhist"
+                      })}
+                    </span>
+                    {isToday && (
+                      <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                        วันนี้
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td
                   id={`checkin-${record.id}`}
@@ -205,11 +241,12 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                   <EditButton record={record} />
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
 
-        {records.length === 0 && <EmptyTableMessage />}
+        {sortedRecords.length === 0 && <EmptyTableMessage />}
       </div>
     </div>
   );
