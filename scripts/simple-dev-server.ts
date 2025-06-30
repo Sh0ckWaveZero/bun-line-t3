@@ -11,6 +11,12 @@ import { withProcessLock } from "./simple-lock";
 async function startDevServer() {
   console.log("🚀 Starting development server...");
 
+  // Start Tailwind watch process
+  const tailwindProcess = spawn("bun", ["run", "tailwind:watch"], {
+    stdio: "inherit",
+    env: process.env,
+  });
+
   const devProcess = spawn("bun", ["run", "dev:basic"], {
     stdio: "inherit",
     env: { ...process.env, PORT: "4325" },
@@ -19,6 +25,7 @@ async function startDevServer() {
   // Handle Ctrl+C
   process.on("SIGINT", () => {
     console.log("\n🛑 Stopping development server...");
+    tailwindProcess.kill("SIGTERM");
     devProcess.kill("SIGTERM");
     process.exit(0);
   });

@@ -1900,9 +1900,6 @@
     --tw-enter-scale: calc(95*1%);
     --tw-enter-scale: .95;
   }
-  .\[animation-duration\:5s\] {
-    animation-duration: 5s;
-  }
   .running {
     animation-play-state: running;
   }
