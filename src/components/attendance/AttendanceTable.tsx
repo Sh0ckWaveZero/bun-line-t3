@@ -5,6 +5,7 @@ import React from "react";
 import { AttendanceStatusType } from "@/features/attendance/types/attendance-status";
 import { dateFormatters, formatHoursSafe, formatDateSafe } from "@/lib/utils/date-formatting";
 import { AttendanceRecord, AttendanceTableProps } from "@/lib/types/attendance";
+import { LeaveStatusBadge } from "@/components/ui/LeaveStatusBadge";
 
 export const AttendanceTable: React.FC<AttendanceTableProps> = ({
   records,
@@ -45,6 +46,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
         return status;
     }
   };
+
 
   const EditButton: React.FC<{ record: AttendanceRecord }> = ({ record }) => {
     const isLeaveDay = record.status === AttendanceStatusType.LEAVE;
@@ -227,12 +229,21 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                   id={`status-${record.id}`}
                   className="whitespace-nowrap px-6 py-4"
                 >
-                  <span
-                    id={`status-badge-${record.id}`}
-                    className={`inline-flex rounded-xl px-2 py-1 text-xs font-semibold ${getStatusColor(record.status)}`}
-                  >
-                    {getStatusText(record.status)}
-                  </span>
+                  {record.status === AttendanceStatusType.LEAVE && record.leaveInfo ? (
+                    <LeaveStatusBadge
+                      record={record}
+                      statusText={getStatusText(record.status)}
+                      statusColor={getStatusColor(record.status)}
+                      recordId={record.id}
+                    />
+                  ) : (
+                    <span
+                      id={`status-badge-${record.id}`}
+                      className={`inline-flex rounded-xl px-2 py-1 text-xs font-semibold ${getStatusColor(record.status)}`}
+                    >
+                      {getStatusText(record.status)}
+                    </span>
+                  )}
                 </td>
                 <td
                   id={`actions-${record.id}`}
