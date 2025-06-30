@@ -3,12 +3,12 @@
 
 # ส่งแจ้งเตือนเข้างานเวลา 08:00 (8:00 AM) Asia/Bangkok วันจันทร์ถึงศุกร์
 # ข้อความสุ่ม 20 แบบ ใช้ภาษาที่นุ่มนวล เป็นกันเองและสุภาพ
-0 8 * * 1-5 curl -H "Authorization: Bearer $CRON_SECRET" http://app:12914/api/cron/check-in-reminder
+0 8 * * 1-5 curl -H "Authorization: Bearer $CRON_SECRET" http://host.containers.internal:4325/api/cron/check-in-reminder
 
 # ส่งแจ้งเตือนออกงานแบบ Dynamic ทุก 5 นาที วันจันทร์ถึงศุกร์ (เวลา 16:40-20:00)
 # คำนวณเวลาแจ้งเตือนแต่ละคนจากเวลาเข้างาน (ก่อนครบ 9 ชม. 10 นาที)
 # หมายเหตุ: API จะกรองเอง ไม่ส่งก่อน 16:40 น.
-*/5 16-20 * * 1-5 curl -H "Authorization: Bearer $CRON_SECRET" http://app:12914/api/cron/enhanced-checkout-reminder
+*/5 16-20 * * 1-5 curl -H "Authorization: Bearer $CRON_SECRET" http://host.containers.internal:4325/api/cron/enhanced-checkout-reminder
 
 # ส่งแจ้งเตือนออกงานเวลา 16:30 (4:30 PM) Asia/Bangkok วันจันทร์ถึงศุกร์ (Legacy - DISABLED)
 # เวลานี้เหมาะสำหรับการแจ้งเตือนทั่วไป - ถูกปิดการใช้งานเพื่อป้องกันการส่งซ้ำ
@@ -17,7 +17,7 @@
 
 # ลงชื่อออกงานอัตโนมัติตอนเที่ยงคืน (00:00) สำหรับคนที่ลืมลงชื่อออก
 # ทำงานทุกวัน เพื่อให้ครอบคลุมทุกวันทำงาน
-0 0 * * * curl -H "Authorization: Bearer $CRON_SECRET" http://app:12914/api/cron/auto-checkout
+0 0 * * * curl -H "Authorization: Bearer $CRON_SECRET" http://host.containers.internal:4325/api/cron/auto-checkout
 
 # ตรวจสอบให้แน่ใจว่า container และ host มี timezone ที่ถูกต้อง
 # ถ้า Dockerfile.cron ตั้ง TZ=Asia/Bangkok แล้ว schedule นี้จะทำงานตามเวลา Asia/Bangkok

@@ -13,7 +13,7 @@ import {
   DateTimeSchemas,
   datetimeRequired,
   datetimeOptional,
-} from "../../../src/lib/validation/datetime";
+} from "@/lib/validation/datetime";
 
 describe("🔐 Datetime Validation Security Tests", () => {
   describe("datetimeTransformer", () => {

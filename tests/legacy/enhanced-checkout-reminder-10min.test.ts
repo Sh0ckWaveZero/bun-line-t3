@@ -3,8 +3,8 @@ import { describe, expect, test } from "bun:test";
 import {
   calculateUserReminderTime,
   shouldReceiveReminderNow,
-} from "../src/features/attendance/helpers";
-import { convertUTCToBangkok } from "../src/lib/utils/datetime";
+} from "../../src/features/attendance/helpers/utils";
+import { convertUTCToBangkok } from "../../src/lib/utils/datetime";
 
 describe("Enhanced Checkout Reminder - 10 Minutes", () => {
   describe("การคำนวณเวลาแจ้งเตือน", () => {

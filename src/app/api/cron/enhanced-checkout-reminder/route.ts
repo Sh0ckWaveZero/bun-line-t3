@@ -66,7 +66,7 @@ export async function GET(_req: NextRequest) {
 
     // Verify that this request is coming from authorized source
     const authHeader = headersList.get("authorization");
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    if (authHeader !== `Bearer ${env.CRON_SECRET}`) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -329,4 +329,8 @@ export async function GET(_req: NextRequest) {
       { status: 500 },
     );
   }
+}
+
+export async function POST() {
+  return Response.json({ error: "Method not allowed" }, { status: 405 });
 }

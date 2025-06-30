@@ -5,8 +5,8 @@ import {
   calculateUserReminderTime,
   shouldReceive10MinReminder,
   shouldReceiveFinalReminder,
-} from "../src/features/attendance/helpers";
-import { convertUTCToBangkok } from "../src/lib/utils/datetime";
+} from "../../src/features/attendance/helpers/utils";
+import { convertUTCToBangkok } from "../../src/lib/utils/datetime";
 
 describe("Two-Stage Checkout Reminder System", () => {
   test("should calculate both 10min and final reminder times correctly", () => {

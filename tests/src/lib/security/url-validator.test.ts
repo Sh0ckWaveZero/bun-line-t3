@@ -10,7 +10,7 @@ import {
   sanitizeUrl,
   validateNextAuthUrl,
   isSafeUrl,
-} from "../../../src/lib/security/url-validator";
+} from "@/lib/security/url-validator";
 
 beforeAll(() => {
   process.env.ALLOWED_DOMAINS =

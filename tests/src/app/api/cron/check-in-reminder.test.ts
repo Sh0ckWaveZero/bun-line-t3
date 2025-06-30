@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { selectRandomElement } from "../../../src/lib/crypto-random";
+import { selectRandomElement } from "@/lib/crypto-random";
 
 // Note: In real tests, we would mock holidayService and db calls
 

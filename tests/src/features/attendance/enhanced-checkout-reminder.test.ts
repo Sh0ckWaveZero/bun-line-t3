@@ -2,8 +2,8 @@ import { describe, test, expect } from "bun:test";
 import {
   calculateUserReminderTime,
   shouldReceiveReminderNow,
-} from "../../../src/features/attendance/helpers/utils";
-import { convertUTCToBangkok } from "../../../src/lib/utils/datetime";
+} from "@/features/attendance/helpers/utils";
+import { convertUTCToBangkok } from "@/lib/utils/datetime";
 
 describe("Enhanced Checkout Reminder Tests", () => {
   describe("calculateUserReminderTime", () => {
