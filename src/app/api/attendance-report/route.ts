@@ -67,15 +67,16 @@ export async function GET(req: NextRequest) {
             return existingRecord;
           }
           
-          // สร้าง record ใหม่สำหรับวันลา
+          // สร้าง record ใหม่สำหรับวันลา (Auto-Stamp System)
+          // Check-in: 01:00 UTC (08:00 Bangkok), Check-out: 10:00 UTC (17:00 Bangkok)
           if (leaveRecord) {
             return {
               id: `leave-${date}`,
               workDate: date,
-              checkInTime: null,
-              checkOutTime: null,
+              checkInTime: `${date}T01:00:00.000Z`, // Auto-stamped leave check-in
+              checkOutTime: `${date}T10:00:00.000Z`, // Auto-stamped leave check-out
               status: "LEAVE",
-              hoursWorked: null,
+              hoursWorked: 9.0, // Standard work hours for leave days
               leaveInfo: {
                 id: leaveRecord.id,
                 type: leaveRecord.type,

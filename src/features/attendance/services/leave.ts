@@ -1,4 +1,5 @@
 import { db } from "@/lib/database";
+import { AttendanceStatusType } from "@prisma/client";
 
 /**
  * ตรวจสอบว่าวันนี้ user ลาหรือไม่ (return true ถ้าลา)
@@ -45,6 +46,14 @@ export const getUserLeavesInMonth = async (userId: string, month: string) => {
 
 /**
  * สร้างวันลาสำหรับ user (validate input ก่อนบันทึก)
+ * และสร้าง attendance record พร้อม stamp เวลา 01:00 UTC และ 9 ชั่วโมงทำงาน
+ * 
+ * Auto-Stamp System:
+ * - Check-in: 01:00 UTC (08:00 Bangkok time)
+ * - Check-out: 10:00 UTC (17:00 Bangkok time) 
+ * - Hours worked: 9.0 hours
+ * - Status: LEAVE
+ * - Creates both Leave and WorkAttendance records in a single transaction
  */
 export const createLeave = async (input: {
   userId: string;
@@ -63,14 +72,37 @@ export const createLeave = async (input: {
   if (exists) {
     throw new Error("มีการลาวันนี้แล้ว");
   }
-  return db.leave.create({
-    data: {
-      userId: input.userId,
-      date: input.date,
-      type: input.type || "personal",
-      reason: input.reason,
-      isActive: input.isActive !== false,
-    },
+
+  // สร้าง leave record และ attendance record พร้อมกัน
+  return db.$transaction(async (tx) => {
+    // สร้าง leave record
+    const leave = await tx.leave.create({
+      data: {
+        userId: input.userId,
+        date: input.date,
+        type: input.type || "personal",
+        reason: input.reason,
+        isActive: input.isActive !== false,
+      },
+    });
+
+    // สร้าง attendance record พร้อม auto-stamp
+    const checkInTime = new Date(`${input.date}T01:00:00.000Z`); // 01:00 UTC
+    const checkOutTime = new Date(`${input.date}T10:00:00.000Z`); // 10:00 UTC (9 ชั่วโมงทำงาน)
+    
+    await tx.workAttendance.create({
+      data: {
+        userId: input.userId,
+        workDate: input.date,
+        checkInTime,
+        checkOutTime,
+        hoursWorked: 9.0,
+        status: AttendanceStatusType.LEAVE,
+        leaveId: leave.id,
+      },
+    });
+
+    return leave;
   });
 };
 

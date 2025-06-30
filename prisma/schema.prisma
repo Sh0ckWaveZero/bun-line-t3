@@ -74,6 +74,7 @@ enum AttendanceStatusType {
   CHECKED_IN_LATE
   CHECKED_OUT
   AUTO_CHECKOUT_MIDNIGHT
+  LEAVE
 }
 
 model Cmc {
@@ -95,12 +96,15 @@ model WorkAttendance {
   checkOutTime      DateTime?            @map("check_out_time")
   workDate          String               @map("work_date") // YYYY-MM-DD format
   status            AttendanceStatusType @default(CHECKED_IN_ON_TIME)
+  hoursWorked       Float?               @map("hours_worked")
+  leaveId           String?              @map("leave_id") @db.ObjectId
   // Checkout reminder tracking
   reminderSent10Min Boolean              @default(false) @map("reminder_sent_10min") // ส่งแจ้งเตือน 10 นาทีก่อนแล้ว
   reminderSentFinal Boolean              @default(false) @map("reminder_sent_final") // ส่งแจ้งเตือนครบ 9 ชั่วโมงแล้ว
   createdAt         DateTime             @default(now()) @map("created_at")
   updatedAt         DateTime             @updatedAt @map("updated_at")
   user              User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leave             Leave?               @relation(fields: [leaveId], references: [id])
 
   @@unique([userId, workDate])
   @@map("work_attendance")
@@ -124,15 +128,16 @@ model PublicHoliday {
 }
 
 model Leave {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String   @map("user_id") @db.ObjectId
-  date      String   @map("date") // YYYY-MM-DD
-  type      String   @default("personal") // personal, sick, vacation, etc.
-  reason    String?  @map("reason")
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String            @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String            @map("user_id") @db.ObjectId
+  date             String            @map("date") // YYYY-MM-DD
+  type             String            @default("personal") // personal, sick, vacation, etc.
+  reason           String?           @map("reason")
+  isActive         Boolean           @default(true) @map("is_active")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workAttendances  WorkAttendance[]
 
   @@index([userId, date, isActive])
   @@map("leaves")

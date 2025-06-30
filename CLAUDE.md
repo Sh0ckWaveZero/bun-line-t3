@@ -85,6 +85,7 @@ src/
 - **No Migrations**: Use `bun run db:push` instead of migrate commands
 - **No Foreign Keys**: MongoDB doesn't support foreign key constraints
 - **Manual Relations**: Manage relationships manually in application code
+- **Leave-Attendance Integration**: Leave records automatically create WorkAttendance records with standardized timestamps
 
 ### Testing Configuration
 
@@ -148,6 +149,11 @@ src/
 - Cron jobs for attendance reminders (Docker-based)
 - Health check endpoints for monitoring
 - Automated checkout reminders with configurable timing
+- **Leave Auto-Stamp System**: Automatically creates attendance records for leave days with standardized times:
+  - Check-in: 01:00 UTC (08:00 Bangkok time)
+  - Check-out: 10:00 UTC (17:00 Bangkok time)
+  - Hours worked: 9.0 hours
+  - Status: LEAVE
 
 Remember to maintain security-first practices, validate all inputs, and ensure proper error handling throughout the codebase.
 

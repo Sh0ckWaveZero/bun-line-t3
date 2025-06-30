@@ -214,7 +214,9 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                   className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-gray-100"
                 >
                   {record.status === AttendanceStatusType.LEAVE
-                    ? "-"
+                    ? record.checkInTime 
+                      ? dateFormatters.time24(record.checkInTime)
+                      : "08:00" // Auto-stamped leave time (01:00 UTC = 08:00 Bangkok)
                     : dateFormatters.time24(record.checkInTime)}
                 </td>
                 <td
@@ -222,7 +224,9 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                   className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-gray-100"
                 >
                   {record.status === AttendanceStatusType.LEAVE
-                    ? "-"
+                    ? record.checkOutTime
+                      ? dateFormatters.time24(record.checkOutTime)
+                      : "17:00" // Auto-stamped leave time (10:00 UTC = 17:00 Bangkok)
                     : record.checkOutTime
                     ? dateFormatters.time24(record.checkOutTime)
                     : "-"}
@@ -232,7 +236,9 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                   className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-gray-100"
                 >
                   {record.status === AttendanceStatusType.LEAVE
-                    ? "-"
+                    ? record.hoursWorked 
+                      ? formatHoursSafe(record.hoursWorked)
+                      : "9.00" // Auto-stamped standard work hours for leave days
                     : formatHoursSafe(record.hoursWorked)}
                 </td>
                 <td
