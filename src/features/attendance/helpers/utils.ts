@@ -9,6 +9,12 @@ import { AttendanceStatusType } from "@prisma/client";
  */
 export const getUsersWithPendingCheckout = async (): Promise<string[]> => {
   try {
+    // 🚧 DEV MODE: ถ้าอยู่ในโหมด development ให้ใช้ test user ID
+    if (process.env.NODE_ENV === "development" && process.env.DEV_TEST_USER_ID) {
+      console.log(`🧪 DEV MODE: Using test user ${process.env.DEV_TEST_USER_ID} for checkout reminder`);
+      return [process.env.DEV_TEST_USER_ID];
+    }
+
     const todayDate = getTodayDateString();
 
     // Get all attendance records for today with status checked_in (either on time or late)

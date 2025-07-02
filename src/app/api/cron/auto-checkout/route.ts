@@ -1,4 +1,3 @@
-import { NextRequest } from "next/server";
 import { env } from "@/env.mjs";
 import { attendanceService } from "@/features/attendance/services/attendance";
 import { db } from "@/lib/database/db";
@@ -8,13 +7,10 @@ import { AttendanceStatusType } from "@prisma/client";
  * API handler สำหรับการลงชื่อออกงานอัตโนมัติตอนเที่ยงคืน
  * สำหรับพนักงานที่ลืมลงชื่อออกงาน
  */
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
-    // ตรวจสอบ API key เพื่อความปลอดภัย
-    const apiKey = req.headers.get("x-api-key");
-    if (apiKey !== env.INTERNAL_API_KEY) {
-      return Response.json({ message: "Unauthorized access" }, { status: 401 });
-    }
+    // ตรวจสอบ Authorization header (middleware จะจัดการ Bearer token แล้ว)
+    // ไม่จำเป็นต้องตรวจสอบซ้ำเพราะ middleware ได้ตรวจสอบ Bearer token แล้ว
 
     const currentTime = new Date();
     const bangkokTime = new Date(
@@ -61,9 +57,9 @@ export async function GET(req: NextRequest) {
             };
           }
 
-          // คำนวณเวลาลงชื่อออกงานอัตโนมัติ (เที่ยงคืน)
+          // คำนวณเวลาลงชื่อออกงานอัตโนมัติ (เที่ยงคืนของวันถัดไป)
           const autoCheckoutTime = new Date(bangkokTime);
-          autoCheckoutTime.setHours(0, 0, 0, 0);
+          autoCheckoutTime.setHours(23, 59, 59, 999); // ใกล้เที่ยงคืนของวันเดียวกัน
 
           // อัปเดต WorkAttendance record ด้วยการลงชื่อออกงานอัตโนมัติ
           await db.workAttendance.update({

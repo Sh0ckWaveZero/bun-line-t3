@@ -93,7 +93,7 @@ describe("Enhanced Health Check API Tests", () => {
       },
       alerts: ["LINE integration credentials missing"],
       recommendations: [
-        "Configure LINE_CHANNEL_ACCESS_TOKEN and LINE_CHANNEL_SECRET",
+        "Configure LINE_CHANNEL_ACCESS and LINE_CHANNEL_SECRET",
       ],
     };
 
@@ -154,7 +154,7 @@ describe("Enhanced Health Check API Tests", () => {
       "Check DATABASE_URL and MongoDB server status",
       "Monitor memory usage closely",
       "Check environment configuration",
-      "Configure LINE_CHANNEL_ACCESS_TOKEN and LINE_CHANNEL_SECRET",
+      "Configure LINE_CHANNEL_ACCESS and LINE_CHANNEL_SECRET",
       "Set CRON_SECRET environment variable",
     ];
 
