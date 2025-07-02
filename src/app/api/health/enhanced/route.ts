@@ -115,7 +115,7 @@ export async function GET(request: NextRequest) {
     try {
       const requiredEnvVars = [
         "NEXTAUTH_SECRET",
-        "LINE_CHANNEL_ACCESS_TOKEN",
+        "LINE_CHANNEL_ACCESS",
         "LINE_CHANNEL_SECRET",
       ];
       let missingVars = 0;
@@ -141,7 +141,7 @@ export async function GET(request: NextRequest) {
     // 4. LINE Integration Check
     try {
       if (
-        process.env.LINE_CHANNEL_ACCESS_TOKEN &&
+        process.env.LINE_CHANNEL_ACCESS &&
         process.env.LINE_CHANNEL_SECRET
       ) {
         healthCheck.checks.lineIntegration = true;
@@ -149,7 +149,7 @@ export async function GET(request: NextRequest) {
         healthScore -= 20;
         alerts.push("LINE integration credentials missing");
         recommendations.push(
-          "Configure LINE_CHANNEL_ACCESS_TOKEN and LINE_CHANNEL_SECRET",
+          "Configure LINE_CHANNEL_ACCESS and LINE_CHANNEL_SECRET",
         );
       }
     } catch {

@@ -72,6 +72,32 @@ async function isWorkingDay(date: Date): Promise<boolean> {
 async function getActiveLineUserIdsForCheckinReminder(
   todayString: string,
 ): Promise<string[]> {
+  // 🚧 DEV MODE: ถ้าอยู่ในโหมด development ให้ใช้ user ID เดียวเท่านั้น
+  if (process.env.NODE_ENV === "development" && process.env.DEV_TEST_USER_ID) {
+    const testUserId = process.env.DEV_TEST_USER_ID;
+    const user = await db.user.findUnique({
+      where: { id: testUserId },
+      select: {
+        accounts: {
+          where: { provider: "line" },
+          select: { providerAccountId: true },
+        },
+        leaves: {
+          where: { date: todayString, isActive: true },
+          select: { id: true },
+        },
+      },
+    });
+    
+    if (user && user.accounts.length > 0 && user.leaves.length === 0) {
+      console.log(`🧪 DEV MODE: Using test user ${testUserId} with LINE ID: ${user.accounts[0]?.providerAccountId}`);
+      return [user.accounts[0]?.providerAccountId].filter((id): id is string => typeof id === "string");
+    } else {
+      console.log(`🧪 DEV MODE: Test user ${testUserId} not available or on leave`);
+      return [];
+    }
+  }
+
   const users = await db.user.findMany({
     select: {
       accounts: {

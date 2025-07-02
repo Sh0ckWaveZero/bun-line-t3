@@ -608,7 +608,7 @@ jobs:
           fi
 
           # ล้าง environment variables จาก shell history
-          unset DATABASE_URL NEXTAUTH_SECRET LINE_CHANNEL_SECRET LINE_CHANNEL_ACCESS_TOKEN
+          unset DATABASE_URL NEXTAUTH_SECRET LINE_CHANNEL_SECRET LINE_CHANNEL_ACCESS
           unset AIRVISUAL_API_KEY CMC_API_KEY ENCRYPTION_KEY HMAC_SECRET
 
           echo "✅ Security cleanup completed"

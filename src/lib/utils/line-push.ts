@@ -26,7 +26,9 @@ export const sendPushMessage = async (userId: string, messages: any[]) => {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to send push message");
+      const errorBody = await response.text();
+      console.error(`LINE Push Message Error: ${response.status} - ${errorBody}`);
+      throw new Error(`Failed to send push message: ${response.status} - ${errorBody}`);
     }
 
     return response;

@@ -41,7 +41,7 @@ function generateSecrets() {
 
     // 📱 LINE Bot Secrets (placeholders - ต้องได้จาก LINE Developers Console)
     LINE_CHANNEL_SECRET: "<GET_FROM_LINE_DEVELOPERS_CONSOLE>",
-    LINE_CHANNEL_ACCESS_TOKEN: "<GET_FROM_LINE_DEVELOPERS_CONSOLE>",
+    LINE_CHANNEL_ACCESS: "<GET_FROM_LINE_DEVELOPERS_CONSOLE>",
 
     // 🗄️ Database (placeholder - ต้องกำหนดเอง)
     DATABASE_URL: "<mongodb://username:password@host:port/database>",

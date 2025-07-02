@@ -69,7 +69,7 @@ check_env_vars() {
     local required_vars=(
         "DATABASE_URL"
         "NEXTAUTH_SECRET"
-        "LINE_CHANNEL_ACCESS_TOKEN"
+        "LINE_CHANNEL_ACCESS"
         "LINE_CHANNEL_SECRET"
     )
     
