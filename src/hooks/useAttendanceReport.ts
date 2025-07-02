@@ -117,7 +117,7 @@ export const useAttendanceReport = () => {
       );
 
       const newCheckOutDateTime =
-        editData.checkOutTime && editingRecord.checkOutTime
+        editData.checkOutTime
           ? combineOriginalDateWithNewTime(
               new Date(editingRecord.checkInTime), // 🔧 FIX: ใช้ checkInTime เป็น base date เพื่อให้อยู่วันเดียวกัน
               editData.checkOutTime,
