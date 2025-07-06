@@ -258,15 +258,15 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({
 
       <Tabs defaultValue="working-hours" className="w-full">
         <TabsList className="mb-6 grid w-full grid-cols-2 rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
-          <TabsTrigger 
-            value="working-hours" 
-            className="flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:data-[state=active]:bg-blue-600"
+          <TabsTrigger
+            value="working-hours"
+            className="flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-blue-50 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-lg dark:hover:bg-blue-900/20 dark:data-[state=active]:bg-blue-600"
           >
             📊 ชั่วโมงการทำงาน
           </TabsTrigger>
-          <TabsTrigger 
-            value="statistics" 
-            className="flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 data-[state=active]:bg-green-500 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-green-50 dark:hover:bg-green-900/20 dark:data-[state=active]:bg-green-600"
+          <TabsTrigger
+            value="statistics"
+            className="flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-green-50 data-[state=active]:bg-green-500 data-[state=active]:text-white data-[state=active]:shadow-lg dark:hover:bg-green-900/20 dark:data-[state=active]:bg-green-600"
           >
             📈 สถิติการเข้างาน
           </TabsTrigger>
@@ -364,7 +364,11 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({
                   </div>
                 ) : (
                   <div
-                    style={{ width: "250px", height: "250px", margin: "0 auto" }}
+                    style={{
+                      width: "250px",
+                      height: "250px",
+                      margin: "0 auto",
+                    }}
                   >
                     <Doughnut
                       data={prepareAttendanceDonutData(report)}
@@ -404,7 +408,11 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({
                   </div>
                 ) : (
                   <div
-                    style={{ width: "250px", height: "250px", margin: "0 auto" }}
+                    style={{
+                      width: "250px",
+                      height: "250px",
+                      margin: "0 auto",
+                    }}
                   >
                     <Doughnut
                       data={prepareComplianceDonutData(report)}

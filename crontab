@@ -2,14 +2,14 @@
 # นาที ชั่วโมง วัน เดือน วันในสัปดาห์ คำสั่ง
 # Production cron jobs for the application using Docker container port 12914
 
-# ส่งแจ้งเตือนเข้างานเวลา 08:00 (8:00 AM) Asia/Bangkok วันจันทร์ถึงศุกร์
+# ส่งแจ้งเตือนเข้างานเวลา 01:00 UTC (08:00 Thailand) วันจันทร์ถึงศุกร์
 # ข้อความสุ่ม 20 แบบ ใช้ภาษาที่นุ่มนวล เป็นกันเองและสุภาพ
-0 8 * * 1-5 curl -H "Authorization: Bearer $CRON_SECRET" http://app:12914/api/cron/check-in-reminder
+0 1 * * 1-5 curl -H "Authorization: Bearer $CRON_SECRET" http://app:12914/api/cron/check-in-reminder
 
-# ส่งแจ้งเตือนออกงานแบบ Dynamic ทุก 5 นาที วันจันทร์ถึงศุกร์ (เวลา 16:40-20:00)
+# ส่งแจ้งเตือนออกงานแบบ Dynamic ทุก 5 นาที วันจันทร์ถึงศุกร์ (เวลา 09:40-13:00 UTC = 16:40-20:00 Thailand)
 # คำนวณเวลาแจ้งเตือนแต่ละคนจากเวลาเข้างาน (ก่อนครบ 9 ชม. 10 นาที)
-# หมายเหตุ: API จะกรองเอง ไม่ส่งก่อน 16:40 น.
-*/5 16-20 * * 1-5 curl -H "Authorization: Bearer $CRON_SECRET" http://app:12914/api/cron/enhanced-checkout-reminder
+# หมายเหตุ: API จะกรองเอง ไม่ส่งก่อน 09:40 UTC
+*/5 9-13 * * 1-5 curl -H "Authorization: Bearer $CRON_SECRET" http://app:12914/api/cron/enhanced-checkout-reminder
 
 # ส่งแจ้งเตือนออกงานเวลา 16:30 (4:30 PM) Asia/Bangkok วันจันทร์ถึงศุกร์ (Legacy - DISABLED)
 # เวลานี้เหมาะสำหรับการแจ้งเตือนทั่วไป - ถูกปิดการใช้งานเพื่อป้องกันการส่งซ้ำ

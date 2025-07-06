@@ -36,18 +36,34 @@ import {
   shouldReceive10MinReminder,
   shouldReceiveFinalReminder,
 } from "../helpers";
-import {
-  convertUTCToBangkok,
-  formatThaiTime,
-  formatThaiTimeOnly,
-  getCurrentBangkokTime,
-  getCurrentUTCTime,
-  getTodayDateString,
-} from "@/lib/utils/datetime";
+import { getCurrentUTCTime, getTodayDateString } from "@/lib/utils/datetime";
 import { AttendanceStatusType } from "@prisma/client";
 import { WORKPLACE_POLICIES } from "../constants/workplace-policies";
 import { db } from "@/lib/database";
 import { selectRandomElement } from "@/lib/crypto-random";
+
+// Helper functions for UTC to Thai time display conversion
+const formatUTCTimeAsThaiTime = (utcDate: Date): string => {
+  const thaiTime = new Date(utcDate.getTime() + 7 * 60 * 60 * 1000);
+  const year = thaiTime.getUTCFullYear() + 543; // Convert to Buddhist Era
+  const month = (thaiTime.getUTCMonth() + 1).toString().padStart(2, "0");
+  const day = thaiTime.getUTCDate().toString().padStart(2, "0");
+  const hours = thaiTime.getUTCHours().toString().padStart(2, "0");
+  const minutes = thaiTime.getUTCMinutes().toString().padStart(2, "0");
+  const seconds = thaiTime.getUTCSeconds().toString().padStart(2, "0");
+  return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+};
+
+const formatUTCTimeAsThaiTimeOnly = (utcDate: Date): string => {
+  const thaiTime = new Date(utcDate.getTime() + 7 * 60 * 60 * 1000);
+  const hours = thaiTime.getUTCHours().toString().padStart(2, "0");
+  const minutes = thaiTime.getUTCMinutes().toString().padStart(2, "0");
+  return `${hours}:${minutes}`;
+};
+
+const convertUTCToThaiTime = (utcDate: Date): Date => {
+  return new Date(utcDate.getTime() + 7 * 60 * 60 * 1000);
+};
 
 const { holidayService } = await import("../services/holidays");
 
@@ -88,12 +104,18 @@ async function getActiveLineUserIdsForCheckinReminder(
         },
       },
     });
-    
+
     if (user && user.accounts.length > 0 && user.leaves.length === 0) {
-      console.log(`🧪 DEV MODE: Using test user ${testUserId} with LINE ID: ${user.accounts[0]?.providerAccountId}`);
-      return [user.accounts[0]?.providerAccountId].filter((id): id is string => typeof id === "string");
+      console.log(
+        `🧪 DEV MODE: Using test user ${testUserId} with LINE ID: ${user.accounts[0]?.providerAccountId}`,
+      );
+      return [user.accounts[0]?.providerAccountId].filter(
+        (id): id is string => typeof id === "string",
+      );
     } else {
-      console.log(`🧪 DEV MODE: Test user ${testUserId} not available or on leave`);
+      console.log(
+        `🧪 DEV MODE: Test user ${testUserId} not available or on leave`,
+      );
       return [];
     }
   }
@@ -120,31 +142,30 @@ async function getActiveLineUserIdsForCheckinReminder(
 
 const checkIn = async (userId: string): Promise<CheckInResult> => {
   try {
-    const todayDate = getTodayDateString();
+    const todayDate = getCurrentUTCTime().toISOString().split("T")[0] as string;
     const utcCheckInTime = getCurrentUTCTime();
-    const bangkokCheckInTime = convertUTCToBangkok(utcCheckInTime);
+    const thaiCheckInTime = convertUTCToThaiTime(utcCheckInTime);
 
     console.log("=== Check-in Debug ===");
     console.log("User ID:", userId);
     console.log("Today Date:", todayDate);
-    console.log("Bangkok Check-in Time:", formatThaiTime(bangkokCheckInTime));
+    console.log("Thai Check-in Time:", formatUTCTimeAsThaiTime(utcCheckInTime));
     console.log("UTC Check-in Time:", utcCheckInTime.toISOString());
     console.log(
-      "Hour (Bangkok):",
-      bangkokCheckInTime.getHours(),
+      "Hour (Thai):",
+      thaiCheckInTime.getUTCHours(),
       "Minute:",
-      bangkokCheckInTime.getMinutes(),
+      thaiCheckInTime.getUTCMinutes(),
     );
 
-    const isWorking = await isWorkingDay(bangkokCheckInTime);
+    const isWorking = await isWorkingDay(thaiCheckInTime);
     console.log("Is Working Day:", isWorking);
 
     if (!isWorking) {
-      const dayName = bangkokCheckInTime.toLocaleDateString("th-TH", {
+      const dayName = thaiCheckInTime.toLocaleDateString("th-TH", {
         weekday: "long",
-        timeZone: "Asia/Bangkok",
       });
-      const isHoliday = await isPublicHoliday(bangkokCheckInTime);
+      const isHoliday = await isPublicHoliday(thaiCheckInTime);
       if (isHoliday) {
         const randomMessage = selectRandomElement(HOLIDAY_MESSAGES);
         return {
@@ -161,7 +182,7 @@ const checkIn = async (userId: string): Promise<CheckInResult> => {
       };
     }
 
-    const timeValidation = isValidCheckInTime(bangkokCheckInTime);
+    const timeValidation = isValidCheckInTime(thaiCheckInTime);
     console.log("Time Validation:", timeValidation);
 
     if (!timeValidation.valid) {
@@ -178,12 +199,12 @@ const checkIn = async (userId: string): Promise<CheckInResult> => {
 
     if (timeValidation.isEarlyCheckIn) {
       recordedCheckInTimeUTC = utcCheckInTime;
-      const year = bangkokCheckInTime.getFullYear();
-      const month = bangkokCheckInTime.getMonth();
-      const date = bangkokCheckInTime.getDate();
-      const bangkokCheckout = new Date(year, month, date, 17, 0, 0, 0);
+      const year = thaiCheckInTime.getUTCFullYear();
+      const month = thaiCheckInTime.getUTCMonth();
+      const date = thaiCheckInTime.getUTCDate();
+      const thaiCheckout = new Date(Date.UTC(year, month, date, 17, 0, 0, 0));
       calculatedExpectedCheckOutTimeUTC = new Date(
-        bangkokCheckout.getTime() - 7 * 60 * 60 * 1000,
+        thaiCheckout.getTime() - 7 * 60 * 60 * 1000,
       );
     } else if (timeValidation.isLateCheckIn) {
       calculatedExpectedCheckOutTimeUTC = calculateExpectedCheckOutTime(
@@ -248,22 +269,19 @@ const checkIn = async (userId: string): Promise<CheckInResult> => {
       },
     });
 
-    const bangkokCheckInForDisplay = convertUTCToBangkok(
-      recordedCheckInTimeUTC,
-    );
-    const bangkokCheckOutForDisplay = convertUTCToBangkok(
+    const thaiCheckInForDisplay = convertUTCToThaiTime(recordedCheckInTimeUTC);
+
+    const checkInTimeStr = formatUTCTimeAsThaiTimeOnly(recordedCheckInTimeUTC);
+    const expectedCheckOutStr = formatUTCTimeAsThaiTimeOnly(
       calculatedExpectedCheckOutTimeUTC,
     );
-
-    const checkInTimeStr = formatThaiTimeOnly(bangkokCheckInForDisplay);
-    const expectedCheckOutStr = formatThaiTimeOnly(bangkokCheckOutForDisplay);
     let message = selectRandomElement(
       SUCCESS_CHECKIN_MESSAGES.map((fn) =>
         fn(checkInTimeStr, expectedCheckOutStr),
       ),
     );
     if (timeValidation.isEarlyCheckIn) {
-      const hour = bangkokCheckInForDisplay.getHours();
+      const hour = thaiCheckInForDisplay.getUTCHours();
       const checkInStr = checkInTimeStr;
       const checkOutStr = "17:00 น.";
       if (hour < 1) {
@@ -359,10 +377,8 @@ const checkOut = async (userId: string): Promise<CheckInResult> => {
       },
     });
 
-    const bangkokCheckInTime = convertUTCToBangkok(attendance.checkInTime);
-    const bangkokCheckOutTime = convertUTCToBangkok(checkOutTime);
-    const checkInTimeStr = formatThaiTimeOnly(bangkokCheckInTime);
-    const checkOutTimeStr = formatThaiTimeOnly(bangkokCheckOutTime);
+    const checkInTimeStr = formatUTCTimeAsThaiTimeOnly(attendance.checkInTime);
+    const checkOutTimeStr = formatUTCTimeAsThaiTimeOnly(checkOutTime);
 
     const workHours = roundToOneDecimal(workingHours);
     let message = `${selectRandomElement(SUCCESS_CHECKOUT_MESSAGES)}\nเข้างาน: ${checkInTimeStr} น.\nออกงาน: ${checkOutTimeStr} น.\nรวม: ${workHours} ชม.`;
@@ -500,16 +516,16 @@ const getMonthlyAttendanceReport = async (
 
 // Debug function to check current time and validation
 const debugTimeValidation = () => {
-  const currentBangkokTime = getCurrentBangkokTime();
   const currentUTCTime = getCurrentUTCTime();
-  const timeValidation = isValidCheckInTime(currentBangkokTime);
-  const todayDate = getTodayDateString();
+  const currentThaiTime = convertUTCToThaiTime(currentUTCTime);
+  const timeValidation = isValidCheckInTime(currentThaiTime);
+  const todayDate = currentUTCTime.toISOString().split("T")[0] as string;
 
   console.log("=== Debug Time Validation ===");
-  console.log("Current Bangkok Time:", formatThaiTime(currentBangkokTime));
+  console.log("Current Thai Time:", formatUTCTimeAsThaiTime(currentUTCTime));
   console.log("Current UTC Time:", currentUTCTime.toISOString());
-  console.log("Current Hour (Bangkok):", currentBangkokTime.getHours());
-  console.log("Current Minute (Bangkok):", currentBangkokTime.getMinutes());
+  console.log("Current Hour (Thai):", currentThaiTime.getUTCHours());
+  console.log("Current Minute (Thai):", currentThaiTime.getUTCMinutes());
   console.log("Today Date String:", todayDate);
   console.log("Time Validation:", timeValidation);
   console.log("Is Early Check-in:", timeValidation.isEarlyCheckIn);
@@ -517,11 +533,11 @@ const debugTimeValidation = () => {
   console.log("============================");
 
   return {
-    currentBangkokTime,
+    currentThaiTime,
     currentUTCTime,
     timeValidation,
     todayDate,
-    formattedTime: formatThaiTime(currentBangkokTime),
+    formattedTime: formatUTCTimeAsThaiTime(currentUTCTime),
   };
 };
 
@@ -542,10 +558,9 @@ export const attendanceService = {
   shouldReceive10MinReminder,
   shouldReceiveFinalReminder,
   getUsersNeedingDynamicReminder,
-  getCurrentBangkokTime,
   getCurrentUTCTime,
-  convertUTCToBangkok,
-  formatThaiTime,
-  formatThaiTimeOnly,
+  convertUTCToThaiTime,
+  formatUTCTimeAsThaiTime,
+  formatUTCTimeAsThaiTimeOnly,
   getActiveLineUserIdsForCheckinReminder,
 };

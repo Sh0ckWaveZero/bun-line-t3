@@ -12,16 +12,17 @@ The application demonstrates strong security practices with robust authenticatio
 
 ## Scan Results Overview
 
-| Category | Status | Critical | High | Medium | Low |
-|----------|--------|----------|------|--------|-----|
-| Dependencies | ✅ PASS | 0 | 0 | 0 | 0 |
-| OWASP Top 10 | ✅ PASS | 0 | 0 | 2 | 1 |
-| Secrets | ✅ PASS | 0 | 0 | 0 | 2 |
-| Code Quality | ✅ PASS | 0 | 0 | 1 | 0 |
+| Category     | Status  | Critical | High | Medium | Low |
+| ------------ | ------- | -------- | ---- | ------ | --- |
+| Dependencies | ✅ PASS | 0        | 0    | 0      | 0   |
+| OWASP Top 10 | ✅ PASS | 0        | 0    | 2      | 1   |
+| Secrets      | ✅ PASS | 0        | 0    | 0      | 2   |
+| Code Quality | ✅ PASS | 0        | 0    | 1      | 0   |
 
 ## Detailed Findings
 
 ### 🔒 Authentication & Authorization (A01:2021)
+
 **Status: ✅ SECURE**
 
 - **NextAuth.js Implementation**: Properly configured with LINE provider
@@ -30,11 +31,13 @@ The application demonstrates strong security practices with robust authenticatio
 - **Account Expiry**: Implements 90-day account expiry mechanism
 
 **Strengths:**
+
 - Proper session invalidation on logout
 - Secure token handling
 - Database-backed session storage
 
 ### 🛡️ Input Validation & Injection Prevention (A03:2021)
+
 **Status: ✅ SECURE**
 
 - **ORM Usage**: Prisma ORM provides built-in SQL injection protection
@@ -42,47 +45,58 @@ The application demonstrates strong security practices with robust authenticatio
 - **Sanitization**: Proper input sanitization for dangerous parameters
 
 **Findings:**
+
 - No direct SQL queries found
 - All database operations use Prisma client
 - Input validation patterns properly implemented
 
 ### 🚦 Rate Limiting & DoS Protection (A06:2021)
+
 **Status: ✅ SECURE**
 
 **Implementation Details:**
+
 - **File**: `src/lib/utils/rate-limiter.ts`
 - **Limits**: 5 requests per minute for cron endpoints
 - **Storage**: In-memory store (recommend Redis for production)
 - **Headers**: Proper rate limit headers included
 
 **Recommendations:**
+
 - Consider Redis for distributed rate limiting in production
 - Implement different rate limits for different endpoint types
 
 ### 🔐 Cryptographic Security (A02:2021)
+
 **Status: ✅ SECURE**
 
 **Findings:**
+
 - **JWT Secrets**: Properly stored in environment variables
 - **LINE Integration**: Uses HMAC-SHA256 for webhook verification
 - **Crypto Random**: Implements secure random generation
 
 **Files Examined:**
+
 - `src/lib/crypto-random.ts` - Secure random utilities
 - `src/features/auth/line-provider.ts` - OAuth implementation
 
 ### 🌐 Security Middleware (A05:2021)
+
 **Status: ✅ SECURE**
 
 **Implementation**: `src/middleware.ts`
+
 - **Cron Protection**: Bearer token authentication for cron endpoints
 - **Rate Limiting**: Integrated rate limiting
 - **URL Rewriting**: Secure OAuth callback handling
 
 ### 📊 Monitoring & Logging
+
 **Status: ✅ GOOD**
 
 **Features:**
+
 - Security event logging for unauthorized access attempts
 - Rate limit monitoring
 - URL validation failure logging
@@ -90,6 +104,7 @@ The application demonstrates strong security practices with robust authenticatio
 ## Medium Priority Issues
 
 ### M1: Production URL Hardcoding
+
 **File**: `src/middleware.ts:27`
 **Issue**: Hardcoded domain `your-app.example.com`
 **Risk**: Medium - Configuration issue
@@ -104,6 +119,7 @@ response.headers.set("x-forwarded-host", env.APP_DOMAIN);
 ```
 
 ### M2: Rate Limiter Storage
+
 **File**: `src/lib/utils/rate-limiter.ts`
 **Issue**: In-memory storage for rate limiting
 **Risk**: Medium - Not suitable for distributed systems
@@ -112,18 +128,21 @@ response.headers.set("x-forwarded-host", env.APP_DOMAIN);
 ## Low Priority Issues
 
 ### L1: Certificate Files in Repository
+
 **Files**: `./certificates/localhost-key.pem`, `./certificates/localhost.pem`
 **Issue**: Development certificates committed to repository
 **Risk**: Low - Development only
 **Recommendation**: Add to .gitignore, use runtime certificate generation
 
 ### L2: Console Logging
+
 **Files**: Multiple files contain console.log/console.error
 **Issue**: Potential information disclosure
 **Risk**: Low - Informational
 **Recommendation**: Implement structured logging with log levels
 
 ### L3: Environment File Handling
+
 **Files**: Multiple `.env*` files
 **Issue**: Many environment files present
 **Risk**: Low - Configuration management
@@ -132,42 +151,46 @@ response.headers.set("x-forwarded-host", env.APP_DOMAIN);
 ## Dependencies Audit Results
 
 **Bun Audit Status: ✅ CLEAN**
+
 - No vulnerabilities found in dependencies
 - All packages from default registry scanned
 - Type-only packages appropriately skipped
 
 ## OWASP Top 10 Compliance
 
-| OWASP Category | Status | Notes |
-|----------------|--------|-------|
-| A01: Broken Access Control | ✅ | Proper authentication with NextAuth |
-| A02: Cryptographic Failures | ✅ | Secure JWT and OAuth implementation |
-| A03: Injection | ✅ | Prisma ORM prevents SQL injection |
-| A04: Insecure Design | ✅ | Security-focused architecture |
-| A05: Security Misconfiguration | ⚠️ | Minor: Hardcoded domains |
-| A06: Vulnerable Components | ✅ | Clean dependency audit |
-| A07: ID & Authentication Failures | ✅ | Robust NextAuth implementation |
-| A08: Software Integrity Failures | ✅ | Package integrity maintained |
-| A09: Logging & Monitoring | ✅ | Security logging implemented |
-| A10: Server-Side Request Forgery | ✅ | URL validation prevents SSRF |
+| OWASP Category                    | Status | Notes                               |
+| --------------------------------- | ------ | ----------------------------------- |
+| A01: Broken Access Control        | ✅     | Proper authentication with NextAuth |
+| A02: Cryptographic Failures       | ✅     | Secure JWT and OAuth implementation |
+| A03: Injection                    | ✅     | Prisma ORM prevents SQL injection   |
+| A04: Insecure Design              | ✅     | Security-focused architecture       |
+| A05: Security Misconfiguration    | ⚠️     | Minor: Hardcoded domains            |
+| A06: Vulnerable Components        | ✅     | Clean dependency audit              |
+| A07: ID & Authentication Failures | ✅     | Robust NextAuth implementation      |
+| A08: Software Integrity Failures  | ✅     | Package integrity maintained        |
+| A09: Logging & Monitoring         | ✅     | Security logging implemented        |
+| A10: Server-Side Request Forgery  | ✅     | URL validation prevents SSRF        |
 
 ## Security Features Highlights
 
 ### ✅ Strong Security Implementations
 
 1. **URL Validation System**
+
    - Comprehensive URL sanitization
    - Domain allowlist enforcement
    - Protocol validation
    - SSRF prevention
 
 2. **Rate Limiting Framework**
+
    - Configurable limits per endpoint
    - Proper HTTP headers
    - Automatic cleanup
    - Middleware integration
 
 3. **Authentication Security**
+
    - OAuth 2.0 with LINE provider
    - Secure session management
    - Account expiry handling
@@ -182,15 +205,18 @@ response.headers.set("x-forwarded-host", env.APP_DOMAIN);
 ## Recommendations
 
 ### Immediate Actions (High Priority)
+
 1. Replace hardcoded domain in middleware with environment variable
 2. Document security configuration in README
 
 ### Short Term (Medium Priority)
+
 1. Implement Redis-based rate limiting for production
 2. Set up structured logging system
 3. Create security monitoring dashboard
 
 ### Long Term (Low Priority)
+
 1. Implement automated security testing in CI/CD
 2. Add security headers middleware
 3. Consider implementing API versioning
@@ -219,6 +245,7 @@ echo "certificates/*.pem" >> .gitignore
 ## Monitoring Recommendations
 
 1. **Set up security alerts for:**
+
    - Rate limit violations
    - Authentication failures
    - Invalid URL access attempts
@@ -234,4 +261,4 @@ echo "certificates/*.pem" >> .gitignore
 
 **Scan completed successfully with no critical security vulnerabilities identified.**
 
-*Report generated by Claude Code Security Scanner v2.0*
+_Report generated by Claude Code Security Scanner v2.0_

@@ -34,7 +34,7 @@ async function startDevServer() {
   });
 
   // Small delay to let Tailwind start
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 
   console.log("🌐 Starting Next.js development server...");
   const devProcess = spawn("bun", ["run", "dev:basic"], {

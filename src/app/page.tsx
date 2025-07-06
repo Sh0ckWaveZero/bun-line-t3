@@ -25,17 +25,21 @@ export default function Home() {
   return (
     <main
       id="page-home"
-      className="flex min-h-screen flex-col items-center justify-center relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-indigo-900 dark:to-purple-900"
+      className="relative flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-indigo-900 dark:to-purple-900"
     >
       <div
         id="container-main"
-        className="container flex flex-col items-center justify-center gap-12 px-4 py-16 relative z-10"
+        className="container relative z-10 flex flex-col items-center justify-center gap-12 px-4 py-16"
       >
         <h1
           id="title-main"
           className="text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-[5rem]"
         >
-          Bun <span className="text-[#07b53b]">LINE</span> <span className="text-[hsl(280,100%,70%)] dark:text-purple-400">T3</span> App
+          Bun <span className="text-[#07b53b]">LINE</span>{" "}
+          <span className="text-[hsl(280,100%,70%)] dark:text-purple-400">
+            T3
+          </span>{" "}
+          App
         </h1>
         {!session ? (
           <button
@@ -88,7 +92,7 @@ export default function Home() {
             </div>
             <div
               id="user-info-card"
-              className="flex max-w-xs flex-col items-center justify-center gap-4 rounded-xl bg-gray-900/10 dark:bg-white/10 p-4 text-gray-900 dark:text-white hover:bg-gray-900/20 dark:hover:bg-white/20"
+              className="flex max-w-xs flex-col items-center justify-center gap-4 rounded-xl bg-gray-900/10 p-4 text-gray-900 hover:bg-gray-900/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/20"
             >
               <h3 id="user-greeting" className="text-2xl font-bold">
                 {session && <span>เข้าสู่ระบบด้วย →</span>}

@@ -127,10 +127,10 @@ export async function GET(req: NextRequest) {
           }
 
           // Calculate if this user should receive reminder now (same logic as enhanced API)
-          const currentBangkokTime = attendanceService.getCurrentBangkokTime();
+          const currentUTCTime = attendanceService.getCurrentUTCTime();
           const shouldRemind = attendanceService.shouldReceive10MinReminder(
             attendance.checkInTime,
-            currentBangkokTime,
+            currentUTCTime,
           );
 
           if (!shouldRemind) {
@@ -155,9 +155,8 @@ export async function GET(req: NextRequest) {
             (currentTime.getTime() - checkInTime.getTime()) / (1000 * 60 * 60);
 
           // Format times for display (always show Bangkok time)
-          const displayCheckInTime = attendanceService.formatThaiTimeOnly(
-            attendanceService.convertUTCToBangkok(checkInTime),
-          );
+          const displayCheckInTime =
+            attendanceService.formatUTCTimeAsThaiTimeOnly(checkInTime);
 
           const payload = [
             {

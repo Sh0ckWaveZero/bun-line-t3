@@ -219,7 +219,10 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({
       id="month-selector-container"
       className="mb-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800 landscape:mb-3 landscape:p-4"
     >
-      <div id="month-selector-content" className="flex items-center gap-4 landscape:gap-2">
+      <div
+        id="month-selector-content"
+        className="flex items-center gap-4 landscape:gap-2"
+      >
         <span
           id="month-selector-label"
           className="text-base font-semibold text-gray-700 dark:text-gray-300 landscape:text-sm"

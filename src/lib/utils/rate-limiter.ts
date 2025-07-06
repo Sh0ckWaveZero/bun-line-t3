@@ -72,7 +72,9 @@ export class RateLimiter {
       const userAgent = request.headers.get("user-agent") || "unknown";
 
       // Create simple hash for user agent
-      const userAgentHash = Buffer.from(userAgent).toString("base64").slice(0, 8);
+      const userAgentHash = Buffer.from(userAgent)
+        .toString("base64")
+        .slice(0, 8);
 
       return `${ip}:${userAgentHash}`;
     } catch (error) {

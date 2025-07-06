@@ -140,10 +140,7 @@ export async function GET(request: NextRequest) {
 
     // 4. LINE Integration Check
     try {
-      if (
-        process.env.LINE_CHANNEL_ACCESS &&
-        process.env.LINE_CHANNEL_SECRET
-      ) {
+      if (process.env.LINE_CHANNEL_ACCESS && process.env.LINE_CHANNEL_SECRET) {
         healthCheck.checks.lineIntegration = true;
       } else {
         healthScore -= 20;

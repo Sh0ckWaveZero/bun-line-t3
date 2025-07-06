@@ -116,13 +116,12 @@ export const useAttendanceReport = () => {
         editData.checkInTime,
       );
 
-      const newCheckOutDateTime =
-        editData.checkOutTime
-          ? combineOriginalDateWithNewTime(
-              new Date(editingRecord.checkInTime), // 🔧 FIX: ใช้ checkInTime เป็น base date เพื่อให้อยู่วันเดียวกัน
-              editData.checkOutTime,
-            )
-          : null;
+      const newCheckOutDateTime = editData.checkOutTime
+        ? combineOriginalDateWithNewTime(
+            new Date(editingRecord.checkInTime), // 🔧 FIX: ใช้ checkInTime เป็น base date เพื่อให้อยู่วันเดียวกัน
+            editData.checkOutTime,
+          )
+        : null;
 
       if (!newCheckInDateTime) {
         throw new Error("เวลาเข้างานไม่ถูกต้อง");

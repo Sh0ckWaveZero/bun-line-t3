@@ -37,10 +37,13 @@ mock.module("@/features/attendance/services/holidays", () => ({
 }));
 
 const mockAttendanceService = {
-  getCurrentBangkokTime: () => {
+  getCurrentUTCTime: () => {
     const mockDate = new Date();
-    mockDate.setUTCHours(1, 0, 0, 0); // 8 AM Bangkok
+    mockDate.setUTCHours(1, 0, 0, 0); // 1 AM UTC = 8 AM Bangkok
     return mockDate;
+  },
+  convertUTCToThaiTime: (utcDate: Date) => {
+    return new Date(utcDate.getTime() + 7 * 60 * 60 * 1000);
   },
   isWorkingDay: async () => true,
   getActiveLineUserIdsForCheckinReminder: async () => [

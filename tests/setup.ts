@@ -8,9 +8,9 @@ import { installCustomMatchers } from "./helpers/test-matchers";
 
 // Mock Next.js environment variables
 if (!process.env.NODE_ENV) {
-  Object.defineProperty(process.env, 'NODE_ENV', {
-    value: 'test',
-    writable: true
+  Object.defineProperty(process.env, "NODE_ENV", {
+    value: "test",
+    writable: true,
   });
 }
 process.env.NEXTAUTH_URL = "http://localhost:3000";
@@ -53,9 +53,9 @@ beforeAll(() => {
   // Mock IntersectionObserver
   global.IntersectionObserver = class IntersectionObserver {
     root = null;
-    rootMargin = '0px';
+    rootMargin = "0px";
     thresholds = [0];
-    
+
     constructor(
       _callback: IntersectionObserverCallback,
       _options?: IntersectionObserverInit,
@@ -63,7 +63,9 @@ beforeAll(() => {
     observe(_element: Element) {}
     unobserve(_element: Element) {}
     disconnect() {}
-    takeRecords(): IntersectionObserverEntry[] { return []; }
+    takeRecords(): IntersectionObserverEntry[] {
+      return [];
+    }
   } as any;
 });
 

@@ -58,11 +58,12 @@ export async function GET(req: NextRequest) {
       );
     }
     // Check if today is a working day (including MongoDB holiday check)
-    const currentBangkokTime = attendanceService.getCurrentBangkokTime();
-    if (!(await attendanceService.isWorkingDay(currentBangkokTime))) {
+    const currentUTCTime = attendanceService.getCurrentUTCTime();
+    const currentThaiTime =
+      attendanceService.convertUTCToThaiTime(currentUTCTime);
+    if (!(await attendanceService.isWorkingDay(currentThaiTime))) {
       // Get additional holiday info for logging
-      const holidayInfo =
-        await holidayService.getHolidayInfo(currentBangkokTime);
+      const holidayInfo = await holidayService.getHolidayInfo(currentThaiTime);
 
       let reason = "not a working day";
       if (holidayInfo) {
@@ -94,11 +95,11 @@ export async function GET(req: NextRequest) {
     }
 
     if (env.APP_ENV === "production") {
-      // Double-check time (should be around 8 AM)
-      const currentHour = currentBangkokTime.getHours();
-      if (currentHour !== 8) {
+      // Double-check time (should be around 1 AM UTC = 8 AM Thailand)
+      const currentHour = currentUTCTime.getHours();
+      if (currentHour !== 1) {
         console.log(
-          `⏰ Current time is ${currentHour}:00, check-in reminder is for 8:00 AM only`,
+          `⏰ Current time is ${currentHour}:00 UTC, check-in reminder is for 01:00 UTC (08:00 Thailand) only`,
         );
         return Response.json(
           {
@@ -111,7 +112,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const todayString = currentBangkokTime?.toISOString().split("T")[0] ?? "";
+    const todayString = currentThaiTime?.toISOString().split("T")[0] ?? "";
     // ดึง LINE userId ที่ไม่ได้ลา (วันนี้) ด้วย service เดียว
     const lineUserIds =
       await attendanceService.getActiveLineUserIdsForCheckinReminder(

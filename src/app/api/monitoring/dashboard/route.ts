@@ -119,15 +119,15 @@ async function secureMonitoringHandler(
     // 🛡️ Step 2: Validate request parameters
     const url = new URL(request.url);
     const queryParams: any = {};
-    
+
     // Parse query parameters correctly
     for (const [key, value] of url.searchParams) {
-      if (key === 'components') {
+      if (key === "components") {
         // Handle array parameters
-        queryParams[key] = value.split(',').filter(Boolean);
-      } else if (key === 'includeDetails') {
+        queryParams[key] = value.split(",").filter(Boolean);
+      } else if (key === "includeDetails") {
         // Handle boolean parameters
-        queryParams[key] = value === 'true';
+        queryParams[key] = value === "true";
       } else {
         queryParams[key] = value;
       }
