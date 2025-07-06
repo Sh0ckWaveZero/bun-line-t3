@@ -41,16 +41,20 @@ export const buildSecureUrl = (path: string): string => {
  */
 export const isAllowedDomain = (domain: string): boolean => {
   // 🚨 Security: Validate input
-  if (!domain || typeof domain !== 'string' || domain.trim().length === 0) {
+  if (!domain || typeof domain !== "string" || domain.trim().length === 0) {
     return false;
   }
 
   // 🧹 Normalize domain (lowercase, trim)
   const normalizedDomain = domain.toLowerCase().trim();
-  
+
   // 🚫 Security: Reject domains with suspicious characters
-  if (normalizedDomain.includes('..') || normalizedDomain.includes('/') || 
-      normalizedDomain.includes('\\') || normalizedDomain.includes(' ')) {
+  if (
+    normalizedDomain.includes("..") ||
+    normalizedDomain.includes("/") ||
+    normalizedDomain.includes("\\") ||
+    normalizedDomain.includes(" ")
+  ) {
     return false;
   }
 
@@ -62,18 +66,20 @@ export const isAllowedDomain = (domain: string): boolean => {
     }
 
     const normalizedAllowed = allowedDomain.toLowerCase().trim();
-    
+
     // ✅ Exact match
     if (normalizedDomain === normalizedAllowed) {
       return true;
     }
-    
+
     // ✅ Valid subdomain check (must have dot separator)
-    if (normalizedDomain.endsWith(`.${normalizedAllowed}`) && 
-        normalizedDomain.length > normalizedAllowed.length + 1) {
+    if (
+      normalizedDomain.endsWith(`.${normalizedAllowed}`) &&
+      normalizedDomain.length > normalizedAllowed.length + 1
+    ) {
       return true;
     }
-    
+
     return false;
   });
 };

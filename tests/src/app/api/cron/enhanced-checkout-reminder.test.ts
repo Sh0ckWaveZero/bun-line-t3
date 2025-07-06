@@ -17,7 +17,7 @@ describe("Enhanced Checkout Reminder Logic Tests", () => {
     test("should validate CRON_SECRET correctly", () => {
       const validSecret = "test-secret";
       const invalidSecret = "wrong-secret";
-      
+
       expect(process.env.CRON_SECRET).toBe(validSecret);
       expect(process.env.CRON_SECRET).not.toBe(invalidSecret);
     });
@@ -33,8 +33,9 @@ describe("Enhanced Checkout Reminder Logic Tests", () => {
       const earlyTime = new Date("2025-06-30T09:30:00.000Z"); // 16:30 Bangkok
       const currentHour = earlyTime.getHours();
       const currentMinute = earlyTime.getMinutes();
-      const isTooEarly = currentHour < 16 || (currentHour === 16 && currentMinute < 40);
-      
+      const isTooEarly =
+        currentHour < 16 || (currentHour === 16 && currentMinute < 40);
+
       expect(isTooEarly).toBe(true);
     });
 
@@ -44,8 +45,9 @@ describe("Enhanced Checkout Reminder Logic Tests", () => {
       validTime.setUTCHours(16, 45, 0, 0); // 16:45 Bangkok time
       const currentHour = validTime.getUTCHours();
       const currentMinute = validTime.getUTCMinutes();
-      const isTooEarly = currentHour < 16 || (currentHour === 16 && currentMinute < 40);
-      
+      const isTooEarly =
+        currentHour < 16 || (currentHour === 16 && currentMinute < 40);
+
       expect(isTooEarly).toBe(false);
     });
 
@@ -55,8 +57,9 @@ describe("Enhanced Checkout Reminder Logic Tests", () => {
       edgeTime.setUTCHours(16, 40, 0, 0); // 16:40 Bangkok time
       const currentHour = edgeTime.getUTCHours();
       const currentMinute = edgeTime.getUTCMinutes();
-      const isTooEarly = currentHour < 16 || (currentHour === 16 && currentMinute < 40);
-      
+      const isTooEarly =
+        currentHour < 16 || (currentHour === 16 && currentMinute < 40);
+
       expect(isTooEarly).toBe(false); // Should proceed at exactly 16:40
     });
   });
@@ -139,12 +142,14 @@ describe("Enhanced Checkout Reminder Logic Tests", () => {
 
       const sentCount = results.filter((r) => r.status === "sent").length;
       const sent10MinCount = results.filter(
-        (r) => r.status === "sent" && r.reminderType === "10min"
+        (r) => r.status === "sent" && r.reminderType === "10min",
       ).length;
       const sentFinalCount = results.filter(
-        (r) => r.status === "sent" && r.reminderType === "final"
+        (r) => r.status === "sent" && r.reminderType === "final",
       ).length;
-      const scheduledCount = results.filter((r) => r.status === "scheduled").length;
+      const scheduledCount = results.filter(
+        (r) => r.status === "scheduled",
+      ).length;
       const failedCount = results.filter((r) => r.status === "failed").length;
       const skippedCount = results.filter((r) => r.status === "skipped").length;
 
@@ -191,17 +196,25 @@ describe("Enhanced Checkout Reminder Logic Tests", () => {
         },
       ];
 
-      testCases.forEach(({ reminderSent10Min, reminderSentFinal, should10Min, shouldFinal, expected }) => {
-        let reminderType: "10min" | "final" | null = null;
+      testCases.forEach(
+        ({
+          reminderSent10Min,
+          reminderSentFinal,
+          should10Min,
+          shouldFinal,
+          expected,
+        }) => {
+          let reminderType: "10min" | "final" | null = null;
 
-        if (should10Min && !reminderSent10Min) {
-          reminderType = "10min";
-        } else if (shouldFinal && !reminderSentFinal) {
-          reminderType = "final";
-        }
+          if (should10Min && !reminderSent10Min) {
+            reminderType = "10min";
+          } else if (shouldFinal && !reminderSentFinal) {
+            reminderType = "final";
+          }
 
-        expect(reminderType).toBe(expected);
-      });
+          expect(reminderType).toBe(expected);
+        },
+      );
     });
   });
 });

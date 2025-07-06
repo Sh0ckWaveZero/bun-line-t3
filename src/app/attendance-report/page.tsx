@@ -74,10 +74,7 @@ export default function AttendanceReportPage() {
   }
 
   return (
-    <div
-      id="attendance-report-page"
-      className="min-h-screen w-full"
-    >
+    <div id="attendance-report-page" className="min-h-screen w-full">
       <div
         id="attendance-report-container"
         className="mx-auto max-w-full px-4 py-8"
@@ -138,7 +135,10 @@ export default function AttendanceReportPage() {
             <div id="report-content" className="space-y-6">
               {/* Summary Cards */}
               <div id="summary-cards-section" className="mb-8">
-                <h2 id="summary-cards-title" className="text-xl font-semibold text-foreground mb-4">
+                <h2
+                  id="summary-cards-title"
+                  className="mb-4 text-xl font-semibold text-foreground"
+                >
                   สรุปรายงาน
                 </h2>
                 <AttendanceSummaryCards report={report} />
@@ -146,7 +146,10 @@ export default function AttendanceReportPage() {
 
               {/* Charts */}
               <div id="charts-section" className="mb-8">
-                <h2 id="charts-title" className="text-xl font-semibold text-foreground mb-4">
+                <h2
+                  id="charts-title"
+                  className="mb-4 text-xl font-semibold text-foreground"
+                >
                   กราฟแสดงผล
                 </h2>
                 <AttendanceCharts report={report} />
@@ -154,7 +157,10 @@ export default function AttendanceReportPage() {
 
               {/* Detailed Table */}
               <div id="table-section" className="mb-4">
-                <h2 id="table-title" className="text-xl font-semibold text-foreground mb-4">
+                <h2
+                  id="table-title"
+                  className="mb-4 text-xl font-semibold text-foreground"
+                >
                   รายละเอียดการเข้างาน
                 </h2>
                 <AttendanceTable

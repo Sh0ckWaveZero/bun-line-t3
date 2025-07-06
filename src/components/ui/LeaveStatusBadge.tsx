@@ -26,23 +26,28 @@ const getLeaveTypeText = (type: string) => {
   }
 };
 
-const LeaveTooltipContent: React.FC<{ record: AttendanceRecord }> = ({ record }) => {
+const LeaveTooltipContent: React.FC<{ record: AttendanceRecord }> = ({
+  record,
+}) => {
   if (!record.leaveInfo) return null;
 
   return (
     <div className="text-left">
-      <div className="font-semibold mb-1">ข้อมูลการลา</div>
-      <div className="text-xs space-y-1">
+      <div className="mb-1 font-semibold">ข้อมูลการลา</div>
+      <div className="space-y-1 text-xs">
         <div>ประเภท: {getLeaveTypeText(record.leaveInfo.type)}</div>
         {record.leaveInfo.reason && (
           <div>เหตุผล: {record.leaveInfo.reason}</div>
         )}
-        <div>วันที่สร้าง: {formatDateSafe(record.leaveInfo.createdAt, {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          calendar: "buddhist"
-        })}</div>
+        <div>
+          วันที่สร้าง:{" "}
+          {formatDateSafe(record.leaveInfo.createdAt, {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            calendar: "buddhist",
+          })}
+        </div>
       </div>
     </div>
   );
@@ -52,14 +57,14 @@ export const LeaveStatusBadge: React.FC<LeaveStatusBadgeProps> = ({
   record,
   statusText,
   statusColor,
-  recordId
+  recordId,
 }) => {
   const [isMobilePopoverOpen, setIsMobilePopoverOpen] = useState(false);
 
   const badgeElement = (
     <span
       id={`status-badge-${recordId}`}
-      className={`inline-flex rounded-xl px-2 py-1 text-xs font-semibold cursor-help ${statusColor}`}
+      className={`inline-flex cursor-help rounded-xl px-2 py-1 text-xs font-semibold ${statusColor}`}
     >
       {statusText}
     </span>
@@ -71,13 +76,11 @@ export const LeaveStatusBadge: React.FC<LeaveStatusBadgeProps> = ({
       <div className="hidden sm:block">
         <Tooltip.Provider>
           <Tooltip.Root>
-            <Tooltip.Trigger asChild>
-              {badgeElement}
-            </Tooltip.Trigger>
+            <Tooltip.Trigger asChild>{badgeElement}</Tooltip.Trigger>
             <Tooltip.Portal>
               <Tooltip.Content
-                className="z-50 px-3 py-2 text-sm bg-gray-900 text-white rounded-lg shadow-lg
-                  dark:bg-gray-800 dark:text-gray-200 max-w-xs"
+                className="z-50 max-w-xs rounded-lg bg-gray-900 px-3 py-2 text-sm text-white
+                  shadow-lg dark:bg-gray-800 dark:text-gray-200"
                 sideOffset={5}
                 align="center"
               >
@@ -91,9 +94,12 @@ export const LeaveStatusBadge: React.FC<LeaveStatusBadgeProps> = ({
 
       {/* Mobile: Popover */}
       <div className="block sm:hidden">
-        <Popover.Root open={isMobilePopoverOpen} onOpenChange={setIsMobilePopoverOpen}>
+        <Popover.Root
+          open={isMobilePopoverOpen}
+          onOpenChange={setIsMobilePopoverOpen}
+        >
           <Popover.Trigger asChild>
-            <button 
+            <button
               className="focus:outline-none"
               onClick={() => setIsMobilePopoverOpen(!isMobilePopoverOpen)}
             >
@@ -102,10 +108,10 @@ export const LeaveStatusBadge: React.FC<LeaveStatusBadgeProps> = ({
           </Popover.Trigger>
           <Popover.Portal>
             <Popover.Content
-              className="z-50 px-3 py-2 text-sm bg-gray-900 text-white rounded-lg shadow-lg
-                dark:bg-gray-800 dark:text-gray-200 max-w-xs
-                animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out 
-                data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
+              className="animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 z-50 max-w-xs
+                rounded-lg bg-gray-900 px-3
+                py-2 text-sm text-white shadow-lg 
+                dark:bg-gray-800 dark:text-gray-200"
               sideOffset={5}
               align="center"
               onOpenAutoFocus={(e) => e.preventDefault()}

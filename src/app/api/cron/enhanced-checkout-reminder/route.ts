@@ -5,13 +5,21 @@ import { bubbleTemplate } from "@/lib/validation/line";
 import { attendanceService } from "@/features/attendance/services/attendance";
 import { db } from "@/lib/database/db";
 import { roundToOneDecimal } from "@/lib/utils/number";
-import { getCurrentBangkokTime } from "@/lib/utils/datetime";
+import { getCurrentUTCTime } from "@/lib/utils/datetime";
 import {
   shouldReceive10MinReminder,
   shouldReceiveFinalReminder,
   calculateUserReminderTime,
   calculateUserCompletionTime,
 } from "@/features/attendance/helpers/utils";
+
+// Helper function to format UTC time as Thai time display (UTC+7)
+const formatUTCTimeAsThaiTime = (utcDate: Date): string => {
+  const thaiTime = new Date(utcDate.getTime() + 7 * 60 * 60 * 1000);
+  const hours = thaiTime.getUTCHours().toString().padStart(2, "0");
+  const minutes = thaiTime.getUTCMinutes().toString().padStart(2, "0");
+  return `${hours}:${minutes}`;
+};
 
 // Helper function to send push message
 const sendPushMessage = async (userId: string, messages: any[]) => {
@@ -74,29 +82,25 @@ export async function GET(_req: NextRequest) {
       "🔔 Enhanced Cron: Running dynamic checkout reminder job (every 5 minutes)...",
     );
 
-    // Get current Bangkok time
-    const currentBangkokTime = getCurrentBangkokTime();
-    console.log(
-      `⏰ Current Bangkok time: ${currentBangkokTime.toLocaleString("th-TH", { timeZone: "Asia/Bangkok" })}`,
-    );
+    // Get current UTC time
+    const currentUTCTime = getCurrentUTCTime();
+    console.log(`⏰ Current UTC time: ${currentUTCTime.toISOString()}`);
 
-    // ✅ Check if current time is before 16:40 - don't send reminders too early
-    const currentHour = currentBangkokTime.getHours();
-    const currentMinute = currentBangkokTime.getMinutes();
+    // ✅ Check if current time is before 09:40 UTC (16:40 Bangkok) - don't send reminders too early
+    const currentHour = currentUTCTime.getHours();
+    const currentMinute = currentUTCTime.getMinutes();
     const isTooEarly =
-      currentHour < 16 || (currentHour === 16 && currentMinute < 40);
+      currentHour < 9 || (currentHour === 9 && currentMinute < 40);
 
     if (isTooEarly) {
       console.log(
-        `⏳ Too early to send reminders (before 16:40). Current time: ${currentHour}:${currentMinute.toString().padStart(2, "0")}`,
+        `⏳ Too early to send reminders (before 09:40 UTC). Current time: ${currentHour}:${currentMinute.toString().padStart(2, "0")} UTC`,
       );
       return Response.json(
         {
           success: true,
-          message: "Too early for checkout reminders (before 16:40)",
-          currentTime: currentBangkokTime.toLocaleString("th-TH", {
-            timeZone: "Asia/Bangkok",
-          }),
+          message: "Too early for checkout reminders (before 09:40 UTC)",
+          currentTime: currentUTCTime.toISOString(),
           timestamp: new Date().toISOString(),
         },
         { status: 200 },
@@ -131,7 +135,7 @@ export async function GET(_req: NextRequest) {
           const attendance = await db.workAttendance.findFirst({
             where: {
               userId,
-              workDate: getCurrentBangkokTime().toISOString().split("T")[0],
+              workDate: getCurrentUTCTime().toISOString().split("T")[0],
               status: {
                 in: ["CHECKED_IN_ON_TIME", "CHECKED_IN_LATE"],
               },
@@ -159,11 +163,11 @@ export async function GET(_req: NextRequest) {
           // Check which reminder should be sent
           const should10Min = shouldReceive10MinReminder(
             attendance.checkInTime,
-            currentBangkokTime,
+            currentUTCTime,
           );
           const shouldFinal = shouldReceiveFinalReminder(
             attendance.checkInTime,
-            currentBangkokTime,
+            currentUTCTime,
           );
 
           let reminderType: "10min" | "final" | null = null;
@@ -172,21 +176,18 @@ export async function GET(_req: NextRequest) {
           // Determine which reminder to send (if any)
           if (should10Min && !attendance.reminderSent10Min) {
             reminderType = "10min";
-            const checkInTimeDisplay = attendanceService.formatThaiTimeOnly(
-              attendanceService.convertUTCToBangkok(attendance.checkInTime),
+            const checkInTimeDisplay = formatUTCTimeAsThaiTime(
+              attendance.checkInTime,
             );
             const hoursWorked =
-              (currentBangkokTime.getTime() -
-                attendanceService
-                  .convertUTCToBangkok(attendance.checkInTime)
-                  .getTime()) /
+              (currentUTCTime.getTime() - attendance.checkInTime.getTime()) /
               (1000 * 60 * 60);
 
             messageText = `⏰ เตือนส่วนตัว - ครั้งที่ 1/2\n\nคุณเข้างานตั้งแต่ ${checkInTimeDisplay} น.\nทำงานแล้ว ${roundToOneDecimal(hoursWorked)} ชั่วโมง\n\n🚨 อีกประมาณ 10 นาทีจะครบ 9 ชั่วโมงแล้ว!\nเตรียมลงชื่อออกงานได้เลย 🕐`;
           } else if (shouldFinal && !attendance.reminderSentFinal) {
             reminderType = "final";
-            const checkInTimeDisplay = attendanceService.formatThaiTimeOnly(
-              attendanceService.convertUTCToBangkok(attendance.checkInTime),
+            const checkInTimeDisplay = formatUTCTimeAsThaiTime(
+              attendance.checkInTime,
             );
 
             messageText = `🎯 เตือนส่วนตัว - ครั้งที่ 2/2\n\nคุณเข้างานตั้งแต่ ${checkInTimeDisplay} น.\n\n✅ ครบ 9 ชั่วโมงแล้ว!\nกรุณาลงชื่อออกงานตอนนี้เลย 🏠`;
@@ -198,7 +199,7 @@ export async function GET(_req: NextRequest) {
               : calculateUserCompletionTime(attendance.checkInTime);
 
             console.log(
-              `⏳ User ${userId}: No reminder needed. Next: ${nextReminderTime.toLocaleString("th-TH", { timeZone: "Asia/Bangkok" })}`,
+              `⏳ User ${userId}: No reminder needed. Next: ${nextReminderTime.toISOString()} UTC`,
             );
             return {
               userId,
@@ -254,7 +255,7 @@ export async function GET(_req: NextRequest) {
           });
 
           console.log(
-            `✅ User ${userId}: ${reminderType} reminder sent successfully at ${currentBangkokTime.toLocaleString("th-TH", { timeZone: "Asia/Bangkok" })}`,
+            `✅ User ${userId}: ${reminderType} reminder sent successfully at ${currentUTCTime.toISOString()} UTC`,
           );
           return {
             userId,
@@ -303,7 +304,7 @@ export async function GET(_req: NextRequest) {
         success: true,
         message: `Checkout reminders processed: ${sentCount} sent (${sent10MinCount} x 10min, ${sentFinalCount} x final), ${scheduledCount} scheduled, ${failedCount} failed, ${skippedCount} skipped`,
         timestamp: new Date().toISOString(),
-        currentBangkokTime: currentBangkokTime.toISOString(),
+        currentUTCTime: currentUTCTime.toISOString(),
         statistics: {
           total: results.length,
           sent: sentCount,

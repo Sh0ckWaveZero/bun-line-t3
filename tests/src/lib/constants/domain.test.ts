@@ -87,7 +87,10 @@ describe("🔐 Domain Security Configuration", () => {
       ];
 
       maliciousDomains.forEach((domain) => {
-        if (domain === "sub.sub.example.com" && ALLOWED_DOMAINS.includes("example.com")) {
+        if (
+          domain === "sub.sub.example.com" &&
+          ALLOWED_DOMAINS.includes("example.com")
+        ) {
           expect(isAllowedDomain(domain)).toBe(true); // This should be allowed
         } else {
           expect(isAllowedDomain(domain)).toBe(false);

@@ -28,16 +28,19 @@ const ThemeToggle = () => {
         {/* Mobile skeleton - icon only */}
         <div
           id="theme-toggle-skeleton-mobile"
-          className="sm:hidden p-2 rounded-md"
+          className="rounded-md p-2 sm:hidden"
           suppressHydrationWarning
         >
-          <Sun id="theme-icon-skeleton-mobile" className="h-5 w-5 text-gray-400" />
+          <Sun
+            id="theme-icon-skeleton-mobile"
+            className="h-5 w-5 text-gray-400"
+          />
         </div>
-        
+
         {/* Desktop skeleton - full switch */}
         <div
           id="theme-toggle-skeleton-desktop"
-          className="hidden sm:flex items-center space-x-3"
+          className="hidden items-center space-x-3 sm:flex"
           suppressHydrationWarning
         >
           <Sun id="theme-icon-sun-skeleton" className="h-4 w-4 text-gray-600" />
@@ -50,7 +53,10 @@ const ThemeToggle = () => {
               className="h-5 w-5 rounded-full bg-white shadow-md"
             />
           </div>
-          <Moon id="theme-icon-moon-skeleton" className="h-4 w-4 text-gray-600" />
+          <Moon
+            id="theme-icon-moon-skeleton"
+            className="h-4 w-4 text-gray-600"
+          />
         </div>
       </>
     );
@@ -105,18 +111,24 @@ const ThemeToggle = () => {
       <button
         id="theme-toggle-button-mobile"
         onClick={() => handleToggle(!isDark)}
-        className="sm:hidden p-2 rounded-md hover:bg-muted/50 transition-colors"
+        className="hover:bg-muted/50 rounded-md p-2 transition-colors sm:hidden"
         aria-label="Toggle theme"
       >
         {isDark ? (
           <Sun id="theme-icon-sun-mobile" className="h-5 w-5 text-yellow-500" />
         ) : (
-          <Moon id="theme-icon-moon-mobile" className="h-5 w-5 text-slate-600" />
+          <Moon
+            id="theme-icon-moon-mobile"
+            className="h-5 w-5 text-slate-600"
+          />
         )}
       </button>
 
       {/* Desktop version - full switch */}
-      <div id="theme-toggle-container-desktop" className="hidden sm:flex items-center space-x-3">
+      <div
+        id="theme-toggle-container-desktop"
+        className="hidden items-center space-x-3 sm:flex"
+      >
         <Sun
           id="theme-icon-sun-desktop"
           className={`h-4 w-4 transition-colors ${

@@ -68,18 +68,24 @@ function MonthPicker({
   const buddhistYear = currentYear + 543;
 
   return (
-    <div id={id} className={cn("w-full max-w-sm p-4 landscape:max-w-lg landscape:p-2 portrait:mx-auto portrait:text-center", className)}>
+    <div
+      id={id}
+      className={cn(
+        "w-full max-w-sm p-4 portrait:mx-auto portrait:text-center landscape:max-w-lg landscape:p-2",
+        className,
+      )}
+    >
       {/* Year Navigation */}
       <div
         id={id ? `${id}-year-nav` : undefined}
-        className="rounded-lg mb-4 flex items-center justify-between"
+        className="mb-4 flex items-center justify-between rounded-lg"
       >
         <button
           id={id ? `${id}-prev-year` : undefined}
           onClick={() => navigateYear("prev")}
           className={cn(
             buttonVariants({ variant: "outline" }),
-            "rounded-lg h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100",
+            "h-8 w-8 rounded-lg bg-transparent p-0 opacity-50 hover:opacity-100",
           )}
         >
           <ChevronLeft className="h-4 w-4" />
@@ -97,7 +103,7 @@ function MonthPicker({
           onClick={() => navigateYear("next")}
           className={cn(
             buttonVariants({ variant: "outline" }),
-            "rounded-lg h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100",
+            "h-8 w-8 rounded-lg bg-transparent p-0 opacity-50 hover:opacity-100",
           )}
         >
           <ChevronRight className="h-4 w-4" />

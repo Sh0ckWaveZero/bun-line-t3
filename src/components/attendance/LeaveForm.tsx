@@ -168,7 +168,7 @@ export const LeaveForm = ({ onSubmit }: LeaveFormProps) => {
       <button
         type="submit"
         disabled={loading}
-        className="mt-2 w-full rounded-lg border-2 border-primary bg-primary px-4 py-2 font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-60 dark:border-primary dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/80"
+        className="hover:bg-primary/90 dark:hover:bg-primary/80 mt-2 w-full rounded-lg border-2 border-primary bg-primary px-4 py-2 font-semibold text-primary-foreground shadow-sm transition disabled:opacity-60 dark:border-primary dark:bg-primary dark:text-primary-foreground"
       >
         {loading ? "กำลังบันทึก..." : "บันทึกวันลา"}
       </button>

@@ -16,14 +16,14 @@ describe("Monitoring Dashboard Security", () => {
 
   // Cached server availability check
   let serverAvailable: boolean | null = null;
-  
+
   const isServerAvailable = async (): Promise<boolean> => {
     if (serverAvailable !== null) return serverAvailable;
-    
+
     try {
-      const response = await fetch(`${baseUrl}/api/health`, { 
-        method: 'HEAD',
-        signal: AbortSignal.timeout(1000) // Reduced to 1 second
+      const response = await fetch(`${baseUrl}/api/health`, {
+        method: "HEAD",
+        signal: AbortSignal.timeout(1000), // Reduced to 1 second
       });
       serverAvailable = response.status < 500;
       return serverAvailable;
@@ -47,7 +47,7 @@ describe("Monitoring Dashboard Security", () => {
         headers: {
           "Content-Type": "application/json",
         },
-        signal: AbortSignal.timeout(2000) // Reduced to 2 seconds
+        signal: AbortSignal.timeout(2000), // Reduced to 2 seconds
       });
 
       // Must require authentication (401) or rate limit (429) or service unavailable (530) or gateway error (502)
@@ -72,7 +72,7 @@ describe("Monitoring Dashboard Security", () => {
           "Content-Type": "application/json",
           Cookie: "next-auth.session-token=invalid-token",
         },
-        signal: AbortSignal.timeout(2000) // Reduced to 2 seconds
+        signal: AbortSignal.timeout(2000), // Reduced to 2 seconds
       });
 
       // Should reject invalid session (401) or rate limit (429) or service unavailable (530) or gateway error (502)
@@ -92,7 +92,7 @@ describe("Monitoring Dashboard Security", () => {
           "Content-Type": "application/json",
           "User-Agent": "", // Invalid user agent
         },
-        signal: AbortSignal.timeout(2000) // Reduced to 2 seconds
+        signal: AbortSignal.timeout(2000), // Reduced to 2 seconds
       });
 
       // Should reject requests with suspicious headers or service unavailable or gateway error
@@ -119,7 +119,7 @@ describe("Monitoring Dashboard Security", () => {
       for (const param of maliciousParams) {
         const response = await fetch(
           `${baseUrl}/api/monitoring/dashboard?${param}`,
-          { signal: AbortSignal.timeout(2000) } // Reduced to 2 seconds
+          { signal: AbortSignal.timeout(2000) }, // Reduced to 2 seconds
         );
 
         // Should reject malicious parameters (including rate limiting and service unavailable)
@@ -136,7 +136,7 @@ describe("Monitoring Dashboard Security", () => {
 
       const response = await fetch(
         `${baseUrl}/api/monitoring/dashboard?timeRange=invalid`,
-        { signal: AbortSignal.timeout(2000) } // Reduced to 2 seconds
+        { signal: AbortSignal.timeout(2000) }, // Reduced to 2 seconds
       );
 
       if (response.status === 400) {
@@ -156,7 +156,7 @@ describe("Monitoring Dashboard Security", () => {
       const largeArray = Array(1000).fill("health").join(",");
       const response = await fetch(
         `${baseUrl}/api/monitoring/dashboard?components=${largeArray}`,
-        { signal: AbortSignal.timeout(2000) } // Reduced to 2 seconds
+        { signal: AbortSignal.timeout(2000) }, // Reduced to 2 seconds
       );
 
       // Should handle large inputs gracefully - 401 is expected due to authentication-first security
@@ -174,7 +174,7 @@ describe("Monitoring Dashboard Security", () => {
       }
 
       const response = await fetch(`${baseUrl}/api/monitoring/dashboard`, {
-        signal: AbortSignal.timeout(2000) // Reduced to 2 seconds
+        signal: AbortSignal.timeout(2000), // Reduced to 2 seconds
       });
 
       if (response.ok) {
@@ -196,7 +196,7 @@ describe("Monitoring Dashboard Security", () => {
       }
 
       const response = await fetch(`${baseUrl}/api/monitoring/dashboard`, {
-        signal: AbortSignal.timeout(2000) // Reduced to 2 seconds
+        signal: AbortSignal.timeout(2000), // Reduced to 2 seconds
       });
 
       if (response.ok) {
@@ -225,7 +225,7 @@ describe("Monitoring Dashboard Security", () => {
       }
 
       const response = await fetch(`${baseUrl}/api/monitoring/dashboard`, {
-        signal: AbortSignal.timeout(2000) // Reduced to 2 seconds
+        signal: AbortSignal.timeout(2000), // Reduced to 2 seconds
       });
 
       if (response.ok) {
@@ -266,7 +266,7 @@ describe("Monitoring Dashboard Security", () => {
           fetch(`${baseUrl}/api/monitoring/dashboard`, {
             method: "GET",
             headers: { "Content-Type": "application/json" },
-            signal: AbortSignal.timeout(1500) // Further reduced timeout
+            signal: AbortSignal.timeout(1500), // Further reduced timeout
           }),
         );
       }
@@ -297,7 +297,7 @@ describe("Monitoring Dashboard Security", () => {
       }
 
       const response = await fetch(`${baseUrl}/api/monitoring/dashboard`, {
-        signal: AbortSignal.timeout(2000) // Reduced to 2 seconds
+        signal: AbortSignal.timeout(2000), // Reduced to 2 seconds
       });
 
       if (response.status === 200 || response.status === 401) {
@@ -320,7 +320,7 @@ describe("Monitoring Dashboard Security", () => {
       }
 
       const response = await fetch(`${baseUrl}/api/monitoring/dashboard`, {
-        signal: AbortSignal.timeout(2000) // Reduced to 2 seconds
+        signal: AbortSignal.timeout(2000), // Reduced to 2 seconds
       });
 
       // Cache control should prevent caching of sensitive data
@@ -351,7 +351,7 @@ describe("Monitoring Dashboard Security", () => {
           Origin: "http://malicious-site.com",
           "Access-Control-Request-Method": "GET",
         },
-        signal: AbortSignal.timeout(2000) // Reduced to 2 seconds
+        signal: AbortSignal.timeout(2000), // Reduced to 2 seconds
       });
 
       // Should not allow arbitrary origins
@@ -377,7 +377,7 @@ describe("Monitoring Dashboard Security", () => {
         method: "POST", // Wrong method
         headers: { "Content-Type": "application/json" },
         body: "invalid json {",
-        signal: AbortSignal.timeout(2000) // Reduced to 2 seconds
+        signal: AbortSignal.timeout(2000), // Reduced to 2 seconds
       });
 
       if (!response.ok) {
@@ -446,14 +446,14 @@ describe("Security Audit", () => {
 
   // Reuse server availability check
   let serverAvailable: boolean | null = null;
-  
+
   const isServerAvailable = async (): Promise<boolean> => {
     if (serverAvailable !== null) return serverAvailable;
-    
+
     try {
-      const response = await fetch(`${baseUrl}/api/health`, { 
-        method: 'HEAD',
-        signal: AbortSignal.timeout(1000) // Reduced timeout
+      const response = await fetch(`${baseUrl}/api/health`, {
+        method: "HEAD",
+        signal: AbortSignal.timeout(1000), // Reduced timeout
       });
       serverAvailable = response.status < 500;
       return serverAvailable;
@@ -479,19 +479,24 @@ describe("Security Audit", () => {
     };
 
     // Run tests in parallel for faster execution
-    const [authResponse, validationResponse, rateLimitResponse1, rateLimitResponse2] = await Promise.all([
+    const [
+      authResponse,
+      validationResponse,
+      rateLimitResponse1,
+      rateLimitResponse2,
+    ] = await Promise.all([
       fetch(`${baseUrl}/api/monitoring/dashboard`, {
-        signal: AbortSignal.timeout(1500)
+        signal: AbortSignal.timeout(1500),
       }),
       fetch(`${baseUrl}/api/monitoring/dashboard?timeRange=invalid`, {
-        signal: AbortSignal.timeout(1500)
+        signal: AbortSignal.timeout(1500),
       }),
       fetch(`${baseUrl}/api/monitoring/dashboard`, {
-        signal: AbortSignal.timeout(1500)
+        signal: AbortSignal.timeout(1500),
       }),
       fetch(`${baseUrl}/api/monitoring/dashboard`, {
-        signal: AbortSignal.timeout(1500)
-      })
+        signal: AbortSignal.timeout(1500),
+      }),
     ]);
 
     securityChecklist.authenticationRequired =
@@ -526,7 +531,7 @@ describe("Security Audit", () => {
     // Test error handling (can be done after parallel requests)
     const errorResponse = await fetch(
       `${baseUrl}/api/monitoring/dashboard?malformed=true`,
-      { signal: AbortSignal.timeout(1000) } // Further reduced timeout
+      { signal: AbortSignal.timeout(1000) }, // Further reduced timeout
     );
     securityChecklist.properErrorHandling =
       !errorResponse.ok && errorResponse.status >= 400;

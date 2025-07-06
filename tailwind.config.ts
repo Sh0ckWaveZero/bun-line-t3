@@ -55,7 +55,7 @@ const config: Config = {
         },
 
         // 🌈 Modern Vibrant Color System สำหรับ Attendance Cards และ UI Components
-        
+
         // LINE Brand Colors - Official Brand Guidelines
         line: {
           green: "#07b53b", // Official LINE green from brand guidelines

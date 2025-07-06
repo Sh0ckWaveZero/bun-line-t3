@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
             (r) => r.workDate === date,
           );
           const leaveRecord = leaveMap.get(date);
-          
+
           if (existingRecord) {
             // เพิ่มข้อมูล leave ให้กับ record ที่มีอยู่ (ถ้าเป็นวันลา)
             if (leaveRecord) {
@@ -61,12 +61,12 @@ export async function GET(req: NextRequest) {
                   type: leaveRecord.type,
                   reason: leaveRecord.reason,
                   createdAt: leaveRecord.createdAt.toISOString(),
-                }
+                },
               };
             }
             return existingRecord;
           }
-          
+
           // สร้าง record ใหม่สำหรับวันลา (Auto-Stamp System)
           // Check-in: 01:00 UTC (08:00 Bangkok), Check-out: 10:00 UTC (17:00 Bangkok)
           if (leaveRecord) {
@@ -82,7 +82,7 @@ export async function GET(req: NextRequest) {
                 type: leaveRecord.type,
                 reason: leaveRecord.reason,
                 createdAt: leaveRecord.createdAt.toISOString(),
-              }
+              },
             };
           }
           return null;
