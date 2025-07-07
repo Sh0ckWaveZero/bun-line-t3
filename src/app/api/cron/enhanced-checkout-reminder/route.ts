@@ -5,7 +5,7 @@ import { bubbleTemplate } from "@/lib/validation/line";
 import { attendanceService } from "@/features/attendance/services/attendance";
 import { db } from "@/lib/database/db";
 import { roundToOneDecimal } from "@/lib/utils/number";
-import { getCurrentUTCTime } from "@/lib/utils/datetime";
+import { getCurrentUTCTime, convertUTCToBangkok } from "@/lib/utils/datetime";
 import {
   shouldReceive10MinReminder,
   shouldReceiveFinalReminder,
@@ -15,7 +15,7 @@ import {
 
 // Helper function to format UTC time as Thai time display (UTC+7)
 const formatUTCTimeAsThaiTime = (utcDate: Date): string => {
-  const thaiTime = new Date(utcDate.getTime() + 7 * 60 * 60 * 1000);
+  const thaiTime = convertUTCToBangkok(utcDate);
   const hours = thaiTime.getUTCHours().toString().padStart(2, "0");
   const minutes = thaiTime.getUTCMinutes().toString().padStart(2, "0");
   return `${hours}:${minutes}`;
@@ -101,7 +101,7 @@ export async function GET(_req: NextRequest) {
           success: true,
           message: "Too early for checkout reminders (before 09:40 UTC)",
           currentTime: currentUTCTime.toISOString(),
-          timestamp: new Date().toISOString(),
+          timestamp: getCurrentUTCTime().toISOString(),
         },
         { status: 200 },
       );
@@ -117,7 +117,7 @@ export async function GET(_req: NextRequest) {
         {
           success: true,
           message: "No users need checkout reminders",
-          timestamp: new Date().toISOString(),
+          timestamp: getCurrentUTCTime().toISOString(),
         },
         { status: 200 },
       );
@@ -303,7 +303,7 @@ export async function GET(_req: NextRequest) {
       {
         success: true,
         message: `Checkout reminders processed: ${sentCount} sent (${sent10MinCount} x 10min, ${sentFinalCount} x final), ${scheduledCount} scheduled, ${failedCount} failed, ${skippedCount} skipped`,
-        timestamp: new Date().toISOString(),
+        timestamp: getCurrentUTCTime().toISOString(),
         currentUTCTime: currentUTCTime.toISOString(),
         statistics: {
           total: results.length,
@@ -325,7 +325,7 @@ export async function GET(_req: NextRequest) {
         success: false,
         message: "Failed to send dynamic checkout reminders",
         error: error.message,
-        timestamp: new Date().toISOString(),
+        timestamp: getCurrentUTCTime().toISOString(),
       },
       { status: 500 },
     );

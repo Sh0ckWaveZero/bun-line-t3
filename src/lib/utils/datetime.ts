@@ -3,7 +3,11 @@
 
 // Get current UTC time (for database storage)
 export const getCurrentUTCTime = (): Date => {
-  return new Date(); // Date object is already in UTC
+  // Return a Date object representing the current UTC time
+  // Note: new Date() creates a Date object based on local time,
+  // but we need true UTC time for consistent database storage
+  const now = new Date();
+  return new Date(now.getTime() + now.getTimezoneOffset() * 60000);
 };
 
 // Get current Bangkok time (for validation and display)
@@ -28,9 +32,20 @@ export const getCurrentBangkokTime = (): Date => {
 
 // Convert UTC time to Bangkok time for display
 export const convertUTCToBangkok = (utcDate: Date): Date => {
-  // Create a new date with Bangkok timezone offset (+7 hours)
-  const bangkokTime = new Date(utcDate.getTime() + 7 * 60 * 60 * 1000);
-  return bangkokTime;
+  // Use proper timezone API instead of manual offset calculation
+  // This handles daylight saving time changes automatically (though Bangkok doesn't use DST)
+  const bangkokTimeString = utcDate.toLocaleString("en-US", {
+    timeZone: "Asia/Bangkok",
+    year: "numeric",
+    month: "2-digit", 
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+  
+  return new Date(bangkokTimeString);
 };
 
 // Get today's date in YYYY-MM-DD format based on Bangkok timezone
