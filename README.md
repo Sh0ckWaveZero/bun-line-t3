@@ -191,7 +191,8 @@ Comprehensive documentation is available in the `/docs` directory:
 - **[🏢 Attendance System](./docs/ATTENDANCE_SYSTEM.md)** - Work time tracking features
 - **[💬 LINE Commands (Thai)](./docs/LINE_COMMANDS_THAI.md)** - คำสั่ง LINE Bot (ภาษาไทย)
 - **[💬 LINE Commands (English)](./docs/LINE_COMMANDS.md)** - LINE Bot commands reference
-- **[⏰ Automated Checkout](./docs/AUTOMATED_CHECKOUT.md)** - ✅ **Production Ready** - Automated reminders
+- **[⏰ Cron Jobs System](./docs/CRON-JOBS.md)** - ✅ **Production Ready** - Automated reminder system
+- **[🔧 Shared Utilities](./docs/SHARED-UTILITIES.md)** - Reusable utility functions reference
 - **[💰 Crypto Tracking](./docs/CRYPTO_TRACKING.md)** - Cryptocurrency monitoring
 - **[🌍 Air Quality](./docs/AIR_QUALITY.md)** - Environmental data monitoring
 
