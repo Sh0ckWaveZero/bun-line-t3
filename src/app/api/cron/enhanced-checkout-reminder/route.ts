@@ -1,11 +1,12 @@
 import { NextRequest } from "next/server";
 import { headers } from "next/headers";
-import { env } from "@/env.mjs";
 import { bubbleTemplate } from "@/lib/validation/line";
 import { attendanceService } from "@/features/attendance/services/attendance";
 import { db } from "@/lib/database/db";
 import { roundToOneDecimal } from "@/lib/utils/number";
-import { getCurrentUTCTime, convertUTCToBangkok } from "@/lib/utils/datetime";
+import { getCurrentUTCTime, formatUTCTimeAsThaiTime } from "@/lib/utils/datetime";
+import { validateSimpleCronAuth } from "@/lib/utils/cron-auth";
+import { sendPushMessage, createFlexCarousel } from "@/lib/utils/line-messaging";
 import {
   shouldReceive10MinReminder,
   shouldReceiveFinalReminder,
@@ -13,55 +14,6 @@ import {
   calculateUserCompletionTime,
 } from "@/features/attendance/helpers/utils";
 
-// Helper function to format UTC time as Thai time display (UTC+7)
-const formatUTCTimeAsThaiTime = (utcDate: Date): string => {
-  const thaiTime = convertUTCToBangkok(utcDate);
-  const hours = thaiTime.getUTCHours().toString().padStart(2, "0");
-  const minutes = thaiTime.getUTCMinutes().toString().padStart(2, "0");
-  return `${hours}:${minutes}`;
-};
-
-// Helper function to send push message
-const sendPushMessage = async (userId: string, messages: any[]) => {
-  const lineChannelAccessToken = env.LINE_CHANNEL_ACCESS;
-  const lineHeader = {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${lineChannelAccessToken}`,
-  };
-
-  try {
-    const response = await fetch(`${env.LINE_MESSAGING_API}/push`, {
-      method: "POST",
-      headers: lineHeader,
-      body: JSON.stringify({
-        to: userId,
-        messages: messages,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to send push message");
-    }
-
-    return response;
-  } catch (err: any) {
-    console.error("Error sending push message:", err.message);
-    throw err;
-  }
-};
-
-const flexMessage = (bubbleItems: any[]) => {
-  return [
-    {
-      type: "flex",
-      altText: "Work Attendance System",
-      contents: {
-        type: "carousel",
-        contents: bubbleItems,
-      },
-    },
-  ];
-};
 
 /**
  * Enhanced Checkout Reminder with Dynamic Timing
@@ -74,7 +26,7 @@ export async function GET(_req: NextRequest) {
 
     // Verify that this request is coming from authorized source
     const authHeader = headersList.get("authorization");
-    if (authHeader !== `Bearer ${env.CRON_SECRET}`) {
+    if (!validateSimpleCronAuth(authHeader)) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -232,7 +184,7 @@ export async function GET(_req: NextRequest) {
               type: "text",
               text: messageText,
             },
-            ...flexMessage(
+            ...createFlexCarousel(
               bubbleTemplate.workStatus({
                 id: attendance.id,
                 userId: attendance.userId,

@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { env } from "@/env.mjs";
 
 interface AuthResult {
   success: boolean;
@@ -41,4 +42,13 @@ export function validateCronAuth(req: NextRequest): AuthResult {
   }
 
   return { success: true };
+}
+
+/**
+ * Simple cron auth validation for enhanced-checkout-reminder style
+ * @param authHeader Authorization header from request
+ * @returns boolean indicating if auth is valid
+ */
+export function validateSimpleCronAuth(authHeader: string | null): boolean {
+  return authHeader === `Bearer ${env.CRON_SECRET}`;
 }

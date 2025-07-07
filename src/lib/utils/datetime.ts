@@ -82,3 +82,11 @@ export const formatThaiTimeOnly = (date: Date): string => {
 
   return `${hours}:${minutes}`;
 };
+
+// Format UTC time as Thai time display (HH:MM) - for cron jobs
+export const formatUTCTimeAsThaiTime = (utcDate: Date): string => {
+  const thaiTime = convertUTCToBangkok(utcDate);
+  const hours = thaiTime.getUTCHours().toString().padStart(2, "0");
+  const minutes = thaiTime.getUTCMinutes().toString().padStart(2, "0");
+  return `${hours}:${minutes}`;
+};
