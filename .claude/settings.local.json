@@ -23,6 +23,30 @@
       "Bash(eslint:*)",
       "Bash(mkdir:*)"
     ],
-    "deny": []
+    "deny": [
+      "Read(**/.env*)",
+      "Read(**/.config*)",
+      "Read(**/*.key)",
+      "Read(**/*.pem)",
+      "Read(**/*.p12)",
+      "Read(**/*.pfx)",
+      "Read(**/*.crt)",
+      "Read(**/*.cer)",
+      "Read(**/*.jks)",
+      "Read(**/*.keystore)",
+      "Read(**/*.secrets)",
+      "Read(**/*.private)",
+      "Read(**/*.backup)",
+      "Read(**/*.bak)",
+      "Read(**/*.vault)",
+      "Read(**/passwd)",
+      "Read(**/shadow)",
+      "Read(**/hosts)",
+      "Read(**/.ssh/*)",
+      "Read(**/.aws/*)",
+      "Read(**/.kube/*)",
+      "Read(**/.docker/*)",
+      "Read(**/.npm/*)"
+    ]
   }
 }
