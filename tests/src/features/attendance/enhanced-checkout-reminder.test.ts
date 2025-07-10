@@ -47,7 +47,7 @@ describe("Enhanced Checkout Reminder Tests", () => {
       expect(reminderBangkok.getMinutes()).toBe(0);
     });
 
-    test("should handle early morning check-in correctly", () => {
+    test("should handle early morning check-in correctly (use 8AM baseline)", () => {
       // เข้างานเช้าตรู่ 07:00 น. (Bangkok) = 00:00 น. (UTC)
       const checkInTimeUTC = new Date("2025-06-17T00:00:00.000Z");
 
@@ -55,8 +55,8 @@ describe("Enhanced Checkout Reminder Tests", () => {
       const reminderTime = calculateUserReminderTime(checkInTimeUTC, 30);
       const reminderBangkok = convertUTCToBangkok(reminderTime);
 
-      // ควรได้เวลาแจ้งเตือน = 15:30 น. (07:00 + 9 ชม. - 30 นาที)
-      expect(reminderBangkok.getHours()).toBe(15);
+      // เข้าก่อน 8:00 น. ใช้ 8:00 น. เป็นฐาน -> 16:30 น. (08:00 + 9 ชม. - 30 นาที)
+      expect(reminderBangkok.getHours()).toBe(16);
       expect(reminderBangkok.getMinutes()).toBe(30);
     });
   });

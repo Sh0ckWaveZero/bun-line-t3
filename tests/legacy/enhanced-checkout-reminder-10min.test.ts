@@ -16,12 +16,13 @@ describe("Enhanced Checkout Reminder - 10 Minutes", () => {
       expect(reminderBangkok.getUTCMinutes()).toBe(50);
     });
 
-    test("ควรแจ้งเตือน 10 นาทีก่อนครบ 9 ชั่วโมง (เข้างาน 07:30)", () => {
+    test("ควรแจ้งเตือน 10 นาทีก่อนครบ 9 ชั่วโมง (เข้างาน 07:30 - ใช้ 8:00 เป็นฐาน)", () => {
       const checkInTime = new Date("2025-06-18T00:30:00.000Z"); // 07:30 Bangkok
       const reminderTime = calculateUserReminderTime(checkInTime);
       const reminderBangkok = convertUTCToBangkok(reminderTime);
-      expect(reminderBangkok.getUTCHours()).toBe(16); // 16:20 Bangkok
-      expect(reminderBangkok.getUTCMinutes()).toBe(20);
+      // เข้าก่อน 8:00 น. ใช้ 8:00 น. เป็นฐาน -> 16:50 Bangkok
+      expect(reminderBangkok.getUTCHours()).toBe(16); // 16:50 Bangkok
+      expect(reminderBangkok.getUTCMinutes()).toBe(50);
     });
 
     test("ควรแจ้งเตือน 10 นาทีก่อนครบ 9 ชั่วโมง (เข้างาน 10:30)", () => {
