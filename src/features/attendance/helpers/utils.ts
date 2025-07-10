@@ -51,13 +51,22 @@ export const getUsersWithPendingCheckout = async (): Promise<string[]> => {
  * @param checkInTime เวลาเข้างาน (UTC)
  * @param offsetMinutes จำนวน (นาที) ที่ต้องการลบจากเวลาครบ 9 ชั่วโมง (default = 10)
  * คืนค่า Date ที่เป็น UTC (ไม่แปลงเป็น Bangkok)
+ * 
+ * กฎ: ถ้าเข้างานก่อน 8:00 น. (01:00 UTC) ให้ใช้ 8:00 น. เป็นฐานในการคำนวณ
  */
 export const calculateUserReminderTime = (
   checkInTime: Date,
   offsetMinutes: number = 10,
 ): Date => {
+  // สร้าง Date object สำหรับ 8:00 น. (01:00 UTC) ในวันเดียวกัน
+  const officialStartTime = new Date(checkInTime);
+  officialStartTime.setUTCHours(1, 0, 0, 0); // 8:00 Bangkok = 01:00 UTC
+  
+  // ถ้าเข้างานก่อน 8:00 น. ให้ใช้ 8:00 น. เป็นฐาน
+  const baseTime = checkInTime < officialStartTime ? officialStartTime : checkInTime;
+  
   // คำนวณเวลาสิ้นสุด 9 ชั่วโมง (UTC)
-  const completionTime = new Date(checkInTime);
+  const completionTime = new Date(baseTime);
   completionTime.setHours(completionTime.getHours() + 9);
   // ลบ offsetMinutes (default 10 นาที)
   const reminderTime = new Date(completionTime);
@@ -68,10 +77,19 @@ export const calculateUserReminderTime = (
 
 /**
  * Calculate exact 9-hour completion time for final reminder
+ * 
+ * กฎ: ถ้าเข้างานก่อน 8:00 น. (01:00 UTC) ให้ใช้ 8:00 น. เป็นฐานในการคำนวณ
  */
 export const calculateUserCompletionTime = (checkInTime: Date): Date => {
+  // สร้าง Date object สำหรับ 8:00 น. (01:00 UTC) ในวันเดียวกัน
+  const officialStartTime = new Date(checkInTime);
+  officialStartTime.setUTCHours(1, 0, 0, 0); // 8:00 Bangkok = 01:00 UTC
+  
+  // ถ้าเข้างานก่อน 8:00 น. ให้ใช้ 8:00 น. เป็นฐาน
+  const baseTime = checkInTime < officialStartTime ? officialStartTime : checkInTime;
+  
   // ไม่ต้องแปลง checkInTime เป็น Bangkok ใช้ UTC ตรง ๆ
-  const completionTime = new Date(checkInTime);
+  const completionTime = new Date(baseTime);
   completionTime.setHours(completionTime.getHours() + 9);
   return completionTime;
 };
