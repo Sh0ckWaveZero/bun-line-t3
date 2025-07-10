@@ -28,14 +28,15 @@ describe("Enhanced Checkout Reminder Helpers", () => {
       expect(reminderTime.getUTCMinutes()).toBe(45);
     });
 
-    test("should handle early check-in times", () => {
+    test("should handle early check-in times (use 8AM baseline)", () => {
       const checkInTime = new Date("2025-06-30T00:30:00.000Z"); // 07:30 Bangkok
       const reminderTime = calculateUserReminderTime(checkInTime);
 
-      // 9 hours after 00:30 UTC = 09:30 UTC
-      // 10 minutes before = 09:20 UTC
+      // Check-in before 8AM (01:00 UTC), so use 8AM as baseline
+      // 9 hours after 01:00 UTC = 10:00 UTC
+      // 10 minutes before = 09:50 UTC
       expect(reminderTime.getUTCHours()).toBe(9);
-      expect(reminderTime.getUTCMinutes()).toBe(20);
+      expect(reminderTime.getUTCMinutes()).toBe(50);
     });
 
     test("should handle late check-in times", () => {
@@ -59,7 +60,7 @@ describe("Enhanced Checkout Reminder Helpers", () => {
       expect(completionTime.getUTCMinutes()).toBe(0);
     });
 
-    test("should handle fractional check-in times", () => {
+    test("should handle fractional check-in times (after 8AM)", () => {
       const checkInTime = new Date("2025-06-30T01:15:30.500Z"); // 08:15:30.500 Bangkok
       const completionTime = calculateUserCompletionTime(checkInTime);
 
@@ -68,6 +69,16 @@ describe("Enhanced Checkout Reminder Helpers", () => {
       expect(completionTime.getUTCMinutes()).toBe(15);
       expect(completionTime.getUTCSeconds()).toBe(30);
       expect(completionTime.getUTCMilliseconds()).toBe(500);
+    });
+
+    test("should handle early check-in times (use 8AM baseline)", () => {
+      const checkInTime = new Date("2025-06-30T00:30:00.000Z"); // 07:30 Bangkok
+      const completionTime = calculateUserCompletionTime(checkInTime);
+
+      // Check-in before 8AM (01:00 UTC), so use 8AM as baseline
+      // 9 hours after 01:00 UTC = 10:00 UTC
+      expect(completionTime.getUTCHours()).toBe(10);
+      expect(completionTime.getUTCMinutes()).toBe(0);
     });
   });
 
@@ -243,18 +254,19 @@ describe("Enhanced Checkout Reminder Helpers", () => {
       expect(completionTime.getUTCMinutes()).toBe(30);
     });
 
-    test("should handle early bird schedule", () => {
+    test("should handle early bird schedule (use 8AM baseline)", () => {
       // Early start at 7:00 AM
       const checkInTime = new Date("2025-06-30T00:00:00.000Z"); // 07:00 Bangkok
       const reminderTime = calculateUserReminderTime(checkInTime);
       const completionTime = calculateUserCompletionTime(checkInTime);
 
-      // Reminder at 15:50 Bangkok (08:50 UTC)
-      expect(reminderTime.getUTCHours()).toBe(8);
+      // Check-in before 8AM (01:00 UTC), so use 8AM as baseline
+      // Reminder at 16:50 Bangkok (09:50 UTC)
+      expect(reminderTime.getUTCHours()).toBe(9);
       expect(reminderTime.getUTCMinutes()).toBe(50);
 
-      // Completion at 16:00 Bangkok (09:00 UTC)
-      expect(completionTime.getUTCHours()).toBe(9);
+      // Completion at 17:00 Bangkok (10:00 UTC)
+      expect(completionTime.getUTCHours()).toBe(10);
       expect(completionTime.getUTCMinutes()).toBe(0);
     });
   });
