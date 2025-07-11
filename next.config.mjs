@@ -34,7 +34,7 @@ const config = {
         allowedDevOrigins: ["*.your-app.example.com"],
       }
     : {}),
-  // output: "standalone", // Disable standalone to serve static files
+  output: "standalone", // Enable standalone for Docker builds
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
