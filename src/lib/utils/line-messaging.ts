@@ -2,6 +2,7 @@ import { env } from "@/env.mjs";
 import { promises as fs } from "fs";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
+import { validateUrl } from "@/lib/security/url-validator";
 
 // Types for LINE messaging
 interface LineMessage {
@@ -127,16 +128,63 @@ export async function sendImageMessage(
  * @param filename Optional filename
  * @returns Promise<{originalUrl: string, previewUrl: string}> URLs to uploaded images
  */
+/**
+ * Validates and sanitizes filename input to prevent SSRF attacks
+ * @param filename User-provided filename
+ * @returns Sanitized filename or default
+ */
+function sanitizeFilename(filename?: string): string {
+  if (!filename) {
+    return "chart";
+  }
+
+  // Allowlist: only alphanumeric, hyphens, underscores (no path separators)
+  const allowedPattern = /^[a-zA-Z0-9_-]+$/;
+
+  // Remove file extension and sanitize
+  const baseName = filename.replace(/\.[^.]*$/, "");
+
+  // Validate against allowlist
+  if (!baseName || !allowedPattern.test(baseName) || baseName.length > 50) {
+    console.warn(
+      `🚨 Security: Invalid filename "${filename}" sanitized to "chart"`,
+    );
+    return "chart";
+  }
+
+  return baseName;
+}
+
+/**
+ * Validates base URL to prevent SSRF attacks
+ * @param baseUrl Base URL to validate
+ * @returns Validated base URL or safe fallback
+ */
+function validateBaseUrl(baseUrl: string): string {
+  const validation = validateUrl(baseUrl);
+
+  if (!validation.isValid) {
+    console.warn(
+      `🚨 Security: Invalid base URL "${baseUrl}" replaced with safe fallback`,
+    );
+    return "https://localhost:4325"; // Safe fallback
+  }
+
+  return baseUrl;
+}
+
 export async function uploadImageToTemporaryHost(
   imageBuffer: Buffer,
   filename?: string,
 ): Promise<UploadResult> {
+  // Sanitize filename input to prevent path traversal and injection
+  const sanitizedBaseName = sanitizeFilename(filename);
+
   // Generate unique filename - always include timestamp and UUID
   const uniqueId = uuidv4();
   const timestamp = Date.now();
-  const baseName = filename ? filename.replace(".png", "") : "chart";
-  const safeFilename = `${baseName}-${timestamp}-${uniqueId}.png`;
-  const previewFilename = `${baseName}-${timestamp}-${uniqueId}_preview.png`;
+  const safeFilename = `${sanitizedBaseName}-${timestamp}-${uniqueId}.png`;
+  const previewFilename = `${sanitizedBaseName}-${timestamp}-${uniqueId}_preview.png`;
 
   // Create file paths
   const publicDir = path.join(process.cwd(), "public", "temp-charts");
@@ -180,12 +228,31 @@ export async function uploadImageToTemporaryHost(
   await new Promise((resolve) => setTimeout(resolve, 100));
 
   // Return public URLs via API route - LINE requires HTTPS and accessible domain
-  const baseUrl =
+  // Validate base URL to prevent SSRF attacks
+  const rawBaseUrl =
     process.env.NEXTAUTH_URL ||
     process.env.FRONTEND_URL ||
     "https://localhost:4325";
+  const baseUrl = validateBaseUrl(rawBaseUrl);
+
+  // Construct URLs with validated base URL and sanitized filenames
   const originalUrl = `${baseUrl}/api/temp-charts/${safeFilename}`;
   const previewUrl = `${baseUrl}/api/temp-charts/${previewFilename}`;
+
+  // Additional validation of constructed URLs
+  const originalUrlValidation = validateUrl(originalUrl);
+  const previewUrlValidation = validateUrl(previewUrl);
+
+  if (!originalUrlValidation.isValid || !previewUrlValidation.isValid) {
+    console.error(`🚨 Security: Constructed URLs failed validation`);
+    console.error(
+      `Original URL: ${originalUrl} - Valid: ${originalUrlValidation.isValid}`,
+    );
+    console.error(
+      `Preview URL: ${previewUrl} - Valid: ${previewUrlValidation.isValid}`,
+    );
+    throw new Error("Failed to generate secure URLs for image upload");
+  }
 
   console.log("📂 Original image saved to:", filePath);
   console.log("📂 Preview image saved to:", previewPath);
@@ -226,6 +293,14 @@ export async function sendChartImage(
   filename?: string,
 ): Promise<Response> {
   try {
+    // Validate filename parameter to prevent SSRF attacks
+    if (filename && typeof filename !== "string") {
+      console.warn(
+        `🚨 Security: Invalid filename type provided: ${typeof filename}`,
+      );
+      throw new Error("Invalid filename parameter");
+    }
+
     // Upload image to temporary hosting service with preview
     const { originalUrl, previewUrl } = await uploadImageToTemporaryHost(
       chartBuffer,

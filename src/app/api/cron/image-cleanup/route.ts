@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   try {
     // Default cleanup images older than 2 hours
     await cleanupTemporaryImages(120);
-    
+
     return Response.json({
       success: true,
       message: "Image cleanup completed successfully",
@@ -21,10 +21,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: any) {
     console.error("❌ Error in image cleanup cron:", error);
-    return createErrorResponse(
-      "Image cleanup failed",
-      500,
-      error.message,
-    );
+    return createErrorResponse("Image cleanup failed", 500, error.message);
   }
 }
