@@ -11,6 +11,8 @@ import { handleHelpCommand } from "./handleHelpCommand";
 import { handlePolicyInfo } from "./handlePolicyInfo";
 import { handleLeaveCommandWrapper } from "./handleLeaveCommandWrapper";
 import { handleDefaultCommand } from "./handleDefaultCommand";
+import { handleChartCommand, parseChartCommand } from "./handleChartCommand";
+const { sendMessage } = await import("@/lib/utils/line-utils");
 
 export const handleCommand = async (
   command: string,
@@ -94,6 +96,57 @@ export const handleCommand = async (
   // Leave
   if (["leave", "ลา"].includes(command)) {
     await handleLeaveCommandWrapper(conditions, req);
+    return;
+  }
+  // Chart
+  if (["chart", "กราฟ"].includes(command)) {
+    console.log("🚀 Chart command detected, command:", command);
+    try {
+      // Check if request structure is valid
+      if (!req.body || !req.body.events || !req.body.events[0]) {
+        console.error("Invalid request structure for chart command");
+        return;
+      }
+
+      const userId = req.body.events[0].source.userId;
+      const originalText = req.body.events[0].message.text;
+      console.log(
+        "📊 Chart command - userId:",
+        userId,
+        "originalText:",
+        originalText,
+      );
+
+      const chartParams = parseChartCommand(originalText);
+      console.log("📊 Chart params parsed:", chartParams);
+
+      if (chartParams) {
+        console.log("📊 Calling handleChartCommand with params:", chartParams);
+        await handleChartCommand(req, userId, chartParams);
+        console.log("✅ Chart command completed successfully");
+      } else {
+        console.error("❌ Chart params parsing failed");
+        await sendMessage(req, [
+          {
+            type: "text",
+            text: `รูปแบบคำสั่งไม่ถูกต้อง\n\nใช้: /chart [เหรียญ] [ตลาด]\nตัวอย่าง: /chart btc, /chart eth binance`,
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error("❌ Chart command error:", error);
+      // Send error message back to user
+      try {
+        await sendMessage(req, [
+          {
+            type: "text",
+            text: `ขออภัย! ไม่สามารถสร้างกราฟได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง\n\nError: ${error instanceof Error ? error.message : "Unknown error"}`,
+          },
+        ]);
+      } catch (sendError) {
+        console.error("Failed to send error message:", sendError);
+      }
+    }
     return;
   }
   // Default

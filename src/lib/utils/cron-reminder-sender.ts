@@ -16,12 +16,17 @@ interface ReminderResult {
  * @param todayString Date string in YYYY-MM-DD format (Bangkok timezone)
  * @returns ReminderResult with sending statistics
  */
-export async function sendCheckInReminders(todayString: string): Promise<ReminderResult> {
+export async function sendCheckInReminders(
+  todayString: string,
+): Promise<ReminderResult> {
   // Get active LINE user IDs for today
-  const lineUserIds = await attendanceService.getActiveLineUserIdsForCheckinReminder(todayString);
+  const lineUserIds =
+    await attendanceService.getActiveLineUserIdsForCheckinReminder(todayString);
 
   if (lineUserIds.length === 0) {
-    console.log("📭 ไม่มี LINE userId สำหรับแจ้งเตือน (อาจมีคนลาทั้งหมดหรือไม่มี LINE ID ที่ active)");
+    console.log(
+      "📭 ไม่มี LINE userId สำหรับแจ้งเตือน (อาจมีคนลาทั้งหมดหรือไม่มี LINE ID ที่ active)",
+    );
     return {
       success: false,
       sentCount: 0,
@@ -49,13 +54,13 @@ export async function sendCheckInReminders(todayString: string): Promise<Reminde
       pushFail++;
       console.error(
         `❌ ส่ง push แจ้งเตือนให้ LINE userId ${lineId} ไม่สำเร็จ`,
-        error
+        error,
       );
     }
   }
 
   console.log(
-    `✅ ส่ง push แจ้งเตือนเช็คอินสำเร็จ ${pushSuccess} คน, ล้มเหลว ${pushFail} คน`
+    `✅ ส่ง push แจ้งเตือนเช็คอินสำเร็จ ${pushSuccess} คน, ล้มเหลว ${pushFail} คน`,
   );
   console.log(`📝 ข้อความที่ส่ง: "${randomMessage}"`);
 

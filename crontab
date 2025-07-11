@@ -19,6 +19,10 @@
 # ทำงานทุกวัน เพื่อให้ครอบคลุมทุกวันทำงาน
 0 0 * * * curl -H "Authorization: Bearer $CRON_SECRET" http://app:12914/api/cron/auto-checkout
 
+# ลบไฟล์รูปภาพชั่วคราวทุก 2 ชั่วโมง (ไฟล์ที่เก่ากว่า 2 ชั่วโมง)
+# ป้องกันไฟล์สะสมจนเต็มพื้นที่ในเซิร์ฟเวอร์
+0 */2 * * * curl -X POST -H "Authorization: Bearer $CRON_SECRET" http://app:12914/api/cron/image-cleanup
+
 # ตรวจสอบให้แน่ใจว่า container และ host มี timezone ที่ถูกต้อง
 # ถ้า Dockerfile.cron ตั้ง TZ=Asia/Bangkok แล้ว schedule นี้จะทำงานตามเวลา Asia/Bangkok
 

@@ -34,7 +34,7 @@ const config = {
         allowedDevOrigins: ["*.your-app.example.com"],
       }
     : {}),
-  output: "standalone",
+  // output: "standalone", // Disable standalone to serve static files
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
@@ -63,6 +63,12 @@ const config = {
       "@/utils": path.resolve(__dirname, "./src/lib/utils"),
       "@/validation": path.resolve(__dirname, "./src/lib/validation"),
     };
+
+    // Fix canvas module issues for chartjs-node-canvas
+    if (isServer) {
+      config.externals = config.externals || [];
+      config.externals.push("canvas");
+    }
     if (dev && !isServer) {
       if (config.devServer) {
         const allowedFromEnv = process.env.ALLOWED_DOMAINS
@@ -86,6 +92,13 @@ const config = {
       test: /\.test\.(ts|tsx)$/,
       use: "ignore-loader",
     });
+
+    // Suppress webpack warnings for chartjs-node-canvas
+    config.ignoreWarnings = config.ignoreWarnings || [];
+    config.ignoreWarnings.push(
+      /Critical dependency: the request of a dependency is an expression/,
+    );
+
     return config;
   },
   compiler: {

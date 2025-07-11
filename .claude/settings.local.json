@@ -21,7 +21,14 @@
       "Bash(ls:*)",
       "Bash(bun audit:*)",
       "Bash(eslint:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(bun list:*)",
+      "Bash(bun pm ls:*)",
+      "Bash(bun add:*)",
+      "WebFetch(domain:developers.line.biz)",
+      "mcp__ide__executeCode",
+      "Bash(NEXTAUTH_URL=https://line-login.midseelee.com bun test-chart-image.js)",
+      "Bash(bun:*)"
     ],
     "deny": [
       "Read(**/.env*)",

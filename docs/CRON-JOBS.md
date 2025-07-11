@@ -26,7 +26,7 @@ This document covers the automated cron job system for attendance reminders in t
 Our cron jobs use shared utilities for consistent behavior:
 
 - **cron-auth.ts**: Authentication validation
-- **line-messaging.ts**: LINE message sending utilities  
+- **line-messaging.ts**: LINE message sending utilities
 - **datetime.ts**: UTC/Bangkok timezone conversion
 - **cron-response.ts**: Standardized API responses
 
@@ -39,6 +39,7 @@ Our cron jobs use shared utilities for consistent behavior:
 **Schedule**: `0 1 * * 1-5` (01:00 UTC / 08:00 Bangkok, Monday-Friday)
 
 **Features**:
+
 - ✅ Working day validation (excludes weekends and Thai holidays)
 - ✅ Time window validation (01:00-02:59 UTC for flexibility)
 - ✅ Random friendly messages (20+ variations)
@@ -46,6 +47,7 @@ Our cron jobs use shared utilities for consistent behavior:
 - ✅ User filtering (excludes users on leave)
 
 **Flow**:
+
 ```mermaid
 flowchart TD
     A[Cron Trigger] --> B[Auth Validation]
@@ -54,7 +56,7 @@ flowchart TD
     D --> E[Get Active Users]
     E --> F[Send Reminders]
     F --> G[Update Statistics]
-    
+
     C -->|Too Early/Late| H[Skip - Wrong Time]
     D -->|Weekend/Holiday| I[Skip - Not Working Day]
     E -->|No Users| J[Skip - No Active Users]
@@ -67,6 +69,7 @@ flowchart TD
 **Schedule**: `*/5 9-13 * * 1-5` (Every 5 minutes, 09:00-13:59 UTC / 16:00-20:59 Bangkok, Monday-Friday)
 
 **Features**:
+
 - ✅ Dynamic timing based on check-in time
 - ✅ Two-tier reminder system (10-minute warning + final reminder)
 - ✅ Overtime detection and alerts
@@ -74,11 +77,13 @@ flowchart TD
 - ✅ Individual working hour preferences
 
 **Reminder Types**:
+
 1. **10-Minute Warning**: Sent 10 minutes before expected checkout
 2. **Final Reminder**: Sent at expected checkout time
 3. **Overtime Alert**: Sent when working beyond expected hours
 
 **Flow**:
+
 ```mermaid
 flowchart TD
     A[Cron Trigger] --> B[Auth Validation]
@@ -90,7 +95,7 @@ flowchart TD
     F -->|Final Reminder| H[Send Final Message]
     F -->|Overtime| I[Send Overtime Alert]
     F -->|Not Ready| J[Schedule for Later]
-    
+
     C -->|Too Early| K[Skip - Before 09:40 UTC]
     D -->|No Users| L[Skip - No Pending Checkouts]
 ```
@@ -118,7 +123,7 @@ NODE_ENV=production
 # Check-in reminder - 8 AM Bangkok (Monday-Friday)
 0 1 * * 1-5 curl -H "Authorization: Bearer $CRON_SECRET" http://app:12914/api/cron/check-in-reminder
 
-# Enhanced checkout reminder - Every 5 minutes (4:40-8:00 PM Bangkok, Monday-Friday)  
+# Enhanced checkout reminder - Every 5 minutes (4:40-8:00 PM Bangkok, Monday-Friday)
 */5 9-13 * * 1-5 curl -H "Authorization: Bearer $CRON_SECRET" http://app:12914/api/cron/enhanced-checkout-reminder
 
 # Auto checkout - Midnight cleanup
@@ -205,7 +210,7 @@ function validateCronAuth(req: NextRequest): AuthResult {
   // Returns: { success: boolean, error?: string, status?: number }
 }
 
-// Simple validation for boolean responses  
+// Simple validation for boolean responses
 function validateSimpleCronAuth(authHeader: string | null): boolean {
   // Returns: true if valid, false otherwise
 }
@@ -215,38 +220,44 @@ function validateSimpleCronAuth(authHeader: string | null): boolean {
 
 ```typescript
 // Send push message to LINE user
-async function sendPushMessage(userId: string, messages: any[]): Promise<Response>
+async function sendPushMessage(
+  userId: string,
+  messages: any[],
+): Promise<Response>;
 
 // Create flex carousel message
-function createFlexCarousel(bubbleItems: any[]): any[]
+function createFlexCarousel(bubbleItems: any[]): any[];
 ```
 
 ### Date/Time (`datetime.ts`)
 
 ```typescript
 // Get true UTC time (corrected implementation)
-function getCurrentUTCTime(): Date
+function getCurrentUTCTime(): Date;
 
 // Convert UTC to Bangkok timezone
-function convertUTCToBangkok(utcDate: Date): Date
+function convertUTCToBangkok(utcDate: Date): Date;
 
 // Format UTC time as Bangkok time string (HH:MM)
-function formatUTCTimeAsThaiTime(utcDate: Date): string
+function formatUTCTimeAsThaiTime(utcDate: Date): string;
 ```
 
 ## Security
 
 ### Authentication
+
 - All cron endpoints require `Authorization: Bearer {CRON_SECRET}` header
 - Validates against environment variable `CRON_SECRET`
 - Returns 401 Unauthorized for invalid/missing tokens
 
 ### Rate Limiting
+
 - Implemented via `RateLimiter.checkCronRateLimit()`
 - Prevents abuse and ensures system stability
 - Configurable limits per endpoint
 
 ### Input Validation
+
 - All user inputs validated using Zod schemas
 - Database queries use parameterized statements
 - LINE message content sanitized
@@ -254,16 +265,19 @@ function formatUTCTimeAsThaiTime(utcDate: Date): string
 ## Monitoring
 
 ### Logging
+
 - Structured console logging with emojis for visibility
 - Request/response logging for debugging
 - Error tracking with detailed messages
 
 ### Health Checks
+
 - Docker health checks verify container status
 - API endpoint availability monitoring
 - Database connection validation
 
 ### Metrics
+
 - Success/failure rates tracked per job
 - User engagement metrics (reminder response rates)
 - Performance metrics (execution time, memory usage)
@@ -273,6 +287,7 @@ function formatUTCTimeAsThaiTime(utcDate: Date): string
 ### Common Issues
 
 **1. Missing Reminders**
+
 ```bash
 # Check if cron container is running
 docker ps | grep cron
@@ -289,16 +304,19 @@ curl -H "Authorization: Bearer $CRON_SECRET" \
 ```
 
 **2. Wrong Timing**
+
 - Verify `APP_ENV=production` for time validation
 - Check timezone settings: `TZ=Asia/Bangkok`
 - Validate UTC time calculation with `getCurrentUTCTime()`
 
-**3. LINE Message Failures**  
+**3. LINE Message Failures**
+
 - Verify `LINE_CHANNEL_ACCESS` token validity
 - Check LINE Messaging API quotas and limits
 - Validate user LINE IDs in database
 
 **4. Authentication Errors**
+
 - Ensure `CRON_SECRET` is set in environment
 - Verify secret matches between cron job and API
 - Check authorization header format: `Bearer {secret}`
@@ -310,7 +328,7 @@ curl -H "Authorization: Bearer $CRON_SECRET" \
 curl -v -H "Authorization: Bearer $CRON_SECRET" \
      http://localhost:12914/api/cron/check-in-reminder
 
-# Test checkout reminder  
+# Test checkout reminder
 curl -v -H "Authorization: Bearer $CRON_SECRET" \
      http://localhost:12914/api/cron/enhanced-checkout-reminder
 
@@ -324,6 +342,7 @@ docker logs -f bun-line-t3-app | grep -E "(cron|reminder)"
 ## Development
 
 ### Local Testing
+
 ```bash
 # Start development server
 bun run dev
@@ -334,6 +353,7 @@ curl -H "Authorization: Bearer test-secret" \
 ```
 
 ### Adding New Cron Jobs
+
 1. Create new API endpoint in `/api/cron/`
 2. Use shared utilities from `/lib/utils/cron-*`
 3. Add authentication with `validateCronAuth()` or `validateSimpleCronAuth()`
@@ -342,6 +362,7 @@ curl -H "Authorization: Bearer test-secret" \
 6. Update documentation
 
 ### Testing
+
 ```bash
 # Run timezone tests
 bun test timezone
@@ -356,17 +377,19 @@ bun run lint
 ## Recent Changes
 
 ### v2.0.1 - UTC Timezone Fix & Refactoring (Latest)
+
 - ✅ **Fixed**: `getCurrentUTCTime()` now returns actual UTC instead of local time
 - ✅ **Refactored**: Extracted shared utilities for better code reusability
 - ✅ **Enhanced**: Improved error handling and response standardization
 - ✅ **Added**: Comprehensive logging and monitoring capabilities
 
 ### Migration Notes
+
 - **Breaking**: `getCurrentUTCTime()` behavior changed - now returns true UTC
 - **Improved**: All timezone calculations use proper APIs instead of manual offsets
 - **New**: Shared utilities available for other cron jobs
 
 ---
 
-*Last updated: January 7, 2025*  
-*Version: 2.0.1*
+_Last updated: January 7, 2025_  
+_Version: 2.0.1_

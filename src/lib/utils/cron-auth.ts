@@ -36,7 +36,7 @@ export function validateCronAuth(req: NextRequest): AuthResult {
   if (token !== cronSecret) {
     return {
       success: false,
-      error: "Invalid authorization token", 
+      error: "Invalid authorization token",
       status: 401,
     };
   }

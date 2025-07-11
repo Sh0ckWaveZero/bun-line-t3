@@ -26,6 +26,7 @@ node --version # Should be >= 18.0.0
 ### IDE Setup
 
 **Recommended VS Code Extensions:**
+
 ```json
 {
   "recommendations": [
@@ -40,6 +41,7 @@ node --version # Should be >= 18.0.0
 ```
 
 **VS Code Settings (`.vscode/settings.json`):**
+
 ```json
 {
   "editor.formatOnSave": true,
@@ -59,7 +61,7 @@ node --version # Should be >= 18.0.0
 ```
 src/
 ├── features/              # 🎯 Domain-driven feature modules
-│   ├── attendance/        
+│   ├── attendance/
 │   │   ├── services/      # Business logic
 │   │   ├── types/         # TypeScript definitions
 │   │   ├── helpers/       # Utility functions
@@ -95,14 +97,14 @@ Each feature follows this structure:
 
 ```typescript
 // features/[feature]/index.ts - Barrel export
-export * from './services'
-export * from './types'
-export * from './helpers'
-export * from './constants'
+export * from "./services";
+export * from "./types";
+export * from "./helpers";
+export * from "./constants";
 
 // features/[feature]/types/index.ts
 export interface FeatureData {
-  id: string
+  id: string;
   // ... type definitions
 }
 
@@ -121,45 +123,49 @@ export class FeatureService {
 ### TypeScript Guidelines
 
 **1. Use strict type definitions:**
+
 ```typescript
 // ✅ Good
 interface UserData {
-  id: string
-  name: string
-  email: string | null
-  createdAt: Date
+  id: string;
+  name: string;
+  email: string | null;
+  createdAt: Date;
 }
 
 // ❌ Avoid
 interface UserData {
-  id: any
-  name?: string
-  [key: string]: any
+  id: any;
+  name?: string;
+  [key: string]: any;
 }
 ```
 
 **2. Prefer interfaces over types for objects:**
+
 ```typescript
 // ✅ Preferred
 interface AttendanceRecord {
-  checkInTime: Date
-  checkOutTime: Date | null
+  checkInTime: Date;
+  checkOutTime: Date | null;
 }
 
 // ✅ Acceptable for unions
-type AttendanceStatus = 'CHECKED_IN' | 'CHECKED_OUT' | 'ABSENT'
+type AttendanceStatus = "CHECKED_IN" | "CHECKED_OUT" | "ABSENT";
 ```
 
 **3. Use utility types effectively:**
+
 ```typescript
 // ✅ Good
-type CreateUserRequest = Omit<User, 'id' | 'createdAt'>
-type UpdateUserRequest = Partial<Pick<User, 'name' | 'email'>>
+type CreateUserRequest = Omit<User, "id" | "createdAt">;
+type UpdateUserRequest = Partial<Pick<User, "name" | "email">>;
 ```
 
 ### React Component Guidelines
 
 **1. Use functional components with hooks:**
+
 ```typescript
 // ✅ Good
 interface AttendanceTableProps {
@@ -169,7 +175,7 @@ interface AttendanceTableProps {
 
 export function AttendanceTable({ data, onUpdate }: AttendanceTableProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  
+
   return (
     <div>
       {data.map(record => (
@@ -183,54 +189,56 @@ export function AttendanceTable({ data, onUpdate }: AttendanceTableProps) {
 ```
 
 **2. Custom hooks for shared logic:**
+
 ```typescript
 // ✅ Good
 export function useAttendanceData(userId: string) {
-  const [data, setData] = useState<AttendanceRecord[]>([])
-  const [loading, setLoading] = useState(true)
-  
+  const [data, setData] = useState<AttendanceRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     // Fetch logic
-  }, [userId])
-  
-  return { data, loading, refetch: () => {} }
+  }, [userId]);
+
+  return { data, loading, refetch: () => {} };
 }
 ```
 
 ### API Route Guidelines
 
 **1. Consistent error handling:**
+
 ```typescript
 // ✅ Good
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Unauthorized - Please login first" },
-        { status: 401 }
-      )
+        { status: 401 },
+      );
     }
-    
-    const body = await request.json()
-    const validatedData = schema.parse(body)
-    
+
+    const body = await request.json();
+    const validatedData = schema.parse(body);
+
     // Business logic
-    
-    return NextResponse.json({ success: true, data })
+
+    return NextResponse.json({ success: true, data });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Invalid input", details: error.errors },
-        { status: 400 }
-      )
+        { status: 400 },
+      );
     }
-    
-    console.error("API Error:", error)
+
+    console.error("API Error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
 ```
@@ -256,20 +264,22 @@ tests/
 ### Unit Testing
 
 **Testing utilities:**
+
 ```typescript
 // tests/helpers/test-matchers.ts
 export const testMatchers = {
   toBeValidDate: (received: any) => {
-    const pass = received instanceof Date && !isNaN(received.getTime())
+    const pass = received instanceof Date && !isNaN(received.getTime());
     return {
       pass,
-      message: () => `Expected ${received} to be a valid Date`
-    }
-  }
-}
+      message: () => `Expected ${received} to be a valid Date`,
+    };
+  },
+};
 ```
 
 **Component testing:**
+
 ```typescript
 // tests/src/components/AttendanceTable.test.tsx
 import { render, screen } from '@testing-library/react'
@@ -288,7 +298,7 @@ describe('AttendanceTable', () => {
 
   it('renders attendance records correctly', () => {
     render(<AttendanceTable data={mockData} onUpdate={jest.fn()} />)
-    
+
     expect(screen.getByText('2025-07-10')).toBeInTheDocument()
     expect(screen.getByText('08:00')).toBeInTheDocument()
     expect(screen.getByText('17:00')).toBeInTheDocument()
@@ -300,36 +310,36 @@ describe('AttendanceTable', () => {
 
 ```typescript
 // tests/api/attendance.test.ts
-import { testApiHandler } from 'next-test-api-route-handler'
-import handler from '@/app/api/attendance/update/route'
+import { testApiHandler } from "next-test-api-route-handler";
+import handler from "@/app/api/attendance/update/route";
 
-describe('/api/attendance/update', () => {
-  it('updates attendance record successfully', async () => {
+describe("/api/attendance/update", () => {
+  it("updates attendance record successfully", async () => {
     await testApiHandler({
       handler,
       requestPatcher: (req) => {
         req.headers = {
-          'content-type': 'application/json',
-          'authorization': 'Bearer valid-token'
-        }
+          "content-type": "application/json",
+          authorization: "Bearer valid-token",
+        };
       },
       test: async ({ fetch }) => {
         const res = await fetch({
-          method: 'PUT',
+          method: "PUT",
           body: JSON.stringify({
-            attendanceId: 'test-id',
-            checkInTime: '2025-07-10T08:00:00Z',
-            checkOutTime: '2025-07-10T17:00:00Z'
-          })
-        })
-        
-        expect(res.status).toBe(200)
-        const data = await res.json()
-        expect(data.success).toBe(true)
-      }
-    })
-  })
-})
+            attendanceId: "test-id",
+            checkInTime: "2025-07-10T08:00:00Z",
+            checkOutTime: "2025-07-10T17:00:00Z",
+          }),
+        });
+
+        expect(res.status).toBe(200);
+        const data = await res.json();
+        expect(data.success).toBe(true);
+      },
+    });
+  });
+});
 ```
 
 ---
@@ -339,6 +349,7 @@ describe('/api/attendance/update', () => {
 ### Git Workflow
 
 **Branch Naming Convention:**
+
 ```bash
 # Feature branches
 feature/attendance-reports
@@ -356,6 +367,7 @@ release/v1.2.0
 ```
 
 **Commit Message Format:**
+
 ```bash
 # Format: type(scope): description
 feat(attendance): add monthly report generation
@@ -368,11 +380,13 @@ refactor(utils): extract date formatting functions
 ### Development Process
 
 **1. Create Feature Branch:**
+
 ```bash
 git checkout -b feature/your-feature-name
 ```
 
 **2. Development Commands:**
+
 ```bash
 # Start development server
 bun run dev
@@ -388,6 +402,7 @@ bun run format
 ```
 
 **3. Pre-commit Checklist:**
+
 - [ ] Tests pass: `bun test`
 - [ ] Linting passes: `bun run lint`
 - [ ] Code formatted: `bun run format:check`
@@ -395,6 +410,7 @@ bun run format
 - [ ] Documentation updated if needed
 
 **4. Create Pull Request:**
+
 ```bash
 git push origin feature/your-feature-name
 # Create PR via GitHub UI
@@ -420,6 +436,7 @@ NODE_ENV=production bun run start
 ### Environment Management
 
 **Environment files:**
+
 ```bash
 .env.development     # Local development
 .env.test           # Test environment
@@ -427,6 +444,7 @@ NODE_ENV=production bun run start
 ```
 
 **Environment switching:**
+
 ```bash
 # Switch to development
 bun run env:dev
@@ -445,6 +463,7 @@ bun run env:status
 ### Debug Configuration
 
 **VS Code Debug (`.vscode/launch.json`):**
+
 ```json
 {
   "version": "0.2.0",
@@ -472,25 +491,26 @@ bun run env:status
 ### Performance Monitoring
 
 **Performance utilities:**
+
 ```typescript
 // lib/utils/performance.ts
 export function measurePerformance<T>(
   name: string,
-  fn: () => T | Promise<T>
+  fn: () => T | Promise<T>,
 ): T | Promise<T> {
-  const start = performance.now()
-  const result = fn()
-  
+  const start = performance.now();
+  const result = fn();
+
   if (result instanceof Promise) {
     return result.finally(() => {
-      const duration = performance.now() - start
-      console.log(`${name}: ${duration}ms`)
-    })
+      const duration = performance.now() - start;
+      console.log(`${name}: ${duration}ms`);
+    });
   }
-  
-  const duration = performance.now() - start
-  console.log(`${name}: ${duration}ms`)
-  return result
+
+  const duration = performance.now() - start;
+  console.log(`${name}: ${duration}ms`);
+  return result;
 }
 ```
 
@@ -501,19 +521,20 @@ export function measurePerformance<T>(
 ### Input Validation
 
 **Always use Zod schemas:**
+
 ```typescript
 // ✅ Good
-import { z } from 'zod'
+import { z } from "zod";
 
 const CreateUserSchema = z.object({
   name: z.string().min(1).max(100),
   email: z.string().email(),
-  role: z.enum(['USER', 'ADMIN'])
-})
+  role: z.enum(["USER", "ADMIN"]),
+});
 
 export async function POST(request: NextRequest) {
-  const body = await request.json()
-  const validatedData = CreateUserSchema.parse(body)
+  const body = await request.json();
+  const validatedData = CreateUserSchema.parse(body);
   // Use validatedData
 }
 ```
@@ -521,18 +542,19 @@ export async function POST(request: NextRequest) {
 ### Authentication Patterns
 
 **Session validation:**
+
 ```typescript
 // ✅ Good
 async function requireAuth(request: NextRequest) {
-  const session = await getServerSession(authOptions)
+  const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    throw new Error('Unauthorized')
+    throw new Error("Unauthorized");
   }
-  return session
+  return session;
 }
 
 export async function POST(request: NextRequest) {
-  const session = await requireAuth(request)
+  const session = await requireAuth(request);
   // Proceed with authenticated user
 }
 ```
@@ -540,17 +562,18 @@ export async function POST(request: NextRequest) {
 ### SSRF Protection
 
 **URL validation:**
+
 ```typescript
 // ✅ Good
-import { validateUrl } from '@/lib/security/url-validator'
+import { validateUrl } from "@/lib/security/url-validator";
 
 export async function fetchExternalData(url: string) {
   if (!validateUrl(url)) {
-    throw new Error('Invalid or disallowed URL')
+    throw new Error("Invalid or disallowed URL");
   }
-  
-  const response = await fetch(url)
-  return response.json()
+
+  const response = await fetch(url);
+  return response.json();
 }
 ```
 
@@ -561,29 +584,31 @@ export async function fetchExternalData(url: string) {
 ### Database Operations
 
 **Use transactions for multiple operations:**
+
 ```typescript
 // ✅ Good
 export async function createAttendanceWithLeave(data: CreateData) {
   return await db.$transaction(async (tx) => {
-    const attendance = await tx.workAttendance.create({ data: attendanceData })
-    const leave = await tx.leave.create({ data: leaveData })
-    return { attendance, leave }
-  })
+    const attendance = await tx.workAttendance.create({ data: attendanceData });
+    const leave = await tx.leave.create({ data: leaveData });
+    return { attendance, leave };
+  });
 }
 ```
 
 ### Error Handling
 
 **Consistent error response format:**
+
 ```typescript
 // ✅ Good
 export class ApiError extends Error {
   constructor(
     public statusCode: number,
     message: string,
-    public code?: string
+    public code?: string,
   ) {
-    super(message)
+    super(message);
   }
 }
 
@@ -591,37 +616,35 @@ export function handleApiError(error: unknown) {
   if (error instanceof ApiError) {
     return NextResponse.json(
       { error: error.message, code: error.code },
-      { status: error.statusCode }
-    )
+      { status: error.statusCode },
+    );
   }
-  
-  console.error('Unexpected error:', error)
-  return NextResponse.json(
-    { error: 'Internal server error' },
-    { status: 500 }
-  )
+
+  console.error("Unexpected error:", error);
+  return NextResponse.json({ error: "Internal server error" }, { status: 500 });
 }
 ```
 
 ### State Management
 
 **Use React Context for shared state:**
+
 ```typescript
 // ✅ Good
 interface AppContextType {
-  user: User | null
-  theme: 'light' | 'dark'
-  setTheme: (theme: 'light' | 'dark') => void
+  user: User | null;
+  theme: "light" | "dark";
+  setTheme: (theme: "light" | "dark") => void;
 }
 
-const AppContext = createContext<AppContextType | null>(null)
+const AppContext = createContext<AppContextType | null>(null);
 
 export function useAppContext() {
-  const context = useContext(AppContext)
+  const context = useContext(AppContext);
   if (!context) {
-    throw new Error('useAppContext must be used within AppProvider')
+    throw new Error("useAppContext must be used within AppProvider");
   }
-  return context
+  return context;
 }
 ```
 
@@ -632,6 +655,7 @@ export function useAppContext() {
 ### Review Checklist
 
 **Security:**
+
 - [ ] Input validation implemented
 - [ ] Authentication/authorization checked
 - [ ] No secrets in code
@@ -639,6 +663,7 @@ export function useAppContext() {
 - [ ] XSS prevention measures
 
 **Performance:**
+
 - [ ] No unnecessary re-renders
 - [ ] Database queries optimized
 - [ ] Large data sets paginated
@@ -646,6 +671,7 @@ export function useAppContext() {
 - [ ] Bundle size impact considered
 
 **Code Quality:**
+
 - [ ] TypeScript types comprehensive
 - [ ] Error handling implemented
 - [ ] Tests written/updated
@@ -653,6 +679,7 @@ export function useAppContext() {
 - [ ] Code follows conventions
 
 **Functionality:**
+
 - [ ] Requirements met
 - [ ] Edge cases handled
 - [ ] Cross-browser compatibility
@@ -690,23 +717,24 @@ npx bundle-analyzer
 ### Database Optimization
 
 **Prisma query optimization:**
+
 ```typescript
 // ✅ Good - Select only needed fields
 const users = await db.user.findMany({
   select: {
     id: true,
     name: true,
-    email: true
+    email: true,
   },
-  where: { active: true }
-})
+  where: { active: true },
+});
 
 // ✅ Good - Use pagination
 const users = await db.user.findMany({
   take: 20,
   skip: page * 20,
-  orderBy: { createdAt: 'desc' }
-})
+  orderBy: { createdAt: "desc" },
+});
 ```
 
 ### React Optimization

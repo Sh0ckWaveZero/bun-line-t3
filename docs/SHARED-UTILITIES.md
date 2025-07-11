@@ -11,7 +11,7 @@ This document covers the shared utility functions created to support cron jobs a
 ```
 src/lib/utils/
 ├── cron-auth.ts              # Authentication validation
-├── cron-response.ts          # Standardized API responses  
+├── cron-response.ts          # Standardized API responses
 ├── cron-time-validation.ts   # Time window validation
 ├── cron-working-day.ts       # Working day validation
 ├── cron-reminder-sender.ts   # Check-in reminder logic
@@ -32,9 +32,11 @@ Provides authentication validation for cron job endpoints with two different sty
 **Purpose**: Comprehensive authentication validation with detailed error responses.
 
 **Parameters**:
+
 - `req: NextRequest` - The incoming request object
 
 **Returns**: `AuthResult`
+
 ```typescript
 interface AuthResult {
   success: boolean;
@@ -44,6 +46,7 @@ interface AuthResult {
 ```
 
 **Usage**:
+
 ```typescript
 import { validateCronAuth } from "@/lib/utils/cron-auth";
 
@@ -57,8 +60,9 @@ export async function GET(req: NextRequest) {
 ```
 
 **Error Scenarios**:
+
 - Missing `CRON_SECRET` environment variable → 500 Internal Server Error
-- Missing/invalid authorization header → 401 Unauthorized  
+- Missing/invalid authorization header → 401 Unauthorized
 - Invalid token → 401 Unauthorized
 
 ##### `validateSimpleCronAuth(authHeader: string | null): boolean`
@@ -66,18 +70,20 @@ export async function GET(req: NextRequest) {
 **Purpose**: Simple boolean authentication validation for basic use cases.
 
 **Parameters**:
+
 - `authHeader: string | null` - The authorization header value
 
 **Returns**: `boolean` - `true` if authentication is valid, `false` otherwise
 
 **Usage**:
+
 ```typescript
 import { validateSimpleCronAuth } from "@/lib/utils/cron-auth";
 
 export async function GET(_req: NextRequest) {
   const headersList = await headers();
   const authHeader = headersList.get("authorization");
-  
+
   if (!validateSimpleCronAuth(authHeader)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -98,20 +104,22 @@ Provides utilities for sending LINE messages and creating message templates.
 **Purpose**: Sends push messages to LINE users via LINE Messaging API.
 
 **Parameters**:
+
 - `userId: string` - LINE user ID to send message to
 - `messages: any[]` - Array of LINE message objects
 
 **Returns**: `Promise<Response>` - HTTP response from LINE API
 
 **Usage**:
+
 ```typescript
 import { sendPushMessage } from "@/lib/utils/line-messaging";
 
 const messages = [
   {
     type: "text",
-    text: "Hello! This is a reminder message."
-  }
+    text: "Hello! This is a reminder message.",
+  },
 ];
 
 try {
@@ -123,6 +131,7 @@ try {
 ```
 
 **Error Handling**:
+
 - Validates LINE channel access token
 - Handles network failures and API errors
 - Logs detailed error information
@@ -132,11 +141,13 @@ try {
 **Purpose**: Creates a flex message carousel for rich LINE message displays.
 
 **Parameters**:
+
 - `bubbleItems: any[]` - Array of bubble template objects
 
 **Returns**: `any[]` - Formatted flex message array
 
 **Usage**:
+
 ```typescript
 import { createFlexCarousel } from "@/lib/utils/line-messaging";
 
@@ -145,8 +156,8 @@ const bubbleItems = [
     id: "123",
     userId: "user1",
     checkInTime: new Date(),
-    status: "CHECKED_IN_ON_TIME"
-  })
+    status: "CHECKED_IN_ON_TIME",
+  }),
 ];
 
 const flexMessage = createFlexCarousel(bubbleItems);
@@ -170,6 +181,7 @@ Enhanced date/time utilities with proper UTC handling and timezone conversions.
 **Returns**: `Date` - Current UTC time
 
 **Usage**:
+
 ```typescript
 import { getCurrentUTCTime } from "@/lib/utils/datetime";
 
@@ -178,13 +190,14 @@ console.log(`Current UTC: ${utcNow.toISOString()}`);
 ```
 
 **Before vs After**:
+
 ```typescript
 // ❌ Before (incorrect)
 export const getCurrentUTCTime = (): Date => {
   return new Date(); // This was local time!
 };
 
-// ✅ After (correct)  
+// ✅ After (correct)
 export const getCurrentUTCTime = (): Date => {
   const now = new Date();
   return new Date(now.getTime() + now.getTimezoneOffset() * 60000);
@@ -196,11 +209,13 @@ export const getCurrentUTCTime = (): Date => {
 **Purpose**: Converts UTC time to Bangkok timezone using proper timezone APIs.
 
 **Parameters**:
+
 - `utcDate: Date` - UTC date to convert
 
 **Returns**: `Date` - Date object representing Bangkok time
 
 **Usage**:
+
 ```typescript
 import { getCurrentUTCTime, convertUTCToBangkok } from "@/lib/utils/datetime";
 
@@ -214,11 +229,13 @@ console.log(`Bangkok: ${bangkokTime.toLocaleString()}`);
 **Purpose**: Formats UTC time as Bangkok time string (HH:MM format).
 
 **Parameters**:
+
 - `utcDate: Date` - UTC date to format
 
 **Returns**: `string` - Time in HH:MM format (Bangkok timezone)
 
 **Usage**:
+
 ```typescript
 import { formatUTCTimeAsThaiTime } from "@/lib/utils/datetime";
 
@@ -240,22 +257,20 @@ Provides standardized response formatting for cron job endpoints.
 **Purpose**: Creates standardized error responses.
 
 **Parameters**:
+
 - `error: string` - Error message
 - `status: number` - HTTP status code
 - `details?: string` - Optional error details
 
 **Usage**:
+
 ```typescript
 import { createErrorResponse } from "@/lib/utils/cron-response";
 
 try {
   // Some operation
 } catch (error: any) {
-  return createErrorResponse(
-    "Failed to process request",
-    500,
-    error.message
-  );
+  return createErrorResponse("Failed to process request", 500, error.message);
 }
 ```
 
@@ -264,12 +279,10 @@ try {
 **Purpose**: Creates standardized responses for skipped operations.
 
 **Usage**:
+
 ```typescript
 if (!isWorkingDay) {
-  return createSkippedResponse(
-    "Skipped - not a working day",
-    holidayInfo
-  );
+  return createSkippedResponse("Skipped - not a working day", holidayInfo);
 }
 ```
 
@@ -286,10 +299,12 @@ Validates time windows for cron job execution.
 **Purpose**: Validates if current time is within acceptable range for check-in reminders.
 
 **Logic**:
+
 - **Production**: Only allow 01:00-02:59 UTC (08:00-09:59 Bangkok)
 - **Development**: Allow all times for testing
 
 **Returns**:
+
 ```typescript
 interface TimeValidationResult {
   isValid: boolean;
@@ -299,6 +314,7 @@ interface TimeValidationResult {
 ```
 
 **Usage**:
+
 ```typescript
 import { validateReminderTime } from "@/lib/utils/cron-time-validation";
 
@@ -321,6 +337,7 @@ Validates working days including weekend and holiday checks.
 **Purpose**: Checks if current date is a working day (excludes weekends and Thai holidays).
 
 **Returns**:
+
 ```typescript
 interface WorkingDayResult {
   isWorkingDay: boolean;
@@ -334,6 +351,7 @@ interface WorkingDayResult {
 ```
 
 **Usage**:
+
 ```typescript
 import { validateWorkingDay } from "@/lib/utils/cron-working-day";
 
@@ -341,7 +359,7 @@ const workingDayResult = await validateWorkingDay(currentThaiTime);
 if (!workingDayResult.isWorkingDay) {
   return createSkippedResponse(
     `Skipped - ${workingDayResult.reason}`,
-    workingDayResult.holidayInfo
+    workingDayResult.holidayInfo,
   );
 }
 ```
@@ -359,9 +377,11 @@ Handles the logic for sending check-in reminders to users.
 **Purpose**: Sends check-in reminder messages to active LINE users.
 
 **Parameters**:
+
 - `todayString: string` - Date string in YYYY-MM-DD format (Bangkok timezone)
 
 **Returns**:
+
 ```typescript
 interface ReminderResult {
   success: boolean;
@@ -373,6 +393,7 @@ interface ReminderResult {
 ```
 
 **Features**:
+
 - Gets active LINE user IDs for the day
 - Excludes users on leave
 - Selects random reminder messages
@@ -380,6 +401,7 @@ interface ReminderResult {
 - Tracks success/failure statistics
 
 **Usage**:
+
 ```typescript
 import { sendCheckInReminders } from "@/lib/utils/cron-reminder-sender";
 
@@ -393,7 +415,7 @@ if (!reminderResult.success && reminderResult.totalUsers === 0) {
 return createReminderSentResponse(
   reminderResult.messageText,
   reminderResult.sentCount,
-  reminderResult.failedCount
+  reminderResult.failedCount,
 );
 ```
 
@@ -418,11 +440,7 @@ export async function GET(req: NextRequest) {
     return createSuccessResponse(data);
   } catch (error: any) {
     console.error("❌ Error in endpoint:", error);
-    return createErrorResponse(
-      "Operation failed",
-      500,
-      error.message
-    );
+    return createErrorResponse("Operation failed", 500, error.message);
   }
 }
 ```
@@ -460,9 +478,9 @@ describe("validateReminderTime", () => {
   it("should allow time within valid range in production", () => {
     process.env.APP_ENV = "production";
     const validTime = new Date("2025-01-07T01:30:00Z");
-    
+
     const result = validateReminderTime(validTime);
-    
+
     expect(result.isValid).toBe(true);
     expect(result.currentHour).toBe(1);
   });
@@ -470,9 +488,9 @@ describe("validateReminderTime", () => {
   it("should reject time outside valid range in production", () => {
     process.env.APP_ENV = "production";
     const invalidTime = new Date("2025-01-07T05:00:00Z");
-    
+
     const result = validateReminderTime(invalidTime);
-    
+
     expect(result.isValid).toBe(false);
     expect(result.reason).toContain("not the right time");
   });
@@ -485,7 +503,7 @@ describe("validateReminderTime", () => {
 # Test complete cron flow
 bun test tests/api/check-in-reminder-api.mock.test.ts
 
-# Test timezone functionality  
+# Test timezone functionality
 bun test timezone
 
 # Test shared utilities
@@ -497,6 +515,7 @@ bun test src/lib/utils/
 ### From Direct Implementation
 
 **Before** (direct implementation):
+
 ```typescript
 // Duplicate code in each endpoint
 const authHeader = req.headers.get("authorization");
@@ -510,6 +529,7 @@ const sendPushMessage = async (userId: string, messages: any[]) => {
 ```
 
 **After** (using shared utilities):
+
 ```typescript
 import { validateSimpleCronAuth } from "@/lib/utils/cron-auth";
 import { sendPushMessage } from "@/lib/utils/line-messaging";
@@ -532,5 +552,5 @@ await sendPushMessage(userId, messages);
 
 ---
 
-*Last updated: January 7, 2025*  
-*Version: 2.0.1*
+_Last updated: January 7, 2025_  
+_Version: 2.0.1_
