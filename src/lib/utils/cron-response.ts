@@ -34,7 +34,7 @@ interface ReminderSentResponse extends SuccessResponse {
 export function createErrorResponse(
   error: string,
   status: number,
-  details?: string
+  details?: string,
 ): Response {
   const response: ErrorResponse = {
     success: false,
@@ -51,7 +51,7 @@ export function createErrorResponse(
  */
 export function createSkippedResponse(
   message: string,
-  holidayInfo?: any
+  holidayInfo?: any,
 ): Response {
   const response: SkippedResponse = {
     success: true,
@@ -69,7 +69,7 @@ export function createSkippedResponse(
 export function createReminderSentResponse(
   messageText: string,
   sentUserCount: number,
-  failedUserCount: number
+  failedUserCount: number,
 ): Response {
   const response: ReminderSentResponse = {
     success: true,

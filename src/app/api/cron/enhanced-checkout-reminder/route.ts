@@ -4,16 +4,21 @@ import { bubbleTemplate } from "@/lib/validation/line";
 import { attendanceService } from "@/features/attendance/services/attendance";
 import { db } from "@/lib/database/db";
 import { roundToOneDecimal } from "@/lib/utils/number";
-import { getCurrentUTCTime, formatUTCTimeAsThaiTime } from "@/lib/utils/datetime";
+import {
+  getCurrentUTCTime,
+  formatUTCTimeAsThaiTime,
+} from "@/lib/utils/datetime";
 import { validateSimpleCronAuth } from "@/lib/utils/cron-auth";
-import { sendPushMessage, createFlexCarousel } from "@/lib/utils/line-messaging";
+import {
+  sendPushMessage,
+  createFlexCarousel,
+} from "@/lib/utils/line-messaging";
 import {
   shouldReceive10MinReminder,
   shouldReceiveFinalReminder,
   calculateUserReminderTime,
   calculateUserCompletionTime,
 } from "@/features/attendance/helpers/utils";
-
 
 /**
  * Enhanced Checkout Reminder with Dynamic Timing

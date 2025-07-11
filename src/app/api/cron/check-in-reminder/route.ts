@@ -32,16 +32,19 @@ export async function GET(req: NextRequest) {
     }
     // Get current time and convert to Bangkok timezone
     const currentUTCTime = attendanceService.getCurrentUTCTime();
-    const currentThaiTime = attendanceService.convertUTCToThaiTime(currentUTCTime);
-    
-    console.log(`🕐 Current time: ${currentUTCTime.toISOString()} UTC (${currentThaiTime.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })} Bangkok)`);
-    
+    const currentThaiTime =
+      attendanceService.convertUTCToThaiTime(currentUTCTime);
+
+    console.log(
+      `🕐 Current time: ${currentUTCTime.toISOString()} UTC (${currentThaiTime.toLocaleString("th-TH", { timeZone: "Asia/Bangkok" })} Bangkok)`,
+    );
+
     // Check if today is a working day
     const workingDayResult = await validateWorkingDay(currentThaiTime);
     if (!workingDayResult.isWorkingDay) {
       return createSkippedResponse(
         `Skipped - ${workingDayResult.reason}`,
-        workingDayResult.holidayInfo
+        workingDayResult.holidayInfo,
       );
     }
 
@@ -54,7 +57,7 @@ export async function GET(req: NextRequest) {
     // Send reminders to active users
     const todayString = currentThaiTime?.toISOString().split("T")[0] ?? "";
     const reminderResult = await sendCheckInReminders(todayString);
-    
+
     if (!reminderResult.success && reminderResult.totalUsers === 0) {
       return createNoUsersResponse();
     }
@@ -62,14 +65,14 @@ export async function GET(req: NextRequest) {
     return createReminderSentResponse(
       reminderResult.messageText,
       reminderResult.sentCount,
-      reminderResult.failedCount
+      reminderResult.failedCount,
     );
   } catch (error: any) {
     console.error("❌ Error in check-in reminder job:", error);
     return createErrorResponse(
       "Failed to send check-in reminder",
       500,
-      error.message
+      error.message,
     );
   }
 }

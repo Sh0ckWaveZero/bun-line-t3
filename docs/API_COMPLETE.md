@@ -9,6 +9,7 @@ This document provides comprehensive documentation for all API endpoints in the 
 ## Authentication
 
 Most endpoints require authentication via NextAuth.js session. Protected endpoints return:
+
 - `401` - Unauthorized (not logged in)
 - `403` - Forbidden (insufficient permissions)
 
@@ -21,13 +22,16 @@ All requests and responses use `application/json` content type unless specified 
 ## 📱 LINE Bot Integration
 
 ### POST /api/line
+
 Main webhook endpoint for LINE Bot events.
 
 **Headers Required:**
+
 - `x-line-signature`: LINE webhook signature
 - `Content-Type`: application/json
 
 **Request Body:**
+
 ```json
 {
   "events": [
@@ -47,6 +51,7 @@ Main webhook endpoint for LINE Bot events.
 ```
 
 **Responses:**
+
 - `200` - Event processed successfully
 - `401` - Invalid signature
 - `500` - Internal server error
@@ -56,12 +61,14 @@ Main webhook endpoint for LINE Bot events.
 ## 🏢 Attendance Management
 
 ### PUT /api/attendance/update
+
 Update existing attendance record.
 
 **Authentication:** Required  
 **Method:** PUT
 
 **Request Body:**
+
 ```json
 {
   "attendanceId": "att_123456",
@@ -71,6 +78,7 @@ Update existing attendance record.
 ```
 
 **Validation Rules:**
+
 - `attendanceId`: Required string (min 1 character)
 - `checkInTime`: Required ISO datetime string
 - `checkOutTime`: Optional ISO datetime string
@@ -78,6 +86,7 @@ Update existing attendance record.
 - Times must be within acceptable range (security validation)
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -95,18 +104,21 @@ Update existing attendance record.
 ```
 
 **Error Responses:**
+
 - `400` - Invalid input data (with Zod validation details)
 - `403` - Can only edit own attendance records
 - `404` - Attendance record not found
 - `409` - Duplicate attendance record
 
 ### POST /api/attendance-push
+
 Send attendance notifications via LINE push messages.
 
 **Authentication:** Cron authentication required  
 **Method:** POST
 
 **Request Body:**
+
 ```json
 {
   "authToken": "your-secure-cron-token",
@@ -119,12 +131,14 @@ Send attendance notifications via LINE push messages.
 ```
 
 ### GET /api/attendance-report
+
 Generate attendance reports for users.
 
 **Authentication:** Required  
 **Method:** GET
 
 **Query Parameters:**
+
 - `startDate`: ISO date string (optional)
 - `endDate`: ISO date string (optional)
 - `format`: 'json' | 'csv' (optional, default: 'json')
@@ -134,12 +148,14 @@ Generate attendance reports for users.
 ## 🏥 Leave Management
 
 ### POST /api/leave
+
 Submit leave application.
 
 **Authentication:** Required  
 **Method:** POST
 
 **Request Body:**
+
 ```json
 {
   "startDate": "2025-07-15",
@@ -150,6 +166,7 @@ Submit leave application.
 ```
 
 **Response (201):**
+
 ```json
 {
   "success": true,
@@ -170,15 +187,18 @@ Submit leave application.
 ## 🔐 Authentication
 
 ### POST /api/auth/[...nextauth]
+
 NextAuth.js authentication endpoints.
 
 **Endpoints:**
+
 - `POST /api/auth/signin` - Sign in
 - `POST /api/auth/signout` - Sign out
 - `GET /api/auth/session` - Get current session
 - `GET /api/auth/providers` - Get available providers
 
 **LINE OAuth Flow:**
+
 1. Redirect to `/api/auth/signin/line`
 2. User authorizes on LINE platform
 3. Callback to `/api/auth/callback/line`
@@ -189,30 +209,35 @@ NextAuth.js authentication endpoints.
 ## ⏰ Cron Job Endpoints
 
 ### POST /api/cron/check-in-reminder
+
 Send morning check-in reminders.
 
 **Authentication:** Cron token required  
 **Schedule:** 07:30 Bangkok time (Mon-Fri)
 
 ### POST /api/cron/checkout-reminder
+
 Send evening check-out reminders.
 
 **Authentication:** Cron token required  
 **Schedule:** 17:30 Bangkok time (Mon-Fri)
 
 ### POST /api/cron/enhanced-checkout-reminder
+
 Send enhanced check-out reminders with multiple stages.
 
 **Authentication:** Cron token required  
 **Schedule:** 18:00, 18:30, 19:00 Bangkok time
 
 ### POST /api/cron/auto-checkout
+
 Automatically check out users who forgot.
 
 **Authentication:** Cron token required  
 **Schedule:** 20:00 Bangkok time (Mon-Fri)
 
 **Request Body (All Cron):**
+
 ```json
 {
   "authToken": "your-secure-cron-token"
@@ -224,12 +249,14 @@ Automatically check out users who forgot.
 ## 🩺 Health Monitoring
 
 ### GET /api/health
+
 Basic health check endpoint.
 
 **Authentication:** None  
 **Method:** GET
 
 **Response (200):**
+
 ```json
 {
   "status": "healthy",
@@ -240,12 +267,14 @@ Basic health check endpoint.
 ```
 
 ### GET /api/health/enhanced
+
 Comprehensive health check with system information.
 
 **Authentication:** None  
 **Method:** GET
 
 **Response (200):**
+
 ```json
 {
   "status": "healthy",
@@ -274,6 +303,7 @@ Comprehensive health check with system information.
 ```
 
 **Status Levels:**
+
 - `healthy` (200) - All systems operational
 - `degraded` (200) - Some non-critical issues
 - `unhealthy` (503) - Critical systems down
@@ -283,12 +313,14 @@ Comprehensive health check with system information.
 ## 📊 Monitoring
 
 ### GET /api/monitoring/dashboard
+
 System monitoring dashboard data.
 
 **Authentication:** Required (Admin role recommended)  
 **Method:** GET
 
 **Response (200):**
+
 ```json
 {
   "system": {
@@ -320,12 +352,14 @@ System monitoring dashboard data.
 ## 🔧 Development & Debug
 
 ### GET /api/debug/line-oauth
+
 Debug LINE OAuth configuration.
 
 **Environment:** Development only  
 **Authentication:** None
 
 **Response (200):**
+
 ```json
 {
   "lineClientId": "1234567890",
@@ -341,24 +375,31 @@ Debug LINE OAuth configuration.
 ## 📝 Response Formats
 
 ### Success Response
+
 ```json
 {
   "success": true,
   "message": "Operation completed successfully",
-  "data": { /* response data */ }
+  "data": {
+    /* response data */
+  }
 }
 ```
 
 ### Error Response
+
 ```json
 {
   "error": "Error description",
-  "details": [ /* optional validation details */ ],
+  "details": [
+    /* optional validation details */
+  ],
   "code": "ERROR_CODE" // optional
 }
 ```
 
 ### Validation Error (400)
+
 ```json
 {
   "error": "Invalid input data",
@@ -377,24 +418,28 @@ Debug LINE OAuth configuration.
 ## 🛡️ Security Features
 
 ### Request Validation
+
 - All inputs validated using Zod schemas
 - SQL injection protection via Prisma ORM
 - XSS protection through input sanitization
 - CSRF protection via NextAuth.js
 
 ### Authentication Security
+
 - Secure session management
 - JWT token expiration
 - LINE webhook signature verification
 - Cron job authentication tokens
 
 ### Data Protection
+
 - Sensitive data logging protection
 - Timezone security validation
 - Date/time range validation
 - User ownership verification
 
 ### Rate Limiting
+
 - Built-in rate limiting for API endpoints
 - Webhook replay attack protection
 - Request timeout handling
@@ -413,28 +458,30 @@ All datetime fields use UTC internally and are converted to `Asia/Bangkok` timez
 
 ## 📊 Status Codes Reference
 
-| Code | Meaning | Usage |
-|------|---------|-------|
-| 200 | OK | Successful request |
-| 201 | Created | Resource created successfully |
-| 400 | Bad Request | Invalid input data |
-| 401 | Unauthorized | Authentication required |
-| 403 | Forbidden | Insufficient permissions |
-| 404 | Not Found | Resource not found |
-| 409 | Conflict | Duplicate resource |
-| 500 | Internal Server Error | Server error |
-| 503 | Service Unavailable | System unhealthy |
+| Code | Meaning               | Usage                         |
+| ---- | --------------------- | ----------------------------- |
+| 200  | OK                    | Successful request            |
+| 201  | Created               | Resource created successfully |
+| 400  | Bad Request           | Invalid input data            |
+| 401  | Unauthorized          | Authentication required       |
+| 403  | Forbidden             | Insufficient permissions      |
+| 404  | Not Found             | Resource not found            |
+| 409  | Conflict              | Duplicate resource            |
+| 500  | Internal Server Error | Server error                  |
+| 503  | Service Unavailable   | System unhealthy              |
 
 ---
 
 ## 🔗 External API Dependencies
 
 ### LINE Platform APIs
+
 - **Messaging API**: Send push notifications
 - **OAuth API**: User authentication
 - **Profile API**: Retrieve user information
 
 ### Third-party Services
+
 - **CoinMarketCap API**: Cryptocurrency data
 - **AirVisual API**: Air quality information
 
@@ -445,6 +492,7 @@ All datetime fields use UTC internally and are converted to `Asia/Bangkok` timez
 ### Complete Attendance Flow
 
 1. **Check In via LINE Bot**
+
    ```
    LINE Message: "เข้างาน"
    → POST /api/line (webhook)
@@ -453,6 +501,7 @@ All datetime fields use UTC internally and are converted to `Asia/Bangkok` timez
    ```
 
 2. **Update Attendance via Web**
+
    ```
    PUT /api/attendance/update
    → Updates existing record
@@ -471,10 +520,11 @@ All datetime fields use UTC internally and are converted to `Asia/Bangkok` timez
 ### Error Handling Flow
 
 1. **Invalid Input**
+
    ```json
    // Request
    { "checkInTime": "invalid-date" }
-   
+
    // Response (400)
    {
      "error": "Invalid input data",

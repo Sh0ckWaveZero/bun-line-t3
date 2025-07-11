@@ -9,13 +9,15 @@ This comprehensive guide covers deploying the Bun LINE T3 application across dif
 ## 📋 Prerequisites
 
 ### System Requirements
+
 - **Bun** >= 1.0.0
-- **Node.js** >= 18.0.0  
+- **Node.js** >= 18.0.0
 - **Docker** >= 20.10.0 (for containerized deployment)
 - **Docker Compose** >= 2.0.0
 - **Git** for version control
 
 ### External Services
+
 - **MongoDB** database (Atlas or self-hosted)
 - **LINE Developer Console** account
 - **SSL certificates** (for HTTPS)
@@ -27,15 +29,17 @@ This comprehensive guide covers deploying the Bun LINE T3 application across dif
 ### 1. Environment Configuration
 
 **Create environment files:**
+
 ```bash
 # Development environment
 cp .env.example .env.development
 
-# Production environment  
+# Production environment
 cp .env.example .env.production
 ```
 
 **Configure `.env.development`:**
+
 ```env
 # Application
 NODE_ENV=development
@@ -99,6 +103,7 @@ bun run dev:clean
 ```
 
 **Development server features:**
+
 - HTTPS on `localhost:4325` with self-signed certificates
 - Process lock to prevent multiple instances
 - Automatic cleanup on Ctrl+C
@@ -113,6 +118,7 @@ bun run dev:clean
 #### 1. Build Configuration
 
 **Create `Dockerfile.prod`:**
+
 ```dockerfile
 FROM oven/bun:1-alpine AS base
 
@@ -155,8 +161,9 @@ CMD ["bun", "server.js"]
 #### 2. Docker Compose Setup
 
 **Create `docker-compose.prod.yml`:**
+
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   app:
@@ -287,29 +294,30 @@ bun run seed:holidays
 #### 3. Process Management with PM2
 
 **Create `ecosystem.config.js`:**
+
 ```javascript
 module.exports = {
   apps: [
     {
-      name: 'bun-line-t3',
-      script: 'bun',
-      args: 'run start',
-      cwd: '/var/www/bun-line-t3',
-      instances: 'max',
-      exec_mode: 'cluster',
+      name: "bun-line-t3",
+      script: "bun",
+      args: "run start",
+      cwd: "/var/www/bun-line-t3",
+      instances: "max",
+      exec_mode: "cluster",
       env: {
-        NODE_ENV: 'production',
-        PORT: 3000
+        NODE_ENV: "production",
+        PORT: 3000,
       },
-      env_file: '.env.production',
-      error_file: '/var/log/pm2/bun-line-t3-error.log',
-      out_file: '/var/log/pm2/bun-line-t3-out.log',
-      log_file: '/var/log/pm2/bun-line-t3.log',
-      max_memory_restart: '500M',
-      restart_delay: 5000
-    }
-  ]
-}
+      env_file: ".env.production",
+      error_file: "/var/log/pm2/bun-line-t3-error.log",
+      out_file: "/var/log/pm2/bun-line-t3-out.log",
+      log_file: "/var/log/pm2/bun-line-t3.log",
+      max_memory_restart: "500M",
+      restart_delay: 5000,
+    },
+  ],
+};
 ```
 
 ```bash
@@ -330,6 +338,7 @@ pm2 startup
 ### Production Environment Variables
 
 **Security Configuration:**
+
 ```env
 # Strong secrets for production
 NEXTAUTH_SECRET="$(openssl rand -base64 32)"
@@ -349,14 +358,14 @@ LINE_WEBHOOK_URL=https://yourdomain.com/api/line
 
 ### Development vs Production Differences
 
-| Feature | Development | Production |
-|---------|-------------|------------|
-| HTTPS | Self-signed cert | Valid SSL cert |
-| Database | Local MongoDB | MongoDB Atlas/Cluster |
-| Secrets | Simple values | Cryptographically secure |
-| Caching | Disabled | Redis/Memory cache |
-| Logging | Console | File + External service |
-| Monitoring | Basic | Comprehensive |
+| Feature    | Development      | Production               |
+| ---------- | ---------------- | ------------------------ |
+| HTTPS      | Self-signed cert | Valid SSL cert           |
+| Database   | Local MongoDB    | MongoDB Atlas/Cluster    |
+| Secrets    | Simple values    | Cryptographically secure |
+| Caching    | Disabled         | Redis/Memory cache       |
+| Logging    | Console          | File + External service  |
+| Monitoring | Basic            | Comprehensive            |
 
 ---
 
@@ -379,6 +388,7 @@ sudo crontab -e
 ### Option 2: Custom SSL Certificate
 
 **Nginx configuration with SSL:**
+
 ```nginx
 server {
     listen 80;
@@ -416,6 +426,7 @@ server {
 ### Docker Cron Service
 
 **`Dockerfile.cron`:**
+
 ```dockerfile
 FROM node:18-alpine
 
@@ -438,11 +449,12 @@ CMD ["crond", "-f", "-d", "8"]
 ```
 
 **`crontab` file:**
+
 ```bash
 # Check-in reminder (7:30 AM Bangkok time = 00:30 UTC)
 30 0 * * 1-5 curl -X POST -H "Content-Type: application/json" -d '{"authToken":"'"$CRON_SECRET_TOKEN"'"}' http://app:3000/api/cron/check-in-reminder
 
-# Checkout reminder (5:30 PM Bangkok time = 10:30 UTC)  
+# Checkout reminder (5:30 PM Bangkok time = 10:30 UTC)
 30 10 * * 1-5 curl -X POST -H "Content-Type: application/json" -d '{"authToken":"'"$CRON_SECRET_TOKEN"'"}' http://app:3000/api/cron/checkout-reminder
 
 # Enhanced checkout reminder (6:00 PM Bangkok time = 11:00 UTC)
@@ -494,6 +506,7 @@ healthcheck:
 ### Monitoring Setup
 
 **Basic monitoring with PM2:**
+
 ```bash
 # Install PM2 monitoring
 pm2 install pm2-server-monit
@@ -579,6 +592,7 @@ ls -t $BACKUP_DIR/app_*.tar.gz | tail -n +4 | xargs rm -f
 ### Common Issues
 
 **1. Application won't start**
+
 ```bash
 # Check logs
 pm2 logs bun-line-t3
@@ -591,6 +605,7 @@ pm2 restart bun-line-t3
 ```
 
 **2. Database connection issues**
+
 ```bash
 # Test MongoDB connection
 mongosh "mongodb://localhost:27017/bun_line_t3"
@@ -603,6 +618,7 @@ sudo systemctl restart mongod
 ```
 
 **3. LINE webhook not working**
+
 ```bash
 # Check webhook signature validation
 curl -X POST https://yourdomain.com/api/line \
@@ -615,6 +631,7 @@ curl https://yourdomain.com/api/debug/line-oauth
 ```
 
 **4. SSL certificate issues**
+
 ```bash
 # Check certificate validity
 openssl x509 -in /etc/nginx/ssl/cert.pem -text -noout
@@ -637,24 +654,26 @@ sudo certbot renew --dry-run
 ### Production Optimizations
 
 **Next.js Configuration:**
+
 ```javascript
 // next.config.mjs
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  output: "standalone",
   experimental: {
-    serverComponentsExternalPackages: ['@prisma/client']
+    serverComponentsExternalPackages: ["@prisma/client"],
   },
   compress: true,
   poweredByHeader: false,
   generateEtags: false,
-  reactStrictMode: true
-}
+  reactStrictMode: true,
+};
 
-export default nextConfig
+export default nextConfig;
 ```
 
 **Database Connection Pooling:**
+
 ```javascript
 // prisma/schema.prisma
 generator client {
