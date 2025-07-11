@@ -105,10 +105,10 @@ export const CHART_STYLES: Record<string, ChartStyle> = {
     gridColor: COLOR_SCHEMES.DARK_THEME.grid,
     borderColor: COLOR_SCHEMES.DARK_THEME.border,
     fonts: {
-      title: FONT_CONFIGS.TITLE || FONT_CONFIGS.TITLE,
-      axis: FONT_CONFIGS.AXIS || FONT_CONFIGS.AXIS,
-      label: FONT_CONFIGS.LABEL || FONT_CONFIGS.LABEL,
-      stats: FONT_CONFIGS.STATS || FONT_CONFIGS.STATS,
+      title: FONT_CONFIGS.TITLE!,
+      axis: FONT_CONFIGS.AXIS!,
+      label: FONT_CONFIGS.LABEL!,
+      stats: FONT_CONFIGS.STATS!,
     },
   },
   DARK_LARGE: {
@@ -117,10 +117,10 @@ export const CHART_STYLES: Record<string, ChartStyle> = {
     gridColor: COLOR_SCHEMES.DARK_THEME.grid,
     borderColor: COLOR_SCHEMES.DARK_THEME.border,
     fonts: {
-      title: FONT_CONFIGS.TITLE_LARGE || FONT_CONFIGS.TITLE,
-      axis: FONT_CONFIGS.AXIS_LARGE || FONT_CONFIGS.AXIS,
-      label: FONT_CONFIGS.LABEL_LARGE || FONT_CONFIGS.LABEL,
-      stats: FONT_CONFIGS.STATS_LARGE || FONT_CONFIGS.STATS,
+      title: FONT_CONFIGS.TITLE_LARGE || FONT_CONFIGS.TITLE!,
+      axis: FONT_CONFIGS.AXIS_LARGE || FONT_CONFIGS.AXIS!,
+      label: FONT_CONFIGS.LABEL_LARGE || FONT_CONFIGS.LABEL!,
+      stats: FONT_CONFIGS.STATS_LARGE || FONT_CONFIGS.STATS!,
     },
   },
 };
@@ -155,7 +155,7 @@ export const createChartDimensions = (
   height: number,
   marginKey: keyof typeof CHART_MARGINS = "DEFAULT",
 ): ChartDimensions => {
-  const margin = CHART_MARGINS[marginKey] || CHART_MARGINS.DEFAULT;
+  const margin = CHART_MARGINS[marginKey] || CHART_MARGINS.DEFAULT!;
   return {
     width,
     height,

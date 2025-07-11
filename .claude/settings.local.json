@@ -28,7 +28,10 @@
       "WebFetch(domain:developers.line.biz)",
       "mcp__ide__executeCode",
       "Bash(NEXTAUTH_URL=https://line-login.midseelee.com bun test-chart-image.js)",
-      "Bash(bun:*)"
+      "Bash(bun:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(cat:*)",
+      "Bash(curl:*)"
     ],
     "deny": [
       "Read(**/.env*)",
