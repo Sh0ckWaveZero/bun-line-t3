@@ -51,3 +51,4 @@ certificates
 !.env.project
 .env.vault
 prisma/generated/*
+public/temp-charts/*
