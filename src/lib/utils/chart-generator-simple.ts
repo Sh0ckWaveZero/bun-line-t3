@@ -84,8 +84,8 @@ export class SimpleChartGenerator {
         <defs>
           <style>
             <![CDATA[
-              .title { font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; }
-              .axis { font-family: Arial, sans-serif; font-size: 12px; }
+              .title { font-family: var(--font-prompt), Arial, sans-serif; font-size: 18px; font-weight: 600; }
+              .axis { font-family: var(--font-prompt), Arial, sans-serif; font-size: 12px; font-weight: 400; }
             ]]>
           </style>
         </defs>

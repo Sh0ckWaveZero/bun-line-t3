@@ -15,7 +15,7 @@ const promptFont = Prompt({
 });
 
 // ใช้ static font class names เพื่อป้องกัน hydration mismatch
-const FONT_CLASSES = `${promptFont.variable} font-prompt antialiased`;
+const FONT_CLASSES = `${promptFont.variable} ${promptFont.className} antialiased`;
 
 export const metadata: Metadata = {
   title: "Bun LINE T3 App",
@@ -32,7 +32,7 @@ export default function RootLayout({
     <html
       id="html-root"
       lang="th"
-      className={promptFont.variable}
+      className={`${promptFont.variable} ${promptFont.className}`}
       suppressHydrationWarning={true}
     >
       <body
