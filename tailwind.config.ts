@@ -268,7 +268,8 @@ const config: Config = {
       },
       // 🎨 Font Families - Updated Theme Fonts
       fontFamily: {
-        prompt: ["Prompt", "sans-serif"],
+        prompt: ["var(--font-prompt)", "Prompt", "sans-serif"],
+        sans: ["var(--font-prompt)", "Prompt", "sans-serif"],
       },
       // 🔤 Font Weights - รองรับทุก weight ของ Prompt
       fontWeight: {

@@ -153,11 +153,10 @@ Volume: ${point.volume.toLocaleString("th-TH")}</title>
           </linearGradient>
           <style>
             <![CDATA[
-              @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
-              .title { font-family: 'Prompt', 'Noto Sans Thai', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 26px; font-weight: 600; }
-              .axis { font-family: 'Prompt', 'Noto Sans Thai', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 15px; font-weight: 500; }
-              .stats { font-family: 'Prompt', 'Noto Sans Thai', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 15px; font-weight: 500; }
-              .label { font-family: 'Prompt', 'Noto Sans Thai', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 13px; font-weight: 400; }
+              .title { font-family: var(--font-prompt), Arial, sans-serif; font-size: 26px; font-weight: 600; }
+              .axis { font-family: var(--font-prompt), Arial, sans-serif; font-size: 15px; font-weight: 500; }
+              .stats { font-family: var(--font-prompt), Arial, sans-serif; font-size: 15px; font-weight: 500; }
+              .label { font-family: var(--font-prompt), Arial, sans-serif; font-size: 13px; font-weight: 400; }
             ]]>
           </style>
         </defs>
@@ -335,8 +334,8 @@ Volume: ${point.volume.toLocaleString("th-TH")}</title>
         <defs>
           <style>
             <![CDATA[
-              .title { font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; }
-              .axis { font-family: Arial, sans-serif; font-size: 12px; }
+              .title { font-family: var(--font-prompt), Arial, sans-serif; font-size: 18px; font-weight: 600; }
+              .axis { font-family: var(--font-prompt), Arial, sans-serif; font-size: 12px; font-weight: 400; }
             ]]>
           </style>
         </defs>
