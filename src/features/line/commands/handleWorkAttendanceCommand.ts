@@ -1,8 +1,8 @@
-import { db } from "../../../lib/database/db";
-import { bubbleTemplate } from "@/lib/validation/line";
-import { sendMessage } from "../../../lib/utils/line-utils";
-import { flexMessage } from "@/lib/utils/line-message-utils";
 import { attendanceService } from "@/features/attendance/services/attendance";
+import { bubbleTemplate } from "@/lib/validation/line";
+import { db } from '@/lib/database';
+import { flexMessage } from "@/lib/utils/line-message-utils";
+import { sendMessage } from '@/lib/utils/line-utils';
 
 export const handleWorkAttendanceCommand = async (req: any) => {
   const userId = req.body.events[0].source.userId;

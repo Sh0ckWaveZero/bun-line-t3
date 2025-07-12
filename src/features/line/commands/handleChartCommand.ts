@@ -1,7 +1,5 @@
 import { NextRequest } from "next/server";
 import { sendChartImage } from "@/lib/utils/line-messaging";
-// import { chartGenerator } from '@/lib/utils/chart-generator';
-// import { simpleChartGenerator } from '@/lib/utils/chart-generator-simple';
 import { historicalChartGenerator } from "@/lib/utils/chart-generator-historical";
 import { exchangeService } from "@/features/crypto/services/exchange";
 import { CryptoInfo } from "@/features/crypto/types/crypto.interface";
@@ -9,7 +7,7 @@ import { CryptoInfo } from "@/features/crypto/types/crypto.interface";
 interface ChartCommandParams {
   symbol: string;
   exchange: string;
-  type: "line" | "comparison" | "portfolio";
+  type: "line" | "comparison";
 }
 
 export async function handleChartCommand(
@@ -204,7 +202,7 @@ export function parseChartCommand(text: string): ChartCommandParams | null {
   if (!symbol) return null;
 
   let exchange: string = "bitkub";
-  let type: "line" | "comparison" | "portfolio" = "line";
+  let type: "line" | "comparison" = "line";
 
   // Check for exchange or type in remaining parts
   for (let i = 2; i < parts.length; i++) {
@@ -215,10 +213,6 @@ export function parseChartCommand(text: string): ChartCommandParams | null {
     // Check for comparison type
     if (part === "compare" || part === "comparison") {
       type = "comparison";
-    }
-    // Check for portfolio type
-    else if (part === "portfolio" || part === "port") {
-      type = "portfolio";
     }
     // Check for exchange names
     else if (["bitkub", "bk", "binance", "bn", "satang", "st"].includes(part)) {

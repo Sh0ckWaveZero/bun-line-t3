@@ -13,6 +13,31 @@ import { svgConverter } from "./svg-converter";
 import { generateWebSafeFontCSS } from "./font-embedding";
 
 /**
+ * Determine appropriate decimal places for crypto prices
+ * Based on price magnitude to ensure readability
+ */
+function getCryptoDecimalPlaces(price: number): number {
+  if (price >= 1000) return 0;      // ฿1,000+ -> no decimals
+  if (price >= 100) return 1;       // ฿100-999 -> 1 decimal
+  if (price >= 10) return 2;        // ฿10-99 -> 2 decimals
+  if (price >= 1) return 3;         // ฿1-9 -> 3 decimals
+  if (price >= 0.1) return 4;       // ฿0.1-0.9 -> 4 decimals
+  if (price >= 0.01) return 5;      // ฿0.01-0.09 -> 5 decimals
+  return 6;                         // < ฿0.01 -> 6 decimals
+}
+
+/**
+ * Format crypto price with appropriate decimal places
+ */
+function formatCryptoPrice(price: number): string {
+  const decimals = getCryptoDecimalPlaces(price);
+  return price.toLocaleString("th-TH", { 
+    minimumFractionDigits: decimals, 
+    maximumFractionDigits: decimals 
+  });
+}
+
+/**
  * Enhanced chart generator with real historical data from Bitkub
  */
 export class HistoricalChartGenerator {
@@ -85,7 +110,7 @@ export class HistoricalChartGenerator {
       yLabels.push(`
         <text x="${margin.left - 10}" y="${y + 5}" 
               text-anchor="end" fill="${CHART_COLORS.TEXT_PRIMARY}" font-size="14" font-weight="500" class="label">
-          ฿${value.toLocaleString("th-TH", { maximumFractionDigits: 0 })}
+          ฿${formatCryptoPrice(value)}
         </text>
         <line x1="${margin.left}" y1="${y}" x2="${margin.left + chartWidth}" y2="${y}" 
               stroke="${CHART_COLORS.BORDER_PRIMARY}" stroke-width="1" opacity="0.3"/>
@@ -134,9 +159,9 @@ export class HistoricalChartGenerator {
       return `
         <circle cx="${x}" cy="${y}" r="3" fill="${lineColor}" stroke="#1a1a1a" stroke-width="2" opacity="0.8">
           <title>Time: ${new Date(point.time).toLocaleString("th-TH")}
-Price: ฿${point.close.toLocaleString("th-TH")}
-High: ฿${point.high.toLocaleString("th-TH")}
-Low: ฿${point.low.toLocaleString("th-TH")}
+Price: ฿${formatCryptoPrice(point.close)}
+High: ฿${formatCryptoPrice(point.high)}
+Low: ฿${formatCryptoPrice(point.low)}
 Volume: ${point.volume.toLocaleString("th-TH")}</title>
         </circle>
       `;
@@ -187,24 +212,24 @@ Volume: ${point.volume.toLocaleString("th-TH")}</title>
         
         <!-- Axis labels -->
         <text x="30" y="${margin.top + chartHeight / 2}" text-anchor="middle" 
-              fill="${CHART_COLORS.TEXT_PRIMARY}" font-size="12" transform="rotate(-90 30 ${margin.top + chartHeight / 2})">
+              fill="${CHART_COLORS.TEXT_PRIMARY}" class="axis-small" transform="rotate(-90 30 ${margin.top + chartHeight / 2})">
           Price (THB)
         </text>
         
         <text x="${margin.left + chartWidth / 2}" y="${height - 20}" text-anchor="middle" 
-              fill="${CHART_COLORS.TEXT_PRIMARY}" font-size="12">
+              fill="${CHART_COLORS.TEXT_PRIMARY}" class="axis-small">
           Time
         </text>
         
         <!-- Stats -->
         <text x="${width - 20}" y="35" text-anchor="end" fill="${CHART_COLORS.SUCCESS}" font-size="16" font-weight="600" class="stats">
-          High: ฿${maxPrice.toLocaleString("th-TH")}
+          High: ฿${formatCryptoPrice(maxPrice)}
         </text>
         <text x="${width - 20}" y="55" text-anchor="end" fill="${CHART_COLORS.ERROR}" font-size="16" font-weight="600" class="stats">
-          Low: ฿${minPrice.toLocaleString("th-TH")}
+          Low: ฿${formatCryptoPrice(minPrice)}
         </text>
         <text x="${width - 20}" y="75" text-anchor="end" fill="${CHART_COLORS.TEXT_PRIMARY}" font-size="16" font-weight="600" class="stats">
-          Current: ฿${lastPrice.toLocaleString("th-TH")}
+          Current: ฿${formatCryptoPrice(lastPrice)}
         </text>
         
         <!-- Timestamp -->
@@ -354,12 +379,12 @@ Volume: ${point.volume.toLocaleString("th-TH")}</title>
         
         <!-- Axis labels -->
         <text x="30" y="${margin.top + chartHeight / 2}" text-anchor="middle" 
-              fill="${CHART_COLORS.TEXT_PRIMARY}" font-size="12" transform="rotate(-90 30 ${margin.top + chartHeight / 2})">
+              fill="${CHART_COLORS.TEXT_PRIMARY}" class="axis-small" transform="rotate(-90 30 ${margin.top + chartHeight / 2})">
           Price Change (%)
         </text>
         
         <text x="${margin.left + chartWidth / 2}" y="${height - 20}" text-anchor="middle" 
-              fill="${CHART_COLORS.TEXT_PRIMARY}" font-size="12">
+              fill="${CHART_COLORS.TEXT_PRIMARY}" class="axis-small">
           Time (${hours} hours)
         </text>
         

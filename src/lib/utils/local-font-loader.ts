@@ -13,6 +13,8 @@ interface FontCache {
 class LocalFontLoader {
   private fontCache: FontCache = {};
   private fontsPath = join(process.cwd(), 'public', 'fonts');
+  private cssCache: string | null = null;
+  private fallbackCssCache: string | null = null;
 
   /**
    * Load and cache font file as base64
@@ -105,40 +107,92 @@ class LocalFontLoader {
   }
 
   /**
-   * Fallback CSS when fonts can't be loaded
+   * Fallback CSS optimized for Linux containers - Google Fonts with caching
    */
   private getFallbackFontCSS(): string {
-    return `
+    // Return cached fallback CSS if available
+    if (this.fallbackCssCache) {
+      console.log('📝 Using cached fallback font CSS');
+      return this.fallbackCssCache;
+    }
+
+    // Generate and cache fallback CSS
+    this.fallbackCssCache = `
       <style>
         <![CDATA[
-          .title { font-family: sans-serif; font-size: 26px; font-weight: 600; }
-          .axis { font-family: sans-serif; font-size: 15px; font-weight: 500; }
-          .stats { font-family: sans-serif; font-size: 15px; font-weight: 500; }
-          .label { font-family: sans-serif; font-size: 13px; font-weight: 400; }
-          .title-small { font-family: sans-serif; font-size: 18px; font-weight: 600; }
-          .axis-small { font-family: sans-serif; font-size: 12px; font-weight: 400; }
+          @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600&subset=thai,latin&display=swap');
+          
+          .title { 
+            font-family: 'Prompt', 'Sarabun', 'Tahoma', sans-serif; 
+            font-size: 26px; 
+            font-weight: 600; 
+          }
+          .axis { 
+            font-family: 'Prompt', 'Sarabun', 'Tahoma', sans-serif; 
+            font-size: 15px; 
+            font-weight: 500; 
+          }
+          .stats { 
+            font-family: 'Prompt', 'Sarabun', 'Tahoma', sans-serif; 
+            font-size: 15px; 
+            font-weight: 500; 
+          }
+          .label { 
+            font-family: 'Prompt', 'Sarabun', 'Tahoma', sans-serif; 
+            font-size: 13px; 
+            font-weight: 400; 
+          }
+          .title-small { 
+            font-family: 'Prompt', 'Sarabun', 'Tahoma', sans-serif; 
+            font-size: 18px; 
+            font-weight: 600; 
+          }
+          .axis-small { 
+            font-family: 'Prompt', 'Sarabun', 'Tahoma', sans-serif; 
+            font-size: 12px; 
+            font-weight: 400; 
+          }
         ]]>
-      </style>
+        </style>
     `;
+
+    console.log('📝 Generated and cached fallback font CSS');
+    return this.fallbackCssCache;
   }
 
   /**
-   * Check if fonts are available
+   * Check if fonts are available and can be loaded
    */
   areFontsAvailable(): boolean {
     try {
+      // Check if font directory exists and files are accessible
       const fontPath = join(this.fontsPath, 'Prompt-Regular.ttf');
-      readFileSync(fontPath);
+      const fontBuffer = readFileSync(fontPath);
+      
+      // Additional check: ensure the font file is not empty and has reasonable size
+      if (fontBuffer.length < 1000) {
+        console.warn('Font file too small, likely corrupted');
+        return false;
+      }
+      
+      console.log('✅ Local fonts available and valid');
       return true;
-    } catch {
+    } catch (error) {
+      console.warn('❌ Local fonts not available:', error instanceof Error ? error.message : 'Unknown error');
       return false;
     }
   }
 
   /**
-   * Get optimized font CSS (only loads essential weights)
+   * Get optimized font CSS (only loads essential weights) with caching
    */
   getOptimizedPromptFontCSS(): string {
+    // Return cached CSS if available
+    if (this.cssCache) {
+      console.log('📝 Using cached optimized Prompt font CSS');
+      return this.cssCache;
+    }
+
     // Only load Regular and SemiBold to reduce size
     const regularBase64 = this.loadFontBase64('Prompt-Regular.ttf');
     const semiBoldBase64 = this.loadFontBase64('Prompt-SemiBold.ttf');
@@ -147,7 +201,8 @@ class LocalFontLoader {
       return this.getFallbackFontCSS();
     }
 
-    return `
+    // Generate and cache CSS
+    this.cssCache = `
       <style>
         <![CDATA[
           @font-face {
@@ -196,6 +251,19 @@ class LocalFontLoader {
         ]]>
       </style>
     `;
+
+    console.log('📝 Generated and cached optimized Prompt font CSS');
+    return this.cssCache;
+  }
+
+  /**
+   * Clear all caches (useful for development or testing)
+   */
+  clearCaches(): void {
+    this.fontCache = {};
+    this.cssCache = null;
+    this.fallbackCssCache = null;
+    console.log('🗑️ Cleared all font and CSS caches');
   }
 }
 
