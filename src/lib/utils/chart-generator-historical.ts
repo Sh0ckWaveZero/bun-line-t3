@@ -10,6 +10,7 @@ import {
   getTimestamp,
 } from "./chart-config";
 import { svgConverter } from "./svg-converter";
+import { generateWebSafeFontCSS } from "./font-embedding";
 
 /**
  * Enhanced chart generator with real historical data from Bitkub
@@ -151,14 +152,7 @@ Volume: ${point.volume.toLocaleString("th-TH")}</title>
             <stop offset="0%" style="stop-color:${lineColor};stop-opacity:0.3" />
             <stop offset="100%" style="stop-color:${lineColor};stop-opacity:0.05" />
           </linearGradient>
-          <style>
-            <![CDATA[
-              .title { font-family: 'Prompt', 'Noto Sans Thai', Arial, sans-serif; font-size: 26px; font-weight: 600; }
-              .axis { font-family: 'Prompt', 'Noto Sans Thai', Arial, sans-serif; font-size: 15px; font-weight: 500; }
-              .stats { font-family: 'Prompt', 'Noto Sans Thai', Arial, sans-serif; font-size: 15px; font-weight: 500; }
-              .label { font-family: 'Prompt', 'Noto Sans Thai', Arial, sans-serif; font-size: 13px; font-weight: 400; }
-            ]]>
-          </style>
+          ${generateWebSafeFontCSS()}
         </defs>
         
         <!-- Background -->
@@ -332,12 +326,7 @@ Volume: ${point.volume.toLocaleString("th-TH")}</title>
     return `
       <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <style>
-            <![CDATA[
-              .title { font-family: 'Prompt', 'Noto Sans Thai', Arial, sans-serif; font-size: 18px; font-weight: 600; }
-              .axis { font-family: 'Prompt', 'Noto Sans Thai', Arial, sans-serif; font-size: 12px; font-weight: 400; }
-            ]]>
-          </style>
+          ${generateWebSafeFontCSS()}
         </defs>
         
         <!-- Background -->

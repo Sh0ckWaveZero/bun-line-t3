@@ -9,6 +9,7 @@ import {
   getTimestamp,
 } from "./chart-config";
 import { svgConverter } from "./svg-converter";
+import { generateWebSafeFontCSS } from "./font-embedding";
 
 /**
  * Simple chart generator that works without canvas dependencies
@@ -82,12 +83,7 @@ export class SimpleChartGenerator {
     return `
       <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <style>
-            <![CDATA[
-              .title { font-family: 'Prompt', 'Noto Sans Thai', Arial, sans-serif; font-size: 18px; font-weight: 600; }
-              .axis { font-family: 'Prompt', 'Noto Sans Thai', Arial, sans-serif; font-size: 12px; font-weight: 400; }
-            ]]>
-          </style>
+          ${generateWebSafeFontCSS()}
         </defs>
         
         <!-- Background -->
