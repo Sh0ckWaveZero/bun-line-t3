@@ -49,45 +49,45 @@ export const CHART_MARGINS: Record<string, ChartMargins> = {
   },
 };
 
-// Font configurations using Next.js CSS variables
+// Font configurations for SVG compatibility
 export const FONT_CONFIGS: Record<string, FontConfig> = {
   TITLE: {
-    family: "var(--font-prompt), Arial, sans-serif",
+    family: "'Prompt', 'Noto Sans Thai', Arial, sans-serif",
     size: 18,
     weight: "bold",
   },
   TITLE_LARGE: {
-    family: "var(--font-prompt), Arial, sans-serif",
+    family: "'Prompt', 'Noto Sans Thai', Arial, sans-serif",
     size: 26,
     weight: 600,
   },
   AXIS: {
-    family: "var(--font-prompt), Arial, sans-serif",
+    family: "'Prompt', 'Noto Sans Thai', Arial, sans-serif",
     size: 14,
     weight: "bold",
   },
   AXIS_LARGE: {
-    family: "var(--font-prompt), Arial, sans-serif",
+    family: "'Prompt', 'Noto Sans Thai', Arial, sans-serif",
     size: 15,
     weight: 500,
   },
   LABEL: {
-    family: "var(--font-prompt), Arial, sans-serif",
+    family: "'Prompt', 'Noto Sans Thai', Arial, sans-serif",
     size: 12,
     weight: "normal",
   },
   LABEL_LARGE: {
-    family: "var(--font-prompt), Arial, sans-serif",
+    family: "'Prompt', 'Noto Sans Thai', Arial, sans-serif",
     size: 13,
     weight: 400,
   },
   STATS: {
-    family: "var(--font-prompt), Arial, sans-serif",
+    family: "'Prompt', 'Noto Sans Thai', Arial, sans-serif",
     size: 16,
     weight: 600,
   },
   STATS_LARGE: {
-    family: "var(--font-prompt), Arial, sans-serif",
+    family: "'Prompt', 'Noto Sans Thai', Arial, sans-serif",
     size: 15,
     weight: 500,
   },
