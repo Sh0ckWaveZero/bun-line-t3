@@ -268,3 +268,7 @@ gemini -p "@src/payment/ @tests/ Is the payment processing module fully tested? 
 - No need for --yolo flag for read-only analysis
 - Gemini's context window can handle large codebases that Claude may not support
 - When checking for features, be specific about what you want for accurate results
+
+### Containerization Notes
+
+- Use podman in dev mode for containers

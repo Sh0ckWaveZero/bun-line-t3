@@ -31,7 +31,16 @@
       "Bash(bun:*)",
       "mcp__ide__getDiagnostics",
       "Bash(cat:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(docker build:*)",
+      "Bash(podman build:*)",
+      "Bash(--build-arg BUILDPLATFORM=linux/arm64/v8 )",
+      "Bash(--build-arg DATABASE_URL=\"mongodb://placeholder:placeholder@placeholder/placeholder\" )",
+      "Bash(--build-arg NEXTAUTH_URL=\"https://placeholder.com\" )",
+      "Bash(--build-arg NEXTAUTH_SECRET=\"placeholder-secret-for-build\" )",
+      "Bash(--build-arg APP_DOMAIN=\"https://placeholder.com\" )",
+      "Bash(--build-arg ALLOWED_DOMAINS=\"placeholder.com\" )",
+      "Bash(--no-cache)"
     ],
     "deny": [
       "Read(**/.env*)",

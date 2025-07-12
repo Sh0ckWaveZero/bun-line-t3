@@ -26,10 +26,7 @@
       "@/styles/*": ["./src/styles/*"],
       "@/app/*": ["./src/app/*"],
       "@/utils/*": ["./src/lib/utils/*"],
-      "@/types/*": ["./src/lib/types/*"],
       "@/constants/*": ["./src/lib/constants/*"],
-      "@/auth/*": ["./src/lib/auth/*"],
-      "@/database/*": ["./src/lib/database/*"],
       "@/validation/*": ["./src/lib/validation/*"]
     },
     "plugins": [
