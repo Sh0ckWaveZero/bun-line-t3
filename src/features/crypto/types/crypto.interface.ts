@@ -4,6 +4,7 @@ interface CryptoInfo {
   textColor?: string;
   currencyName?: string;
   lastPrice?: string;
+  lastPriceRaw?: number;
   highPrice?: string;
   lowPrice?: string;
   changePrice?: string;
