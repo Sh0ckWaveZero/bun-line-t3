@@ -190,7 +190,3 @@ networks:
 volumes:
   temp_charts:
     driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./public/temp-charts
