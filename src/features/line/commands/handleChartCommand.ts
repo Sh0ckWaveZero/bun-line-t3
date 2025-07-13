@@ -1,15 +1,13 @@
 import { NextRequest } from "next/server";
 import { sendChartImage } from "@/lib/utils/line-messaging";
-// import { chartGenerator } from '@/lib/utils/chart-generator';
-// import { simpleChartGenerator } from '@/lib/utils/chart-generator-simple';
-import { historicalChartGenerator } from "@/lib/utils/chart-generator-historical";
+import { d3ChartGenerator } from "@/lib/utils/chart-generator-d3";
 import { exchangeService } from "@/features/crypto/services/exchange";
 import { CryptoInfo } from "@/features/crypto/types/crypto.interface";
 
 interface ChartCommandParams {
   symbol: string;
   exchange: string;
-  type: "line" | "comparison" | "portfolio";
+  type: "line" | "comparison";
 }
 
 export async function handleChartCommand(
@@ -50,15 +48,12 @@ export async function handleChartCommand(
         },
       ]);
 
-      // Use historical comparison chart
-      const svgChart =
-        await historicalChartGenerator.generateHistoricalComparison(
-          [symbol], // For now, just compare one symbol over time
-          24,
-          `${symbol.toUpperCase()} Price Comparison`,
-        );
-      const chartBuffer =
-        await historicalChartGenerator.convertSvgToPng(svgChart);
+      // Use D3 historical comparison chart
+      const chartBuffer = await d3ChartGenerator.generateHistoricalComparison(
+        [symbol], // For now, just compare one symbol over time
+        24,
+        `${symbol.toUpperCase()} Price Comparison`,
+      );
 
       await sendChartImage(
         userId,
@@ -143,17 +138,13 @@ export async function handleChartCommand(
         "records",
       );
 
-      // Generate historical chart with real data
-      console.log("📈 Generating historical chart for:", symbol);
-      const svgChart = await historicalChartGenerator.generateHistoricalChart(
+      // Generate historical chart with D3.js
+      console.log("📈 Generating D3 chart for:", symbol);
+      const chartBuffer = await d3ChartGenerator.generateHistoricalChart(
         symbol,
         24, // 24 hours of data
         `${cryptoData.currencyName || symbol.toUpperCase()} Price Chart`,
       );
-      console.log("📈 SVG chart generated, length:", svgChart.length);
-
-      const chartBuffer =
-        await historicalChartGenerator.convertSvgToPng(svgChart);
       console.log("📈 PNG buffer generated, length:", chartBuffer.length);
 
       console.log("📤 Sending chart image to user:", userId);
@@ -204,7 +195,7 @@ export function parseChartCommand(text: string): ChartCommandParams | null {
   if (!symbol) return null;
 
   let exchange: string = "bitkub";
-  let type: "line" | "comparison" | "portfolio" = "line";
+  let type: "line" | "comparison" = "line";
 
   // Check for exchange or type in remaining parts
   for (let i = 2; i < parts.length; i++) {
@@ -215,10 +206,6 @@ export function parseChartCommand(text: string): ChartCommandParams | null {
     // Check for comparison type
     if (part === "compare" || part === "comparison") {
       type = "comparison";
-    }
-    // Check for portfolio type
-    else if (part === "portfolio" || part === "port") {
-      type = "portfolio";
     }
     // Check for exchange names
     else if (["bitkub", "bk", "binance", "bn", "satang", "st"].includes(part)) {
