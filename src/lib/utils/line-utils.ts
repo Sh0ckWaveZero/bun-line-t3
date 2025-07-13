@@ -47,7 +47,6 @@ export const sendLoadingAnimation = async (req: any) => {
 };
 
 export const sendMessage = async (req: any, payload: any) => {
-  console.dir(payload, { depth: null });
   const lineChannelAccessToken = env.LINE_CHANNEL_ACCESS;
   const lineHeader = {
     "Content-Type": "application/json",

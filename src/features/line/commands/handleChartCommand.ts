@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { sendMessage, sendPushMessage } from "@/lib/utils/line-utils";
+import { sendMessage } from "@/lib/utils/line-utils";
 import { chartService } from "@/features/crypto/services/chart";
 import { ChartTemplates } from "@/features/line/templates/chart-templates";
 import { ChartParser, ChartCommandParams } from "@/features/line/parsers/chart-parser";
@@ -38,7 +38,7 @@ async function handleComparisonChart(req: NextRequest, symbol: string): Promise<
       logoUrl,
     );
     
-    await sendPushMessage(req, [chartMessage]);
+    await sendMessage(req, [chartMessage]);
   } catch (error) {
     console.error("❌ Failed to generate comparison chart:", error);
     throw error;
@@ -56,10 +56,6 @@ async function handleSingleChart(req: NextRequest, symbol: string, exchange: str
     return;
   }
 
-  // Send loading message
-  const loadingMessage = ChartTemplates.createLoadingMessage(symbol);
-  await sendMessage(req, [loadingMessage]);
-
   try {
     console.log("📈 Generating chart for:", symbol, "from:", exchange);
     const chartData = await chartService.generateSingleChart(symbol, exchange);
@@ -70,7 +66,7 @@ async function handleSingleChart(req: NextRequest, symbol: string, exchange: str
       chartData.imageUrls,
     );
     
-    await sendPushMessage(req, [chartMessage]);
+    await sendMessage(req, [chartMessage]);
     console.log("✅ Chart carousel sent successfully");
   } catch (imageError) {
     console.error("❌ Failed to send chart carousel:", imageError);
@@ -80,7 +76,7 @@ async function handleSingleChart(req: NextRequest, symbol: string, exchange: str
       const cryptoData = await chartService.getCryptoData(symbol, exchange);
       if (cryptoData) {
         const fallbackMessage = ChartTemplates.createErrorFallbackMessage(symbol, cryptoData);
-        await sendPushMessage(req, [fallbackMessage]);
+        await sendMessage(req, [fallbackMessage]);
       }
     } catch (fallbackError) {
       console.error("❌ Failed to send fallback message:", fallbackError);
