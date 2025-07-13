@@ -229,9 +229,7 @@ export async function uploadImageToTemporaryHost(
   // Return public URLs via API route - LINE requires HTTPS and accessible domain
   // Validate base URL to prevent SSRF attacks
   const rawBaseUrl =
-    env.NEXTAUTH_URL ||
-    env.FRONTEND_URL ||
-    "https://line-login.midseelee.com"; // Use production domain for LINE compatibility
+    env.NEXTAUTH_URL || env.FRONTEND_URL || "https://line-login.midseelee.com"; // Use production domain for LINE compatibility
   const baseUrl = validateBaseUrl(rawBaseUrl);
 
   // Construct URLs with validated base URL and sanitized filenames
@@ -301,7 +299,7 @@ export async function sendChartImage(
     // Verify images are accessible on production domain
     let testOriginal: Response;
     let testPreview: Response;
-    
+
     // Use standard fetch for HTTPS URLs (production)
     const fetchOptions = {
       method: "HEAD" as const,
@@ -309,7 +307,7 @@ export async function sendChartImage(
         "User-Agent": "LINE-Bot-SDK",
       },
     };
-    
+
     try {
       testOriginal = await fetch(originalUrl, fetchOptions);
       testPreview = await fetch(previewUrl, fetchOptions);

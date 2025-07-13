@@ -9,17 +9,23 @@ export const sendRequest = async (
   body: any,
 ) => {
   try {
+    console.log("🔗 Sending request to:", url);
+    console.log("📦 Request body size:", JSON.stringify(body).length, "characters");
     const response = await fetch(url, {
       method,
       headers,
       body: JSON.stringify(body),
     });
+    console.log("📊 Response status:", response.status, response.statusText);
     if (!response.ok) {
-      throw new Error("Failed to send request");
+      const errorText = await response.text();
+      console.error("❌ Response error:", errorText);
+      throw new Error(`Failed to send request: ${response.status} ${response.statusText} - ${errorText}`);
     }
     return response;
   } catch (err: any) {
-    console.error(err.message);
+    console.error("💥 sendRequest error:", err.message);
+    throw err;
   }
 };
 
@@ -41,6 +47,7 @@ export const sendLoadingAnimation = async (req: any) => {
 };
 
 export const sendMessage = async (req: any, payload: any) => {
+  console.dir(payload, { depth: null });
   const lineChannelAccessToken = env.LINE_CHANNEL_ACCESS;
   const lineHeader = {
     "Content-Type": "application/json",
@@ -54,5 +61,24 @@ export const sendMessage = async (req: any, payload: any) => {
     });
   } catch (err: any) {
     console.error(err.message);
+  }
+};
+
+export const sendPushMessage = async (req: any, payload: any) => {
+  console.log("📤 Sending push message");
+  console.dir(payload, { depth: null });
+  const lineChannelAccessToken = env.LINE_CHANNEL_ACCESS;
+  const lineHeader = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${lineChannelAccessToken}`,
+  };
+  try {
+    return sendRequest(`${env.LINE_MESSAGING_API}/push`, "POST", lineHeader, {
+      to: req.body.events[0].source.userId,
+      messages: payload,
+    });
+  } catch (err: any) {
+    console.error("❌ Push message error:", err.message);
+    throw err;
   }
 };

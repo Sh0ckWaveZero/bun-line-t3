@@ -115,6 +115,10 @@ services:
       - /tmp:rw,size=100m,mode=1777
       - /var/tmp:rw,size=50m,mode=1777
 
+    # 📁 VOLUMES: Chart files persistence
+    volumes:
+      - temp_charts:/app/public/temp-charts
+
     # 🔐 SECURITY: Network isolation - ใช้ yadom network ที่มีอยู่แล้ว
     networks:
       - yadom
@@ -181,3 +185,12 @@ services:
 networks:
   yadom:
     external: true # ใช้ network yadom ที่มีอยู่แล้วในระบบ
+
+# 📁 VOLUMES: Named volumes สำหรับ data persistence
+volumes:
+  temp_charts:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./public/temp-charts
