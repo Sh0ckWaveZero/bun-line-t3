@@ -26,12 +26,19 @@ WORKDIR /app
 # 🔐 SECURITY: ติดตั้ง system packages ที่จำเป็นสำหรับ Prisma และ production
 # ✅ SECURITY: อัปเดต package index ก่อนติดตั้งเพื่อความปลอดภัย
 # 🔧 Multi-platform: ปรับ node-prune installation ให้รองรับ ARM64
+# 🎨 CANVAS: เพิ่ม dependencies สำหรับ node-canvas
 RUN apk update && apk add --no-cache \
     curl \
     bash \
     openssl \
     ca-certificates \
     dumb-init \
+    cairo-dev \
+    jpeg-dev \
+    pango-dev \
+    giflib-dev \
+    build-base \
+    python3 \
     && rm -rf /var/cache/apk/*
 
 # 🔧 Multi-platform: Skip node-prune ใน ARM64 เนื่องจากไม่มี ARM64 binary
@@ -49,6 +56,10 @@ COPY prisma ./prisma
 # 🔧 RASPBERRY PI: ลด memory usage และ parallel jobs
 RUN NODE_OPTIONS="--max_old_space_size=1536" bun install --frozen-lockfile --ignore-scripts
 
+# 🎨 CANVAS: Install npm and rebuild canvas module with native dependencies
+RUN apk add --no-cache npm \
+    && cd node_modules/canvas && npm rebuild
+
 # 🚀 OPTIMIZATION: Generate Prisma Client แยกต่างหาก
 # 🔧 RASPBERRY PI: จำกัด memory สำหรับ Prisma generation
 RUN NODE_OPTIONS="--max_old_space_size=1024" bunx prisma generate
@@ -62,6 +73,15 @@ ARG NEXTAUTH_URL
 ARG NEXTAUTH_SECRET
 ARG APP_DOMAIN
 ARG ALLOWED_DOMAINS
+ARG LINE_CLIENT_ID
+ARG LINE_CLIENT_SECRET
+ARG LINE_CHANNEL_SECRET
+ARG LINE_MESSAGING_API
+ARG LINE_CHANNEL_ACCESS
+ARG CMC_URL
+ARG CMC_API_KEY
+ARG FRONTEND_URL
+ARG AIRVISUAL_API_KEY
 
 # 🔐 SECURITY: ตั้งค่า Prisma สำหรับ production build
 # 🔧 RASPBERRY PI OPTIMIZATION: ตั้งค่า memory limits สำหรับ Node.js
@@ -69,7 +89,8 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV CI=true
 ENV SKIP_ENV_VALIDATION=true
-ENV NODE_OPTIONS="--max_old_space_size=1536"
+# 🔧 ARM64: ลด memory limit สำหรับ ARM64 และปิด memory warnings
+ENV NODE_OPTIONS="--max_old_space_size=1024 --no-warnings"
 
 # 🔐 SECURITY: ตั้งค่า environment variables สำหรับ build time
 ENV DATABASE_URL=${DATABASE_URL}
@@ -77,13 +98,25 @@ ENV NEXTAUTH_URL=${NEXTAUTH_URL}
 ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
 ENV APP_DOMAIN=${APP_DOMAIN}
 ENV ALLOWED_DOMAINS=${ALLOWED_DOMAINS}
+ENV LINE_CLIENT_ID=${LINE_CLIENT_ID}
+ENV LINE_CLIENT_SECRET=${LINE_CLIENT_SECRET}
+ENV LINE_CHANNEL_SECRET=${LINE_CHANNEL_SECRET}
+ENV LINE_MESSAGING_API=${LINE_MESSAGING_API:-"https://api.line.me/v2/bot/message"}
+ENV LINE_CHANNEL_ACCESS=${LINE_CHANNEL_ACCESS}
+ENV CMC_URL=${CMC_URL:-"https://pro-api.coinmarketcap.com"}
+ENV CMC_API_KEY=${CMC_API_KEY}
+ENV FRONTEND_URL=${FRONTEND_URL}
+ENV AIRVISUAL_API_KEY=${AIRVISUAL_API_KEY}
 
 # 🚀 OPTIMIZATION: Generate Prisma Client และ build Next.js
-# 🔧 RASPBERRY PI: แยก commands เพื่อลด memory peak usage
-RUN NODE_OPTIONS="--max_old_space_size=1024" bunx prisma generate
+# 🔧 ARM64: แยก commands เพื่อลด memory peak usage สำหรับ ARM64
+RUN NODE_OPTIONS="--max_old_space_size=768 --no-warnings" bunx prisma generate
 
-# 🔧 RASPBERRY PI: Build Next.js แยกต่างหาก เพื่อลด memory usage
-RUN NODE_OPTIONS="--max_old_space_size=1536" bun run build
+# 🔧 ARM64: ใช้ Node.js แทน Bun สำหรับ Next.js build เพื่อหลีกเลี่ยง worker issues
+ENV NEXT_BUILD_WORKERS=0
+ENV NEXT_WORKER_THREADS=false
+ENV NEXT_PARALLEL=false
+RUN NODE_OPTIONS="--max_old_space_size=1024 --no-warnings" npx next build
 
 # 🚀 OPTIMIZATION: ทำความสะอาดไฟล์ที่ไม่จำเป็น และ reduce attack surface
 # 🔧 Multi-platform: ใช้ manual cleanup แทน node-prune สำหรับ ARM64 compatibility
@@ -115,10 +148,15 @@ ARG BUILDPLATFORM
 
 # 🔐 SECURITY: ติดตั้ง runtime dependencies ที่จำเป็น
 # ✅ SECURITY: เพิ่ม dumb-init สำหรับ proper signal handling
+# 🎨 CANVAS: เพิ่ม runtime dependencies สำหรับ node-canvas
 RUN apk update && apk add --no-cache \
     curl \
     ca-certificates \
     dumb-init \
+    cairo \
+    jpeg \
+    pango \
+    giflib \
     && rm -rf /var/cache/apk/*
 
 ###################
