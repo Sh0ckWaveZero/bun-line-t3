@@ -35,6 +35,7 @@ export class ChartTemplates {
     cryptoData: CryptoInfo,
     symbol: string,
     imageUrls: ChartImageUrls,
+    exchange: string = "bitkub",
   ): LineFlexMessage {
     const chartBubble = {
       type: "bubble",
@@ -77,7 +78,7 @@ export class ChartTemplates {
                 contents: [
                   {
                     type: "text",
-                    text: `฿${(cryptoData.lastPriceRaw || 0).toLocaleString("th-TH", { 
+                    text: `${exchange.toLowerCase() === "binance" || exchange.toLowerCase() === "bn" ? "$" : "฿"}${(cryptoData.lastPriceRaw || 0).toLocaleString("th-TH", { 
                       minimumFractionDigits: 2, 
                       maximumFractionDigits: 8 
                     })}`,
@@ -250,10 +251,12 @@ export class ChartTemplates {
   static createErrorFallbackMessage(
     symbol: string,
     cryptoData: CryptoInfo,
+    exchange: string = "bitkub",
   ): LineTextMessage {
+    const currencySymbol = exchange.toLowerCase() === "binance" || exchange.toLowerCase() === "bn" ? "$" : "฿";
     return {
       type: "text",
-      text: `⚠️ กราฟ ${symbol.toUpperCase()} ถูกสร้างแล้ว แต่ไม่สามารถส่งรูปภาพได้\n\n📊 ข้อมูลล่าสุด:\n• ชื่อ: ${cryptoData.currencyName}\n• ราคา: ฿${(cryptoData.lastPriceRaw || 0).toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 8 })}\n• เปลี่ยนแปลง: ${(cryptoData.changePriceOriginal || 0) >= 0 ? "+" : ""}${(cryptoData.changePriceOriginal || 0).toFixed(2)}%\n\n🔄 ลองใหม่: /chart ${symbol.toLowerCase()}`,
+      text: `⚠️ กราฟ ${symbol.toUpperCase()} ถูกสร้างแล้ว แต่ไม่สามารถส่งรูปภาพได้\n\n📊 ข้อมูลล่าสุด:\n• ชื่อ: ${cryptoData.currencyName}\n• ราคา: ${currencySymbol}${(cryptoData.lastPriceRaw || 0).toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 8 })}\n• เปลี่ยนแปลง: ${(cryptoData.changePriceOriginal || 0) >= 0 ? "+" : ""}${(cryptoData.changePriceOriginal || 0).toFixed(2)}%\n\n🔄 ลองใหม่: /chart ${symbol.toLowerCase()}`,
     };
   }
 

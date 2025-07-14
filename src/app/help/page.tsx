@@ -154,6 +154,41 @@ export default function HelpPage() {
         ],
       },
       {
+        title: "กราฟและชาร์ท",
+        description: "คำสั่งสำหรับดูกราฟราคาคริปโตเคอเรนซี",
+        commands: [
+          {
+            name: "chart",
+            aliases: ["c", "กราฟ"],
+            description: "แสดงกราฟราคาคริปโตเคอเรนซี 24 ชั่วโมง",
+            usage: "/chart [เหรียญ] [ตลาด] หรือ /chart [ตลาด] [เหรียญ]",
+            examples: [
+              "/chart btc",
+              "/chart btc binance", 
+              "/chart bn btc",
+              "/chart bk eth",
+              "/c bn btc",
+              "/c bk sol",
+              "/กราฟ btc",
+              "/chart btc compare"
+            ],
+          },
+        ],
+      },
+      {
+        title: "การลาป่วย/ลาพักผ่อน",
+        description: "คำสั่งสำหรับจัดการการลางาน",
+        commands: [
+          {
+            name: "leave",
+            aliases: ["ลา"],
+            description: "ส่งคำขอลาป่วยหรือลาพักผ่อน",
+            usage: "/leave [ประเภท] [วันที่] [เหตุผล]",
+            examples: ["/leave sick 2024-12-20 ป่วยไข้หวัด", "/ลา vacation 2024-12-25 ลาพักผ่อน"],
+          },
+        ],
+      },
+      {
         title: "ข้อมูลอื่นๆ",
         description: "คำสั่งสำหรับดูข้อมูลทั่วไป",
         commands: [
@@ -212,7 +247,7 @@ export default function HelpPage() {
     .filter((category) => category.commands.length > 0);
 
   return (
-    <div className="prompt-text min-h-screen font-sans">
+    <div className="prompt-text min-h-screen font-prompt">
       <Head>
         <title>LINE Bot คำสั่งทั้งหมด | Bun LINE T3</title>
         <meta
@@ -224,10 +259,10 @@ export default function HelpPage() {
 
       <div className="mx-auto max-w-6xl px-4 py-8">
         <header className="mb-10 text-center">
-          <h1 className="mb-4 text-4xl font-bold leading-tight tracking-tight text-white">
+          <h1 className="mb-4 text-4xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white font-prompt">
             คำสั่งทั้งหมดของ LINE Bot
           </h1>
-          <p className="mb-6 text-lg font-light leading-relaxed text-gray-100">
+          <p className="mb-6 text-lg font-normal leading-relaxed text-gray-700 dark:text-gray-300 font-prompt">
             รวมทุกคำสั่งที่ใช้ได้กับบอท LINE พร้อมคำอธิบายและตัวอย่าง
           </p>
 
@@ -235,7 +270,7 @@ export default function HelpPage() {
             <input
               type="text"
               placeholder="ค้นหาคำสั่ง..."
-              className="w-full rounded-lg border border-gray-300 p-3 font-light focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 p-3 font-prompt font-normal text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -252,13 +287,13 @@ export default function HelpPage() {
               {filteredCategories.map((category, idx) => (
                 <section
                   key={idx}
-                  className="overflow-hidden rounded-lg bg-white shadow-md"
+                  className="overflow-hidden rounded-lg bg-white dark:bg-gray-800 shadow-md"
                 >
                   <div className="bg-indigo-600 p-6">
-                    <h2 className="text-2xl font-bold tracking-tight text-white">
+                    <h2 className="text-2xl font-bold tracking-tight text-white font-prompt">
                       {category.title}
                     </h2>
-                    <p className="mt-1 font-light text-indigo-100">
+                    <p className="mt-1 font-normal text-indigo-100 dark:text-indigo-200 font-prompt">
                       {category.description}
                     </p>
                   </div>
@@ -267,41 +302,41 @@ export default function HelpPage() {
                     {category.commands.map((command, cmdIdx) => (
                       <div key={cmdIdx} className="p-6">
                         <div className="mb-3 flex flex-wrap gap-2">
-                          <span className="rounded-full bg-indigo-100 px-3 py-1 text-sm font-medium text-indigo-800">
+                          <span className="rounded-full bg-indigo-100 px-3 py-1 text-sm font-medium text-indigo-800 font-prompt">
                             /{command.name}
                           </span>
                           {command.aliases.map((alias, aliasIdx) => (
                             <span
                               key={aliasIdx}
-                              className="rounded-full bg-gray-100 px-3 py-1 text-sm font-light text-gray-700"
+                              className="rounded-full bg-gray-100 dark:bg-gray-700 px-3 py-1 text-sm font-normal text-gray-800 dark:text-gray-200 font-prompt"
                             >
                               /{alias}
                             </span>
                           ))}
                         </div>
 
-                        <p className="mb-4 font-light text-gray-700">
+                        <p className="mb-4 font-normal text-gray-800 dark:text-gray-200 font-prompt">
                           {command.description}
                         </p>
 
                         <div className="mb-4">
-                          <h4 className="mb-2 text-sm font-semibold uppercase tracking-wider text-gray-500">
+                          <h4 className="mb-2 text-sm font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400 font-prompt">
                             การใช้งาน
                           </h4>
-                          <code className="code-text rounded bg-gray-100 px-2 py-1 font-medium text-gray-800">
+                          <code className="code-text rounded bg-gray-100 dark:bg-gray-700 px-2 py-1 font-medium text-gray-900 dark:text-gray-200 font-prompt">
                             {command.usage}
                           </code>
                         </div>
 
                         <div>
-                          <h4 className="mb-2 text-sm font-semibold uppercase tracking-wider text-gray-500">
+                          <h4 className="mb-2 text-sm font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400 font-prompt">
                             ตัวอย่าง
                           </h4>
                           <div className="flex flex-wrap gap-2">
                             {command.examples.map((example, exIdx) => (
                               <code
                                 key={exIdx}
-                                className="code-text rounded bg-gray-100 px-2 py-1 font-medium text-gray-800"
+                                className="code-text rounded bg-gray-100 dark:bg-gray-700 px-2 py-1 font-medium text-gray-900 dark:text-gray-200 font-prompt"
                               >
                                 {example}
                               </code>
@@ -318,17 +353,17 @@ export default function HelpPage() {
 
           {!loading && filteredCategories.length === 0 && (
             <div className="py-16 text-center">
-              <h3 className="text-xl font-medium text-gray-700">
+              <h3 className="text-xl font-medium text-gray-800 dark:text-gray-200 font-prompt">
                 ไม่พบคำสั่งที่ค้นหา
               </h3>
-              <p className="mt-2 font-light text-gray-500">
+              <p className="mt-2 font-normal text-gray-600 dark:text-gray-400 font-prompt">
                 ลองค้นหาด้วยคำอื่น หรือตรวจสอบการสะกดอีกครั้ง
               </p>
             </div>
           )}
         </main>
 
-        <footer className="mt-16 text-center text-sm font-light text-gray-500">
+        <footer className="mt-16 text-center text-sm font-normal text-gray-600 dark:text-gray-400 font-prompt">
           <p>
             © {currentYear} Bun LINE T3. สามารถใช้คำสั่งทั้งภาษาไทยและอังกฤษได้
           </p>
