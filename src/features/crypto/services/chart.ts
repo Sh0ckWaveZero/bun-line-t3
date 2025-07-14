@@ -3,6 +3,7 @@ import { uploadImageToTemporaryHost } from "@/lib/utils/line-messaging";
 import type { UploadResult } from "@/lib/types/line-messaging";
 import { exchangeService } from "./exchange";
 import { bitkubHistoryService } from "./bitkub-history";
+import { binanceHistoryService } from "./binance-history";
 import { CryptoInfo } from "../types/crypto.interface";
 
 export type ChartImageUrls = UploadResult;
@@ -54,8 +55,13 @@ class ChartService {
       throw new Error(`Failed to fetch ${symbol} data from ${exchange}`);
     }
 
-    // Check for historical data
-    const historicalData = await bitkubHistoryService.getPopularCryptoHistory(symbol, 24);
+    // Get historical data based on exchange
+    let historicalData;
+    if (exchange.toLowerCase() === "binance" || exchange.toLowerCase() === "bn") {
+      historicalData = await binanceHistoryService.getPopularCryptoHistory(symbol, 24);
+    } else {
+      historicalData = await bitkubHistoryService.getPopularCryptoHistory(symbol, 24);
+    }
     
     if (historicalData.length === 0) {
       throw new Error(`No historical data available for ${symbol}`);
@@ -65,7 +71,8 @@ class ChartService {
     const chartBuffer = await d3ChartGenerator.generateHistoricalChart(
       symbol,
       24,
-      `${cryptoData.currencyName || symbol.toUpperCase()} Price Chart`,
+      `${cryptoData.currencyName || symbol.toUpperCase()} Price Chart (${exchange.toUpperCase()})`,
+      exchange,
     );
 
     // Upload chart image
@@ -121,8 +128,15 @@ class ChartService {
     };
   }
 
-  async checkHistoricalDataAvailability(symbol: string): Promise<boolean> {
-    const historicalData = await bitkubHistoryService.getPopularCryptoHistory(symbol, 24);
+  async checkHistoricalDataAvailability(symbol: string, exchange: string = "bitkub"): Promise<boolean> {
+    let historicalData;
+    
+    if (exchange.toLowerCase() === "binance" || exchange.toLowerCase() === "bn") {
+      historicalData = await binanceHistoryService.getPopularCryptoHistory(symbol, 24);
+    } else {
+      historicalData = await bitkubHistoryService.getPopularCryptoHistory(symbol, 24);
+    }
+    
     return historicalData.length > 0;
   }
 }

@@ -105,7 +105,7 @@ export const handleCommand = async (
     return;
   }
   // Chart
-  if (["chart", "กราฟ"].includes(command)) {
+  if (["chart", "กราฟ", "c"].includes(command)) {
     console.log("🚀 Chart command detected, command:", command);
     try {
       // Check if request structure is valid
@@ -135,7 +135,7 @@ export const handleCommand = async (
         await sendMessage(req, [
           {
             type: "text",
-            text: `รูปแบบคำสั่งไม่ถูกต้อง\n\nใช้: /chart [เหรียญ] [ตลาด]\nตัวอย่าง: /chart btc, /chart eth binance`,
+            text: `รูปแบบคำสั่งไม่ถูกต้อง\n\nใช้:\n• /chart [เหรียญ] [ตลาด]\n• /chart [ตลาด] [เหรียญ]\n• /c [ตลาด] [เหรียญ]\n\nตัวอย่าง:\n• /chart btc\n• /chart bn btc\n• /c bn btc`,
           },
         ]);
       }

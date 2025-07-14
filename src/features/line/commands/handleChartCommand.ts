@@ -47,10 +47,10 @@ async function handleComparisonChart(req: NextRequest, symbol: string): Promise<
 
 async function handleSingleChart(req: NextRequest, symbol: string, exchange: string): Promise<void> {
   // Check historical data availability first
-  const hasHistoricalData = await chartService.checkHistoricalDataAvailability(symbol);
+  const hasHistoricalData = await chartService.checkHistoricalDataAvailability(symbol, exchange);
   
   if (!hasHistoricalData) {
-    console.log("❌ No historical data available for:", symbol);
+    console.log("❌ No historical data available for:", symbol, "on", exchange);
     const noDataMessage = ChartTemplates.createNoDataMessage(symbol);
     await sendMessage(req, [noDataMessage]);
     return;
@@ -64,6 +64,7 @@ async function handleSingleChart(req: NextRequest, symbol: string, exchange: str
       chartData.cryptoData,
       symbol,
       chartData.imageUrls,
+      exchange,
     );
     
     await sendMessage(req, [chartMessage]);
@@ -75,7 +76,7 @@ async function handleSingleChart(req: NextRequest, symbol: string, exchange: str
     try {
       const cryptoData = await chartService.getCryptoData(symbol, exchange);
       if (cryptoData) {
-        const fallbackMessage = ChartTemplates.createErrorFallbackMessage(symbol, cryptoData);
+        const fallbackMessage = ChartTemplates.createErrorFallbackMessage(symbol, cryptoData, exchange);
         await sendMessage(req, [fallbackMessage]);
       }
     } catch (fallbackError) {
