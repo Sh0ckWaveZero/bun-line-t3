@@ -55,6 +55,7 @@ model User {
   sessions        Session[]
   workAttendances WorkAttendance[]
   leaves          Leave[]
+  settings        UserSettings?
 
   @@map("users")
 }
@@ -141,4 +142,23 @@ model Leave {
 
   @@index([userId, date, isActive])
   @@map("leaves")
+}
+
+model UserSettings {
+  id                          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId                      String   @unique @map("user_id") @db.ObjectId
+  // Notification preferences
+  enableCheckInReminders      Boolean  @default(true) @map("enable_checkin_reminders")
+  enableCheckOutReminders     Boolean  @default(true) @map("enable_checkout_reminders")
+  enableHolidayNotifications  Boolean  @default(false) @map("enable_holiday_notifications")
+  // Timezone and locale
+  timezone                    String   @default("Asia/Bangkok") @map("timezone")
+  language                    String   @default("th") @map("language")
+  // Timestamps
+  createdAt                   DateTime @default(now()) @map("created_at")
+  updatedAt                   DateTime @updatedAt @map("updated_at")
+  // Relations
+  user                        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
 }

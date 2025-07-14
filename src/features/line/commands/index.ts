@@ -12,6 +12,7 @@ import { handlePolicyInfo } from "./handlePolicyInfo";
 import { handleLeaveCommandWrapper } from "./handleLeaveCommandWrapper";
 import { handleDefaultCommand } from "./handleDefaultCommand";
 import { handleChartCommand, parseChartCommand } from "./handleChartCommand";
+import { handleSettingsCommand } from "./handleSettingsCommand";
 const { sendMessage } = await import("@/lib/utils/line-utils");
 
 export const handleCommand = async (
@@ -96,6 +97,11 @@ export const handleCommand = async (
   // Leave
   if (["leave", "ลา"].includes(command)) {
     await handleLeaveCommandWrapper(conditions, req);
+    return;
+  }
+  // Settings
+  if (["ตั้งค่า", "settings", "setting", "config", "preferences", "pref"].includes(command)) {
+    await handleSettingsCommand(req, conditions);
     return;
   }
   // Chart
