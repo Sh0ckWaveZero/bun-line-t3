@@ -2,32 +2,15 @@ import { env } from "@/env.mjs";
 import { promises as fs } from "fs";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-
-// Types for LINE messaging
-interface LineMessage {
-  type: string;
-  [key: string]: any;
-}
-
-interface FlexCarouselMessage {
-  type: "flex";
-  altText: string;
-  contents: {
-    type: "carousel";
-    contents: any[];
-  };
-}
-
-interface ImageMessage {
-  type: "image";
-  originalContentUrl: string;
-  previewImageUrl: string;
-}
-
-interface UploadResult {
-  originalUrl: string;
-  previewUrl: string;
-}
+import type {
+  LineMessage,
+  FlexCarouselMessage,
+  ImageMessage,
+  UploadResult,
+  ProcessedImage,
+  FileInfo,
+  UrlResult,
+} from "@/lib/types/line-messaging";
 
 /**
  * Sends push message to LINE user
@@ -127,6 +110,7 @@ export async function sendImageMessage(
  * @param filename Optional filename
  * @returns Promise<{originalUrl: string, previewUrl: string}> URLs to uploaded images
  */
+
 /**
  * Validates and sanitizes filename input to prevent SSRF attacks
  * @param filename User-provided filename
@@ -172,31 +156,17 @@ function validateBaseUrl(baseUrl: string): string {
   }
 }
 
-export async function uploadImageToTemporaryHost(
-  imageBuffer: Buffer,
-  filename?: string,
-): Promise<UploadResult> {
-  // Sanitize filename input to prevent path traversal and injection
-  const sanitizedBaseName = sanitizeFilename(filename);
-
-  // Generate unique filename - always include timestamp and UUID
-  const uniqueId = uuidv4();
-  const timestamp = Date.now();
-  const safeFilename = `${sanitizedBaseName}-${timestamp}-${uniqueId}.png`;
-  const previewFilename = `${sanitizedBaseName}-${timestamp}-${uniqueId}_preview.png`;
-
-  // Create file paths
-  const publicDir = path.join(process.cwd(), "public", "temp-charts");
-  const filePath = path.join(publicDir, safeFilename);
-  const previewPath = path.join(publicDir, previewFilename);
-
-  // Ensure directory exists
-  await fs.mkdir(publicDir, { recursive: true });
-
-  // Create preview image (smaller size for better performance)
+/**
+ * Processes image buffer to create original and preview versions
+ * @param imageBuffer Original image buffer
+ * @returns Promise<ProcessedImage> Processed image buffers
+ */
+async function processImageBuffers(imageBuffer: Buffer): Promise<ProcessedImage> {
   let previewBuffer = imageBuffer;
+  
   try {
-    const { default: sharp } = await import("sharp");
+    // Use a safer dynamic import pattern
+    const sharp = (await import("sharp")).default;
     previewBuffer = await sharp(imageBuffer)
       .resize(400, 400, {
         fit: "inside",
@@ -209,62 +179,151 @@ export async function uploadImageToTemporaryHost(
       })
       .toBuffer();
     console.log("📱 Preview image created:", previewBuffer.length, "bytes");
-  } catch {
-    console.warn("⚠️ Sharp not available, using original as preview");
+  } catch (error) {
+    console.warn("⚠️ Sharp not available, using original as preview:", error);
     previewBuffer = imageBuffer;
   }
 
+  return {
+    originalBuffer: imageBuffer,
+    previewBuffer,
+  };
+}
+
+/**
+ * Generates file information including paths and filenames
+ * @param filename Optional base filename
+ * @returns FileInfo object with file paths and names
+ */
+function generateFileInfo(filename?: string): FileInfo {
+  const sanitizedBaseName = sanitizeFilename(filename);
+  const uniqueId = uuidv4();
+  const timestamp = Date.now();
+  
+  const originalFilename = `${sanitizedBaseName}-${timestamp}-${uniqueId}.png`;
+  const previewFilename = `${sanitizedBaseName}-${timestamp}-${uniqueId}_preview.png`;
+  
+  const publicDir = path.join(process.cwd(), "public", "temp-charts");
+  const originalPath = path.join(publicDir, originalFilename);
+  const previewPath = path.join(publicDir, previewFilename);
+
+  return {
+    originalFilename,
+    previewFilename,
+    originalPath,
+    previewPath,
+  };
+}
+
+/**
+ * Saves processed images to filesystem
+ * @param processedImages Processed image buffers
+ * @param fileInfo File information and paths
+ * @returns Promise<void>
+ */
+async function saveImageFiles(
+  processedImages: ProcessedImage,
+  fileInfo: FileInfo,
+): Promise<void> {
+  const publicDir = path.dirname(fileInfo.originalPath);
+  
+  // Ensure directory exists
+  await fs.mkdir(publicDir, { recursive: true });
+
   // Save both images
-  await fs.writeFile(filePath, imageBuffer);
-  await fs.writeFile(previewPath, previewBuffer);
+  await fs.writeFile(fileInfo.originalPath, processedImages.originalBuffer);
+  await fs.writeFile(fileInfo.previewPath, processedImages.previewBuffer);
 
   // Verify files are fully written before proceeding
-  await fs.access(filePath);
-  await fs.access(previewPath);
+  await fs.access(fileInfo.originalPath);
+  await fs.access(fileInfo.previewPath);
   console.log("✅ Both image files verified as accessible");
 
   // Add small delay to ensure file system sync
   await new Promise((resolve) => setTimeout(resolve, 100));
+}
 
-  // Return public URLs via API route - LINE requires HTTPS and accessible domain
-  // Validate base URL to prevent SSRF attacks
+/**
+ * Generates public URLs for uploaded images
+ * @param fileInfo File information containing filenames
+ * @returns UrlResult object with original and preview URLs
+ */
+function generateImageUrls(fileInfo: FileInfo): UrlResult {
   const rawBaseUrl =
-    env.NEXTAUTH_URL || env.FRONTEND_URL || "https://line-login.midseelee.com"; // Use production domain for LINE compatibility
+    env.NEXTAUTH_URL || env.FRONTEND_URL || "https://line-login.midseelee.com";
   const baseUrl = validateBaseUrl(rawBaseUrl);
 
-  // Construct URLs with validated base URL and sanitized filenames
-  const originalUrl = `${baseUrl}/api/temp-charts/${safeFilename}`;
-  const previewUrl = `${baseUrl}/api/temp-charts/${previewFilename}`;
+  const originalUrl = `${baseUrl}/api/temp-charts/${fileInfo.originalFilename}`;
+  const previewUrl = `${baseUrl}/api/temp-charts/${fileInfo.previewFilename}`;
 
-  // Log URLs for debugging
+  return { originalUrl, previewUrl };
+}
+
+/**
+ * Logs detailed information about the upload process
+ * @param fileInfo File information
+ * @param urls Generated URLs
+ * @param processedImages Image buffers for size logging
+ */
+function logUploadDetails(
+  fileInfo: FileInfo,
+  urls: UrlResult,
+  processedImages: ProcessedImage,
+): void {
   console.log("🔗 Generated URLs:");
-  console.log(`Original URL: ${originalUrl}`);
-  console.log(`Preview URL: ${previewUrl}`);
-
-  console.log("📂 Original image saved to:", filePath);
-  console.log("📂 Preview image saved to:", previewPath);
-  console.log("🌐 Original URL:", originalUrl);
-  console.log("🌐 Preview URL:", previewUrl);
-  console.log("📏 Original size:", imageBuffer.length, "bytes");
-  console.log("📏 Preview size:", previewBuffer.length, "bytes");
+  console.log(`Original URL: ${urls.originalUrl}`);
+  console.log(`Preview URL: ${urls.previewUrl}`);
+  console.log("📂 Original image saved to:", fileInfo.originalPath);
+  console.log("📂 Preview image saved to:", fileInfo.previewPath);
+  console.log("🌐 Original URL:", urls.originalUrl);
+  console.log("🌐 Preview URL:", urls.previewUrl);
+  console.log("📏 Original size:", processedImages.originalBuffer.length, "bytes");
+  console.log("📏 Preview size:", processedImages.previewBuffer.length, "bytes");
   console.log(
     "🔐 URL protocol:",
-    originalUrl.startsWith("https")
+    urls.originalUrl.startsWith("https")
       ? "HTTPS ✅"
       : "HTTP ❌ (LINE requires HTTPS)",
   );
   console.log(
     "🌍 Domain accessible:",
-    originalUrl.includes("localhost")
+    urls.originalUrl.includes("localhost")
       ? "Local ❌ (LINE cannot access localhost)"
       : "Public ✅",
   );
   console.log(
     "📋 LINE compliant:",
-    imageBuffer.length < 10 * 1024 * 1024 ? "Size ✅" : "Size ❌ (>10MB)",
+    processedImages.originalBuffer.length < 10 * 1024 * 1024
+      ? "Size ✅"
+      : "Size ❌ (>10MB)",
   );
+}
 
-  return { originalUrl, previewUrl };
+export async function uploadImageToTemporaryHost(
+  imageBuffer: Buffer,
+  filename?: string,
+): Promise<UploadResult> {
+  try {
+    // Generate file information and paths
+    const fileInfo = generateFileInfo(filename);
+
+    // Process images (create preview)
+    const processedImages = await processImageBuffers(imageBuffer);
+
+    // Save images to filesystem
+    await saveImageFiles(processedImages, fileInfo);
+
+    // Generate public URLs
+    const urls = generateImageUrls(fileInfo);
+
+    // Log upload details for debugging
+    logUploadDetails(fileInfo, urls, processedImages);
+
+    return urls;
+  } catch (error) {
+    console.error("Error in uploadImageToTemporaryHost:", error);
+    throw new Error(`Failed to upload image: ${error instanceof Error ? error.message : "Unknown error"}`);
+  }
 }
 
 /**

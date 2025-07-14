@@ -88,7 +88,7 @@ export class ChartTemplates {
                   },
                   {
                     type: "text",
-                    text: `${cryptoData.changePriceOriginal || 0 >= 0 ? "+" : ""}${cryptoData.changePriceOriginal || 0}%`,
+                    text: `${(cryptoData.changePriceOriginal || 0) >= 0 ? "+" : ""}${(cryptoData.changePriceOriginal || 0).toFixed(2)}%`,
                     color: (cryptoData.changePriceOriginal || 0) >= 0 ? "#00FF88cc" : "#FF4444cc",
                     gravity: "bottom",
                     flex: 0,
@@ -253,7 +253,7 @@ export class ChartTemplates {
   ): LineTextMessage {
     return {
       type: "text",
-      text: `⚠️ กราฟ ${symbol.toUpperCase()} ถูกสร้างแล้ว แต่ไม่สามารถส่งรูปภาพได้\n\n📊 ข้อมูลล่าสุด:\n• ชื่อ: ${cryptoData.currencyName}\n• ราคา: ฿${(cryptoData.lastPriceRaw || 0).toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 8 })}\n• เปลี่ยนแปลง: ${cryptoData.changePriceOriginal || 0 >= 0 ? "+" : ""}${cryptoData.changePriceOriginal || 0}%\n\n🔄 ลองใหม่: /chart ${symbol.toLowerCase()}`,
+      text: `⚠️ กราฟ ${symbol.toUpperCase()} ถูกสร้างแล้ว แต่ไม่สามารถส่งรูปภาพได้\n\n📊 ข้อมูลล่าสุด:\n• ชื่อ: ${cryptoData.currencyName}\n• ราคา: ฿${(cryptoData.lastPriceRaw || 0).toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 8 })}\n• เปลี่ยนแปลง: ${(cryptoData.changePriceOriginal || 0) >= 0 ? "+" : ""}${(cryptoData.changePriceOriginal || 0).toFixed(2)}%\n\n🔄 ลองใหม่: /chart ${symbol.toLowerCase()}`,
     };
   }
 
