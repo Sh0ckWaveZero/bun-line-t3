@@ -80,6 +80,22 @@ export default function HelpPage() {
             usage: "/policy",
             examples: ["/policy", "/นโยบาย", "/กฎ", "/rule"],
           },
+          {
+            name: "settings",
+            aliases: ["ตั้งค่า", "การตั้งค่า"],
+            description: "จัดการการตั้งค่าการแจ้งเตือน (เข้างาน, เลิกงาน, วันหยุด)",
+            usage: "/settings [ตัวเลือก]",
+            examples: [
+              "/settings",
+              "/ตั้งค่า",
+              "/ตั้งค่า เข้างาน",
+              "/ตั้งค่า เลิกงาน", 
+              "/ตั้งค่า วันหยุด",
+              "/settings morning",
+              "/settings finish",
+              "/settings holiday"
+            ],
+          },
         ],
       },
       {

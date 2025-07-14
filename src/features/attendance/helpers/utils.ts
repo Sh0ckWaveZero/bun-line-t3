@@ -47,6 +47,69 @@ export const getUsersWithPendingCheckout = async (): Promise<string[]> => {
 };
 
 /**
+ * Get users who need checkout reminders and have checkout reminders enabled
+ * @returns Array of user IDs who need checkout reminders AND have the setting enabled
+ */
+export const getUsersWithPendingCheckoutAndSettingsEnabled = async (): Promise<string[]> => {
+  try {
+    // 🚧 DEV MODE: ถ้าอยู่ในโหมด development ให้ใช้ test user ID
+    if (
+      process.env.NODE_ENV === "development" &&
+      process.env.DEV_TEST_USER_ID
+    ) {
+      console.log(
+        `🧪 DEV MODE: Using test user ${process.env.DEV_TEST_USER_ID} for checkout reminder`,
+      );
+      return [process.env.DEV_TEST_USER_ID];
+    }
+
+    const todayDate = getCurrentUTCTime().toISOString().split("T")[0];
+
+    // Get all attendance records for today with status checked_in (either on time or late)
+    // AND include user settings to check if checkout reminders are enabled
+    const pendingCheckouts = await db.workAttendance.findMany({
+      where: {
+        workDate: todayDate,
+        status: {
+          in: [
+            AttendanceStatusType.CHECKED_IN_ON_TIME,
+            AttendanceStatusType.CHECKED_IN_LATE,
+          ],
+        },
+      },
+      select: {
+        userId: true,
+        user: {
+          select: {
+            settings: {
+              select: {
+                enableCheckOutReminders: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Filter users who have checkout reminders enabled (default is true if no settings)
+    const filteredUsers = pendingCheckouts.filter((record) => {
+      const checkoutEnabled = record.user.settings?.enableCheckOutReminders ?? true;
+      return checkoutEnabled;
+    });
+
+    console.log(
+      `📊 Checkout reminder filtering: ${pendingCheckouts.length} total users, ${filteredUsers.length} with reminders enabled`,
+    );
+
+    // Extract just the user IDs
+    return filteredUsers.map((record) => record.userId);
+  } catch (error) {
+    console.error("Error finding users with pending checkouts and settings:", error);
+    return [];
+  }
+};
+
+/**
  * Calculate dynamic reminder time for each user (offset ก่อนครบ 9 ชั่วโมง)
  * @param checkInTime เวลาเข้างาน (UTC)
  * @param offsetMinutes จำนวน (นาที) ที่ต้องการลบจากเวลาครบ 9 ชั่วโมง (default = 10)

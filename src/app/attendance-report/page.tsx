@@ -19,6 +19,7 @@ import {
   AttendanceCharts,
   AttendanceTable,
   UserInfoCard,
+  UserSettingsCard,
   LoadingSpinner,
   AuthLoadingScreen,
   LoginPrompt,
@@ -115,6 +116,11 @@ export default function AttendanceReportPage() {
               <UserInfoCard user={session.user} />
             </div>
           )}
+
+          {/* User Settings */}
+          <div id="user-settings-section" className="mb-6">
+            <UserSettingsCard />
+          </div>
 
           {/* Loading State */}
           {loading && (

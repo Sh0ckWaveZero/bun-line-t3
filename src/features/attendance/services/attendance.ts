@@ -29,6 +29,7 @@ import {
   calculateUserReminderTime,
   getUsersNeedingDynamicReminder,
   getUsersWithPendingCheckout,
+  getUsersWithPendingCheckoutAndSettingsEnabled,
   getWorkingDaysInMonth,
   getWorkingHoursInfo,
   isPublicHoliday,
@@ -102,10 +103,16 @@ async function getActiveLineUserIdsForCheckinReminder(
           where: { date: todayString, isActive: true },
           select: { id: true },
         },
+        settings: {
+          select: { enableCheckInReminders: true },
+        },
       },
     });
 
-    if (user && user.accounts.length > 0 && user.leaves.length === 0) {
+    // Check if user has notifications enabled (default is true if no settings)
+    const notificationsEnabled = user?.settings?.enableCheckInReminders ?? true;
+
+    if (user && user.accounts.length > 0 && user.leaves.length === 0 && notificationsEnabled) {
       console.log(
         `🧪 DEV MODE: Using test user ${testUserId} with LINE ID: ${user.accounts[0]?.providerAccountId}`,
       );
@@ -114,7 +121,7 @@ async function getActiveLineUserIdsForCheckinReminder(
       );
     } else {
       console.log(
-        `🧪 DEV MODE: Test user ${testUserId} not available or on leave`,
+        `🧪 DEV MODE: Test user ${testUserId} not available, on leave, or notifications disabled`,
       );
       return [];
     }
@@ -130,12 +137,21 @@ async function getActiveLineUserIdsForCheckinReminder(
         where: { date: todayString, isActive: true },
         select: { id: true },
       },
+      settings: {
+        select: { enableCheckInReminders: true },
+      },
     },
   });
+  
   return users
-    .filter(
-      (u) => u.accounts.length > 0 && u.leaves.length === 0 && u.accounts[0],
-    )
+    .filter((u) => {
+      const hasLineAccount = u.accounts.length > 0 && u.accounts[0];
+      const notOnLeave = u.leaves.length === 0;
+      // Default to true if user has no settings yet
+      const notificationsEnabled = u.settings?.enableCheckInReminders ?? true;
+      
+      return hasLineAccount && notOnLeave && notificationsEnabled;
+    })
     .map((u) => u.accounts[0]?.providerAccountId)
     .filter((id): id is string => typeof id === "string");
 }
@@ -554,6 +570,7 @@ export const attendanceService = {
   getWorkingHoursInfo,
   getWorkingDaysInMonth,
   getUsersWithPendingCheckout,
+  getUsersWithPendingCheckoutAndSettingsEnabled,
   calculateUserReminderTime,
   shouldReceive10MinReminder,
   shouldReceiveFinalReminder,

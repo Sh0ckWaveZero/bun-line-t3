@@ -64,9 +64,9 @@ export async function GET(_req: NextRequest) {
       );
     }
 
-    // Get all users who need checkout reminders
+    // Get all users who need checkout reminders AND have the setting enabled
     const usersNeedingReminder =
-      await attendanceService.getUsersWithPendingCheckout();
+      await attendanceService.getUsersWithPendingCheckoutAndSettingsEnabled();
 
     if (!usersNeedingReminder.length) {
       console.log("✅ No users need checkout reminders");
