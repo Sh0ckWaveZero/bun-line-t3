@@ -12,12 +12,20 @@ export async function POST(req: NextRequest) {
 
   try {
     // Default cleanup images older than 2 hours
-    await cleanupTemporaryImages(120);
+    const stats = await cleanupTemporaryImages(120);
+
+    console.log("📊 Image cleanup statistics:", stats);
 
     return Response.json({
       success: true,
       message: "Image cleanup completed successfully",
       timestamp: new Date().toISOString(),
+      statistics: {
+        filesProcessed: stats.totalFiles,
+        filesDeleted: stats.cleaned,
+        errors: stats.errors,
+        maxAgeMinutes: 120,
+      },
     });
   } catch (error: any) {
     console.error("❌ Error in image cleanup cron:", error);

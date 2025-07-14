@@ -1,13 +1,11 @@
 import { d3ChartGenerator } from "@/lib/utils/chart-generator-d3";
 import { uploadImageToTemporaryHost } from "@/lib/utils/line-messaging";
+import type { UploadResult } from "@/lib/types/line-messaging";
 import { exchangeService } from "./exchange";
 import { bitkubHistoryService } from "./bitkub-history";
 import { CryptoInfo } from "../types/crypto.interface";
 
-export interface ChartImageUrls {
-  originalUrl: string;
-  previewUrl: string;
-}
+export type ChartImageUrls = UploadResult;
 
 export interface ChartData {
   cryptoData: CryptoInfo;

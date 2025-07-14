@@ -68,6 +68,8 @@ const config = {
     if (isServer) {
       config.externals = config.externals || [];
       config.externals.push("canvas");
+      // Make sharp external to prevent webpack bundling issues
+      config.externals.push("sharp");
     }
     if (dev && !isServer) {
       if (config.devServer) {

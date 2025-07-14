@@ -32,6 +32,7 @@ const getBitkub = async (_currency: any): Promise<CryptoInfoType> => {
     lastPriceRaw: parseFloat(response.last),
     highPrice: utils.priceFormat(response.high24hr, "฿"),
     lowPrice: utils.priceFormat(response.low24hr, "฿"),
+    changePriceOriginal: parseFloat(response.percentChange) || 0,
     volume_change_24h: utils.volumeChangeFormat(response.percentChange),
     priceChangeColor: utils.priceChangeColor(response.percentChange),
     last_updated: utils.lastUpdateFormat(null),
@@ -59,6 +60,7 @@ const getSatangCorp = async (_currency: any): Promise<CryptoInfoType> => {
     lastPriceRaw: parseFloat(response.lastPrice),
     highPrice: utils.priceFormat(response.highPrice, "฿"),
     lowPrice: utils.priceFormat(response.lowPrice, "฿"),
+    changePriceOriginal: parseFloat(response.priceChangePercent) || parseFloat(response.priceChange) || 0,
     volume_change_24h: utils.volumeChangeFormat(response.priceChange),
     priceChangeColor: utils.priceChangeColor(response.priceChange),
     last_updated: utils.lastUpdateFormat(null),
@@ -86,6 +88,7 @@ const getBitazza = async (_currency: string): Promise<CryptoInfoType> => {
     lastPriceRaw: parseFloat(response.last_price),
     highPrice: utils.priceFormat(response.highest_price_24h, "฿"),
     lowPrice: utils.priceFormat(response.lowest_price_24h, "฿"),
+    changePriceOriginal: parseFloat(response.price_change_percent_24h) || 0,
     volume_change_24h: utils.volumeChangeFormat(
       response.price_change_percent_24h,
     ),
@@ -118,6 +121,7 @@ const getBinance = async (
     lastPriceRaw: parseFloat(response.lastPrice),
     highPrice: utils.priceFormat(response.highPrice, "$"),
     lowPrice: utils.priceFormat(response.lowPrice, "$"),
+    changePriceOriginal: parseFloat(response.priceChangePercent) || 0,
     volume_change_24h: utils.volumeChangeFormat(response.priceChangePercent),
     priceChangeColor: utils.priceChangeColor(response.priceChangePercent),
     last_updated: utils.lastUpdateFormat(null),
@@ -128,8 +132,9 @@ const getBinance = async (
 const getGeteio = async (_currency: string): Promise<CryptoInfoType> => {
   const currency = cryptoCurrencyService.mapSymbolsThai(_currency);
   const response: any = await geteIO(currency);
-  if (utils.isEmpty(response)) return null;
+  if (utils.isEmpty(response) || !Array.isArray(response) || response.length === 0) return null;
 
+  const data = response[0]; // Gate.io returns an array, take first item
   const cryptoInfo = await cmcService.findOne(currency.toUpperCase());
   const logoInfo = await cryptoCurrencyService.getCurrencyLogo(
     _currency.toLowerCase(),
@@ -141,12 +146,13 @@ const getGeteio = async (_currency: string): Promise<CryptoInfoType> => {
       "https://s2.coinmarketcap.com/static/img/exchanges/128x128/302.png",
     textColor: "#CE615E",
     currencyName: cryptoInfo?.name,
-    lastPrice: utils.priceFormat(response.last, "$"),
-    lastPriceRaw: parseFloat(response.last),
-    highPrice: utils.priceFormat(response.high_24h, "$"),
-    lowPrice: utils.priceFormat(response.low_24h, "$"),
-    volume_change_24h: utils.volumeChangeFormat(response.change_percentage),
-    priceChangeColor: utils.priceChangeColor(response.change_percentage),
+    lastPrice: utils.priceFormat(data.last, "$"),
+    lastPriceRaw: parseFloat(data.last),
+    highPrice: utils.priceFormat(data.high_24h, "$"),
+    lowPrice: utils.priceFormat(data.low_24h, "$"),
+    changePriceOriginal: parseFloat(data.change_percentage) || 0,
+    volume_change_24h: utils.volumeChangeFormat(data.change_percentage),
+    priceChangeColor: utils.priceChangeColor(data.change_percentage),
     last_updated: utils.lastUpdateFormat(null),
     urlLogo: logoInfo,
   };
@@ -172,6 +178,7 @@ const getMexc = async (_currency: string): Promise<CryptoInfoType> => {
     lastPriceRaw: parseFloat(response.last),
     highPrice: utils.priceFormat(response.high, "$"),
     lowPrice: utils.priceFormat(response.low, "$"),
+    changePriceOriginal: parseFloat(response.change_rate) || 0,
     volume_change_24h: utils.volumeChangeFormat(response.change_rate),
     priceChangeColor: utils.priceChangeColor(response.change_rate),
     last_updated: utils.lastUpdateFormat(null),
@@ -198,6 +205,7 @@ const getCoinMarketCap = async (_currency: string): Promise<CryptoInfoType> => {
     lastPriceRaw: parseFloat(quote.price),
     volume_24h: utils.expo(quote.volume_24h, "$"),
     cmc_rank: response.cmc_rank,
+    changePriceOriginal: parseFloat(quote.percent_change_24h) || 0,
     volume_change_24h: utils.volumeChangeFormat(quote.percent_change_24h),
     priceChangeColor: utils.priceChangeColor(quote.percent_change_24h),
     last_updated: utils.lastUpdateFormat(quote.last_updated),
