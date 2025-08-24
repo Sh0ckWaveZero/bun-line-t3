@@ -38,7 +38,10 @@
       "Bash(podman compose build:*)",
       "Bash(podman:*)",
       "Bash(podman machine:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "WebFetch(domain:nextjs.org)",
+      "Bash(time bun run:*)",
+      "Bash(timeout:*)"
     ],
     "deny": [
       "Read(**/.env*)",

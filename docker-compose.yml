@@ -7,8 +7,9 @@ version: "3.8"
 # ===================================
 # 1. GitHub Actions จะ inject ค่า environment variables จาก repository secrets
 # 2. Docker Compose ใช้ค่าเหล่านั้นโดยตรง (ไม่ต้องพึ่งไฟล์ .env.prod)
-# 3. ครอบคลุม 16 required secrets: DATABASE_URL, NEXTAUTH_*, JWT_SECRET,
+# 3. ครอบคลุม 17 required secrets: DATABASE_URL, NEXTAUTH_*, JWT_SECRET,
 #    INTERNAL_API_KEY, CRON_SECRET, LINE_* (6 secrets), AIRVISUAL_API_KEY,
+#    CMC_API_KEY, OPENAI_API_KEY, APP_DOMAIN, ALLOWED_DOMAINS
 # 4. Security: ไม่มีไฟล์ sensitive ใดๆ บน production server
 
 services:
@@ -35,7 +36,7 @@ services:
     # GitHub Actions จะ inject environment variables ทั้งหมดจาก repository secrets
 
     # 🛡️ PRODUCTION: Environment variables จาก GitHub Secrets เท่านั้น
-    # ค่าทั้งหมดมาจาก GitHub Actions environment injection (16 secrets + static configs)
+    # ค่าทั้งหมดมาจาก GitHub Actions environment injection (17 secrets + static configs)
     environment:
       # =============================================================================
       # Application Environment (Static + Dynamic)
@@ -80,11 +81,12 @@ services:
       - DB_NAME=linebot
 
       # =============================================================================
-      # External API Keys (3 GitHub Secrets)
+      # External API Keys (4 GitHub Secrets)
       # =============================================================================
       - AIRVISUAL_API_KEY=${AIRVISUAL_API_KEY}
       - CMC_API_KEY=${CMC_API_KEY}
       - CMC_URL=https://pro-api.coinmarketcap.com
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
 
       # =============================================================================
       # Domain Security Configuration (GitHub Secrets)
