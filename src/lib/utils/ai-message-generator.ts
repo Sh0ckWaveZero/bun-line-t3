@@ -51,7 +51,10 @@ const CONSOLATION_FALLBACKS = [
 ];
 
 // Helper functions
-const isAIAvailable = (): boolean => !!env.OPENAI_API_KEY;
+const isAIAvailable = (): boolean => {
+  const apiKey = env.OPENAI_API_KEY;
+  return !!(apiKey && apiKey.trim() && apiKey !== 'undefined' && apiKey !== '');
+};
 
 const handleAIError = (error: unknown, fallbacks: string[]): string => {
   console.error("AI message generation failed:", error);
@@ -85,6 +88,7 @@ export async function generateCheckInMessage(
 // AI-powered consolation message generation
 export async function generateConsolationMessage(): Promise<string> {
   if (!isAIAvailable()) {
+    console.log('AI not available, using fallback messages');
     return selectRandomElement(CONSOLATION_FALLBACKS);
   }
 
@@ -121,10 +125,13 @@ export async function getCheckInMessage(
 export async function getConsolationMessage(
   options?: ConsolationOptions,
 ): Promise<string> {
+  console.log(`getConsolationMessage called with useAI: ${options?.useAI}, isAIAvailable: ${isAIAvailable()}`);
+  
   if (options?.useAI && isAIAvailable()) {
     return await generateConsolationMessage();
   }
 
   // Use static fallbacks for better performance
+  console.log('Using fallback consolation messages');
   return selectRandomElement(CONSOLATION_FALLBACKS);
 }
