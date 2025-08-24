@@ -79,6 +79,7 @@ jobs:
             "LINE_CHANNEL_SECRET"
             "AIRVISUAL_API_KEY"
             "CMC_API_KEY"
+            "OPENAI_API_KEY"
             "APP_DOMAIN"
             "ALLOWED_DOMAINS"
           )
@@ -114,6 +115,7 @@ jobs:
           LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
           AIRVISUAL_API_KEY: ${{ secrets.AIRVISUAL_API_KEY }}
           CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
           ALLOWED_DOMAINS: ${{ secrets.ALLOWED_DOMAINS }}
 
@@ -270,6 +272,9 @@ jobs:
           CMC_API_KEY="${{ secrets.CMC_API_KEY }}"
           CMC_URL=https://pro-api.coinmarketcap.com
 
+          # OpenAI API Configuration
+          OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}"
+
           # =============================================================================
           # Domain Security Configuration
           # =============================================================================
@@ -301,6 +306,7 @@ jobs:
             --build-arg DATABASE_URL="${{ secrets.DATABASE_URL }}" \
             --build-arg NEXTAUTH_URL="${{ secrets.NEXTAUTH_URL }}" \
             --build-arg NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}" \
+            --build-arg OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
             --build-arg APP_DOMAIN="${{ secrets.APP_DOMAIN }}" \
             --build-arg ALLOWED_DOMAINS="${{ secrets.ALLOWED_DOMAINS }}"; then
             echo "✅ Build completed successfully"
@@ -368,6 +374,7 @@ jobs:
           LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
           AIRVISUAL_API_KEY: ${{ secrets.AIRVISUAL_API_KEY }}
           CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
           ALLOWED_DOMAINS: ${{ secrets.ALLOWED_DOMAINS }}
 
@@ -416,6 +423,7 @@ jobs:
           LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
           AIRVISUAL_API_KEY: ${{ secrets.AIRVISUAL_API_KEY }}
           CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
           ALLOWED_DOMAINS: ${{ secrets.ALLOWED_DOMAINS }}
 
@@ -542,6 +550,7 @@ jobs:
           LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
           AIRVISUAL_API_KEY: ${{ secrets.AIRVISUAL_API_KEY }}
           CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
           ALLOWED_DOMAINS: ${{ secrets.ALLOWED_DOMAINS }}
 
