@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 # 🚀 GitHub Actions Deployment Workflow
 # สำหรับ Self-Hosted Runner (Raspberry Pi) และ GitHub Secrets Management
 
