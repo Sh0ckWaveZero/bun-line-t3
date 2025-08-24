@@ -1,3 +1,4 @@
+import { env } from "@/env.mjs";
 import { attendanceService } from "@/features/attendance/services/attendance";
 import { getCheckInMessage } from "@/lib/constants/checkin-reminder-messages";
 import { sendPushMessage } from "@/lib/utils/line-push";
@@ -43,7 +44,7 @@ export async function sendCheckInReminders(
   const dayOfWeek = new Intl.DateTimeFormat('th-TH', { weekday: 'long' }).format(new Date());
   
   const reminderMessage = await getCheckInMessage({
-    useAI: process.env.OPENAI_API_KEY ? true : false, // Use AI if API key is available
+    useAI: env.OPENAI_API_KEY ? true : false, // Use AI if API key is available
     context: {
       timeOfDay,
       dayOfWeek,

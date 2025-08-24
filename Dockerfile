@@ -82,6 +82,7 @@ ARG CMC_URL
 ARG CMC_API_KEY
 ARG FRONTEND_URL
 ARG AIRVISUAL_API_KEY
+ARG OPENAI_API_KEY
 
 # 🔐 SECURITY: ตั้งค่า Prisma สำหรับ production build
 # 🔧 RASPBERRY PI OPTIMIZATION: ตั้งค่า memory limits สำหรับ Node.js
@@ -107,6 +108,7 @@ ENV CMC_URL=${CMC_URL:-"https://pro-api.coinmarketcap.com"}
 ENV CMC_API_KEY=${CMC_API_KEY}
 ENV FRONTEND_URL=${FRONTEND_URL}
 ENV AIRVISUAL_API_KEY=${AIRVISUAL_API_KEY}
+ENV OPENAI_API_KEY=${OPENAI_API_KEY}
 
 # 🚀 OPTIMIZATION: Generate Prisma Client และ build Next.js
 # 🔧 ARM64: แยก commands เพื่อลด memory peak usage สำหรับ ARM64

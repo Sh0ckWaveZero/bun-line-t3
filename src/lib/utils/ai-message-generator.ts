@@ -1,6 +1,7 @@
 import { openai } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import { selectRandomElement } from "@/lib/crypto-random";
+import { env } from "@/env.mjs";
 
 /**
  * AI-powered dynamic message generation utilities
@@ -37,7 +38,7 @@ const CHECK_IN_FALLBACKS = [
   "🎶 สวัสดีค่ะ! เวลาทำงานมาถึงแล้ว ลงชื่อเข้างานแล้วเริ่มวันที่สวยงามกันเลย 🎵",
   "🌞 หวาดดี! วันใหม่มาพร้อมโอกาสใหม่ อย่าลืมเช็คอินเพื่อเริ่มต้นวันที่ดีนะคะ ✌️",
   "🌺 เช้าสดใส! ขอให้วันนี้เป็นวันที่มีความสุข เริ่มด้วยการลงชื่อเข้างานกันค่ะ 🌈",
-  "☕ กาแฟหอม เช้าใหม่! พร้อมเผชิญหน้ากับวันทำงานแล้วใช่ไหม? เช็คอินได้เลย ☺️"
+  "☕ กาแฟหอม เช้าใหม่! พร้อมเผชิญหน้ากับวันทำงานแล้วใช่ไหม? เช็คอินได้เลย ☺️",
 ];
 
 const CONSOLATION_FALLBACKS = [
@@ -50,7 +51,7 @@ const CONSOLATION_FALLBACKS = [
 ];
 
 // Helper functions
-const isAIAvailable = (): boolean => !!process.env.OPENAI_API_KEY;
+const isAIAvailable = (): boolean => !!env.OPENAI_API_KEY;
 
 const handleAIError = (error: unknown, fallbacks: string[]): string => {
   console.error("AI message generation failed:", error);
@@ -58,7 +59,9 @@ const handleAIError = (error: unknown, fallbacks: string[]): string => {
 };
 
 // AI-powered check-in reminder message generation
-export async function generateCheckInMessage(context?: CheckInContext): Promise<string> {
+export async function generateCheckInMessage(
+  context?: CheckInContext,
+): Promise<string> {
   if (!isAIAvailable()) {
     return selectRandomElement(CHECK_IN_FALLBACKS);
   }
@@ -71,7 +74,9 @@ export async function generateCheckInMessage(context?: CheckInContext): Promise<
     });
 
     const generatedText = text?.trim() || "";
-    return generatedText.length > 0 ? generatedText : selectRandomElement(CHECK_IN_FALLBACKS);
+    return generatedText.length > 0
+      ? generatedText
+      : selectRandomElement(CHECK_IN_FALLBACKS);
   } catch (error) {
     return handleAIError(error, CHECK_IN_FALLBACKS);
   }
@@ -91,14 +96,18 @@ export async function generateConsolationMessage(): Promise<string> {
     });
 
     const generatedText = text?.trim() || "";
-    return generatedText.length > 0 ? generatedText : selectRandomElement(CONSOLATION_FALLBACKS);
+    return generatedText.length > 0
+      ? generatedText
+      : selectRandomElement(CONSOLATION_FALLBACKS);
   } catch (error) {
     return handleAIError(error, CONSOLATION_FALLBACKS);
   }
 }
 
 // Public API functions
-export async function getCheckInMessage(options?: MessageOptions): Promise<string> {
+export async function getCheckInMessage(
+  options?: MessageOptions,
+): Promise<string> {
   if (options?.useAI && isAIAvailable()) {
     return await generateCheckInMessage({
       userName: options.userName,
@@ -109,7 +118,9 @@ export async function getCheckInMessage(options?: MessageOptions): Promise<strin
   return selectRandomElement(CHECK_IN_FALLBACKS);
 }
 
-export async function getConsolationMessage(options?: ConsolationOptions): Promise<string> {
+export async function getConsolationMessage(
+  options?: ConsolationOptions,
+): Promise<string> {
   if (options?.useAI && isAIAvailable()) {
     return await generateConsolationMessage();
   }
