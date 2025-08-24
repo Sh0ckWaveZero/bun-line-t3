@@ -27,7 +27,7 @@ export interface ConsolationOptions {
 }
 
 // Constants
-const AI_MODEL = "gpt-5-nano";
+const AI_MODEL = "gpt-4o-mini"; // Using cost-effective model for simple message generation
 const AI_TEMPERATURE = 0.8;
 
 const CHECK_IN_FALLBACKS = [
@@ -70,6 +70,8 @@ export async function generateCheckInMessage(
   }
 
   try {
+    console.log(`Attempting to generate check-in message with model: ${AI_MODEL}`);
+    
     const { text } = await generateText({
       model: openai(AI_MODEL),
       prompt: `สร้างข้อความเตือนเช็คอินภาษาไทย อบอุ่น เป็นมิตร สำหรับ${context?.userName || "เพื่อน"} ช่วง${context?.timeOfDay || "เช้า"} อากาศ${context?.weather || "สดใส"} ใส่อีโมจิ 1-2 อีโมจิ ไม่เกิน 80 ตัวอักษร ส่งแค่ข้อความเดียว`,
@@ -77,10 +79,13 @@ export async function generateCheckInMessage(
     });
 
     const generatedText = text?.trim() || "";
+    console.log(`AI generated check-in text: ${generatedText}`);
+    
     return generatedText.length > 0
       ? generatedText
       : selectRandomElement(CHECK_IN_FALLBACKS);
   } catch (error) {
+    console.error("Check-in AI generation error:", error);
     return handleAIError(error, CHECK_IN_FALLBACKS);
   }
 }
@@ -93,6 +98,8 @@ export async function generateConsolationMessage(): Promise<string> {
   }
 
   try {
+    console.log(`Attempting to generate AI message with model: ${AI_MODEL}`);
+    
     const { text } = await generateText({
       model: openai(AI_MODEL),
       prompt: `สร้างข้อความปลอบโยนภาษาไทยที่อบอุ่น ให้กำลังใจ ใส่อีโมจิ 1-2 อีโมจิ ไม่เกิน 60 ตัวอักษร ส่งแค่ข้อความเดียว`,
@@ -100,10 +107,13 @@ export async function generateConsolationMessage(): Promise<string> {
     });
 
     const generatedText = text?.trim() || "";
+    console.log(`AI generated text: ${generatedText}`);
+    
     return generatedText.length > 0
       ? generatedText
       : selectRandomElement(CONSOLATION_FALLBACKS);
   } catch (error) {
+    console.error("AI generation error details:", error);
     return handleAIError(error, CONSOLATION_FALLBACKS);
   }
 }
