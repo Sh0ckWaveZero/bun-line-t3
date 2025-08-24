@@ -30,6 +30,29 @@
     "yadom",
     "zoneinfo"
   ],
+  "cSpell.languageSettings": [
+    {
+      "languageId": "*",
+      "ignoreRegExpList": [
+        "/[\\u0E00-\\u0E7F]+/g"
+      ]
+    }
+  ],
+  "cSpell.allowCompoundWords": true,
+  "cSpell.enabledLanguageIds": [
+    "typescript",
+    "javascript",
+    "typescriptreact",
+    "javascriptreact",
+    "json",
+    "markdown",
+    "text",
+    "html",
+    "css",
+    "scss",
+    "yaml",
+    "yml"
+  ],
   "mcp": {
     "inputs": [
       {

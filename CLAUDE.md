@@ -4,7 +4,7 @@ Development Commands
 
 ### Essential Commands
 
-- `bun run dev` - Start development server on port 4325 with process lock
+- `bun run dev` - Start development server with Turbopack on port 4325 with process lock
 - `bun run build` - Build production application
 - `bun run lint` - Run ESLint code analysis
 - `bun run format` - Format code with Prettier

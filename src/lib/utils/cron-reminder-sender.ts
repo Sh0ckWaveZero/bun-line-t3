@@ -1,6 +1,5 @@
 import { attendanceService } from "@/features/attendance/services/attendance";
-import { checkInReminderMessages } from "@/lib/constants/checkin-reminder-messages";
-import { selectRandomElement } from "@/lib/crypto-random";
+import { getCheckInMessage } from "@/lib/constants/checkin-reminder-messages";
 import { sendPushMessage } from "@/lib/utils/line-push";
 
 interface ReminderResult {
@@ -38,9 +37,21 @@ export async function sendCheckInReminders(
 
   console.log(`📢 พบ ${lineUserIds.length} คนที่ต้องส่งแจ้งเตือน`);
 
-  // Select random message and create LINE messages
-  const randomMessage = selectRandomElement(checkInReminderMessages);
-  const messages = createReminderMessages(randomMessage);
+  // Get check-in message (AI or fallback)
+  const currentHour = new Date().getHours();
+  const timeOfDay = currentHour < 12 ? 'morning' : currentHour < 17 ? 'afternoon' : 'evening';
+  const dayOfWeek = new Intl.DateTimeFormat('th-TH', { weekday: 'long' }).format(new Date());
+  
+  const reminderMessage = await getCheckInMessage({
+    useAI: process.env.OPENAI_API_KEY ? true : false, // Use AI if API key is available
+    context: {
+      timeOfDay,
+      dayOfWeek,
+      weather: 'สดใส' // Default weather, could be enhanced with weather API
+    }
+  });
+  
+  const messages = createReminderMessages(reminderMessage);
 
   // Send push messages to all users
   let pushSuccess = 0;
@@ -62,13 +73,13 @@ export async function sendCheckInReminders(
   console.log(
     `✅ ส่ง push แจ้งเตือนเช็คอินสำเร็จ ${pushSuccess} คน, ล้มเหลว ${pushFail} คน`,
   );
-  console.log(`📝 ข้อความที่ส่ง: "${randomMessage}"`);
+  console.log(`📝 ข้อความที่ส่ง: "${reminderMessage}"`);
 
   return {
     success: pushSuccess > 0,
     sentCount: pushSuccess,
     failedCount: pushFail,
-    messageText: randomMessage,
+    messageText: reminderMessage,
     totalUsers: lineUserIds.length,
   };
 }

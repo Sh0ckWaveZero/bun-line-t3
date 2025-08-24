@@ -17,6 +17,17 @@ const config = {
   experimental: {
     optimizePackageImports: ["date-fns", "date-fns-tz", "zod"],
     optimizeServerReact: true,
+    // Enhanced prefetching and routing optimizations
+    ppr: false, // Partial Prerendering (experimental)
+  },
+  // Turbopack configuration (stable in Next.js 15.4+)
+  turbopack: {
+    rules: {
+      '*.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
+      },
+    },
   },
   typescript: {
     ignoreBuildErrors: false,

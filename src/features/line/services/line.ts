@@ -5,15 +5,19 @@ import { handleSticker } from "../commands/handleSticker";
 import { handlePostback } from "../commands/handlePostback";
 import { handleText } from "../commands/handleText";
 
-const handleEvent = (req: NextApiRequest, res: NextApiResponse): any => {
+const handleEvent = async (req: NextApiRequest, res: NextApiResponse): Promise<any> => {
   const events = req.body.events;
   console.log("🚀 LINE handleEvent - processing events:", events.length);
-  events.forEach((event: any, index: number) => {
+  
+  // Process events sequentially to handle async operations properly
+  for (let index = 0; index < events.length; index++) {
+    const event = events[index];
     console.log(
       `🚀 Processing event ${index + 1}:`,
       event.type,
       event.message?.type,
     );
+    
     switch (event.type) {
       case "message":
         switch (event.message.type) {
@@ -29,7 +33,8 @@ const handleEvent = (req: NextApiRequest, res: NextApiResponse): any => {
             }
             break;
           case "sticker":
-            handleSticker(req, event);
+            console.log("🎭 Sticker received, routing to handleSticker");
+            await handleSticker(req, event);
             break;
           case "location":
             handleLocation(req, event);
@@ -45,7 +50,7 @@ const handleEvent = (req: NextApiRequest, res: NextApiResponse): any => {
       default:
         res.status(401).send("Invalid token");
     }
-  });
+  }
 };
 
 export const lineService = { handleEvent };
