@@ -27,7 +27,7 @@ export interface ConsolationOptions {
 }
 
 // Constants
-const AI_MODEL = "gpt-4o-mini"; // Using cost-effective model for simple message generation
+const AI_MODEL = "gpt-5-nano";
 const AI_TEMPERATURE = 0.8;
 
 const CHECK_IN_FALLBACKS = [
@@ -53,7 +53,9 @@ const CONSOLATION_FALLBACKS = [
 // Helper functions
 const isAIAvailable = (): boolean => {
   const apiKey = env.OPENAI_API_KEY;
-  return !!(apiKey && apiKey.trim() && apiKey !== 'undefined' && apiKey !== '');
+  const available = !!(apiKey && apiKey.trim() && apiKey !== 'undefined' && apiKey !== '');
+  console.log(`isAIAvailable check: ${available}, API key exists: ${!!apiKey}, key length: ${apiKey?.length || 0}`);
+  return available;
 };
 
 const handleAIError = (error: unknown, fallbacks: string[]): string => {

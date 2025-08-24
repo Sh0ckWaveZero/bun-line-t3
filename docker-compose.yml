@@ -25,6 +25,7 @@ services:
         - DATABASE_URL=${DATABASE_URL}
         - NEXTAUTH_URL=${NEXTAUTH_URL}
         - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+        - OPENAI_API_KEY=${OPENAI_API_KEY}
       target: runner
       # 🔧 RASPBERRY PI: จำกัด memory สำหรับ build process
       shm_size: 512m
