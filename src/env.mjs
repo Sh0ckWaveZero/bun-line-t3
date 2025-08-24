@@ -40,6 +40,7 @@ export const env = createEnv({
     ALLOWED_DOMAINS: z.string().min(1),
     // 🧪 Development Test User ID
     DEV_TEST_USER_ID: z.string().optional(),
+    OPENAI_API_KEY: z.string().optional(),
   },
 
   /**
@@ -75,6 +76,7 @@ export const env = createEnv({
     APP_DOMAIN: process.env.APP_DOMAIN,
     ALLOWED_DOMAINS: process.env.ALLOWED_DOMAINS,
     DEV_TEST_USER_ID: process.env.DEV_TEST_USER_ID,
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
