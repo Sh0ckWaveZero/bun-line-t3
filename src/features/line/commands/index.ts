@@ -13,6 +13,7 @@ import { handleLeaveCommandWrapper } from "./handleLeaveCommandWrapper";
 import { handleDefaultCommand } from "./handleDefaultCommand";
 import { handleChartCommand, parseChartCommand } from "./handleChartCommand";
 import { handleSettingsCommand } from "./handleSettingsCommand";
+import { handleIdGenerator } from "./id-generator";
 const { sendMessage } = await import("@/lib/utils/line-utils");
 
 export const handleCommand = async (
@@ -100,8 +101,34 @@ export const handleCommand = async (
     return;
   }
   // Settings
-  if (["ตั้งค่า", "settings", "setting", "config", "preferences", "pref"].includes(command)) {
+  if (
+    [
+      "ตั้งค่า",
+      "settings",
+      "setting",
+      "config",
+      "preferences",
+      "pref",
+    ].includes(command)
+  ) {
     await handleSettingsCommand(req, conditions);
+    return;
+  }
+  // Thai ID Generator
+  if (
+    [
+      "สุ่มเลขบัตร",
+      "สุ่มบัตรประชาชน",
+      "เลขบัตรประชาชน",
+      "บัตรประชาชน",
+      "ตรวจสอบบัตร",
+      "เช็คบัตร",
+    ].includes(command)
+  ) {
+    const response = await handleIdGenerator(req.body.events[0]);
+    if (response) {
+      await sendMessage(req, [{ type: "text", text: response }]);
+    }
     return;
   }
   // Chart
