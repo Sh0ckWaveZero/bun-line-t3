@@ -30,20 +30,33 @@ export const sendRequest = async (
 };
 
 export const sendLoadingAnimation = async (req: any) => {
-  const lineChannelAccessToken = env.LINE_CHANNEL_ACCESS;
-  const lineHeader = {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${lineChannelAccessToken}`,
-  };
-  return sendRequest(
-    "https://api.line.me/v2/bot/chat/loading/start",
-    "POST",
-    lineHeader,
-    {
-      chatId: req.body.events[0].source.userId,
-      loadingSeconds: 5,
-    },
-  );
+  try {
+    // Check if userId exists
+    const userId = req.body?.events?.[0]?.source?.userId;
+    if (!userId) {
+      console.warn("⚠️ No valid userId found for loading animation");
+      return; // Skip loading animation if no userId
+    }
+
+    const lineChannelAccessToken = env.LINE_CHANNEL_ACCESS;
+    const lineHeader = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${lineChannelAccessToken}`,
+    };
+    return sendRequest(
+      "https://api.line.me/v2/bot/chat/loading/start",
+      "POST",
+      lineHeader,
+      {
+        chatId: userId,
+        loadingSeconds: 5,
+      },
+    );
+  } catch (error: any) {
+    console.warn("⚠️ Failed to send loading animation:", error.message);
+    // Don't throw error, just skip loading animation
+    return;
+  }
 };
 
 export const sendMessage = async (req: any, payload: any) => {
@@ -53,13 +66,39 @@ export const sendMessage = async (req: any, payload: any) => {
     Authorization: `Bearer ${lineChannelAccessToken}`,
   };
   try {
-    await sendLoadingAnimation(req);
+    // Check if replyToken exists and is valid
+    const replyToken = req.body?.events?.[0]?.replyToken;
+    const userId = req.body?.events?.[0]?.source?.userId;
+
+    if (!replyToken) {
+      console.warn("⚠️ No valid replyToken found, falling back to push message");
+      return sendPushMessage(req, payload);
+    }
+
+    // Only send loading animation if we have userId
+    if (userId) {
+      try {
+        await sendLoadingAnimation(req);
+      } catch (loadingErr: any) {
+        console.warn("⚠️ Loading animation failed, continuing with message:", loadingErr.message);
+        // Continue without loading animation
+      }
+    }
+
     return sendRequest(`${env.LINE_MESSAGING_API}/reply`, "POST", lineHeader, {
-      replyToken: req.body.events[0].replyToken,
+      replyToken: replyToken,
       messages: payload,
     });
   } catch (err: any) {
-    console.error(err.message);
+    console.error("❌ sendMessage error:", err.message);
+    // Fallback to push message if reply fails
+    try {
+      console.log("🔄 Falling back to push message");
+      return sendPushMessage(req, payload);
+    } catch (pushErr: any) {
+      console.error("❌ Push message also failed:", pushErr.message);
+      throw pushErr;
+    }
   }
 };
 

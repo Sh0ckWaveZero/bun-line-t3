@@ -28,7 +28,12 @@
     "vercel",
     "WATCHPACK",
     "yadom",
-    "zoneinfo"
+    "zoneinfo",
+    "thai",
+    "ThaiId",
+    "ThaiID",
+    "CheckDigit",
+    "CheckDigitAlgorithm"
   ],
   "cSpell.languageSettings": [
     {
@@ -53,6 +58,27 @@
     "yaml",
     "yml"
   ],
+  "typescript.preferences.includePackageJsonAutoImports": "auto",
+  "typescript.suggest.autoImports": true,
+  "typescript.preferences.importModuleSpecifier": "shortest",
+  "typescript.preferences.preferTypeOnlyAutoImports": false,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "typescript.preferences.noSemicolons": "off",
+  "typescript.preferences.quoteStyle": "double",
+  "files.associations": {
+    "*.tsx": "typescriptreact",
+    "*.ts": "typescript"
+  },
+  "typescript.tsc.autoDetect": "on",
+  "typescript.suggest.completeFunctionCalls": true,
+  "typescript.suggest.includeCompletionsForImportStatements": true,
+  "typescript.suggest.includeAutomaticOptionalChainCompletions": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
   "mcp": {
     "inputs": [
       {
@@ -65,7 +91,9 @@
     "servers": {
       "line-bot": {
         "command": "bunx",
-        "args": ["@line/line-bot-mcp-server"],
+        "args": [
+          "@line/line-bot-mcp-server"
+        ],
         "env": {
           "CHANNEL_ACCESS_TOKEN": "${input:line_bot_channel_access_token}",
           "DESTINATION_USER_ID": "FILL_HERE"
