@@ -21,7 +21,7 @@ export function calculateCheckDigit(first12Digits: string): number {
   const sum = first12Digits
     .split('')
     .map(Number)
-    .reduce((total, digit, index) => total + (digit * multipliers[index]), 0);
+    .reduce((total, digit, index) => total + (digit * (multipliers[index] || 0)), 0);
 
   // หารเอาเศษด้วย 11
   const remainder = sum % 11;
@@ -29,7 +29,8 @@ export function calculateCheckDigit(first12Digits: string): number {
   // คำนวณ Check Digit
   const checkDigit = 11 - remainder;
 
-  // ถ้าได้ 10 ให้เอาหลักหน่วย (0), ถ้าได้ 11 ให้ใช้ 1
+  // Algorithm มาตรฐาน Thai ID:
+  // ถ้าได้ 0 ให้ใช้ 0, ถ้าได้ 1 ให้ใช้ 1, ถ้าได้ 2 ให้ใช้ 2, ... ถ้าได้ 10 ให้ใช้ 0, ถ้าได้ 11 ให้ใช้ 1
   if (checkDigit === 10) return 0;
   if (checkDigit === 11) return 1;
 
@@ -130,10 +131,4 @@ export function exampleUsage() {
   multipleIds.forEach((id, index) => {
     console.log(`${index + 1}. ${id} (ถูกต้อง: ${validateThaiID(id) ? 'ใช่' : 'ไม่'})`);
   });
-}
-
-// ทดสอบกับตัวอย่างจากโจทย์: 1-2345-67890-12-1
-if (import.meta.env.NODE_ENV === 'development') {
-  const testId = '1-2345-67890-12-1';
-  console.log(`ทดสอบกับ ${testId}:`, validateThaiID(testId));
 }

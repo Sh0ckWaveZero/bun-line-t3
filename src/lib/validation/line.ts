@@ -11,7 +11,7 @@ const lottery = (infoItems: any[]) => {
   return infoItems.map((item) => {
     return {
       type: "bubble",
-      size: "mega",
+      size: "giga",
       header: {
         type: "box",
         layout: "vertical",
@@ -74,7 +74,6 @@ const lottery = (infoItems: any[]) => {
                 offsetStart: "60px",
                 offsetTop: "90px",
                 height: "70px",
-                alignItems: "center",
                 cornerRadius: "8px",
                 background: {
                   type: "linearGradient",
@@ -105,6 +104,7 @@ const lottery = (infoItems: any[]) => {
                     contents: [],
                     size: "xl",
                     wrap: true,
+                    flex: 0,
                     text: "ประจำงวด",
                     color: "#ffffff",
                     weight: "bold",
@@ -131,6 +131,7 @@ const lottery = (infoItems: any[]) => {
                         contents: [],
                         size: "md",
                         wrap: true,
+                        flex: 0,
                         margin: "xs",
                         color: "#ffffffde",
                         text: `${item.name}`,
@@ -147,7 +148,7 @@ const lottery = (infoItems: any[]) => {
             ],
           },
         ],
-        paddingAll: "20px",
+        paddingAll: "30px",
         backgroundColor: "#7A8299",
       },
     };
@@ -177,7 +178,7 @@ const cryptoCurrency = (data: CryptoInfo): any => {
 
   bubbleMessageTpl = {
     type: "bubble",
-    size: "mega",
+    size: "giga",
     header: {
       type: "box",
       layout: "baseline",
@@ -345,7 +346,7 @@ const gold = (data: any): any => {
   const image3 = utils.randomItems(IMAGE_GOLD_URLS);
   bubbleMessageTpl = {
     type: "bubble",
-    size: "mega",
+    size: "giga",
     header: {
       type: "box",
       layout: "vertical",
@@ -433,6 +434,7 @@ const gold = (data: any): any => {
                   contents: [],
                   size: "xl",
                   wrap: true,
+                  flex: 0,
                   text: "🏅 ราคาทองวันนี้",
                   color: "#ffffff",
                   weight: "bold",
@@ -595,7 +597,7 @@ const gold = (data: any): any => {
           ],
         },
       ],
-      paddingAll: "20px",
+      paddingAll: "30px",
       backgroundColor: "#7A8299",
     },
     footer: {
@@ -734,7 +736,7 @@ const notFound = () => {
             offsetStart: "0px",
             offsetEnd: "0px",
             backgroundColor: "#FABEA7",
-            paddingAll: "20px",
+            paddingAll: "30px",
             paddingTop: "18px",
           },
           {
@@ -785,7 +787,7 @@ const workCheckIn = () => {
           },
         ],
         backgroundColor: "#7BB3A9",
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
       body: {
         type: "box",
@@ -823,7 +825,7 @@ const workCheckIn = () => {
             margin: "lg",
           },
         ],
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
       footer: {
         type: "box",
@@ -852,7 +854,7 @@ const workCheckIn = () => {
             height: "sm",
           },
         ],
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
     },
   ];
@@ -890,7 +892,7 @@ const workCheckInSuccess = (checkInTime: Date, expectedCheckOutTime: Date) => {
           },
         ],
         backgroundColor: "#7BB3A9",
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
       body: {
         type: "box",
@@ -982,7 +984,7 @@ const workCheckInSuccess = (checkInTime: Date, expectedCheckOutTime: Date) => {
             ],
           },
         ],
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
       footer: {
         type: "box",
@@ -1000,7 +1002,7 @@ const workCheckInSuccess = (checkInTime: Date, expectedCheckOutTime: Date) => {
             color: "#E57373",
           },
         ],
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
     },
   ];
@@ -1037,7 +1039,7 @@ const workCheckInEarlySuccess = (
           },
         ],
         backgroundColor: "#FFB366",
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
       body: {
         type: "box",
@@ -1154,6 +1156,7 @@ const workCheckInEarlySuccess = (
                 size: "xs",
                 color: "#8A8A8A",
                 wrap: true,
+                flex: 0,
                 margin: "sm",
               },
               {
@@ -1162,11 +1165,12 @@ const workCheckInEarlySuccess = (
                 size: "xs",
                 color: "#8A8A8A",
                 wrap: true,
+                flex: 0,
               },
             ],
           },
         ],
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
     },
   ];
@@ -1275,7 +1279,7 @@ const workStatus = (attendance: any) => {
           },
         ],
         backgroundColor: statusColor,
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
       body: {
         type: "box",
@@ -1354,27 +1358,27 @@ const workStatus = (attendance: any) => {
             ],
           },
         ],
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
       footer: !isCheckedOut
         ? {
-            type: "box",
-            layout: "vertical",
-            spacing: "sm",
-            contents: [
-              {
-                type: "button",
-                style: "primary",
-                action: {
-                  type: "postback",
-                  label: "🔴 ออกงาน",
-                  data: "action=checkout",
-                },
-                color: "#E57373",
+          type: "box",
+          layout: "vertical",
+          spacing: "sm",
+          contents: [
+            {
+              type: "button",
+              style: "primary",
+              action: {
+                type: "postback",
+                label: "🔴 ออกงาน",
+                data: "action=checkout",
               },
-            ],
-            paddingAll: "20px",
-          }
+              color: "#E57373",
+            },
+          ],
+          paddingAll: "30px",
+        }
         : undefined,
     },
   ];
@@ -1431,7 +1435,7 @@ const workCheckOutSuccess = (checkInTime: Date, checkOutTime: Date) => {
           },
         ],
         backgroundColor: "#7BB3A9",
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
       body: {
         type: "box",
@@ -1531,7 +1535,7 @@ const workCheckOutSuccess = (checkInTime: Date, checkOutTime: Date) => {
             ],
           },
         ],
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
     },
   ];
@@ -1561,7 +1565,7 @@ const workError = (message: string) => {
           },
         ],
         backgroundColor: "#E57373",
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
       body: {
         type: "box",
@@ -1577,7 +1581,7 @@ const workError = (message: string) => {
             color: "#E57373",
           },
         ],
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
       footer: {
         type: "box",
@@ -1594,7 +1598,7 @@ const workError = (message: string) => {
             },
           },
         ],
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
     },
   ];
@@ -1624,7 +1628,7 @@ const leaveError = (message: string) => {
           },
         ],
         backgroundColor: "#E57373",
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
       body: {
         type: "box",
@@ -1640,7 +1644,7 @@ const leaveError = (message: string) => {
             color: "#E57373",
           },
         ],
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
       footer: {
         type: "box",
@@ -1658,7 +1662,7 @@ const leaveError = (message: string) => {
             color: "#5B7FD3",
           },
         ],
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
     },
   ];
@@ -1671,7 +1675,7 @@ const leaveError = (message: string) => {
 const monthlyReportMenu = () => {
   return {
     type: "bubble",
-    size: "mega",
+    size: "giga",
     header: {
       type: "box",
       layout: "vertical",
@@ -1685,7 +1689,7 @@ const monthlyReportMenu = () => {
         },
       ],
       backgroundColor: "#8B7FE5",
-      paddingAll: "20px",
+      paddingAll: "30px",
     },
     body: {
       type: "box",
@@ -1811,7 +1815,7 @@ const monthlyReportSummary = (report: any) => {
 
   return {
     type: "bubble",
-    size: "mega",
+    size: "giga",
     header: createMonthlyReportHeader(monthName),
     /**
      * สร้าง info box สำหรับแสดงข้อมูลสถิติต่างๆ
@@ -1990,7 +1994,7 @@ const workplacePolicyInfo = () => {
         },
       ],
       backgroundColor: "#5B7FD3",
-      paddingAll: "20px",
+      paddingAll: "30px",
     },
     body: {
       type: "box",
@@ -2012,6 +2016,7 @@ const workplacePolicyInfo = () => {
               type: "text",
               text: "• จันทร์ ถึง ศุกร์ (5 วันต่อสัปดาห์)\n• ทุกกลุ่มงานและทุกระดับงาน",
               wrap: true,
+              flex: 0,
               size: "sm",
               color: "#374151",
               margin: "sm",
@@ -2038,6 +2043,7 @@ const workplacePolicyInfo = () => {
               type: "text",
               text: "• รวม 9 ชั่วโมงต่อวัน (รวมพักกลางวัน 1 ชม.)\n• เวลาปฏิบัติงานจริง 8 ชั่วโมงต่อวัน\n• เวลาเข้างานยืดหยุ่น: 08:00 - 11:00 น.",
               wrap: true,
+              flex: 0,
               size: "sm",
               color: "#374151",
               margin: "sm",
@@ -2064,6 +2070,7 @@ const workplacePolicyInfo = () => {
               type: "text",
               text: "• บันทึกเข้า-ออกงานที่เครื่องบันทึกเวลา\n• หน้าประตูทางเข้า-ออก (ประตูใหญ่)\n• ระบบนับ 9 ชั่วโมงรวมพัก 1 ชั่วโมง",
               wrap: true,
+              flex: 0,
               size: "sm",
               color: "#374151",
               margin: "sm",
@@ -2071,7 +2078,7 @@ const workplacePolicyInfo = () => {
           ],
         },
       ],
-      paddingAll: "20px",
+      paddingAll: "30px",
     },
     footer: {
       type: "box",
@@ -2088,7 +2095,7 @@ const workplacePolicyInfo = () => {
           color: "#5B7FD3",
         },
       ],
-      paddingAll: "20px",
+      paddingAll: "30px",
     },
   };
 };
@@ -2120,7 +2127,7 @@ const workPublicHoliday = (holidayMessage: string) => {
           },
         ],
         backgroundColor: "#ff9800",
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
       body: {
         type: "box",
@@ -2156,7 +2163,7 @@ const workPublicHoliday = (holidayMessage: string) => {
             align: "center",
           },
         ],
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
       footer: {
         type: "box",
@@ -2174,7 +2181,7 @@ const workPublicHoliday = (holidayMessage: string) => {
             color: "#ff9800",
           },
         ],
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
     },
   ];
@@ -2247,7 +2254,7 @@ const workCheckInLateSuccess = (
           },
         ],
         backgroundColor: "#FFB84D",
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
       body: {
         type: "box",
@@ -2274,7 +2281,7 @@ const workCheckInLateSuccess = (
             color: "#999999",
           },
         ],
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
     },
     {
@@ -2294,7 +2301,7 @@ const workCheckInLateSuccess = (
           },
         ],
         backgroundColor: "#4CAF50",
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
       body: {
         type: "box",
@@ -2382,7 +2389,7 @@ const workCheckInLateSuccess = (
             wrap: true,
           },
         ],
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
       footer: {
         type: "box",
@@ -2400,10 +2407,883 @@ const workCheckInLateSuccess = (
             color: "#E57373",
           },
         ],
-        paddingAll: "20px",
+        paddingAll: "30px",
       },
     },
   ];
+};
+
+/**
+ * สร้าง bubble template สำหรับแสดงเลขบัตรประชาชนที่สุ่มได้ (แบบสวยงาม)
+ * @param idNumber เลขบัตรประชาชน
+ * @param isRandom เป็นการสุ่มหรือไม่
+ * @returns bubble template
+ */
+const thaiIdCard = (idNumber: string, isRandom: boolean = false) => {
+  const headerText = isRandom ? "🎲 เลขบัตรประชาชนที่สุ่มได้" : "📋 เลขบัตรประชาชน";
+  const headerBg = isRandom
+    ? {
+      type: "linearGradient",
+      angle: "0deg",
+      startColor: "#6366f1",
+      endColor: "#8b5cf6",
+    }
+    : {
+      type: "linearGradient",
+      angle: "0deg",
+      startColor: "#10b981",
+      endColor: "#059669",
+    };
+
+  return {
+    type: "bubble",
+    size: "giga",
+    header: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "text",
+          text: headerText,
+          weight: "bold",
+          size: "xl",
+          color: "#ffffff",
+          align: "center",
+        },
+      ],
+      background: headerBg,
+      paddingAll: "30px",
+    },
+    body: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "box",
+          layout: "horizontal",
+          contents: [
+            {
+              type: "text",
+              text: `${idNumber}`,
+              size: "3xl",
+              color: "#111827",
+              weight: "bold",
+              align: "center",
+              wrap: true,
+              flex: 0,
+            },
+          ],
+          justifyContent: "center",
+          margin: "xxl",
+        },
+        {
+          type: "separator",
+          margin: "xl",
+        },
+        {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "📋 แตะที่เลขบัตรเพื่อคัดลอก",
+              size: "sm",
+              color: "#6b7280",
+              align: "center",
+              margin: "sm",
+            },
+            {
+              type: "text",
+              text: "✅ เลขนี้ถูกต้องตาม Check Digit Algorithm",
+              size: "xs",
+              color: "#10b981",
+              align: "center",
+              margin: "sm",
+            },
+          ],
+          margin: "md",
+        },
+      ],
+      paddingAll: "30px",
+      backgroundColor: "#f8fafc",
+    },
+    footer: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "box",
+          layout: "horizontal",
+          contents: [
+            {
+              type: "text",
+              text: "⚠️ ใช้เพื่อการทดสอบเท่านั้น ห้ามนำไปใช้ผิดกฎหมาย",
+              size: "xs",
+              color: "#9ca3af",
+              wrap: true,
+              align: "start",
+              flex: 0,
+              margin: "sm",
+            },
+          ],
+        },
+      ],
+      paddingAll: "16px",
+      backgroundColor: "#fef3c7",
+    },
+  };
+};
+
+/**
+ * สร้าง bubble template สำหรับแสดงเลขบัตรประชาชนหลายเลข (แบบสวยงาม)
+ * @param ids รายการเลขบัตรประชาชน
+ * @returns bubble template
+ */
+const thaiIdMultipleCards = (ids: string[]) => {
+  const idCards = ids.map((id, index) => ({
+    type: "box",
+    layout: "vertical",
+    contents: [
+      {
+        type: "text",
+        text: `${index + 1}.`,
+        size: "sm",
+        color: "#6366f1",
+        weight: "bold",
+        margin: "xs",
+      },
+      {
+        type: "box",
+        layout: "horizontal",
+        contents: [
+          {
+            type: "text",
+            text: `${id}`,
+            size: "xl",
+            color: "#111827",
+            weight: "bold",
+            align: "center",
+            wrap: true,
+            flex: 0,
+          },
+        ],
+        justifyContent: "center",
+        margin: "md",
+      },
+    ],
+    backgroundColor: "#f8fafc",
+    cornerRadius: "6px",
+    paddingAll: "12px",
+    margin: "sm",
+    borderWidth: "1px",
+    borderColor: "#e5e7eb",
+  }));
+
+  return {
+    type: "bubble",
+    size: "giga",
+    header: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "text",
+          text: `🎲 เลขบัตรประชาชนที่สุ่มได้`,
+          weight: "bold",
+          size: "xl",
+          color: "#ffffff",
+          align: "center",
+        },
+        {
+          type: "text",
+          text: `(${ids.length} เลข)`,
+          size: "sm",
+          color: "#ffffff",
+          align: "center",
+        },
+      ],
+      background: {
+        type: "linearGradient",
+        angle: "0deg",
+        startColor: "#6366f1",
+        endColor: "#8b5cf6",
+      },
+      paddingAll: "30px",
+    },
+    body: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "box",
+          layout: "vertical",
+          contents: idCards,
+          backgroundColor: "#ffffff",
+          cornerRadius: "12px",
+          paddingAll: "16px",
+          margin: "md",
+          borderWidth: "1px",
+          borderColor: "#e5e7eb",
+        },
+        {
+          type: "separator",
+          margin: "xl",
+        },
+        {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "📋 แตะที่เลขบัตรเพื่อคัดลอก",
+              size: "sm",
+              color: "#6b7280",
+              align: "center",
+              margin: "sm",
+            },
+            {
+              type: "text",
+              text: "✅ ทุกเลขถูกต้องตาม Check Digit Algorithm",
+              size: "xs",
+              color: "#10b981",
+              align: "center",
+              margin: "sm",
+            },
+          ],
+          margin: "md",
+        },
+      ],
+      paddingAll: "30px",
+      backgroundColor: "#f8fafc",
+    },
+    footer: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "box",
+          layout: "horizontal",
+          contents: [
+            {
+              type: "text",
+              text: "⚠️",
+              size: "sm",
+              color: "#f59e0b",
+            },
+            {
+              type: "text",
+              text: "ใช้เพื่อการทดสอบเท่านั้น ห้ามนำไปใช้ผิดกฎหมาย",
+              size: "xs",
+              color: "#9ca3af",
+              wrap: true,
+              align: "start",
+              flex: 0,
+              margin: "sm",
+            },
+          ],
+        },
+      ],
+      paddingAll: "16px",
+      backgroundColor: "#fef3c7",
+    },
+  };
+};
+
+/**
+ * สร้าง bubble template สำหรับแสดงผลการตรวจสอบเลขบัตรประชาชน (แบบสวยงาม)
+ * @param idNumber เลขบัตรประชาชน
+ * @param isValid ผลการตรวจสอบ
+ * @returns bubble template
+ */
+const thaiIdValidationResult = (idNumber: string, isValid: boolean) => {
+  const statusText = isValid ? "✅ ถูกต้อง" : "❌ ไม่ถูกต้อง";
+  const statusColor = isValid ? "#10b981" : "#ef4444";
+  const headerBg = isValid
+    ? {
+      type: "linearGradient",
+      angle: "0deg",
+      startColor: "#10b981",
+      endColor: "#059669",
+    }
+    : {
+      type: "linearGradient",
+      angle: "0deg",
+      startColor: "#ef4444",
+      endColor: "#dc2626",
+    };
+  const bgColor = isValid ? "#f0fdf4" : "#fef2f2";
+
+  return {
+    type: "bubble",
+    size: "giga",
+    header: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "text",
+          text: "🔍 ผลการตรวจสอบเลขบัตรประชาชน",
+          weight: "bold",
+          size: "xl",
+          color: "#ffffff",
+          align: "center",
+        },
+      ],
+      background: headerBg,
+      paddingAll: "30px",
+    },
+    hero: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "text",
+          text: "📊",
+          size: "3xl",
+          align: "center",
+          color: "#ffffff",
+        },
+      ],
+      alignItems: "center",
+      justifyContent: "center",
+      paddingAll: "lg",
+      background: headerBg,
+    },
+    body: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "box",
+              layout: "horizontal",
+              contents: [
+                {
+                  type: "text",
+                  text: `${idNumber}`,
+                  size: "3xl",
+                  color: "#111827",
+                  weight: "bold",
+                  align: "center",
+                  wrap: true,
+                  flex: 0,
+                },
+              ],
+              justifyContent: "center",
+              margin: "xxl",
+              width: "100%",
+            },
+          ],
+          backgroundColor: bgColor,
+          cornerRadius: "8px",
+          paddingAll: "16px",
+          margin: "md",
+        },
+        {
+          type: "separator",
+          margin: "xl",
+        },
+        {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: statusText,
+              weight: "bold",
+              size: "lg",
+              color: statusColor,
+              align: "center",
+              margin: "md",
+            },
+            {
+              type: "text",
+              text: `📊 สถานะ: ${isValid ? 'ผ่านการตรวจสอบ' : 'ไม่ผ่านการตรวจสอบ'} ตาม Check Digit Algorithm`,
+              size: "sm",
+              color: "#6b7280",
+              align: "center",
+              margin: "sm",
+            },
+            ...(isValid ? [] : [
+              {
+                type: "separator",
+                margin: "md",
+              },
+              {
+                type: "text",
+                text: "💡 เลขบัตรประชาชนไทยต้องมี 13 หลัก และผ่านการตรวจสอบ Check Digit",
+                size: "xs",
+                color: "#9ca3af",
+                wrap: true,
+                flex: 0,
+                align: "center",
+                margin: "sm",
+              }
+            ]),
+          ],
+          margin: "lg",
+        },
+        {
+          type: "separator",
+          margin: "lg",
+        },
+        {
+          type: "text",
+          text: "📋 แตะที่เลขบัตรเพื่อคัดลอก",
+          size: "sm",
+          color: "#6b7280",
+          align: "center",
+          margin: "md",
+        },
+      ],
+      paddingAll: "30px",
+      backgroundColor: "#f8fafc",
+    },
+    footer: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "box",
+          layout: "horizontal",
+          contents: [
+            {
+              type: "text",
+              text: "⚠️ เลขบัตรนี้ถูกใช้เพื่อการทดสอบเท่านั้น",
+              size: "xs",
+              color: "#9ca3af",
+              wrap: true,
+              align: "start",
+              flex: 0,
+              margin: "sm",
+            },
+          ],
+        },
+      ],
+      paddingAll: "16px",
+      backgroundColor: "#fef3c7",
+    },
+  };
+};
+
+/**
+ * สร้าง bubble template สำหรับแสดงคำแนะนำการใช้งาน Thai ID Generator
+ * @returns bubble template
+ */
+const thaiIdValidateInput = () => {
+  return {
+    type: "bubble",
+    size: "giga",
+    header: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "text",
+          text: "🔍 ตรวจสอบเลขบัตรประชาชน",
+          weight: "bold",
+          size: "xl",
+          color: "#ffffff",
+          align: "center",
+        },
+        {
+          type: "text",
+          text: "Thai ID Validator",
+          size: "sm",
+          color: "#ffffff",
+          align: "center",
+        },
+      ],
+      backgroundColor: "#f59e0b",
+      paddingAll: "30px",
+    },
+    body: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "กรุณากรอกเลขบัตรประชาชน 13 หลัก",
+              weight: "bold",
+              size: "md",
+              color: "#374151",
+              margin: "md",
+            },
+            {
+              type: "text",
+              text: "รองรับทั้งรูปแบบมี dash และไม่มี dash",
+              size: "sm",
+              color: "#6b7280",
+              margin: "xs",
+            },
+            {
+              type: "separator",
+              margin: "lg",
+            },
+            {
+              type: "box",
+              layout: "vertical",
+              contents: [
+                {
+                  type: "text",
+                  text: "ตัวอย่าง:",
+                  size: "sm",
+                  color: "#6b7280",
+                  weight: "bold",
+                  margin: "sm",
+                },
+                {
+                  type: "text",
+                  text: "• 1234567890123",
+                  size: "sm",
+                  color: "#059669",
+                  margin: "xs",
+                },
+                {
+                  type: "text",
+                  text: "• 1-2345-67890-12-3",
+                  size: "sm",
+                  color: "#059669",
+                  margin: "xs",
+                },
+                {
+                  type: "text",
+                  text: "• 1 2345 67890 12 3",
+                  size: "sm",
+                  color: "#059669",
+                  margin: "xs",
+                },
+              ],
+              backgroundColor: "#f0fdf4",
+              cornerRadius: "4px",
+              paddingAll: "12px",
+              margin: "sm",
+            },
+            {
+              type: "separator",
+              margin: "lg",
+            },
+            {
+              type: "button",
+              style: "primary",
+              action: {
+                type: "postback",
+                label: "⬅️ กลับไปเมนูหลัก",
+                data: "action=thai_id_menu",
+              },
+              color: "#6b7280",
+              margin: "md",
+            },
+          ],
+          backgroundColor: "#ffffff",
+          cornerRadius: "8px",
+          paddingAll: "16px",
+          margin: "md",
+        },
+      ],
+      paddingAll: "30px",
+    },
+    footer: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "text",
+          text: "⚠️ หมายเหตุ: ใช้เพื่อการทดสอบเท่านั้น ห้ามนำไปใช้ในการปลอมแปลงเอกสาร",
+          size: "xs",
+          color: "#9ca3af",
+          wrap: true,
+          align: "start",
+        },
+      ],
+      paddingAll: "16px",
+      justifyContent: "start",
+    },
+  };
+};
+
+const thaiIdMainMenu = () => {
+  return {
+    type: "bubble",
+    size: "giga",
+    header: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "text",
+          text: "🎲 สุ่มเลขบัตรประชาชน",
+          weight: "bold",
+          size: "xl",
+          color: "#ffffff",
+          align: "center",
+        },
+        {
+          type: "text",
+          text: "Thai ID Generator",
+          size: "sm",
+          color: "#ffffff",
+          align: "center",
+        },
+      ],
+      backgroundColor: "#6366f1",
+      paddingAll: "30px",
+    },
+    body: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "เลือกการดำเนินการที่ต้องการ:",
+              weight: "bold",
+              size: "md",
+              color: "#374151",
+              margin: "md",
+            },
+            {
+              type: "separator",
+              margin: "lg",
+            },
+            {
+              type: "box",
+              layout: "vertical",
+              contents: [
+                {
+                  type: "button",
+                  style: "primary",
+                  action: {
+                    type: "postback",
+                    label: "🎲 สุ่มเลขบัตร 1 เลข",
+                    data: "action=thai_id_generate_1",
+                  },
+                  color: "#10b981",
+                  margin: "sm",
+                },
+                {
+                  type: "button",
+                  style: "primary",
+                  action: {
+                    type: "postback",
+                    label: "🎲 สุ่มเลขบัตร 5 เลข",
+                    data: "action=thai_id_generate_5",
+                  },
+                  color: "#6366f1",
+                  margin: "sm",
+                },
+                {
+                  type: "button",
+                  style: "secondary",
+                  action: {
+                    type: "postback",
+                    label: "🔍 ตรวจสอบเลขบัตร",
+                    data: "action=thai_id_validate",
+                  },
+                  color: "#f59e0b",
+                  margin: "sm",
+                },
+                {
+                  type: "button",
+                  style: "secondary",
+                  action: {
+                    type: "postback",
+                    label: "📋 ดูคำสั่งทั้งหมด",
+                    data: "action=thai_id_help",
+                  },
+                  color: "#6b7280",
+                  margin: "sm",
+                },
+              ],
+              margin: "md",
+            },
+          ],
+          backgroundColor: "#ffffff",
+          cornerRadius: "8px",
+          paddingAll: "16px",
+          margin: "md",
+        },
+      ],
+      paddingAll: "30px",
+    },
+    footer: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "text",
+          text: "⚠️ หมายเหตุ: ใช้เพื่อการทดสอบเท่านั้น ห้ามนำไปใช้ในการปลอมแปลงเอกสาร",
+          size: "xs",
+          color: "#9ca3af",
+          wrap: true,
+          align: "start",
+        },
+      ],
+      paddingAll: "16px",
+      justifyContent: "start",
+    },
+  };
+};
+
+const thaiIdHelp = () => {
+  return {
+    type: "bubble",
+    size: "giga",
+    header: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "text",
+          text: "🆔 ตัวสร้างเลขบัตรประชาชนไทย",
+          weight: "bold",
+          size: "lg",
+          color: "#ffffff",
+          align: "center",
+        },
+        {
+          type: "text",
+          text: "Thai ID Generator",
+          size: "sm",
+          color: "#ffffff",
+          align: "center",
+        },
+      ],
+      backgroundColor: "#6366f1",
+      paddingAll: "30px",
+    },
+    body: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "📝 คำสั่งที่ใช้ได้:",
+              weight: "bold",
+              size: "md",
+              color: "#374151",
+              margin: "md",
+            },
+            {
+              type: "box",
+              layout: "vertical",
+              contents: [
+                {
+                  type: "text",
+                  text: "• สุ่มเลขบัตร - สุ่มเลขบัตรประชาชน 1 เลข",
+                  size: "sm",
+                  color: "#6b7280",
+                  wrap: true,
+                  flex: 0,
+                  margin: "xs",
+                },
+                {
+                  type: "text",
+                  text: "• สุ่มเลขบัตร 5 - สุ่มเลขบัตรประชาชน 5 เลข",
+                  size: "sm",
+                  color: "#6b7280",
+                  wrap: true,
+                  flex: 0,
+                  margin: "xs",
+                },
+                {
+                  type: "text",
+                  text: "• ตรวจสอบบัตร [เลขบัตร] - ตรวจสอบความถูกต้อง",
+                  size: "sm",
+                  color: "#6b7280",
+                  wrap: true,
+                  flex: 0,
+                  margin: "xs",
+                },
+              ],
+              margin: "sm",
+            },
+            {
+              type: "separator",
+              margin: "lg",
+            },
+            {
+              type: "text",
+              text: "📋 ตัวอย่างการใช้งาน:",
+              weight: "bold",
+              size: "md",
+              color: "#374151",
+              margin: "md",
+            },
+            {
+              type: "box",
+              layout: "vertical",
+              contents: [
+                {
+                  type: "text",
+                  text: "• สุ่มบัตรประชาชน",
+                  size: "sm",
+                  color: "#059669",
+                  weight: "bold",
+                  margin: "xs",
+                },
+                {
+                  type: "text",
+                  text: "• สุ่มเลขบัตร 3",
+                  size: "sm",
+                  color: "#059669",
+                  weight: "bold",
+                  margin: "xs",
+                },
+                {
+                  type: "text",
+                  text: "• ตรวจสอบบัตร 1-2345-67890-12-1",
+                  size: "sm",
+                  color: "#059669",
+                  weight: "bold",
+                  margin: "xs",
+                },
+              ],
+              backgroundColor: "#f0fdf4",
+              cornerRadius: "4px",
+              paddingAll: "12px",
+              margin: "sm",
+            },
+          ],
+          backgroundColor: "#ffffff",
+          cornerRadius: "8px",
+          paddingAll: "16px",
+          margin: "md",
+        },
+      ],
+      paddingAll: "30px",
+    },
+      footer: {
+        type: "box",
+        layout: "vertical",
+        contents: [
+          {
+            type: "text",
+            text: "⚠️ หมายเหตุ: ใช้เพื่อการทดสอบเท่านั้น ห้ามนำไปใช้ในการปลอมแปลงเอกสาร",
+            size: "xs",
+            color: "#9ca3af",
+            wrap: true,
+            align: "start",
+          },
+        ],
+        paddingAll: "16px",
+        justifyContent: "start",
+      },
+  };
 };
 
 export const bubbleTemplate = {
@@ -2425,4 +3305,10 @@ export const bubbleTemplate = {
   workplacePolicyInfo,
   workPublicHoliday,
   leaveError,
+  thaiIdCard,
+  thaiIdMultipleCards,
+  thaiIdValidationResult,
+  thaiIdHelp,
+  thaiIdMainMenu,
+  thaiIdValidateInput,
 };
