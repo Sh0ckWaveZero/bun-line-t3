@@ -89,14 +89,6 @@ const ThemeToggle = () => {
       classList.add(newTheme);
       html.style.colorScheme = newTheme;
       html.setAttribute("data-theme", newTheme);
-
-      console.log("🎨 HTML force updated (Switch):", {
-        classes: html.className,
-        colorScheme: html.style.colorScheme,
-        dataTheme: html.getAttribute("data-theme"),
-        hasLight: html.classList.contains("light"),
-        hasDark: html.classList.contains("dark"),
-      });
     };
 
     // Multiple force updates to ensure sync

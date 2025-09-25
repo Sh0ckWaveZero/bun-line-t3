@@ -1,180 +1,151 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { generateFormattedThaiID, generateMultipleThaiIDs, validateThaiID } from '@/lib/utils/thai-id-generator';
+import { useState } from "react";
+import { Copy } from "lucide-react";
+import {
+  generateFormattedThaiID,
+  validateThaiID,
+} from "@/lib/utils/thai-id-generator";
 
 export default function ThaiIdGenerate() {
-  const [count, setCount] = useState(1);
-  const [generatedId, setGeneratedId] = useState<string>('');
-  const [generatedIds, setGeneratedIds] = useState<string[]>([]);
+  const [generatedId, setGeneratedId] = useState<string>("6118480700970");
+  const [validationInput, setValidationInput] = useState<string>("");
+  const [validationResult, setValidationResult] = useState<boolean | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(false);
-  const [history, setHistory] = useState<string[]>([]);
+  const [copySuccess, setCopySuccess] = useState(false);
 
-  const handleGenerateSingle = async () => {
+  const handleGenerateNew = async () => {
     setIsLoading(true);
     try {
       // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const id = generateFormattedThaiID();
-      setGeneratedId(id);
-      setHistory(prev => [id, ...prev.slice(0, 9)]); // Keep last 10
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      const newId = generateFormattedThaiID().replace(/-/g, "");
+      setGeneratedId(newId);
     } catch (error) {
-      console.error('Error generating ID:', error);
+      console.error("Error generating ID:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGenerateMultiple = async () => {
-    setIsLoading(true);
+  const handleCopy = async () => {
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const ids = generateMultipleThaiIDs(count);
-      setGeneratedIds(ids);
-      setHistory(prev => [...ids, ...prev.slice(0, 10 - ids.length)]); // Keep last 10
+      await navigator.clipboard.writeText(generatedId);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
     } catch (error) {
-      console.error('Error generating IDs:', error);
-    } finally {
-      setIsLoading(false);
+      console.error("Failed to copy:", error);
     }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    // You can add toast notification here
+  const handleValidation = () => {
+    if (validationInput.trim()) {
+      const cleanInput = validationInput.replace(/[-\s]/g, "");
+      const isValid = validateThaiID(cleanInput);
+      setValidationResult(isValid);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, ""); // Only allow digits
+    if (value.length <= 13) {
+      setValidationInput(value);
+      setValidationResult(null);
+    }
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="grid md:grid-cols-2 gap-8">
-        {/* Generate Controls */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-            🎲 สุ่มเลขบัตรประชาชน
-          </h2>
+    <div className="flex min-h-screen flex-col items-center justify-center space-y-8 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-4">
+      {/* Main Card - ID Generator */}
+      <div className="w-full max-w-lg rounded-2xl bg-white p-8 shadow-xl">
+        <h1 className="mb-8 text-center text-2xl font-bold text-purple-600">
+          สุ่มเลขบัตรประชาชน
+        </h1>
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                จำนวนเลขที่ต้องการสุ่ม:
-              </label>
-              <input
-                type="number"
-                min="1"
-                max="20"
-                value={count}
-                onChange={(e) => setCount(Math.min(Math.max(parseInt(e.target.value) || 1, 1), 20))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={handleGenerateSingle}
-                disabled={isLoading}
-                className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
-              >
-                {isLoading ? '...' : '🎲 สุ่ม 1 เลข'}
-              </button>
-
-              <button
-                onClick={handleGenerateMultiple}
-                disabled={isLoading}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
-              >
-                {isLoading ? '...' : `🎲 สุ่ม ${count} เลข`}
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <Link
-                href="/thai-id"
-                className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center block"
-              >
-                ⬅️ กลับ
-              </Link>
-
-              <Link
-                href="/thai-id/validate"
-                className="bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center block"
-              >
-                🔍 ตรวจสอบ
-              </Link>
-            </div>
+        {/* Generated ID Display */}
+        <div className="relative mb-6 rounded-xl bg-gradient-to-r from-blue-400 to-blue-600 p-6 text-center">
+          <div className="font-mono text-3xl font-bold tracking-wider text-white">
+            {generatedId}
           </div>
-        </div>
-
-        {/* Results */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-            📋 ผลลัพธ์
-          </h2>
-
-          {generatedId && (
-            <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
-              <h3 className="font-semibold text-green-800 mb-2">เลขบัตรประชาชนที่สุ่มได้:</h3>
-              <div className="text-xl font-mono text-green-700 bg-white p-3 rounded border text-center mb-2">
-                {generatedId}
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => copyToClipboard(generatedId)}
-                  className="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded transition-colors"
-                >
-                  📋 คัดลอก
-                </button>
-                <button
-                  onClick={() => validateThaiID(generatedId) ? alert('✅ ถูกต้อง') : alert('❌ ไม่ถูกต้อง')}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded transition-colors"
-                >
-                  ✅ ตรวจสอบ
-                </button>
-              </div>
-            </div>
-          )}
-
-          {generatedIds.length > 0 && (
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <h3 className="font-semibold text-blue-800 mb-2">
-                เลขบัตรประชาชนที่สุ่มได้ ({generatedIds.length} เลข):
-              </h3>
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {generatedIds.map((id, index) => (
-                  <div key={index} className="flex items-center gap-2 p-2 bg-white rounded border">
-                    <span className="text-sm font-mono text-blue-700 flex-1">{id}</span>
-                    <button
-                      onClick={() => copyToClipboard(id)}
-                      className="bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1 rounded"
-                    >
-                      📋
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <button
-                onClick={() => copyToClipboard(generatedIds.join('\n'))}
-                className="mt-2 w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition-colors"
-              >
-                📋 คัดลอกทั้งหมด
-              </button>
-            </div>
-          )}
-
-          {history.length > 0 && (
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <h3 className="font-semibold text-gray-800 mb-2">ประวัติการสุ่มล่าสุด:</h3>
-              <div className="space-y-1 max-h-32 overflow-y-auto">
-                {history.slice(0, 5).map((id, index) => (
-                  <div key={index} className="text-sm font-mono text-gray-600 bg-white p-2 rounded border">
-                    {id}
-                  </div>
-                ))}
-              </div>
+          <button
+            onClick={handleCopy}
+            className="absolute right-4 top-4 text-white transition-colors hover:text-gray-200"
+            title="คัดลอก"
+          >
+            <Copy size={20} />
+          </button>
+          {copySuccess && (
+            <div className="absolute -top-2 right-12 rounded bg-green-500 px-2 py-1 text-xs text-white">
+              คัดลอกแล้ว!
             </div>
           )}
         </div>
+
+        {/* Generate New Button */}
+        <button
+          onClick={handleGenerateNew}
+          disabled={isLoading}
+          className="mb-4 w-full rounded-xl bg-gray-100 px-6 py-3 font-medium text-gray-800 transition-colors hover:bg-gray-200 disabled:opacity-50"
+        >
+          {isLoading ? "กำลังสุ่ม..." : "สุ่มเลขบัตรใหม่"}
+        </button>
+
+        {/* Warning Text */}
+        <p className="text-center text-sm leading-relaxed text-gray-500">
+          เลขบัตรประชาชนนี้เป็นเพียงตัวอย่างที่สร้างขึ้นมาเพื่อการทดสอบเท่านั้น
+          ไม่ใช่เลขของคนที่มีอยู่จริง
+        </p>
+      </div>
+
+      {/* Validation Card */}
+      <div className="w-full max-w-lg rounded-2xl bg-white p-8 shadow-xl">
+        <h2 className="mb-8 text-center text-2xl font-bold text-purple-600">
+          ตรวจสอบเลขบัตรประชาชน
+        </h2>
+
+        {/* Input Field */}
+        <div className="mb-6">
+          <input
+            type="text"
+            value={validationInput}
+            onChange={handleInputChange}
+            placeholder="กรอกเลขบัตรประชาชน 13 หลัก"
+            className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-center font-mono text-lg focus:border-purple-400 focus:outline-none"
+          />
+        </div>
+
+        {/* Validate Button */}
+        <button
+          onClick={handleValidation}
+          disabled={!validationInput.trim() || validationInput.length !== 13}
+          className="mb-4 w-full rounded-xl bg-gray-100 px-6 py-3 font-medium text-gray-800 transition-colors hover:bg-gray-200 disabled:opacity-50"
+        >
+          ตรวจสอบ
+        </button>
+
+        {/* Validation Result */}
+        {validationResult !== null && (
+          <div
+            className={`rounded-xl p-4 text-center ${
+              validationResult
+                ? "border border-green-200 bg-green-50 text-green-700"
+                : "border border-red-200 bg-red-50 text-red-700"
+            }`}
+          >
+            <div className="text-lg font-semibold">
+              {validationResult
+                ? "✅ เลขบัตรประชาชนถูกต้อง"
+                : "❌ เลขบัตรประชาชนไม่ถูกต้อง"}
+            </div>
+            {validationResult && (
+              <div className="mt-1 text-sm">
+                ผ่านการตรวจสอบ Check Digit Algorithm
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
