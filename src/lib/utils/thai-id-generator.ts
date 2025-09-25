@@ -12,16 +12,19 @@
  */
 export function calculateCheckDigit(first12Digits: string): number {
   if (first12Digits.length !== 12) {
-    throw new Error('First 12 digits must be exactly 12 characters');
+    throw new Error("First 12 digits must be exactly 12 characters");
   }
 
   const multipliers = [13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2];
 
   // คูณแต่ละหลักกับตัวคูณ
   const sum = first12Digits
-    .split('')
+    .split("")
     .map(Number)
-    .reduce((total, digit, index) => total + (digit * (multipliers[index] || 0)), 0);
+    .reduce(
+      (total, digit, index) => total + digit * (multipliers[index] || 0),
+      0,
+    );
 
   // หารเอาเศษด้วย 11
   const remainder = sum % 11;
@@ -42,7 +45,7 @@ export function calculateCheckDigit(first12Digits: string): number {
  */
 export function validateThaiID(idNumber: string): boolean {
   // ลบ dash และ space ออก
-  const cleanId = idNumber.replace(/[-\s]/g, '');
+  const cleanId = idNumber.replace(/[-\s]/g, "");
 
   // ตรวจสอบความยาว
   if (cleanId.length !== 13) {
@@ -69,8 +72,8 @@ export function generateRandomThaiID(): string {
   // หลักแรกไม่ควรเป็น 0
   const firstDigit = Math.floor(Math.random() * 9) + 1;
   const remaining11Digits = Array.from({ length: 11 }, () =>
-    Math.floor(Math.random() * 10)
-  ).join('');
+    Math.floor(Math.random() * 10),
+  ).join("");
 
   const first12 = firstDigit + remaining11Digits;
   const checkDigit = calculateCheckDigit(first12);
@@ -90,10 +93,10 @@ export function generateFormattedThaiID(): string {
  * จัดรูปแบบเลขบัตรประชาชนให้มี dash
  */
 export function formatThaiID(idNumber: string): string {
-  const cleanId = idNumber.replace(/[-\s]/g, '');
+  const cleanId = idNumber.replace(/[-\s]/g, "");
 
   if (cleanId.length !== 13) {
-    throw new Error('Thai ID must be 13 digits');
+    throw new Error("Thai ID must be 13 digits");
   }
 
   // รูปแบบ: X-XXXX-XXXXX-XX-X
@@ -101,11 +104,29 @@ export function formatThaiID(idNumber: string): string {
 }
 
 /**
+ * จัดรูปแบบเลขบัตรประชาชนสำหรับ input field (รองรับการพิมพ์ไม่ครบ)
+ */
+export function formatThaiIDInput(value: string): string {
+  // Remove all non-digits
+  const digits = value.replace(/\D/g, "");
+
+  // Apply formatting: X-XXXX-XXXXX-XX-X
+  if (digits.length === 0) return "";
+  if (digits.length <= 1) return digits;
+  if (digits.length <= 5) return `${digits.slice(0, 1)}-${digits.slice(1)}`;
+  if (digits.length <= 10)
+    return `${digits.slice(0, 1)}-${digits.slice(1, 5)}-${digits.slice(5)}`;
+  if (digits.length <= 12)
+    return `${digits.slice(0, 1)}-${digits.slice(1, 5)}-${digits.slice(5, 10)}-${digits.slice(10)}`;
+  return `${digits.slice(0, 1)}-${digits.slice(1, 5)}-${digits.slice(5, 10)}-${digits.slice(10, 12)}-${digits.slice(12, 13)}`;
+}
+
+/**
  * สร้างเลขบัตรประชาชนไทยหลายๆ เลข
  */
 export function generateMultipleThaiIDs(count: number = 5): string[] {
   if (count < 1 || count > 20) {
-    throw new Error('Count must be between 1 and 20');
+    throw new Error("Count must be between 1 and 20");
   }
 
   return Array.from({ length: count }, () => generateFormattedThaiID());
@@ -115,20 +136,22 @@ export function generateMultipleThaiIDs(count: number = 5): string[] {
  * ตัวอย่างการใช้งาน
  */
 export function exampleUsage() {
-  console.log('=== ตัวอย่างการใช้งาน ===');
+  console.log("=== ตัวอย่างการใช้งาน ===");
 
   // สร้างเลขบัตรประชาชนแบบสุ่ม
   const randomId = generateFormattedThaiID();
-  console.log('เลขบัตรประชาชนที่สร้างขึ้น:', randomId);
+  console.log("เลขบัตรประชาชนที่สร้างขึ้น:", randomId);
 
   // ตรวจสอบความถูกต้อง
   const isValid = validateThaiID(randomId);
-  console.log('ความถูกต้อง:', isValid ? 'ถูกต้อง' : 'ไม่ถูกต้อง');
+  console.log("ความถูกต้อง:", isValid ? "ถูกต้อง" : "ไม่ถูกต้อง");
 
   // สร้างหลายๆ เลข
   const multipleIds = generateMultipleThaiIDs(3);
-  console.log('เลขบัตรประชาชนหลายๆ เลข:');
+  console.log("เลขบัตรประชาชนหลายๆ เลข:");
   multipleIds.forEach((id, index) => {
-    console.log(`${index + 1}. ${id} (ถูกต้อง: ${validateThaiID(id) ? 'ใช่' : 'ไม่'})`);
+    console.log(
+      `${index + 1}. ${id} (ถูกต้อง: ${validateThaiID(id) ? "ใช่" : "ไม่"})`,
+    );
   });
 }
