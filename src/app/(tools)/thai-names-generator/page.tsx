@@ -90,43 +90,51 @@ export default function ThaiNamesGeneratorPage() {
   };
 
   const romanizeThaiName = (thaiName: string): string => {
-    // Simple romanization mapping (basic implementation)
+    // Comprehensive romanization mapping for Thai characters
     const romanizationMap: { [key: string]: string } = {
-      ก: "K",
-      ข: "Kh",
-      ค: "Kh",
-      ฆ: "Kh",
-      ง: "Ng",
-      จ: "J",
-      ฉ: "Ch",
-      ช: "Ch",
-      ซ: "S",
-      ฌ: "Ch",
-      ญ: "Y",
-      ด: "D",
-      ต: "T",
-      ถ: "Th",
-      ท: "Th",
-      ธ: "Th",
-      น: "N",
-      บ: "B",
-      ป: "P",
-      ผ: "Ph",
-      ฝ: "F",
-      พ: "Ph",
-      ฟ: "F",
-      ภ: "Ph",
-      ม: "M",
-      ย: "Y",
-      ร: "R",
-      ล: "L",
-      ว: "W",
-      ศ: "S",
-      ษ: "S",
-      ส: "S",
-      ห: "H",
+      // Consonants
+      ก: "k",
+      ข: "kh",
+      ฃ: "kh",
+      ค: "kh",
+      ฅ: "kh",
+      ฆ: "kh",
+      ง: "ng",
+      จ: "j",
+      ฉ: "ch",
+      ช: "ch",
+      ซ: "s",
+      ฌ: "ch",
+      ญ: "y",
+      ด: "d",
+      ต: "t",
+      ถ: "th",
+      ท: "th",
+      ธ: "th",
+      น: "n",
+      บ: "b",
+      ป: "p",
+      ผ: "ph",
+      ฝ: "f",
+      พ: "ph",
+      ฟ: "f",
+      ภ: "ph",
+      ม: "m",
+      ย: "y",
+      ร: "r",
+      ฤ: "rue",
+      ล: "l",
+      ฦ: "lue",
+      ว: "w",
+      ศ: "s",
+      ษ: "s",
+      ส: "s",
+      ห: "h",
+      ฬ: "l",
       อ: "",
-      ฮ: "H",
+      ฮ: "h",
+
+      // Vowels
       "ั": "a",
       า: "a",
       "ิ": "i",
@@ -140,20 +148,85 @@ export default function ThaiNamesGeneratorPage() {
       โ: "o",
       ใ: "ai",
       ไ: "ai",
+      ฤ: "rue",
+      ฤๅ: "rue",
+      ฦ: "lue",
+      ฦๅ: "lue",
+
+      // Special combinations
+      เา: "ao",
+      เีย: "ia",
+      เือ: "uea",
+      เาะ: "o",
+      แอ: "ae",
+      โอ: "o",
+      เอา: "ao",
+      "ิว": "iw",
+      าว: "aw",
+      อว: "uaw",
+
+      // Tone marks (remove them)
       "่": "",
       "้": "",
       "๊": "",
       "๋": "",
+
+      // Special marks
       "์": "",
       "ํ": "",
+      "็": "",
+      "ฺ": "",
+      ฯ: "",
+      ๆ: "",
+
+      // Numbers
+      "๐": "0",
+      "๑": "1",
+      "๒": "2",
+      "๓": "3",
+      "๔": "4",
+      "๕": "5",
+      "๖": "6",
+      "๗": "7",
+      "๘": "8",
+      "๙": "9",
+
+      // Punctuation
+      ฯ: "...",
+      ๆ: "",
+      ฯลฯ: "etc",
     };
 
-    return thaiName
+    // Process the string character by character
+    let result = thaiName
       .split("")
-      .map((char) => romanizationMap[char] || char)
+      .map((char) => {
+        // If character has romanization, use it; if it's already Latin, keep it; otherwise remove
+        if (romanizationMap.hasOwnProperty(char)) {
+          return romanizationMap[char];
+        } else if (/[a-zA-Z0-9\s\-']/.test(char)) {
+          // Keep Latin characters, numbers, spaces, hyphens, and apostrophes
+          return char;
+        } else {
+          // Remove unknown Thai characters or symbols
+          return "";
+        }
+      })
       .join("")
-      .replace(/\s+/g, " ")
-      .trim();
+      .replace(/\s+/g, " ") // Clean up multiple spaces
+      .replace(/^\s+|\s+$/g, "") // Trim
+      .replace(/^$/, "Unknown"); // Handle empty results
+
+    // Capitalize each word properly
+    return result
+      .split(" ")
+      .map((word) =>
+        word.length > 0
+          ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+          : "",
+      )
+      .filter((word) => word.length > 0) // Remove empty words
+      .join(" ");
   };
 
   const handleGenerate = () => {
@@ -199,25 +272,30 @@ export default function ThaiNamesGeneratorPage() {
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-6">
-      {/* Header - Mobile Optimized */}
-      <div className="mb-6 text-center sm:mb-8">
-        <h1 className="mb-3 text-2xl font-bold text-gray-900 dark:text-white sm:mb-4 sm:text-3xl">
-          โปรแกรมสุ่มชื่อไทย
-        </h1>
-        <h2 className="mb-3 text-lg text-gray-700 dark:text-gray-300 sm:text-xl">
-          Thai Names Generator
-        </h2>
-        <p className="px-2 text-sm text-gray-600 dark:text-gray-300 sm:text-base">
-          สุ่มชื่อจริง นามสกุล และชื่อเล่น คนไทย สำหรับช่วยคิดชื่อ ใช้เป็น mock
-          data หรือไอเดียตั้งชื่อ
-        </p>
-        <p className="mt-2 px-2 text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
-          ฐานข้อมูลชื่อ 22,000+ รายการ จาก{" "}
+      {/* Header - Enhanced Design */}
+      <div className="mb-8 text-center">
+        <div className="mx-auto mb-6 max-w-4xl">
+          <div className="rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-600 p-8 text-white shadow-xl">
+            <div className="mb-4 text-4xl">🎲</div>
+            <h1 className="mb-2 text-3xl font-bold sm:text-4xl">
+              โปรแกรมสุ่มชื่อไทย
+            </h1>
+            <h2 className="mb-4 text-lg font-medium text-indigo-100 sm:text-xl">
+              Thai Names Generator
+            </h2>
+            <p className="mx-auto max-w-2xl text-sm text-indigo-50 sm:text-base">
+              สุ่มชื่อจริง นามสกุล และชื่อเล่น คนไทย สำหรับช่วยคิดชื่อ ใช้เป็น
+              mock data หรือไอเดียตั้งชื่อ
+            </p>
+          </div>
+        </div>
+        <p className="text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
+          ฐานข้อมูล 22,000+ รายการ จาก{" "}
           <a
             href="https://github.com/korkeatw/thai-names-corpus"
             target="_blank"
             rel="noopener noreferrer"
-            className="underline hover:text-blue-600 dark:hover:text-blue-400"
+            className="font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
           >
             Thai Names Corpus
           </a>{" "}
@@ -444,36 +522,62 @@ export default function ThaiNamesGeneratorPage() {
             </div>
 
             {generatedNames.length > 0 && (
-              <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-3">
                 {generatedNames.map((name, index) => (
                   <div
                     key={index}
-                    className="rounded-lg bg-gray-50 p-3 shadow-sm dark:bg-gray-800 sm:p-4"
+                    className="group rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 p-4 shadow-md transition-all duration-200 hover:from-blue-100 hover:to-indigo-100 hover:shadow-lg dark:from-gray-800 dark:to-gray-700 dark:hover:from-gray-700 dark:hover:to-gray-600"
                   >
-                    {options.languages.thai && (
-                      <div className="space-y-1">
-                        {name.fullName && (
-                          <div className="text-base font-medium text-gray-900 dark:text-gray-100 sm:text-lg">
-                            {name.fullName}
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        {options.languages.thai && (
+                          <div className="space-y-1">
+                            {name.fullName && (
+                              <div className="text-lg font-bold text-gray-900 dark:text-gray-100 sm:text-xl">
+                                {name.fullName}
+                              </div>
+                            )}
+                            {name.nickname && !name.fullName && (
+                              <div className="text-lg font-bold text-gray-900 dark:text-gray-100 sm:text-xl">
+                                {name.nickname}
+                              </div>
+                            )}
                           </div>
                         )}
-                        {name.nickname && !name.fullName && (
-                          <div className="text-base font-medium text-gray-900 dark:text-gray-100 sm:text-lg">
-                            {name.nickname}
+                        {options.languages.english && name.englishName && (
+                          <div className="mt-2 text-sm font-medium text-indigo-600 dark:text-indigo-400">
+                            {name.englishName}
+                          </div>
+                        )}
+                        {name.nickname && name.fullName && (
+                          <div className="mt-2 flex items-center gap-2">
+                            <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                              ชื่อเล่น
+                            </span>
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              {name.nickname}
+                            </span>
                           </div>
                         )}
                       </div>
-                    )}
-                    {options.languages.english && name.englishName && (
-                      <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                        {name.englishName}
+                      <div className="ml-4 flex flex-col items-center gap-1">
+                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                          #{index + 1}
+                        </span>
+                        <button
+                          onClick={() => {
+                            const textToCopy = options.languages.thai
+                              ? name.fullName || name.nickname || ""
+                              : name.englishName || "";
+                            navigator.clipboard.writeText(textToCopy);
+                          }}
+                          className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-white hover:text-gray-600 dark:hover:bg-gray-600 dark:hover:text-gray-200"
+                          title="Copy name"
+                        >
+                          📋
+                        </button>
                       </div>
-                    )}
-                    {name.nickname && name.fullName && (
-                      <div className="mt-1 text-xs text-gray-500 dark:text-gray-500 sm:text-sm">
-                        ชื่อเล่น: {name.nickname}
-                      </div>
-                    )}
+                    </div>
                   </div>
                 ))}
               </div>
