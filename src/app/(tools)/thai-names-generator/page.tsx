@@ -52,6 +52,7 @@ export default function ThaiNamesGeneratorPage() {
   });
 
   const [generatedNames, setGeneratedNames] = useState<GeneratedName[]>([]);
+  const [showSettings, setShowSettings] = useState(false);
 
   const generateRandomName = (): GeneratedName => {
     const selectedGender = determineGender();
@@ -226,211 +227,200 @@ export default function ThaiNamesGeneratorPage() {
 
       {/* Main Content - Mobile First Layout */}
       <div className="grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-2">
-        {/* Options Panel */}
+        {/* Options Panel - Collapsible */}
         <Card>
           <CardHeader className="pb-3">
             <div className="rounded-lg bg-gray-200 px-3 py-2 text-center dark:bg-gray-700 sm:px-4 sm:py-3">
-              <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 sm:text-xl">
-                ตั้งค่า
-              </h2>
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                className="flex w-full items-center justify-center gap-2 text-lg font-semibold text-gray-800 dark:text-gray-200 sm:text-xl"
+              >
+                <span>ตั้งค่า</span>
+                <span
+                  className={`transform transition-transform duration-200 ${showSettings ? "rotate-180" : ""}`}
+                >
+                  ▼
+                </span>
+              </button>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4 sm:space-y-6">
-            {/* Gender Selection - Mobile Optimized */}
-            <div>
-              <Label className="mb-2 block text-sm font-medium sm:mb-3 sm:text-base">
-                เพศ
-              </Label>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-1 sm:space-y-2">
-                <div className="flex items-center space-x-3 rounded-md border border-gray-200 p-3 dark:border-gray-700 sm:border-0 sm:p-0">
-                  <Checkbox
-                    id="male"
-                    checked={options.gender.male}
-                    onCheckedChange={(checked) =>
-                      updateGender("male", !!checked)
-                    }
-                    className="h-5 w-5"
-                  />
-                  <Label
-                    htmlFor="male"
-                    className="cursor-pointer text-sm font-medium sm:font-normal"
-                  >
-                    หญิง
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-3 rounded-md border border-gray-200 p-3 dark:border-gray-700 sm:border-0 sm:p-0">
-                  <Checkbox
-                    id="female"
-                    checked={options.gender.female}
-                    onCheckedChange={(checked) =>
-                      updateGender("female", !!checked)
-                    }
-                    className="h-5 w-5"
-                  />
-                  <Label
-                    htmlFor="female"
-                    className="cursor-pointer text-sm font-medium sm:font-normal"
-                  >
-                    ชาย
-                  </Label>
+          {showSettings && (
+            <CardContent className="animate-in slide-in-from-top-2 space-y-4 duration-200">
+              {/* Gender Selection - Compact */}
+              <div>
+                <Label className="mb-2 block text-sm font-medium">เพศ</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex items-center space-x-2 rounded border border-gray-200 p-2 dark:border-gray-700">
+                    <Checkbox
+                      id="male"
+                      checked={options.gender.male}
+                      onCheckedChange={(checked) =>
+                        updateGender("male", !!checked)
+                      }
+                      className="h-4 w-4"
+                    />
+                    <Label htmlFor="male" className="cursor-pointer text-sm">
+                      หญิง
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2 rounded border border-gray-200 p-2 dark:border-gray-700">
+                    <Checkbox
+                      id="female"
+                      checked={options.gender.female}
+                      onCheckedChange={(checked) =>
+                        updateGender("female", !!checked)
+                      }
+                      className="h-4 w-4"
+                    />
+                    <Label htmlFor="female" className="cursor-pointer text-sm">
+                      ชาย
+                    </Label>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Type Selection - Mobile Optimized */}
-            <div>
-              <Label className="mb-2 block text-sm font-medium sm:mb-3 sm:text-base">
-                ประเภท
-              </Label>
-              <div className="grid grid-cols-1 gap-2 sm:space-y-2">
-                <div className="flex items-center space-x-3 rounded-md border border-gray-200 p-3 dark:border-gray-700 sm:border-0 sm:p-0">
-                  <Checkbox
-                    id="firstName"
-                    checked={options.types.firstName}
-                    onCheckedChange={(checked) =>
-                      updateType("firstName", !!checked)
-                    }
-                    className="h-5 w-5"
-                  />
-                  <Label
-                    htmlFor="firstName"
-                    className="cursor-pointer text-sm font-medium sm:font-normal"
-                  >
-                    ชื่อจริง
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-3 rounded-md border border-gray-200 p-3 dark:border-gray-700 sm:border-0 sm:p-0">
-                  <Checkbox
-                    id="surname"
-                    checked={options.types.surname}
-                    onCheckedChange={(checked) =>
-                      updateType("surname", !!checked)
-                    }
-                    className="h-5 w-5"
-                  />
-                  <Label
-                    htmlFor="surname"
-                    className="cursor-pointer text-sm font-medium sm:font-normal"
-                  >
-                    นามสกุล
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-3 rounded-md border border-gray-200 p-3 dark:border-gray-700 sm:border-0 sm:p-0">
-                  <Checkbox
-                    id="nickname"
-                    checked={options.types.nickname}
-                    onCheckedChange={(checked) =>
-                      updateType("nickname", !!checked)
-                    }
-                    className="h-5 w-5"
-                  />
-                  <Label
-                    htmlFor="nickname"
-                    className="cursor-pointer text-sm font-medium sm:font-normal"
-                  >
-                    ชื่อเล่น
-                  </Label>
+              {/* Type Selection - Mobile Optimized */}
+              <div>
+                <Label className="mb-2 block text-sm font-medium">ประเภท</Label>
+                <div className="grid grid-cols-1 gap-1.5">
+                  <div className="flex items-center space-x-2 rounded border border-gray-200 p-2 dark:border-gray-700">
+                    <Checkbox
+                      id="firstName"
+                      checked={options.types.firstName}
+                      onCheckedChange={(checked) =>
+                        updateType("firstName", !!checked)
+                      }
+                      className="h-4 w-4"
+                    />
+                    <Label
+                      htmlFor="firstName"
+                      className="cursor-pointer text-sm"
+                    >
+                      ชื่อจริง
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2 rounded border border-gray-200 p-2 dark:border-gray-700">
+                    <Checkbox
+                      id="surname"
+                      checked={options.types.surname}
+                      onCheckedChange={(checked) =>
+                        updateType("surname", !!checked)
+                      }
+                      className="h-4 w-4"
+                    />
+                    <Label htmlFor="surname" className="cursor-pointer text-sm">
+                      นามสกุล
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2 rounded border border-gray-200 p-2 dark:border-gray-700">
+                    <Checkbox
+                      id="nickname"
+                      checked={options.types.nickname}
+                      onCheckedChange={(checked) =>
+                        updateType("nickname", !!checked)
+                      }
+                      className="h-4 w-4"
+                    />
+                    <Label
+                      htmlFor="nickname"
+                      className="cursor-pointer text-sm"
+                    >
+                      ชื่อเล่น
+                    </Label>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Language Selection - Mobile Optimized */}
-            <div>
-              <Label className="mb-2 block text-sm font-medium sm:mb-3 sm:text-base">
-                ภาษา
-              </Label>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-1 sm:space-y-2">
-                <div className="flex items-center space-x-3 rounded-md border border-gray-200 p-3 dark:border-gray-700 sm:border-0 sm:p-0">
-                  <Checkbox
-                    id="thai"
-                    checked={options.languages.thai}
-                    onCheckedChange={(checked) =>
-                      updateLanguage("thai", !!checked)
-                    }
-                    className="h-5 w-5"
-                  />
-                  <Label
-                    htmlFor="thai"
-                    className="cursor-pointer text-sm font-medium sm:font-normal"
-                  >
-                    ไทย
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-3 rounded-md border border-gray-200 p-3 dark:border-gray-700 sm:border-0 sm:p-0">
-                  <Checkbox
-                    id="english"
-                    checked={options.languages.english}
-                    onCheckedChange={(checked) =>
-                      updateLanguage("english", !!checked)
-                    }
-                    className="h-5 w-5"
-                  />
-                  <Label
-                    htmlFor="english"
-                    className="cursor-pointer text-sm font-medium sm:font-normal"
-                  >
-                    English
-                  </Label>
+              {/* Language Selection - Compact */}
+              <div>
+                <Label className="mb-2 block text-sm font-medium">ภาษา</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex items-center space-x-2 rounded border border-gray-200 p-2 dark:border-gray-700">
+                    <Checkbox
+                      id="thai"
+                      checked={options.languages.thai}
+                      onCheckedChange={(checked) =>
+                        updateLanguage("thai", !!checked)
+                      }
+                      className="h-4 w-4"
+                    />
+                    <Label htmlFor="thai" className="cursor-pointer text-sm">
+                      ไทย
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2 rounded border border-gray-200 p-2 dark:border-gray-700">
+                    <Checkbox
+                      id="english"
+                      checked={options.languages.english}
+                      onCheckedChange={(checked) =>
+                        updateLanguage("english", !!checked)
+                      }
+                      className="h-4 w-4"
+                    />
+                    <Label htmlFor="english" className="cursor-pointer text-sm">
+                      English
+                    </Label>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Count Selection - Mobile Optimized */}
-            <div>
-              <Label
-                htmlFor="count"
-                className="mb-2 block text-sm font-medium sm:mb-3 sm:text-base"
-              >
-                จำนวนชื่อ
-              </Label>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    1
-                  </span>
-                  <div className="mx-3 flex flex-1 items-center justify-center">
-                    <span className="rounded-full bg-blue-100 px-4 py-2 text-lg font-bold text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                      {options.count}
+              {/* Count Selection - Mobile Optimized */}
+              <div>
+                <Label
+                  htmlFor="count"
+                  className="mb-2 block text-sm font-medium sm:mb-3 sm:text-base"
+                >
+                  จำนวนชื่อ
+                </Label>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      1
+                    </span>
+                    <div className="mx-3 flex flex-1 items-center justify-center">
+                      <span className="rounded-full bg-blue-100 px-4 py-2 text-lg font-bold text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                        {options.count}
+                      </span>
+                    </div>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      20
                     </span>
                   </div>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    20
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="20"
-                  value={options.count}
-                  onChange={(e) =>
-                    setOptions((prev) => ({
-                      ...prev,
-                      count: parseInt(e.target.value),
-                    }))
-                  }
-                  className="h-3 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700
-                           [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:cursor-pointer
-                           [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500"
-                />
-                <div className="flex justify-center sm:hidden">
-                  <Input
-                    id="count"
-                    type="number"
+                  <input
+                    type="range"
                     min="1"
                     max="20"
                     value={options.count}
                     onChange={(e) =>
                       setOptions((prev) => ({
                         ...prev,
-                        count: parseInt(e.target.value) || 1,
+                        count: parseInt(e.target.value),
                       }))
                     }
-                    className="w-20 text-center"
+                    className="h-3 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700
+                           [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:cursor-pointer
+                           [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500"
                   />
+                  <div className="flex justify-center sm:hidden">
+                    <Input
+                      id="count"
+                      type="number"
+                      min="1"
+                      max="20"
+                      value={options.count}
+                      onChange={(e) =>
+                        setOptions((prev) => ({
+                          ...prev,
+                          count: parseInt(e.target.value) || 1,
+                        }))
+                      }
+                      className="w-20 text-center"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          </CardContent>
+            </CardContent>
+          )}
         </Card>
 
         {/* Results Panel - Mobile Optimized */}
