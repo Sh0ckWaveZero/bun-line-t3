@@ -197,16 +197,20 @@ export default function ThaiNamesGeneratorPage() {
   };
 
   return (
-    <div className="container mx-auto max-w-4xl p-6">
-      <div className="mb-8 text-center">
-        <h1 className="mb-4 text-3xl font-bold text-gray-900 dark:text-white">
-          โปรแกรมสุ่มชื่อไทย (Thai Names Generator)
+    <div className="container mx-auto max-w-6xl px-4 py-6">
+      {/* Header - Mobile Optimized */}
+      <div className="mb-6 text-center sm:mb-8">
+        <h1 className="mb-3 text-2xl font-bold text-gray-900 dark:text-white sm:mb-4 sm:text-3xl">
+          โปรแกรมสุ่มชื่อไทย
         </h1>
-        <p className="text-gray-600 dark:text-gray-300">
+        <h2 className="mb-3 text-lg text-gray-700 dark:text-gray-300 sm:text-xl">
+          Thai Names Generator
+        </h2>
+        <p className="px-2 text-sm text-gray-600 dark:text-gray-300 sm:text-base">
           สุ่มชื่อจริง นามสกุล และชื่อเล่น คนไทย สำหรับช่วยคิดชื่อ ใช้เป็น mock
           data หรือไอเดียตั้งชื่อ
         </p>
-        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+        <p className="mt-2 px-2 text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
           ฐานข้อมูลชื่อ 22,000+ รายการ จาก{" "}
           <a
             href="https://github.com/korkeatw/thai-names-corpus"
@@ -220,145 +224,179 @@ export default function ThaiNamesGeneratorPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      {/* Main Content - Mobile First Layout */}
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-2">
         {/* Options Panel */}
         <Card>
-          <CardHeader>
-            <div className="rounded-lg bg-gray-200 px-4 py-3 text-center dark:bg-gray-700">
-              <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+          <CardHeader className="pb-3">
+            <div className="rounded-lg bg-gray-200 px-3 py-2 text-center dark:bg-gray-700 sm:px-4 sm:py-3">
+              <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 sm:text-xl">
                 ตั้งค่า
               </h2>
             </div>
           </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Gender Selection */}
+          <CardContent className="space-y-4 sm:space-y-6">
+            {/* Gender Selection - Mobile Optimized */}
             <div>
-              <Label className="mb-3 block text-base font-medium">เพศ</Label>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
+              <Label className="mb-2 block text-sm font-medium sm:mb-3 sm:text-base">
+                เพศ
+              </Label>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-1 sm:space-y-2">
+                <div className="flex items-center space-x-3 rounded-md border border-gray-200 p-3 dark:border-gray-700 sm:border-0 sm:p-0">
                   <Checkbox
                     id="male"
                     checked={options.gender.male}
                     onCheckedChange={(checked) =>
                       updateGender("male", !!checked)
                     }
+                    className="h-5 w-5"
                   />
-                  <Label htmlFor="male" className="text-sm">
+                  <Label
+                    htmlFor="male"
+                    className="cursor-pointer text-sm font-medium sm:font-normal"
+                  >
                     หญิง
                   </Label>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-3 rounded-md border border-gray-200 p-3 dark:border-gray-700 sm:border-0 sm:p-0">
                   <Checkbox
                     id="female"
                     checked={options.gender.female}
                     onCheckedChange={(checked) =>
                       updateGender("female", !!checked)
                     }
+                    className="h-5 w-5"
                   />
-                  <Label htmlFor="female" className="text-sm">
+                  <Label
+                    htmlFor="female"
+                    className="cursor-pointer text-sm font-medium sm:font-normal"
+                  >
                     ชาย
                   </Label>
                 </div>
               </div>
             </div>
 
-            {/* Type Selection */}
+            {/* Type Selection - Mobile Optimized */}
             <div>
-              <Label className="mb-3 block text-base font-medium">ประเภท</Label>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
+              <Label className="mb-2 block text-sm font-medium sm:mb-3 sm:text-base">
+                ประเภท
+              </Label>
+              <div className="grid grid-cols-1 gap-2 sm:space-y-2">
+                <div className="flex items-center space-x-3 rounded-md border border-gray-200 p-3 dark:border-gray-700 sm:border-0 sm:p-0">
                   <Checkbox
                     id="firstName"
                     checked={options.types.firstName}
                     onCheckedChange={(checked) =>
                       updateType("firstName", !!checked)
                     }
+                    className="h-5 w-5"
                   />
-                  <Label htmlFor="firstName" className="text-sm">
+                  <Label
+                    htmlFor="firstName"
+                    className="cursor-pointer text-sm font-medium sm:font-normal"
+                  >
                     ชื่อจริง
                   </Label>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-3 rounded-md border border-gray-200 p-3 dark:border-gray-700 sm:border-0 sm:p-0">
                   <Checkbox
                     id="surname"
                     checked={options.types.surname}
                     onCheckedChange={(checked) =>
                       updateType("surname", !!checked)
                     }
+                    className="h-5 w-5"
                   />
-                  <Label htmlFor="surname" className="text-sm">
+                  <Label
+                    htmlFor="surname"
+                    className="cursor-pointer text-sm font-medium sm:font-normal"
+                  >
                     นามสกุล
                   </Label>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-3 rounded-md border border-gray-200 p-3 dark:border-gray-700 sm:border-0 sm:p-0">
                   <Checkbox
                     id="nickname"
                     checked={options.types.nickname}
                     onCheckedChange={(checked) =>
                       updateType("nickname", !!checked)
                     }
+                    className="h-5 w-5"
                   />
-                  <Label htmlFor="nickname" className="text-sm">
+                  <Label
+                    htmlFor="nickname"
+                    className="cursor-pointer text-sm font-medium sm:font-normal"
+                  >
                     ชื่อเล่น
                   </Label>
                 </div>
               </div>
             </div>
 
-            {/* Language Selection */}
+            {/* Language Selection - Mobile Optimized */}
             <div>
-              <Label className="mb-3 block text-base font-medium">ภาษา</Label>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
+              <Label className="mb-2 block text-sm font-medium sm:mb-3 sm:text-base">
+                ภาษา
+              </Label>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-1 sm:space-y-2">
+                <div className="flex items-center space-x-3 rounded-md border border-gray-200 p-3 dark:border-gray-700 sm:border-0 sm:p-0">
                   <Checkbox
                     id="thai"
                     checked={options.languages.thai}
                     onCheckedChange={(checked) =>
                       updateLanguage("thai", !!checked)
                     }
+                    className="h-5 w-5"
                   />
-                  <Label htmlFor="thai" className="text-sm">
+                  <Label
+                    htmlFor="thai"
+                    className="cursor-pointer text-sm font-medium sm:font-normal"
+                  >
                     ไทย
                   </Label>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-3 rounded-md border border-gray-200 p-3 dark:border-gray-700 sm:border-0 sm:p-0">
                   <Checkbox
                     id="english"
                     checked={options.languages.english}
                     onCheckedChange={(checked) =>
                       updateLanguage("english", !!checked)
                     }
+                    className="h-5 w-5"
                   />
-                  <Label htmlFor="english" className="text-sm">
+                  <Label
+                    htmlFor="english"
+                    className="cursor-pointer text-sm font-medium sm:font-normal"
+                  >
                     English
                   </Label>
                 </div>
               </div>
             </div>
 
-            {/* Count Selection */}
+            {/* Count Selection - Mobile Optimized */}
             <div>
               <Label
                 htmlFor="count"
-                className="mb-3 block text-base font-medium"
+                className="mb-2 block text-sm font-medium sm:mb-3 sm:text-base"
               >
                 จำนวนชื่อ
               </Label>
-              <div className="flex items-center space-x-3">
-                <Input
-                  id="count"
-                  type="number"
-                  min="1"
-                  max="20"
-                  value={options.count}
-                  onChange={(e) =>
-                    setOptions((prev) => ({
-                      ...prev,
-                      count: parseInt(e.target.value) || 1,
-                    }))
-                  }
-                  className="w-20"
-                />
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    1
+                  </span>
+                  <div className="mx-3 flex flex-1 items-center justify-center">
+                    <span className="rounded-full bg-blue-100 px-4 py-2 text-lg font-bold text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                      {options.count}
+                    </span>
+                  </div>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    20
+                  </span>
+                </div>
                 <input
                   type="range"
                   min="1"
@@ -370,49 +408,67 @@ export default function ThaiNamesGeneratorPage() {
                       count: parseInt(e.target.value),
                     }))
                   }
-                  className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700"
+                  className="h-3 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700
+                           [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:cursor-pointer
+                           [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500"
                 />
+                <div className="flex justify-center sm:hidden">
+                  <Input
+                    id="count"
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={options.count}
+                    onChange={(e) =>
+                      setOptions((prev) => ({
+                        ...prev,
+                        count: parseInt(e.target.value) || 1,
+                      }))
+                    }
+                    className="w-20 text-center"
+                  />
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Results Panel */}
+        {/* Results Panel - Mobile Optimized */}
         <Card>
-          <CardHeader>
-            <div className="rounded-lg bg-gray-200 px-4 py-3 text-center dark:bg-gray-700">
-              <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+          <CardHeader className="pb-3">
+            <div className="rounded-lg bg-gray-200 px-3 py-2 text-center dark:bg-gray-700 sm:px-4 sm:py-3">
+              <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 sm:text-xl">
                 ชื่อ
               </h2>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="mb-6 text-center">
+            <div className="mb-4 text-center sm:mb-6">
               <Button
                 onClick={handleGenerate}
                 size="lg"
-                className="rounded-lg bg-green-500 px-8 py-3 text-lg font-medium text-white hover:bg-green-600"
+                className="w-full rounded-lg bg-green-500 px-6 py-4 text-base font-medium text-white hover:bg-green-600 sm:w-auto sm:px-8 sm:py-3 sm:text-lg"
               >
                 สุ่มชื่อใหม่
               </Button>
             </div>
 
             {generatedNames.length > 0 && (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {generatedNames.map((name, index) => (
                   <div
                     key={index}
-                    className="rounded-lg bg-gray-50 p-4 dark:bg-gray-800"
+                    className="rounded-lg bg-gray-50 p-3 shadow-sm dark:bg-gray-800 sm:p-4"
                   >
                     {options.languages.thai && (
                       <div className="space-y-1">
                         {name.fullName && (
-                          <div className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                          <div className="text-base font-medium text-gray-900 dark:text-gray-100 sm:text-lg">
                             {name.fullName}
                           </div>
                         )}
                         {name.nickname && !name.fullName && (
-                          <div className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                          <div className="text-base font-medium text-gray-900 dark:text-gray-100 sm:text-lg">
                             {name.nickname}
                           </div>
                         )}
@@ -424,7 +480,7 @@ export default function ThaiNamesGeneratorPage() {
                       </div>
                     )}
                     {name.nickname && name.fullName && (
-                      <div className="mt-1 text-sm text-gray-500 dark:text-gray-500">
+                      <div className="mt-1 text-xs text-gray-500 dark:text-gray-500 sm:text-sm">
                         ชื่อเล่น: {name.nickname}
                       </div>
                     )}
@@ -434,8 +490,14 @@ export default function ThaiNamesGeneratorPage() {
             )}
 
             {generatedNames.length === 0 && (
-              <div className="py-8 text-center text-gray-500 dark:text-gray-400">
-                กดปุ่ม &quot;สุ่มชื่อใหม่&quot; เพื่อเริ่มสร้างชื่อ
+              <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-gray-500 dark:bg-gray-800 dark:text-gray-400 sm:py-12">
+                <div className="mb-3 text-4xl sm:text-6xl">🎲</div>
+                <p className="text-sm sm:text-base">
+                  กดปุ่ม &quot;สุ่มชื่อใหม่&quot; เพื่อเริ่มสร้างชื่อ
+                </p>
+                <p className="mt-2 text-xs text-gray-400 dark:text-gray-500 sm:text-sm">
+                  ฐานข้อมูล 22,000+ ชื่อรอคุณอยู่!
+                </p>
               </div>
             )}
           </CardContent>
