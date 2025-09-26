@@ -122,9 +122,7 @@ export default function ThaiNamesGeneratorPage() {
       ม: "m",
       ย: "y",
       ร: "r",
-      ฤ: "rue",
       ล: "l",
-      ฦ: "lue",
       ว: "w",
       ศ: "s",
       ษ: "s",
@@ -190,10 +188,6 @@ export default function ThaiNamesGeneratorPage() {
       "๗": "7",
       "๘": "8",
       "๙": "9",
-
-      // Punctuation
-      ฯ: "...",
-      ๆ: "",
       ฯลฯ: "etc",
     };
 
