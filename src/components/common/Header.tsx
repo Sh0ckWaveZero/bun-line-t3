@@ -73,6 +73,16 @@ export default function Header() {
                 ลางาน
               </Link>
               <Link
+                href="/thai-names-generator"
+                className={`drop-shadow-sm transition-colors hover:text-foreground ${
+                  pathname === "/thai-names-generator"
+                    ? "font-medium text-foreground"
+                    : "text-muted-foreground"
+                }`}
+              >
+                สุ่มชื่อไทย
+              </Link>
+              <Link
                 href="/monitoring"
                 className={`drop-shadow-sm transition-colors hover:text-foreground ${
                   pathname === "/monitoring"
@@ -156,6 +166,17 @@ export default function Header() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 ลางาน
+              </Link>
+              <Link
+                href="/thai-names-generator"
+                className={`drop-shadow-sm transition-colors hover:text-foreground ${
+                  pathname === "/thai-names-generator"
+                    ? "font-medium text-foreground"
+                    : "text-muted-foreground"
+                }`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                สุ่มชื่อไทย
               </Link>
               <Link
                 href="/monitoring"

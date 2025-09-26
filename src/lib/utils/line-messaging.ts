@@ -161,9 +161,11 @@ function validateBaseUrl(baseUrl: string): string {
  * @param imageBuffer Original image buffer
  * @returns Promise<ProcessedImage> Processed image buffers
  */
-async function processImageBuffers(imageBuffer: Buffer): Promise<ProcessedImage> {
+async function processImageBuffers(
+  imageBuffer: Buffer,
+): Promise<ProcessedImage> {
   let previewBuffer = imageBuffer;
-  
+
   try {
     // Use a safer dynamic import pattern
     const sharp = (await import("sharp")).default;
@@ -199,10 +201,10 @@ function generateFileInfo(filename?: string): FileInfo {
   const sanitizedBaseName = sanitizeFilename(filename);
   const uniqueId = uuidv4();
   const timestamp = Date.now();
-  
+
   const originalFilename = `${sanitizedBaseName}-${timestamp}-${uniqueId}.png`;
   const previewFilename = `${sanitizedBaseName}-${timestamp}-${uniqueId}_preview.png`;
-  
+
   const publicDir = path.join(process.cwd(), "public", "temp-charts");
   const originalPath = path.join(publicDir, originalFilename);
   const previewPath = path.join(publicDir, previewFilename);
@@ -226,7 +228,7 @@ async function saveImageFiles(
   fileInfo: FileInfo,
 ): Promise<void> {
   const publicDir = path.dirname(fileInfo.originalPath);
-  
+
   // Ensure directory exists
   await fs.mkdir(publicDir, { recursive: true });
 
@@ -277,8 +279,16 @@ function logUploadDetails(
   console.log("📂 Preview image saved to:", fileInfo.previewPath);
   console.log("🌐 Original URL:", urls.originalUrl);
   console.log("🌐 Preview URL:", urls.previewUrl);
-  console.log("📏 Original size:", processedImages.originalBuffer.length, "bytes");
-  console.log("📏 Preview size:", processedImages.previewBuffer.length, "bytes");
+  console.log(
+    "📏 Original size:",
+    processedImages.originalBuffer.length,
+    "bytes",
+  );
+  console.log(
+    "📏 Preview size:",
+    processedImages.previewBuffer.length,
+    "bytes",
+  );
   console.log(
     "🔐 URL protocol:",
     urls.originalUrl.startsWith("https")
@@ -322,7 +332,9 @@ export async function uploadImageToTemporaryHost(
     return urls;
   } catch (error) {
     console.error("Error in uploadImageToTemporaryHost:", error);
-    throw new Error(`Failed to upload image: ${error instanceof Error ? error.message : "Unknown error"}`);
+    throw new Error(
+      `Failed to upload image: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 }
 

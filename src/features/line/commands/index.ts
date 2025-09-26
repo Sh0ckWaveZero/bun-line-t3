@@ -13,10 +13,9 @@ import { handleLeaveCommandWrapper } from "./handleLeaveCommandWrapper";
 import { handleDefaultCommand } from "./handleDefaultCommand";
 import { handleChartCommand, parseChartCommand } from "./handleChartCommand";
 import { handleSettingsCommand } from "./handleSettingsCommand";
-import { handleIdGenerator } from './handleIdGenerator';
+import { handleIdGenerator } from "./handleIdGenerator";
 
 const { sendMessage } = await import("@/lib/utils/line-utils");
-
 
 export const handleCommand = async (
   command: string,
@@ -119,20 +118,48 @@ export const handleCommand = async (
   // Thai ID Generator
   if (
     [
-       // ภาษาไทย (เต็ม)
-       "สุ่มเลขบัตร", "สุ่มบัตรประชาชน", "เลขบัตรประชาชน", "บัตรประชาชน",
-       "สุ่มเลขบัตรประชาชน", "ตรวจสอบเลขบัตรประชาชน",
-       "ตรวจสอบบัตร", "เช็คบัตร", "เช็คเลขบัตรประชาชน",
+      // ภาษาไทย (เต็ม)
+      "สุ่มเลขบัตร",
+      "สุ่มบัตรประชาชน",
+      "เลขบัตรประชาชน",
+      "บัตรประชาชน",
+      "สุ่มเลขบัตรประชาชน",
+      "ตรวจสอบเลขบัตรประชาชน",
+      "ตรวจสอบบัตร",
+      "เช็คบัตร",
+      "เช็คเลขบัตรประชาชน",
 
-       // ภาษาอังกฤษ (เต็ม)
-       "random id", "generate id", "random thai id", "generate thai id",
-       "create id card", "create thai id", "random citizen id", "generate citizen id",
-       "validate id", "check id", "verify id", "validate thai id", "check thai id",
-       "verify thai id", "validate citizen id", "check citizen id", "verify citizen id",
+      // ภาษาอังกฤษ (เต็ม)
+      "random id",
+      "generate id",
+      "random thai id",
+      "generate thai id",
+      "create id card",
+      "create thai id",
+      "random citizen id",
+      "generate citizen id",
+      "validate id",
+      "check id",
+      "verify id",
+      "validate thai id",
+      "check thai id",
+      "verify thai id",
+      "validate citizen id",
+      "check citizen id",
+      "verify citizen id",
 
-       // ภาษาอังกฤษ (ย่อ)
-       "id card", "thai id", "gen id", "rand id", "new id", "create id", "make id",
-       "valid id", "checkid", "verifyid", "validateid",
+      // ภาษาอังกฤษ (ย่อ)
+      "id card",
+      "thai id",
+      "gen id",
+      "rand id",
+      "new id",
+      "create id",
+      "make id",
+      "valid id",
+      "checkid",
+      "verifyid",
+      "validateid",
     ].includes(command)
   ) {
     await handleIdGenerator(req);

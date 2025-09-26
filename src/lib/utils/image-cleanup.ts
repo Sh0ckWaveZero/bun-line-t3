@@ -17,11 +17,13 @@ export async function cleanupTemporaryImages(
   try {
     // Ensure directory exists
     await fs.mkdir(tempDir, { recursive: true });
-    
+
     const files = await fs.readdir(tempDir);
     totalFiles = files.length;
 
-    console.log(`🧹 Starting image cleanup - Found ${totalFiles} files in temp-charts`);
+    console.log(
+      `🧹 Starting image cleanup - Found ${totalFiles} files in temp-charts`,
+    );
     console.log(`🕐 Cleaning files older than ${maxAgeMinutes} minutes`);
 
     const now = Date.now();
@@ -46,9 +48,13 @@ export async function cleanupTemporaryImages(
         if (fileAge > maxAge) {
           await fs.unlink(filePath);
           cleaned++;
-          console.log(`✅ Cleaned up temporary chart: ${file} (${fileAgeMinutes} minutes old)`);
+          console.log(
+            `✅ Cleaned up temporary chart: ${file} (${fileAgeMinutes} minutes old)`,
+          );
         } else {
-          console.log(`⏳ Keeping file: ${file} (only ${fileAgeMinutes} minutes old)`);
+          console.log(
+            `⏳ Keeping file: ${file} (only ${fileAgeMinutes} minutes old)`,
+          );
         }
       } catch (fileError) {
         errors++;
@@ -56,7 +62,9 @@ export async function cleanupTemporaryImages(
       }
     }
 
-    console.log(`🧹 Cleanup completed - Cleaned: ${cleaned}, Errors: ${errors}, Total: ${totalFiles}`);
+    console.log(
+      `🧹 Cleanup completed - Cleaned: ${cleaned}, Errors: ${errors}, Total: ${totalFiles}`,
+    );
     return { cleaned, errors, totalFiles };
   } catch (error) {
     console.error("❌ Error accessing temp-charts directory:", error);

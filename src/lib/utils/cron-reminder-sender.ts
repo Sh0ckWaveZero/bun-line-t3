@@ -40,18 +40,21 @@ export async function sendCheckInReminders(
 
   // Get check-in message (AI or fallback)
   const currentHour = new Date().getHours();
-  const timeOfDay = currentHour < 12 ? 'morning' : currentHour < 17 ? 'afternoon' : 'evening';
-  const dayOfWeek = new Intl.DateTimeFormat('th-TH', { weekday: 'long' }).format(new Date());
-  
+  const timeOfDay =
+    currentHour < 12 ? "morning" : currentHour < 17 ? "afternoon" : "evening";
+  const dayOfWeek = new Intl.DateTimeFormat("th-TH", {
+    weekday: "long",
+  }).format(new Date());
+
   const reminderMessage = await getCheckInMessage({
     useAI: env.OPENAI_API_KEY ? true : false, // Use AI if API key is available
     context: {
       timeOfDay,
       dayOfWeek,
-      weather: 'สดใส' // Default weather, could be enhanced with weather API
-    }
+      weather: "สดใส", // Default weather, could be enhanced with weather API
+    },
   });
-  
+
   const messages = createReminderMessages(reminderMessage);
 
   // Send push messages to all users

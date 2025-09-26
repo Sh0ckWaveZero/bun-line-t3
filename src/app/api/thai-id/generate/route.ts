@@ -1,15 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { generateFormattedThaiID, generateMultipleThaiIDs } from '@/lib/utils/thai-id-generator';
+import { NextRequest, NextResponse } from "next/server";
+import {
+  generateFormattedThaiID,
+  generateMultipleThaiIDs,
+} from "@/lib/utils/thai-id-generator";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const count = parseInt(searchParams.get('count') || '1');
+  const count = parseInt(searchParams.get("count") || "1");
 
   // Validate count
   if (count < 1 || count > 20) {
     return NextResponse.json(
-      { error: 'Count must be between 1 and 20' },
-      { status: 400 }
+      { error: "Count must be between 1 and 20" },
+      { status: 400 },
     );
   }
 
@@ -22,10 +25,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ ids });
     }
   } catch (error) {
-    console.error('Error generating Thai ID:', error);
+    console.error("Error generating Thai ID:", error);
     return NextResponse.json(
-      { error: 'Failed to generate Thai ID' },
-      { status: 500 }
+      { error: "Failed to generate Thai ID" },
+      { status: 500 },
     );
   }
 }

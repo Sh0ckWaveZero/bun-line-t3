@@ -10,7 +10,11 @@ export const sendRequest = async (
 ) => {
   try {
     console.log("🔗 Sending request to:", url);
-    console.log("📦 Request body size:", JSON.stringify(body).length, "characters");
+    console.log(
+      "📦 Request body size:",
+      JSON.stringify(body).length,
+      "characters",
+    );
     const response = await fetch(url, {
       method,
       headers,
@@ -20,7 +24,9 @@ export const sendRequest = async (
     if (!response.ok) {
       const errorText = await response.text();
       console.error("❌ Response error:", errorText);
-      throw new Error(`Failed to send request: ${response.status} ${response.statusText} - ${errorText}`);
+      throw new Error(
+        `Failed to send request: ${response.status} ${response.statusText} - ${errorText}`,
+      );
     }
     return response;
   } catch (err: any) {
@@ -71,7 +77,9 @@ export const sendMessage = async (req: any, payload: any) => {
     const userId = req.body?.events?.[0]?.source?.userId;
 
     if (!replyToken) {
-      console.warn("⚠️ No valid replyToken found, falling back to push message");
+      console.warn(
+        "⚠️ No valid replyToken found, falling back to push message",
+      );
       return sendPushMessage(req, payload);
     }
 
@@ -80,7 +88,10 @@ export const sendMessage = async (req: any, payload: any) => {
       try {
         await sendLoadingAnimation(req);
       } catch (loadingErr: any) {
-        console.warn("⚠️ Loading animation failed, continuing with message:", loadingErr.message);
+        console.warn(
+          "⚠️ Loading animation failed, continuing with message:",
+          loadingErr.message,
+        );
         // Continue without loading animation
       }
     }

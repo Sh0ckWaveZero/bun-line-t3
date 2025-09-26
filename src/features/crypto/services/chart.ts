@@ -20,7 +20,10 @@ export interface ComparisonChartData {
 }
 
 class ChartService {
-  async getCryptoData(symbol: string, exchange: string): Promise<CryptoInfo | null> {
+  async getCryptoData(
+    symbol: string,
+    exchange: string,
+  ): Promise<CryptoInfo | null> {
     switch (exchange.toLowerCase()) {
       case "bitkub":
       case "bk":
@@ -48,21 +51,33 @@ class ChartService {
     }
   }
 
-  async generateSingleChart(symbol: string, exchange: string): Promise<ChartData> {
+  async generateSingleChart(
+    symbol: string,
+    exchange: string,
+  ): Promise<ChartData> {
     const cryptoData = await this.getCryptoData(symbol, exchange);
-    
+
     if (!cryptoData) {
       throw new Error(`Failed to fetch ${symbol} data from ${exchange}`);
     }
 
     // Get historical data based on exchange
     let historicalData;
-    if (exchange.toLowerCase() === "binance" || exchange.toLowerCase() === "bn") {
-      historicalData = await binanceHistoryService.getPopularCryptoHistory(symbol, 24);
+    if (
+      exchange.toLowerCase() === "binance" ||
+      exchange.toLowerCase() === "bn"
+    ) {
+      historicalData = await binanceHistoryService.getPopularCryptoHistory(
+        symbol,
+        24,
+      );
     } else {
-      historicalData = await bitkubHistoryService.getPopularCryptoHistory(symbol, 24);
+      historicalData = await bitkubHistoryService.getPopularCryptoHistory(
+        symbol,
+        24,
+      );
     }
-    
+
     if (historicalData.length === 0) {
       throw new Error(`No historical data available for ${symbol}`);
     }
@@ -95,7 +110,7 @@ class ChartService {
       exchangeService.getBinance(symbol, "USDT"),
       exchangeService.getSatangCorp(symbol),
     ];
-    
+
     const cryptoResults = await Promise.allSettled(cryptoPromises);
 
     const validCryptos = cryptoResults
@@ -128,15 +143,27 @@ class ChartService {
     };
   }
 
-  async checkHistoricalDataAvailability(symbol: string, exchange: string = "bitkub"): Promise<boolean> {
+  async checkHistoricalDataAvailability(
+    symbol: string,
+    exchange: string = "bitkub",
+  ): Promise<boolean> {
     let historicalData;
-    
-    if (exchange.toLowerCase() === "binance" || exchange.toLowerCase() === "bn") {
-      historicalData = await binanceHistoryService.getPopularCryptoHistory(symbol, 24);
+
+    if (
+      exchange.toLowerCase() === "binance" ||
+      exchange.toLowerCase() === "bn"
+    ) {
+      historicalData = await binanceHistoryService.getPopularCryptoHistory(
+        symbol,
+        24,
+      );
     } else {
-      historicalData = await bitkubHistoryService.getPopularCryptoHistory(symbol, 24);
+      historicalData = await bitkubHistoryService.getPopularCryptoHistory(
+        symbol,
+        24,
+      );
     }
-    
+
     return historicalData.length > 0;
   }
 }

@@ -10,10 +10,13 @@ import { withProcessLock } from "./simple-lock";
 
 async function startDevServer() {
   // Check for Turbopack flag
-  const useTurbopack = process.argv.includes("--turbo") || process.env.USE_TURBOPACK === "true";
+  const useTurbopack =
+    process.argv.includes("--turbo") || process.env.USE_TURBOPACK === "true";
   const devCommand = useTurbopack ? "dev:turbo" : "dev:basic";
-  
-  console.log(`🚀 Starting development server${useTurbopack ? " (Turbopack)" : ""}...`);
+
+  console.log(
+    `🚀 Starting development server${useTurbopack ? " (Turbopack)" : ""}...`,
+  );
   console.log("📦 Starting Tailwind CSS watch mode...");
 
   // Start Tailwind watch process
@@ -40,7 +43,9 @@ async function startDevServer() {
   // Small delay to let Tailwind start
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  console.log(`🌐 Starting Next.js development server (${useTurbopack ? "Turbopack" : "Webpack"})...`);
+  console.log(
+    `🌐 Starting Next.js development server (${useTurbopack ? "Turbopack" : "Webpack"})...`,
+  );
   const devProcess = spawn("bun", ["run", devCommand], {
     stdio: "inherit",
     env: { ...process.env, PORT: "4325" },

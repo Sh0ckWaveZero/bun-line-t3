@@ -38,9 +38,7 @@
   "cSpell.languageSettings": [
     {
       "languageId": "*",
-      "ignoreRegExpList": [
-        "/[\\u0E00-\\u0E7F]+/g"
-      ]
+      "ignoreRegExpList": ["/[\\u0E00-\\u0E7F]+/g"]
     }
   ],
   "cSpell.allowCompoundWords": true,
@@ -91,9 +89,7 @@
     "servers": {
       "line-bot": {
         "command": "bunx",
-        "args": [
-          "@line/line-bot-mcp-server"
-        ],
+        "args": ["@line/line-bot-mcp-server"],
         "env": {
           "CHANNEL_ACCESS_TOKEN": "${input:line_bot_channel_access_token}",
           "DESTINATION_USER_ID": "FILL_HERE"

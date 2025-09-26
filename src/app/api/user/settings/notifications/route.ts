@@ -11,7 +11,7 @@ const notificationSettingsSchema = z.object({
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -26,7 +26,8 @@ export async function GET() {
     }
 
     // If user doesn't have settings, return defaults
-    const enableCheckInReminders = user.settings?.enableCheckInReminders ?? true;
+    const enableCheckInReminders =
+      user.settings?.enableCheckInReminders ?? true;
 
     return NextResponse.json({
       enableCheckInReminders,
@@ -35,7 +36,7 @@ export async function GET() {
     console.error("Error fetching notification settings:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -43,7 +44,7 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -90,14 +91,14 @@ export async function PUT(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Invalid input", details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     console.error("Error updating notification settings:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

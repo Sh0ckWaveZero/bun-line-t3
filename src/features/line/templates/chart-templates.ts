@@ -16,7 +16,10 @@ export interface LineTextMessage {
 }
 
 export class ChartTemplates {
-  static createLoadingMessage(symbol: string, isComparison = false): LineTextMessage {
+  static createLoadingMessage(
+    symbol: string,
+    isComparison = false,
+  ): LineTextMessage {
     const action = isComparison ? "เปรียบเทียบ" : "กราฟ";
     return {
       type: "text",
@@ -78,9 +81,11 @@ export class ChartTemplates {
                 contents: [
                   {
                     type: "text",
-                    text: `${exchange.toLowerCase() === "binance" || exchange.toLowerCase() === "bn" ? "$" : "฿"}${(cryptoData.lastPriceRaw || 0).toLocaleString("th-TH", { 
-                      minimumFractionDigits: 2, 
-                      maximumFractionDigits: 8 
+                    text: `${exchange.toLowerCase() === "binance" || exchange.toLowerCase() === "bn" ? "$" : "฿"}${(
+                      cryptoData.lastPriceRaw || 0
+                    ).toLocaleString("th-TH", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 8,
                     })}`,
                     color: "#ebebeb",
                     size: "lg",
@@ -90,7 +95,10 @@ export class ChartTemplates {
                   {
                     type: "text",
                     text: `${(cryptoData.changePriceOriginal || 0) >= 0 ? "+" : ""}${(cryptoData.changePriceOriginal || 0).toFixed(2)}%`,
-                    color: (cryptoData.changePriceOriginal || 0) >= 0 ? "#00FF88cc" : "#FF4444cc",
+                    color:
+                      (cryptoData.changePriceOriginal || 0) >= 0
+                        ? "#00FF88cc"
+                        : "#FF4444cc",
                     gravity: "bottom",
                     flex: 0,
                     size: "sm",
@@ -253,7 +261,10 @@ export class ChartTemplates {
     cryptoData: CryptoInfo,
     exchange: string = "bitkub",
   ): LineTextMessage {
-    const currencySymbol = exchange.toLowerCase() === "binance" || exchange.toLowerCase() === "bn" ? "$" : "฿";
+    const currencySymbol =
+      exchange.toLowerCase() === "binance" || exchange.toLowerCase() === "bn"
+        ? "$"
+        : "฿";
     return {
       type: "text",
       text: `⚠️ กราฟ ${symbol.toUpperCase()} ถูกสร้างแล้ว แต่ไม่สามารถส่งรูปภาพได้\n\n📊 ข้อมูลล่าสุด:\n• ชื่อ: ${cryptoData.currencyName}\n• ราคา: ${currencySymbol}${(cryptoData.lastPriceRaw || 0).toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 8 })}\n• เปลี่ยนแปลง: ${(cryptoData.changePriceOriginal || 0) >= 0 ? "+" : ""}${(cryptoData.changePriceOriginal || 0).toFixed(2)}%\n\n🔄 ลองใหม่: /chart ${symbol.toLowerCase()}`,
@@ -327,7 +338,7 @@ export class ChartTemplates {
         width: "35px",
       };
     }
-    
+
     return {
       type: "box",
       layout: "vertical",
