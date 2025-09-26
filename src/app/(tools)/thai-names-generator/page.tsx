@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { thaiNamesData } from "@/lib/data/thai-names";
+import { generateThaiName } from "@/lib/data/thai-names";
 
 interface GenerationOptions {
   gender: {
@@ -54,45 +54,22 @@ export default function ThaiNamesGeneratorPage() {
   const [generatedNames, setGeneratedNames] = useState<GeneratedName[]>([]);
 
   const generateRandomName = (): GeneratedName => {
-    const isRandomMale = Math.random() < 0.5;
-    const shouldGenerateMale =
-      options.gender.male && (isRandomMale || !options.gender.female);
-    const selectedGender = shouldGenerateMale ? "male" : "female";
+    const selectedGender = determineGender();
 
-    const result: GeneratedName = {};
+    // Use the new helper function to generate the name
+    const generatedName = generateThaiName({
+      includeFirstName: options.types.firstName,
+      includeSurname: options.types.surname,
+      includeNickname: options.types.nickname,
+      gender: selectedGender,
+    });
 
-    // Generate first name
-    if (options.types.firstName) {
-      const firstNamesPool =
-        selectedGender === "male"
-          ? thaiNamesData.firstNames.male
-          : thaiNamesData.firstNames.female;
-      result.firstName =
-        firstNamesPool[Math.floor(Math.random() * firstNamesPool.length)];
-    }
-
-    // Generate surname
-    if (options.types.surname) {
-      result.surname =
-        thaiNamesData.surnames[
-          Math.floor(Math.random() * thaiNamesData.surnames.length)
-        ];
-    }
-
-    // Generate nickname
-    if (options.types.nickname) {
-      result.nickname =
-        thaiNamesData.nicknames[
-          Math.floor(Math.random() * thaiNamesData.nicknames.length)
-        ];
-    }
-
-    // Create full name
-    if (result.firstName || result.surname) {
-      result.fullName = [result.firstName, result.surname]
-        .filter(Boolean)
-        .join(" ");
-    }
+    const result: GeneratedName = {
+      firstName: generatedName.firstName,
+      surname: generatedName.surname,
+      nickname: generatedName.nickname,
+      fullName: generatedName.fullName,
+    };
 
     // Generate English equivalent (simple romanization for demo)
     if (options.languages.english) {
@@ -102,6 +79,13 @@ export default function ThaiNamesGeneratorPage() {
     }
 
     return result;
+  };
+
+  const determineGender = (): "male" | "female" => {
+    const isRandomMale = Math.random() < 0.5;
+    const shouldGenerateMale =
+      options.gender.male && (isRandomMale || !options.gender.female);
+    return shouldGenerateMale ? "male" : "female";
   };
 
   const romanizeThaiName = (thaiName: string): string => {
@@ -221,6 +205,18 @@ export default function ThaiNamesGeneratorPage() {
         <p className="text-gray-600 dark:text-gray-300">
           สุ่มชื่อจริง นามสกุล และชื่อเล่น คนไทย สำหรับช่วยคิดชื่อ ใช้เป็น mock
           data หรือไอเดียตั้งชื่อ
+        </p>
+        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+          ฐานข้อมูลชื่อ 22,000+ รายการ จาก{" "}
+          <a
+            href="https://github.com/korkeatw/thai-names-corpus"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-blue-600 dark:hover:text-blue-400"
+          >
+            Thai Names Corpus
+          </a>{" "}
+          (CC BY-SA 4.0)
         </p>
       </div>
 
