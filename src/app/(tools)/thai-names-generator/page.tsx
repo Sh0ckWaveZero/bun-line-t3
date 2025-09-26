@@ -198,7 +198,7 @@ export default function ThaiNamesGeneratorPage() {
     };
 
     // Process the string character by character
-    let result = thaiName
+    const result = thaiName
       .split("")
       .map((char) => {
         // If character has romanization, use it; if it's already Latin, keep it; otherwise remove
@@ -323,85 +323,98 @@ export default function ThaiNamesGeneratorPage() {
             </div>
           </CardHeader>
           {showSettings && (
-            <CardContent className="animate-in slide-in-from-top-2 space-y-4 duration-200">
-              {/* Gender Selection - Compact */}
-              <div>
-                <Label className="mb-2 block text-sm font-medium">เพศ</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex items-center space-x-2 rounded border border-gray-200 p-2 dark:border-gray-700">
+            <CardContent className="animate-in slide-in-from-top-2 space-y-6 p-6 duration-200">
+              {/* Gender Selection - Improved Spacing */}
+              <div className="space-y-3">
+                <Label className="block text-base font-semibold text-gray-800 dark:text-gray-200">
+                  เพศ
+                </Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center space-x-3 rounded-lg border-2 border-gray-200 bg-white p-4 transition-all hover:border-blue-300 hover:shadow-sm dark:border-gray-600 dark:bg-gray-800 dark:hover:border-blue-500">
                     <Checkbox
                       id="male"
                       checked={options.gender.male}
                       onCheckedChange={(checked) =>
                         updateGender("male", !!checked)
                       }
-                      className="h-4 w-4"
+                      className="h-5 w-5"
                     />
-                    <Label htmlFor="male" className="cursor-pointer text-sm">
+                    <Label
+                      htmlFor="male"
+                      className="cursor-pointer font-medium text-gray-700 dark:text-gray-300"
+                    >
                       หญิง
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2 rounded border border-gray-200 p-2 dark:border-gray-700">
+                  <div className="flex items-center space-x-3 rounded-lg border-2 border-gray-200 bg-white p-4 transition-all hover:border-blue-300 hover:shadow-sm dark:border-gray-600 dark:bg-gray-800 dark:hover:border-blue-500">
                     <Checkbox
                       id="female"
                       checked={options.gender.female}
                       onCheckedChange={(checked) =>
                         updateGender("female", !!checked)
                       }
-                      className="h-4 w-4"
+                      className="h-5 w-5"
                     />
-                    <Label htmlFor="female" className="cursor-pointer text-sm">
+                    <Label
+                      htmlFor="female"
+                      className="cursor-pointer font-medium text-gray-700 dark:text-gray-300"
+                    >
                       ชาย
                     </Label>
                   </div>
                 </div>
               </div>
 
-              {/* Type Selection - Mobile Optimized */}
-              <div>
-                <Label className="mb-2 block text-sm font-medium">ประเภท</Label>
-                <div className="grid grid-cols-1 gap-1.5">
-                  <div className="flex items-center space-x-2 rounded border border-gray-200 p-2 dark:border-gray-700">
+              {/* Type Selection - Better Layout */}
+              <div className="space-y-3">
+                <Label className="block text-base font-semibold text-gray-800 dark:text-gray-200">
+                  ประเภท
+                </Label>
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3 rounded-lg border-2 border-gray-200 bg-white p-4 transition-all hover:border-green-300 hover:shadow-sm dark:border-gray-600 dark:bg-gray-800 dark:hover:border-green-500">
                     <Checkbox
                       id="firstName"
                       checked={options.types.firstName}
                       onCheckedChange={(checked) =>
                         updateType("firstName", !!checked)
                       }
-                      className="h-4 w-4"
+                      className="h-5 w-5"
                     />
                     <Label
                       htmlFor="firstName"
-                      className="cursor-pointer text-sm"
+                      className="cursor-pointer font-medium text-gray-700 dark:text-gray-300"
                     >
                       ชื่อจริง
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2 rounded border border-gray-200 p-2 dark:border-gray-700">
+                  <div className="flex items-center space-x-3 rounded-lg border-2 border-gray-200 bg-white p-4 transition-all hover:border-green-300 hover:shadow-sm dark:border-gray-600 dark:bg-gray-800 dark:hover:border-green-500">
                     <Checkbox
                       id="surname"
                       checked={options.types.surname}
                       onCheckedChange={(checked) =>
                         updateType("surname", !!checked)
                       }
-                      className="h-4 w-4"
+                      className="h-5 w-5"
                     />
-                    <Label htmlFor="surname" className="cursor-pointer text-sm">
+                    <Label
+                      htmlFor="surname"
+                      className="cursor-pointer font-medium text-gray-700 dark:text-gray-300"
+                    >
                       นามสกุล
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2 rounded border border-gray-200 p-2 dark:border-gray-700">
+                  <div className="flex items-center space-x-3 rounded-lg border-2 border-gray-200 bg-white p-4 transition-all hover:border-green-300 hover:shadow-sm dark:border-gray-600 dark:bg-gray-800 dark:hover:border-green-500">
                     <Checkbox
                       id="nickname"
                       checked={options.types.nickname}
                       onCheckedChange={(checked) =>
                         updateType("nickname", !!checked)
                       }
-                      className="h-4 w-4"
+                      className="h-5 w-5"
                     />
                     <Label
                       htmlFor="nickname"
-                      className="cursor-pointer text-sm"
+                      className="cursor-pointer font-medium text-gray-700 dark:text-gray-300"
                     >
                       ชื่อเล่น
                     </Label>
@@ -409,91 +422,103 @@ export default function ThaiNamesGeneratorPage() {
                 </div>
               </div>
 
-              {/* Language Selection - Compact */}
-              <div>
-                <Label className="mb-2 block text-sm font-medium">ภาษา</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex items-center space-x-2 rounded border border-gray-200 p-2 dark:border-gray-700">
+              {/* Language Selection - Improved */}
+              <div className="space-y-3">
+                <Label className="block text-base font-semibold text-gray-800 dark:text-gray-200">
+                  ภาษา
+                </Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center space-x-3 rounded-lg border-2 border-gray-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-sm dark:border-gray-600 dark:bg-gray-800 dark:hover:border-purple-500">
                     <Checkbox
                       id="thai"
                       checked={options.languages.thai}
                       onCheckedChange={(checked) =>
                         updateLanguage("thai", !!checked)
                       }
-                      className="h-4 w-4"
+                      className="h-5 w-5"
                     />
-                    <Label htmlFor="thai" className="cursor-pointer text-sm">
-                      ไทย
+                    <Label
+                      htmlFor="thai"
+                      className="cursor-pointer font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      🇹🇭 ไทย
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2 rounded border border-gray-200 p-2 dark:border-gray-700">
+                  <div className="flex items-center space-x-3 rounded-lg border-2 border-gray-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-sm dark:border-gray-600 dark:bg-gray-800 dark:hover:border-purple-500">
                     <Checkbox
                       id="english"
                       checked={options.languages.english}
                       onCheckedChange={(checked) =>
                         updateLanguage("english", !!checked)
                       }
-                      className="h-4 w-4"
+                      className="h-5 w-5"
                     />
-                    <Label htmlFor="english" className="cursor-pointer text-sm">
-                      English
+                    <Label
+                      htmlFor="english"
+                      className="cursor-pointer font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      🇺🇸 English
                     </Label>
                   </div>
                 </div>
               </div>
 
-              {/* Count Selection - Mobile Optimized */}
-              <div>
+              {/* Count Selection - Enhanced Design */}
+              <div className="space-y-4">
                 <Label
                   htmlFor="count"
-                  className="mb-2 block text-sm font-medium sm:mb-3 sm:text-base"
+                  className="block text-base font-semibold text-gray-800 dark:text-gray-200"
                 >
                   จำนวนชื่อ
                 </Label>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      1
-                    </span>
-                    <div className="mx-3 flex flex-1 items-center justify-center">
-                      <span className="rounded-full bg-blue-100 px-4 py-2 text-lg font-bold text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                        {options.count}
+                <div className="rounded-lg border-2 border-gray-200 bg-gradient-to-r from-orange-50 to-red-50 p-5 dark:border-gray-600 dark:from-gray-800 dark:to-gray-700">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        น้อย
+                      </span>
+                      <div className="flex flex-1 items-center justify-center">
+                        <span className="rounded-full bg-gradient-to-r from-orange-500 to-red-500 px-6 py-2 text-xl font-bold text-white shadow-lg">
+                          {options.count}
+                        </span>
+                      </div>
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        เยอะ
                       </span>
                     </div>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      20
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min="1"
-                    max="20"
-                    value={options.count}
-                    onChange={(e) =>
-                      setOptions((prev) => ({
-                        ...prev,
-                        count: parseInt(e.target.value),
-                      }))
-                    }
-                    className="h-3 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700
-                           [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:cursor-pointer
-                           [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500"
-                  />
-                  <div className="flex justify-center sm:hidden">
-                    <Input
-                      id="count"
-                      type="number"
+                    <input
+                      type="range"
                       min="1"
                       max="20"
                       value={options.count}
                       onChange={(e) =>
                         setOptions((prev) => ({
                           ...prev,
-                          count: parseInt(e.target.value) || 1,
+                          count: parseInt(e.target.value),
                         }))
                       }
-                      className="w-20 text-center"
+                      className="h-4 w-full cursor-pointer appearance-none rounded-lg bg-gray-300 dark:bg-gray-600
+                             [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:cursor-pointer
+                             [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full
+                             [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-orange-500
+                             [&::-webkit-slider-thumb]:to-red-500 [&::-webkit-slider-thumb]:shadow-lg"
                     />
+                    <div className="flex justify-center sm:hidden">
+                      <Input
+                        id="count"
+                        type="number"
+                        min="1"
+                        max="20"
+                        value={options.count}
+                        onChange={(e) =>
+                          setOptions((prev) => ({
+                            ...prev,
+                            count: parseInt(e.target.value) || 1,
+                          }))
+                        }
+                        className="w-24 border-2 border-orange-300 text-center focus:border-orange-500"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
