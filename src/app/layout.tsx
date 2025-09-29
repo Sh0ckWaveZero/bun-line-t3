@@ -1,9 +1,16 @@
+import Header from "@/components/common/Header";
 import { type Metadata } from "next";
 import { Prompt } from "next/font/google";
 import Providers from "./providers";
-import Header from "@/components/common/Header";
 
 import "@/styles/globals.css";
+
+// 🎨 Theme-aware font classes
+const getThemeClasses = () => {
+  // ใน server-side เราต้องใช้ static classes
+  // Theme จะถูกจัดการโดย ThemeProvider ใน client-side
+  return "light"; // Default theme
+};
 
 // 🎨 กำหนด Google Font Prompt
 const promptFont = Prompt({
@@ -34,11 +41,12 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const themeClass = getThemeClasses();
   return (
     <html
       id="html-root"
       lang="th"
-      className={`${promptFont.variable} ${promptFont.className}`}
+      className={`${promptFont.variable} ${promptFont.className} ${themeClass}`}
       suppressHydrationWarning={true}
     >
       <body
