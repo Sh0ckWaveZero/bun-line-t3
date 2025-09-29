@@ -23,9 +23,9 @@ const config = {
   // Turbopack configuration (stable in Next.js 15.4+)
   turbopack: {
     rules: {
-      '*.svg': {
-        loaders: ['@svgr/webpack'],
-        as: '*.js',
+      "*.svg": {
+        loaders: ["@svgr/webpack"],
+        as: "*.js",
       },
     },
   },

@@ -15,10 +15,10 @@ const updateSettingsSchema = z.object({
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    console.log('🚀 ~ GET /api/user/settings ~ session:', session);
-    
+    console.log("🚀 ~ GET /api/user/settings ~ session:", session);
+
     if (!session?.user?.id) {
-      console.log('❌ No session or user id found');
+      console.log("❌ No session or user id found");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -48,7 +48,8 @@ export async function GET() {
         settings: {
           enableCheckInReminders: defaultSettings.enableCheckInReminders,
           enableCheckOutReminders: defaultSettings.enableCheckOutReminders,
-          enableHolidayNotifications: defaultSettings.enableHolidayNotifications,
+          enableHolidayNotifications:
+            defaultSettings.enableHolidayNotifications,
           timezone: defaultSettings.timezone,
           language: defaultSettings.language,
         },
@@ -68,7 +69,7 @@ export async function GET() {
     console.error("Error fetching user settings:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -76,7 +77,7 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -101,8 +102,10 @@ export async function PUT(request: NextRequest) {
         data: {
           userId: user.id,
           enableCheckInReminders: validatedData.enableCheckInReminders ?? true,
-          enableCheckOutReminders: validatedData.enableCheckOutReminders ?? true,
-          enableHolidayNotifications: validatedData.enableHolidayNotifications ?? false,
+          enableCheckOutReminders:
+            validatedData.enableCheckOutReminders ?? true,
+          enableHolidayNotifications:
+            validatedData.enableHolidayNotifications ?? false,
           timezone: validatedData.timezone ?? "Asia/Bangkok",
           language: validatedData.language ?? "th",
         },
@@ -129,14 +132,14 @@ export async function PUT(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Invalid input", details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     console.error("Error updating user settings:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -2,7 +2,10 @@ import { NextRequest } from "next/server";
 import { sendMessage } from "@/lib/utils/line-utils";
 import { chartService } from "@/features/crypto/services/chart";
 import { ChartTemplates } from "@/features/line/templates/chart-templates";
-import { ChartParser, ChartCommandParams } from "@/features/line/parsers/chart-parser";
+import {
+  ChartParser,
+  ChartCommandParams,
+} from "@/features/line/parsers/chart-parser";
 
 export async function handleChartCommand(
   req: NextRequest,
@@ -24,7 +27,10 @@ export async function handleChartCommand(
   }
 }
 
-async function handleComparisonChart(req: NextRequest, symbol: string): Promise<void> {
+async function handleComparisonChart(
+  req: NextRequest,
+  symbol: string,
+): Promise<void> {
   // Send loading message
   const loadingMessage = ChartTemplates.createLoadingMessage(symbol, true);
   await sendMessage(req, [loadingMessage]);
@@ -37,7 +43,7 @@ async function handleComparisonChart(req: NextRequest, symbol: string): Promise<
       comparisonData.imageUrls,
       logoUrl,
     );
-    
+
     await sendMessage(req, [chartMessage]);
   } catch (error) {
     console.error("❌ Failed to generate comparison chart:", error);
@@ -45,10 +51,17 @@ async function handleComparisonChart(req: NextRequest, symbol: string): Promise<
   }
 }
 
-async function handleSingleChart(req: NextRequest, symbol: string, exchange: string): Promise<void> {
+async function handleSingleChart(
+  req: NextRequest,
+  symbol: string,
+  exchange: string,
+): Promise<void> {
   // Check historical data availability first
-  const hasHistoricalData = await chartService.checkHistoricalDataAvailability(symbol, exchange);
-  
+  const hasHistoricalData = await chartService.checkHistoricalDataAvailability(
+    symbol,
+    exchange,
+  );
+
   if (!hasHistoricalData) {
     console.log("❌ No historical data available for:", symbol, "on", exchange);
     const noDataMessage = ChartTemplates.createNoDataMessage(symbol);
@@ -59,24 +72,28 @@ async function handleSingleChart(req: NextRequest, symbol: string, exchange: str
   try {
     console.log("📈 Generating chart for:", symbol, "from:", exchange);
     const chartData = await chartService.generateSingleChart(symbol, exchange);
-    
+
     const chartMessage = ChartTemplates.createSingleChartCarousel(
       chartData.cryptoData,
       symbol,
       chartData.imageUrls,
       exchange,
     );
-    
+
     await sendMessage(req, [chartMessage]);
     console.log("✅ Chart carousel sent successfully");
   } catch (imageError) {
     console.error("❌ Failed to send chart carousel:", imageError);
-    
+
     // Try to get crypto data for fallback message
     try {
       const cryptoData = await chartService.getCryptoData(symbol, exchange);
       if (cryptoData) {
-        const fallbackMessage = ChartTemplates.createErrorFallbackMessage(symbol, cryptoData, exchange);
+        const fallbackMessage = ChartTemplates.createErrorFallbackMessage(
+          symbol,
+          cryptoData,
+          exchange,
+        );
         await sendMessage(req, [fallbackMessage]);
       }
     } catch (fallbackError) {

@@ -5,10 +5,13 @@ import { handleSticker } from "../commands/handleSticker";
 import { handlePostback } from "../commands/handlePostback";
 import { handleText } from "../commands/handleText";
 
-const handleEvent = async (req: NextApiRequest, res: NextApiResponse): Promise<any> => {
+const handleEvent = async (
+  req: NextApiRequest,
+  res: NextApiResponse,
+): Promise<any> => {
   const events = req.body.events;
   console.log("🚀 LINE handleEvent - processing events:", events.length);
-  
+
   // Process events sequentially to handle async operations properly
   for (let index = 0; index < events.length; index++) {
     const event = events[index];
@@ -17,7 +20,7 @@ const handleEvent = async (req: NextApiRequest, res: NextApiResponse): Promise<a
       event.type,
       event.message?.type,
     );
-    
+
     switch (event.type) {
       case "message":
         switch (event.message.type) {

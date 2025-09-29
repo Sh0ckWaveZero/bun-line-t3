@@ -143,11 +143,7 @@ export class BinanceHistoryService {
     const interval = "1h";
     const limit = Math.min(hours, 720); // Max 720 hours (30 days)
 
-    const data = await this.fetchKlineData(
-      binanceSymbol,
-      interval,
-      limit,
-    );
+    const data = await this.fetchKlineData(binanceSymbol, interval, limit);
 
     if (!data) {
       console.log(`❌ No data returned for ${binanceSymbol}`);
@@ -233,7 +229,7 @@ export class BinanceHistoryService {
       const response = await fetch(
         `${this.baseUrl}/api/v3/ticker/24hr?symbol=${binanceSymbol}`,
       );
-      
+
       if (!response.ok) {
         return null;
       }

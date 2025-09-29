@@ -60,7 +60,10 @@ const getSatangCorp = async (_currency: any): Promise<CryptoInfoType> => {
     lastPriceRaw: parseFloat(response.lastPrice),
     highPrice: utils.priceFormat(response.highPrice, "฿"),
     lowPrice: utils.priceFormat(response.lowPrice, "฿"),
-    changePriceOriginal: parseFloat(response.priceChangePercent) || parseFloat(response.priceChange) || 0,
+    changePriceOriginal:
+      parseFloat(response.priceChangePercent) ||
+      parseFloat(response.priceChange) ||
+      0,
     volume_change_24h: utils.volumeChangeFormat(response.priceChange),
     priceChangeColor: utils.priceChangeColor(response.priceChange),
     last_updated: utils.lastUpdateFormat(null),
@@ -132,7 +135,12 @@ const getBinance = async (
 const getGeteio = async (_currency: string): Promise<CryptoInfoType> => {
   const currency = cryptoCurrencyService.mapSymbolsThai(_currency);
   const response: any = await geteIO(currency);
-  if (utils.isEmpty(response) || !Array.isArray(response) || response.length === 0) return null;
+  if (
+    utils.isEmpty(response) ||
+    !Array.isArray(response) ||
+    response.length === 0
+  )
+    return null;
 
   const data = response[0]; // Gate.io returns an array, take first item
   const cryptoInfo = await cmcService.findOne(currency.toUpperCase());

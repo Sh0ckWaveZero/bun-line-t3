@@ -53,8 +53,15 @@ const CONSOLATION_FALLBACKS = [
 // Helper functions
 const isAIAvailable = (): boolean => {
   const apiKey = env.OPENAI_API_KEY;
-  const available = !!(apiKey && apiKey.trim() && apiKey !== 'undefined' && apiKey !== '');
-  console.log(`isAIAvailable check: ${available}, API key exists: ${!!apiKey}, key length: ${apiKey?.length || 0}`);
+  const available = !!(
+    apiKey &&
+    apiKey.trim() &&
+    apiKey !== "undefined" &&
+    apiKey !== ""
+  );
+  console.log(
+    `isAIAvailable check: ${available}, API key exists: ${!!apiKey}, key length: ${apiKey?.length || 0}`,
+  );
   return available;
 };
 
@@ -72,8 +79,10 @@ export async function generateCheckInMessage(
   }
 
   try {
-    console.log(`Attempting to generate check-in message with model: ${AI_MODEL}`);
-    
+    console.log(
+      `Attempting to generate check-in message with model: ${AI_MODEL}`,
+    );
+
     const { text } = await generateText({
       model: openai(AI_MODEL),
       prompt: `สร้างข้อความเตือนเช็คอินภาษาไทย อบอุ่น เป็นมิตร สำหรับ${context?.userName || "เพื่อน"} ช่วง${context?.timeOfDay || "เช้า"} อากาศ${context?.weather || "สดใส"} ใส่อีโมจิ 1-2 อีโมจิ ไม่เกิน 80 ตัวอักษร ส่งแค่ข้อความเดียว`,
@@ -82,7 +91,7 @@ export async function generateCheckInMessage(
 
     const generatedText = text?.trim() || "";
     console.log(`AI generated check-in text: ${generatedText}`);
-    
+
     return generatedText.length > 0
       ? generatedText
       : selectRandomElement(CHECK_IN_FALLBACKS);
@@ -95,13 +104,13 @@ export async function generateCheckInMessage(
 // AI-powered consolation message generation
 export async function generateConsolationMessage(): Promise<string> {
   if (!isAIAvailable()) {
-    console.log('AI not available, using fallback messages');
+    console.log("AI not available, using fallback messages");
     return selectRandomElement(CONSOLATION_FALLBACKS);
   }
 
   try {
     console.log(`Attempting to generate AI message with model: ${AI_MODEL}`);
-    
+
     const { text } = await generateText({
       model: openai(AI_MODEL),
       prompt: `สร้างข้อความปลอบโยนภาษาไทยที่อบอุ่น ให้กำลังใจ ใส่อีโมจิ 1-2 อีโมจิ ไม่เกิน 60 ตัวอักษร ส่งแค่ข้อความเดียว`,
@@ -110,7 +119,7 @@ export async function generateConsolationMessage(): Promise<string> {
 
     const generatedText = text?.trim() || "";
     console.log(`AI generated text: ${generatedText}`);
-    
+
     return generatedText.length > 0
       ? generatedText
       : selectRandomElement(CONSOLATION_FALLBACKS);
@@ -137,13 +146,15 @@ export async function getCheckInMessage(
 export async function getConsolationMessage(
   options?: ConsolationOptions,
 ): Promise<string> {
-  console.log(`getConsolationMessage called with useAI: ${options?.useAI}, isAIAvailable: ${isAIAvailable()}`);
-  
+  console.log(
+    `getConsolationMessage called with useAI: ${options?.useAI}, isAIAvailable: ${isAIAvailable()}`,
+  );
+
   if (options?.useAI && isAIAvailable()) {
     return await generateConsolationMessage();
   }
 
   // Use static fallbacks for better performance
-  console.log('Using fallback consolation messages');
+  console.log("Using fallback consolation messages");
   return selectRandomElement(CONSOLATION_FALLBACKS);
 }

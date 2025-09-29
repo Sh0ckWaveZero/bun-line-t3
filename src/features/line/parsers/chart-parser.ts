@@ -26,7 +26,9 @@ export class ChartParser {
     // Check for chart command aliases
     const chartAliases = ["chart", "/chart", "c", "/c"];
     if (parts.length < 2 || !chartAliases.includes(parts[0] || "")) {
-      console.log("❌ ChartParser parseCommand failed - invalid command or insufficient parts");
+      console.log(
+        "❌ ChartParser parseCommand failed - invalid command or insufficient parts",
+      );
       return null;
     }
 
@@ -35,10 +37,15 @@ export class ChartParser {
     let type: "line" | "comparison" = "line";
 
     // Check if second parameter is an exchange (new format: /chart [exchange] [symbol])
-    if (parts.length >= 3 && parts[1] && parts[2] && this.isValidExchange(parts[1])) {
+    if (
+      parts.length >= 3 &&
+      parts[1] &&
+      parts[2] &&
+      this.isValidExchange(parts[1])
+    ) {
       exchange = this.normalizeExchangeName(parts[1]);
       symbol = parts[2];
-      
+
       // Check for additional parameters (comparison, etc.)
       for (let i = 3; i < parts.length; i++) {
         const part = parts[i];
@@ -75,26 +82,33 @@ export class ChartParser {
 
   private static isValidExchange(exchange: string): boolean {
     const validExchanges = [
-      "bitkub", "bk", 
-      "binance", "bn", 
-      "satang", "st",
-      "bitazza", "btz",
-      "gate", "gateio",
-      "mexc", "mx",
-      "cmc", "coinmarketcap"
+      "bitkub",
+      "bk",
+      "binance",
+      "bn",
+      "satang",
+      "st",
+      "bitazza",
+      "btz",
+      "gate",
+      "gateio",
+      "mexc",
+      "mx",
+      "cmc",
+      "coinmarketcap",
     ];
     return validExchanges.includes(exchange);
   }
 
   private static normalizeExchangeName(exchange: string): string {
     const exchangeMap: Record<string, string> = {
-      "bk": "bitkub",
-      "bn": "binance",
-      "st": "satang",
-      "btz": "bitazza",
-      "gateio": "gate",
-      "mx": "mexc",
-      "coinmarketcap": "cmc"
+      bk: "bitkub",
+      bn: "binance",
+      st: "satang",
+      btz: "bitazza",
+      gateio: "gate",
+      mx: "mexc",
+      coinmarketcap: "cmc",
     };
 
     return exchangeMap[exchange] || exchange;

@@ -112,7 +112,12 @@ async function getActiveLineUserIdsForCheckinReminder(
     // Check if user has notifications enabled (default is true if no settings)
     const notificationsEnabled = user?.settings?.enableCheckInReminders ?? true;
 
-    if (user && user.accounts.length > 0 && user.leaves.length === 0 && notificationsEnabled) {
+    if (
+      user &&
+      user.accounts.length > 0 &&
+      user.leaves.length === 0 &&
+      notificationsEnabled
+    ) {
       console.log(
         `🧪 DEV MODE: Using test user ${testUserId} with LINE ID: ${user.accounts[0]?.providerAccountId}`,
       );
@@ -142,14 +147,14 @@ async function getActiveLineUserIdsForCheckinReminder(
       },
     },
   });
-  
+
   return users
     .filter((u) => {
       const hasLineAccount = u.accounts.length > 0 && u.accounts[0];
       const notOnLeave = u.leaves.length === 0;
       // Default to true if user has no settings yet
       const notificationsEnabled = u.settings?.enableCheckInReminders ?? true;
-      
+
       return hasLineAccount && notOnLeave && notificationsEnabled;
     })
     .map((u) => u.accounts[0]?.providerAccountId)

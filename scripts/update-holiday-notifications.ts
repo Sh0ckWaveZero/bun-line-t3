@@ -2,7 +2,7 @@
 
 /**
  * Update Script: Set enableHolidayNotifications to false for all users
- * 
+ *
  * This script updates all existing users' enableHolidayNotifications setting
  * from true to false to disable holiday notifications by default.
  */
@@ -47,21 +47,30 @@ async function updateHolidayNotifications(): Promise<UpdateResult> {
 
     // Find users with holiday notifications enabled
     const usersWithHolidayNotificationsEnabled = allUserSettings.filter(
-      settings => settings.enableHolidayNotifications === true
+      (settings) => settings.enableHolidayNotifications === true,
     );
 
-    result.usersWithHolidayNotificationsEnabled = usersWithHolidayNotificationsEnabled.length;
+    result.usersWithHolidayNotificationsEnabled =
+      usersWithHolidayNotificationsEnabled.length;
 
-    console.log(`✅ Users with holiday notifications enabled: ${result.usersWithHolidayNotificationsEnabled}`);
-    console.log(`⚠️  Users with holiday notifications disabled: ${result.totalUsers - result.usersWithHolidayNotificationsEnabled}`);
+    console.log(
+      `✅ Users with holiday notifications enabled: ${result.usersWithHolidayNotificationsEnabled}`,
+    );
+    console.log(
+      `⚠️  Users with holiday notifications disabled: ${result.totalUsers - result.usersWithHolidayNotificationsEnabled}`,
+    );
 
     if (result.usersWithHolidayNotificationsEnabled === 0) {
-      console.log("🎉 All users already have holiday notifications disabled! No update needed.");
+      console.log(
+        "🎉 All users already have holiday notifications disabled! No update needed.",
+      );
       return result;
     }
 
     // Update holiday notifications for users who have it enabled
-    console.log(`🔧 Disabling holiday notifications for ${result.usersWithHolidayNotificationsEnabled} users...`);
+    console.log(
+      `🔧 Disabling holiday notifications for ${result.usersWithHolidayNotificationsEnabled} users...`,
+    );
 
     for (const userSettings of usersWithHolidayNotificationsEnabled) {
       try {
@@ -75,7 +84,10 @@ async function updateHolidayNotifications(): Promise<UpdateResult> {
         });
 
         result.usersUpdated++;
-        const userName = userSettings.user.name || userSettings.user.email || userSettings.userId;
+        const userName =
+          userSettings.user.name ||
+          userSettings.user.email ||
+          userSettings.userId;
         console.log(`✅ Disabled holiday notifications for user: ${userName}`);
       } catch (error) {
         const errorMsg = `Failed to update settings for user ${userSettings.userId}: ${error}`;
@@ -86,21 +98,24 @@ async function updateHolidayNotifications(): Promise<UpdateResult> {
 
     console.log("\n📋 Update Summary:");
     console.log(`├── Total user settings: ${result.totalUsers}`);
-    console.log(`├── Users with holiday notifications enabled: ${result.usersWithHolidayNotificationsEnabled}`);
+    console.log(
+      `├── Users with holiday notifications enabled: ${result.usersWithHolidayNotificationsEnabled}`,
+    );
     console.log(`├── Users successfully updated: ${result.usersUpdated}`);
     console.log(`└── Errors: ${result.errors.length}`);
 
     if (result.errors.length > 0) {
       console.log("\n❌ Errors encountered:");
-      result.errors.forEach(error => console.log(`   ${error}`));
+      result.errors.forEach((error) => console.log(`   ${error}`));
     }
 
     if (result.usersUpdated === result.usersWithHolidayNotificationsEnabled) {
       console.log("\n🎉 Update completed successfully!");
     } else {
-      console.log("\n⚠️  Update completed with some errors. Please review the output above.");
+      console.log(
+        "\n⚠️  Update completed with some errors. Please review the output above.",
+      );
     }
-
   } catch (error) {
     console.error("💥 Update failed with error:", error);
     result.errors.push(`Update failed: ${error}`);
@@ -113,44 +128,54 @@ async function verifyUpdate(): Promise<void> {
   try {
     console.log("\n🔍 Verifying update results...");
 
-    const usersWithHolidayNotificationsEnabled = await db.userSettings.findMany({
-      where: {
-        enableHolidayNotifications: true,
-      },
-      select: {
-        userId: true,
-        user: {
-          select: {
-            name: true,
-            email: true,
+    const usersWithHolidayNotificationsEnabled = await db.userSettings.findMany(
+      {
+        where: {
+          enableHolidayNotifications: true,
+        },
+        select: {
+          userId: true,
+          user: {
+            select: {
+              name: true,
+              email: true,
+            },
           },
         },
       },
-    });
+    );
 
     if (usersWithHolidayNotificationsEnabled.length === 0) {
-      console.log("✅ Verification passed: All users now have holiday notifications disabled!");
+      console.log(
+        "✅ Verification passed: All users now have holiday notifications disabled!",
+      );
     } else {
-      console.log(`❌ Verification failed: ${usersWithHolidayNotificationsEnabled.length} users still have holiday notifications enabled:`);
-      usersWithHolidayNotificationsEnabled.forEach(userSettings => {
-        const userName = userSettings.user.name || userSettings.user.email || userSettings.userId;
+      console.log(
+        `❌ Verification failed: ${usersWithHolidayNotificationsEnabled.length} users still have holiday notifications enabled:`,
+      );
+      usersWithHolidayNotificationsEnabled.forEach((userSettings) => {
+        const userName =
+          userSettings.user.name ||
+          userSettings.user.email ||
+          userSettings.userId;
         console.log(`   - ${userName}`);
       });
     }
 
     // Show holiday notification settings distribution
     const holidayNotificationStats = await db.userSettings.groupBy({
-      by: ['enableHolidayNotifications'],
+      by: ["enableHolidayNotifications"],
       _count: {
         _all: true,
       },
     });
 
     console.log("\n📊 Holiday notification settings distribution:");
-    holidayNotificationStats.forEach(stat => {
-      console.log(`   Holiday notifications: ${stat.enableHolidayNotifications ? 'ENABLED' : 'DISABLED'} → ${stat._count._all} users`);
+    holidayNotificationStats.forEach((stat) => {
+      console.log(
+        `   Holiday notifications: ${stat.enableHolidayNotifications ? "ENABLED" : "DISABLED"} → ${stat._count._all} users`,
+      );
     });
-
   } catch (error) {
     console.error("❌ Verification failed:", error);
   }
@@ -166,7 +191,10 @@ async function main() {
     const result = await updateHolidayNotifications();
     await verifyUpdate();
 
-    if (result.errors.length === 0 && result.usersUpdated === result.usersWithHolidayNotificationsEnabled) {
+    if (
+      result.errors.length === 0 &&
+      result.usersUpdated === result.usersWithHolidayNotificationsEnabled
+    ) {
       process.exit(0);
     } else {
       process.exit(1);

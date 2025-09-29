@@ -1,15 +1,15 @@
 /**
  * Check-in reminder messages constants and utilities
- * 
+ *
  * This module provides backward compatibility for existing check-in reminder functionality.
  * All AI-powered features have been moved to @/lib/utils/ai-message-generator
  */
 
-import { 
-  generateCheckInMessage, 
+import {
+  generateCheckInMessage,
   getCheckInMessage as getCheckInMessageUtil,
   type MessageOptions,
-  type CheckInContext
+  type CheckInContext,
 } from "@/lib/utils/ai-message-generator";
 
 // Static fallback messages for backward compatibility
@@ -21,7 +21,7 @@ export const checkInReminderMessages = [
   "🎶 สวัสดีค่ะ! เวลาทำงานมาถึงแล้ว ลงชื่อเข้างานแล้วเริ่มวันที่สวยงามกันเลย 🎵",
   "🌞 หวาดดี! วันใหม่มาพร้อมโอกาสใหม่ อย่าลืมเช็คอินเพื่อเริ่มต้นวันที่ดีนะคะ ✌️",
   "🌺 เช้าสดใส! ขอให้วันนี้เป็นวันที่มีความสุข เริ่มด้วยการลงชื่อเข้างานกันค่ะ 🌈",
-  "☕ กาแฟหอม เช้าใหม่! พร้อมเผชิญหน้ากับวันทำงานแล้วใช่ไหม? เช็คอินได้เลย ☺️"
+  "☕ กาแฟหอม เช้าใหม่! พร้อมเผชิญหน้ากับวันทำงานแล้วใช่ไหม? เช็คอินได้เลย ☺️",
 ];
 
 // Re-export types for backward compatibility
@@ -31,6 +31,8 @@ export type { MessageOptions, CheckInContext };
 export { generateCheckInMessage };
 
 // Utility function to get check-in message (AI or fallback)
-export async function getCheckInMessage(options?: MessageOptions): Promise<string> {
+export async function getCheckInMessage(
+  options?: MessageOptions,
+): Promise<string> {
   return await getCheckInMessageUtil(options);
 }

@@ -50,7 +50,9 @@ export const getUsersWithPendingCheckout = async (): Promise<string[]> => {
  * Get users who need checkout reminders and have checkout reminders enabled
  * @returns Array of user IDs who need checkout reminders AND have the setting enabled
  */
-export const getUsersWithPendingCheckoutAndSettingsEnabled = async (): Promise<string[]> => {
+export const getUsersWithPendingCheckoutAndSettingsEnabled = async (): Promise<
+  string[]
+> => {
   try {
     // 🚧 DEV MODE: ถ้าอยู่ในโหมด development ให้ใช้ test user ID
     if (
@@ -93,7 +95,8 @@ export const getUsersWithPendingCheckoutAndSettingsEnabled = async (): Promise<s
 
     // Filter users who have checkout reminders enabled (default is true if no settings)
     const filteredUsers = pendingCheckouts.filter((record) => {
-      const checkoutEnabled = record.user.settings?.enableCheckOutReminders ?? true;
+      const checkoutEnabled =
+        record.user.settings?.enableCheckOutReminders ?? true;
       return checkoutEnabled;
     });
 
@@ -104,7 +107,10 @@ export const getUsersWithPendingCheckoutAndSettingsEnabled = async (): Promise<s
     // Extract just the user IDs
     return filteredUsers.map((record) => record.userId);
   } catch (error) {
-    console.error("Error finding users with pending checkouts and settings:", error);
+    console.error(
+      "Error finding users with pending checkouts and settings:",
+      error,
+    );
     return [];
   }
 };

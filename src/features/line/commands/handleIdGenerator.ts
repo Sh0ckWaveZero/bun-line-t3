@@ -18,7 +18,10 @@ import { sendMessage } from "@/lib/utils/line-utils";
  */
 
 export async function handleIdGenerator(req: any): Promise<void> {
-  console.log("🎯 handleIdGenerator called with req:", JSON.stringify(req, null, 2));
+  console.log(
+    "🎯 handleIdGenerator called with req:",
+    JSON.stringify(req, null, 2),
+  );
 
   // Check if req has proper structure
   const event = req?.body?.events?.[0];
@@ -47,11 +50,29 @@ export async function handleIdGenerator(req: any): Promise<void> {
   }
 
   // ตรวจสอบว่าเป็นคำสั่งสุ่มเลขบัตรหรือไม่
-  const generateKeywords = ["สุ่ม", "random", "generate", "create", "new", "make"];
-  const validateKeywords = ["ตรวจสอบ", "เช็ค", "validate", "check", "verify", "valid"];
+  const generateKeywords = [
+    "สุ่ม",
+    "random",
+    "generate",
+    "create",
+    "new",
+    "make",
+  ];
+  const validateKeywords = [
+    "ตรวจสอบ",
+    "เช็ค",
+    "validate",
+    "check",
+    "verify",
+    "valid",
+  ];
 
-  const isGenerateCommand = generateKeywords.some((keyword) => text.includes(keyword));
-  const isValidateCommand = validateKeywords.some((keyword) => text.includes(keyword));
+  const isGenerateCommand = generateKeywords.some((keyword) =>
+    text.includes(keyword),
+  );
+  const isValidateCommand = validateKeywords.some((keyword) =>
+    text.includes(keyword),
+  );
 
   if (isGenerateCommand) {
     await handleGenerateId(req, event, text);
@@ -77,13 +98,20 @@ export async function handleIdGenerator(req: any): Promise<void> {
 /**
  * จัดการการสุ่มเลขบัตรประชาชนแบบ Interactive
  */
-async function handleInteractiveGenerate(req: any, event: any, count: number = 1): Promise<void> {
+async function handleInteractiveGenerate(
+  req: any,
+  event: any,
+  count: number = 1,
+): Promise<void> {
   try {
     if (count === 1) {
       const singleId = generateFormattedThaiID();
       console.log("🎲 Generated single ID:", singleId);
       try {
-        await sendMessage(req, flexMessage([bubbleTemplate.thaiIdCard(singleId, true)]));
+        await sendMessage(
+          req,
+          flexMessage([bubbleTemplate.thaiIdCard(singleId, true)]),
+        );
         console.log("✅ Single ID message sent successfully");
       } catch (error) {
         console.error("❌ Failed to send single ID message:", error);
@@ -92,7 +120,10 @@ async function handleInteractiveGenerate(req: any, event: any, count: number = 1
       const multipleIds = generateMultipleThaiIDs(count);
       console.log(`🎲 Generated ${count} IDs:`, multipleIds);
       try {
-        await sendMessage(req, flexMessage([bubbleTemplate.thaiIdMultipleCards(multipleIds)]));
+        await sendMessage(
+          req,
+          flexMessage([bubbleTemplate.thaiIdMultipleCards(multipleIds)]),
+        );
         console.log("✅ Multiple IDs message sent successfully");
       } catch (error) {
         console.error("❌ Failed to send multiple IDs message:", error);
@@ -101,7 +132,14 @@ async function handleInteractiveGenerate(req: any, event: any, count: number = 1
   } catch (error) {
     console.error("❌ Error generating Thai ID:", error);
     try {
-      await sendMessage(req, flexMessage([bubbleTemplate.workError("เกิดข้อผิดพลาดในการสุ่มเลขบัตรประชาชน กรุณาลองใหม่อีกครั้ง")]));
+      await sendMessage(
+        req,
+        flexMessage([
+          bubbleTemplate.workError(
+            "เกิดข้อผิดพลาดในการสุ่มเลขบัตรประชาชน กรุณาลองใหม่อีกครั้ง",
+          ),
+        ]),
+      );
       console.log("✅ Error message for generation sent successfully");
     } catch (sendError) {
       console.error("❌ Failed to send error message:", sendError);
@@ -112,7 +150,11 @@ async function handleInteractiveGenerate(req: any, event: any, count: number = 1
 /**
  * จัดการการสุ่มเลขบัตรประชาชน
  */
-async function handleGenerateId(req: any, event: any, text: string): Promise<void> {
+async function handleGenerateId(
+  req: any,
+  event: any,
+  text: string,
+): Promise<void> {
   try {
     // ตรวจสอบว่ามีการระบุจำนวนหรือไม่
     const countMatch = text.match(/(\d+)/);
@@ -125,7 +167,10 @@ async function handleGenerateId(req: any, event: any, text: string): Promise<voi
       const singleId = generateFormattedThaiID();
       console.log("🎲 Generated single ID:", singleId);
       try {
-        await sendMessage(req, flexMessage([bubbleTemplate.thaiIdCard(singleId, true)]));
+        await sendMessage(
+          req,
+          flexMessage([bubbleTemplate.thaiIdCard(singleId, true)]),
+        );
       } catch (error) {
         console.error("❌ Failed to send single ID message:", error);
       }
@@ -133,7 +178,10 @@ async function handleGenerateId(req: any, event: any, text: string): Promise<voi
       const multipleIds = generateMultipleThaiIDs(actualCount);
       console.log(`🎲 Generated ${actualCount} IDs:`, multipleIds);
       try {
-        await sendMessage(req, flexMessage([bubbleTemplate.thaiIdMultipleCards(multipleIds)]));
+        await sendMessage(
+          req,
+          flexMessage([bubbleTemplate.thaiIdMultipleCards(multipleIds)]),
+        );
       } catch (error) {
         console.error("❌ Failed to send multiple IDs message:", error);
       }
@@ -141,7 +189,14 @@ async function handleGenerateId(req: any, event: any, text: string): Promise<voi
   } catch (error) {
     console.error("❌ Error generating Thai ID:", error);
     try {
-      await sendMessage(req, flexMessage([bubbleTemplate.workError("เกิดข้อผิดพลาดในการสุ่มเลขบัตรประชาชน กรุณาลองใหม่อีกครั้ง")]));
+      await sendMessage(
+        req,
+        flexMessage([
+          bubbleTemplate.workError(
+            "เกิดข้อผิดพลาดในการสุ่มเลขบัตรประชาชน กรุณาลองใหม่อีกครั้ง",
+          ),
+        ]),
+      );
     } catch (sendError) {
       console.error("❌ Failed to send error message:", sendError);
     }
@@ -167,7 +222,10 @@ async function handlePostbackAction(req: any, event: any): Promise<void> {
         await handleInteractiveGenerate(req, event, 5);
         break;
       case "thai_id_validate":
-        await sendMessage(req, flexMessage([bubbleTemplate.thaiIdValidateInput()]));
+        await sendMessage(
+          req,
+          flexMessage([bubbleTemplate.thaiIdValidateInput()]),
+        );
         console.log("✅ Validation input sent successfully");
         break;
       case "thai_id_help":
@@ -191,7 +249,11 @@ async function handlePostbackAction(req: any, event: any): Promise<void> {
 /**
  * จัดการการตรวจสอบเลขบัตรประชาชน
  */
-async function handleValidateId(req: any, event: any, text: string): Promise<void> {
+async function handleValidateId(
+  req: any,
+  event: any,
+  text: string,
+): Promise<void> {
   try {
     // ดึงเลขบัตรประชาชนจากข้อความ
     const idMatch = text.match(/[\d\-\s]{13,17}/);
@@ -199,7 +261,14 @@ async function handleValidateId(req: any, event: any, text: string): Promise<voi
     if (!idMatch || !idMatch[0]) {
       console.log("❌ No ID number found in message");
       try {
-        await sendMessage(req, flexMessage([bubbleTemplate.workError("กรุณาระบุเลขบัตรประชาชนที่ต้องการตรวจสอบ\n\nตัวอย่าง: ตรวจสอบบัตร 1-2345-67890-12-1")]));
+        await sendMessage(
+          req,
+          flexMessage([
+            bubbleTemplate.workError(
+              "กรุณาระบุเลขบัตรประชาชนที่ต้องการตรวจสอบ\n\nตัวอย่าง: ตรวจสอบบัตร 1-2345-67890-12-1",
+            ),
+          ]),
+        );
       } catch (error) {
         console.error("❌ Failed to send error message:", error);
       }
@@ -223,14 +292,26 @@ async function handleValidateId(req: any, event: any, text: string): Promise<voi
     }
 
     try {
-      await sendMessage(req, flexMessage([bubbleTemplate.thaiIdValidationResult(formattedId, isValid)]));
+      await sendMessage(
+        req,
+        flexMessage([
+          bubbleTemplate.thaiIdValidationResult(formattedId, isValid),
+        ]),
+      );
     } catch (error) {
       console.error("❌ Failed to send validation result:", error);
     }
   } catch (error) {
     console.error("❌ Error validating Thai ID:", error);
     try {
-      await sendMessage(req, flexMessage([bubbleTemplate.workError("เกิดข้อผิดพลาดในการตรวจสอบเลขบัตรประชาชน กรุณาลองใหม่อีกครั้ง")]));
+      await sendMessage(
+        req,
+        flexMessage([
+          bubbleTemplate.workError(
+            "เกิดข้อผิดพลาดในการตรวจสอบเลขบัตรประชาชน กรุณาลองใหม่อีกครั้ง",
+          ),
+        ]),
+      );
     } catch (sendError) {
       console.error("❌ Failed to send error message:", sendError);
     }

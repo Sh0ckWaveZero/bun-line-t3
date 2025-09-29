@@ -84,11 +84,22 @@ export class D3ChartGenerator {
 
     // Get historical data based on exchange
     let historicalData;
-    if (exchange.toLowerCase() === "binance" || exchange.toLowerCase() === "bn") {
-      const { binanceHistoryService } = await import("@/features/crypto/services/binance-history");
-      historicalData = await binanceHistoryService.getPopularCryptoHistory(symbol, hours);
+    if (
+      exchange.toLowerCase() === "binance" ||
+      exchange.toLowerCase() === "bn"
+    ) {
+      const { binanceHistoryService } = await import(
+        "@/features/crypto/services/binance-history"
+      );
+      historicalData = await binanceHistoryService.getPopularCryptoHistory(
+        symbol,
+        hours,
+      );
     } else {
-      historicalData = await bitkubHistoryService.getPopularCryptoHistory(symbol, hours);
+      historicalData = await bitkubHistoryService.getPopularCryptoHistory(
+        symbol,
+        hours,
+      );
     }
 
     if (historicalData.length === 0) {
@@ -260,12 +271,19 @@ export class D3ChartGenerator {
     context.textAlign = "right";
 
     // Determine currency symbol based on exchange
-    const currencySymbol = exchange.toLowerCase() === "binance" || exchange.toLowerCase() === "bn" ? "$" : "฿";
-    
+    const currencySymbol =
+      exchange.toLowerCase() === "binance" || exchange.toLowerCase() === "bn"
+        ? "$"
+        : "฿";
+
     for (let i = 0; i <= 5; i++) {
       const value = adjustedMin + ((adjustedMax - adjustedMin) / 5) * i;
       const y = yScale(value);
-      context.fillText(`${currencySymbol}${formatCryptoPrice(value)}`, margin.left - 10, y + 5);
+      context.fillText(
+        `${currencySymbol}${formatCryptoPrice(value)}`,
+        margin.left - 10,
+        y + 5,
+      );
     }
 
     // X-axis labels (time)
@@ -296,10 +314,18 @@ export class D3ChartGenerator {
     context.font = "600 16px Prompt, Arial, sans-serif";
 
     context.fillStyle = CHART_COLORS.SUCCESS;
-    context.fillText(`High: ${currencySymbol}${formatCryptoPrice(maxPrice)}`, width - 20, 35);
+    context.fillText(
+      `High: ${currencySymbol}${formatCryptoPrice(maxPrice)}`,
+      width - 20,
+      35,
+    );
 
     context.fillStyle = CHART_COLORS.ERROR;
-    context.fillText(`Low: ${currencySymbol}${formatCryptoPrice(minPrice)}`, width - 20, 55);
+    context.fillText(
+      `Low: ${currencySymbol}${formatCryptoPrice(minPrice)}`,
+      width - 20,
+      55,
+    );
 
     context.fillStyle = CHART_COLORS.TEXT_PRIMARY;
     context.fillText(
@@ -317,7 +343,10 @@ export class D3ChartGenerator {
     context.save();
     context.translate(30, margin.top + chartHeight / 2);
     context.rotate(-Math.PI / 2);
-    const priceLabel = exchange.toLowerCase() === "binance" || exchange.toLowerCase() === "bn" ? "Price (USD)" : "Price (THB)";
+    const priceLabel =
+      exchange.toLowerCase() === "binance" || exchange.toLowerCase() === "bn"
+        ? "Price (USD)"
+        : "Price (THB)";
     context.fillText(priceLabel, 0, 0);
     context.restore();
 
@@ -332,7 +361,10 @@ export class D3ChartGenerator {
     context.fillText(`Generated: ${getTimestamp()}`, width - 10, height - 10);
 
     context.textAlign = "left";
-    const dataSource = exchange.toLowerCase() === "binance" || exchange.toLowerCase() === "bn" ? "Data: Binance API" : "Data: Bitkub API";
+    const dataSource =
+      exchange.toLowerCase() === "binance" || exchange.toLowerCase() === "bn"
+        ? "Data: Binance API"
+        : "Data: Bitkub API";
     context.fillText(dataSource, 10, height - 10);
 
     return canvas.toBuffer("image/png");

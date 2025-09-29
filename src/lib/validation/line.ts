@@ -1362,23 +1362,23 @@ const workStatus = (attendance: any) => {
       },
       footer: !isCheckedOut
         ? {
-          type: "box",
-          layout: "vertical",
-          spacing: "sm",
-          contents: [
-            {
-              type: "button",
-              style: "primary",
-              action: {
-                type: "postback",
-                label: "🔴 ออกงาน",
-                data: "action=checkout",
+            type: "box",
+            layout: "vertical",
+            spacing: "sm",
+            contents: [
+              {
+                type: "button",
+                style: "primary",
+                action: {
+                  type: "postback",
+                  label: "🔴 ออกงาน",
+                  data: "action=checkout",
+                },
+                color: "#E57373",
               },
-              color: "#E57373",
-            },
-          ],
-          paddingAll: "30px",
-        }
+            ],
+            paddingAll: "30px",
+          }
         : undefined,
     },
   ];
@@ -2420,20 +2420,22 @@ const workCheckInLateSuccess = (
  * @returns bubble template
  */
 const thaiIdCard = (idNumber: string, isRandom: boolean = false) => {
-  const headerText = isRandom ? "🎲 เลขบัตรประชาชนที่สุ่มได้" : "📋 เลขบัตรประชาชน";
+  const headerText = isRandom
+    ? "🎲 เลขบัตรประชาชนที่สุ่มได้"
+    : "📋 เลขบัตรประชาชน";
   const headerBg = isRandom
     ? {
-      type: "linearGradient",
-      angle: "0deg",
-      startColor: "#6366f1",
-      endColor: "#8b5cf6",
-    }
+        type: "linearGradient",
+        angle: "0deg",
+        startColor: "#6366f1",
+        endColor: "#8b5cf6",
+      }
     : {
-      type: "linearGradient",
-      angle: "0deg",
-      startColor: "#10b981",
-      endColor: "#059669",
-    };
+        type: "linearGradient",
+        angle: "0deg",
+        startColor: "#10b981",
+        endColor: "#059669",
+      };
 
   return {
     type: "bubble",
@@ -2700,17 +2702,17 @@ const thaiIdValidationResult = (idNumber: string, isValid: boolean) => {
   const statusColor = isValid ? "#10b981" : "#ef4444";
   const headerBg = isValid
     ? {
-      type: "linearGradient",
-      angle: "0deg",
-      startColor: "#10b981",
-      endColor: "#059669",
-    }
+        type: "linearGradient",
+        angle: "0deg",
+        startColor: "#10b981",
+        endColor: "#059669",
+      }
     : {
-      type: "linearGradient",
-      angle: "0deg",
-      startColor: "#ef4444",
-      endColor: "#dc2626",
-    };
+        type: "linearGradient",
+        angle: "0deg",
+        startColor: "#ef4444",
+        endColor: "#dc2626",
+      };
   const bgColor = isValid ? "#f0fdf4" : "#fef2f2";
 
   return {
@@ -2801,28 +2803,30 @@ const thaiIdValidationResult = (idNumber: string, isValid: boolean) => {
             },
             {
               type: "text",
-              text: `📊 สถานะ: ${isValid ? 'ผ่านการตรวจสอบ' : 'ไม่ผ่านการตรวจสอบ'} ตาม Check Digit Algorithm`,
+              text: `📊 สถานะ: ${isValid ? "ผ่านการตรวจสอบ" : "ไม่ผ่านการตรวจสอบ"} ตาม Check Digit Algorithm`,
               size: "sm",
               color: "#6b7280",
               align: "center",
               margin: "sm",
             },
-            ...(isValid ? [] : [
-              {
-                type: "separator",
-                margin: "md",
-              },
-              {
-                type: "text",
-                text: "💡 เลขบัตรประชาชนไทยต้องมี 13 หลัก และผ่านการตรวจสอบ Check Digit",
-                size: "xs",
-                color: "#9ca3af",
-                wrap: true,
-                flex: 0,
-                align: "center",
-                margin: "sm",
-              }
-            ]),
+            ...(isValid
+              ? []
+              : [
+                  {
+                    type: "separator",
+                    margin: "md",
+                  },
+                  {
+                    type: "text",
+                    text: "💡 เลขบัตรประชาชนไทยต้องมี 13 หลัก และผ่านการตรวจสอบ Check Digit",
+                    size: "xs",
+                    color: "#9ca3af",
+                    wrap: true,
+                    flex: 0,
+                    align: "center",
+                    margin: "sm",
+                  },
+                ]),
           ],
           margin: "lg",
         },
@@ -3267,22 +3271,22 @@ const thaiIdHelp = () => {
       ],
       paddingAll: "30px",
     },
-      footer: {
-        type: "box",
-        layout: "vertical",
-        contents: [
-          {
-            type: "text",
-            text: "⚠️ หมายเหตุ: ใช้เพื่อการทดสอบเท่านั้น ห้ามนำไปใช้ในการปลอมแปลงเอกสาร",
-            size: "xs",
-            color: "#9ca3af",
-            wrap: true,
-            align: "start",
-          },
-        ],
-        paddingAll: "16px",
-        justifyContent: "start",
-      },
+    footer: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "text",
+          text: "⚠️ หมายเหตุ: ใช้เพื่อการทดสอบเท่านั้น ห้ามนำไปใช้ในการปลอมแปลงเอกสาร",
+          size: "xs",
+          color: "#9ca3af",
+          wrap: true,
+          align: "start",
+        },
+      ],
+      paddingAll: "16px",
+      justifyContent: "start",
+    },
   };
 };
 

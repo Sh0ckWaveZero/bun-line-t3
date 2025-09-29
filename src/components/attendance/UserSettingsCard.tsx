@@ -28,11 +28,11 @@ export function UserSettingsCard({ className }: UserSettingsCardProps) {
   const [hasChanges, setHasChanges] = useState(false);
   const { showToast } = useToast();
   const { data: session, status } = useSession();
-  console.log('🚀 ~ UserSettingsCard ~ session:', session);
+  console.log("🚀 ~ UserSettingsCard ~ session:", session);
 
   const fetchSettings = useCallback(async () => {
     if (status === "loading" || !session) return;
-    
+
     try {
       setLoading(true);
       const response = await fetch("/api/user/settings");
@@ -142,7 +142,7 @@ export function UserSettingsCard({ className }: UserSettingsCardProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="py-8 text-center text-muted-foreground">
             กรุณาเข้าสู่ระบบเพื่อใช้งานการตั้งค่า
           </div>
         </CardContent>
@@ -160,7 +160,7 @@ export function UserSettingsCard({ className }: UserSettingsCardProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="py-8 text-center text-muted-foreground">
             ไม่สามารถโหลดการตั้งค่าได้
           </div>
         </CardContent>
@@ -183,7 +183,7 @@ export function UserSettingsCard({ className }: UserSettingsCardProps) {
         {/* Check-in Reminders */}
         <div className="flex items-center justify-between space-x-2">
           <div className="space-y-0.5">
-            <Label className="text-base font-medium flex items-center gap-2">
+            <Label className="flex items-center gap-2 text-base font-medium">
               {settings.enableCheckInReminders ? (
                 <Bell className="h-4 w-4 text-green-600" />
               ) : (
@@ -206,7 +206,7 @@ export function UserSettingsCard({ className }: UserSettingsCardProps) {
         {/* Check-out Reminders */}
         <div className="flex items-center justify-between space-x-2">
           <div className="space-y-0.5">
-            <Label className="text-base font-medium flex items-center gap-2">
+            <Label className="flex items-center gap-2 text-base font-medium">
               {settings.enableCheckOutReminders ? (
                 <Bell className="h-4 w-4 text-green-600" />
               ) : (
@@ -229,7 +229,7 @@ export function UserSettingsCard({ className }: UserSettingsCardProps) {
         {/* Holiday Notifications */}
         <div className="flex items-center justify-between space-x-2">
           <div className="space-y-0.5">
-            <Label className="text-base font-medium flex items-center gap-2">
+            <Label className="flex items-center gap-2 text-base font-medium">
               {settings.enableHolidayNotifications ? (
                 <Bell className="h-4 w-4 text-green-600" />
               ) : (
@@ -251,7 +251,7 @@ export function UserSettingsCard({ className }: UserSettingsCardProps) {
 
         {/* Save Button */}
         {hasChanges && (
-          <div className="flex justify-end pt-4 border-t">
+          <div className="flex justify-end border-t pt-4">
             <Button onClick={saveSettings} disabled={saving}>
               {saving ? (
                 <>
