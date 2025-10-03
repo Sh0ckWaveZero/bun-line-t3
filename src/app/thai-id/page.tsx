@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import ThaiIdGenerator from "@/components/thai-id/ThaiIdGenerator";
+import ThaiIdGenerate from "@/components/thai-id/ThaiIdGenerate";
 
 export const metadata: Metadata = {
   title: "สุ่มเลขบัตรประชาชน | Thai ID Generator",
@@ -10,12 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function ThaiIdPage() {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-4">
-      <div className="container mx-auto">
-        <ThaiIdGenerator />
-      </div>
-    </div>
-  );
+  return <ThaiIdGenerate />;
 }
-
