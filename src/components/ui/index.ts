@@ -17,4 +17,7 @@ export { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs";
 
 export { ThemeToggle } from "./theme-toggle-simple";
 
+export * from "./badge";
+export * from "./separator";
+
 // Note: CalendarExample ไม่ export เพราะเป็นเพียงตัวอย่าง
