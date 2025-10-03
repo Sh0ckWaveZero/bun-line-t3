@@ -126,7 +126,10 @@ src/
 - Follow functional programming patterns where possible
 - Prefer early returns and immutable data structures
 - Use TypeScript interfaces over types for objects
-- Support dark/light mode in all components
+- **UI Theme Support**: All UI components MUST automatically support both light and dark modes
+  - Use Tailwind's dark mode classes (dark:) for styling
+  - Leverage Radix UI's built-in theme-aware components
+  - Test components in both themes before completion
 - Implement proper error handling without exposing sensitive data
 
 ## External Integrations
