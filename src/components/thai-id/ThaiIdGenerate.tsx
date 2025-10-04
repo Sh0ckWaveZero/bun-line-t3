@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -70,6 +70,7 @@ export default function ThaiIdGenerate() {
     null,
   );
   const [includeValidation, setIncludeValidation] = useState<boolean>(true);
+  const firstResultRef = useRef<HTMLDivElement>(null);
 
   const handleGenerate = () => {
     const ids: GeneratedID[] = [];
@@ -79,6 +80,14 @@ export default function ThaiIdGenerate() {
       ids.push({ raw, formatted });
     }
     setGeneratedIDs(ids);
+
+    // Scroll to first result after generating
+    setTimeout(() => {
+      firstResultRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 100);
   };
 
   const handleCopy = async (text: string, key: string) => {
@@ -265,7 +274,7 @@ export default function ThaiIdGenerate() {
             ) : (
               <div className="space-y-4">
                 {generatedIDs.map((id, index) => (
-                  <Card key={index}>
+                  <Card key={index} ref={index === 0 ? firstResultRef : null}>
                     <CardHeader>
                       <CardTitle className="text-lg">
                         เลขบัตรที่ {index + 1}
