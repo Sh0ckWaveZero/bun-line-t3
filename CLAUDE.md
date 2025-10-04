@@ -131,6 +131,7 @@ src/
   - Leverage Radix UI's built-in theme-aware components
   - Test components in both themes before completion
 - Implement proper error handling without exposing sensitive data
+- **UI Design System**: Follow patterns in [docs/UI_DESIGN_SYSTEM.md](/docs/UI_DESIGN_SYSTEM.md) for consistent component design
 
 ## External Integrations
 
