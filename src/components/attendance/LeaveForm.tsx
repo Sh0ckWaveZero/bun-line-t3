@@ -4,6 +4,17 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/components/common/ToastProvider";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import {
+  Calendar,
+  Save,
+  Cake,
+  Palmtree,
+  Stethoscope,
+  User,
+} from "lucide-react";
 
 interface LeaveFormProps {
   onSubmit?: () => void;
@@ -106,72 +117,135 @@ export const LeaveForm = ({ onSubmit }: LeaveFormProps) => {
     }
   };
 
+  const leaveTypes = [
+    {
+      value: "personal",
+      label: "ลากิจ",
+      icon: <User className="h-4 w-4" />,
+    },
+    {
+      value: "sick",
+      label: "ลาป่วย",
+      icon: <Stethoscope className="h-4 w-4" />,
+    },
+    {
+      value: "vacation",
+      label: "ลาพักร้อน",
+      icon: <Palmtree className="h-4 w-4" />,
+    },
+    {
+      value: "birthday",
+      label: "เดือนเกิด",
+      icon: <Cake className="h-4 w-4" />,
+    },
+  ];
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="animate-fade-in mx-auto mt-2 flex w-full max-w-md flex-col gap-4 rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-6 shadow-lg dark:border-gray-700 dark:bg-gray-900 sm:max-w-lg sm:py-12 md:max-w-xl md:py-16"
-      style={{ minWidth: 0 }}
-    >
-      <h2 className="text-high-contrast dark:text-high-contrast mb-2 text-center text-xl font-bold sm:text-2xl">
-        แจ้งวันลา
-      </h2>
-      <div className="flex flex-col gap-1">
-        <label
-          className="text-medium-contrast dark:text-medium-contrast mb-1 font-medium"
-          htmlFor="leave-date"
-        >
-          วันที่ลา
-        </label>
-        <input
-          id="leave-date"
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          required
-          className="w-full rounded-lg border-2 border-gray-200 bg-background px-3 py-2 text-foreground transition focus:outline-none focus:ring-2 focus:ring-primary dark:border-gray-600"
-        />
+    <div className="container mx-auto max-w-4xl px-4 py-8">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">แจ้งวันลา</h1>
+          <p className="text-muted-foreground">
+            บันทึกข้อมูลวันลาของคุณ ระบบจะสร้างบันทึกการทำงานอัตโนมัติ
+          </p>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              ข้อมูลการลา
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Date Field */}
+              <div className="space-y-2">
+                <Label htmlFor="leave-date" className="text-sm font-medium">
+                  วันที่ลา
+                </Label>
+                <input
+                  id="leave-date"
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  required
+                  className="w-full rounded-md border bg-background px-3 py-1.5 text-sm text-foreground transition focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+
+              {/* Leave Type Field */}
+              <div className="space-y-3">
+                <Label htmlFor="leave-type" className="text-sm font-semibold">
+                  ประเภทวันลา
+                </Label>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {leaveTypes.map((leaveType) => (
+                    <button
+                      key={leaveType.value}
+                      type="button"
+                      onClick={() => setType(leaveType.value)}
+                      className={`flex h-14 items-center gap-3 rounded-lg border p-3 transition-all ${
+                        type === leaveType.value
+                          ? "bg-primary/10 border-primary text-primary"
+                          : "border-border bg-card hover:bg-accent"
+                      }`}
+                    >
+                      <div
+                        className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md ${
+                          type === leaveType.value
+                            ? "bg-primary/20 text-primary"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {leaveType.icon}
+                      </div>
+                      <span className="font-medium">{leaveType.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Reason Field */}
+              <div className="space-y-3">
+                <Label htmlFor="leave-reason" className="text-sm font-semibold">
+                  เหตุผล (ถ้ามี)
+                </Label>
+                <input
+                  id="leave-reason"
+                  type="text"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  className="w-full rounded-lg border bg-background px-3 py-2 text-foreground transition focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="ระบุเหตุผล (ถ้ามี)"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full"
+                size="lg"
+              >
+                <Save className="mr-2 h-4 w-4" />
+                {loading ? "กำลังบันทึก..." : "บันทึกวันลา"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* Info Section */}
+        <div className="space-y-2 rounded-lg border border-blue-500/50 bg-blue-500/10 p-6">
+          <h3 className="font-semibold text-blue-700 dark:text-blue-400">
+            ℹ️ ข้อมูลสำคัญ
+          </h3>
+          <p className="text-sm text-blue-700/80 dark:text-blue-400/80">
+            เมื่อบันทึกวันลา ระบบจะสร้างบันทึกการทำงานอัตโนมัติให้
+            โดยเวลาเข้างาน 08:00 น. และเวลาออกงาน 17:00 น. (เวลาประเทศไทย)
+          </p>
+        </div>
       </div>
-      <div className="flex flex-col gap-1">
-        <label
-          className="text-medium-contrast dark:text-medium-contrast mb-1 font-medium"
-          htmlFor="leave-type"
-        >
-          ประเภทวันลา
-        </label>
-        <select
-          id="leave-type"
-          value={type}
-          onChange={(e) => setType(e.target.value)}
-          className="w-full rounded-lg border-2 border-gray-200 bg-background px-3 py-2 text-foreground transition focus:outline-none focus:ring-2 focus:ring-primary dark:border-gray-600"
-        >
-          <option value="personal">ลากิจ</option>
-          <option value="sick">ลาป่วย</option>
-          <option value="vacation">ลาพักร้อน</option>
-        </select>
-      </div>
-      <div className="flex flex-col gap-1">
-        <label
-          className="text-medium-contrast dark:text-medium-contrast mb-1 font-medium"
-          htmlFor="leave-reason"
-        >
-          เหตุผล (ถ้ามี)
-        </label>
-        <input
-          id="leave-reason"
-          type="text"
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          className="w-full rounded-lg border-2 border-gray-200 bg-background px-3 py-2 text-foreground transition focus:outline-none focus:ring-2 focus:ring-primary dark:border-gray-600"
-          placeholder="ระบุเหตุผล (ถ้ามี)"
-        />
-      </div>
-      <button
-        type="submit"
-        disabled={loading}
-        className="hover:bg-primary/90 dark:hover:bg-primary/80 mt-2 w-full rounded-lg border-2 border-primary bg-primary px-4 py-2 font-semibold text-primary-foreground shadow-sm transition disabled:opacity-60 dark:border-primary dark:bg-primary dark:text-primary-foreground"
-      >
-        {loading ? "กำลังบันทึก..." : "บันทึกวันลา"}
-      </button>
-    </form>
+    </div>
   );
 };

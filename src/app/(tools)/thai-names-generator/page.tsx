@@ -63,7 +63,7 @@ export default function ThaiNamesGeneratorPage() {
   const [count, setCount] = useState<number>(5);
   const [generatedNames, setGeneratedNames] = useState<GeneratedName[]>([]);
   const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({});
-  const firstResultRef = useRef<HTMLDivElement>(null);
+  const resultsContainerRef = useRef<HTMLDivElement>(null);
 
   const handleCopy = async (text: string, key: string) => {
     try {
@@ -96,9 +96,9 @@ export default function ThaiNamesGeneratorPage() {
     }
     setGeneratedNames(names);
 
-    // Scroll to first result after generating
+    // Scroll to results container after generating
     setTimeout(() => {
-      firstResultRef.current?.scrollIntoView({
+      resultsContainerRef.current?.scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
@@ -157,7 +157,7 @@ export default function ThaiNamesGeneratorPage() {
           </Card>
 
           {/* Results Panel */}
-          <div className="space-y-4">
+          <div className="space-y-4" ref={resultsContainerRef}>
             {generatedNames.length === 0 ? (
               <Card>
                 <CardContent className="flex min-h-[400px] items-center justify-center p-8">
@@ -170,7 +170,7 @@ export default function ThaiNamesGeneratorPage() {
             ) : (
               <div className="space-y-4">
                 {generatedNames.map((name, index) => (
-                  <Card key={index} ref={index === 0 ? firstResultRef : null}>
+                  <Card key={index}>
                     <CardHeader>
                       <CardTitle className="text-lg">
                         ชื่อที่ {index + 1}
