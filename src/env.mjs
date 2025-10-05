@@ -40,7 +40,9 @@ export const env = createEnv({
     ALLOWED_DOMAINS: z.string().min(1),
     // 🧪 Development Test User ID
     DEV_TEST_USER_ID: z.string().optional(),
+    // 🤖 AI Assistant Configuration
     OPENAI_API_KEY: z.string().optional(),
+    MCP_AI_MODEL: z.string().default("gpt-4o"),
   },
 
   /**
@@ -77,6 +79,7 @@ export const env = createEnv({
     ALLOWED_DOMAINS: process.env.ALLOWED_DOMAINS,
     DEV_TEST_USER_ID: process.env.DEV_TEST_USER_ID,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    MCP_AI_MODEL: process.env.MCP_AI_MODEL,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

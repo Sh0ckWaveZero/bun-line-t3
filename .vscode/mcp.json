@@ -6,6 +6,14 @@
     "browsermcp": {
       "command": "bunx",
       "args": ["@browsermcp/mcp@latest"]
+    },
+    // Local AI Assistant MCP Server
+    "ai-assistant": {
+      "command": "bun",
+      "args": ["src/lib/mcp/server.ts"],
+      "env": {
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}"
+      }
     }
   }
 }

@@ -46,6 +46,7 @@
   "dependencies": {
     "@ai-sdk/openai": "^2.0.42",
     "@auth/prisma-adapter": "^2.10.0",
+    "@modelcontextprotocol/sdk": "^1.19.1",
     "@prisma/client": "^6.16.3",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-checkbox": "^1.3.3",
@@ -85,7 +86,8 @@
     "tailwindcss": "^4.1.14",
     "tweakpane": "^4.0.5",
     "uuid": "^11.1.0",
-    "zod": "3.25.53"
+    "zod": "3.25.53",
+    "zod-to-json-schema": "^3.24.6"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",

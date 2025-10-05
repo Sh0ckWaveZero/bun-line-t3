@@ -15,6 +15,7 @@ import { handleChartCommand, parseChartCommand } from "./handleChartCommand";
 import { handleSettingsCommand } from "./handleSettingsCommand";
 import { handleIdGenerator } from "./handleIdGenerator";
 import { handleHealthCommand } from "./handleHealthCommand";
+import { handleAiCommand } from "./handleAiCommand";
 
 const { sendMessage } = await import("@/lib/utils/line-utils");
 
@@ -179,6 +180,11 @@ export const handleCommand = async (
     ].includes(command)
   ) {
     await handleHealthCommand(req);
+    return;
+  }
+  // AI Assistant
+  if (["ai", "ถาม", "ask", "คุย", "chat"].includes(command)) {
+    await handleAiCommand(req, conditions);
     return;
   }
   // Chart
