@@ -9,7 +9,14 @@ export class ActivityFormatter {
    * Format activity summary for LINE message
    */
   static formatSummary(summary: ActivitySummary): string {
-    const { period, totalActivities, totalDuration, totalDistance, totalCalories, totalSteps } = summary;
+    const {
+      period,
+      totalActivities,
+      totalDuration,
+      totalDistance,
+      totalCalories,
+      totalSteps,
+    } = summary;
 
     const periodName = {
       daily: "วันนี้",

@@ -4,12 +4,15 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth/auth-options";
+import { authOptions } from "@/lib/auth/auth";
 import { healthActivityService } from "@/features/health-activity/services/health-activity.service";
 import { z } from "zod";
 
 const healthMetricsSchema = z.object({
-  date: z.string().transform((val) => new Date(val)).optional(),
+  date: z
+    .string()
+    .transform((val) => new Date(val))
+    .optional(),
   weight: z.number().optional(),
   height: z.number().optional(),
   bmi: z.number().optional(),
@@ -42,7 +45,7 @@ export async function GET(request: NextRequest) {
 
     const metrics = await healthActivityService.getHealthMetrics(
       session.user.id,
-      date
+      date,
     );
 
     return NextResponse.json({
@@ -53,7 +56,7 @@ export async function GET(request: NextRequest) {
     console.error("Error fetching health metrics:", error);
     return NextResponse.json(
       { error: "Failed to fetch health metrics" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -83,7 +86,7 @@ export async function POST(request: NextRequest) {
         data: metrics,
         message: "Health metrics saved successfully",
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error("Error saving health metrics:", error);
@@ -91,13 +94,13 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Invalid input data", details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     return NextResponse.json(
       { error: "Failed to save health metrics" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

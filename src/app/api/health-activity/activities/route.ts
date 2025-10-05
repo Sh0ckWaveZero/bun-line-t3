@@ -4,20 +4,20 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth/auth-options";
+import { authOptions } from "@/lib/auth/auth";
 import { healthActivityService } from "@/features/health-activity/services/health-activity.service";
 import { z } from "zod";
-import type { ActivityType } from "@/features/health-activity/types";
+import type { ActivityType } from "@prisma/client";
 
 const createActivitySchema = z.object({
   activityType: z.enum([
-    "walking",
-    "running",
-    "cycling",
-    "swimming",
-    "workout",
-    "yoga",
-    "other",
+    "WALKING",
+    "RUNNING",
+    "CYCLING",
+    "SWIMMING",
+    "WORKOUT",
+    "YOGA",
+    "OTHER",
   ]),
   date: z.string().transform((val) => new Date(val)),
   duration: z.number().min(1),
@@ -48,7 +48,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
-    const activityType = searchParams.get("activityType") as ActivityType | null;
+    const activityType = searchParams.get(
+      "activityType",
+    ) as ActivityType | null;
     const limit = parseInt(searchParams.get("limit") || "50");
     const offset = parseInt(searchParams.get("offset") || "0");
 
@@ -70,7 +72,7 @@ export async function GET(request: NextRequest) {
     console.error("Error fetching activities:", error);
     return NextResponse.json(
       { error: "Failed to fetch activities" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -100,7 +102,7 @@ export async function POST(request: NextRequest) {
         data: activity,
         message: "Activity created successfully",
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error("Error creating activity:", error);
@@ -108,13 +110,13 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Invalid input data", details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     return NextResponse.json(
       { error: "Failed to create activity" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -136,19 +138,19 @@ export async function DELETE(request: NextRequest) {
     if (!activityId) {
       return NextResponse.json(
         { error: "Activity ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const success = await healthActivityService.deleteActivity(
       activityId,
-      session.user.id
+      session.user.id,
     );
 
     if (!success) {
       return NextResponse.json(
         { error: "Failed to delete activity" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -160,7 +162,7 @@ export async function DELETE(request: NextRequest) {
     console.error("Error deleting activity:", error);
     return NextResponse.json(
       { error: "Failed to delete activity" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -9,16 +9,19 @@ This feature allows users to track their health activities, fitness metrics, and
 ## Features
 
 ### 1. Activity Tracking
+
 - Track various activity types: Walking, Running, Cycling, Swimming, Workout, Yoga, and more
 - Record duration, distance, calories burned, steps, and heart rate
 - View activity history and summaries
 
 ### 2. Health Metrics
+
 - Track weight, height, BMI, and body fat percentage
 - Monitor blood pressure and resting heart rate
 - Record sleep hours and water intake
 
 ### 3. Activity Summaries
+
 - Daily activity summary
 - Weekly activity summary
 - Monthly activity summary
@@ -55,9 +58,11 @@ This feature allows users to track their health activities, fitness metrics, and
 ### Activities API
 
 #### GET `/api/health-activity/activities`
+
 Get user's activities with optional filters.
 
 **Query Parameters:**
+
 - `startDate` (optional) - Filter by start date (ISO 8601)
 - `endDate` (optional) - Filter by end date (ISO 8601)
 - `activityType` (optional) - Filter by activity type
@@ -65,6 +70,7 @@ Get user's activities with optional filters.
 - `offset` (optional) - Offset for pagination (default: 0)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -92,9 +98,11 @@ Get user's activities with optional filters.
 ```
 
 #### POST `/api/health-activity/activities`
+
 Create a new activity record.
 
 **Request Body:**
+
 ```json
 {
   "activityType": "running",
@@ -112,6 +120,7 @@ Create a new activity record.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -121,9 +130,11 @@ Create a new activity record.
 ```
 
 #### DELETE `/api/health-activity/activities?id={activityId}`
+
 Delete an activity.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -134,13 +145,16 @@ Delete an activity.
 ### Summary API
 
 #### GET `/api/health-activity/summary`
+
 Get activity summary for a specific period.
 
 **Query Parameters:**
+
 - `period` (required) - Period type: `daily`, `weekly`, or `monthly`
 - `date` (optional) - Reference date (ISO 8601, default: today)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -163,12 +177,15 @@ Get activity summary for a specific period.
 ### Health Metrics API
 
 #### GET `/api/health-activity/metrics`
+
 Get health metrics for a specific date.
 
 **Query Parameters:**
+
 - `date` (optional) - Date to get metrics for (ISO 8601, default: today)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -192,9 +209,11 @@ Get health metrics for a specific date.
 ```
 
 #### POST `/api/health-activity/metrics`
+
 Save health metrics.
 
 **Request Body:**
+
 ```json
 {
   "date": "2025-10-05T00:00:00.000Z",
@@ -211,6 +230,7 @@ Save health metrics.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -222,6 +242,7 @@ Save health metrics.
 ## Database Schema
 
 ### HealthActivity Model
+
 ```prisma
 model HealthActivity {
   id           String       @id @default(auto()) @map("_id") @db.ObjectId
@@ -244,6 +265,7 @@ model HealthActivity {
 ```
 
 ### HealthMetrics Model
+
 ```prisma
 model HealthMetrics {
   id               String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -306,10 +328,12 @@ This feature is designed to be extensible and can integrate with external health
 ### Supported Integration Patterns
 
 1. **Direct API Integration**
+
    - POST activities directly to `/api/health-activity/activities`
    - Authenticate using NextAuth session or API tokens
 
 2. **Webhook Integration**
+
    - Configure external apps to send activity data to your webhook endpoint
    - Transform and store data using the service layer
 
@@ -331,7 +355,7 @@ async function handleGoogleFitWebhook(data: GoogleFitActivity) {
     calories: data.calories,
     steps: data.steps,
   });
-  
+
   return activity;
 }
 ```

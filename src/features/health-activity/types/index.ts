@@ -2,6 +2,9 @@
  * Health Activity Feature Types
  * Types for health and fitness activity tracking
  */
+import type { ActivityType as PrismaActivityType } from "@prisma/client";
+
+export type ActivityType = PrismaActivityType;
 
 export interface ActivityData {
   id: string;
@@ -9,27 +12,18 @@ export interface ActivityData {
   activityType: ActivityType;
   date: Date;
   duration: number; // minutes
-  distance?: number; // kilometers
-  calories?: number;
-  steps?: number;
+  distance?: number | null; // kilometers
+  calories?: number | null;
+  steps?: number | null;
   heartRate?: {
     average?: number;
     max?: number;
     min?: number;
-  };
-  metadata?: Record<string, unknown>;
+  } | null;
+  metadata?: Record<string, unknown> | null;
   createdAt: Date;
   updatedAt: Date;
 }
-
-export type ActivityType =
-  | "walking"
-  | "running"
-  | "cycling"
-  | "swimming"
-  | "workout"
-  | "yoga"
-  | "other";
 
 export interface ActivitySummary {
   userId: string;
@@ -46,19 +40,22 @@ export interface ActivitySummary {
 }
 
 export interface HealthMetrics {
+  id: string;
   userId: string;
   date: Date;
-  weight?: number; // kg
-  height?: number; // cm
-  bmi?: number;
-  bodyFat?: number; // percentage
+  weight?: number | null; // kg
+  height?: number | null; // cm
+  bmi?: number | null;
+  bodyFat?: number | null; // percentage
   bloodPressure?: {
     systolic: number;
     diastolic: number;
-  };
-  restingHeartRate?: number;
-  sleepHours?: number;
-  waterIntake?: number; // liters
+  } | null;
+  restingHeartRate?: number | null;
+  sleepHours?: number | null;
+  waterIntake?: number | null; // liters
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface CreateActivityInput {

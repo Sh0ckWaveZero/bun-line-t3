@@ -3,6 +3,7 @@
  * Service for managing health and fitness activity data
  */
 import { db } from "@/lib/database/db";
+import { ActivityType } from "@prisma/client";
 import type {
   ActivityData,
   ActivitySummary,
@@ -19,25 +20,52 @@ export class HealthActivityService {
     const activity = await db.healthActivity.create({
       data: {
         userId: input.userId,
-        activityType: input.activityType,
+        activityType: input.activityType as ActivityType,
         date: input.date,
         duration: input.duration,
         distance: input.distance,
         calories: input.calories,
         steps: input.steps,
-        heartRate: input.heartRate,
-        metadata: input.metadata,
+        heartRate: input.heartRate as any,
+        metadata: input.metadata as any,
       },
     });
 
-    return activity as ActivityData;
+    return this.mapToActivityData(activity);
+  }
+
+  /**
+   * Map Prisma result to ActivityData
+   */
+  private mapToActivityData(activity: any): ActivityData {
+    return {
+      id: activity.id,
+      userId: activity.userId,
+      activityType: activity.activityType,
+      date: activity.date,
+      duration: activity.duration,
+      distance: activity.distance,
+      calories: activity.calories,
+      steps: activity.steps,
+      heartRate: activity.heartRate as any,
+      metadata: activity.metadata as any,
+      createdAt: activity.createdAt,
+      updatedAt: activity.updatedAt,
+    };
   }
 
   /**
    * Get activities for a user with optional filters
    */
   async getActivities(query: GetActivitiesQuery): Promise<ActivityData[]> {
-    const { userId, startDate, endDate, activityType, limit = 50, offset = 0 } = query;
+    const {
+      userId,
+      startDate,
+      endDate,
+      activityType,
+      limit = 50,
+      offset = 0,
+    } = query;
 
     const where: any = { userId };
 
@@ -58,7 +86,7 @@ export class HealthActivityService {
       skip: offset,
     });
 
-    return activities as ActivityData[];
+    return activities.map(this.mapToActivityData);
   }
 
   /**
@@ -67,7 +95,7 @@ export class HealthActivityService {
   async getActivitySummary(
     userId: string,
     period: "daily" | "weekly" | "monthly",
-    date: Date = new Date()
+    date: Date = new Date(),
   ): Promise<ActivitySummary> {
     const { startDate, endDate } = this.getPeriodRange(period, date);
 
@@ -154,7 +182,10 @@ export class HealthActivityService {
   /**
    * Get user's health metrics
    */
-  async getHealthMetrics(userId: string, date?: Date): Promise<HealthMetrics | null> {
+  async getHealthMetrics(
+    userId: string,
+    date?: Date,
+  ): Promise<HealthMetrics | null> {
     const targetDate = date || new Date();
 
     const metrics = await db.healthMetrics.findFirst({
@@ -168,13 +199,38 @@ export class HealthActivityService {
       orderBy: { date: "desc" },
     });
 
-    return metrics as HealthMetrics | null;
+    if (!metrics) return null;
+
+    return this.mapToHealthMetrics(metrics);
+  }
+
+  /**
+   * Map Prisma result to HealthMetrics
+   */
+  private mapToHealthMetrics(metrics: any): HealthMetrics {
+    return {
+      id: metrics.id,
+      userId: metrics.userId,
+      date: metrics.date,
+      weight: metrics.weight,
+      height: metrics.height,
+      bmi: metrics.bmi,
+      bodyFat: metrics.bodyFat,
+      bloodPressure: metrics.bloodPressure as any,
+      restingHeartRate: metrics.restingHeartRate,
+      sleepHours: metrics.sleepHours,
+      waterIntake: metrics.waterIntake,
+      createdAt: metrics.createdAt,
+      updatedAt: metrics.updatedAt,
+    };
   }
 
   /**
    * Save health metrics
    */
-  async saveHealthMetrics(metrics: Partial<HealthMetrics> & { userId: string }): Promise<HealthMetrics> {
+  async saveHealthMetrics(
+    metrics: Partial<HealthMetrics> & { userId: string },
+  ): Promise<HealthMetrics> {
     const result = await db.healthMetrics.upsert({
       where: {
         userId_date: {
@@ -189,7 +245,7 @@ export class HealthActivityService {
         height: metrics.height,
         bmi: metrics.bmi,
         bodyFat: metrics.bodyFat,
-        bloodPressure: metrics.bloodPressure,
+        bloodPressure: metrics.bloodPressure as any,
         restingHeartRate: metrics.restingHeartRate,
         sleepHours: metrics.sleepHours,
         waterIntake: metrics.waterIntake,
@@ -199,14 +255,14 @@ export class HealthActivityService {
         height: metrics.height,
         bmi: metrics.bmi,
         bodyFat: metrics.bodyFat,
-        bloodPressure: metrics.bloodPressure,
+        bloodPressure: metrics.bloodPressure as any,
         restingHeartRate: metrics.restingHeartRate,
         sleepHours: metrics.sleepHours,
         waterIntake: metrics.waterIntake,
       },
     });
 
-    return result as HealthMetrics;
+    return this.mapToHealthMetrics(result);
   }
 
   /**
@@ -214,7 +270,7 @@ export class HealthActivityService {
    */
   private getPeriodRange(
     period: "daily" | "weekly" | "monthly",
-    date: Date
+    date: Date,
   ): { startDate: Date; endDate: Date } {
     const startDate = new Date(date);
     const endDate = new Date(date);

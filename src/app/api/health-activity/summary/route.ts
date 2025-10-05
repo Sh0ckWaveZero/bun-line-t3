@@ -4,7 +4,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth/auth-options";
+import { authOptions } from "@/lib/auth/auth";
 import { healthActivityService } from "@/features/health-activity/services/health-activity.service";
 
 /**
@@ -20,13 +20,17 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const period = searchParams.get("period") as "daily" | "weekly" | "monthly" | null;
+    const period = searchParams.get("period") as
+      | "daily"
+      | "weekly"
+      | "monthly"
+      | null;
     const dateParam = searchParams.get("date");
 
     if (!period || !["daily", "weekly", "monthly"].includes(period)) {
       return NextResponse.json(
         { error: "Invalid period. Must be: daily, weekly, or monthly" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -35,7 +39,7 @@ export async function GET(request: NextRequest) {
     const summary = await healthActivityService.getActivitySummary(
       session.user.id,
       period,
-      date
+      date,
     );
 
     return NextResponse.json({
@@ -46,7 +50,7 @@ export async function GET(request: NextRequest) {
     console.error("Error fetching activity summary:", error);
     return NextResponse.json(
       { error: "Failed to fetch activity summary" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
