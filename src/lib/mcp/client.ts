@@ -111,15 +111,20 @@ export class AIMCPClient {
       });
 
       if (result.isError) {
+        const content = result.content as Array<{
+          type: string;
+          text?: string;
+        }>;
         throw new Error(
-          result.content[0]?.type === "text"
-            ? result.content[0].text
+          content[0]?.type === "text" && content[0].text
+            ? content[0].text
             : "Unknown error",
         );
       }
 
+      const content = result.content as Array<{ type: string; text?: string }>;
       const text =
-        result.content[0]?.type === "text" ? result.content[0].text : "";
+        content[0]?.type === "text" && content[0].text ? content[0].text : "";
 
       return { text };
     } catch (error) {
@@ -147,15 +152,20 @@ export class AIMCPClient {
       });
 
       if (result.isError) {
+        const content = result.content as Array<{
+          type: string;
+          text?: string;
+        }>;
         throw new Error(
-          result.content[0]?.type === "text"
-            ? result.content[0].text
+          content[0]?.type === "text" && content[0].text
+            ? content[0].text
             : "Unknown error",
         );
       }
 
+      const content = result.content as Array<{ type: string; text?: string }>;
       const text =
-        result.content[0]?.type === "text" ? result.content[0].text : "";
+        content[0]?.type === "text" && content[0].text ? content[0].text : "";
 
       return {
         text,
@@ -187,15 +197,20 @@ export class AIMCPClient {
       });
 
       if (result.isError) {
+        const content = result.content as Array<{
+          type: string;
+          text?: string;
+        }>;
         throw new Error(
-          result.content[0]?.type === "text"
-            ? result.content[0].text
+          content[0]?.type === "text" && content[0].text
+            ? content[0].text
             : "Unknown error",
         );
       }
 
+      const content = result.content as Array<{ type: string; text?: string }>;
       const text =
-        result.content[0]?.type === "text" ? result.content[0].text : "";
+        content[0]?.type === "text" && content[0].text ? content[0].text : "";
 
       // Parse JSON response
       try {
@@ -206,7 +221,7 @@ export class AIMCPClient {
           reasoning: parsed.reasoning || "",
           confidence: parsed.confidence || 0,
         };
-      } catch (parseError) {
+      } catch {
         console.error("❌ Failed to parse AI response:", text);
         throw new Error("Failed to parse AI command routing response");
       }

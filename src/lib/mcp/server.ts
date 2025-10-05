@@ -127,7 +127,6 @@ export class AIMCPServer {
     const { text } = await generateText({
       model: openai(model),
       prompt,
-      maxTokens: 1000,
     });
 
     return {
@@ -170,7 +169,6 @@ export class AIMCPServer {
     const { text } = await generateText({
       model: openai("gpt-4o"),
       messages,
-      maxTokens: 1000,
     });
 
     // Update conversation history
@@ -232,7 +230,6 @@ ${availableCommands}
         { role: "system", content: systemPrompt },
         { role: "user", content: userMessage },
       ],
-      maxTokens: 500,
     });
 
     return {

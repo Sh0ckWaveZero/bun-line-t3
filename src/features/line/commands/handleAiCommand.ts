@@ -25,7 +25,7 @@ export async function handleAiCommand(req: any, conditions: string[]) {
       return;
     }
 
-    const subCommand = conditions[0].toLowerCase();
+    const subCommand = conditions[0]?.toLowerCase() || "";
 
     // Handle help command
     if (subCommand === "help" || subCommand === "ช่วยเหลือ") {
@@ -122,7 +122,7 @@ async function handleCommandRouting(req: any, naturalLanguage: string) {
       await sendMessage(req, [
         {
           type: "text",
-          text: `ไม่พบคำสั่ง: ${routeResponse.command}`,
+          text: `ไม่พบคำสั่ง: ${routeResponse.command || "unknown"}`,
         },
       ]);
       return;

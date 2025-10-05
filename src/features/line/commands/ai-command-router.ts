@@ -23,8 +23,6 @@ import { handleSettingsCommand } from "./handleSettingsCommand";
 import { handleIdGenerator } from "./handleIdGenerator";
 import { handleHealthCommand } from "./handleHealthCommand";
 
-const { sendMessage } = await import("@/lib/utils/line-utils");
-
 export interface CommandRouteResult {
   /** Whether the command was successfully routed */
   success: boolean;
