@@ -1,4 +1,4 @@
-import { getAIMCPClient } from "@/lib/mcp/client";
+import { routeCommand, chat } from "@/lib/ai/openai-client";
 import { formatCommandsForAI, getCommandByName } from "./command-registry";
 import { executeCommand } from "./ai-command-router";
 
@@ -73,21 +73,11 @@ export async function handleAiCommand(req: any, conditions: string[]) {
  */
 async function handleCommandRouting(req: any, naturalLanguage: string) {
   try {
-    // Send loading message
-    await sendMessage(req, [
-      {
-        type: "text",
-        text: "🤖 กำลังวิเคราะห์คำขอ...",
-      },
-    ]);
-
-    const client = getAIMCPClient();
-
     // Get available commands in formatted string
     const commandsContext = formatCommandsForAI();
 
-    // Route the command using AI
-    const routeResponse = await client.routeCommand({
+    // Route the command using AI (direct OpenAI call)
+    const routeResponse = await routeCommand({
       userMessage: naturalLanguage,
       availableCommands: commandsContext,
     });
@@ -128,15 +118,8 @@ async function handleCommandRouting(req: any, naturalLanguage: string) {
       return;
     }
 
-    // Send confirmation message
-    await sendMessage(req, [
-      {
-        type: "text",
-        text: `✅ เข้าใจแล้ว: ${routeResponse.reasoning}\n\n⚡ กำลังดำเนินการ...`,
-      },
-    ]);
-
-    // Execute the command
+    // Execute the command directly (no loading message)
+    // The actual command handler will send its own response
     const result = await executeCommand(
       commandDef,
       routeResponse.parameters,
@@ -151,7 +134,6 @@ async function handleCommandRouting(req: any, naturalLanguage: string) {
         },
       ]);
     }
-    // Note: The actual command handler will send its own response
   } catch (error) {
     console.error("❌ Error in command routing:", error);
     throw error;
@@ -163,18 +145,8 @@ async function handleCommandRouting(req: any, naturalLanguage: string) {
  */
 async function handleChatMode(req: any, userId: string, message: string) {
   try {
-    // Send loading message
-    await sendMessage(req, [
-      {
-        type: "text",
-        text: "💬 กำลังคิด...",
-      },
-    ]);
-
-    const client = getAIMCPClient();
-    const response = await client.chat({
+    const response = await chat({
       message,
-      conversationId: userId, // Use LINE userId as conversation ID
       systemPrompt:
         "คุณเป็นผู้ช่วย AI ที่เป็นมิตรและชาญฉลาด ตอบคำถามเป็นภาษาไทยที่เข้าใจง่าย กระชับ และตรงประเด็น",
     });
