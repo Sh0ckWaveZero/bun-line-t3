@@ -14,6 +14,7 @@ import { handleDefaultCommand } from "./handleDefaultCommand";
 import { handleChartCommand, parseChartCommand } from "./handleChartCommand";
 import { handleSettingsCommand } from "./handleSettingsCommand";
 import { handleIdGenerator } from "./handleIdGenerator";
+import { handleHealthCommand } from "./handleHealthCommand";
 
 const { sendMessage } = await import("@/lib/utils/line-utils");
 
@@ -163,6 +164,21 @@ export const handleCommand = async (
     ].includes(command)
   ) {
     await handleIdGenerator(req);
+    return;
+  }
+  // Health
+  if (
+    [
+      "สุขภาพ",
+      "health",
+      "กิจกรรม",
+      "activity",
+      "วันนี้",
+      "สัปดาห์นี้",
+      "เดือนนี้",
+    ].includes(command)
+  ) {
+    await handleHealthCommand(req);
     return;
   }
   // Chart
