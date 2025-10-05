@@ -9,7 +9,7 @@ export interface AIResponse {
 export interface AskAIParams {
   question: string;
   context?: string;
-  model?: "gpt-4o" | "gpt-4-turbo" | "gpt-3.5-turbo";
+  model?: string; // Any OpenAI model name (e.g., "gpt-4o", "gpt-5-nano", etc.)
 }
 
 export interface ChatParams {
@@ -106,7 +106,7 @@ export class AIMCPClient {
         arguments: {
           question: params.question,
           context: params.context,
-          model: params.model || "gpt-4o",
+          model: params.model, // Will use MCP_AI_MODEL env if not provided
         },
       });
 

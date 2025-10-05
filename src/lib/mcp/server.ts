@@ -19,9 +19,9 @@ const AskAISchema = z.object({
     .optional()
     .describe("Additional context for the question"),
   model: z
-    .enum(["gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"])
-    .default("gpt-4o")
-    .describe("OpenAI model to use"),
+    .string()
+    .optional()
+    .describe("OpenAI model to use (defaults to MCP_AI_MODEL env variable)"),
 });
 
 const ChatSchema = z.object({
@@ -124,8 +124,11 @@ export class AIMCPServer {
       ? `Context: ${context}\n\nQuestion: ${question}`
       : question;
 
+    // Use provided model or default to env variable
+    const modelName = model || process.env.MCP_AI_MODEL || "gpt-4o";
+
     const { text } = await generateText({
-      model: openai(model),
+      model: openai(modelName),
       prompt,
     });
 
@@ -166,8 +169,11 @@ export class AIMCPServer {
     messages.push(...history);
     messages.push({ role: "user", content: message });
 
+    // Use env variable for model
+    const modelName = process.env.MCP_AI_MODEL || "gpt-4o";
+
     const { text } = await generateText({
-      model: openai("gpt-4o"),
+      model: openai(modelName),
       messages,
     });
 
@@ -224,8 +230,11 @@ ${availableCommands}
 - ถ้าไม่เข้าใจคำขอหรือไม่มีคำสั่งที่เหมาะสม ให้ตอบ {"command": null, "reasoning": "...", "confidence": 0}
 - ตอบกลับเป็น JSON เท่านั้น ห้ามมีข้อความอื่นนอกเหนือจาก JSON`;
 
+    // Use env variable for model
+    const modelName = process.env.MCP_AI_MODEL || "gpt-4o";
+
     const { text } = await generateText({
-      model: openai("gpt-4o"),
+      model: openai(modelName),
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userMessage },

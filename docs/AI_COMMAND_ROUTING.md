@@ -30,7 +30,8 @@ Response
 
    - `route_command` tool: Analyzes natural language and returns JSON
    - Runs locally via stdio (no external server needed)
-   - Uses GPT-4o for intelligent command routing
+   - Uses configurable AI model (default: MCP_AI_MODEL env variable)
+   - Supports any OpenAI model: gpt-4o, gpt-5-nano, gpt-4-turbo, etc.
 
 3. **MCP Client** (`src/lib/mcp/client.ts`)
 
@@ -249,8 +250,10 @@ Bot: ขอโทษครับ ไม่แน่ใจว่าคุณต�
 # Required
 OPENAI_API_KEY=sk-your-openai-api-key
 
-# Optional (defaults shown)
-MCP_AI_MODEL=gpt-4o
+# AI Model Configuration
+# Supports any OpenAI model: gpt-4o, gpt-5-nano, gpt-4-turbo, gpt-3.5-turbo, etc.
+# Default: gpt-4o (if not specified)
+MCP_AI_MODEL=gpt-5-nano
 ```
 
 ### MCP Server Configuration
