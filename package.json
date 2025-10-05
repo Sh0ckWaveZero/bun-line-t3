@@ -85,7 +85,8 @@
     "tailwindcss": "^4.1.14",
     "tweakpane": "^4.0.5",
     "uuid": "^11.1.0",
-    "zod": "3.25.53"
+    "zod": "3.25.53",
+    "zod-to-json-schema": "^3.24.6"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",

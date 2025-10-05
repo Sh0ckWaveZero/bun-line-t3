@@ -1,6 +1,6 @@
-import * as React from "react"
+import * as React from "react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 const Separator = React.forwardRef<
   React.ElementRef<"div">,
@@ -8,11 +8,11 @@ const Separator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("shrink-0 bg-border h-[1px] w-full", className)}
+    className={cn("h-[1px] w-full shrink-0 bg-border", className)}
     role="separator"
     {...props}
   />
-))
-Separator.displayName = "Separator"
+));
+Separator.displayName = "Separator";
 
-export { Separator }
+export { Separator };

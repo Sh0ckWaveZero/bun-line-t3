@@ -12,7 +12,7 @@ The project follows a consistent design pattern for tool pages (Thai Names Gener
       <h1 className="text-3xl font-bold tracking-tight">Page Title</h1>
       <p className="text-muted-foreground">Description</p>
     </div>
-    
+
     <div className="grid gap-6 lg:grid-cols-[350px_1fr]">
       <Card>Settings Panel (350px fixed width)</Card>
       <div>Results Panel (flexible width)</div>
@@ -25,13 +25,13 @@ The project follows a consistent design pattern for tool pages (Thai Names Gener
 
 ```tsx
 // Use Design System Tokens for automatic dark mode support
-bg-card              // Card background (auto adapts)
-border               // Border color (auto adapts)
-text-muted-foreground // Muted text (auto adapts)
-bg-primary/10        // Primary color with 10% opacity
-text-primary         // Primary color text
-bg-accent            // Accent background for hover states
-ring-ring            // Focus ring color
+bg - card; // Card background (auto adapts)
+border; // Border color (auto adapts)
+text - muted - foreground; // Muted text (auto adapts)
+bg - primary / 10; // Primary color with 10% opacity
+text - primary; // Primary color text
+bg - accent; // Accent background for hover states
+ring - ring; // Focus ring color
 ```
 
 ## Card Structure Pattern
@@ -74,7 +74,7 @@ ring-ring            // Focus ring color
 
 ```tsx
 // Success State (Green)
-className="border-green-200 bg-green-50 text-green-700 
+className="border-green-200 bg-green-50 text-green-700
           dark:border-green-800 dark:bg-green-950 dark:text-green-400"
 
 // Error State (Red)
@@ -93,30 +93,31 @@ className="border-blue-200 bg-blue-50 text-blue-700
 ## Spacing System
 
 ```tsx
-space-y-6  // Between major sections
-space-y-4  // Between cards/items
-space-y-3  // Between form elements
-space-y-2  // Between list items
-gap-6      // Grid gap
-gap-3      // Small gaps
-gap-2      // Minimal gaps
+space - y - 6; // Between major sections
+space - y - 4; // Between cards/items
+space - y - 3; // Between form elements
+space - y - 2; // Between list items
+gap - 6; // Grid gap
+gap - 3; // Small gaps
+gap - 2; // Minimal gaps
 ```
 
 ## Interactive States
 
 ```tsx
 // Hover & Transitions
-className="transition-colors hover:bg-accent"
-className="transition-all duration-200 hover:shadow-lg"
+className = "transition-colors hover:bg-accent";
+className = "transition-all duration-200 hover:shadow-lg";
 
-// Active/Click States  
-className="active:scale-95"
+// Active/Click States
+className = "active:scale-95";
 
 // Focus States
-className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+className =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 
 // Disabled States
-className="disabled:cursor-not-allowed disabled:opacity-50"
+className = "disabled:cursor-not-allowed disabled:opacity-50";
 ```
 
 ## Settings Panel Components

@@ -88,6 +88,7 @@ services:
       - CMC_API_KEY=${CMC_API_KEY}
       - CMC_URL=https://pro-api.coinmarketcap.com
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - MCP_AI_MODEL=${MCP_AI_MODEL:-gpt-5-nano}
 
       # =============================================================================
       # Domain Security Configuration (GitHub Secrets)

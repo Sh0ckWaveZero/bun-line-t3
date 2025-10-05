@@ -129,36 +129,84 @@ model PublicHoliday {
 }
 
 model Leave {
-  id               String            @id @default(auto()) @map("_id") @db.ObjectId
-  userId           String            @map("user_id") @db.ObjectId
-  date             String            @map("date") // YYYY-MM-DD
-  type             String            @default("personal") // personal, sick, vacation, etc.
-  reason           String?           @map("reason")
-  isActive         Boolean           @default(true) @map("is_active")
-  createdAt        DateTime          @default(now()) @map("created_at")
-  updatedAt        DateTime          @updatedAt @map("updated_at")
-  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  workAttendances  WorkAttendance[]
+  id              String           @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String           @map("user_id") @db.ObjectId
+  date            String           @map("date") // YYYY-MM-DD
+  type            String           @default("personal") // personal, sick, vacation, etc.
+  reason          String?          @map("reason")
+  isActive        Boolean          @default(true) @map("is_active")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workAttendances WorkAttendance[]
 
   @@index([userId, date, isActive])
   @@map("leaves")
 }
 
 model UserSettings {
-  id                          String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId                      String   @unique @map("user_id") @db.ObjectId
+  id                         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId                     String   @unique @map("user_id") @db.ObjectId
   // Notification preferences
-  enableCheckInReminders      Boolean  @default(true) @map("enable_checkin_reminders")
-  enableCheckOutReminders     Boolean  @default(true) @map("enable_checkout_reminders")
-  enableHolidayNotifications  Boolean  @default(false) @map("enable_holiday_notifications")
+  enableCheckInReminders     Boolean  @default(true) @map("enable_checkin_reminders")
+  enableCheckOutReminders    Boolean  @default(true) @map("enable_checkout_reminders")
+  enableHolidayNotifications Boolean  @default(false) @map("enable_holiday_notifications")
   // Timezone and locale
-  timezone                    String   @default("Asia/Bangkok") @map("timezone")
-  language                    String   @default("th") @map("language")
+  timezone                   String   @default("Asia/Bangkok") @map("timezone")
+  language                   String   @default("th") @map("language")
   // Timestamps
-  createdAt                   DateTime @default(now()) @map("created_at")
-  updatedAt                   DateTime @updatedAt @map("updated_at")
+  createdAt                  DateTime @default(now()) @map("created_at")
+  updatedAt                  DateTime @updatedAt @map("updated_at")
   // Relations
-  user                        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_settings")
+}
+
+enum ActivityType {
+  WALKING
+  RUNNING
+  CYCLING
+  SWIMMING
+  WORKOUT
+  YOGA
+  OTHER
+}
+
+model HealthActivity {
+  id           String       @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String       @map("user_id") @db.ObjectId
+  activityType ActivityType @map("activity_type")
+  date         DateTime     @map("date")
+  duration     Float        @map("duration") // in minutes
+  distance     Float?       @map("distance") // in kilometers
+  calories     Float?       @map("calories")
+  steps        Int?         @map("steps")
+  heartRate    Json?        @map("heart_rate") // { average, max, min }
+  metadata     Json?        @map("metadata")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  @@index([userId, date])
+  @@index([userId, activityType])
+  @@map("health_activities")
+}
+
+model HealthMetrics {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String   @map("user_id") @db.ObjectId
+  date             DateTime @map("date")
+  weight           Float?   @map("weight") // in kg
+  height           Float?   @map("height") // in cm
+  bmi              Float?   @map("bmi")
+  bodyFat          Float?   @map("body_fat") // percentage
+  bloodPressure    Json?    @map("blood_pressure") // { systolic, diastolic }
+  restingHeartRate Int?     @map("resting_heart_rate")
+  sleepHours       Float?   @map("sleep_hours")
+  waterIntake      Float?   @map("water_intake") // in liters
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, date])
+  @@map("health_metrics")
 }

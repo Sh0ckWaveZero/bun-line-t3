@@ -55,8 +55,13 @@ export async function POST(req: NextRequest) {
       },
     } as any;
 
-    await lineService.handleEvent(compatibleReq, compatibleRes);
+    // Process events asynchronously to avoid LINE timeout (3 seconds)
+    // Fire-and-forget pattern - respond to LINE immediately
+    lineService.handleEvent(compatibleReq, compatibleRes).catch((error) => {
+      console.error("❌ Error processing LINE event:", error);
+    });
 
+    // Return immediately to LINE (must respond within 3 seconds)
     return Response.json({ message: "ok" }, { status: 200 });
   } catch (error) {
     console.error("LINE API error:", error);

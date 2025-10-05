@@ -116,6 +116,7 @@ jobs:
           AIRVISUAL_API_KEY: ${{ secrets.AIRVISUAL_API_KEY }}
           CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          MCP_AI_MODEL: ${{ secrets.MCP_AI_MODEL }}
           APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
           ALLOWED_DOMAINS: ${{ secrets.ALLOWED_DOMAINS }}
 
@@ -274,6 +275,7 @@ jobs:
 
           # OpenAI API Configuration
           OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}"
+          MCP_AI_MODEL="${{ secrets.MCP_AI_MODEL || 'gpt-5-nano' }}"
 
           # =============================================================================
           # Domain Security Configuration
@@ -564,19 +566,19 @@ jobs:
             # นับจำนวน backup ทั้งหมด
             TOTAL_BACKUPS=$(ls -1d /tmp/backup-* 2>/dev/null | wc -l)
             echo "ℹ️ Found $TOTAL_BACKUPS backup directories"
-            
+
             # ถ้ามีมากกว่า 3 ตัว ให้ลบอันเก่า
             if [ "$TOTAL_BACKUPS" -gt 3 ]; then
               echo "Removing old backups (keeping 3 newest)..."
               # ใช้ stat เพื่อเรียงตามเวลาแล้วลบอันเก่า
-              cd /tmp && for dir in backup-*; do 
+              cd /tmp && for dir in backup-*; do
                 stat -f "%m %N" "$dir" 2>/dev/null
               done | sort -nr | tail -n +4 | cut -d' ' -f2- | while read -r backup_dir; do
                 echo "Removing old backup: $backup_dir"
                 rm -rf "$backup_dir" 2>/dev/null || true
               done
             fi
-            
+
             # แสดงจำนวน backup ที่เหลือ
             REMAINING_BACKUPS=$(ls -1d /tmp/backup-* 2>/dev/null | wc -l)
             echo "ℹ️ Remaining backups: $REMAINING_BACKUPS"

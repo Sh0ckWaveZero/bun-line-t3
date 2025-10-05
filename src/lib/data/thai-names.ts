@@ -7149,8 +7149,8 @@ export const thaiNamesData: ThaiNamesData = {
       "ไอลวิน",
       "ไอศูรย์",
       "ไอแซก",
-      "ไอใจ"
-],
+      "ไอใจ",
+    ],
     female: [
       "กงใจ",
       "กชกร",
@@ -12249,8 +12249,8 @@ export const thaiNamesData: ThaiNamesData = {
       "ไอรดา",
       "ไอริณ",
       "ไอลดา",
-      "ไฮฟะ"
-],
+      "ไฮฟะ",
+    ],
   },
   surnames: [
     "กกขุนทด",
@@ -22088,8 +22088,8 @@ export const thaiNamesData: ThaiNamesData = {
     "ไหลสกุล",
     "ไหวพริบ",
     "ไอยรารัตน์",
-    "ไอ่ดอ"
-],
+    "ไอ่ดอ",
+  ],
   nicknames: [
     "กิ๊บ",
     "กิ๊ฟ",
@@ -22317,8 +22317,8 @@ export const thaiNamesData: ThaiNamesData = {
     "ออร์",
     "ไฮดี้",
     "โคโค่",
-    "ปังปอนด์"
-],
+    "ปังปอนด์",
+  ],
 };
 
 /**
@@ -22327,21 +22327,30 @@ export const thaiNamesData: ThaiNamesData = {
  * @param gender - Gender for first names (ignored for surnames/nicknames)
  */
 export function getRandomThaiName(
-  type: 'firstName' | 'surname' | 'nickname',
-  gender?: 'male' | 'female'
+  type: "firstName" | "surname" | "nickname",
+  gender?: "male" | "female",
 ): string {
   switch (type) {
-    case 'firstName':
-      const pool = gender === 'female'
-        ? thaiNamesData.firstNames.female
-        : thaiNamesData.firstNames.male;
-      return pool[Math.floor(Math.random() * pool.length)] || '';
-    case 'surname':
-      return thaiNamesData.surnames[Math.floor(Math.random() * thaiNamesData.surnames.length)] || '';
-    case 'nickname':
-      return thaiNamesData.nicknames[Math.floor(Math.random() * thaiNamesData.nicknames.length)] || '';
+    case "firstName":
+      const pool =
+        gender === "female"
+          ? thaiNamesData.firstNames.female
+          : thaiNamesData.firstNames.male;
+      return pool[Math.floor(Math.random() * pool.length)] || "";
+    case "surname":
+      return (
+        thaiNamesData.surnames[
+          Math.floor(Math.random() * thaiNamesData.surnames.length)
+        ] || ""
+      );
+    case "nickname":
+      return (
+        thaiNamesData.nicknames[
+          Math.floor(Math.random() * thaiNamesData.nicknames.length)
+        ] || ""
+      );
     default:
-      return '';
+      return "";
   }
 }
 
@@ -22353,13 +22362,13 @@ export function generateThaiName(options: {
   includeFirstName?: boolean;
   includeSurname?: boolean;
   includeNickname?: boolean;
-  gender?: 'male' | 'female';
+  gender?: "male" | "female";
 }) {
   const {
     includeFirstName = true,
     includeSurname = true,
     includeNickname = false,
-    gender = Math.random() < 0.5 ? 'male' : 'female'
+    gender = Math.random() < 0.5 ? "male" : "female",
   } = options;
 
   const result: {
@@ -22370,22 +22379,22 @@ export function generateThaiName(options: {
   } = {};
 
   if (includeFirstName) {
-    result.firstName = getRandomThaiName('firstName', gender);
+    result.firstName = getRandomThaiName("firstName", gender);
   }
 
   if (includeSurname) {
-    result.surname = getRandomThaiName('surname');
+    result.surname = getRandomThaiName("surname");
   }
 
   if (includeNickname) {
-    result.nickname = getRandomThaiName('nickname');
+    result.nickname = getRandomThaiName("nickname");
   }
 
   // Generate full name if we have first name or surname
   if (result.firstName || result.surname) {
     result.fullName = [result.firstName, result.surname]
       .filter(Boolean)
-      .join(' ');
+      .join(" ");
   }
 
   return result;
