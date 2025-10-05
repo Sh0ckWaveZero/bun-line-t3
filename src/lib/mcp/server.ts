@@ -33,6 +33,15 @@ const ChatSchema = z.object({
   systemPrompt: z.string().optional().describe("Custom system prompt"),
 });
 
+const RouteCommandSchema = z.object({
+  userMessage: z
+    .string()
+    .describe("Natural language request from user in Thai or English"),
+  availableCommands: z
+    .string()
+    .describe("JSON string of available LINE bot commands"),
+});
+
 // MCP Server implementation
 export class AIMCPServer {
   private server: Server;
@@ -71,6 +80,12 @@ export class AIMCPServer {
             "Have a conversation with AI. Maintains conversation context across messages.",
           inputSchema: zodToJsonSchema(ChatSchema),
         },
+        {
+          name: "route_command",
+          description:
+            "Analyze natural language request and route to appropriate LINE bot command. Returns command name and extracted parameters in JSON format.",
+          inputSchema: zodToJsonSchema(RouteCommandSchema),
+        },
       ],
     }));
 
@@ -81,6 +96,8 @@ export class AIMCPServer {
           return await this.handleAskAI(request.params.arguments);
         } else if (request.params.name === "chat") {
           return await this.handleChat(request.params.arguments);
+        } else if (request.params.name === "route_command") {
+          return await this.handleRouteCommand(request.params.arguments);
         } else {
           throw new Error(`Unknown tool: ${request.params.name}`);
         }
@@ -164,6 +181,59 @@ export class AIMCPServer {
     if (history.length > 20) {
       history.splice(0, history.length - 20);
     }
+
+    return {
+      content: [
+        {
+          type: "text",
+          text,
+        },
+      ],
+    };
+  }
+
+  private async handleRouteCommand(args: any) {
+    const { userMessage, availableCommands } = RouteCommandSchema.parse(args);
+
+    const systemPrompt = `คุณเป็น AI ที่ช่วยวิเคราะห์คำขอจากผู้ใช้และแปลงเป็นคำสั่ง LINE bot ที่เหมาะสม
+
+คำสั่งที่มีทั้งหมด:
+${availableCommands}
+
+วิธีการทำงาน:
+1. อ่านและเข้าใจคำขอจากผู้ใช้ (รองรับทั้งภาษาไทยและอังกฤษ)
+2. หาคำสั่งที่เหมาะสมที่สุดจากรายการคำสั่งข้างต้น
+3. ดึงพารามิเตอร์ที่จำเป็นออกมาจากคำขอ
+4. ตอบกลับในรูปแบบ JSON ดังนี้:
+
+{
+  "command": "ชื่อคำสั่ง",
+  "parameters": {
+    "ชื่อพารามิเตอร์": "ค่า"
+  },
+  "reasoning": "เหตุผลที่เลือกคำสั่งนี้",
+  "confidence": 0.0-1.0
+}
+
+ตัวอย่าง:
+- ผู้ใช้: "ดึงราคาทองให้หน่อย" → {"command": "gold", "parameters": {}, "reasoning": "ผู้ใช้ต้องการทราบราคาทอง", "confidence": 1.0}
+- ผู้ใช้: "ราคา Bitcoin ตอนนี้เท่าไหร่" → {"command": "bitkub", "parameters": {"coin": "btc"}, "reasoning": "ผู้ใช้ต้องการราคา Bitcoin", "confidence": 0.9}
+- ผู้ใช้: "เช็คชื่อเข้างาน" → {"command": "checkin", "parameters": {}, "reasoning": "ผู้ใช้ต้องการบันทึกเวลาเข้างาน", "confidence": 1.0}
+- ผู้ใช้: "สร้างกราฟ BTC จาก binance" → {"command": "chart", "parameters": {"exchange": "bn", "coin": "btc"}, "reasoning": "ผู้ใช้ต้องการกราฟราคา BTC จาก Binance", "confidence": 1.0}
+
+หมายเหตุ:
+- ถ้าไม่แน่ใจว่าคำสั่งไหนเหมาะสม ให้ confidence ต่ำกว่า 0.8
+- ถ้าไม่เข้าใจคำขอหรือไม่มีคำสั่งที่เหมาะสม ให้ตอบ {"command": null, "reasoning": "...", "confidence": 0}
+- ตอบกลับเป็น JSON เท่านั้น ห้ามมีข้อความอื่นนอกเหนือจาก JSON`;
+
+    const { text } = await generateText({
+      model: openai("gpt-4o"),
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userMessage },
+      ],
+      maxTokens: 500,
+    });
 
     return {
       content: [

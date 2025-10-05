@@ -1,12 +1,14 @@
 import { getAIMCPClient } from "@/lib/mcp/client";
+import { formatCommandsForAI, getCommandByName } from "./command-registry";
+import { executeCommand } from "./ai-command-router";
 
 const { sendMessage } = await import("@/lib/utils/line-utils");
 
 /**
- * Handle /ai command - AI-powered chat using MCP
+ * Handle /ai command - AI-powered natural language command routing
  *
  * Supports:
- * - /ai [question] - Ask a single question
+ * - /ai [natural language request] - Route to appropriate command
  * - /ai chat [message] - Have a conversation (maintains context)
  * - /ai help - Show help message
  *
@@ -48,9 +50,9 @@ export async function handleAiCommand(req: any, conditions: string[]) {
       return;
     }
 
-    // Default: single question mode
-    const question = conditions.join(" ");
-    await handleQuestionMode(req, question);
+    // Default: Natural language command routing
+    const naturalLanguage = conditions.join(" ");
+    await handleCommandRouting(req, naturalLanguage);
   } catch (error) {
     console.error("❌ Error in handleAiCommand:", error);
 
@@ -67,32 +69,91 @@ export async function handleAiCommand(req: any, conditions: string[]) {
 }
 
 /**
- * Handle single question mode (no conversation context)
+ * Handle natural language command routing
  */
-async function handleQuestionMode(req: any, question: string) {
+async function handleCommandRouting(req: any, naturalLanguage: string) {
   try {
     // Send loading message
     await sendMessage(req, [
       {
         type: "text",
-        text: "🤖 กำลังประมวลผล...",
+        text: "🤖 กำลังวิเคราะห์คำขอ...",
       },
     ]);
 
     const client = getAIMCPClient();
-    const response = await client.askAI({
-      question,
-      model: "gpt-4o",
+
+    // Get available commands in formatted string
+    const commandsContext = formatCommandsForAI();
+
+    // Route the command using AI
+    const routeResponse = await client.routeCommand({
+      userMessage: naturalLanguage,
+      availableCommands: commandsContext,
     });
 
+    console.log("🎯 AI Route Response:", routeResponse);
+
+    // Check confidence level
+    if (routeResponse.confidence < 0.6) {
+      await sendMessage(req, [
+        {
+          type: "text",
+          text: `ขอโทษครับ ไม่แน่ใจว่าคุณต้องการอะไร\n\n💭 ที่เข้าใจ: ${routeResponse.reasoning}\n\nลองพิมพ์ /ai help เพื่อดูคำสั่งที่มี`,
+        },
+      ]);
+      return;
+    }
+
+    // Check if command was found
+    if (!routeResponse.command) {
+      await sendMessage(req, [
+        {
+          type: "text",
+          text: `ไม่พบคำสั่งที่เหมาะสม\n\n💭 ${routeResponse.reasoning}\n\nพิมพ์ /help เพื่อดูคำสั่งทั้งหมด`,
+        },
+      ]);
+      return;
+    }
+
+    // Get command definition
+    const commandDef = getCommandByName(routeResponse.command);
+    if (!commandDef) {
+      await sendMessage(req, [
+        {
+          type: "text",
+          text: `ไม่พบคำสั่ง: ${routeResponse.command}`,
+        },
+      ]);
+      return;
+    }
+
+    // Send confirmation message
     await sendMessage(req, [
       {
         type: "text",
-        text: `🤖 คำตอบ:\n\n${response.text}`,
+        text: `✅ เข้าใจแล้ว: ${routeResponse.reasoning}\n\n⚡ กำลังดำเนินการ...`,
       },
     ]);
+
+    // Execute the command
+    const result = await executeCommand(
+      commandDef,
+      routeResponse.parameters,
+      req,
+    );
+
+    if (!result.success) {
+      await sendMessage(req, [
+        {
+          type: "text",
+          text: `❌ เกิดข้อผิดพลาด: ${result.error}`,
+        },
+      ]);
+    }
+    // Note: The actual command handler will send its own response
   } catch (error) {
-    console.error("❌ Error in question mode:", error);
+    console.error("❌ Error in command routing:", error);
     throw error;
   }
 }
@@ -134,27 +195,43 @@ async function handleChatMode(req: any, userId: string, message: string) {
  * Send AI help message
  */
 async function sendAIHelp(req: any) {
-  const helpText = `🤖 คำสั่ง AI Assistant
+  const helpText = `🤖 AI Assistant - คำสั่งอัจฉริยะ
 
 📌 วิธีใช้งาน:
 
-1️⃣ ถามคำถามเดี่ยว:
-   /ai [คำถาม]
-   ตัวอย่าง: /ai อธิบาย blockchain
+1️⃣ สั่งงานด้วยภาษาธรรมชาติ:
+   /ai [คำขอ]
+
+   ตัวอย่าง:
+   • /ai ดึงราคาทองให้หน่อย
+   • /ai ราคา Bitcoin ตอนนี้เท่าไหร่
+   • /ai เช็คชื่อเข้างาน
+   • /ai สร้างกราฟ BTC จาก binance
+   • /ai ขอลาวันที่ 10 มกราคม
 
 2️⃣ สนทนา (จำบริบท):
    /ai chat [ข้อความ]
    /ai คุย [ข้อความ]
-   ตัวอย่าง: /ai chat สวัสดี
+
+   ตัวอย่าง:
+   • /ai chat สวัสดี
+   • /ai คุย วันนี้อากาศเป็นอย่างไร
 
 3️⃣ ดูคำสั่ง:
    /ai help
    /ai ช่วยเหลือ
 
 💡 เคล็ดลับ:
-• โหมด chat จะจำบทสนทนาของคุณ
-• โหมดถามคำถามเหมาะสำหรับคำถามทั่วไป
-• รองรับทั้งภาษาไทยและภาษาอังกฤษ
+• AI จะวิเคราะห์คำขอและเรียกคำสั่งที่เหมาะสม
+• รองรับภาษาไทยและอังกฤษ
+• ไม่ต้องจำคำสั่ง แค่บอกสิ่งที่ต้องการ
+• โหมด chat สำหรับสนทนาทั่วไป
+
+📚 คำสั่งที่รองรับ:
+• คริปโต: ราคาเหรียญ, กราฟ
+• การทำงาน: เช็คชื่อเข้า/ออก, รายงาน, ลา
+• ข้อมูล: ทอง, หวย, น้ำมัน
+• เครื่องมือ: สุ่มเลขบัตร, ตั้งค่า
 
 🔋 Powered by GPT-4o via MCP`;
 

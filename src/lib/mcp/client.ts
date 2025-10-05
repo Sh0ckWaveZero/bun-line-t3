@@ -18,6 +18,18 @@ export interface ChatParams {
   systemPrompt?: string;
 }
 
+export interface RouteCommandParams {
+  userMessage: string;
+  availableCommands: string;
+}
+
+export interface CommandRouteResponse {
+  command: string | null;
+  parameters: Record<string, any>;
+  reasoning: string;
+  confidence: number;
+}
+
 /**
  * MCP Client for AI interactions
  * Connects to the local MCP server running in the same process
@@ -151,6 +163,55 @@ export class AIMCPClient {
       };
     } catch (error) {
       console.error("❌ Error calling chat tool:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Route natural language command to LINE bot command
+   */
+  async routeCommand(
+    params: RouteCommandParams,
+  ): Promise<CommandRouteResponse> {
+    if (!this.isConnected || !this.client) {
+      await this.connect();
+    }
+
+    try {
+      const result = await this.client!.callTool({
+        name: "route_command",
+        arguments: {
+          userMessage: params.userMessage,
+          availableCommands: params.availableCommands,
+        },
+      });
+
+      if (result.isError) {
+        throw new Error(
+          result.content[0]?.type === "text"
+            ? result.content[0].text
+            : "Unknown error",
+        );
+      }
+
+      const text =
+        result.content[0]?.type === "text" ? result.content[0].text : "";
+
+      // Parse JSON response
+      try {
+        const parsed = JSON.parse(text);
+        return {
+          command: parsed.command || null,
+          parameters: parsed.parameters || {},
+          reasoning: parsed.reasoning || "",
+          confidence: parsed.confidence || 0,
+        };
+      } catch (parseError) {
+        console.error("❌ Failed to parse AI response:", text);
+        throw new Error("Failed to parse AI command routing response");
+      }
+    } catch (error) {
+      console.error("❌ Error calling route_command tool:", error);
       throw error;
     }
   }
