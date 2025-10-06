@@ -48,11 +48,22 @@ function formatDuration(ms: number): string {
  */
 function getAlbumImage(track: SpotifyTrack): string {
   const images = track.album.images;
-  if (images.length === 0) {
+  if (!images || images.length === 0) {
     return "https://via.placeholder.com/300x300.png?text=No+Image";
   }
+
   // Get medium size image (usually 300x300)
-  return images[1]?.url || images[0]?.url || images[images.length - 1]?.url;
+  // Spotify returns images in descending size order: [large, medium, small]
+  const mediumImage = images[1]?.url;
+  const largeImage = images[0]?.url;
+  const smallImage = images[images.length - 1]?.url;
+
+  return (
+    mediumImage ||
+    largeImage ||
+    smallImage ||
+    "https://via.placeholder.com/300x300.png?text=No+Image"
+  );
 }
 
 /**
