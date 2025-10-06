@@ -6,6 +6,7 @@
  */
 
 import { z } from "zod";
+import { env } from "@/env.mjs";
 
 // ============================================================================
 // Types & Schemas
@@ -79,8 +80,10 @@ class SpotifyService {
       return this.accessToken;
     }
 
-    const clientId = process.env.SPOTIFY_CLIENT_ID;
-    const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+    const clientId = env.SPOTIFY_CLIENT_ID;
+    console.log("clientId:", clientId);
+    const clientSecret = env.SPOTIFY_CLIENT_SECRET;
+    console.log("clientSecret:", clientSecret);
 
     if (
       !clientId ||
@@ -136,16 +139,16 @@ class SpotifyService {
     type: "track" | "artist" | "playlist" = "track",
     limit = 10,
   ) {
-    const token = await this.getAccessToken();
-
-    const params = new URLSearchParams({
-      q: query,
-      type,
-      limit: limit.toString(),
-      market: "TH", // Thai market
-    });
-
     try {
+      const token = await this.getAccessToken();
+
+      const params = new URLSearchParams({
+        q: query,
+        type,
+        limit: limit.toString(),
+        market: "TH", // Thai market
+      });
+
       const response = await fetch(`${this.baseUrl}/search?${params}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -153,13 +156,22 @@ class SpotifyService {
       });
 
       if (!response.ok) {
-        throw new Error(`Spotify search failed: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error("Spotify search error:", response.status, errorText);
+        throw new Error(`SPOTIFY_SEARCH_FAILED: ${response.status}`);
       }
 
       return await response.json();
     } catch (error) {
       console.error("Spotify search error:", error);
-      throw new Error("Unable to search Spotify");
+
+      if (error instanceof Error) {
+        if (error.message.startsWith("SPOTIFY_")) {
+          throw error;
+        }
+      }
+
+      throw new Error("SPOTIFY_SEARCH_ERROR");
     }
   }
 
@@ -169,38 +181,38 @@ class SpotifyService {
   async getRecommendations(
     params: GetRecommendationsParams,
   ): Promise<SpotifyTrack[]> {
-    const token = await this.getAccessToken();
-
-    // Build query parameters
-    const queryParams = new URLSearchParams();
-    queryParams.append("limit", (params.limit || 10).toString());
-    queryParams.append("market", "TH");
-
-    if (params.seedGenres?.length) {
-      queryParams.append("seed_genres", params.seedGenres.join(","));
-    }
-    if (params.seedArtists?.length) {
-      queryParams.append("seed_artists", params.seedArtists.join(","));
-    }
-    if (params.seedTracks?.length) {
-      queryParams.append("seed_tracks", params.seedTracks.join(","));
-    }
-
-    // Audio features
-    if (params.targetEnergy !== undefined) {
-      queryParams.append("target_energy", params.targetEnergy.toString());
-    }
-    if (params.targetValence !== undefined) {
-      queryParams.append("target_valence", params.targetValence.toString());
-    }
-    if (params.targetDanceability !== undefined) {
-      queryParams.append(
-        "target_danceability",
-        params.targetDanceability.toString(),
-      );
-    }
-
     try {
+      const token = await this.getAccessToken();
+
+      // Build query parameters
+      const queryParams = new URLSearchParams();
+      queryParams.append("limit", (params.limit || 10).toString());
+      queryParams.append("market", "TH");
+
+      if (params.seedGenres?.length) {
+        queryParams.append("seed_genres", params.seedGenres.join(","));
+      }
+      if (params.seedArtists?.length) {
+        queryParams.append("seed_artists", params.seedArtists.join(","));
+      }
+      if (params.seedTracks?.length) {
+        queryParams.append("seed_tracks", params.seedTracks.join(","));
+      }
+
+      // Audio features
+      if (params.targetEnergy !== undefined) {
+        queryParams.append("target_energy", params.targetEnergy.toString());
+      }
+      if (params.targetValence !== undefined) {
+        queryParams.append("target_valence", params.targetValence.toString());
+      }
+      if (params.targetDanceability !== undefined) {
+        queryParams.append(
+          "target_danceability",
+          params.targetDanceability.toString(),
+        );
+      }
+
       const response = await fetch(
         `${this.baseUrl}/recommendations?${queryParams}`,
         {
@@ -211,9 +223,13 @@ class SpotifyService {
       );
 
       if (!response.ok) {
-        throw new Error(
-          `Spotify recommendations failed: ${response.statusText}`,
+        const errorText = await response.text();
+        console.error(
+          "Spotify recommendations error:",
+          response.status,
+          errorText,
         );
+        throw new Error(`SPOTIFY_RECOMMENDATIONS_FAILED: ${response.status}`);
       }
 
       const data = await response.json();
@@ -222,7 +238,14 @@ class SpotifyService {
       return parsed.tracks;
     } catch (error) {
       console.error("Spotify recommendations error:", error);
-      throw new Error("Unable to get recommendations from Spotify");
+
+      if (error instanceof Error) {
+        if (error.message.startsWith("SPOTIFY_")) {
+          throw error;
+        }
+      }
+
+      throw new Error("SPOTIFY_RECOMMENDATIONS_ERROR");
     }
   }
 
