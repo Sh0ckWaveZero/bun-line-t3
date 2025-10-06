@@ -18,12 +18,8 @@ const { sendMessage } = await import("@/lib/utils/line-utils");
  */
 export async function handleAiCommand(req: any, conditions: string[]) {
   const userId = req.body.events[0].source.userId;
-  const replyToken = req.body.events[0].replyToken;
 
   try {
-    // Get LINE client from request
-    const client = (req as any).client;
-
     // Show help if no arguments
     if (conditions.length === 0) {
       await sendAIHelp(req);
@@ -45,7 +41,7 @@ export async function handleAiCommand(req: any, conditions: string[]) {
       subCommand === "music"
     ) {
       const fullText = `/ai ${conditions.join(" ")}`;
-      await spotifyHandler.handle(client, replyToken, fullText);
+      await spotifyHandler.handle(req, fullText);
       return;
     }
 
