@@ -22,6 +22,7 @@ import { handleChartCommand, parseChartCommand } from "./handleChartCommand";
 import { handleSettingsCommand } from "./handleSettingsCommand";
 import { handleIdGenerator } from "./handleIdGenerator";
 import { handleHealthCommand } from "./handleHealthCommand";
+import { spotifyHandler } from "@/features/spotify/handlers/spotify.handler";
 
 export interface CommandRouteResult {
   /** Whether the command was successfully routed */
@@ -196,6 +197,32 @@ export async function executeCommand(
           command: "health",
           explanation: "แสดงข้อมูลสุขภาพและกิจกรรม",
         };
+
+      // Music commands
+      case "spotify": {
+        const mood = parameters.mood || "";
+        const query = parameters.query || "";
+
+        // Build spotify command text
+        let spotifyText = "/ai spotify";
+        if (mood) {
+          spotifyText += ` ${mood}`;
+        } else if (query) {
+          spotifyText += ` ${query}`;
+        }
+
+        await spotifyHandler.handle(req, spotifyText);
+        return {
+          success: true,
+          command: "spotify",
+          parameters,
+          explanation: mood
+            ? `แนะนำเพลง mood: ${mood}`
+            : query
+              ? `ค้นหาและแนะนำเพลง: ${query}`
+              : "แสดงเมนูเลือก mood",
+        };
+      }
 
       // Utility commands
       case "thai-id":

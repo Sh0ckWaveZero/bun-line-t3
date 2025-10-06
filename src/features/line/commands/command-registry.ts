@@ -25,7 +25,14 @@ export interface CommandDefinition {
   /** Example usage */
   examples: string[];
   /** Category for grouping */
-  category: "crypto" | "work" | "info" | "utility" | "health" | "settings";
+  category:
+    | "crypto"
+    | "work"
+    | "info"
+    | "utility"
+    | "health"
+    | "settings"
+    | "music";
 }
 
 export const LINE_COMMANDS: CommandDefinition[] = [
@@ -252,6 +259,63 @@ export const LINE_COMMANDS: CommandDefinition[] = [
   },
 
   // ============================================================================
+  // Music Commands
+  // ============================================================================
+  {
+    command: "spotify",
+    aliases: ["เพลง", "music"],
+    descriptionTH: "แนะนำเพลงจาก Spotify ตาม mood หรือค้นหาเพลง",
+    descriptionEN: "Get music recommendations from Spotify by mood or search",
+    keywords: [
+      "spotify",
+      "เพลง",
+      "music",
+      "แนะนำเพลง",
+      "ฟังเพลง",
+      "เพลงมีความสุข",
+      "เพลงเศร้า",
+      "เพลงกระฉับกระเฉง",
+      "เพลงชิล",
+      "เพลงปาร์ตี้",
+      "เพลงสมาธิ",
+      "happy",
+      "sad",
+      "energetic",
+      "chill",
+      "party",
+      "focus",
+      "recommend",
+      "song",
+      "artist",
+      "ศิลปิน",
+      "นักร้อง",
+    ],
+    parameters: [
+      {
+        name: "mood",
+        type: "optional",
+        description: "Mood type: happy, sad, energetic, chill, party, focus",
+      },
+      {
+        name: "query",
+        type: "optional",
+        description: "Artist or song name to search",
+      },
+    ],
+    examples: [
+      "/ai spotify",
+      "/ai spotify happy",
+      "/ai เพลง sad",
+      "/ai แนะนำเพลงมีความสุข",
+      "/ai เพลง คิมแฮนึล",
+      "อยากฟังเพลงชิลๆ",
+      "แนะนำเพลงปาร์ตี้หน่อย",
+      "เพลงสำหรับมีสมาธิ",
+    ],
+    category: "music",
+  },
+
+  // ============================================================================
   // Utility Commands
   // ============================================================================
   {
@@ -322,6 +386,7 @@ export function formatCommandsForAI(): string {
     work: "💼 การทำงาน (Work Attendance)",
     info: "ℹ️ ข้อมูล (Information)",
     health: "🏃 สุขภาพ (Health & Activity)",
+    music: "🎵 เพลง (Music Recommendations)",
     utility: "🔧 เครื่องมือ (Utilities)",
     settings: "⚙️ ตั้งค่า (Settings)",
   };
