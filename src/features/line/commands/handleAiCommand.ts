@@ -1,7 +1,7 @@
 import { routeCommand, chat } from "@/lib/ai/openai-client";
 import { formatCommandsForAI, getCommandByName } from "./command-registry";
 import { executeCommand } from "./ai-command-router";
-import { spotifyHandler } from "@/features/spotify/handlers/spotify.handler";
+import { spotifyHandler } from "@/features/spotify/handlers/handleSpotifyCommand";
 
 const { sendMessage } = await import("@/lib/utils/line-utils");
 

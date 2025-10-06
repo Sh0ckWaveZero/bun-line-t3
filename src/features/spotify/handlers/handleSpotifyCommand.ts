@@ -5,12 +5,12 @@
  */
 
 import type { LineMessage } from "@/lib/types/line-messaging";
-import { spotifyService } from "../services/spotify.service";
+import { spotifyService } from "../services/spotifyService";
 import {
   createSpotifyRecommendationsCarousel,
   createMoodSelectionMessage,
   createSpotifyErrorMessage,
-} from "../templates/spotify-flex.template";
+} from "../templates/spotifyFlexTemplate";
 
 const { sendMessage } = await import("@/lib/utils/line-utils");
 

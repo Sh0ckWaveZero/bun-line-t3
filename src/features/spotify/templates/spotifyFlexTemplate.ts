@@ -4,7 +4,7 @@
  * Beautiful Flex Messages for displaying Spotify music recommendations
  */
 
-import type { SpotifyTrack } from "../services/spotify.service";
+import type { SpotifyTrack } from "../services/spotifyService";
 
 // ============================================================================
 // Flex Message Types (LINE Messaging API)

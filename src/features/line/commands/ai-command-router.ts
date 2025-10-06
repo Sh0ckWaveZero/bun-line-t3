@@ -22,7 +22,7 @@ import { handleChartCommand, parseChartCommand } from "./handleChartCommand";
 import { handleSettingsCommand } from "./handleSettingsCommand";
 import { handleIdGenerator } from "./handleIdGenerator";
 import { handleHealthCommand } from "./handleHealthCommand";
-import { spotifyHandler } from "@/features/spotify/handlers/spotify.handler";
+import { spotifyHandler } from "@/features/spotify/handlers/handleSpotifyCommand";
 
 export interface CommandRouteResult {
   /** Whether the command was successfully routed */
