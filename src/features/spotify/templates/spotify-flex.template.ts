@@ -254,7 +254,7 @@ export function createSpotifyRecommendationsCarousel(
 
 export function createSpotifyTrackMessage(
   track: SpotifyTrack,
-  title = "🎵 Track",
+  _title = "🎵 Track",
 ): FlexMessage {
   return {
     type: "flex",
