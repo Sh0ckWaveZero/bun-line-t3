@@ -224,11 +224,22 @@ class SpotifyService {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(
-          "Spotify recommendations error:",
-          response.status,
-          errorText,
-        );
+        console.error("❌ Spotify recommendations failed:");
+        console.error("   Status:", response.status);
+        console.error("   Response:", errorText);
+        console.error("   Query params:", queryParams.toString());
+
+        // Handle specific error cases
+        if (response.status === 400) {
+          throw new Error("SPOTIFY_INVALID_REQUEST");
+        } else if (response.status === 401) {
+          throw new Error("SPOTIFY_AUTH_FAILED: 401");
+        } else if (response.status === 403) {
+          throw new Error("SPOTIFY_FORBIDDEN");
+        } else if (response.status === 429) {
+          throw new Error("SPOTIFY_RATE_LIMITED");
+        }
+
         throw new Error(`SPOTIFY_RECOMMENDATIONS_FAILED: ${response.status}`);
       }
 
