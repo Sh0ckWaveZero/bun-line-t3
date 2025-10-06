@@ -1,6 +1,7 @@
 import { routeCommand, chat } from "@/lib/ai/openai-client";
 import { formatCommandsForAI, getCommandByName } from "./command-registry";
 import { executeCommand } from "./ai-command-router";
+import { spotifyHandler } from "@/features/spotify/handlers/spotify.handler";
 
 const { sendMessage } = await import("@/lib/utils/line-utils");
 
@@ -17,8 +18,12 @@ const { sendMessage } = await import("@/lib/utils/line-utils");
  */
 export async function handleAiCommand(req: any, conditions: string[]) {
   const userId = req.body.events[0].source.userId;
+  const replyToken = req.body.events[0].replyToken;
 
   try {
+    // Get LINE client from request
+    const client = (req as any).client;
+
     // Show help if no arguments
     if (conditions.length === 0) {
       await sendAIHelp(req);
@@ -30,6 +35,17 @@ export async function handleAiCommand(req: any, conditions: string[]) {
     // Handle help command
     if (subCommand === "help" || subCommand === "ช่วยเหลือ") {
       await sendAIHelp(req);
+      return;
+    }
+
+    // Handle Spotify command
+    if (
+      subCommand === "spotify" ||
+      subCommand === "เพลง" ||
+      subCommand === "music"
+    ) {
+      const fullText = `/ai ${conditions.join(" ")}`;
+      await spotifyHandler.handle(client, replyToken, fullText);
       return;
     }
 
@@ -181,7 +197,20 @@ async function sendAIHelp(req: any) {
    • /ai สร้างกราฟ BTC จาก binance
    • /ai ขอลาวันที่ 10 มกราคม
 
-2️⃣ สนทนา (จำบริบท):
+2️⃣ แนะนำเพลง Spotify:
+   /ai spotify [mood/ค้นหา]
+   /ai เพลง [mood/ค้นหา]
+
+   ตัวอย่าง:
+   • /ai spotify happy - เพลงมีความสุข
+   • /ai spotify sad - เพลงเศร้า
+   • /ai spotify energetic - เพลงกระฉับกระเฉง
+   • /ai spotify chill - เพลงชิล
+   • /ai spotify party - เพลงปาร์ตี้
+   • /ai spotify focus - เพลงสำหรับมีสมาธิ
+   • /ai spotify คิมแฮนึล - ค้นหาและแนะนำเพลง
+
+3️⃣ สนทนา (จำบริบท):
    /ai chat [ข้อความ]
    /ai คุย [ข้อความ]
 
@@ -189,7 +218,7 @@ async function sendAIHelp(req: any) {
    • /ai chat สวัสดี
    • /ai คุย วันนี้อากาศเป็นอย่างไร
 
-3️⃣ ดูคำสั่ง:
+4️⃣ ดูคำสั่ง:
    /ai help
    /ai ช่วยเหลือ
 
@@ -200,12 +229,13 @@ async function sendAIHelp(req: any) {
 • โหมด chat สำหรับสนทนาทั่วไป
 
 📚 คำสั่งที่รองรับ:
-• คริปโต: ราคาเหรียญ, กราฟ
-• การทำงาน: เช็คชื่อเข้า/ออก, รายงาน, ลา
-• ข้อมูล: ทอง, หวย, น้ำมัน
-• เครื่องมือ: สุ่มเลขบัตร, ตั้งค่า
+• 🎵 เพลง: แนะนำเพลงจาก Spotify
+• 💰 คริปโต: ราคาเหรียญ, กราฟ
+• 👔 การทำงาน: เช็คชื่อเข้า/ออก, รายงาน, ลา
+• 📊 ข้อมูล: ทอง, หวย, น้ำมัน
+• 🛠️ เครื่องมือ: สุ่มเลขบัตร, ตั้งค่า
 
-🔋 Powered by GPT-4o via MCP`;
+🔋 Powered by GPT-4o via MCP + Spotify API`;
 
   await sendMessage(req, [
     {
