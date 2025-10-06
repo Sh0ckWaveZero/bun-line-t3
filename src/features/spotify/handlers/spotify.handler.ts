@@ -4,7 +4,7 @@
  * Handles Spotify-related commands via /ai spotify [mood/query]
  */
 
-import type { Message } from "@line/bot-sdk";
+import type { LineMessage } from "@/lib/types/line-messaging";
 import { spotifyService } from "../services/spotify.service";
 import {
   createSpotifyRecommendationsCarousel,
@@ -90,7 +90,7 @@ export async function handleSpotifyCommand(
   try {
     const command = parseSpotifyCommand(text);
 
-    let messages: Message[];
+    let messages: LineMessage[];
 
     switch (command.action) {
       case "mood-select":
@@ -188,9 +188,41 @@ export async function handleSpotifyCommand(
   } catch (error) {
     console.error("Spotify command error:", error);
 
-    // Send error message
-    const errorMsg =
-      error instanceof Error ? error.message : "An unexpected error occurred";
+    // Send user-friendly error message
+    let errorMsg = "เกิดข้อผิดพลาดที่ไม่คาดคิด";
+
+    if (error instanceof Error) {
+      switch (error.message) {
+        case "SPOTIFY_NOT_CONFIGURED":
+          errorMsg =
+            "🎵 Spotify ยังไม่ได้ตั้งค่า\n\n" +
+            "กรุณาติดต่อผู้ดูแลระบบเพื่อ:\n" +
+            "1. สร้าง Spotify App ที่ developer.spotify.com\n" +
+            "2. ตั้งค่า SPOTIFY_CLIENT_ID และ SPOTIFY_CLIENT_SECRET\n" +
+            "3. Restart server\n\n" +
+            "📖 ดูรายละเอียดเพิ่มเติม:\n" +
+            "src/features/spotify/README.md";
+          break;
+
+        case "SPOTIFY_CONNECTION_ERROR":
+          errorMsg =
+            "⚠️ ไม่สามารถเชื่อมต่อ Spotify ได้\n\n" +
+            "กรุณาลองใหม่อีกครั้ง\n" +
+            "หรือติดต่อผู้ดูแลระบบถ้าปัญหาไม่หาย";
+          break;
+
+        default:
+          if (error.message.startsWith("SPOTIFY_AUTH_FAILED")) {
+            errorMsg =
+              "🔐 การยืนยันตัวตน Spotify ล้มเหลว\n\n" +
+              "Client ID หรือ Secret อาจไม่ถูกต้อง\n" +
+              "กรุณาติดต่อผู้ดูแลระบบ";
+          } else {
+            errorMsg = `เกิดข้อผิดพลาด: ${error.message}`;
+          }
+      }
+    }
+
     await sendMessage(req, [createSpotifyErrorMessage(errorMsg)]);
   }
 }
