@@ -107,7 +107,7 @@ export async function handleSpotifyCommand(
 
         const moodTracks = await spotifyService.getRecommendationsByMood(
           command.mood,
-          10,
+          5,
         );
 
         if (moodTracks.length === 0) {
@@ -143,38 +143,68 @@ export async function handleSpotifyCommand(
           break;
         }
 
+        console.log(`🔍 Searching Spotify for: "${command.query}"`);
+
+        // Enhance query with Thai context if needed
+        let searchQuery = command.query.trim();
+
+        // Check if query mentions Thai context
+        const hasThai = /ไทย|thai|thailand|ในไทย/i.test(searchQuery);
+
+        // Check if it's a short artist name query (1-3 words)
+        const words = searchQuery.split(/\s+/);
+        const isShortQuery = words.length <= 3;
+
+        // Remove common prefixes like "the", "a", "an" for better matching
+        const cleanedQuery = searchQuery.replace(/^(the|a|an)\s+/i, "").trim();
+
+        // If no Thai keyword and short query, add Thailand for better local results
+        if (!hasThai && isShortQuery && cleanedQuery) {
+          console.log(
+            `📍 Enhancing query: "${searchQuery}" → "${cleanedQuery} Thailand"`,
+          );
+          searchQuery = `${cleanedQuery} Thailand`;
+        }
+
         // First, search for the query to get seed tracks/artists
         const searchResults = await spotifyService.search(
-          command.query,
+          searchQuery,
           "track",
-          1,
+          5, // Get 5 results
         );
 
+        console.log(`📊 Search results:`, {
+          found: searchResults.tracks?.items?.length || 0,
+          original: command.query,
+          enhanced: searchQuery,
+        });
+
         if (!searchResults.tracks?.items?.length) {
+          console.log(`❌ No search results for "${command.query}"`);
+
+          // Provide helpful error message with suggestions
           messages = [
             createSpotifyErrorMessage(
-              `No results found for "${command.query}"`,
+              `ไม่พบผลลัพธ์สำหรับ "${command.query}"\n\n` +
+                `💡 ลองใช้คำค้นหาอื่น:\n` +
+                `• ชื่อศิลปิน (เช่น "Taylor Swift")\n` +
+                `• ชื่อเพลง (เช่น "Shape of You")\n` +
+                `• แนวเพลง (เช่น "pop", "rock")\n` +
+                `• หรือลอง mood: happy, sad, chill, party`,
             ),
           ];
           break;
         }
 
-        // Use the first result as seed for recommendations
-        const seedTrack = searchResults.tracks.items[0];
-        const recommendations = await spotifyService.getRecommendations({
-          seedTracks: [seedTrack.id],
-          limit: 10,
-        });
+        // Return top search results directly instead of recommendations
+        const topTracks = searchResults.tracks.items.slice(0, 5);
 
-        if (recommendations.length === 0) {
-          messages = [createSpotifyErrorMessage("No recommendations found")];
-          break;
-        }
+        console.log(`✅ Returning ${topTracks.length} tracks`);
 
         messages = [
           createSpotifyRecommendationsCarousel(
-            recommendations,
-            `🎵 Similar to "${seedTrack.name}"`,
+            topTracks,
+            `🎵 ผลการค้นหา: "${command.query}"`,
           ),
         ];
         break;

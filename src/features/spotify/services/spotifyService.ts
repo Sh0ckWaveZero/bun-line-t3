@@ -81,9 +81,7 @@ class SpotifyService {
     }
 
     const clientId = env.SPOTIFY_CLIENT_ID;
-    console.log("clientId:", clientId);
     const clientSecret = env.SPOTIFY_CLIENT_SECRET;
-    console.log("clientSecret:", clientSecret);
 
     if (
       !clientId ||
@@ -149,6 +147,10 @@ class SpotifyService {
         market: "TH", // Thai market
       });
 
+      console.log("🔍 Spotify search request:");
+      console.log("   Query:", query);
+      console.log("   URL:", `${this.baseUrl}/search?${params}`);
+
       const response = await fetch(`${this.baseUrl}/search?${params}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -157,11 +159,17 @@ class SpotifyService {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Spotify search error:", response.status, errorText);
+        console.error("❌ Spotify search failed:");
+        console.error("   Status:", response.status);
+        console.error("   Response:", errorText);
         throw new Error(`SPOTIFY_SEARCH_FAILED: ${response.status}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      console.log("✅ Spotify search success:");
+      console.log("   Found tracks:", data.tracks?.items?.length || 0);
+
+      return data;
     } catch (error) {
       console.error("Spotify search error:", error);
 
@@ -212,6 +220,10 @@ class SpotifyService {
           params.targetDanceability.toString(),
         );
       }
+
+      console.log("🎵 Requesting Spotify recommendations:");
+      console.log("   URL:", `${this.baseUrl}/recommendations?${queryParams}`);
+      console.log("   Params:", Object.fromEntries(queryParams.entries()));
 
       const response = await fetch(
         `${this.baseUrl}/recommendations?${queryParams}`,
@@ -289,52 +301,54 @@ class SpotifyService {
   }
 
   /**
-   * Get recommendations by mood/vibe
+   * Get recommendations by mood/vibe using Search API
    */
   async getRecommendationsByMood(
     mood: "happy" | "sad" | "energetic" | "chill" | "party" | "focus",
     limit = 10,
   ): Promise<SpotifyTrack[]> {
-    const moodConfig: Record<typeof mood, GetRecommendationsParams> = {
-      happy: {
-        targetValence: 0.8,
-        targetEnergy: 0.7,
-        seedGenres: ["pop", "happy"],
-        limit,
-      },
-      sad: {
-        targetValence: 0.3,
-        targetEnergy: 0.4,
-        seedGenres: ["sad", "acoustic"],
-        limit,
-      },
-      energetic: {
-        targetEnergy: 0.9,
-        targetDanceability: 0.8,
-        seedGenres: ["edm", "dance", "electronic"],
-        limit,
-      },
-      chill: {
-        targetEnergy: 0.3,
-        targetValence: 0.6,
-        seedGenres: ["chill", "ambient", "lo-fi"],
-        limit,
-      },
-      party: {
-        targetEnergy: 0.9,
-        targetDanceability: 0.9,
-        seedGenres: ["party", "dance", "pop"],
-        limit,
-      },
-      focus: {
-        targetEnergy: 0.4,
-        targetValence: 0.5,
-        seedGenres: ["study", "instrumental", "classical"],
-        limit,
-      },
+    const moodQueries: Record<string, string> = {
+      happy: "happy pop upbeat",
+      sad: "sad acoustic emotional",
+      energetic: "energetic edm workout",
+      chill: "chill lofi relax",
+      party: "party dance club",
+      focus: "focus study concentration",
     };
 
-    return this.getRecommendations(moodConfig[mood]);
+    const query = moodQueries[mood] || mood;
+
+    try {
+      const result = await this.search(query, "track", limit);
+
+      // Extract tracks from search results
+      if (result.tracks?.items && result.tracks.items.length > 0) {
+        console.log(
+          `✅ Found ${result.tracks.items.length} tracks for mood: ${mood}`,
+        );
+        return result.tracks.items;
+      }
+
+      // Fallback: try simpler query
+      console.log(`⚠️ No results for "${query}", trying fallback...`);
+      const fallbackResult = await this.search(mood, "track", limit);
+
+      if (
+        fallbackResult.tracks?.items &&
+        fallbackResult.tracks.items.length > 0
+      ) {
+        console.log(
+          `✅ Fallback found ${fallbackResult.tracks.items.length} tracks`,
+        );
+        return fallbackResult.tracks.items;
+      }
+
+      console.log(`❌ No tracks found for mood: ${mood}`);
+      return [];
+    } catch (error) {
+      console.error(`Error getting recommendations for mood ${mood}:`, error);
+      throw error;
+    }
   }
 }
 

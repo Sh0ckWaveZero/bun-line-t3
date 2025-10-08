@@ -203,12 +203,25 @@ export async function executeCommand(
         const mood = parameters.mood || "";
         const query = parameters.query || "";
 
+        // Valid moods
+        const validMoods = [
+          "happy",
+          "sad",
+          "energetic",
+          "chill",
+          "party",
+          "focus",
+        ];
+
         // Build spotify command text
         let spotifyText = "/ai spotify";
-        if (mood) {
+
+        // Prioritize query if mood is invalid, or use query if both present
+        if (query || (mood && !validMoods.includes(mood.toLowerCase()))) {
+          const searchQuery = query || mood;
+          spotifyText += ` ${searchQuery}`;
+        } else if (mood && validMoods.includes(mood.toLowerCase())) {
           spotifyText += ` ${mood}`;
-        } else if (query) {
-          spotifyText += ` ${query}`;
         }
 
         await spotifyHandler.handle(req, spotifyText);
@@ -216,11 +229,14 @@ export async function executeCommand(
           success: true,
           command: "spotify",
           parameters,
-          explanation: mood
-            ? `แนะนำเพลง mood: ${mood}`
-            : query
-              ? `ค้นหาและแนะนำเพลง: ${query}`
-              : "แสดงเมนูเลือก mood",
+          explanation:
+            mood && validMoods.includes(mood.toLowerCase())
+              ? `แนะนำเพลง mood: ${mood}`
+              : query
+                ? `ค้นหาและแนะนำเพลง: ${query}`
+                : mood
+                  ? `ค้นหาและแนะนำเพลง: ${mood}`
+                  : "แสดงเมนูเลือก mood",
         };
       }
 

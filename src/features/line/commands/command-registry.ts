@@ -289,6 +289,15 @@ export const LINE_COMMANDS: CommandDefinition[] = [
       "artist",
       "ศิลปิน",
       "นักร้อง",
+      "ฮิต",
+      "เพลงฮิต",
+      "ติดชาร์ต",
+      "top",
+      "hits",
+      "popular",
+      "trending",
+      "ปัจจุบัน",
+      "ยอดนิยม",
     ],
     parameters: [
       {
@@ -299,7 +308,8 @@ export const LINE_COMMANDS: CommandDefinition[] = [
       {
         name: "query",
         type: "optional",
-        description: "Artist or song name to search",
+        description:
+          "Artist, song name, or search term (e.g., 'top hits', 'trending', 'popular Thai songs')",
       },
     ],
     examples: [
@@ -311,6 +321,13 @@ export const LINE_COMMANDS: CommandDefinition[] = [
       "อยากฟังเพลงชิลๆ",
       "แนะนำเพลงปาร์ตี้หน่อย",
       "เพลงสำหรับมีสมาธิ",
+      "เพลงฮิตในปัจจุบัน",
+      "เพลงติดชาร์ต",
+      "อยากฟังเพลงยอดนิยม",
+      "top hits Thailand",
+      "อยากฟังเพลงของ Clash ไทย",
+      "เพลง Bodyslam",
+      "เพลงของ The Toys",
     ],
     category: "music",
   },

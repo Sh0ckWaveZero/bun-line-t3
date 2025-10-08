@@ -128,7 +128,7 @@ function createTrackBubble(track: SpotifyTrack, index?: number): FlexBubble {
                     height: "20px",
                   },
                 ],
-                marginBottom: "sm",
+                margin: "none",
               },
             ]
           : []),
@@ -246,7 +246,7 @@ export function createSpotifyRecommendationsCarousel(
   title = "🎵 Spotify Recommendations",
 ): FlexMessage {
   const bubbles = tracks
-    .slice(0, 10)
+    .slice(0, 5)
     .map((track, index) => createTrackBubble(track, index));
 
   return {

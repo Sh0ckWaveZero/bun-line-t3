@@ -24,6 +24,20 @@ export const sendRequest = async (
     if (!response.ok) {
       const errorText = await response.text();
       console.error("❌ Response error:", errorText);
+
+      // Parse error details if available
+      try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.details) {
+          console.error(
+            "❌ Error details:",
+            JSON.stringify(errorJson.details, null, 2),
+          );
+        }
+      } catch {
+        // Error text is not JSON, ignore
+      }
+
       throw new Error(
         `Failed to send request: ${response.status} ${response.statusText} - ${errorText}`,
       );
@@ -35,7 +49,10 @@ export const sendRequest = async (
   }
 };
 
-export const sendLoadingAnimation = async (req: any) => {
+export const sendLoadingAnimation = async (
+  req: any,
+  loadingSeconds: number = 5,
+) => {
   try {
     // Check if userId exists
     const userId = req.body?.events?.[0]?.source?.userId;
@@ -49,15 +66,27 @@ export const sendLoadingAnimation = async (req: any) => {
       "Content-Type": "application/json",
       Authorization: `Bearer ${lineChannelAccessToken}`,
     };
-    return sendRequest(
+
+    const response = await fetch(
       "https://api.line.me/v2/bot/chat/loading/start",
-      "POST",
-      lineHeader,
       {
-        chatId: userId,
-        loadingSeconds: 5,
+        method: "POST",
+        headers: lineHeader,
+        body: JSON.stringify({
+          chatId: userId,
+          loadingSeconds: Math.min(loadingSeconds, 60), // Max 60 seconds
+        }),
       },
     );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.warn("⚠️ Loading animation API error:", errorText);
+      return;
+    }
+
+    console.log("⏳ Loading animation started");
+    return response;
   } catch (error: any) {
     console.warn("⚠️ Failed to send loading animation:", error.message);
     // Don't throw error, just skip loading animation
@@ -65,12 +94,17 @@ export const sendLoadingAnimation = async (req: any) => {
   }
 };
 
-export const sendMessage = async (req: any, payload: any) => {
+export const sendMessage = async (
+  req: any,
+  payload: any,
+  options?: { showLoading?: boolean },
+) => {
   const lineChannelAccessToken = env.LINE_CHANNEL_ACCESS;
   const lineHeader = {
     "Content-Type": "application/json",
     Authorization: `Bearer ${lineChannelAccessToken}`,
   };
+
   try {
     // Check if replyToken exists and is valid
     const replyToken = req.body?.events?.[0]?.replyToken;
@@ -83,32 +117,41 @@ export const sendMessage = async (req: any, payload: any) => {
       return sendPushMessage(req, payload);
     }
 
-    // Only send loading animation if we have userId
-    if (userId) {
+    // Optionally send loading animation BEFORE reply
+    // WARNING: This consumes time and may cause reply token to expire
+    if (options?.showLoading && userId) {
       try {
-        await sendLoadingAnimation(req);
-      } catch (loadingErr: any) {
-        console.warn(
-          "⚠️ Loading animation failed, continuing with message:",
-          loadingErr.message,
-        );
-        // Continue without loading animation
+        await sendLoadingAnimation(req, 5);
+      } catch (err: any) {
+        console.warn("⚠️ Loading animation failed:", err?.message || err);
       }
     }
 
-    return sendRequest(`${env.LINE_MESSAGING_API}/reply`, "POST", lineHeader, {
-      replyToken: replyToken,
-      messages: payload,
-    });
+    // Send reply
+    const response = await sendRequest(
+      `${env.LINE_MESSAGING_API}/reply`,
+      "POST",
+      lineHeader,
+      {
+        replyToken: replyToken,
+        messages: payload,
+      },
+    );
+
+    console.log("✅ Reply message sent successfully");
+    return response;
   } catch (err: any) {
     console.error("❌ sendMessage error:", err.message);
-    // Fallback to push message if reply fails
+
+    // Always try to fallback to push message on any reply error
+    console.log("🔄 Reply failed, attempting push message fallback");
     try {
-      console.log("🔄 Falling back to push message");
-      return sendPushMessage(req, payload);
+      return await sendPushMessage(req, payload);
     } catch (pushErr: any) {
       console.error("❌ Push message also failed:", pushErr.message);
-      throw pushErr;
+      // Don't throw error, just log it to prevent webhook from failing
+      console.error("❌ Both reply and push message failed, giving up");
+      return null;
     }
   }
 };

@@ -82,13 +82,17 @@ services:
       - DB_NAME=linebot
 
       # =============================================================================
-      # External API Keys (4 GitHub Secrets)
+      # External API Keys (6 GitHub Secrets)
       # =============================================================================
       - AIRVISUAL_API_KEY=${AIRVISUAL_API_KEY}
       - CMC_API_KEY=${CMC_API_KEY}
       - CMC_URL=https://pro-api.coinmarketcap.com
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - MCP_AI_MODEL=${MCP_AI_MODEL:-gpt-5-nano}
+
+      # Spotify Integration
+      - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
+      - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
 
       # =============================================================================
       # Domain Security Configuration (GitHub Secrets)
