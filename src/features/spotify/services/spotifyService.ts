@@ -324,13 +324,15 @@ class SpotifyService {
       // Extract tracks from search results
       if (result.tracks?.items && result.tracks.items.length > 0) {
         console.log(
-          `✅ Found ${result.tracks.items.length} tracks for mood: ${mood}`,
+          "✅ Found tracks for mood:",
+          result.tracks.items.length,
+          mood,
         );
         return result.tracks.items;
       }
 
       // Fallback: try simpler query
-      console.log(`⚠️ No results for "${query}", trying fallback...`);
+      console.log("⚠️ No results for query, trying fallback:", query);
       const fallbackResult = await this.search(mood, "track", limit);
 
       if (
@@ -343,10 +345,10 @@ class SpotifyService {
         return fallbackResult.tracks.items;
       }
 
-      console.log(`❌ No tracks found for mood: ${mood}`);
+      console.log("❌ No tracks found for mood:", mood);
       return [];
     } catch (error) {
-      console.error(`Error getting recommendations for mood ${mood}:`, error);
+      console.error("Error getting recommendations for mood:", mood, error);
       throw error;
     }
   }
