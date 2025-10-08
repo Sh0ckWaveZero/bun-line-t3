@@ -9,7 +9,14 @@ const handleEvent = async (
   req: NextApiRequest,
   res: NextApiResponse,
 ): Promise<any> => {
-  const events = req.body.events;
+  const events = req.body?.events;
+
+  // Validate events array
+  if (!Array.isArray(events) || events.length === 0) {
+    console.warn("⚠️ No valid events in request body");
+    return res.status(400).json({ error: "No events to process" });
+  }
+
   console.log("🚀 LINE handleEvent - processing events:", events.length);
 
   // Process events sequentially to handle async operations properly
