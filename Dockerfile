@@ -4,17 +4,17 @@
 # 🔧 Multi-platform support for ARM64 (Raspberry Pi) และ AMD64
 
 ###################
-# BUILD FOR PRODUCTION  
+# BUILD FOR PRODUCTION
 ###################
 FROM --platform=$BUILDPLATFORM oven/bun:1-alpine AS build
 
 # 🔐 SECURITY: เพิ่ม metadata สำหรับ container security
 LABEL maintainer="security@company.com" \
-      version="1.0" \
-      description="Secure Bun + Next.js + Prisma Production Container (Multi-platform)" \
-      org.opencontainers.image.source="https://github.com/your-org/bun-line-t3" \
-      org.opencontainers.image.title="Bun LINE T3 App" \
-      org.opencontainers.image.description="Secure production container for Bun + Next.js + Prisma application"
+    version="1.0" \
+    description="Secure Bun + Next.js + Prisma Production Container (Multi-platform)" \
+    org.opencontainers.image.source="https://github.com/your-org/bun-line-t3" \
+    org.opencontainers.image.title="Bun LINE T3 App" \
+    org.opencontainers.image.description="Secure production container for Bun + Next.js + Prisma application"
 
 # 🔧 Multi-platform build arguments
 ARG TARGETPLATFORM
@@ -69,7 +69,7 @@ COPY . .
 
 # 🔐 SECURITY: Build arguments สำหรับ environment variables
 ARG DATABASE_URL
-ARG NEXTAUTH_URL  
+ARG NEXTAUTH_URL
 ARG NEXTAUTH_SECRET
 ARG APP_DOMAIN
 ARG ALLOWED_DOMAINS
@@ -83,6 +83,8 @@ ARG CMC_API_KEY
 ARG FRONTEND_URL
 ARG AIRVISUAL_API_KEY
 ARG OPENAI_API_KEY
+ARG SPOTIFY_CLIENT_ID
+ARG SPOTIFY_CLIENT_SECRET
 
 # 🔐 SECURITY: ตั้งค่า Prisma สำหรับ production build
 # 🔧 RASPBERRY PI OPTIMIZATION: ตั้งค่า memory limits สำหรับ Node.js
@@ -109,6 +111,8 @@ ENV CMC_API_KEY=${CMC_API_KEY}
 ENV FRONTEND_URL=${FRONTEND_URL}
 ENV AIRVISUAL_API_KEY=${AIRVISUAL_API_KEY}
 ENV OPENAI_API_KEY=${OPENAI_API_KEY}
+ENV SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
+ENV SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
 
 # 🚀 OPTIMIZATION: Generate Prisma Client และ build Next.js
 # 🔧 ARM64: แยก commands เพื่อลด memory peak usage สำหรับ ARM64
@@ -215,7 +219,7 @@ EXPOSE 12914
 
 # 🔐 SECURITY: ลด healthcheck interval เพื่อลด overhead แต่ยังคงการตรวจสอบความปลอดภัย
 HEALTHCHECK --interval=60s --timeout=10s --start-period=30s --retries=3 \
-  CMD ["./scripts/health-check.sh"]
+    CMD ["./scripts/health-check.sh"]
 
 # 🚀 OPTIMIZATION & 🔐 SECURITY: Startup script ที่รองรับ Prisma และ Database Migration
 # ตรวจสอบและเตรียม database ก่อนเริ่ม application พร้อม proper signal handling

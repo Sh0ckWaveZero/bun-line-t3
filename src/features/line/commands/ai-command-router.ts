@@ -22,6 +22,7 @@ import { handleChartCommand, parseChartCommand } from "./handleChartCommand";
 import { handleSettingsCommand } from "./handleSettingsCommand";
 import { handleIdGenerator } from "./handleIdGenerator";
 import { handleHealthCommand } from "./handleHealthCommand";
+import { spotifyHandler } from "@/features/spotify/handlers/handleSpotifyCommand";
 
 export interface CommandRouteResult {
   /** Whether the command was successfully routed */
@@ -196,6 +197,48 @@ export async function executeCommand(
           command: "health",
           explanation: "แสดงข้อมูลสุขภาพและกิจกรรม",
         };
+
+      // Music commands
+      case "spotify": {
+        const mood = parameters.mood || "";
+        const query = parameters.query || "";
+
+        // Valid moods
+        const validMoods = [
+          "happy",
+          "sad",
+          "energetic",
+          "chill",
+          "party",
+          "focus",
+        ];
+
+        // Build spotify command text
+        let spotifyText = "/ai spotify";
+
+        // Prioritize query if mood is invalid, or use query if both present
+        if (query || (mood && !validMoods.includes(mood.toLowerCase()))) {
+          const searchQuery = query || mood;
+          spotifyText += ` ${searchQuery}`;
+        } else if (mood && validMoods.includes(mood.toLowerCase())) {
+          spotifyText += ` ${mood}`;
+        }
+
+        await spotifyHandler.handle(req, spotifyText);
+        return {
+          success: true,
+          command: "spotify",
+          parameters,
+          explanation:
+            mood && validMoods.includes(mood.toLowerCase())
+              ? `แนะนำเพลง mood: ${mood}`
+              : query
+                ? `ค้นหาและแนะนำเพลง: ${query}`
+                : mood
+                  ? `ค้นหาและแนะนำเพลง: ${mood}`
+                  : "แสดงเมนูเลือก mood",
+        };
+      }
 
       // Utility commands
       case "thai-id":
