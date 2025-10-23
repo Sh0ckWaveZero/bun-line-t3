@@ -2,6 +2,11 @@ import { routeCommand, chat } from "@/lib/ai/openai-client";
 import { formatCommandsForAI, getCommandByName } from "./command-registry";
 import { executeCommand } from "./ai-command-router";
 import { spotifyHandler } from "@/features/spotify/handlers/handleSpotifyCommand";
+import {
+  checkContentSafety,
+  getSafetyResponseMessage,
+  logAbuseReport,
+} from "@/lib/ai/content-safety";
 
 const { sendMessage } = await import("@/lib/utils/line-utils");
 
@@ -85,6 +90,36 @@ export async function handleAiCommand(req: any, conditions: string[]) {
  */
 async function handleCommandRouting(req: any, naturalLanguage: string) {
   try {
+    const userId = req.body.events[0].source.userId;
+
+    // ✅ Safety check: Detect abuse/inappropriate content
+    const safetyCheck = checkContentSafety(naturalLanguage);
+
+    if (!safetyCheck.isSafe) {
+      console.warn(
+        `⚠️ [SAFETY] Blocked unsafe content from ${userId}: ${safetyCheck.category}`,
+      );
+
+      // Log abuse report for moderation
+      await logAbuseReport({
+        userId,
+        text: safetyCheck.originalText,
+        category: safetyCheck.category,
+        severity: safetyCheck.severity,
+        triggeredPatterns: safetyCheck.triggeredPatterns,
+        timestamp: new Date(),
+      });
+
+      // Send safe response to user
+      await sendMessage(req, [
+        {
+          type: "text",
+          text: getSafetyResponseMessage(safetyCheck),
+        },
+      ]);
+      return;
+    }
+
     // Get available commands in formatted string
     const commandsContext = formatCommandsForAI();
 
@@ -157,6 +192,34 @@ async function handleCommandRouting(req: any, naturalLanguage: string) {
  */
 async function handleChatMode(req: any, userId: string, message: string) {
   try {
+    // ✅ Safety check: Detect abuse/inappropriate content
+    const safetyCheck = checkContentSafety(message);
+
+    if (!safetyCheck.isSafe) {
+      console.warn(
+        `⚠️ [SAFETY] Blocked unsafe content from ${userId} in chat mode: ${safetyCheck.category}`,
+      );
+
+      // Log abuse report for moderation
+      await logAbuseReport({
+        userId,
+        text: safetyCheck.originalText,
+        category: safetyCheck.category,
+        severity: safetyCheck.severity,
+        triggeredPatterns: safetyCheck.triggeredPatterns,
+        timestamp: new Date(),
+      });
+
+      // Send safe response to user
+      await sendMessage(req, [
+        {
+          type: "text",
+          text: getSafetyResponseMessage(safetyCheck),
+        },
+      ]);
+      return;
+    }
+
     const response = await chat({
       message,
       systemPrompt:
