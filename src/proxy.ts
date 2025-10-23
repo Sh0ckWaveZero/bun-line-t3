@@ -2,7 +2,7 @@ import { RateLimiter } from "@/lib/utils/rate-limiter";
 import { env } from "@/env.mjs";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   // ตรวจสอบ Cron Auth เฉพาะ /api/cron/*
   if (request.nextUrl.pathname.startsWith("/api/cron")) {
     // 1. ตรวจสอบ rate limit

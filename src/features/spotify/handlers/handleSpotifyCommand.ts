@@ -143,7 +143,7 @@ export async function handleSpotifyCommand(
           break;
         }
 
-        console.log(`🔍 Searching Spotify for: "${command.query}"`);
+        console.log("🔍 Searching Spotify for:", command.query);
 
         // Enhance query with Thai context if needed
         let searchQuery = command.query.trim();
@@ -161,7 +161,10 @@ export async function handleSpotifyCommand(
         // If no Thai keyword and short query, add Thailand for better local results
         if (!hasThai && isShortQuery && cleanedQuery) {
           console.log(
-            `📍 Enhancing query: "${searchQuery}" → "${cleanedQuery} Thailand"`,
+            "📍 Enhancing query:",
+            searchQuery,
+            "→",
+            cleanedQuery + " Thailand",
           );
           searchQuery = `${cleanedQuery} Thailand`;
         }
@@ -180,7 +183,7 @@ export async function handleSpotifyCommand(
         });
 
         if (!searchResults.tracks?.items?.length) {
-          console.log(`❌ No search results for "${command.query}"`);
+          console.log("❌ No search results for query:", command.query);
 
           // Provide helpful error message with suggestions
           messages = [
@@ -199,7 +202,7 @@ export async function handleSpotifyCommand(
         // Return top search results directly instead of recommendations
         const topTracks = searchResults.tracks.items.slice(0, 5);
 
-        console.log(`✅ Returning ${topTracks.length} tracks`);
+        console.log("✅ Returning tracks:", topTracks.length);
 
         messages = [
           createSpotifyRecommendationsCarousel(
