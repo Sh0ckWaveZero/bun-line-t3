@@ -1,4 +1,9 @@
 import { generatePersonalText } from "@/lib/ai/text-generation";
+import {
+  checkContentSafety,
+  generateSafetyResponse,
+  logAbuseReport,
+} from "@/lib/ai/content-safety";
 import { db as prisma } from "@/lib/database/db";
 
 const { sendMessage } = await import("@/lib/utils/line-utils");
@@ -9,6 +14,37 @@ const { sendMessage } = await import("@/lib/utils/line-utils");
 export async function handleCommandRouting(req: any, naturalLanguage: string) {
   try {
     const userId = req.body.events[0].source.userId;
+
+    // ✅ Safety check: Detect abuse/inappropriate content
+    const safetyCheck = checkContentSafety(naturalLanguage);
+
+    if (!safetyCheck.isSafe) {
+      console.warn(
+        `⚠️ [SAFETY] Blocked unsafe content from ${userId} in command routing: ${safetyCheck.category}`,
+      );
+
+      // Log abuse report for moderation
+      await logAbuseReport({
+        userId,
+        text: safetyCheck.originalText,
+        category: safetyCheck.category,
+        severity: safetyCheck.severity,
+        triggeredPatterns: safetyCheck.triggeredPatterns,
+        timestamp: new Date(),
+      });
+
+      // Generate dynamic response using AI
+      const aiResponse = await generateSafetyResponse(safetyCheck);
+
+      // Send safe response to user
+      await sendMessage(req, [
+        {
+          type: "text",
+          text: aiResponse,
+        },
+      ]);
+      return;
+    }
 
     // 🔥 Fetch user data (name and image) from DB
     console.log(`📢 Responding to user ${userId} with AI-generated personalized message`);

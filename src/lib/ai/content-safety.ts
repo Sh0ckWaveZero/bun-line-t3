@@ -145,11 +145,15 @@ export async function generateSafetyResponse(
     const isThaiAbuse = result.category === "abusive";
 
     const prompt = isThaiAbuse
-      ? `สร้างตอบกลับแบบผู้ดี แต่เจ็บจิ๊ดๆ (2-3 ประโยค):
+      ? `ผู้ใช้พูดว่า: "${result.originalText}"
+
+สร้างตอบกลับแบบผู้ดี แต่เจ็บจิ๊ดๆ (2-3 ประโยค):
 - เริ่มด้วย emoji อารมณ์ (😔😢😞🥺)
 - ด่ากลับอย่างสุภาพ
 - จริงใจและสั้น`
-      : `Create a witty but gentle comeback (2-3 sentences):
+      : `User said: "${result.originalText}"
+
+Create a witty but gentle comeback (2-3 sentences):
 - Start with emotion emoji (😔😢😞🥺)
 - Respond disrespectfully back politely
 - Be sincere and brief`;
