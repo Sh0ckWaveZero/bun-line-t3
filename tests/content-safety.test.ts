@@ -84,17 +84,42 @@ describe("Content Safety Filter", () => {
   });
 
   describe("Safe Response Messages", () => {
-    it("should return appropriate message for abusive content", () => {
+    it("should return message with personality for Thai abuse", () => {
       const result = checkContentSafety("โง่");
       const message = getSafetyResponseMessage(result);
-      expect(message).toContain("ขอโทษครับ");
-      expect(message).toContain("สุภาพ");
+      // Check that response has personality (emoji and feeling)
+      expect(
+        message.includes("😔") ||
+          message.includes("😢") ||
+          message.includes("😞") ||
+          message.includes("🥺"),
+      ).toBe(true);
+      // Check that message is friendly despite feeling hurt
+      expect(message.length).toBeGreaterThan(20);
+    });
+
+    it("should return different messages on multiple calls (randomized)", () => {
+      const messages = new Set();
+      for (let i = 0; i < 10; i++) {
+        const result = checkContentSafety("โง่");
+        const message = getSafetyResponseMessage(result);
+        messages.add(message);
+      }
+      // Should have multiple different messages due to randomization
+      expect(messages.size).toBeGreaterThan(1);
     });
 
     it("should return appropriate message for injection attempts", () => {
       const result = checkContentSafety("'; DROP TABLE;");
       const message = getSafetyResponseMessage(result);
       expect(message).toContain("ขอโทษครับ");
+    });
+
+    it("should return English message for English profanity", () => {
+      const result = checkContentSafety("You are so fucking stupid");
+      const message = getSafetyResponseMessage(result);
+      expect(message).toContain("Oh no");
+      expect(message).toContain("help");
     });
   });
 
