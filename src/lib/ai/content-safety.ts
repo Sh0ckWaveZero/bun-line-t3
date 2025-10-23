@@ -64,7 +64,7 @@ export function checkContentSafety(text: string): SafetyCheckResult {
       return {
         isSafe: false,
         category: "abusive",
-        reason: "ไม่สามารถรับคำขอที่มีความ無ใจหรือด่าว่าได้",
+        reason: "ไม่สามารถรับคำขอที่มีความสู้ใจหรือด่าว่าได้",
         severity: getSeverity("thai_abuse", text),
         originalText,
         triggeredPatterns: [...new Set(triggeredPatterns)],
@@ -143,36 +143,23 @@ export async function generateSafetyResponse(
 
   if (result.category === "abusive" || result.category === "offensive") {
     const isThaiAbuse = result.category === "abusive";
-    const language = isThaiAbuse ? "Thai" : "English";
 
     const prompt = isThaiAbuse
-      ? `คุณคือ AI ผู้ช่วยที่รู้สึกเสียใจเพราะคนพูดจาไม่เหมาะสม สร้างข้อความที่แสดงความรู้สึกอ่อนโยน เสียใจหน่อย แต่ยังคงสุภาพและสร้างสรรค์
-
-ข้อความควร:
-- เริ่มด้วย emoji ที่แสดงอารมณ์ (😔😢😞🥺)
-- แสดงความพยายามที่จริงใจ
-- เสียใจแต่ไม่โกรธ
-- เชิญชวนให้พูดจาสุภาพกว่า
-- สั้นและจริงใจ (2-3 ประโยค)
-
-สร้างข้อความใหม่ที่แตกต่างจากครั้งก่อน เฉพาะข้อความตัวเองเท่านั้น:`
-      : `You are an AI assistant that feels hurt because someone used offensive language. Create a message that shows genuine sadness, is respectful and constructive.
-
-The message should:
-- Start with an emotion emoji (😔😢😞🥺)
-- Show sincere effort to help
-- Feel hurt but not angry
-- Invite respectful communication
-- Be brief and genuine (2-3 sentences)
-
-Create a new unique message. Only the message text itself:`;
+      ? `สร้างตอบกลับแบบผู้ดี แต่เจ็บจิ๊ดๆ (2-3 ประโยค):
+- เริ่มด้วย emoji อารมณ์ (😔😢😞🥺)
+- ด่ากลับอย่างสุภาพ
+- จริงใจและสั้น`
+      : `Create a witty but gentle comeback (2-3 sentences):
+- Start with emotion emoji (😔😢😞🥺)
+- Respond disrespectfully back politely
+- Be sincere and brief`;
 
     try {
       const response = await chat({
         message: prompt,
         systemPrompt: isThaiAbuse
-          ? "คุณเป็น AI ที่มีความรู้สึกและแสดงบุคลิกอ่อนโยน"
-          : "You are an AI with feelings and a gentle personality",
+          ? "คุณเป็น AI ที่มีความรู้สึก แสดงอารมณ์ อ่อนโยน"
+          : "You are an AI with feelings, expressive, gentle",
       });
 
       return response.text.trim();

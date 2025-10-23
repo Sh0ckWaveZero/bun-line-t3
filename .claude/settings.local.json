@@ -46,7 +46,8 @@
       "Bash(next lint:*)",
       "Bash(bunx next lint:*)",
       "Bash(bunx eslint:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(awk '{print $9, \"\"\"\"(\"\"\"\" $5 \"\"\"\")\"\"\"\"}')"
     ],
     "deny": [
       "Read(**/.env*)",
