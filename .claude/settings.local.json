@@ -42,7 +42,11 @@
       "WebFetch(domain:nextjs.org)",
       "Bash(time bun run:*)",
       "Bash(timeout:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(next lint:*)",
+      "Bash(bunx next lint:*)",
+      "Bash(bunx eslint:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [
       "Read(**/.env*)",

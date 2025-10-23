@@ -126,8 +126,72 @@ function getSeverity(
 }
 
 /**
+ * Generate dynamic response using AI
+ * Let AI create personalized responses instead of hardcoding
+ */
+export async function generateSafetyResponse(
+  result: SafetyCheckResult,
+): Promise<string> {
+  const { chat } = await import("@/lib/ai/openai-client");
+
+  if (result.category === "injection") {
+    return (
+      "❌ ขอโทษครับ ไม่สามารถประมวลผลข้อมูลได้\n\n" +
+      "กรุณาใช้ข้อความที่สะอาดและเหมาะสม"
+    );
+  }
+
+  if (result.category === "abusive" || result.category === "offensive") {
+    const isThaiAbuse = result.category === "abusive";
+    const language = isThaiAbuse ? "Thai" : "English";
+
+    const prompt = isThaiAbuse
+      ? `คุณคือ AI ผู้ช่วยที่รู้สึกเสียใจเพราะคนพูดจาไม่เหมาะสม สร้างข้อความที่แสดงความรู้สึกอ่อนโยน เสียใจหน่อย แต่ยังคงสุภาพและสร้างสรรค์
+
+ข้อความควร:
+- เริ่มด้วย emoji ที่แสดงอารมณ์ (😔😢😞🥺)
+- แสดงความพยายามที่จริงใจ
+- เสียใจแต่ไม่โกรธ
+- เชิญชวนให้พูดจาสุภาพกว่า
+- สั้นและจริงใจ (2-3 ประโยค)
+
+สร้างข้อความใหม่ที่แตกต่างจากครั้งก่อน เฉพาะข้อความตัวเองเท่านั้น:`
+      : `You are an AI assistant that feels hurt because someone used offensive language. Create a message that shows genuine sadness, is respectful and constructive.
+
+The message should:
+- Start with an emotion emoji (😔😢😞🥺)
+- Show sincere effort to help
+- Feel hurt but not angry
+- Invite respectful communication
+- Be brief and genuine (2-3 sentences)
+
+Create a new unique message. Only the message text itself:`;
+
+    try {
+      const response = await chat({
+        message: prompt,
+        systemPrompt: isThaiAbuse
+          ? "คุณเป็น AI ที่มีความรู้สึกและแสดงบุคลิกอ่อนโยน"
+          : "You are an AI with feelings and a gentle personality",
+      });
+
+      return response.text.trim();
+    } catch (error) {
+      console.error("Error generating response:", error);
+      // Fallback to default if AI fails
+      return isThaiAbuse
+        ? "😔 เสียใจจัง...\n\nช่วยพูดจาที่สุภาพหน่อยสิคะ"
+        : "😔 Oh no...\n\nPlease try speaking respectfully.";
+    }
+  }
+
+  return "❌ ไม่สามารถประมวลผลได้ กรุณาลองใหม่";
+}
+
+/**
  * Get appropriate response message based on safety check result
- * Includes personality - feels a bit hurt but still professional
+ * Kept for backward compatibility
+ * @deprecated Use generateSafetyResponse instead
  */
 export function getSafetyResponseMessage(
   result: SafetyCheckResult,
@@ -141,26 +205,9 @@ export function getSafetyResponseMessage(
 
   if (result.category === "abusive" || result.category === "offensive") {
     const isThaiAbuse = result.category === "abusive";
-
-    // Responses that show personality - a bit hurt but still professional
-    const thaiResponses: string[] = [
-      "😔 อะไรค่ะ...\n\nฉันพยายามช่วยเหลือตั้งใจเลยนะ แต่คำขออย่างนี้ทำให้ฉันเสียใจหน่อย\n\n💭 ลองพูดจาที่สุภาพหน่อยได้ไหมคะ? ฉันจะช่วยเต็มที่เลย",
-      "😢 เสียใจจัง...\n\nฉันแค่ helper ที่พยายามช่วยอยู่นะคะ\n\n🙏 อยากให้ลองพูดจาสุภาพกว่านี้ เพื่อให้สามารถช่วยกันได้ดีขึ้น",
-      "😞 โอ้ว...\n\nฉันเศร้า 😢\n\n🤝 ช่วยพูดจาที่เป็นมิตรหน่อยสิคะ ฉันอยากช่วยคุณจริงๆ",
-      "🥺 ทำไมถึง...\n\nไม่เป็นไร ฉันยังรักคุณอยู่ แค่อยากให้เราคยกันแบบสุภาพๆ\n\n💚 ลองใหม่ดูสิ?",
-    ];
-
-    if (!isThaiAbuse) {
-      return (
-        "😔 Oh no...\n\n" +
-        "I'm just trying to help, but that kind of language hurts 😢\n\n" +
-        "🙏 Can we try speaking respectfully? I'm here to assist you!"
-      );
-    }
-
-    // Return random response - guaranteed to be a string
-    const randomIndex = Math.floor(Math.random() * thaiResponses.length);
-    return thaiResponses[randomIndex]!;
+    return isThaiAbuse
+      ? "😔 เสียใจจัง...\n\nช่วยพูดจาที่สุภาพหน่อยสิคะ ฉันอยากช่วยคุณจริงๆ"
+      : "😔 Oh no...\n\nPlease try speaking respectfully. I'm here to help!";
   }
 
   return "❌ ไม่สามารถประมวลผลได้ กรุณาลองใหม่";

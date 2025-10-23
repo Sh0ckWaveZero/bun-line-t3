@@ -20,13 +20,27 @@ const config = {
     // Enhanced prefetching and routing optimizations
     ppr: false, // Partial Prerendering (experimental)
   },
-  // Turbopack configuration (stable in Next.js 15.4+)
+  // Turbopack configuration (stable in Next.js 16+)
   turbopack: {
     rules: {
       "*.svg": {
         loaders: ["@svgr/webpack"],
         as: "*.js",
       },
+    },
+    resolveAlias: {
+      "@": "./src",
+      "@/app": "./src/app",
+      "@/auth": "./src/lib/auth",
+      "@/components": "./src/components",
+      "@/constants": "./src/lib/constants",
+      "@/database": "./src/lib/database",
+      "@/features": "./src/features",
+      "@/hooks": "./src/hooks",
+      "@/lib": "./src/lib",
+      "@/types": "./src/lib/types",
+      "@/utils": "./src/lib/utils",
+      "@/validation": "./src/lib/validation",
     },
   },
   typescript: {

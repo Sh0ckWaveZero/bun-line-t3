@@ -4,7 +4,7 @@ import { executeCommand } from "./ai-command-router";
 import { spotifyHandler } from "@/features/spotify/handlers/handleSpotifyCommand";
 import {
   checkContentSafety,
-  getSafetyResponseMessage,
+  generateSafetyResponse,
   logAbuseReport,
 } from "@/lib/ai/content-safety";
 
@@ -110,11 +110,14 @@ async function handleCommandRouting(req: any, naturalLanguage: string) {
         timestamp: new Date(),
       });
 
+      // Generate dynamic response using AI
+      const aiResponse = await generateSafetyResponse(safetyCheck);
+
       // Send safe response to user
       await sendMessage(req, [
         {
           type: "text",
-          text: getSafetyResponseMessage(safetyCheck),
+          text: aiResponse,
         },
       ]);
       return;
@@ -210,11 +213,14 @@ async function handleChatMode(req: any, userId: string, message: string) {
         timestamp: new Date(),
       });
 
+      // Generate dynamic response using AI
+      const aiResponse = await generateSafetyResponse(safetyCheck);
+
       // Send safe response to user
       await sendMessage(req, [
         {
           type: "text",
-          text: getSafetyResponseMessage(safetyCheck),
+          text: aiResponse,
         },
       ]);
       return;
