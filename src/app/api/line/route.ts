@@ -1,9 +1,8 @@
-import crypto from "node:crypto";
 import { env } from "@/env.mjs";
 import { lineService } from "@/features/line/services/line";
 import { utils } from "@/lib/validation";
-import { sendLoadingIndicator } from "@/features/line/utils/loadingIndicator";
 import { NextRequest } from "next/server";
+import crypto from "node:crypto";
 
 export async function POST(req: NextRequest) {
   try {
@@ -74,17 +73,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Send loading indicator to all unique users (fire-and-forget)
-    if (userIds.size > 0) {
-      console.log(`🎬 Sending loading indicator to ${userIds.size} user(s)`);
-      for (const userId of userIds) {
-        sendLoadingIndicator(userId).catch((error) => {
-          console.warn("⚠️ Failed to send loading indicator to user:", error);
-        });
-      }
-    }
-
-    // Process events asynchronously to avoid LINE timeout (3 seconds)
     // Fire-and-forget pattern - respond to LINE immediately
     lineService.handleEvent(compatibleReq, compatibleRes).catch((error) => {
       console.error("❌ Error processing LINE event:", error);

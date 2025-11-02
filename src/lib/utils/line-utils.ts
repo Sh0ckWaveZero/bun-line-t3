@@ -67,28 +67,56 @@ export const sendLoadingAnimation = async (
       Authorization: `Bearer ${lineChannelAccessToken}`,
     };
 
-    const response = await fetch(
-      "https://api.line.me/v2/bot/chat/loading/start",
-      {
-        method: "POST",
-        headers: lineHeader,
-        body: JSON.stringify({
-          chatId: userId,
-          loadingSeconds: Math.min(loadingSeconds, 60), // Max 60 seconds
-        }),
-      },
-    );
+    // Try LINE Chat Loading API first (newer API)
+    try {
+      const loadingResponse = await fetch(
+        "https://api.line.me/v2/bot/chat/loading/start",
+        {
+          method: "POST",
+          headers: lineHeader,
+          body: JSON.stringify({
+            chatId: userId,
+            loadingSeconds: Math.min(loadingSeconds, 60), // Max 60 seconds
+          }),
+        },
+      );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.warn("⚠️ Loading animation API error:", errorText);
-      return;
+      if (loadingResponse.ok) {
+        console.log("⏳ Loading animation started (Chat Loading API)");
+        return loadingResponse;
+      }
+
+      // If Chat Loading API fails, fall back to sending a message
+      console.log("ℹ️ Chat Loading API not available, using message fallback");
+    } catch (apiError) {
+      console.log("ℹ️ Chat Loading API failed, using message fallback");
     }
 
-    console.log("⏳ Loading animation started");
-    return response;
+    // Fallback: Send a simple loading message
+    const messageResponse = await fetch(env.LINE_MESSAGING_API, {
+      method: "POST",
+      headers: lineHeader,
+      body: JSON.stringify({
+        to: userId,
+        messages: [
+          {
+            type: "text",
+            text: "⏳ กำลังประมวลผล...",
+          },
+        ],
+      }),
+    });
+
+    if (messageResponse.ok) {
+      console.log("⏳ Loading message sent successfully");
+      return messageResponse;
+    }
+
+    const errorText = await messageResponse.text();
+    console.warn("⚠️ Loading message failed:", errorText);
+    return;
   } catch (error: any) {
-    console.warn("⚠️ Failed to send loading animation:", error.message);
+    console.warn("⚠️ Failed to send loading indicator:", error.message);
     // Don't throw error, just skip loading animation
     return;
   }

@@ -12,7 +12,7 @@ import {
   createSpotifyErrorMessage,
 } from "../templates/spotifyFlexTemplate";
 
-const { sendMessage } = await import("@/lib/utils/line-utils");
+const { sendMessage, sendLoadingAnimation } = await import("@/lib/utils/line-utils");
 
 // ============================================================================
 // Types
@@ -99,6 +99,9 @@ export async function handleSpotifyCommand(
         break;
 
       case "mood-recommend":
+        // 🔄 Send loading animation for recommendations
+        await sendLoadingAnimation(req, 10);
+
         // Get recommendations by mood
         if (!command.mood) {
           messages = [createSpotifyErrorMessage("Invalid mood specified")];
@@ -135,6 +138,9 @@ export async function handleSpotifyCommand(
         break;
 
       case "search":
+        // 🔄 Send loading animation for search
+        await sendLoadingAnimation(req, 10);
+
         // Search and get recommendations
         if (!command.query) {
           messages = [

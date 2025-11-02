@@ -1,12 +1,17 @@
-import { generatePersonalText } from "@/lib/ai/text-generation";
 import {
   checkContentSafety,
   generateSafetyResponse,
   logAbuseReport,
 } from "@/lib/ai/content-safety";
-import { db as prisma } from "@/lib/database/db";
+import { routeNaturalLanguageToCommand } from "@/lib/ai/command-intent";
+import { LINE_COMMANDS } from "../command-registry";
+import {
+  executeCommand,
+  parseAICommandResponse,
+  type CommandRouteResult,
+} from "../ai-command-router";
 
-const { sendMessage } = await import("@/lib/utils/line-utils");
+const { sendMessage, sendLoadingAnimation } = await import("@/lib/utils/line-utils");
 
 /**
  * Handle natural language command routing
@@ -14,6 +19,9 @@ const { sendMessage } = await import("@/lib/utils/line-utils");
 export async function handleCommandRouting(req: any, naturalLanguage: string) {
   try {
     const userId = req.body.events[0].source.userId;
+
+    // 🔄 Send loading animation to user immediately
+    await sendLoadingAnimation(req, 20); // 20 seconds for AI processing
 
     // ✅ Safety check: Detect abuse/inappropriate content
     const safetyCheck = checkContentSafety(naturalLanguage);
@@ -46,92 +54,72 @@ export async function handleCommandRouting(req: any, naturalLanguage: string) {
       return;
     }
 
-    // 🔥 Fetch user data (name and image) from DB
-    console.log(`📢 Responding to user ${userId} with AI-generated personalized message`);
+    // 🤖 Route natural language to command using AI
+    console.log(`🔄 Routing natural language: "${naturalLanguage}"`);
 
-    let userName = "พื้นที่";
-    let userImage: string | null = null;
-    try {
-      const user = await prisma.user.findUnique({
-        where: { id: "68537c965b5bd5e41afec1d5" },
-        select: { image: true, name: true },
-      });
-      userName = user?.name || "พื้นที่";
-      userImage = user?.image || null;
-    } catch (dbError) {
-      console.error("Failed to fetch user data from DB:", dbError);
-      // Continue with defaults
-    }
+    const aiResponse = await routeNaturalLanguageToCommand(
+      naturalLanguage,
+      LINE_COMMANDS,
+    );
 
-    // Generate AI text with user's name
-    let generatedText = "นะมันหล่อ ✨";
-    try {
-      const aiResponse = await generatePersonalText({
-        personName: userName,
-        context: "นะมันหล่อ",
-      });
-      generatedText = aiResponse.text;
-      console.log(`✨ Generated AI text: ${generatedText}`);
-    } catch (aiError) {
-      console.error("Failed to generate AI text, using default:", aiError);
-      // Fallback to default message
-      generatedText = `นะมันหล่อ ${userName} ✨`;
-    }
+    console.log(`📊 AI routing result:`, aiResponse);
 
-    // Fallback image if not found in DB
-    const imageUrl = userImage || "https://example.com/default-image.jpg";
+    // Parse AI response
+    const { command, parameters, reasoning } = parseAICommandResponse(aiResponse);
 
-    const flexMessage = {
-      type: "flex",
-      altText: generatedText,
-      contents: {
-        type: "bubble",
-        body: {
-          type: "box",
-          layout: "vertical",
-          spacing: "md",
-          contents: [
-            {
-              type: "image",
-              url: imageUrl,
-              size: "full",
-              aspectRatio: "1:1",
-              aspectMode: "cover",
-            },
-            {
-              type: "box",
-              layout: "vertical",
-              spacing: "sm",
-              paddingAll: "lg",
-              backgroundColor: "#ffffff",
-              cornerRadius: "md",
-              contents: [
-                {
-                  type: "text",
-                  text: generatedText,
-                  size: "sm",
-                  weight: "bold",
-                  align: "center",
-                  color: "#FF6B9D",
-                  wrap: true,
-                  maxLines: 3,
-                },
-                {
-                  type: "text",
-                  text: "✨ 100%",
-                  size: "xs",
-                  align: "center",
-                  color: "#999999",
-                  margin: "md",
-                },
-              ],
-            },
-          ],
+    if (!command) {
+      console.warn(`⚠️ No command detected from AI response`);
+      await sendMessage(req, [
+        {
+          type: "text",
+          text: "ขอโทษครับ ไม่เข้าใจคำสั่งของคุณ\n\nพิมพ์ /ai help เพื่อดูตัวอย่างการใช้งาน",
         },
-      },
-    };
+      ]);
+      return;
+    }
 
-    await sendMessage(req, [flexMessage]);
+    // Find command definition
+    const commandDef = LINE_COMMANDS.find((cmd) => cmd.command === command);
+
+    if (!commandDef) {
+      console.warn(`⚠️ Command not found: ${command}`);
+      await sendMessage(req, [
+        {
+          type: "text",
+          text: `ไม่พบคำสั่ง: ${command}\n\nพิมพ์ /help เพื่อดูรายการคำสั่งทั้งหมด`,
+        },
+      ]);
+      return;
+    }
+
+    // Execute the command
+    console.log(`✅ Executing command: ${command} with parameters:`, parameters);
+
+    if (reasoning) {
+      console.log(`💡 AI reasoning: ${reasoning}`);
+    }
+
+    const result: CommandRouteResult = await executeCommand(
+      commandDef,
+      parameters,
+      req,
+    );
+
+    // Log result
+    if (result.success) {
+      console.log(`✅ Command executed successfully: ${result.command}`);
+      if (result.explanation) {
+        console.log(`📝 ${result.explanation}`);
+      }
+    } else {
+      console.error(`❌ Command execution failed:`, result.error);
+      await sendMessage(req, [
+        {
+          type: "text",
+          text: `ขออภัย! ${result.error}\n\nพิมพ์ /ai help เพื่อดูวิธีใช้งาน`,
+        },
+      ]);
+    }
   } catch (error) {
     console.error("❌ Error in command routing:", error);
     throw error;
