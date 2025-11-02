@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { env } from "@/env.mjs";
 import { lineService } from "@/features/line/services/line";
 import { utils } from "@/lib/validation";
+import { sendLoadingIndicator } from "@/features/line/utils/loadingIndicator";
 import { NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -54,6 +55,34 @@ export async function POST(req: NextRequest) {
         return data;
       },
     } as any;
+
+    // Send loading indicator immediately for each event
+    // This provides instant visual feedback to user
+    // Extract userId from any event type (message, postback, etc.)
+    const events = body.events || [];
+    const userIds = new Set<string>();
+
+    for (const event of events) {
+      // Get userId from various event source types
+      const userId =
+        event.source?.userId || // Standard message/postback events
+        event.source?.groupId || // Group events
+        event.source?.roomId; // Room events
+
+      if (userId) {
+        userIds.add(userId);
+      }
+    }
+
+    // Send loading indicator to all unique users (fire-and-forget)
+    if (userIds.size > 0) {
+      console.log(`🎬 Sending loading indicator to ${userIds.size} user(s)`);
+      for (const userId of userIds) {
+        sendLoadingIndicator(userId).catch((error) => {
+          console.warn("⚠️ Failed to send loading indicator to user:", error);
+        });
+      }
+    }
 
     // Process events asynchronously to avoid LINE timeout (3 seconds)
     // Fire-and-forget pattern - respond to LINE immediately

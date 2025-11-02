@@ -312,11 +312,21 @@ export function parseAICommandResponse(aiResponse: string): {
       if (line.startsWith("command:")) {
         command = line.replace("command:", "").trim();
       } else if (line.startsWith("parameters:")) {
-        try {
-          const paramStr = line.replace("parameters:", "").trim();
-          Object.assign(parameters, JSON.parse(paramStr));
-        } catch {
-          // Ignore parsing errors
+        const paramStr = line.replace("parameters:", "").trim();
+        if (paramStr) {
+          try {
+            const parsed = JSON.parse(paramStr);
+            // Validate that parsed result is an object
+            if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+              Object.assign(parameters, parsed);
+            } else {
+              console.warn(`Invalid parameters format (not an object): ${paramStr}`);
+            }
+          } catch (parseError) {
+            const errorMessage = parseError instanceof Error ? parseError.message : String(parseError);
+            console.warn(`Failed to parse parameters: ${paramStr} (Error: ${errorMessage})`);
+            // Continue with empty parameters instead of silently failing
+          }
         }
       } else if (line.startsWith("reasoning:")) {
         reasoning = line.replace("reasoning:", "").trim();

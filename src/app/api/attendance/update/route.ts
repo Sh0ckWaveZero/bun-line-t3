@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/auth";
 import { db } from "@/lib/database/db";
+import { env } from "@/env.mjs";
 import { z } from "zod";
 import { AttendanceStatusType } from "@prisma/client";
 import {
@@ -166,11 +167,11 @@ export async function PUT(request: NextRequest) {
 
     // Handle Zod validation errors
     if (error instanceof z.ZodError) {
-      console.error("Validation error details:", error.errors);
+      console.error("Validation error details:", error.issues);
       return NextResponse.json(
         {
           error: "Invalid input data",
-          details: error.errors.map((err) => ({
+          details: error.issues.map((err) => ({
             field: err.path.join("."),
             message: err.message,
             code: err.code,
@@ -204,14 +205,36 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// Support OPTIONS method for CORS
-export async function OPTIONS() {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "PUT, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    },
-  });
+/**
+ * Handle CORS preflight requests
+ * Restricts cross-origin access to the configured frontend URL
+ * Prevents CSRF attacks by rejecting requests from unknown origins
+ */
+export async function OPTIONS(request: NextRequest) {
+  // Get the requesting origin
+  const origin = request.headers.get("origin");
+
+  // Parse the allowed frontend URL from environment
+  try {
+    const allowedUrl = new URL(env.FRONTEND_URL);
+    const allowedOrigin = allowedUrl.origin;
+
+    // Only allow requests from the configured frontend origin
+    if (origin === allowedOrigin) {
+      return new NextResponse(null, {
+        status: 200,
+        headers: {
+          "Access-Control-Allow-Origin": allowedOrigin,
+          "Access-Control-Allow-Methods": "PUT, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Max-Age": "86400", // Cache preflight for 24 hours
+        },
+      });
+    }
+  } catch (error) {
+    console.error("Failed to parse FRONTEND_URL:", error);
+  }
+
+  // Reject requests from other origins
+  return new NextResponse(null, { status: 403 });
 }

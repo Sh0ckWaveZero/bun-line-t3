@@ -1,8 +1,8 @@
 // src/lib/utils/line-message-utils.ts
 // 🛡️ Utility สำหรับ LINE Flex Message และการตอบกลับ
 import { bubbleTemplate } from "@/lib/validation/line";
-import { sendMessage } from "./line-utils";
 import { utils } from "../validation";
+import { sendMessage } from "./line-utils";
 
 export const flexMessage = (bubbleItems: any[]) => [
   {
@@ -42,7 +42,7 @@ export const replyRaw = async (
   }
   Promise.all(bubbleItems)
     .then(async (items) => {
-      console.log("🚀 ~ .then ~ items:", items);
+      console.dir(items, { depth: null });
       const payload = flexMessage(items);
       await sendMessage(req, payload);
     })

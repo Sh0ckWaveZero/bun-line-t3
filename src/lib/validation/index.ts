@@ -3,8 +3,8 @@ export * from "./line";
 export * from "./randomColor";
 
 // Import utility functions
-import { roundToTwoDecimals } from "@/lib/utils/number";
 import { formatDateTimeSafe } from "@/lib/utils/date-formatting";
+import { roundToTwoDecimals } from "@/lib/utils/number";
 import { timeBasedSelect } from "@/lib/utils/safe-random";
 
 // Existing utilities
@@ -102,7 +102,7 @@ const getGoldPricesColors = (element: any, goldBarPrices: any) => {
   const colors: any[] = [];
   const colorsClassName: { [key: string]: string } = {
     "g-d": "#E20303",
-    "g-n": "#444",
+    "g-n": "#444444",
     "g-u": "#0F8000",
   };
 

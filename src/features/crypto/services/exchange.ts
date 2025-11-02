@@ -380,7 +380,7 @@ const getGoldPrice = async (): Promise<any> => {
       if (index === 0) {
         const className = $(el).attr("class");
         const change = classToChangeMap[className] || {
-          color: "#444",
+          color: "#444444",
           symbol: "🟰",
         };
         Object.assign(goldTodayChange, change);
