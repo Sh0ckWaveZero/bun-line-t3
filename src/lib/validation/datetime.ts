@@ -20,7 +20,9 @@ export const datetimeTransformer = z.string().transform((val, ctx) => {
   const date = new Date(val);
   if (isNaN(date.getTime())) {
     ctx.addIssue({
-      code: z.ZodIssueCode.invalid_date,
+      code: "invalid_type",
+      expected: "date",
+      received: "invalid",
       message: "Invalid datetime format",
     });
     return z.NEVER;
