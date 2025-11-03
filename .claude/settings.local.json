@@ -54,7 +54,8 @@
       "Bash(lsof:*)",
       "Bash(xargs kill:*)",
       "Bash(xargs:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git branch:*)"
     ],
     "deny": [
       "Read(**/.env*)",
