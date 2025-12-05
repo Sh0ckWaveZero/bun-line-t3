@@ -19,7 +19,7 @@ db.$connect()
   .then(() => {
     console.log("Successfully connected to database");
   })
-  .catch((e) => {
+  .catch((e: unknown) => {
     console.error("Error connecting to database:", e);
     process.exit(1);
   });
