@@ -1,5 +1,5 @@
-import { cmcService } from "./cmc";
 import { CRYPTO_CURRENCIES_LIST } from "@/lib/constants/common.constant";
+import { cmcService } from "./cmc";
 
 const mapSymbolsThai = (symbols: string): string => {
   const currency: string =
@@ -10,30 +10,74 @@ const mapSymbolsThai = (symbols: string): string => {
   return currency;
 };
 
+// SSRF Protection: Hardcoded allowlist of trusted hosts
+const TRUSTED_IMAGE_HOSTS = Object.freeze([
+  "s2.coinmarketcap.com",
+  "lcw.nyc3.cdn.digitaloceanspaces.com",
+  "cryptoicon-api.vercel.app",
+] as const);
+
+// SSRF Protection: Validate URL is safe to fetch
+const isUrlSafeToFetch = (urlString: string): boolean => {
+  try {
+    const url = new URL(urlString);
+
+    // Only allow HTTPS protocol
+    if (url.protocol !== "https:") {
+      return false;
+    }
+
+    // Check against hardcoded allowlist
+    if (
+      !TRUSTED_IMAGE_HOSTS.includes(
+        url.hostname as (typeof TRUSTED_IMAGE_HOSTS)[number],
+      )
+    ) {
+      return false;
+    }
+
+    // Block internal/private IP addresses
+    const hostname = url.hostname.toLowerCase();
+    if (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname.startsWith("192.168.") ||
+      hostname.startsWith("10.") ||
+      hostname.startsWith("172.") ||
+      hostname.endsWith(".local") ||
+      hostname.includes("internal")
+    ) {
+      return false;
+    }
+
+    // Ensure no credentials in URL
+    if (url.username || url.password) {
+      return false;
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 const getCurrencyLogo = async (currencyName: string): Promise<string> => {
-  // Define fallback URL as a constant
+  // Hardcoded fallback URL (not user-controlled)
   const FALLBACK_ICON_URL =
     "https://cryptoicon-api.vercel.app/api/icon/notfound";
 
-  // 🛡️ SECURITY: Define allowed hosts to prevent SSRF attacks
-  const ALLOWED_HOSTS = new Set([
-    "s2.coinmarketcap.com",
-    "lcw.nyc3.cdn.digitaloceanspaces.com",
-    "cryptoicon-api.vercel.app",
-  ]);
-
   try {
-    // 🔒 SECURITY: Strict input validation - only allow alphanumeric characters, limit length
+    // SSRF Protection: Strict input validation
     if (!currencyName || typeof currencyName !== "string") {
       return FALLBACK_ICON_URL;
     }
 
+    // SSRF Protection: Sanitize input - only alphanumeric, limited length
     const sanitizedCurrencyName = currencyName
       .replace(/[^a-zA-Z0-9]/g, "")
-      .slice(0, 10) // Limit length to prevent abuse
+      .slice(0, 10)
       .toUpperCase();
 
-    // Additional validation: must be at least 1 character and max 10
     if (
       sanitizedCurrencyName.length === 0 ||
       sanitizedCurrencyName.length > 10
@@ -41,68 +85,62 @@ const getCurrencyLogo = async (currencyName: string): Promise<string> => {
       return FALLBACK_ICON_URL;
     }
 
-    // Validate against CMC first
+    // Try CMC first (returns hardcoded URL pattern, not user-controlled)
     const res = await cmcService.findOne(sanitizedCurrencyName);
 
     if (res?.no) {
-      // 🔒 SECURITY: Validate CMC ID is numeric to prevent injection
+      // SSRF Protection: Validate CMC ID is numeric
       const cmcId = String(res.no).replace(/[^0-9]/g, "");
       if (cmcId && cmcId === String(res.no)) {
+        // Hardcoded URL template - safe from SSRF
         return `https://s2.coinmarketcap.com/static/img/coins/128x128/${cmcId}.png`;
       }
     }
 
-    // 🛡️ SECURITY: Use predefined URL patterns to prevent SSRF
-    const SAFE_URL_PATTERNS = {
-      lcw: (currency: string) =>
-        `https://lcw.nyc3.cdn.digitaloceanspaces.com/production/currencies/64/${currency.toLowerCase()}.webp`,
-      generic: () => FALLBACK_ICON_URL,
-    };
+    // SSRF Protection: Generate URL using hardcoded template
+    // Only the currency name (alphanumeric, max 10 chars) is interpolated
+    const imageUrl = `https://lcw.nyc3.cdn.digitaloceanspaces.com/production/currencies/64/${sanitizedCurrencyName.toLowerCase()}.webp`;
 
-    // 🔒 SECURITY: Generate URL using safe pattern only
-    const safeUrl = SAFE_URL_PATTERNS.lcw(sanitizedCurrencyName);
-
-    // 🛡️ SECURITY: Double-check URL is still in allowlist
-    const url = new URL(safeUrl);
-    if (!ALLOWED_HOSTS.has(url.hostname)) {
-      console.warn("Generated URL hostname not in allowlist");
+    // SSRF Protection: Final URL validation before fetch
+    if (!isUrlSafeToFetch(imageUrl)) {
+      console.warn("URL failed safety validation:", imageUrl);
       return FALLBACK_ICON_URL;
     }
 
-    // 🔒 SECURITY: Additional URL validation - ensure path matches expected pattern
+    // SSRF Protection: Validate path pattern
+    const url = new URL(imageUrl);
     const expectedPathPattern =
       /^\/production\/currencies\/64\/[a-z0-9]{1,10}\.webp$/;
     if (!expectedPathPattern.test(url.pathname)) {
-      console.warn("Generated URL path does not match expected pattern");
+      console.warn("URL path does not match expected pattern");
       return FALLBACK_ICON_URL;
     }
 
-    // 🛡️ SECURITY: Make request with strict controls
+    // SSRF Protection: Fetch with strict controls
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
     try {
-      const response = await fetch(safeUrl, {
+      const response = await fetch(imageUrl, {
         signal: controller.signal,
-        method: "GET", // Explicitly set to GET only
+        method: "GET",
         headers: {
           "User-Agent": "CryptoApp/1.0",
           Accept: "image/webp,image/*,*/*;q=0.8",
         },
-        redirect: "error", // Don't follow redirects to prevent redirect-based attacks
+        redirect: "error", // Prevent redirect-based SSRF
         referrerPolicy: "no-referrer",
       });
 
       clearTimeout(timeoutId);
 
-      // 🔒 SECURITY: Strict response validation
+      // SSRF Protection: Strict response validation
       if (
         response.ok &&
         response.status === 200 &&
         response.headers.get("content-type")?.startsWith("image/") &&
-        response.url === safeUrl
+        response.url === imageUrl // Ensure no redirects occurred
       ) {
-        // Ensure no redirects occurred
         return response.url;
       }
 
@@ -111,8 +149,7 @@ const getCurrencyLogo = async (currencyName: string): Promise<string> => {
       clearTimeout(timeoutId);
     }
   } catch (error) {
-    // 🔒 SECURITY: Don't leak sensitive information in logs
-    // Sanitize currency name for logging to prevent format string attacks
+    // SSRF Protection: Sanitize error logging
     const safeCurrencyName =
       typeof currencyName === "string"
         ? currencyName.replace(/[^a-zA-Z0-9]/g, "").slice(0, 10)
