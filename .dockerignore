@@ -1,31 +1,43 @@
-# 🚀 OPTIMIZATION: Docker Build Performance Ignore List
-# High-impact optimizations for faster builds
+# Docker Build Optimization - Ignore List
+# Reduces build context size and improves build speed
 
-# Git และ version control (ลด build context size มาก)
+# =============================================================================
+# Version Control
+# =============================================================================
 .git
 .gitignore
 .gitattributes
 
-# Node.js และ dependencies (จะถูก install ใหม่)
+# =============================================================================
+# Dependencies (will be installed fresh in container)
+# =============================================================================
 node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 bun.lockb.backup*
 
-# ✅ Prisma generated files (จะ generate ใหม่ใน container)
+# =============================================================================
+# Prisma (will be generated in container)
+# =============================================================================
 node_modules/.prisma/
 node_modules/@prisma/engines/
-# Keep src/@prisma/ for build utilities
-!src/@prisma/
+# Note: Keep prisma/ folder - schema.prisma is needed
+# Note: migrations/ excluded for MongoDB (no migrations)
+prisma/migrations/
 
-# Next.js build outputs (จะถูกสร้างใหม่)
+# =============================================================================
+# Build Outputs (will be built in container)
+# =============================================================================
 .next/
 out/
 build/
 dist/
+src/output.css
 
-# Development และ testing files
+# =============================================================================
+# Testing
+# =============================================================================
 *.test.js
 *.test.ts
 *.spec.js
@@ -36,14 +48,20 @@ coverage/
 junit.xml
 tests/
 
-# IDE และ editor files
+# =============================================================================
+# IDE & Editor
+# =============================================================================
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+.cursor/
+.agent/
 
-# OS generated files
+# =============================================================================
+# OS Files
+# =============================================================================
 .DS_Store
 .DS_Store?
 ._*
@@ -52,84 +70,105 @@ tests/
 ehthumbs.db
 Thumbs.db
 
-# Logs และ debug files
+# =============================================================================
+# Logs
+# =============================================================================
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .npm
 .eslintcache
+logs/
 
-# Documentation และ markdown files (ไม่จำเป็นใน runtime)
+# =============================================================================
+# Documentation (not needed at runtime)
+# =============================================================================
 README.md
 CHANGELOG.md
 LICENSE
 *.md
 docs/
+GEMINI.md
+CLAUDE.md
 
-# Development tools และ configuration
+# =============================================================================
+# Development Config
+# =============================================================================
 .eslintrc*
+eslint.config.*
 .prettierrc*
+prettier.config.*
 .babelrc*
 jest.config.*
+vitest.config.*
 cypress/
 .storybook/
 stories/
+tsconfig.*.json
+!tsconfig.json
 
-# Docker files (ป้องกัน recursive copy)
+# =============================================================================
+# Docker (prevent recursive copy)
+# =============================================================================
 Dockerfile*
 .dockerignore
 docker-compose*.yml
 
-# Deployment และ CI/CD files
+# =============================================================================
+# CI/CD & Deployment
+# =============================================================================
 .vercel
 .netlify
 .github/
 .gitlab-ci.yml
 .travis.yml
 
-# SSL certificates และ development keys
+# =============================================================================
+# Security - Certificates & Keys
+# =============================================================================
 certificates/
 *.pem
 *.key
 *.crt
+*.p12
+*.pfx
 
-# Scripts และ development tools (ไม่ใช้ใน container)
+# =============================================================================
+# Scripts (keep only essential startup scripts)
+# =============================================================================
 scripts/
 !scripts/docker-entrypoint.sh
 !scripts/health-check.sh
-Makefile
 
-# 🔐 SECURITY & 🚀 OPTIMIZATION: Prisma และ Database Management
-# รวม Prisma files ที่จำเป็นสำหรับ Docker build
-# prisma/migrations/ - สำหรับ development เท่านั้น
-prisma/migrations/
-
-# 🛡️ SECURITY: Database และ migration files ที่ไม่ควรอยู่ใน container
+# =============================================================================
+# Database Files
+# =============================================================================
 *.db
 *.sqlite
 *.sqlite3
 migration-*.sql
 
-# 🔐 SECURITY: Generated Prisma Client (จะถูกสร้างใหม่ใน container)
-node_modules/.prisma/
-
-# Environment files (จะถูกจัดการผ่าน Docker)
+# =============================================================================
+# Environment Files
+# =============================================================================
 .env
 .env.local
+.env.development
 .env.development.local
+.env.test
 .env.test.local
+.env.production.local
 .env.*.local
 !.env.example
-!.env.prod
 
-# Temporary files
+# =============================================================================
+# Temporary & Cache
+# =============================================================================
 *.tmp
 *.temp
 .tmp/
 temp/
-
-# Runtime และ cache files
 .cache/
 .parcel-cache/
 .nuxt/
@@ -138,8 +177,20 @@ temp/
 .serverless/
 .fusebox/
 .dynamodb/
+.locks/
 
-# Package manager locks (เว้น bun.lockb ที่จำเป็น)
+# =============================================================================
+# Package Manager Locks (keep bun.lock only)
+# =============================================================================
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
+
+# =============================================================================
+# Misc
+# =============================================================================
+Makefile
+*.tgz
+*.tar.gz
+*.zip
+public/temp-charts/*
