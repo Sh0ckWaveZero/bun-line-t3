@@ -296,15 +296,20 @@ jobs:
         run: |
           echo "🏗️ Building application..."
 
-          # Force rebuild ถ้า manual trigger เปิดใช้งาน
+          # Enable BuildKit for faster builds with caching
+          export DOCKER_BUILDKIT=1
+          export COMPOSE_DOCKER_CLI_BUILD=1
+
+          # Force rebuild if manual trigger is enabled
           BUILD_ARGS=""
           if [[ "${{ github.event.inputs.force_rebuild }}" == "true" ]]; then
             echo "🔄 Force rebuild enabled - pulling base images..."
             BUILD_ARGS="--pull --no-cache"
           fi
 
-          # ส่ง build arguments ที่จำเป็นให้กับ Docker build
+          # Build with cache and parallel options
           if docker compose build $BUILD_ARGS \
+            --build-arg BUILDKIT_INLINE_CACHE=1 \
             --build-arg DATABASE_URL="${{ secrets.DATABASE_URL }}" \
             --build-arg NEXTAUTH_URL="${{ secrets.NEXTAUTH_URL }}" \
             --build-arg NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}" \

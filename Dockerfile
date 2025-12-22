@@ -43,14 +43,16 @@ COPY package.json bun.lock ./
 # 🗄️ Copy Prisma schema before installing dependencies
 COPY prisma ./prisma
 
-# 📥 Install dependencies
-RUN NODE_OPTIONS="--max_old_space_size=1536" bun install --frozen-lockfile --ignore-scripts
+# 📥 Install dependencies (with cache mount for faster rebuilds)
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+    NODE_OPTIONS="--max_old_space_size=1536" bun install --frozen-lockfile --ignore-scripts
 
 # 🎨 Rebuild canvas module with native dependencies
 RUN cd node_modules/canvas && npm rebuild 2>/dev/null || true
 
-# 🗄️ Generate Prisma Client
-RUN NODE_OPTIONS="--max_old_space_size=1024" bunx prisma generate
+# 🗄️ Generate Prisma Client (with cache mount)
+RUN --mount=type=cache,target=/root/.cache/prisma \
+    NODE_OPTIONS="--max_old_space_size=1024" bunx prisma generate
 
 # 📋 Copy source files
 COPY . .
@@ -103,8 +105,9 @@ ENV NEXT_BUILD_WORKERS=0 \
     NEXT_WORKER_THREADS=false \
     NEXT_PARALLEL=false
 
-# 🎨 Build Tailwind CSS and 🚀 Next.js
-RUN echo "🎨 Building Tailwind CSS..." && \
+# 🎨 Build Tailwind CSS and 🚀 Next.js (with cache mount)
+RUN --mount=type=cache,target=/app/.next/cache \
+    echo "🎨 Building Tailwind CSS..." && \
     bunx @tailwindcss/cli -i ./src/input.css -o ./src/output.css && \
     echo "🚀 Building Next.js..." && \
     NODE_OPTIONS="--max_old_space_size=1024 --no-warnings" npx next build && \
