@@ -196,8 +196,8 @@ jobs:
             echo "ℹ️ No existing images to backup"
           fi
 
-          # Backup docker-compose state
-          docker-compose config > "$BACKUP_DIR/docker-compose-state.yml" 2>/dev/null || true
+          # Backup docker compose state
+          docker compose config > "$BACKUP_DIR/docker-compose-state.yml" 2>/dev/null || true
 
           # Save backup path for later use
           echo "BACKUP_DIR=$BACKUP_DIR" >> $GITHUB_ENV
@@ -304,7 +304,7 @@ jobs:
           fi
 
           # ส่ง build arguments ที่จำเป็นให้กับ Docker build
-          if docker-compose build $BUILD_ARGS \
+          if docker compose build $BUILD_ARGS \
             --build-arg DATABASE_URL="${{ secrets.DATABASE_URL }}" \
             --build-arg NEXTAUTH_URL="${{ secrets.NEXTAUTH_URL }}" \
             --build-arg NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}" \
@@ -336,17 +336,17 @@ jobs:
             echo "📦 Restoring previous Docker images..."
             docker load -i "$BACKUP_DIR/current-images.tar"
 
-            # ตรวจสอบว่ามี .env.prod หรือไม่ และโหลดให้ docker-compose
+            # ตรวจสอบว่ามี .env.prod หรือไม่ และโหลดให้ docker compose
             if [[ -f ".env.prod" ]]; then
               echo "🔧 Using existing .env.prod for rollback..."
               # Restart services with previous images และ environment variables
-              docker-compose --env-file .env.prod down --timeout 30 || true
-              docker-compose --env-file .env.prod up -d
+              docker compose --env-file .env.prod down --timeout 30 || true
+              docker compose --env-file .env.prod up -d
             else
               echo "⚠️ No .env.prod found, using environment variables directly..."
               # Restart services with previous images
-              docker-compose down --timeout 30 || true
-              docker-compose up -d
+              docker compose down --timeout 30 || true
+              docker compose up -d
             fi
 
             echo "✅ Rollback completed - services restored to previous version"
@@ -386,11 +386,11 @@ jobs:
           echo "🛑 หยุดบริการที่ทำงานอยู่..."
 
           # ตรวจสอบ services ที่ทำงานอยู่ด้วย timeout protection
-          if timeout 10 docker-compose ps 2>/dev/null | grep -q "Up" 2>/dev/null; then
+          if timeout 10 docker compose ps 2>/dev/null | grep -q "Up" 2>/dev/null; then
             echo "Stopping existing services..."
-            docker-compose down --timeout 30 || true
+            docker compose down --timeout 30 || true
           else
-            echo "No running services found or docker-compose not responding"
+            echo "No running services found or docker compose not responding"
           fi
 
       - name: 🚀 Start Services
@@ -400,7 +400,7 @@ jobs:
           echo "🚀 เริ่มต้นบริการ..."
 
           # Start services with new images
-          if docker-compose up -d; then
+          if docker compose up -d; then
             echo "✅ Services started successfully"
             echo "SERVICES_STARTED=true" >> $GITHUB_OUTPUT
           else
@@ -409,7 +409,7 @@ jobs:
             exit 1
           fi
         env:
-          # Override environment variables สำหรับ docker-compose
+          # Override environment variables สำหรับ docker compose
           PORT: ${{ secrets.PORT || '12914' }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
@@ -440,8 +440,8 @@ jobs:
           sleep 20
 
           # Check if containers are running with timeout protection
-          if ! timeout 10 docker-compose ps 2>/dev/null | grep -q "Up" 2>/dev/null; then
-            echo "❌ Containers are not running properly or docker-compose not responding"
+          if ! timeout 10 docker compose ps 2>/dev/null | grep -q "Up" 2>/dev/null; then
+            echo "❌ Containers are not running properly or docker compose not responding"
             echo "📋 Attempting to get container status directly..."
             docker ps --filter "name=bun-line-t3" || true
             echo "HEALTH_CHECK_PASSED=false" >> $GITHUB_OUTPUT
@@ -485,27 +485,27 @@ jobs:
 
           # Stop current failed deployment
           echo "🛑 Stopping failed deployment..."
-          docker-compose down --timeout 30 || true
+          docker compose down --timeout 30 || true
 
           # ตรวจสอบว่ามี backup หรือไม่
           if [[ -f "$BACKUP_DIR/current-images.tar" ]]; then
             echo "📦 Restoring previous Docker images..."
             docker load -i "$BACKUP_DIR/current-images.tar"
 
-            # ตรวจสอบว่ามี .env.prod หรือไม่ และโหลดให้ docker-compose
+            # ตรวจสอบว่ามี .env.prod หรือไม่ และโหลดให้ docker compose
             if [[ -f ".env.prod" ]]; then
               echo "🔧 Using existing .env.prod for rollback..."
               # Restart services with previous images และ environment variables
-              docker-compose --env-file .env.prod up -d
+              docker compose --env-file .env.prod up -d
             else
               echo "⚠️ No .env.prod found, using environment variables directly..."
               # Restart services with previous images
-              docker-compose up -d
+              docker compose up -d
             fi
 
             # Wait and check if rollback was successful
             sleep 15
-            if docker-compose ps | grep -q "Up"; then
+            if docker compose ps | grep -q "Up"; then
               echo "✅ Rollback completed successfully"
               echo "🔗 Previous version restored and accessible at: ${{ secrets.NEXTAUTH_URL }}"
 
@@ -519,16 +519,16 @@ jobs:
             else
               echo "❌ Rollback failed - containers not starting"
               echo "🔧 Manual intervention required - checking logs..."
-              docker-compose logs --tail=50
+              docker compose logs --tail=50
               exit 1
             fi
           else
             echo "⚠️ No backup found - this might be the first deployment"
             echo "🔧 First deployment failed - please check configuration and try again"
             echo "📋 Current container status:"
-            docker-compose ps
+            docker compose ps
             echo "📋 Recent logs:"
-            docker-compose logs --tail=30
+            docker compose logs --tail=30
             exit 1
           fi
 
@@ -600,7 +600,7 @@ jobs:
           echo "🔗 Application URL: ${{ secrets.NEXTAUTH_URL }}"
 
           echo "🐳 Container Status:"
-          docker-compose ps --format "table {{.Name}}\t{{.State}}\t{{.Ports}}"
+          docker compose ps --format "table {{.Name}}\t{{.State}}\t{{.Ports}}"
 
           echo "📊 Resource Usage:"
           docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}"
@@ -655,7 +655,7 @@ jobs:
             else
               if [[ $ATTEMPT -eq $MAX_ATTEMPTS ]]; then
                 echo "❌ Application health check failed after $MAX_ATTEMPTS attempts"
-                docker-compose logs --tail=50
+                docker compose logs --tail=50
                 exit 1
               fi
               echo "⏳ Waiting 10 seconds before retry..."
@@ -669,12 +669,12 @@ jobs:
           echo "🔍 ตรวจสอบสถานะบริการ..."
 
           # Check container status with timeout and error handling
-          if ! timeout 15 docker-compose ps 2>/dev/null | grep -E "(Up|healthy)" 2>/dev/null; then
+          if ! timeout 15 docker compose ps 2>/dev/null | grep -E "(Up|healthy)" 2>/dev/null; then
             echo "❌ Services are not running properly or not responding"
             echo "📋 Attempting alternative status check..."
             docker ps --filter "name=bun-line-t3" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" || true
             echo "📋 Recent logs:"
-            timeout 30 docker-compose logs --tail=100 2>/dev/null || docker logs $(docker ps -q --filter "name=bun-line-t3") --tail=50 2>/dev/null || true
+            timeout 30 docker compose logs --tail=100 2>/dev/null || docker logs $(docker ps -q --filter "name=bun-line-t3") --tail=50 2>/dev/null || true
             exit 1
           fi
 
@@ -709,7 +709,7 @@ jobs:
 
           # Container information
           echo "🐳 Running containers:"
-          docker-compose ps --format "table {{.Name}}\t{{.State}}\t{{.Ports}}"
+          docker compose ps --format "table {{.Name}}\t{{.State}}\t{{.Ports}}"
 
   # Job 4: Post-deployment Verification (เฉพาะ production)
   verify:
