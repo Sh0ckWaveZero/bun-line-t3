@@ -118,6 +118,12 @@ ENV SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
 # 🔧 ARM64: แยก commands เพื่อลด memory peak usage สำหรับ ARM64
 RUN NODE_OPTIONS="--max_old_space_size=768 --no-warnings" bunx prisma generate
 
+# 🎨 TAILWIND CSS: Build CSS before Next.js build
+# This is critical - without this step, output.css will be empty in production!
+RUN echo "🎨 Building Tailwind CSS..." && \
+    bunx @tailwindcss/cli -i ./src/input.css -o ./src/output.css && \
+    echo "✅ Tailwind CSS build completed"
+
 # 🔧 ARM64: ใช้ Node.js แทน Bun สำหรับ Next.js build เพื่อหลีกเลี่ยง worker issues
 ENV NEXT_BUILD_WORKERS=0
 ENV NEXT_WORKER_THREADS=false
