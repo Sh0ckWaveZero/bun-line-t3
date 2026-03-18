@@ -1,40 +1,86 @@
 import { NextRequest } from "next/server";
+import { z } from "zod";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth/auth";
 import { attendanceService } from "@/features/attendance/services/attendance";
 import { leaveService } from "@/features/attendance/services/leave";
 
+// Validation schema for query parameters
+const AttendanceReportQuerySchema = z.object({
+  userId: z.string().min(1, "userId is required"),
+  month: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/, "Invalid month format. Use YYYY-MM")
+    .refine((month) => {
+      const [year, monthNum] = month.split("-").map(Number);
+      if (!year || !monthNum) return false;
+      return (
+        year >= 2020 &&
+        year <= 2100 &&
+        monthNum >= 1 &&
+        monthNum <= 12
+      );
+    }, "Month must be valid (2020-2100, 01-12)"),
+});
+
 export async function GET(req: NextRequest) {
   try {
+    // Authentication check
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return Response.json(
+        {
+          error: "Unauthorized - Authentication required",
+        },
+        { status: 401 },
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");
     const month = searchParams.get("month");
 
-    if (!userId || !month) {
+    // Validate query parameters with Zod
+    const validationResult = AttendanceReportQuerySchema.safeParse({
+      userId,
+      month,
+    });
+
+    if (!validationResult.success) {
       return Response.json(
         {
-          error: "Missing required parameters: userId and month",
+          error: "Validation error",
+          details: validationResult.error.issues.map((e) => ({
+            path: e.path.join("."),
+            message: e.message,
+          })),
         },
         { status: 400 },
       );
     }
 
-    // Validate month format (YYYY-MM)
-    const monthRegex = /^\d{4}-\d{2}$/;
-    if (!monthRegex.test(month)) {
+    const validatedData = validationResult.data;
+
+    // Authorization check - users can only access their own data
+    if (session.user.id !== validatedData.userId) {
       return Response.json(
         {
-          error: "Invalid month format. Use YYYY-MM",
+          error: "Forbidden - You can only access your own attendance data",
         },
-        { status: 400 },
+        { status: 403 },
       );
     }
 
     const report = await attendanceService.getMonthlyAttendanceReport(
-      userId,
-      month,
+      validatedData.userId,
+      validatedData.month,
     );
 
     // ดึงวันลาของ user ในเดือนนั้น
-    const leaves = await leaveService.getUserLeavesInMonth(userId, month);
+    const leaves = await leaveService.getUserLeavesInMonth(
+      validatedData.userId,
+      validatedData.month,
+    );
     // สร้าง map ของวันที่ลาพร้อมข้อมูล leave
     const leaveMap = new Map(leaves.map((leave) => [leave.date, leave]));
     // สร้างรายงานใหม่โดยนับวันที่ลาเป็น "ไม่ขาดงาน"

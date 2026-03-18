@@ -1,5 +1,17 @@
 # Agent Development Guide
 
+## Agent Skills
+
+> **For LLMs**: This project uses [Vercel Agent Skills](https://github.com/vercel-labs/agent-skills). Before creating React/Next.js components or UI code, reference the **Vercel React Best Practices** and **Web Design Guidelines** skills for performance optimization and accessibility compliance.
+
+### Installed Skills (Global)
+
+- **vercel-react-best-practices** - React/Next.js performance optimization (data fetching, bundle size, re-renders)
+- **web-design-guidelines** - UI audit against 100+ best practices (accessibility, dark mode, i18n)
+- **vercel:deploy** - Deploy to Vercel directly from conversation
+
+Skills activate automatically when you describe relevant tasks naturally (e.g., "review my UI", "optimize this component", "deploy to production")
+
 ## Commands
 
 - **Dev**: `bun run dev` (with process lock, Turbopack on :4325)
@@ -60,7 +72,7 @@
 
 ### MongoDB + Prisma ORM
 
-- **USE Prisma v6.19.0** - MongoDB is NOT supported in Prisma v7 yet
+- **USE Prisma v6.19.2** - MongoDB is NOT supported in Prisma v7 yet
 - **NEVER upgrade to Prisma v7** until MongoDB support is added
 - **NEVER use `prisma migrate`** - MongoDB doesn't support migrations
 - **ALWAYS use `db:push`** for schema changes (prototyping workflow)

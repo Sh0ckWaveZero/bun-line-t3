@@ -55,7 +55,10 @@
       "Bash(xargs kill:*)",
       "Bash(xargs:*)",
       "Bash(git commit:*)",
-      "Bash(git branch:*)"
+      "Bash(git branch:*)",
+      "Bash(bunx next lint:*)",
+      "Bash(chmod:*)",
+      "Bash(tee:*)"
     ],
     "deny": [
       "Read(**/.env*)",

@@ -12,13 +12,15 @@ const getThemeClasses = () => {
   return "light"; // Default theme
 };
 
-// 🎨 กำหนด Google Font Prompt
+// 🎨 กำหนด Google Font Prompt - Optimized
 const promptFont = Prompt({
   subsets: ["latin", "thai"],
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
-  style: ["normal", "italic"],
+  weight: ["300", "400", "600"], // Reduced from 9 weights (100-900) to 3 essential weights
+  style: ["normal"], // Removed italic variants (rarely used in Thai)
   display: "swap",
   variable: "--font-prompt",
+  preload: true, // Preload for faster initial render
+  adjustFontFallback: false, // Reduce font metrics overhead
 });
 
 // ใช้ static font class names เพื่อป้องกัน hydration mismatch

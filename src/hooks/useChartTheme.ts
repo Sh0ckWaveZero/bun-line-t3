@@ -3,6 +3,9 @@
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
+// Import optimized Chart.js registration
+import "@/lib/chart-registration";
+
 export interface ChartThemeColors {
   background: string;
   text: string;

@@ -1,5 +1,6 @@
 import path from "path";
 import { fileURLToPath } from "url";
+import withBundleAnalyzer from "@next/bundle-analyzer";
 
 /**
  * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially useful
@@ -15,7 +16,14 @@ const __dirname = path.dirname(__filename);
 const config = {
   reactStrictMode: true,
   experimental: {
-    optimizePackageImports: ["date-fns", "date-fns-tz", "zod"],
+    optimizePackageImports: [
+      "date-fns",
+      "date-fns-tz",
+      "zod",
+      "lucide-react", // Icon tree-shaking
+      "chart.js", // Chart optimization
+      "react-chartjs-2", // Chart wrapper optimization
+    ],
     optimizeServerReact: true,
     // Enhanced prefetching and routing optimizations
     ppr: false, // Partial Prerendering (experimental)
@@ -133,4 +141,9 @@ const config = {
   },
 };
 
-export default config;
+// Wrap config with bundle analyzer
+const bundleAnalyzer = withBundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
+
+export default bundleAnalyzer(config);

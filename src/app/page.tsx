@@ -1,12 +1,12 @@
 "use client";
 
+import Rings from "@/components/common/Rings";
+import "@/styles/ring.css";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import Rings from "@/components/common/Rings";
-import "@/styles/ring.css";
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -30,11 +30,11 @@ export default function Home() {
     >
       <div
         id="container-main"
-        className="container relative z-10 flex flex-col items-center justify-center gap-12 px-4 py-16"
+        className="relative z-10 container flex flex-col items-center justify-center gap-12 px-4 py-16"
       >
         <h1
           id="title-main"
-          className="text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-[5rem]"
+          className="text-5xl font-extrabold tracking-tight text-gray-900 sm:text-[5rem] dark:text-white"
         >
           Bun <span className="text-[#07b53b]">LINE</span>{" "}
           <span className="text-[hsl(280,100%,70%)] dark:text-purple-400">
@@ -46,7 +46,7 @@ export default function Home() {
           <button
             id="btn-login"
             onClick={() => signIn()}
-            className="flex w-full max-w-[14rem] flex-row items-center justify-start gap-4 rounded-md bg-[#07b53b] px-4 py-1 text-center text-white transition duration-300 ease-in-out hover:bg-[#07b53b] hover:bg-opacity-90"
+            className="hover:bg-opacity-90 flex w-full max-w-[14rem] flex-row items-center justify-start gap-4 rounded-md bg-[#07b53b] px-4 py-1 text-center text-white transition duration-300 ease-in-out hover:bg-[#07b53b]"
           >
             <svg
               id="icon-line-login"
@@ -156,7 +156,19 @@ export default function Home() {
         )}
       </div>
 
-      <div className="absolute inset-0 z-0 flex items-center justify-center">
+      <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center">
+        <div
+          className="animate-bg-grid-flow absolute inset-0 mt-[-100%] ml-[-100%] h-[300%] w-[300%] opacity-[0.03] dark:opacity-[0.05]"
+          style={{
+            backgroundImage:
+              "radial-gradient(currentColor 1px, transparent 1px)",
+            backgroundSize: "24px 24px",
+            maskImage:
+              "radial-gradient(circle at center, black 40%, transparent 100%)",
+            WebkitMaskImage:
+              "radial-gradient(circle at center, black 40%, transparent 100%)",
+          }}
+        />
         <Rings id="rings-animation" count={15} />
       </div>
     </main>

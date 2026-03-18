@@ -1,11 +1,41 @@
 "use client";
 
 import React from "react";
+import dynamic from "next/dynamic";
 import { useChartTheme } from "@/hooks/useChartTheme";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { WorkingHoursTabContent } from "./WorkingHoursTabContent";
-import { StatisticsTabContent } from "./StatisticsTabContent";
 import type { AttendanceChartsProps } from "@/lib/types/attendance";
+
+// Lazy load chart components for better bundle splitting
+const WorkingHoursTabContent = dynamic(
+  () =>
+    import("./WorkingHoursTabContent").then((m) => ({
+      default: m.WorkingHoursTabContent,
+    })),
+  {
+    ssr: false, // Charts don't need SSR
+    loading: () => (
+      <div className="flex h-64 items-center justify-center text-gray-400 dark:text-gray-500">
+        กำลังโหลดกราฟ...
+      </div>
+    ),
+  },
+);
+
+const StatisticsTabContent = dynamic(
+  () =>
+    import("./StatisticsTabContent").then((m) => ({
+      default: m.StatisticsTabContent,
+    })),
+  {
+    ssr: false, // Charts don't need SSR
+    loading: () => (
+      <div className="flex h-64 items-center justify-center text-gray-400 dark:text-gray-500">
+        กำลังโหลดกราฟ...
+      </div>
+    ),
+  },
+);
 
 /**
  * Attendance Charts Component - REFACTORED

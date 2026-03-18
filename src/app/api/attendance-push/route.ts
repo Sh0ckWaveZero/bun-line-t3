@@ -1,11 +1,28 @@
 import { NextRequest } from "next/server";
+import { z } from "zod";
 import { env } from "@/env.mjs";
 import { bubbleTemplate } from "@/lib/validation/line";
 import { attendanceService } from "@/features/attendance/services/attendance";
 import { db } from "@/lib/database/db";
+import type {
+  LineMessage,
+  LineFlexMessage,
+  AttendancePushRequest,
+} from "@/types/line-message";
 
-// Helper function to send push message
-const sendPushMessage = async (userId: string, messages: any[]) => {
+// Validation schema for request body
+const AttendancePushSchema = z.object({
+  userId: z.string().min(1, "userId is required"),
+  messageType: z
+    .enum(["checkin_menu", "reminder", "checkout_reminder", "default"])
+    .default("checkin_menu"),
+});
+
+// Helper function to send push message with proper typing
+const sendPushMessage = async (
+  userId: string,
+  messages: LineMessage[],
+): Promise<Response> => {
   const lineChannelAccessToken = env.LINE_CHANNEL_ACCESS;
   const lineHeader = {
     "Content-Type": "application/json",
@@ -23,23 +40,31 @@ const sendPushMessage = async (userId: string, messages: any[]) => {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to send push message");
+      const errorText = await response.text();
+      throw new Error(`LINE API error: ${response.status} ${errorText}`);
     }
 
     return response;
-  } catch (err: any) {
-    console.error("Error sending push message:", err.message);
-    throw err;
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("Error sending push message:", {
+        error: error.message,
+        userId: userId.slice(0, 8) + "...", // Log partial ID only
+      });
+    }
+    throw error;
   }
 };
 
-const flexMessage = (bubbleItems: any[]) => {
+const flexMessage = (
+  bubbleItems: Array<Record<string, unknown>>,
+): LineFlexMessage[] => {
   return [
     {
-      type: "flex",
+      type: "flex" as const,
       altText: "Work Attendance System",
       contents: {
-        type: "carousel",
+        type: "carousel" as const,
         contents: bubbleItems,
       },
     },
@@ -49,18 +74,31 @@ const flexMessage = (bubbleItems: any[]) => {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { userId, messageType = "checkin_menu" } = body;
 
-    if (!userId) {
-      return Response.json({ message: "userId is required" }, { status: 400 });
+    // Validate request body with Zod
+    const validationResult = AttendancePushSchema.safeParse(body);
+    if (!validationResult.success) {
+      return Response.json(
+        {
+          success: false,
+          message: "Validation error",
+          errors: validationResult.error.issues.map((e) => ({
+            path: e.path.join("."),
+            message: e.message,
+          })),
+        },
+        { status: 400 },
+      );
     }
+
+    const { userId, messageType } = validationResult.data;
 
     // Find user account to get internal userId
     const userAccount = await db.account.findFirst({
       where: { providerAccountId: userId },
     });
 
-    let payload;
+    let payload: LineMessage[];
 
     switch (messageType) {
       case "checkin_menu":
@@ -143,13 +181,23 @@ export async function POST(req: NextRequest) {
       },
       { status: 200 },
     );
-  } catch (error: any) {
-    console.error("Error in attendance push API:", error);
+  } catch (error) {
+    // Log error securely without exposing sensitive details
+    if (error instanceof Error) {
+      console.error("Error in attendance push API:", {
+        error: error.message,
+        stack:
+          process.env.NODE_ENV === "development" ? error.stack : undefined,
+      });
+    }
+
+    // Return generic error to client in production
     return Response.json(
       {
         success: false,
         message: "Failed to send push message",
-        error: error.message,
+        ...(process.env.NODE_ENV === "development" &&
+          error instanceof Error && { error: error.message }),
       },
       { status: 500 },
     );

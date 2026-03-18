@@ -3,7 +3,7 @@
  * Service for managing health and fitness activity data
  */
 import { db } from "@/lib/database/db";
-import { ActivityType } from "@prisma/client";
+import { ActivityType, Prisma } from "@prisma/client";
 import type {
   ActivityData,
   ActivitySummary,
@@ -26,8 +26,8 @@ export class HealthActivityService {
         distance: input.distance,
         calories: input.calories,
         steps: input.steps,
-        heartRate: input.heartRate as any,
-        metadata: input.metadata as any,
+        heartRate: input.heartRate as Prisma.InputJsonValue,
+        metadata: input.metadata as Prisma.InputJsonValue,
       },
     });
 
@@ -35,9 +35,22 @@ export class HealthActivityService {
   }
 
   /**
-   * Map Prisma result to ActivityData
+   * Map Prisma result to ActivityData with proper type safety
    */
-  private mapToActivityData(activity: any): ActivityData {
+  private mapToActivityData(activity: {
+    id: string;
+    userId: string;
+    activityType: ActivityType;
+    date: Date;
+    duration: number;
+    distance: number | null;
+    calories: number | null;
+    steps: number | null;
+    heartRate: Prisma.JsonValue;
+    metadata: Prisma.JsonValue;
+    createdAt: Date;
+    updatedAt: Date;
+  }): ActivityData {
     return {
       id: activity.id,
       userId: activity.userId,
@@ -47,11 +60,43 @@ export class HealthActivityService {
       distance: activity.distance,
       calories: activity.calories,
       steps: activity.steps,
-      heartRate: activity.heartRate as any,
-      metadata: activity.metadata as any,
+      heartRate: this.parseHeartRate(activity.heartRate),
+      metadata: this.parseMetadata(activity.metadata),
       createdAt: activity.createdAt,
       updatedAt: activity.updatedAt,
     };
+  }
+
+  /**
+   * Safely parse heartRate JSON data
+   */
+  private parseHeartRate(
+    data: Prisma.JsonValue,
+  ): { average?: number; max?: number; min?: number } | null {
+    if (!data || typeof data !== "object" || Array.isArray(data)) return null;
+
+    const heartRate: {
+      average?: number;
+      max?: number;
+      min?: number;
+    } = {};
+
+    const record = data as Record<string, unknown>;
+    if (typeof record.average === "number") heartRate.average = record.average;
+    if (typeof record.max === "number") heartRate.max = record.max;
+    if (typeof record.min === "number") heartRate.min = record.min;
+
+    return Object.keys(heartRate).length > 0 ? heartRate : null;
+  }
+
+  /**
+   * Safely parse metadata JSON data
+   */
+  private parseMetadata(
+    data: Prisma.JsonValue,
+  ): Record<string, unknown> | null {
+    if (!data || typeof data !== "object" || Array.isArray(data)) return null;
+    return data as Record<string, unknown>;
   }
 
   /**
@@ -67,9 +112,18 @@ export class HealthActivityService {
       offset = 0,
     } = query;
 
-    const where: any = { userId };
+    interface WhereClause {
+      userId: string;
+      date?: {
+        gte?: Date;
+        lte?: Date;
+      };
+      activityType?: ActivityType;
+    }
 
-    if (startDate || endDate) {
+    const where: WhereClause = { userId };
+
+    if (startDate ?? endDate) {
       where.date = {};
       if (startDate) where.date.gte = startDate;
       if (endDate) where.date.lte = endDate;
@@ -86,7 +140,7 @@ export class HealthActivityService {
       skip: offset,
     });
 
-    return activities.map(this.mapToActivityData);
+    return activities.map((activity) => this.mapToActivityData(activity));
   }
 
   /**
@@ -205,9 +259,23 @@ export class HealthActivityService {
   }
 
   /**
-   * Map Prisma result to HealthMetrics
+   * Map Prisma result to HealthMetrics with proper type safety
    */
-  private mapToHealthMetrics(metrics: any): HealthMetrics {
+  private mapToHealthMetrics(metrics: {
+    id: string;
+    userId: string;
+    date: Date;
+    weight: number | null;
+    height: number | null;
+    bmi: number | null;
+    bodyFat: number | null;
+    bloodPressure: Prisma.JsonValue;
+    restingHeartRate: number | null;
+    sleepHours: number | null;
+    waterIntake: number | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }): HealthMetrics {
     return {
       id: metrics.id,
       userId: metrics.userId,
@@ -216,7 +284,7 @@ export class HealthActivityService {
       height: metrics.height,
       bmi: metrics.bmi,
       bodyFat: metrics.bodyFat,
-      bloodPressure: metrics.bloodPressure as any,
+      bloodPressure: this.parseBloodPressure(metrics.bloodPressure),
       restingHeartRate: metrics.restingHeartRate,
       sleepHours: metrics.sleepHours,
       waterIntake: metrics.waterIntake,
@@ -226,26 +294,50 @@ export class HealthActivityService {
   }
 
   /**
-   * Save health metrics
+   * Safely parse bloodPressure JSON data
+   */
+  private parseBloodPressure(
+    data: Prisma.JsonValue,
+  ): { systolic: number; diastolic: number } | null {
+    if (!data || typeof data !== "object" || Array.isArray(data)) return null;
+
+    const record = data as Record<string, unknown>;
+    if (
+      typeof record.systolic === "number" &&
+      typeof record.diastolic === "number"
+    ) {
+      return {
+        systolic: record.systolic,
+        diastolic: record.diastolic,
+      };
+    }
+
+    return null;
+  }
+
+  /**
+   * Save health metrics with proper type conversion
    */
   async saveHealthMetrics(
     metrics: Partial<HealthMetrics> & { userId: string },
   ): Promise<HealthMetrics> {
+    const bloodPressureData = metrics.bloodPressure as Prisma.InputJsonValue;
+
     const result = await db.healthMetrics.upsert({
       where: {
         userId_date: {
           userId: metrics.userId,
-          date: metrics.date || new Date(),
+          date: metrics.date ?? new Date(),
         },
       },
       create: {
         userId: metrics.userId,
-        date: metrics.date || new Date(),
+        date: metrics.date ?? new Date(),
         weight: metrics.weight,
         height: metrics.height,
         bmi: metrics.bmi,
         bodyFat: metrics.bodyFat,
-        bloodPressure: metrics.bloodPressure as any,
+        bloodPressure: bloodPressureData,
         restingHeartRate: metrics.restingHeartRate,
         sleepHours: metrics.sleepHours,
         waterIntake: metrics.waterIntake,
@@ -255,7 +347,7 @@ export class HealthActivityService {
         height: metrics.height,
         bmi: metrics.bmi,
         bodyFat: metrics.bodyFat,
-        bloodPressure: metrics.bloodPressure as any,
+        bloodPressure: bloodPressureData,
         restingHeartRate: metrics.restingHeartRate,
         sleepHours: metrics.sleepHours,
         waterIntake: metrics.waterIntake,

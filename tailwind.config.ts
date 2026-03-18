@@ -293,6 +293,7 @@ const config: Config = {
         spin: "spin 1s linear infinite",
         pulse: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         bounce: "bounce 1s infinite",
+        "bg-grid-flow": "bg-grid-flow 20s linear infinite",
       },
       animationDelay: {
         0: "0ms",
@@ -377,6 +378,10 @@ const config: Config = {
             transform: "translateY(0)",
             animationTimingFunction: "cubic-bezier(0, 0, 0.2, 1)",
           },
+        },
+        "bg-grid-flow": {
+          "0%": { backgroundPosition: "0 0" },
+          "100%": { backgroundPosition: "24px 24px" },
         },
       },
 
