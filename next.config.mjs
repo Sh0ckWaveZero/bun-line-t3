@@ -1,6 +1,6 @@
+import withBundleAnalyzer from "@next/bundle-analyzer";
 import path from "path";
 import { fileURLToPath } from "url";
-import withBundleAnalyzer from "@next/bundle-analyzer";
 
 /**
  * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially useful
@@ -54,7 +54,7 @@ const config = {
   typescript: {
     ignoreBuildErrors: false,
   },
-  ...(process.env.NODE_ENV === "development"
+  ...(process.env.APP_ENV === "development"
     ? {
         assetPrefix: "",
         basePath: "",
@@ -64,7 +64,7 @@ const config = {
           : ["localhost", "127.0.0.1", ".localhost"],
       }
     : {}),
-  ...(process.env.NODE_ENV === "production" && process.env.ALLOWED_DOMAINS
+  ...(process.env.APP_ENV === "production" && process.env.ALLOWED_DOMAINS
     ? {
         allowedDevOrigins: process.env.ALLOWED_DOMAINS.split(",").map((s) =>
           s.trim(),
@@ -141,7 +141,7 @@ const config = {
     return config;
   },
   compiler: {
-    removeConsole: process.env.NODE_ENV === "production",
+    removeConsole: process.env.APP_ENV === "production",
   },
 };
 
