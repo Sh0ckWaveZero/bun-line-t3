@@ -62,8 +62,6 @@ export const MobileModal: React.FC<MobileModalProps> = ({
   // 🔐 SECURITY: ไม่แสดง modal หากไม่เปิดหรือยังไม่พร้อม
   if (!isOpen || !canUsePortal || !portalRoot) return null;
 
-  console.log("MobileModal rendering:", { isOpen, canUsePortal });
-
   // 🎯 Handle background click to close modal
   const handleBackgroundClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -132,7 +130,5 @@ export const MobileModal: React.FC<MobileModalProps> = ({
   );
 
   // Use portal to render at document body level - safely
-  console.log("MobileModal portal target:", portalRoot);
-
   return createPortal(modalElement, portalRoot);
 };

@@ -15,10 +15,8 @@ const updateSettingsSchema = z.object({
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    console.log("🚀 ~ GET /api/user/settings ~ session:", session);
 
     if (!session?.user?.id) {
-      console.log("❌ No session or user id found");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

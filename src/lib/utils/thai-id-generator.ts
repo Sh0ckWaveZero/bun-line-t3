@@ -136,22 +136,12 @@ export function generateMultipleThaiIDs(count: number = 5): string[] {
  * ตัวอย่างการใช้งาน
  */
 export function exampleUsage() {
-  console.log("=== ตัวอย่างการใช้งาน ===");
-
   // สร้างเลขบัตรประชาชนแบบสุ่ม
   const randomId = generateFormattedThaiID();
-  console.log("เลขบัตรประชาชนที่สร้างขึ้น:", randomId);
 
   // ตรวจสอบความถูกต้อง
-  const isValid = validateThaiID(randomId);
-  console.log("ความถูกต้อง:", isValid ? "ถูกต้อง" : "ไม่ถูกต้อง");
+  validateThaiID(randomId);
 
   // สร้างหลายๆ เลข
-  const multipleIds = generateMultipleThaiIDs(3);
-  console.log("เลขบัตรประชาชนหลายๆ เลข:");
-  multipleIds.forEach((id, index) => {
-    console.log(
-      `${index + 1}. ${id} (ถูกต้อง: ${validateThaiID(id) ? "ใช่" : "ไม่"})`,
-    );
-  });
+  generateMultipleThaiIDs(3);
 }

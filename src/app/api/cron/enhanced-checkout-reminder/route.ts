@@ -35,13 +35,8 @@ export async function GET(_req: NextRequest) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    console.log(
-      "🔔 Enhanced Cron: Running dynamic checkout reminder job (every 5 minutes)...",
-    );
-
     // Get current UTC time
     const currentUTCTime = getCurrentUTCTime();
-    console.log(`⏰ Current UTC time: ${currentUTCTime.toISOString()}`);
 
     // ✅ Check if current time is before 09:40 UTC (16:40 Bangkok) - don't send reminders too early
     const currentHour = currentUTCTime.getHours();
@@ -50,9 +45,6 @@ export async function GET(_req: NextRequest) {
       currentHour < 9 || (currentHour === 9 && currentMinute < 40);
 
     if (isTooEarly) {
-      console.log(
-        `⏳ Too early to send reminders (before 09:40 UTC). Current time: ${currentHour}:${currentMinute.toString().padStart(2, "0")} UTC`,
-      );
       return Response.json(
         {
           success: true,
@@ -69,7 +61,6 @@ export async function GET(_req: NextRequest) {
       await attendanceService.getUsersWithPendingCheckoutAndSettingsEnabled();
 
     if (!usersNeedingReminder.length) {
-      console.log("✅ No users need checkout reminders");
       return Response.json(
         {
           success: true,
@@ -79,10 +70,6 @@ export async function GET(_req: NextRequest) {
         { status: 200 },
       );
     }
-
-    console.log(
-      `📝 Found ${usersNeedingReminder.length} users to check for dynamic reminders`,
-    );
 
     // Process each user individually with dynamic timing (2 reminders max)
     const results = await Promise.all(
@@ -109,7 +96,6 @@ export async function GET(_req: NextRequest) {
           });
 
           if (!attendance) {
-            console.log(`⚠️ User ${userId}: No attendance record found`);
             return {
               userId,
               status: "skipped",
@@ -155,9 +141,6 @@ export async function GET(_req: NextRequest) {
               ? calculateUserReminderTime(attendance.checkInTime)
               : calculateUserCompletionTime(attendance.checkInTime);
 
-            console.log(
-              `⏳ User ${userId}: No reminder needed. Next: ${nextReminderTime.toISOString()} UTC`,
-            );
             return {
               userId,
               status: "scheduled",
@@ -175,7 +158,6 @@ export async function GET(_req: NextRequest) {
           });
 
           if (!userAccount) {
-            console.log(`⚠️ User ${userId}: No LINE account found`);
             return {
               userId,
               status: "skipped",
@@ -211,9 +193,6 @@ export async function GET(_req: NextRequest) {
             },
           });
 
-          console.log(
-            `✅ User ${userId}: ${reminderType} reminder sent successfully at ${currentUTCTime.toISOString()} UTC`,
-          );
           return {
             userId,
             lineUserId: userAccount.providerAccountId.substring(0, 8) + "...",
@@ -251,10 +230,6 @@ export async function GET(_req: NextRequest) {
     const sentFinalCount = results.filter(
       (r) => r.status === "sent" && r.reminderType === "final",
     ).length;
-
-    console.log(
-      `📊 Results: ${sentCount} sent (${sent10MinCount} x 10min, ${sentFinalCount} x final), ${scheduledCount} scheduled, ${failedCount} failed, ${skippedCount} skipped`,
-    );
 
     return Response.json(
       {

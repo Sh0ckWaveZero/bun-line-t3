@@ -20,15 +20,9 @@ export class ChartParser {
       .split(" ")
       .filter((part) => part.length > 0);
 
-    console.log("🚀 ChartParser ~ parseCommand ~ parts:", parts);
-    console.log("🚀 ChartParser ~ parseCommand ~ original text:", text);
-
     // Check for chart command aliases
     const chartAliases = ["chart", "/chart", "c", "/c"];
     if (parts.length < 2 || !chartAliases.includes(parts[0] || "")) {
-      console.log(
-        "❌ ChartParser parseCommand failed - invalid command or insufficient parts",
-      );
       return null;
     }
 
@@ -75,9 +69,7 @@ export class ChartParser {
       }
     }
 
-    const result = { symbol, exchange, type };
-    console.log("✅ ChartParser parseCommand success:", result);
-    return result;
+    return { symbol, exchange, type };
   }
 
   private static isValidExchange(exchange: string): boolean {

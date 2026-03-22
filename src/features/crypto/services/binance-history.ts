@@ -80,11 +80,8 @@ export class BinanceHistoryService {
       }
 
       const data = await response.json();
-      console.log("🚀 ~ BinanceHistoryService ~ data length:", data.length);
-
       return data;
-    } catch (error) {
-      console.error("Error fetching Binance kline data:", error);
+    } catch {
       return null;
     }
   }
@@ -137,29 +134,18 @@ export class BinanceHistoryService {
     hours: number = 24,
   ): Promise<ChartDataPoint[]> {
     const binanceSymbol = this.convertToUsdtPair(symbol);
-    console.log(`🔍 Fetching Binance data for: ${symbol} -> ${binanceSymbol}`);
 
     // Calculate limit based on hours and interval
     const interval = "1h";
-    const limit = Math.min(hours, 720); // Max 720 hours (30 days)
+    const limit = Math.min(hours, 720);
 
     const data = await this.fetchKlineData(binanceSymbol, interval, limit);
 
-    if (!data) {
-      console.log(`❌ No data returned for ${binanceSymbol}`);
-      return [];
-    }
-
-    if (data.length === 0) {
-      console.log(`❌ No data available for ${binanceSymbol}`);
+    if (!data || data.length === 0) {
       return [];
     }
 
     const formattedData = this.formatChartData(data);
-    console.log(
-      `✅ Binance data formatted for ${binanceSymbol}: ${formattedData.length} points`,
-    );
-
     return formattedData;
   }
 

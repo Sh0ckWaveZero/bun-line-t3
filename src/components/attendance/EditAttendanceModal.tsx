@@ -48,21 +48,6 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
         isSmallScreen ||
         (isTouchDevice && mobileKeywords);
       setIsMobile(mobile);
-
-      // Enhanced debug logging
-      console.log("🔍 Mobile Detection Details:", {
-        userAgent: userAgent.substring(0, 80),
-        isMobileDevice,
-        isTablet,
-        isSmallScreen,
-        isTouchDevice,
-        mobileKeywords,
-        windowWidth: window.innerWidth,
-        windowHeight: window.innerHeight,
-        maxTouchPoints: navigator.maxTouchPoints,
-        finalResult: mobile,
-        timestamp: new Date().toISOString(),
-      });
     };
 
     checkMobile();
@@ -97,14 +82,6 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
 
   // 🎯 ใช้ modal ที่เหมาะสมกับ device
   const ModalComponent = isMobile ? MobileModal : CenteredModal;
-
-  console.log("🚀 Rendering EditAttendanceModal:", {
-    isOpen,
-    isMobile,
-    editingRecord: !!editingRecord,
-    ModalComponent: isMobile ? "MobileModal" : "CenteredModal",
-    windowWidth: typeof window !== "undefined" ? window.innerWidth : "unknown",
-  });
 
   // 🔐 SECURITY: ใช้ React.Portal เพื่อ render ที่ body level เสมอ
   if (!document) return null;
@@ -251,12 +228,12 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
           </div>
         </div>
 
-        <div className="flex flex-col-reverse justify-end gap-3 rounded-b-xl bg-gray-50 px-6 py-4 dark:bg-gray-900 sm:flex-row">
+        <div className="flex flex-col-reverse justify-end gap-3 rounded-b-xl bg-gray-50 px-6 py-4 sm:flex-row dark:bg-gray-900">
           <button
             type="button"
             onClick={onClose}
             disabled={updateLoading}
-            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 sm:w-auto"
+            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
             style={{ minHeight: "44px" }}
           >
             ยกเลิก

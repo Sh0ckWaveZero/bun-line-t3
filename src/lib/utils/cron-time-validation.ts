@@ -19,9 +19,6 @@ export function validateReminderTime(
 ): TimeValidationResult {
   const currentHour = currentUTCTime.getHours();
 
-  console.log("🚀 ~ validateReminderTime ~ currentHour:", currentHour);
-  console.log(`🕐 Current time: ${currentUTCTime.toISOString()} UTC`);
-
   // In development mode, allow all times for testing
   if (env.APP_ENV !== "production") {
     return {

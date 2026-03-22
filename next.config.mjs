@@ -59,12 +59,16 @@ const config = {
         assetPrefix: "",
         basePath: "",
         devIndicators: { position: "bottom-right" },
-        allowedDevOrigins: ["localhost", "127.0.0.1", ".localhost"],
+        allowedDevOrigins: process.env.ALLOWED_DOMAINS
+          ? process.env.ALLOWED_DOMAINS.split(",").map((s) => s.trim())
+          : ["localhost", "127.0.0.1", ".localhost"],
       }
     : {}),
-  ...(process.env.NODE_ENV === "production"
+  ...(process.env.NODE_ENV === "production" && process.env.ALLOWED_DOMAINS
     ? {
-        allowedDevOrigins: ["*.your-app.example.com"],
+        allowedDevOrigins: process.env.ALLOWED_DOMAINS.split(",").map((s) =>
+          s.trim(),
+        ),
       }
     : {}),
   output: "standalone", // Enable standalone for Docker builds

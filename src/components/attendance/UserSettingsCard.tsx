@@ -28,7 +28,6 @@ export function UserSettingsCard({ className }: UserSettingsCardProps) {
   const [hasChanges, setHasChanges] = useState(false);
   const { showToast } = useToast();
   const { data: session, status } = useSession();
-  console.log("🚀 ~ UserSettingsCard ~ session:", session);
 
   const fetchSettings = useCallback(async () => {
     if (status === "loading" || !session) return;
@@ -142,7 +141,7 @@ export function UserSettingsCard({ className }: UserSettingsCardProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="py-8 text-center text-muted-foreground">
+          <div className="text-muted-foreground py-8 text-center">
             กรุณาเข้าสู่ระบบเพื่อใช้งานการตั้งค่า
           </div>
         </CardContent>
@@ -160,7 +159,7 @@ export function UserSettingsCard({ className }: UserSettingsCardProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="py-8 text-center text-muted-foreground">
+          <div className="text-muted-foreground py-8 text-center">
             ไม่สามารถโหลดการตั้งค่าได้
           </div>
         </CardContent>
@@ -175,7 +174,7 @@ export function UserSettingsCard({ className }: UserSettingsCardProps) {
           <Settings className="h-5 w-5" />
           การตั้งค่าการแจ้งเตือน
         </CardTitle>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           จัดการการแจ้งเตือนต่างๆ ของระบบ
         </p>
       </CardHeader>
@@ -191,7 +190,7 @@ export function UserSettingsCard({ className }: UserSettingsCardProps) {
               )}
               แจ้งเตือนเข้างาน
             </Label>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-muted-foreground text-sm">
               รับการแจ้งเตือนในเวลา 8:00 น. ทุกเช้า
             </div>
           </div>
@@ -214,7 +213,7 @@ export function UserSettingsCard({ className }: UserSettingsCardProps) {
               )}
               แจ้งเตือนเลิกงาน
             </Label>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-muted-foreground text-sm">
               รับการแจ้งเตือนก่อนครบ 9 ชั่วโมง และเมื่อครบ 9 ชั่วโมง
             </div>
           </div>
@@ -237,7 +236,7 @@ export function UserSettingsCard({ className }: UserSettingsCardProps) {
               )}
               แจ้งเตือนวันหยุดราชการ
             </Label>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-muted-foreground text-sm">
               รับการแจ้งเตือนเกี่ยวกับวันหยุดประจำปี
             </div>
           </div>

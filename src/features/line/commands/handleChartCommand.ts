@@ -13,7 +13,6 @@ export async function handleChartCommand(
   params: ChartCommandParams,
 ): Promise<void> {
   try {
-    console.log("🎯 handleChartCommand called with params:", params);
     const { symbol, exchange = "bitkub", type = "line" } = params;
 
     if (type === "comparison") {
@@ -22,7 +21,6 @@ export async function handleChartCommand(
       await handleSingleChart(req, symbol, exchange);
     }
   } catch (error) {
-    console.error("Error handling chart command:", error);
     throw error;
   }
 }
@@ -46,7 +44,6 @@ async function handleComparisonChart(
 
     await sendMessage(req, [chartMessage]);
   } catch (error) {
-    console.error("❌ Failed to generate comparison chart:", error);
     throw error;
   }
 }
@@ -63,14 +60,12 @@ async function handleSingleChart(
   );
 
   if (!hasHistoricalData) {
-    console.log("❌ No historical data available for:", symbol, "on", exchange);
     const noDataMessage = ChartTemplates.createNoDataMessage(symbol);
     await sendMessage(req, [noDataMessage]);
     return;
   }
 
   try {
-    console.log("📈 Generating chart for:", symbol, "from:", exchange);
     const chartData = await chartService.generateSingleChart(symbol, exchange);
 
     const chartMessage = ChartTemplates.createSingleChartCarousel(
@@ -81,10 +76,7 @@ async function handleSingleChart(
     );
 
     await sendMessage(req, [chartMessage]);
-    console.log("✅ Chart carousel sent successfully");
   } catch (imageError) {
-    console.error("❌ Failed to send chart carousel:", imageError);
-
     // Try to get crypto data for fallback message
     try {
       const cryptoData = await chartService.getCryptoData(symbol, exchange);
@@ -96,8 +88,7 @@ async function handleSingleChart(
         );
         await sendMessage(req, [fallbackMessage]);
       }
-    } catch (fallbackError) {
-      console.error("❌ Failed to send fallback message:", fallbackError);
+    } catch {
       throw imageError;
     }
   }

@@ -14,8 +14,6 @@ export async function POST(req: NextRequest) {
     // Default cleanup images older than 2 hours
     const stats = await cleanupTemporaryImages(120);
 
-    console.log("📊 Image cleanup statistics:", stats);
-
     return Response.json({
       success: true,
       message: "Image cleanup completed successfully",

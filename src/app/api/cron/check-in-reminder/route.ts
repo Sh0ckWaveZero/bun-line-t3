@@ -35,10 +35,6 @@ export async function GET(req: NextRequest) {
     const currentThaiTime =
       attendanceService.convertUTCToThaiTime(currentUTCTime);
 
-    console.log(
-      `🕐 Current time: ${currentUTCTime.toISOString()} UTC (${currentThaiTime.toLocaleString("th-TH", { timeZone: "Asia/Bangkok" })} Bangkok)`,
-    );
-
     // Check if today is a working day
     const workingDayResult = await validateWorkingDay(currentThaiTime);
     if (!workingDayResult.isWorkingDay) {

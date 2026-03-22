@@ -18,7 +18,6 @@ export async function GET(_req: NextRequest) {
       await attendanceService.getUsersWithPendingCheckoutAndSettingsEnabled();
 
     if (!usersNeedingReminder.length) {
-      console.log("✅ No users need checkout reminders");
       return Response.json(
         {
           success: true,
@@ -29,10 +28,6 @@ export async function GET(_req: NextRequest) {
       );
     }
 
-    console.log(
-      `📝 Found ${usersNeedingReminder.length} users needing reminders`,
-    );
-
     // Get the LINE user IDs for each internal user ID and send reminders
     const results = await Promise.all(
       usersNeedingReminder.map(async (userId) => {
@@ -41,12 +36,11 @@ export async function GET(_req: NextRequest) {
           const userAccount = await db.account.findFirst({
             where: {
               userId,
-              provider: "line", // Make sure we're getting LINE accounts
+              provider: "line",
             },
           });
 
           if (!userAccount) {
-            console.log(`⚠️ User ${userId}: No LINE account found`);
             return {
               userId,
               status: "skipped",
@@ -58,7 +52,6 @@ export async function GET(_req: NextRequest) {
           const attendance = await attendanceService.getTodayAttendance(userId);
 
           if (!attendance) {
-            console.log(`⚠️ User ${userId}: No attendance record found`);
             return {
               userId,
               status: "skipped",
@@ -83,14 +76,12 @@ export async function GET(_req: NextRequest) {
           // Send the push message
           await sendPushMessage(userAccount.providerAccountId, payload);
 
-          console.log(`✅ User ${userId}: Reminder sent successfully`);
           return {
             userId,
-            lineUserId: userAccount.providerAccountId.substring(0, 8) + "...", // Hide full ID for security
+            lineUserId: userAccount.providerAccountId.substring(0, 8) + "...",
             status: "success",
           };
         } catch (error: any) {
-          console.error(`❌ Error sending reminder to user ${userId}:`, error);
           return {
             userId,
             status: "failed",
@@ -104,10 +95,6 @@ export async function GET(_req: NextRequest) {
     const successCount = results.filter((r) => r.status === "success").length;
     const failedCount = results.filter((r) => r.status === "failed").length;
     const skippedCount = results.filter((r) => r.status === "skipped").length;
-
-    console.log(
-      `📊 Results: ${successCount} sent, ${failedCount} failed, ${skippedCount} skipped`,
-    );
 
     return Response.json(
       {

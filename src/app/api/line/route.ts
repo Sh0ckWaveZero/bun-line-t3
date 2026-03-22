@@ -41,16 +41,13 @@ export async function POST(req: NextRequest) {
     const compatibleRes = {
       status: (code: number) => ({
         send: (data: any) => {
-          console.log(`Response ${code}:`, data);
           return { status: code, data };
         },
         json: (data: any) => {
-          console.log(`Response ${code}:`, data);
           return { status: code, data };
         },
       }),
       json: (data: any) => {
-        console.log("Response:", data);
         return data;
       },
     } as any;

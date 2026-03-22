@@ -19,12 +19,8 @@ interface LineLoadingRequest {
  * @param userId - LINE user ID from webhook event (can be user/group/room ID)
  * @returns Promise<boolean> - true if sent successfully
  */
-export async function sendLoadingIndicator(
-  userId: string,
-): Promise<boolean> {
+export async function sendLoadingIndicator(userId: string): Promise<boolean> {
   try {
-    console.log(`⏳ Sending loading indicator to: ${userId}`);
-
     const response = await fetch(env.LINE_MESSAGING_API, {
       method: "POST",
       headers: {
@@ -43,19 +39,11 @@ export async function sendLoadingIndicator(
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("❌ Failed to send loading indicator:", {
-        userId,
-        status: response.status,
-        error: errorData,
-      });
       return false;
     }
 
-    console.log(`✅ Loading indicator sent to ${userId}`);
     return true;
-  } catch (error) {
-    console.error(`❌ Error sending loading indicator to ${userId}:`, error);
+  } catch {
     return false;
   }
 }
@@ -67,7 +55,6 @@ export async function sendLoadingIndicator(
  */
 export async function sendLoadingState(userId: string): Promise<boolean> {
   try {
-    // Alternative: Send a simpler loading message
     const response = await fetch(env.LINE_MESSAGING_API, {
       method: "POST",
       headers: {
@@ -86,8 +73,7 @@ export async function sendLoadingState(userId: string): Promise<boolean> {
     });
 
     return response.ok;
-  } catch (error) {
-    console.error("Error in sendLoadingState:", error);
+  } catch {
     return false;
   }
 }

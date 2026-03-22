@@ -20,7 +20,6 @@ async function registerPromptFonts() {
   try {
     const fontPath = path.join(process.cwd(), "public", "fonts");
 
-    // Register Prompt fonts for Canvas
     const promptRegular = path.join(fontPath, "Prompt-Regular.ttf");
     const promptMedium = path.join(fontPath, "Prompt-Medium.ttf");
     const promptSemiBold = path.join(fontPath, "Prompt-SemiBold.ttf");
@@ -36,10 +35,8 @@ async function registerPromptFonts() {
     }
 
     fontsRegistered = true;
-    console.log("✅ Prompt fonts registered for D3/Canvas charts");
-  } catch (error) {
-    console.warn("⚠️ Failed to register Prompt fonts:", error);
-    // Continue without custom fonts - Canvas will use system defaults
+  } catch {
+    // Continue without custom fonts
   }
 }
 

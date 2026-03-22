@@ -315,7 +315,6 @@ const cmcList = async (start: number, limit: number): Promise<any> => {
     };
     const response = await fetch(url, { headers });
     const data = await response.json();
-    console.log(data?.data);
     return data?.data;
   } catch (error) {
     console.error("CoinMarkerCap is error: ", error);

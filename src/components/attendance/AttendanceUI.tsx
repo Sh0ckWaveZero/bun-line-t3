@@ -202,12 +202,6 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
-      console.log(
-        "📅 Date selected:",
-        date,
-        "Formatted:",
-        formatToMonthString(date),
-      );
       setSelectedDate(date);
       onMonthChange(formatToMonthString(date));
       setIsOpen(false); // Close popover after selection
@@ -217,7 +211,7 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({
   return (
     <div
       id="month-selector-container"
-      className="mb-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800 landscape:mb-3 landscape:p-4"
+      className="mb-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm landscape:mb-3 landscape:p-4 dark:border-gray-700 dark:bg-gray-800"
     >
       <div
         id="month-selector-content"
@@ -225,7 +219,7 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({
       >
         <span
           id="month-selector-label"
-          className="text-base font-semibold text-gray-700 dark:text-gray-300 landscape:text-sm"
+          className="text-base font-semibold text-gray-700 landscape:text-sm dark:text-gray-300"
         >
           เลือกเดือน
         </span>
@@ -235,7 +229,7 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({
               id="month-selector-button"
               variant="outline"
               className={cn(
-                "h-12 w-[240px] justify-start rounded-lg border-gray-300 bg-gray-50 text-left font-medium text-gray-900 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600 landscape:h-10 landscape:w-[200px] landscape:text-sm",
+                "h-12 w-[240px] justify-start rounded-lg border-gray-300 bg-gray-50 text-left font-medium text-gray-900 transition-colors hover:bg-gray-100 landscape:h-10 landscape:w-[200px] landscape:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600",
                 !selectedDate && "text-muted-foreground",
               )}
             >
@@ -250,7 +244,7 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({
           </PopoverTrigger>
           <PopoverContent
             id="month-selector-popover"
-            className="w-auto rounded-lg border-gray-300 bg-white p-0 shadow-xl dark:border-gray-600 dark:bg-gray-800 portrait:mx-auto"
+            className="w-auto rounded-lg border-gray-300 bg-white p-0 shadow-xl portrait:mx-auto dark:border-gray-600 dark:bg-gray-800"
             align="center"
           >
             <MonthPicker

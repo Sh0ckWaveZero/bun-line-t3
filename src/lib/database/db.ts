@@ -17,7 +17,7 @@ if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = db;
 // Test database connection
 db.$connect()
   .then(() => {
-    console.log("Successfully connected to database");
+    // Connected successfully
   })
   .catch((e: unknown) => {
     console.error("Error connecting to database:", e);

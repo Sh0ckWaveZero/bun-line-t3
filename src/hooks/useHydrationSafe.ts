@@ -123,7 +123,6 @@ export function useHydrationWarningDetector() {
           message.includes("mismatch") ||
           message.includes("Text content does not match")
         ) {
-          console.warn("🚨 Hydration Mismatch Detected:", ...args);
           // Optional: ส่งไปยัง error tracking service
           if ((window as any).gtag) {
             (window as any).gtag("event", "hydration_mismatch", {

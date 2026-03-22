@@ -39,10 +39,8 @@ export const handleSticker = async (
     }
 
     if (isSadSticker(event.message.keywords)) {
-      console.log("🎭 Sad sticker detected, sending consolation message");
-
       const consolationMessage = await getConsolationMessage({
-        useAI: true, // Always try AI first, fallback handled in utils
+        useAI: true,
       });
 
       await sendMessage(req, [
@@ -52,8 +50,7 @@ export const handleSticker = async (
         },
       ]);
     }
-  } catch (error) {
-    console.error("❌ Error in handleSticker:", error);
+  } catch {
     // Don't throw - this is a non-critical feature
   }
 };

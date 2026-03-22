@@ -11,15 +11,7 @@ const ThemeToggle = () => {
 
   useEffect(() => {
     setMounted(true);
-
-    // Debug logging
-    console.log("🎨 ThemeToggle (Switch) mounted:", {
-      theme,
-      resolvedTheme,
-      htmlClasses: document.documentElement.className,
-      localStorage: localStorage.getItem("theme-preference"),
-    });
-  }, [theme, resolvedTheme]);
+  }, []);
 
   if (!mounted) {
     // Show skeleton with exact same structure
@@ -66,18 +58,14 @@ const ThemeToggle = () => {
 
   const handleToggle = (checked: boolean) => {
     const newTheme = checked ? "dark" : "light";
-    console.log("🎨 Theme changing (Switch):", { from: theme, to: newTheme });
     setTheme(newTheme);
 
-    // Force update HTML class immediately for better sync - More aggressive
     const forceUpdate = () => {
       const html = document.documentElement;
       const classList = html.classList;
 
-      // Aggressively remove all theme classes
       classList.remove("light", "dark");
 
-      // Double-check for any remaining theme classes
       const classArray = Array.from(classList);
       classArray.forEach((className) => {
         if (className === "dark" || className === "light") {
@@ -85,13 +73,11 @@ const ThemeToggle = () => {
         }
       });
 
-      // Force add the correct theme
       classList.add(newTheme);
       html.style.colorScheme = newTheme;
       html.setAttribute("data-theme", newTheme);
     };
 
-    // Multiple force updates to ensure sync
     setTimeout(forceUpdate, 10);
     setTimeout(forceUpdate, 50);
     setTimeout(forceUpdate, 100);

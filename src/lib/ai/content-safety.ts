@@ -184,9 +184,7 @@ Create a witty but gentle comeback (2-3 sentences):
  * Kept for backward compatibility
  * @deprecated Use generateSafetyResponse instead
  */
-export function getSafetyResponseMessage(
-  result: SafetyCheckResult,
-): string {
+export function getSafetyResponseMessage(result: SafetyCheckResult): string {
   if (result.category === "injection") {
     return (
       "❌ ขอโทษครับ ไม่สามารถประมวลผลข้อมูลได้\n\n" +
@@ -217,16 +215,6 @@ export async function logAbuseReport(params: {
   timestamp: Date;
 }) {
   try {
-    // Log to console for now
-    console.warn("⚠️ [ABUSE REPORT]", {
-      timestamp: params.timestamp.toISOString(),
-      userId: params.userId,
-      category: params.category,
-      severity: params.severity,
-      triggers: params.triggeredPatterns.slice(0, 3), // First 3 only
-      // Don't log full text in console
-    });
-
     // TODO: Send to monitoring service
     // - Send to analytics/logging service
     // - Alert admins if severity is HIGH

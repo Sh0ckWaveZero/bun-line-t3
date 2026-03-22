@@ -18,30 +18,20 @@ import { sendMessage } from "@/lib/utils/line-utils";
  */
 
 export async function handleIdGenerator(req: any): Promise<void> {
-  console.log(
-    "🎯 handleIdGenerator called with req:",
-    JSON.stringify(req, null, 2),
-  );
-
   // Check if req has proper structure
   const event = req?.body?.events?.[0];
   if (!event) {
-    console.log("❌ Invalid request structure - no event found");
     return;
   }
 
   if (event.type !== "message" || event.message?.type !== "text") {
-    console.log("❌ Invalid event type or message type");
     return;
   }
 
   const text = event.message.text?.toLowerCase().trim();
   if (!text) {
-    console.log("❌ No text message found");
     return;
   }
-
-  console.log("📝 Processing text:", text);
 
   // ตรวจสอบว่ามี postback action หรือไม่
   if (event.type === "postback") {
@@ -85,13 +75,11 @@ export async function handleIdGenerator(req: any): Promise<void> {
   }
 
   // ถ้าไม่ใช่คำสั่งที่รู้จัก ให้แสดงเมนูหลัก
-  console.log("❓ Thai ID command not recognized, showing main menu:", text);
   try {
     const mainMenuMessage = flexMessage([bubbleTemplate.thaiIdMainMenu()]);
     await sendMessage(req, mainMenuMessage);
-    console.log("✅ Main menu message sent successfully");
-  } catch (error) {
-    console.error("❌ Error sending main menu message:", error);
+  } catch {
+    // Silently fail
   }
 }
 
@@ -106,31 +94,26 @@ async function handleInteractiveGenerate(
   try {
     if (count === 1) {
       const singleId = generateFormattedThaiID();
-      console.log("🎲 Generated single ID:", singleId);
       try {
         await sendMessage(
           req,
           flexMessage([bubbleTemplate.thaiIdCard(singleId, true)]),
         );
-        console.log("✅ Single ID message sent successfully");
-      } catch (error) {
-        console.error("❌ Failed to send single ID message:", error);
+      } catch {
+        // Silently fail
       }
     } else {
       const multipleIds = generateMultipleThaiIDs(count);
-      console.log(`🎲 Generated ${count} IDs:`, multipleIds);
       try {
         await sendMessage(
           req,
           flexMessage([bubbleTemplate.thaiIdMultipleCards(multipleIds)]),
         );
-        console.log("✅ Multiple IDs message sent successfully");
-      } catch (error) {
-        console.error("❌ Failed to send multiple IDs message:", error);
+      } catch {
+        // Silently fail
       }
     }
-  } catch (error) {
-    console.error("❌ Error generating Thai ID:", error);
+  } catch {
     try {
       await sendMessage(
         req,
@@ -140,9 +123,8 @@ async function handleInteractiveGenerate(
           ),
         ]),
       );
-      console.log("✅ Error message for generation sent successfully");
-    } catch (sendError) {
-      console.error("❌ Failed to send error message:", sendError);
+    } catch {
+      // Silently fail
     }
   }
 }
@@ -165,29 +147,26 @@ async function handleGenerateId(
 
     if (actualCount === 1) {
       const singleId = generateFormattedThaiID();
-      console.log("🎲 Generated single ID:", singleId);
       try {
         await sendMessage(
           req,
           flexMessage([bubbleTemplate.thaiIdCard(singleId, true)]),
         );
-      } catch (error) {
-        console.error("❌ Failed to send single ID message:", error);
+      } catch {
+        // Silently fail
       }
     } else {
       const multipleIds = generateMultipleThaiIDs(actualCount);
-      console.log(`🎲 Generated ${actualCount} IDs:`, multipleIds);
       try {
         await sendMessage(
           req,
           flexMessage([bubbleTemplate.thaiIdMultipleCards(multipleIds)]),
         );
-      } catch (error) {
-        console.error("❌ Failed to send multiple IDs message:", error);
+      } catch {
+        // Silently fail
       }
     }
-  } catch (error) {
-    console.error("❌ Error generating Thai ID:", error);
+  } catch {
     try {
       await sendMessage(
         req,
@@ -197,8 +176,8 @@ async function handleGenerateId(
           ),
         ]),
       );
-    } catch (sendError) {
-      console.error("❌ Failed to send error message:", sendError);
+    } catch {
+      // Silently fail
     }
   }
 }
@@ -208,8 +187,6 @@ async function handleGenerateId(
  */
 async function handlePostbackAction(req: any, event: any): Promise<void> {
   const postbackData = event.postback?.data;
-
-  console.log("📋 Postback action received:", postbackData);
 
   if (postbackData?.startsWith("action=")) {
     const action = postbackData.replace("action=", "");
@@ -226,23 +203,18 @@ async function handlePostbackAction(req: any, event: any): Promise<void> {
           req,
           flexMessage([bubbleTemplate.thaiIdValidateInput()]),
         );
-        console.log("✅ Validation input sent successfully");
         break;
       case "thai_id_help":
         await sendMessage(req, flexMessage([bubbleTemplate.thaiIdHelp()]));
-        console.log("✅ Help message sent successfully");
         break;
       case "thai_id_menu":
         await sendMessage(req, flexMessage([bubbleTemplate.thaiIdMainMenu()]));
-        console.log("✅ Main menu sent successfully");
         break;
       default:
         await sendMessage(req, flexMessage([bubbleTemplate.thaiIdMainMenu()]));
-        console.log("✅ Default main menu sent successfully");
     }
   } else {
     await sendMessage(req, flexMessage([bubbleTemplate.thaiIdMainMenu()]));
-    console.log("✅ Default main menu sent successfully");
   }
 }
 
@@ -259,7 +231,6 @@ async function handleValidateId(
     const idMatch = text.match(/[\d\-\s]{13,17}/);
 
     if (!idMatch || !idMatch[0]) {
-      console.log("❌ No ID number found in message");
       try {
         await sendMessage(
           req,
@@ -269,8 +240,8 @@ async function handleValidateId(
             ),
           ]),
         );
-      } catch (error) {
-        console.error("❌ Failed to send error message:", error);
+      } catch {
+        // Silently fail
       }
       return;
     }
@@ -298,11 +269,10 @@ async function handleValidateId(
           bubbleTemplate.thaiIdValidationResult(formattedId, isValid),
         ]),
       );
-    } catch (error) {
-      console.error("❌ Failed to send validation result:", error);
+    } catch {
+      // Silently fail
     }
-  } catch (error) {
-    console.error("❌ Error validating Thai ID:", error);
+  } catch {
     try {
       await sendMessage(
         req,
@@ -312,8 +282,8 @@ async function handleValidateId(
           ),
         ]),
       );
-    } catch (sendError) {
-      console.error("❌ Failed to send error message:", sendError);
+    } catch {
+      // Silently fail
     }
   }
 }

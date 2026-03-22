@@ -103,7 +103,6 @@ const getCurrencyLogo = async (currencyName: string): Promise<string> => {
 
     // SSRF Protection: Final URL validation before fetch
     if (!isUrlSafeToFetch(imageUrl)) {
-      console.warn("URL failed safety validation:", imageUrl);
       return FALLBACK_ICON_URL;
     }
 
@@ -112,7 +111,6 @@ const getCurrencyLogo = async (currencyName: string): Promise<string> => {
     const expectedPathPattern =
       /^\/production\/currencies\/64\/[a-z0-9]{1,10}\.webp$/;
     if (!expectedPathPattern.test(url.pathname)) {
-      console.warn("URL path does not match expected pattern");
       return FALLBACK_ICON_URL;
     }
 

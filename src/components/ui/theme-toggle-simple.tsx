@@ -11,15 +11,7 @@ export function ThemeToggle() {
 
   useEffect(() => {
     setMounted(true);
-
-    // Debug logging
-    console.log("🎨 ThemeToggle mounted:", {
-      theme,
-      resolvedTheme,
-      htmlClasses: document.documentElement.className,
-      localStorage: localStorage.getItem("theme-preference"),
-    });
-  }, [theme, resolvedTheme]);
+  }, []);
 
   if (!mounted) {
     return (
@@ -31,18 +23,14 @@ export function ThemeToggle() {
 
   const handleThemeToggle = () => {
     const newTheme = theme === "light" ? "dark" : "light";
-    console.log("🎨 Theme changing:", { from: theme, to: newTheme });
     setTheme(newTheme);
 
-    // Force immediate HTML class update for better UX - More aggressive approach
     const forceUpdate = () => {
       const html = document.documentElement;
       const classList = html.classList;
 
-      // Remove ALL theme-related classes
       classList.remove("light", "dark");
 
-      // Check and remove any lingering theme classes
       const classArray = Array.from(classList);
       classArray.forEach((className) => {
         if (className === "dark" || className === "light") {
@@ -50,21 +38,11 @@ export function ThemeToggle() {
         }
       });
 
-      // Force add the new theme
       classList.add(newTheme);
       html.style.colorScheme = newTheme;
       html.setAttribute("data-theme", newTheme);
-
-      console.log("🎨 HTML class force updated:", {
-        classes: html.className,
-        colorScheme: html.style.colorScheme,
-        dataTheme: html.getAttribute("data-theme"),
-        hasLight: html.classList.contains("light"),
-        hasDark: html.classList.contains("dark"),
-      });
     };
 
-    // Force update immediately and also after short delays
     setTimeout(forceUpdate, 10);
     setTimeout(forceUpdate, 50);
     setTimeout(forceUpdate, 100);

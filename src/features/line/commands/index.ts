@@ -189,32 +189,19 @@ export const handleCommand = async (
   }
   // Chart
   if (["chart", "กราฟ", "c"].includes(command)) {
-    console.log("🚀 Chart command detected, command:", command);
     try {
-      // Check if request structure is valid
       if (!req.body || !req.body.events || !req.body.events[0]) {
-        console.error("Invalid request structure for chart command");
         return;
       }
 
       const userId = req.body.events[0].source.userId;
       const originalText = req.body.events[0].message.text;
-      console.log(
-        "📊 Chart command - userId:",
-        userId,
-        "originalText:",
-        originalText,
-      );
 
       const chartParams = parseChartCommand(originalText);
-      console.log("📊 Chart params parsed:", chartParams);
 
       if (chartParams) {
-        console.log("📊 Calling handleChartCommand with params:", chartParams);
         await handleChartCommand(req, userId, chartParams);
-        console.log("✅ Chart command completed successfully");
       } else {
-        console.error("❌ Chart params parsing failed");
         await sendMessage(req, [
           {
             type: "text",
@@ -222,18 +209,16 @@ export const handleCommand = async (
           },
         ]);
       }
-    } catch (error) {
-      console.error("❌ Chart command error:", error);
-      // Send error message back to user
+    } catch {
       try {
         await sendMessage(req, [
           {
             type: "text",
-            text: `ขออภัย! ไม่สามารถสร้างกราฟได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง\n\nError: ${error instanceof Error ? error.message : "Unknown error"}`,
+            text: `ขออภัย! ไม่สามารถสร้างกราฟได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง`,
           },
         ]);
-      } catch (sendError) {
-        console.error("Failed to send error message:", sendError);
+      } catch {
+        // Silently fail
       }
     }
     return;

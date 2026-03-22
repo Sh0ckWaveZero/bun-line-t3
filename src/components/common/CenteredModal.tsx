@@ -41,13 +41,6 @@ export const CenteredModal: React.FC<CenteredModalProps> = ({
     };
   }, [isOpen, onClose, canUsePortal]);
 
-  // 🔍 Debug logging
-  React.useEffect(() => {
-    if (isOpen && canUsePortal) {
-      console.log("CenteredModal opened - Perfect centering active");
-    }
-  }, [isOpen, canUsePortal]);
-
   // 🔐 SECURITY: ไม่แสดง modal หากไม่เปิดหรือยังไม่พร้อม
   if (!isOpen || !canUsePortal || !portalRoot) return null;
 

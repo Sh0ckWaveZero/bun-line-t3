@@ -12,7 +12,9 @@ import {
   createSpotifyErrorMessage,
 } from "../templates/spotifyFlexTemplate";
 
-const { sendMessage, sendLoadingAnimation } = await import("@/lib/utils/line-utils");
+const { sendMessage, sendLoadingAnimation } = await import(
+  "@/lib/utils/line-utils"
+);
 
 // ============================================================================
 // Types
@@ -149,8 +151,6 @@ export async function handleSpotifyCommand(
           break;
         }
 
-        console.log("🔍 Searching Spotify for:", command.query);
-
         // Enhance query with Thai context if needed
         let searchQuery = command.query.trim();
 
@@ -166,12 +166,6 @@ export async function handleSpotifyCommand(
 
         // If no Thai keyword and short query, add Thailand for better local results
         if (!hasThai && isShortQuery && cleanedQuery) {
-          console.log(
-            "📍 Enhancing query:",
-            searchQuery,
-            "→",
-            cleanedQuery + " Thailand",
-          );
           searchQuery = `${cleanedQuery} Thailand`;
         }
 
@@ -179,18 +173,10 @@ export async function handleSpotifyCommand(
         const searchResults = await spotifyService.search(
           searchQuery,
           "track",
-          5, // Get 5 results
+          5,
         );
 
-        console.log(`📊 Search results:`, {
-          found: searchResults.tracks?.items?.length || 0,
-          original: command.query,
-          enhanced: searchQuery,
-        });
-
         if (!searchResults.tracks?.items?.length) {
-          console.log("❌ No search results for query:", command.query);
-
           // Provide helpful error message with suggestions
           messages = [
             createSpotifyErrorMessage(
@@ -208,8 +194,6 @@ export async function handleSpotifyCommand(
         // Return top search results directly instead of recommendations
         const topTracks = searchResults.tracks.items.slice(0, 5);
 
-        console.log("✅ Returning tracks:", topTracks.length);
-
         messages = [
           createSpotifyRecommendationsCarousel(
             topTracks,
@@ -225,8 +209,6 @@ export async function handleSpotifyCommand(
     // Send reply using LINE utils
     await sendMessage(req, messages);
   } catch (error) {
-    console.error("Spotify command error:", error);
-
     // Send user-friendly error message
     let errorMsg = "เกิดข้อผิดพลาดที่ไม่คาดคิด";
 

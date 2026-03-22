@@ -317,14 +317,14 @@ export function parseAICommandResponse(aiResponse: string): {
           try {
             const parsed = JSON.parse(paramStr);
             // Validate that parsed result is an object
-            if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+            if (
+              parsed &&
+              typeof parsed === "object" &&
+              !Array.isArray(parsed)
+            ) {
               Object.assign(parameters, parsed);
-            } else {
-              console.warn(`Invalid parameters format (not an object): ${paramStr}`);
             }
-          } catch (parseError) {
-            const errorMessage = parseError instanceof Error ? parseError.message : String(parseError);
-            console.warn(`Failed to parse parameters: ${paramStr} (Error: ${errorMessage})`);
+          } catch {
             // Continue with empty parameters instead of silently failing
           }
         }

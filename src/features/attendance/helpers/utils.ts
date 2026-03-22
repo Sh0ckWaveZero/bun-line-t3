@@ -14,9 +14,6 @@ export const getUsersWithPendingCheckout = async (): Promise<string[]> => {
       process.env.NODE_ENV === "development" &&
       process.env.DEV_TEST_USER_ID
     ) {
-      console.log(
-        `🧪 DEV MODE: Using test user ${process.env.DEV_TEST_USER_ID} for checkout reminder`,
-      );
       return [process.env.DEV_TEST_USER_ID];
     }
 
@@ -40,8 +37,7 @@ export const getUsersWithPendingCheckout = async (): Promise<string[]> => {
 
     // Extract just the user IDs
     return pendingCheckouts.map((record) => record.userId);
-  } catch (error) {
-    console.error("Error finding users with pending checkouts:", error);
+  } catch {
     return [];
   }
 };
@@ -59,9 +55,6 @@ export const getUsersWithPendingCheckoutAndSettingsEnabled = async (): Promise<
       process.env.NODE_ENV === "development" &&
       process.env.DEV_TEST_USER_ID
     ) {
-      console.log(
-        `🧪 DEV MODE: Using test user ${process.env.DEV_TEST_USER_ID} for checkout reminder`,
-      );
       return [process.env.DEV_TEST_USER_ID];
     }
 
@@ -100,17 +93,9 @@ export const getUsersWithPendingCheckoutAndSettingsEnabled = async (): Promise<
       return checkoutEnabled;
     });
 
-    console.log(
-      `📊 Checkout reminder filtering: ${pendingCheckouts.length} total users, ${filteredUsers.length} with reminders enabled`,
-    );
-
     // Extract just the user IDs
     return filteredUsers.map((record) => record.userId);
-  } catch (error) {
-    console.error(
-      "Error finding users with pending checkouts and settings:",
-      error,
-    );
+  } catch {
     return [];
   }
 };

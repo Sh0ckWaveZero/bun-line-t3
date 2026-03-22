@@ -9,16 +9,9 @@ import { AttendanceStatusType } from "@prisma/client";
  */
 export async function GET() {
   try {
-    // ตรวจสอบ Authorization header (middleware จะจัดการ Bearer token แล้ว)
-    // ไม่จำเป็นต้องตรวจสอบซ้ำเพราะ middleware ได้ตรวจสอบ Bearer token แล้ว
-
     const currentTime = new Date();
     const bangkokTime = new Date(
       currentTime.toLocaleString("en-US", { timeZone: "Asia/Bangkok" }),
-    );
-
-    console.log(
-      `[${bangkokTime.toLocaleString("th-TH")}] เริ่มกระบวนการลงชื่อออกงานอัตโนมัติ...`,
     );
 
     // ค้นหาพนักงานที่ยังไม่ลงชื่อออกงานในวันนี้
@@ -26,7 +19,6 @@ export async function GET() {
       await attendanceService.getUsersWithPendingCheckout();
 
     if (!usersWithoutCheckout.length) {
-      console.log("✅ ไม่มีพนักงานที่ต้องลงชื่อออกงานอัตโนมัติ");
       return Response.json(
         {
           success: true,
@@ -36,10 +28,6 @@ export async function GET() {
         { status: 200 },
       );
     }
-
-    console.log(
-      `🔍 พบพนักงานที่ยังไม่ลงชื่อออกงาน: ${usersWithoutCheckout.length} คน`,
-    );
 
     // ประมวลผลลงชื่อออกงานอัตโนมัติสำหรับแต่ละคน
     const results = await Promise.all(
@@ -59,14 +47,13 @@ export async function GET() {
 
           // คำนวณเวลาลงชื่อออกงานอัตโนมัติ (เที่ยงคืนของวันถัดไป)
           const autoCheckoutTime = new Date(bangkokTime);
-          autoCheckoutTime.setHours(23, 59, 59, 999); // ใกล้เที่ยงคืนของวันเดียวกัน
+          autoCheckoutTime.setHours(23, 59, 59, 999);
 
           // อัปเดต WorkAttendance record ด้วยการลงชื่อออกงานอัตโนมัติ
           await db.workAttendance.update({
             where: { id: todayAttendance.id },
             data: {
               checkOutTime: autoCheckoutTime,
-              // ใช้ string literal แทน enum ชั่วคราว
               status: "AUTO_CHECKOUT_MIDNIGHT" as AttendanceStatusType,
             },
           });
@@ -76,10 +63,6 @@ export async function GET() {
           const workingMilliseconds =
             autoCheckoutTime.getTime() - checkInTime.getTime();
           const workingHours = workingMilliseconds / (1000 * 60 * 60);
-
-          console.log(
-            `✅ ลงชื่อออกงานอัตโนมัติสำหรับ userId: ${userId} (${workingHours.toFixed(2)} ชั่วโมง)`,
-          );
 
           // ส่งแจ้งเตือนให้ผู้ใช้ทราบ (ถ้าต้องการ)
           await sendAutoCheckoutNotification(userId, {
@@ -96,10 +79,6 @@ export async function GET() {
             workingHours: workingHours.toFixed(2),
           };
         } catch (error: any) {
-          console.error(
-            `❌ เกิดข้อผิดพลาดในการลงชื่อออกงานอัตโนมัติสำหรับ userId ${userId}:`,
-            error,
-          );
           return {
             userId,
             status: "failed",
@@ -113,10 +92,6 @@ export async function GET() {
     const successCount = results.filter((r) => r.status === "success").length;
     const failedCount = results.filter((r) => r.status === "failed").length;
     const skippedCount = results.filter((r) => r.status === "skipped").length;
-
-    console.log(
-      `📊 สรุปผลการลงชื่อออกงานอัตโนมัติ: สำเร็จ ${successCount}, ล้มเหลว ${failedCount}, ข้าม ${skippedCount}`,
-    );
 
     return Response.json(
       {
@@ -133,7 +108,6 @@ export async function GET() {
       { status: 200 },
     );
   } catch (error: any) {
-    console.error("❌ เกิดข้อผิดพลาดในระบบลงชื่อออกงานอัตโนมัติ:", error);
     return Response.json(
       {
         success: false,
@@ -166,7 +140,6 @@ async function sendAutoCheckoutNotification(
     });
 
     if (!userAccount) {
-      console.log(`⚠️ ไม่พบ LINE account สำหรับ userId: ${userId}`);
       return;
     }
 
@@ -185,7 +158,7 @@ async function sendAutoCheckoutNotification(
 
     // ส่งข้อความผ่าน LINE
     const lineChannelAccessToken = env.LINE_CHANNEL_ACCESS;
-    const response = await fetch(`${env.LINE_MESSAGING_API}/push`, {
+    await fetch(`${env.LINE_MESSAGING_API}/push`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -196,18 +169,7 @@ async function sendAutoCheckoutNotification(
         messages: [message],
       }),
     });
-
-    if (response.ok) {
-      console.log(
-        `📱 ส่งแจ้งเตือนการลงชื่อออกงานอัตโนมัติให้ userId: ${userId} แล้ว`,
-      );
-    } else {
-      console.error(`❌ ไม่สามารถส่งแจ้งเตือนให้ userId: ${userId} ได้`);
-    }
-  } catch (error: any) {
-    console.error(
-      `❌ เกิดข้อผิดพลาดในการส่งแจ้งเตือนให้ userId ${userId}:`,
-      error,
-    );
+  } catch {
+    // Silently fail
   }
 }

@@ -17,15 +17,16 @@ const SECURITY_HEADERS = {
   "Referrer-Policy": "strict-origin-when-cross-origin",
   // Disable client-side caching for sensitive responses
   "Cache-Control": "no-cache, no-store, must-revalidate",
-  "Pragma": "no-cache",
-  "Expires": "0",
+  Pragma: "no-cache",
+  Expires: "0",
 } as const;
 
 /**
  * Content Security Policy for restricting resource loading
  * Prevents inline scripts and external script injection
  */
-const CSP_HEADER = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self';";
+const CSP_HEADER =
+  "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self';";
 
 /**
  * Apply security headers to the response
@@ -43,7 +44,7 @@ function applySecurityHeaders(response: NextResponse): NextResponse {
   if (env.APP_ENV === "production") {
     response.headers.set(
       "Strict-Transport-Security",
-      "max-age=31536000; includeSubDomains; preload"
+      "max-age=31536000; includeSubDomains; preload",
     );
   }
 
@@ -78,10 +79,9 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     // 2. Verify Bearer token authentication
     const authHeader = request.headers.get("authorization");
     if (authHeader !== `Bearer ${env.CRON_SECRET}`) {
-      console.warn("🚨 Unauthorized cron request detected");
       const errorResponse = NextResponse.json(
         { error: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
       return applySecurityHeaders(errorResponse);
     }

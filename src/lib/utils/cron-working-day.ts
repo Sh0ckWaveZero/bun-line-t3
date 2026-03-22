@@ -31,11 +31,6 @@ export async function validateWorkingDay(
   let reason = "not a working day";
   if (holidayInfo) {
     reason = `public holiday: ${holidayInfo.nameThai} (${holidayInfo.nameEnglish})`;
-    console.log(
-      `🎉 Today is ${holidayInfo.nameThai} (${holidayInfo.nameEnglish}), skipping reminder`,
-    );
-  } else {
-    console.log("📅 Today is not a working day (weekend), skipping reminder");
   }
 
   return {

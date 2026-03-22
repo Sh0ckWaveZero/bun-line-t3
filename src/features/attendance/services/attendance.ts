@@ -118,16 +118,10 @@ async function getActiveLineUserIdsForCheckinReminder(
       user.leaves.length === 0 &&
       notificationsEnabled
     ) {
-      console.log(
-        `🧪 DEV MODE: Using test user ${testUserId} with LINE ID: ${user.accounts[0]?.providerAccountId}`,
-      );
       return [user.accounts[0]?.providerAccountId].filter(
         (id): id is string => typeof id === "string",
       );
     } else {
-      console.log(
-        `🧪 DEV MODE: Test user ${testUserId} not available, on leave, or notifications disabled`,
-      );
       return [];
     }
   }
@@ -167,20 +161,7 @@ const checkIn = async (userId: string): Promise<CheckInResult> => {
     const utcCheckInTime = getCurrentUTCTime();
     const thaiCheckInTime = convertUTCToThaiTime(utcCheckInTime);
 
-    console.log("=== Check-in Debug ===");
-    console.log("User ID:", userId);
-    console.log("Today Date:", todayDate);
-    console.log("Thai Check-in Time:", formatUTCTimeAsThaiTime(utcCheckInTime));
-    console.log("UTC Check-in Time:", utcCheckInTime.toISOString());
-    console.log(
-      "Hour (Thai):",
-      thaiCheckInTime.getUTCHours(),
-      "Minute:",
-      thaiCheckInTime.getUTCMinutes(),
-    );
-
     const isWorking = await isWorkingDay(thaiCheckInTime);
-    console.log("Is Working Day:", isWorking);
 
     if (!isWorking) {
       const dayName = thaiCheckInTime.toLocaleDateString("th-TH", {
@@ -204,7 +185,6 @@ const checkIn = async (userId: string): Promise<CheckInResult> => {
     }
 
     const timeValidation = isValidCheckInTime(thaiCheckInTime);
-    console.log("Time Validation:", timeValidation);
 
     if (!timeValidation.valid) {
       return {
@@ -541,17 +521,6 @@ const debugTimeValidation = () => {
   const currentThaiTime = convertUTCToThaiTime(currentUTCTime);
   const timeValidation = isValidCheckInTime(currentThaiTime);
   const todayDate = currentUTCTime.toISOString().split("T")[0] as string;
-
-  console.log("=== Debug Time Validation ===");
-  console.log("Current Thai Time:", formatUTCTimeAsThaiTime(currentUTCTime));
-  console.log("Current UTC Time:", currentUTCTime.toISOString());
-  console.log("Current Hour (Thai):", currentThaiTime.getUTCHours());
-  console.log("Current Minute (Thai):", currentThaiTime.getUTCMinutes());
-  console.log("Today Date String:", todayDate);
-  console.log("Time Validation:", timeValidation);
-  console.log("Is Early Check-in:", timeValidation.isEarlyCheckIn);
-  console.log("Is Late Check-in:", timeValidation.isLateCheckIn);
-  console.log("============================");
 
   return {
     currentThaiTime,

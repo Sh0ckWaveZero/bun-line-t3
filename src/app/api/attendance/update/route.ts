@@ -33,21 +33,6 @@ export async function PUT(request: NextRequest) {
     // Parse request body
     const body = await request.json();
 
-    // 📝 Log ข้อมูลที่รับมาเพื่อการ debug (ไม่แสดงข้อมูลสำคัญ)
-    console.log("Update attendance request:", {
-      attendanceId: body.attendanceId,
-      checkInDate: DateTimeSecurity.toSafeLogString(
-        validateAndParseDateTime(body.checkInTime),
-      ),
-      checkOutDate: body.checkOutTime
-        ? DateTimeSecurity.toSafeLogString(
-            validateAndParseDateTime(body.checkOutTime),
-          )
-        : null,
-      userId: session.user.id,
-      timestamp: new Date().toISOString(),
-    });
-
     // Validate input data
     const validatedData = UpdateAttendanceSchema.parse(body);
 

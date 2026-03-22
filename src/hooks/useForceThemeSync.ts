@@ -10,14 +10,6 @@ export function useForceThemeSync() {
     const html = document.documentElement;
     const stored = localStorage.getItem("theme-preference") || "light";
 
-    console.log("🔥 AGGRESSIVE THEME SYNC - Before:", {
-      theme,
-      resolvedTheme,
-      stored,
-      htmlClasses: html.className,
-      htmlClassList: Array.from(html.classList),
-    });
-
     // Step 1: Aggressive class removal
     html.classList.remove("light", "dark");
 
@@ -41,21 +33,12 @@ export function useForceThemeSync() {
       setTheme(stored);
     }
 
-    console.log("🔥 AGGRESSIVE THEME SYNC - After:", {
-      stored,
-      htmlClasses: html.className,
-      htmlClassList: Array.from(html.classList),
-      dataTheme: html.getAttribute("data-theme"),
-      colorScheme: html.style.colorScheme,
-    });
-
     // Step 6: Verify and retry if needed
     setTimeout(() => {
       if (
         !html.classList.contains(stored) ||
         html.classList.contains(stored === "light" ? "dark" : "light")
       ) {
-        console.log("⚠️ RETRY THEME SYNC - Class still wrong");
         html.className = html.className.replace(/\b(light|dark)\b/g, "").trim();
         html.classList.add(stored);
       }
@@ -74,7 +57,6 @@ export function useForceThemeSync() {
     );
 
     if (!hasCorrectClass || hasWrongClass) {
-      console.log("🚨 AUTO-SYNC: Theme mismatch detected, forcing sync...");
       forceSync();
     }
   }, [theme, resolvedTheme, forceSync]);

@@ -5,12 +5,18 @@ import {
 } from "@/lib/ai/content-safety";
 import { chat } from "@/lib/ai/openai-client";
 
-const { sendMessage, sendLoadingAnimation } = await import("@/lib/utils/line-utils");
+const { sendMessage, sendLoadingAnimation } = await import(
+  "@/lib/utils/line-utils"
+);
 
 /**
  * Handle chat mode (maintains conversation context)
  */
-export async function handleChatMode(req: any, userId: string, message: string) {
+export async function handleChatMode(
+  req: any,
+  userId: string,
+  message: string,
+) {
   try {
     // 🔄 Send loading animation to user immediately
     await sendLoadingAnimation(req, 15); // 15 seconds for chat response
@@ -19,10 +25,6 @@ export async function handleChatMode(req: any, userId: string, message: string) 
     const safetyCheck = checkContentSafety(message);
 
     if (!safetyCheck.isSafe) {
-      console.warn(
-        `⚠️ [SAFETY] Blocked unsafe content from ${userId} in chat mode: ${safetyCheck.category}`,
-      );
-
       // Log abuse report for moderation
       await logAbuseReport({
         userId,

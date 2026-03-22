@@ -19,14 +19,10 @@ interface ReminderResult {
 export async function sendCheckInReminders(
   todayString: string,
 ): Promise<ReminderResult> {
-  // Get active LINE user IDs for today
   const lineUserIds =
     await attendanceService.getActiveLineUserIdsForCheckinReminder(todayString);
 
   if (lineUserIds.length === 0) {
-    console.log(
-      "📭 ไม่มี LINE userId สำหรับแจ้งเตือน (อาจมีคนลาทั้งหมดหรือไม่มี LINE ID ที่ active)",
-    );
     return {
       success: false,
       sentCount: 0,
@@ -36,9 +32,6 @@ export async function sendCheckInReminders(
     };
   }
 
-  console.log(`📢 พบ ${lineUserIds.length} คนที่ต้องส่งแจ้งเตือน`);
-
-  // Get check-in message (AI or fallback)
   const currentHour = new Date().getHours();
   const timeOfDay =
     currentHour < 12 ? "morning" : currentHour < 17 ? "afternoon" : "evening";
@@ -47,17 +40,16 @@ export async function sendCheckInReminders(
   }).format(new Date());
 
   const reminderMessage = await getCheckInMessage({
-    useAI: env.OPENAI_API_KEY ? true : false, // Use AI if API key is available
+    useAI: env.OPENAI_API_KEY ? true : false,
     context: {
       timeOfDay,
       dayOfWeek,
-      weather: "สดใส", // Default weather, could be enhanced with weather API
+      weather: "สดใส",
     },
   });
 
   const messages = createReminderMessages(reminderMessage);
 
-  // Send push messages to all users
   let pushSuccess = 0;
   let pushFail = 0;
 
@@ -65,19 +57,10 @@ export async function sendCheckInReminders(
     try {
       await sendPushMessage(lineId, messages);
       pushSuccess++;
-    } catch (error) {
+    } catch {
       pushFail++;
-      console.error(
-        `❌ ส่ง push แจ้งเตือนให้ LINE userId ${lineId} ไม่สำเร็จ`,
-        error,
-      );
     }
   }
-
-  console.log(
-    `✅ ส่ง push แจ้งเตือนเช็คอินสำเร็จ ${pushSuccess} คน, ล้มเหลว ${pushFail} คน`,
-  );
-  console.log(`📝 ข้อความที่ส่ง: "${reminderMessage}"`);
 
   return {
     success: pushSuccess > 0,

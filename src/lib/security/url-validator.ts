@@ -118,11 +118,6 @@ export const getSafeRedirectUrl = (
     return url;
   }
 
-  // 📝 Log security attempt for monitoring
-  console.warn(
-    `🚨 Security: Blocked unsafe redirect attempt to "${url}". Reason: ${validation.error}`,
-  );
-
   return fallback;
 };
 
@@ -271,9 +266,6 @@ export const sanitizeUrl = (url: string): string => {
     const urlLower = decodedUrl.toLowerCase();
     for (const protocol of dangerousProtocols) {
       if (urlLower.startsWith(protocol)) {
-        console.warn(
-          `🚨 Security: Blocked dangerous protocol "${protocol}" in URL: ${url}`,
-        );
         return "/";
       }
     }
@@ -285,9 +277,6 @@ export const sanitizeUrl = (url: string): string => {
         testUrl.startsWith("data") &&
         (testUrl.includes("script") || testUrl.includes("javascript"))
       ) {
-        console.warn(
-          `🚨 Security: Blocked encoded data URL with script content: ${url}`,
-        );
         return "/";
       }
     }
@@ -367,9 +356,6 @@ export const sanitizeUrl = (url: string): string => {
     for (const [key, value] of searchParams.entries()) {
       if (isDangerousString(key) || isDangerousString(value)) {
         paramsToDelete.push(key);
-        console.warn(
-          `🚨 Security: Removed dangerous query parameter "${key}=${value}"`,
-        );
       }
     }
 
@@ -379,17 +365,11 @@ export const sanitizeUrl = (url: string): string => {
 
     // 🧹 Sanitize hash fragment
     if (parsedUrl.hash && isDangerousString(parsedUrl.hash)) {
-      console.warn(
-        `🚨 Security: Removed dangerous hash fragment: ${parsedUrl.hash}`,
-      );
       parsedUrl.hash = "";
     }
 
     // 🧹 Sanitize pathname for obvious script injections
     if (parsedUrl.pathname && isDangerousString(parsedUrl.pathname)) {
-      console.warn(
-        `🚨 Security: Detected dangerous path, using safe fallback: ${parsedUrl.pathname}`,
-      );
       return "/";
     }
 
@@ -397,14 +377,12 @@ export const sanitizeUrl = (url: string): string => {
 
     // Final safety check - if the resulting URL still contains dangerous patterns, reject it
     if (isDangerousString(sanitizedUrl)) {
-      console.warn(`🚨 Security: Final check failed for URL: ${sanitizedUrl}`);
       return "/";
     }
 
     return sanitizedUrl;
-  } catch (error) {
-    console.warn(`🚨 Security: URL parsing error for "${url}": ${error}`);
-    return "/"; // Safe fallback
+  } catch {
+    return "/";
   }
 };
 
@@ -533,10 +511,6 @@ export const validateUrlForCSP = (
   const validation = deepValidateUrl(url);
 
   if (!validation.isValid) {
-    console.warn(
-      `🚨 CSP: URL "${url}" failed validation for directive "${directive}":`,
-      validation.issues,
-    );
     return false;
   }
 
@@ -552,9 +526,6 @@ export const validateUrlForCSP = (
       ) &&
       parsedUrl.protocol !== "https:"
     ) {
-      console.warn(
-        `🚨 CSP: Non-HTTPS URL "${url}" not allowed for directive "${directive}" in production`,
-      );
       return false;
     }
 

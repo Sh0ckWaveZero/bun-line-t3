@@ -56,9 +56,6 @@ ${params.availableCommands}
       temperature: 0.3,
     });
 
-    console.log("🤖 AI Response:", text);
-
-    // Parse JSON response
     const parsed = JSON.parse(text);
     return {
       command: parsed.command || null,
@@ -67,7 +64,6 @@ ${params.availableCommands}
       confidence: parsed.confidence || 0,
     };
   } catch (error) {
-    console.error("❌ OpenAI API error:", error);
     throw error;
   }
 }
@@ -96,7 +92,6 @@ export async function chat(params: {
 
     return { text };
   } catch (error) {
-    console.error("❌ OpenAI Chat error:", error);
     throw error;
   }
 }

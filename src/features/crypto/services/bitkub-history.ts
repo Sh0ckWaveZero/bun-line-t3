@@ -66,12 +66,8 @@ export class BitkubHistoryService {
       }
 
       const data = await response.json();
-      console.log("🚀 ~ BitkubHistoryService ~ data:", data);
 
       if (data.s !== "ok") {
-        console.log(
-          `Bitkub API returned status: ${data.s} for symbol: ${symbol}`,
-        );
         if (data.s === "no_data") {
           return { s: "no_data", t: [], o: [], h: [], l: [], c: [], v: [] };
         }
@@ -79,8 +75,7 @@ export class BitkubHistoryService {
       }
 
       return data;
-    } catch (error) {
-      console.error("Error fetching Bitkub historical data:", error);
+    } catch {
       return null;
     }
   }
@@ -133,33 +128,17 @@ export class BitkubHistoryService {
     hours: number = 24,
   ): Promise<ChartDataPoint[]> {
     const bitkubSymbol = this.convertToThbPair(symbol);
-    console.log(`🔍 Fetching data for: ${symbol} -> ${bitkubSymbol}`);
 
     const now = Math.floor(Date.now() / 1000);
     const from = now - hours * 60 * 60;
 
-    const data = await this.fetchHistoricalData(
-      bitkubSymbol,
-      "60", // 1 hour resolution
-      from,
-      now,
-    );
+    const data = await this.fetchHistoricalData(bitkubSymbol, "60", from, now);
 
-    if (!data) {
-      console.log(`❌ No data returned for ${bitkubSymbol}`);
-      return [];
-    }
-
-    if (data.s === "no_data") {
-      console.log(`❌ No data available for ${bitkubSymbol}`);
+    if (!data || data.s === "no_data") {
       return [];
     }
 
     const formattedData = this.formatChartData(data);
-    console.log(
-      `✅ Data formatted for ${bitkubSymbol}: ${formattedData.length} points`,
-    );
-
     return formattedData;
   }
 

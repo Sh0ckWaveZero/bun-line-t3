@@ -103,8 +103,6 @@ class SpotifyService {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Spotify auth error:", response.status, errorText);
         throw new Error(`SPOTIFY_AUTH_FAILED: ${response.status}`);
       }
 
@@ -113,15 +111,13 @@ class SpotifyService {
 
       // Cache token
       this.accessToken = parsed.access_token;
-      this.tokenExpiresAt = Date.now() + parsed.expires_in * 1000 - 60000; // Refresh 1min before expiry
+      this.tokenExpiresAt = Date.now() + parsed.expires_in * 1000 - 60000;
 
       return this.accessToken;
     } catch (error) {
-      console.error("Failed to get Spotify access token:", error);
-
       if (error instanceof Error) {
         if (error.message.startsWith("SPOTIFY_")) {
-          throw error; // Re-throw our custom errors
+          throw error;
         }
       }
 
@@ -144,12 +140,8 @@ class SpotifyService {
         q: query,
         type,
         limit: limit.toString(),
-        market: "TH", // Thai market
+        market: "TH",
       });
-
-      console.log("🔍 Spotify search request:");
-      console.log("   Query:", query);
-      console.log("   URL:", `${this.baseUrl}/search?${params}`);
 
       const response = await fetch(`${this.baseUrl}/search?${params}`, {
         headers: {
@@ -158,21 +150,13 @@ class SpotifyService {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("❌ Spotify search failed:");
-        console.error("   Status:", response.status);
-        console.error("   Response:", errorText);
         throw new Error(`SPOTIFY_SEARCH_FAILED: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log("✅ Spotify search success:");
-      console.log("   Found tracks:", data.tracks?.items?.length || 0);
 
       return data;
     } catch (error) {
-      console.error("Spotify search error:", error);
-
       if (error instanceof Error) {
         if (error.message.startsWith("SPOTIFY_")) {
           throw error;
@@ -221,10 +205,6 @@ class SpotifyService {
         );
       }
 
-      console.log("🎵 Requesting Spotify recommendations:");
-      console.log("   URL:", `${this.baseUrl}/recommendations?${queryParams}`);
-      console.log("   Params:", Object.fromEntries(queryParams.entries()));
-
       const response = await fetch(
         `${this.baseUrl}/recommendations?${queryParams}`,
         {
@@ -235,12 +215,6 @@ class SpotifyService {
       );
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("❌ Spotify recommendations failed:");
-        console.error("   Status:", response.status);
-        console.error("   Response:", errorText);
-        console.error("   Query params:", queryParams.toString());
-
         // Handle specific error cases
         if (response.status === 400) {
           throw new Error("SPOTIFY_INVALID_REQUEST");
@@ -260,8 +234,6 @@ class SpotifyService {
 
       return parsed.tracks;
     } catch (error) {
-      console.error("Spotify recommendations error:", error);
-
       if (error instanceof Error) {
         if (error.message.startsWith("SPOTIFY_")) {
           throw error;
@@ -294,8 +266,7 @@ class SpotifyService {
 
       const data = await response.json();
       return data.genres || [];
-    } catch (error) {
-      console.error("Failed to get genre seeds:", error);
+    } catch {
       return [];
     }
   }
@@ -323,32 +294,21 @@ class SpotifyService {
 
       // Extract tracks from search results
       if (result.tracks?.items && result.tracks.items.length > 0) {
-        console.log(
-          "✅ Found tracks for mood:",
-          result.tracks.items.length,
-          mood,
-        );
         return result.tracks.items;
       }
 
       // Fallback: try simpler query
-      console.log("⚠️ No results for query, trying fallback:", query);
       const fallbackResult = await this.search(mood, "track", limit);
 
       if (
         fallbackResult.tracks?.items &&
         fallbackResult.tracks.items.length > 0
       ) {
-        console.log(
-          `✅ Fallback found ${fallbackResult.tracks.items.length} tracks`,
-        );
         return fallbackResult.tracks.items;
       }
 
-      console.log("❌ No tracks found for mood:", mood);
       return [];
     } catch (error) {
-      console.error("Error getting recommendations for mood:", mood, error);
       throw error;
     }
   }

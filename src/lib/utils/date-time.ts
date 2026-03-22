@@ -49,7 +49,6 @@ export const formatTimeOnly = (
         : validatedDate;
 
     if (isNaN(dateObj.getTime())) {
-      console.warn("Invalid date provided to formatTimeOnly:", date);
       return "";
     }
 
@@ -57,8 +56,7 @@ export const formatTimeOnly = (
     const minutes = dateObj.getMinutes().toString().padStart(2, "0");
 
     return `${hours}:${minutes}`;
-  } catch (error) {
-    console.warn("Error formatting time:", error);
+  } catch {
     return "";
   }
 };
@@ -83,9 +81,6 @@ export const combineOriginalDateWithNewTime = (
   newTime: string | null | undefined,
 ): Date | null => {
   if (!originalDate || !newTime) {
-    console.warn(
-      "Missing originalDate or newTime in combineOriginalDateWithNewTime",
-    );
     return null;
   }
 
@@ -98,14 +93,12 @@ export const combineOriginalDateWithNewTime = (
         : DateSchema.parse(originalDate);
 
     if (isNaN(originalDateObj.getTime())) {
-      console.warn("Invalid original date provided:", originalDate);
       return null;
     }
 
     // Parse time components safely with type assertion
     const timeParts = validatedTime.split(":");
     if (timeParts.length !== 2) {
-      console.warn("Invalid time format after validation:", validatedTime);
       return null;
     }
 
@@ -113,7 +106,6 @@ export const combineOriginalDateWithNewTime = (
     const minutesStr = timeParts[1]!;
 
     if (!hoursStr || !minutesStr) {
-      console.warn("Missing time components:", { hoursStr, minutesStr });
       return null;
     }
 
@@ -122,7 +114,6 @@ export const combineOriginalDateWithNewTime = (
 
     // Validate time ranges
     if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-      console.warn("Invalid time values:", { hours, minutes });
       return null;
     }
 
@@ -131,11 +122,7 @@ export const combineOriginalDateWithNewTime = (
     newDate.setHours(hours, minutes, 0, 0); // Reset seconds and milliseconds
 
     return newDate;
-  } catch (error) {
-    console.warn("Error combining date and time:", error, {
-      originalDate,
-      newTime,
-    });
+  } catch {
     return null;
   }
 };
@@ -169,7 +156,6 @@ export const formatForDateTimeLocal = (
         : validatedDate;
 
     if (isNaN(dateObj.getTime())) {
-      console.warn("Invalid date provided to formatForDateTimeLocal:", date);
       return "";
     }
 
@@ -181,8 +167,7 @@ export const formatForDateTimeLocal = (
     const minutes = dateObj.getMinutes().toString().padStart(2, "0");
 
     return `${year}-${month}-${day}T${hours}:${minutes}`;
-  } catch (error) {
-    console.warn("Error formatting for datetime-local:", error);
+  } catch {
     return "";
   }
 };
@@ -206,13 +191,11 @@ export const parseDateTimeLocal = (
     const date = new Date(datetimeLocal);
 
     if (isNaN(date.getTime())) {
-      console.warn("Invalid datetime-local string:", datetimeLocal);
       return null;
     }
 
     return date;
-  } catch (error) {
-    console.warn("Error parsing datetime-local:", error);
+  } catch {
     return null;
   }
 };
