@@ -2,9 +2,9 @@
 # 🛡️ Security-first multi-stage build for Bun runtime
 
 ###################
-# 🏗️ BUILD STAGE
+# 🏗️ BASE BUILD STAGE
 ###################
-FROM --platform=$BUILDPLATFORM oven/bun:1-alpine AS build
+FROM --platform=$BUILDPLATFORM oven/bun:1-alpine AS build-base
 
 LABEL maintainer="security@company.com" \
     version="1.0" \
@@ -19,7 +19,7 @@ RUN echo "🔧 Building on $BUILDPLATFORM for $TARGETPLATFORM"
 
 WORKDIR /app
 
-RUN apk update && apk add --no-cache --virtual .build-deps \
+RUN apk add --no-cache \
     bash \
     build-base \
     cairo-dev \
@@ -34,13 +34,16 @@ RUN apk update && apk add --no-cache --virtual .build-deps \
     python3 \
     && rm -rf /var/cache/apk/*
 
+###################
+# 🏗️ APP BUILD STAGE
+###################
+FROM build-base AS build
+
 COPY package.json bun.lock ./
 COPY prisma ./prisma
 
 RUN --mount=type=cache,target=/root/.bun/install/cache \
     NODE_OPTIONS="--max_old_space_size=1536" bun install --frozen-lockfile --ignore-scripts
-
-RUN cd node_modules/canvas && npm rebuild 2>/dev/null || true
 
 RUN --mount=type=cache,target=/root/.cache/prisma \
     NODE_OPTIONS="--max_old_space_size=1024" bunx prisma generate
@@ -91,12 +94,21 @@ RUN echo "🚀 Building TanStack Start..." && \
     bun run build && \
     echo "✅ Build completed"
 
-RUN echo "🧹 Cleaning up..." && \
-    bun pm cache rm 2>/dev/null || true && \
-    rm -rf /root/.cache /root/.bun/install/cache /root/.npm /tmp/* && \
-    rm -rf node_modules/.cache && \
-    find /app -name ".DS_Store" -delete 2>/dev/null || true && \
-    echo "✅ Cleanup completed"
+###################
+# 📦 PRODUCTION DEPENDENCIES STAGE
+###################
+FROM build-base AS prod-deps
+
+ENV SKIP_PRISMA_GENERATE=1 \
+    NODE_ENV=production
+
+COPY package.json bun.lock ./
+
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+    bun install --production --frozen-lockfile
+
+COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=build /app/node_modules/@prisma/client ./node_modules/@prisma/client
 
 ###################
 # 🚀 RUNTIME STAGE
@@ -104,7 +116,7 @@ RUN echo "🧹 Cleaning up..." && \
 FROM oven/bun:1-alpine AS runner
 WORKDIR /app
 
-RUN apk update && apk add --no-cache \
+RUN apk add --no-cache \
     bash \
     cairo \
     ca-certificates \
@@ -125,7 +137,7 @@ RUN addgroup --system --gid 1001 appgroup && \
 
 COPY --from=build --chown=appuser:appgroup /app/dist ./dist
 COPY --from=build --chown=appuser:appgroup /app/public ./public
-COPY --from=build --chown=appuser:appgroup /app/node_modules ./node_modules
+COPY --from=prod-deps --chown=appuser:appgroup /app/node_modules ./node_modules
 COPY --from=build --chown=appuser:appgroup /app/prisma ./prisma
 COPY --from=build --chown=appuser:appgroup /app/package.json ./package.json
 COPY --from=build --chown=appuser:appgroup /app/scripts/docker-entrypoint.sh ./scripts/
