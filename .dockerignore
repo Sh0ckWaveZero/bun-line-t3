@@ -140,6 +140,7 @@ certificates/
 scripts/
 !scripts/docker-entrypoint.sh
 !scripts/health-check.sh
+!scripts/cron-request.sh
 
 # =============================================================================
 # Database Files
