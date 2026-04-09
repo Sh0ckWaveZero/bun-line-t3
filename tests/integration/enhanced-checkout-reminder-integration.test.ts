@@ -1,6 +1,5 @@
-import { describe, expect, test, beforeEach, mock } from "bun:test";
-import { GET, POST } from "@/app/api/cron/enhanced-checkout-reminder/route";
-import { NextRequest } from "next/server";
+import { describe, expect, test, beforeEach } from "bun:test";
+import { GET, POST } from "@/routes/api/cron/enhanced-checkout-reminder";
 
 const CRON_SECRET =
   "9475cea14c54b7d6d7ee6e43b907dcaec7c0dd445cef72ada756310cf9d3c494";
@@ -8,34 +7,14 @@ const CRON_SECRET =
 // Mock environment
 process.env.CRON_SECRET = CRON_SECRET;
 
-// Mock headers function that returns a proper Headers-like object
-const mockHeaders = mock(() => ({
-  get: mock((key: string) => {
-    const mockRequest = (global as any).__mockRequest;
-    if (mockRequest?.headers) {
-      return mockRequest.headers[key.toLowerCase()] || null;
-    }
-    return null;
-  }),
-}));
-
-// Mock Next.js headers
-mock.module("next/headers", () => ({
-  headers: mockHeaders,
-}));
-
 describe("Enhanced Checkout Reminder Integration Tests", () => {
   beforeEach(() => {
-    // Reset environment for each test
     process.env.CRON_SECRET = CRON_SECRET;
-    // Clear mock request
-    (global as any).__mockRequest = null;
   });
 
   describe("API Authorization", () => {
     test("should return 401 for missing authorization header", async () => {
-      (global as any).__mockRequest = { headers: {} };
-      const request = new NextRequest(
+      const request = new Request(
         "http://localhost/api/cron/enhanced-checkout-reminder",
       );
       const response = await GET(request);
@@ -46,11 +25,11 @@ describe("Enhanced Checkout Reminder Integration Tests", () => {
     });
 
     test("should return 401 for invalid authorization token", async () => {
-      (global as any).__mockRequest = {
-        headers: { authorization: "Bearer invalid-token" },
-      };
-      const request = new NextRequest(
+      const request = new Request(
         "http://localhost/api/cron/enhanced-checkout-reminder",
+        {
+          headers: { authorization: "Bearer invalid-token" },
+        },
       );
       const response = await GET(request);
 
@@ -60,11 +39,11 @@ describe("Enhanced Checkout Reminder Integration Tests", () => {
     });
 
     test("should accept valid authorization token", async () => {
-      (global as any).__mockRequest = {
-        headers: { authorization: `Bearer ${CRON_SECRET}` },
-      };
-      const request = new NextRequest(
+      const request = new Request(
         "http://localhost/api/cron/enhanced-checkout-reminder",
+        {
+          headers: { authorization: `Bearer ${CRON_SECRET}` },
+        },
       );
       const response = await GET(request);
 
@@ -76,11 +55,11 @@ describe("Enhanced Checkout Reminder Integration Tests", () => {
 
   describe("Response Structure", () => {
     test("should return proper response structure", async () => {
-      (global as any).__mockRequest = {
-        headers: { authorization: `Bearer ${CRON_SECRET}` },
-      };
-      const request = new NextRequest(
+      const request = new Request(
         "http://localhost/api/cron/enhanced-checkout-reminder",
+        {
+          headers: { authorization: `Bearer ${CRON_SECRET}` },
+        },
       );
       const response = await GET(request);
 
@@ -94,11 +73,11 @@ describe("Enhanced Checkout Reminder Integration Tests", () => {
     });
 
     test("should include UTC time in response", async () => {
-      (global as any).__mockRequest = {
-        headers: { authorization: `Bearer ${CRON_SECRET}` },
-      };
-      const request = new NextRequest(
+      const request = new Request(
         "http://localhost/api/cron/enhanced-checkout-reminder",
+        {
+          headers: { authorization: `Bearer ${CRON_SECRET}` },
+        },
       );
       const response = await GET(request);
 
@@ -127,11 +106,11 @@ describe("Enhanced Checkout Reminder Integration Tests", () => {
 
   describe("Time-based Logic", () => {
     test("should handle early time detection (before 09:40 UTC)", async () => {
-      (global as any).__mockRequest = {
-        headers: { authorization: `Bearer ${CRON_SECRET}` },
-      };
-      const request = new NextRequest(
+      const request = new Request(
         "http://localhost/api/cron/enhanced-checkout-reminder",
+        {
+          headers: { authorization: `Bearer ${CRON_SECRET}` },
+        },
       );
       const response = await GET(request);
 
@@ -167,11 +146,11 @@ describe("Enhanced Checkout Reminder Integration Tests", () => {
 
   describe("User Processing", () => {
     test("should process users correctly", async () => {
-      (global as any).__mockRequest = {
-        headers: { authorization: `Bearer ${CRON_SECRET}` },
-      };
-      const request = new NextRequest(
+      const request = new Request(
         "http://localhost/api/cron/enhanced-checkout-reminder",
+        {
+          headers: { authorization: `Bearer ${CRON_SECRET}` },
+        },
       );
       const response = await GET(request);
 
@@ -214,11 +193,11 @@ describe("Enhanced Checkout Reminder Integration Tests", () => {
     test("should respond within reasonable time", async () => {
       const startTime = Date.now();
 
-      (global as any).__mockRequest = {
-        headers: { authorization: `Bearer ${CRON_SECRET}` },
-      };
-      const request = new NextRequest(
+      const request = new Request(
         "http://localhost/api/cron/enhanced-checkout-reminder",
+        {
+          headers: { authorization: `Bearer ${CRON_SECRET}` },
+        },
       );
       const response = await GET(request);
 
@@ -240,8 +219,7 @@ describe("Enhanced Checkout Reminder Integration Tests", () => {
     });
 
     test("should provide helpful error messages", async () => {
-      (global as any).__mockRequest = { headers: {} };
-      const request = new NextRequest(
+      const request = new Request(
         "http://localhost/api/cron/enhanced-checkout-reminder",
       );
       const response = await GET(request);

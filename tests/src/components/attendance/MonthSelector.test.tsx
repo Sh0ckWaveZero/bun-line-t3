@@ -1,5 +1,4 @@
 import { test, expect } from "bun:test";
-import { useState } from "react";
 
 // Test the date utility functions
 test("parseMonthString should parse YYYY-MM format correctly", () => {

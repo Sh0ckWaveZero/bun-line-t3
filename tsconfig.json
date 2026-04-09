@@ -53,13 +53,9 @@
         "./src/lib/validation/*"
       ]
     },
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
     "types": [
-      "bun-types"
+      "bun-types",
+      "vite/client"
     ]
   },
   "include": [
@@ -68,12 +64,11 @@
     "**/*.ts",
     "**/*.tsx",
     ".eslintrc.cjs",
-    "next-env.d.ts",
-    "next.config.mjs",
-    ".next/types/**/*.ts",
+    "vite.config.ts",
+    "src/routeTree.gen.ts",
     "tests/**/*.ts",
     "tests/**/*.tsx",
-    ".next/dev/types/**/*.ts"
+    ".tanstack/**/*"
   ],
   "exclude": [
     "node_modules",

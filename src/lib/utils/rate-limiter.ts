@@ -1,5 +1,3 @@
-import { NextRequest, NextResponse } from "next/server";
-
 // Rate limiting configuration
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
 const MAX_REQUESTS_PER_WINDOW = 5; // Max 5 requests per minute for cron endpoints
@@ -63,7 +61,7 @@ export class RateLimiter {
   /**
    * Get identifier for rate limiting (IP + User-Agent hash)
    */
-  static async getIdentifier(request: NextRequest): Promise<string> {
+  static async getIdentifier(request: Request): Promise<string> {
     try {
       const ip =
         request.headers.get("x-forwarded-for") ||
@@ -87,15 +85,15 @@ export class RateLimiter {
    * Middleware for rate limiting cron endpoints
    */
   static async checkRequestRateLimit(
-    request: NextRequest,
+    request: Request,
     maxRequests: number = MAX_REQUESTS_PER_WINDOW,
-  ): Promise<NextResponse | null> {
+  ): Promise<Response | null> {
     try {
       const identifier = await this.getIdentifier(request);
       const result = this.checkRateLimit(identifier, maxRequests);
 
       if (!result.allowed) {
-        return NextResponse.json(
+        return Response.json(
           {
             error: "Rate limit exceeded",
             message: "Too many requests. Please try again later.",
@@ -127,8 +125,8 @@ export class RateLimiter {
   }
 
   static async checkCronRateLimit(
-    request: NextRequest,
-  ): Promise<NextResponse | null> {
+    request: Request,
+  ): Promise<Response | null> {
     return this.checkRequestRateLimit(request, MAX_REQUESTS_PER_WINDOW);
   }
 
@@ -136,10 +134,10 @@ export class RateLimiter {
    * Add rate limit headers to response
    */
   static addRateLimitHeaders(
-    response: NextResponse,
+    response: Response,
     remainingRequests: number,
     resetTime: number,
-  ): NextResponse {
+  ): Response {
     response.headers.set(
       "X-RateLimit-Limit",
       MAX_REQUESTS_PER_WINDOW.toString(),
@@ -181,10 +179,10 @@ if (typeof setInterval !== "undefined") {
  * Higher-order function to add rate limiting to API routes
  */
 export function withRateLimit(
-  handler: (request: NextRequest) => Promise<NextResponse>,
+  handler: (request: Request) => Promise<Response>,
   maxRequests: number = MAX_REQUESTS_PER_WINDOW,
 ) {
-  return async (request: NextRequest): Promise<NextResponse> => {
+  return async (request: Request): Promise<Response> => {
     // Check rate limit
     const rateLimitResponse = await RateLimiter.checkRequestRateLimit(
       request,

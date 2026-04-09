@@ -1,23 +1,14 @@
-import { type GetServerSidePropsContext } from "next";
-import {
-  getServerSession,
-  type DefaultSession,
-  type NextAuthOptions,
-} from "next-auth";
-import LineProvider from "next-auth/providers/line";
-import { PrismaAdapter } from "@auth/prisma-adapter";
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import { tanstackStartCookies } from "better-auth/tanstack-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { env } from "@/env.mjs";
 import { db } from "../database/db";
+import type { AppSession } from "./session-context";
 
-declare module "next-auth" {
-  interface Session extends DefaultSession {
-    user: DefaultSession["user"] & {
-      id: string;
-    };
-  }
-}
+const LINE_FALLBACK_EMAIL_DOMAIN = "line.local";
+const DEFAULT_DEV_PORT = "4325";
 
-// Function to calculate the expiry date
 const calculateExpiryDate = () => {
   const MILLISECONDS_IN_A_DAY = 24 * 60 * 60 * 1000;
   const SECONDS_IN_A_MILLISECOND = 1 / 1000;
@@ -26,69 +17,164 @@ const calculateExpiryDate = () => {
   );
 };
 
-// Function to update the account expiry date
-const updateAccountExpiryDate = async (accountInfo: any) => {
-  try {
-    await db.account.update({
-      where: { providerAccountId: accountInfo.providerAccountId },
-      data: { expires_at: calculateExpiryDate() },
-    });
-  } catch (error) {
-    console.error("Failed to update account expiry date:", error);
-  }
+const getLocalDevOrigin = () => {
+  const port = process.env.PORT || DEFAULT_DEV_PORT;
+  return `http://localhost:${port}`;
 };
 
-/**
- * Options for NextAuth.js used to configure adapters, providers, callbacks, etc.
- *
- * @see https://next-auth.js.org/configuration/options
- */
-export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(db),
-  providers: [
-    LineProvider({
-      clientId: env.LINE_CLIENT_ID,
-      clientSecret: env.LINE_CLIENT_SECRET,
-    }),
-  ],
-  callbacks: {
-    async signIn({ account }) {
-      const accountInfo = account as any;
+const getLoopbackDevOrigin = () => {
+  const port = process.env.PORT || DEFAULT_DEV_PORT;
+  return `http://127.0.0.1:${port}`;
+};
 
-      // Update account expiry date
-      await updateAccountExpiryDate(accountInfo);
+const getAuthBaseUrl = () => {
+  return env.APP_URL;
+};
 
-      // Check if user is allowed to sign in
-      const isAllowedToSignIn = true;
-      if (isAllowedToSignIn) {
-        return true;
-      } else {
-        // Return false to display a default error message
-        return false;
-        // Or you can return a URL to redirect to:
-        // return '/unauthorized'
-      }
-    },
-    session: async ({ session, user }) => {
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          id: user.id,
-        },
-      };
+const getTrustedOrigins = () =>
+  Array.from(
+    new Set(
+      [
+        env.APP_URL,
+        env.FRONTEND_URL,
+        env.APP_DOMAIN,
+        ...(env.APP_ENV === "development"
+          ? [getLocalDevOrigin(), getLoopbackDevOrigin()]
+          : []),
+      ].map((url) => {
+        return new URL(url).origin;
+      }),
+    ),
+  );
+
+const createSyntheticLineEmail = (lineUserId: string) => {
+  const normalizedId =
+    lineUserId
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9._-]/g, "") || "line-user";
+
+  return `${normalizedId}@${LINE_FALLBACK_EMAIL_DOMAIN}`;
+};
+
+const toIsoString = (value: Date | string) => {
+  return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
+};
+
+export const auth = betterAuth({
+  baseURL: getAuthBaseUrl(),
+  database: prismaAdapter(db, {
+    provider: "mongodb",
+  }),
+  advanced: {
+    database: {
+      generateId: false,
     },
   },
-};
+  plugins: [tanstackStartCookies()],
+  secret: env.AUTH_SECRET ?? env.LINE_CHANNEL_SECRET,
+  trustedOrigins: getTrustedOrigins(),
+  user: {
+    fields: {
+      emailVerified: "emailVerifiedFlag",
+    },
+  },
+  session: {
+    fields: {
+      expiresAt: "expires",
+      token: "sessionToken",
+    },
+  },
+  account: {
+    skipStateCookieCheck: env.APP_ENV === "development",
+    fields: {
+      accountId: "providerAccountId",
+      providerId: "provider",
+      accessToken: "access_token",
+      refreshToken: "refresh_token",
+      idToken: "id_token",
+    },
+  },
+  verification: {
+    modelName: "verificationToken",
+    fields: {
+      expiresAt: "expires",
+      value: "token",
+    },
+  },
+  socialProviders: {
+    line: {
+      clientId: env.LINE_CLIENT_ID,
+      clientSecret: env.LINE_CLIENT_SECRET,
+      mapProfileToUser(profile) {
+        const lineProfile = profile as {
+          displayName?: string;
+          email?: string;
+          name?: string;
+          picture?: string;
+          pictureUrl?: string;
+          sub?: string;
+          userId?: string;
+        };
+        const lineUserId = lineProfile.sub ?? lineProfile.userId ?? "";
+
+        return {
+          email:
+            lineProfile.email?.toLowerCase() ??
+            createSyntheticLineEmail(lineUserId),
+          emailVerified: Boolean(lineProfile.email),
+          image: lineProfile.picture ?? lineProfile.pictureUrl,
+          name: lineProfile.name ?? lineProfile.displayName ?? "LINE User",
+        };
+      },
+    },
+  },
+  databaseHooks: {
+    account: {
+      create: {
+        async before(account) {
+          return {
+            data: {
+              ...account,
+              expires_at: calculateExpiryDate(),
+            },
+          };
+        },
+      },
+      update: {
+        async before(account) {
+          return {
+            data: {
+              ...account,
+              expires_at: calculateExpiryDate(),
+            },
+          };
+        },
+      },
+    },
+  },
+});
 
 /**
- * Wrapper for `getServerSession` so that you don't need to import the `authOptions` in every file.
- *
- * @see https://next-auth.js.org/configuration/nextjs
+ * Server-side session helper for TanStack Start routes and server functions.
  */
-export const getServerAuthSession = (ctx: {
-  req: GetServerSidePropsContext["req"];
-  res: GetServerSidePropsContext["res"];
-}) => {
-  return getServerSession(ctx.req, ctx.res, authOptions);
+export const getServerAuthSession = async (request?: Request) => {
+  const activeRequest = request ?? getRequest();
+  const session = await auth.api.getSession({
+    headers: activeRequest.headers,
+  });
+
+  if (!session) {
+    return null;
+  }
+
+  return {
+    expires: toIsoString(session.session.expiresAt),
+    user: {
+      email: session.user.email,
+      id: session.user.id,
+      image: session.user.image,
+      name: session.user.name,
+    },
+  } satisfies AppSession;
 };

@@ -8,11 +8,6 @@ import { env } from "@/env.mjs";
  * without waiting for actual command processing
  */
 
-interface LineLoadingRequest {
-  userId: string;
-  chatId?: string;
-}
-
 /**
  * Send loading indicator to LINE chat
  * Called immediately when command is received - no waiting!

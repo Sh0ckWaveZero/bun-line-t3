@@ -19,80 +19,73 @@ const { sendMessage, sendLoadingAnimation } = await import(
  * Handle natural language command routing
  */
 export async function handleCommandRouting(req: any, naturalLanguage: string) {
-  try {
-    const userId = req.body.events[0].source.userId;
+  const userId = req.body.events[0].source.userId;
 
-    await sendLoadingAnimation(req, 20);
+  await sendLoadingAnimation(req, 20);
 
-    const safetyCheck = checkContentSafety(naturalLanguage);
+  const safetyCheck = checkContentSafety(naturalLanguage);
 
-    if (!safetyCheck.isSafe) {
-      // Log abuse report for moderation
-      await logAbuseReport({
-        userId,
-        text: safetyCheck.originalText,
-        category: safetyCheck.category,
-        severity: safetyCheck.severity,
-        triggeredPatterns: safetyCheck.triggeredPatterns,
-        timestamp: new Date(),
-      });
+  if (!safetyCheck.isSafe) {
+    await logAbuseReport({
+      userId,
+      text: safetyCheck.originalText,
+      category: safetyCheck.category,
+      severity: safetyCheck.severity,
+      triggeredPatterns: safetyCheck.triggeredPatterns,
+      timestamp: new Date(),
+    });
 
-      const aiResponse = await generateSafetyResponse(safetyCheck);
+    const aiResponse = await generateSafetyResponse(safetyCheck);
 
-      await sendMessage(req, [
-        {
-          type: "text",
-          text: aiResponse,
-        },
-      ]);
-      return;
-    }
+    await sendMessage(req, [
+      {
+        type: "text",
+        text: aiResponse,
+      },
+    ]);
+    return;
+  }
 
-    const aiResponse = await routeNaturalLanguageToCommand(
-      naturalLanguage,
-      LINE_COMMANDS,
-    );
+  const aiResponse = await routeNaturalLanguageToCommand(
+    naturalLanguage,
+    LINE_COMMANDS,
+  );
+  const { command, parameters } = parseAICommandResponse(aiResponse);
 
-    const { command, parameters, reasoning } =
-      parseAICommandResponse(aiResponse);
+  if (!command) {
+    await sendMessage(req, [
+      {
+        type: "text",
+        text: "ขอโทษครับ ไม่เข้าใจคำสั่งของคุณ\n\nพิมพ์ /ai help เพื่อดูตัวอย่างการใช้งาน",
+      },
+    ]);
+    return;
+  }
 
-    if (!command) {
-      await sendMessage(req, [
-        {
-          type: "text",
-          text: "ขอโทษครับ ไม่เข้าใจคำสั่งของคุณ\n\nพิมพ์ /ai help เพื่อดูตัวอย่างการใช้งาน",
-        },
-      ]);
-      return;
-    }
+  const commandDef = LINE_COMMANDS.find((cmd) => cmd.command === command);
 
-    const commandDef = LINE_COMMANDS.find((cmd) => cmd.command === command);
+  if (!commandDef) {
+    await sendMessage(req, [
+      {
+        type: "text",
+        text: `ไม่พบคำสั่ง: ${command}\n\nพิมพ์ /help เพื่อดูรายการคำสั่งทั้งหมด`,
+      },
+    ]);
+    return;
+  }
 
-    if (!commandDef) {
-      await sendMessage(req, [
-        {
-          type: "text",
-          text: `ไม่พบคำสั่ง: ${command}\n\nพิมพ์ /help เพื่อดูรายการคำสั่งทั้งหมด`,
-        },
-      ]);
-      return;
-    }
+  const result: CommandRouteResult = await executeCommand(
+    commandDef,
+    parameters,
+    req,
+  );
 
-    const result: CommandRouteResult = await executeCommand(
-      commandDef,
-      parameters,
-      req,
-    );
-
-    if (!result.success) {
-      await sendMessage(req, [
-        {
-          type: "text",
-          text: `ขออภัย! ${result.error}\n\nพิมพ์ /ai help เพื่อดูวิธีใช้งาน`,
-        },
-      ]);
-    }
-  } catch (error) {
-    throw error;
+  if (!result.success) {
+    await sendMessage(req, [
+      {
+        type: "text",
+        text: `ขออภัย! ${result.error}\n\nพิมพ์ /ai help เพื่อดูวิธีใช้งาน`,
+      },
+    ]);
   }
 }

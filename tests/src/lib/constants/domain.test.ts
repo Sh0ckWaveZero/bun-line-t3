@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from "bun:test";
 
 // Set up environment variables for testing
 beforeAll(() => {
-  process.env.APP_DOMAIN = "http://localhost:3000";
+  process.env.APP_DOMAIN = "http://localhost:4325";
   process.env.ALLOWED_DOMAINS = "localhost,127.0.0.1,example.com";
   process.env.APP_ENV = "test";
 });

@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import { useState } from "react";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { MonthPicker } from "@/components/ui/calendar";
@@ -33,7 +32,7 @@ export const UserInfoCard: React.FC<UserInfoCardProps> = ({ user }) => (
     </h3>
     <div id="user-info-content" className="flex items-center gap-3">
       {user.image && (
-        <Image
+        <img
           id="user-profile-image"
           src={user.image}
           alt="Profile"

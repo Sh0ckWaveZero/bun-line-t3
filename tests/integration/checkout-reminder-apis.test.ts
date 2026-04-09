@@ -28,11 +28,11 @@ describe("Checkout Reminder APIs Comparison", () => {
     expect(reminderTime.getMinutes()).toBe(30);
 
     // Test shouldReceiveReminderNow function
-    const currentTime = new Date("2025-06-17T10:30:00.000Z"); // 17:30 Bangkok
     const shouldRemind = shouldReceiveReminderNow(checkInTime, reminderTime);
 
     // Function should exist and be callable
     expect(typeof shouldReceiveReminderNow).toBe("function");
+    expect(typeof shouldRemind).toBe("boolean");
   });
 
   it("should validate response structure consistency", () => {

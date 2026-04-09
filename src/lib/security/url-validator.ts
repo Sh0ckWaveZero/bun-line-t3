@@ -386,8 +386,8 @@ export const sanitizeUrl = (url: string): string => {
   }
 };
 
-// ✅ NextAuth specific URL validation
-export const validateNextAuthUrl = (
+// ✅ Application URL validation
+export const validateAppUrl = (
   url: string,
 ): {
   isValid: boolean;
@@ -424,6 +424,9 @@ export const validateNextAuthUrl = (
     hostname,
   };
 };
+
+// Backward-compatible alias for older tests/docs that still use the previous helper name.
+export const validateNextAuthUrl = validateAppUrl;
 
 // ✅ Additional security validation functions
 

@@ -227,12 +227,14 @@ describe("🎣 useAttendanceReport Hook", () => {
       };
 
       // Simple memoization
-      const memoize = (fn: Function) => {
+      const memoize = <TArgs extends unknown[], TResult>(
+        fn: (...args: TArgs) => TResult,
+      ) => {
         const cache = new Map();
-        return (...args: any[]) => {
+        return (...args: TArgs): TResult => {
           const key = JSON.stringify(args);
           if (cache.has(key)) {
-            return cache.get(key);
+            return cache.get(key) as TResult;
           }
           const result = fn(...args);
           cache.set(key, result);
@@ -293,8 +295,8 @@ describe("🎣 useAttendanceReport Hook", () => {
     it("should support function composition", () => {
       // Functional pipeline for data processing
       const pipe =
-        (...fns: Function[]) =>
-        (value: any) =>
+        <TValue>(...fns: Array<(value: TValue) => TValue>) =>
+        (value: TValue) =>
           fns.reduce((acc, fn) => fn(acc), value);
 
       const validateRecord = (record: any) => {
@@ -331,7 +333,10 @@ describe("🎣 useAttendanceReport Hook", () => {
       let cleanupCalled = false;
 
       // Simulate useEffect with cleanup
-      const useEffect = (effect: () => (() => void) | void, deps: any[]) => {
+      const simulateEffect = (
+        effect: () => (() => void) | void,
+        _deps: unknown[],
+      ) => {
         const cleanup = effect();
 
         return () => {
@@ -339,7 +344,7 @@ describe("🎣 useAttendanceReport Hook", () => {
         };
       };
 
-      const cleanup = useEffect(() => {
+      const cleanup = simulateEffect(() => {
         // Setup
         subscriptionActive = true;
 

@@ -205,7 +205,7 @@ export function getSafetyResponseMessage(result: SafetyCheckResult): string {
 /**
  * Log abuse attempt for moderation
  */
-export async function logAbuseReport(params: {
+export async function logAbuseReport(_params: {
   userId: string;
   userName?: string;
   text: string;

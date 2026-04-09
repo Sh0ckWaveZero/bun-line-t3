@@ -5,21 +5,18 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
+
+const subscribeToHydration = () => {
+  return () => {};
+};
 
 /**
  * 🎯 Hook สำหรับตรวจสอบว่า component ถูก mount บน client แล้วหรือยัง
  * ป้องกัน hydration mismatch จากการใช้ browser APIs เช่น document, window
  */
 export function useIsomorphicLayoutEffect() {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
-  }, []);
-
-  return mounted;
+  return useSyncExternalStore(subscribeToHydration, () => true, () => false);
 }
 
 /**
@@ -35,13 +32,7 @@ export function useClientOnlyMounted() {
  * ป้องกัน SSR errors จากการเข้าถึง window object
  */
 export function useIsBrowser() {
-  const [isBrowser, setIsBrowser] = useState(false);
-
-  useEffect(() => {
-    setIsBrowser(typeof window !== "undefined");
-  }, []);
-
-  return isBrowser;
+  return useClientOnlyMounted();
 }
 
 /**
@@ -49,16 +40,11 @@ export function useIsBrowser() {
  * เช่น timestamps, random values, หรือ user-specific data
  */
 export function useSafeHydration<T>(serverValue: T, clientValue: () => T): T {
-  const [value, setValue] = useState(serverValue);
   const mounted = useClientOnlyMounted();
-
-  useEffect(() => {
-    if (mounted) {
-      setValue(clientValue());
-    }
-  }, [mounted, clientValue]);
-
-  return value;
+  return useMemo(
+    () => (mounted ? clientValue() : serverValue),
+    [clientValue, mounted, serverValue],
+  );
 }
 
 /**
@@ -69,22 +55,17 @@ export function useSafeHydration<T>(serverValue: T, clientValue: () => T): T {
  * @returns boolean สำหรับ suppressHydrationWarning prop
  */
 export function useSuppressHydrationWarning(condition?: boolean): boolean {
-  const [shouldSuppress, setShouldSuppress] = useState(false);
+  const isBrowser = useIsBrowser();
 
-  useEffect(() => {
-    if (condition !== undefined) {
-      setShouldSuppress(condition);
-    } else {
-      // Auto-detect common hydration mismatch patterns
-      setShouldSuppress(
-        typeof window !== "undefined" &&
-          (process.env.NODE_ENV === "development" ||
-            process.env.NODE_ENV === "test"),
-      );
-    }
-  }, [condition]);
+  if (condition !== undefined) {
+    return condition;
+  }
 
-  return shouldSuppress;
+  return (
+    isBrowser &&
+    (process.env.NODE_ENV === "development" ||
+      process.env.NODE_ENV === "test")
+  );
 }
 
 /**
@@ -94,10 +75,9 @@ export function useSuppressHydrationWarning(condition?: boolean): boolean {
 export function useSafeTimestamp(initialTimestamp?: Date) {
   const mounted = useClientOnlyMounted();
   const suppressWarning = useSuppressHydrationWarning(!mounted);
-
-  const timestamp = useSafeHydration(
-    initialTimestamp || new Date(),
-    () => new Date(),
+  const timestamp = useMemo(
+    () => (mounted ? new Date() : (initialTimestamp ?? new Date())),
+    [initialTimestamp, mounted],
   );
 
   return {

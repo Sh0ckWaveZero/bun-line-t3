@@ -1,4 +1,3 @@
-import { NextRequest } from "next/server";
 import { env } from "@/env.mjs";
 
 interface AuthResult {
@@ -9,10 +8,10 @@ interface AuthResult {
 
 /**
  * Validates cron job authentication using Bearer token
- * @param req NextRequest object
+ * @param req Request object
  * @returns AuthResult indicating success or failure with error details
  */
-export function validateCronAuth(req: NextRequest): AuthResult {
+export function validateCronAuth(req: Request): AuthResult {
   const authHeader = req.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
 

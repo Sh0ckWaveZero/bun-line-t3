@@ -1,54 +1,69 @@
-import { env } from "@/env.mjs";
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/database/db";
 
-export class UsersRepository {
-  expiresIn = 0;
-  constructor() {
-    this.expiresIn = Number(env.JWT_EXPIRES_IN);
-  }
+interface UpdateUserInput {
+  userId: string;
+  email?: string | null;
+  emailVerified?: Date | null;
+  emailVerifiedFlag?: boolean | null;
+  image?: string | null;
+  is_verified?: boolean | null;
+  name?: string | null;
+}
 
+export class UsersRepository {
   async findById(userId: string) {
     try {
-      const userPermission: any = await db.account.aggregate({
+      return await db.user.findFirst({
         where: {
-          providerAccountId: {
-            contains: userId,
-          },
+          OR: [
+            { id: userId },
+            {
+              accounts: {
+                some: {
+                  providerAccountId: userId,
+                },
+              },
+            },
+          ],
         },
       });
-      return userPermission;
     } catch (error) {
-      console.error(error);
+      console.error("Failed to find user by identifier", error);
       return null;
     }
   }
 
-  async add(user: any) {
-    const data = {
-      ...user,
-      expiresIn: new Date(Date.now() + this.expiresIn),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    return await db.user.create({
-      data: data,
+  async add(user: Prisma.UserCreateInput) {
+    const now = new Date();
+
+    return db.user.create({
+      data: {
+        ...user,
+        createdAt: user.createdAt ?? now,
+        updatedAt: now,
+      },
     });
   }
 
-  async update(user: any) {
-    const data = {
-      $set: {
-        ...user,
-        expiresIn: new Date(Date.now() + this.expiresIn),
-        updatedAt: new Date(),
-      },
+  async update(user: UpdateUserInput) {
+    const existingUser = await this.findById(user.userId);
+
+    if (!existingUser) {
+      return null;
+    }
+
+    const { userId: _userId, ...rest } = user;
+    const data: Prisma.UserUpdateInput = {
+      ...rest,
+      updatedAt: new Date(),
     };
-    const find = await this.findById(user.userId);
+
     return db.user.update({
       where: {
-        id: find?.id,
+        id: existingUser.id,
       },
-      data: data,
+      data,
     });
   }
 }

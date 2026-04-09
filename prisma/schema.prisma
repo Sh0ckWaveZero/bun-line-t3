@@ -14,61 +14,75 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Necessary for Next auth
+// Necessary for Better Auth and legacy LINE permission checks
 model Account {
-  id                String    @id @default(auto()) @map("_id") @db.ObjectId
-  userId            String    @unique @map("user_id") @db.ObjectId
-  provider          String
-  type              String
-  providerAccountId String    @unique @map("provider_account_id")
-  refresh_token     String?   @db.String
-  access_token      String?   @db.String
-  verified_request  DateTime?
-  verification_id   String?
-  is_verified       Boolean   @default(false)
-  expires_at        Int?      @default(0)
-  token_type        String?
-  scope             String?
-  id_token          String?   @db.String
-  session_state     String?
-  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                    String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId                String    @map("user_id") @db.ObjectId
+  provider              String
+  type                  String    @default("oauth")
+  providerAccountId     String    @unique @map("provider_account_id")
+  refresh_token         String?   @db.String
+  access_token          String?   @db.String
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+  verified_request      DateTime?
+  verification_id       String?
+  is_verified           Boolean   @default(false)
+  expires_at            Int?      @default(0)
+  token_type            String?
+  scope                 String?
+  id_token              String?   @db.String
+  password              String?
+  session_state         String?
+  createdAt             DateTime? @default(now()) @map("created_at")
+  updatedAt             DateTime? @updatedAt @map("updated_at")
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@map("accounts")
 }
 
 model Session {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  sessionToken String   @unique @map("session_token")
-  userId       String   @map("user_id") @db.ObjectId
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String    @unique @map("session_token")
+  userId       String    @map("user_id") @db.ObjectId
   expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ipAddress    String?   @map("ip_address")
+  userAgent    String?   @map("user_agent")
+  createdAt    DateTime? @default(now()) @map("created_at")
+  updatedAt    DateTime? @updatedAt @map("updated_at")
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("sessions")
 }
 
 model User {
-  id              String           @id @default(auto()) @map("_id") @db.ObjectId
-  name            String?
-  email           String?          @unique
-  emailVerified   DateTime?        @map("email_verified")
-  is_verified     Boolean?         @default(false)
-  image           String?
-  accounts        Account[]
-  sessions        Session[]
-  workAttendances WorkAttendance[]
-  leaves          Leave[]
-  settings        UserSettings?
+  id                String           @id @default(auto()) @map("_id") @db.ObjectId
+  name              String?
+  email             String?          @unique
+  emailVerified     DateTime?        @map("email_verified")
+  emailVerifiedFlag Boolean?         @default(false) @map("email_verified_flag")
+  is_verified       Boolean?         @default(false)
+  image             String?
+  createdAt         DateTime?        @default(now()) @map("created_at")
+  updatedAt         DateTime?        @updatedAt @map("updated_at")
+  accounts          Account[]
+  sessions          Session[]
+  workAttendances   WorkAttendance[]
+  leaves            Leave[]
+  settings          UserSettings?
 
   @@map("users")
 }
 
 model VerificationToken {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
   identifier String
-  token      String   @unique
+  token      String    @unique
   expires    DateTime
+  createdAt  DateTime? @default(now()) @map("created_at")
+  updatedAt  DateTime? @updatedAt @map("updated_at")
 
   @@unique([identifier, token])
   @@map("verification_tokens")

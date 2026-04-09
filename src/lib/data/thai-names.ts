@@ -22331,12 +22331,13 @@ export function getRandomThaiName(
   gender?: "male" | "female",
 ): string {
   switch (type) {
-    case "firstName":
+    case "firstName": {
       const pool =
         gender === "female"
           ? thaiNamesData.firstNames.female
           : thaiNamesData.firstNames.male;
       return pool[Math.floor(Math.random() * pool.length)] || "";
+    }
     case "surname":
       return (
         thaiNamesData.surnames[

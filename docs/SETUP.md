@@ -2,7 +2,7 @@
 
 > **🎯 คู่มือการติดตั้งโปรเจกต์ Bun LINE T3 Attendance System**
 >
-> **⚡ ใช้เทคโนโลยี**: Bun + Next.js 15 + React 19 + TypeScript + MongoDB
+> **⚡ ใช้เทคโนโลยี**: Bun + TanStack Start + React 19 + TypeScript + MongoDB
 
 ## 📋 สารบัญ | Table of Contents
 
@@ -75,9 +75,6 @@ cd bun-line-t3
 ```bash
 # ติดตั้งด้วย Bun (แนะนำ)
 bun install
-
-# หรือใช้ npm หากมีปัญหา
-npm install
 ```
 
 ### 3. Copy Environment File
@@ -112,7 +109,7 @@ bun run seed:holidays
 bun run dev
 
 # เปิดเบราว์เซอร์ไปที่
-# https://localhost:4325
+# http://localhost:4325
 ```
 
 ## 🔐 การกำหนดค่า Environment | Environment Configuration
@@ -134,9 +131,9 @@ DATABASE_URL="mongodb+srv://username:password@cluster.mongodb.net/bun_line_t3"
 #### 🔐 Authentication
 
 ```env
-# NextAuth.js Configuration
-NEXTAUTH_SECRET="your-secure-secret-key-here"
-NEXTAUTH_URL="https://localhost:4325"
+# Better Auth Configuration
+AUTH_SECRET="your-secure-secret-key-here"
+APP_URL="http://localhost:4325"
 ```
 
 #### 💬 LINE Bot Configuration
@@ -158,8 +155,9 @@ APP_ENV="development"
 NEXT_PUBLIC_APP_ENV="development"
 
 # URLs
-FRONTEND_URL="https://localhost:4325"
-LINE_MESSAGING_API="https://api.line.me/v2/bot"
+APP_URL="http://localhost:4325"
+FRONTEND_URL="http://localhost:4325"
+LINE_MESSAGING_API="https://api.line.me/v2/bot/message"
 ```
 
 #### 🔧 Optional Services
@@ -176,7 +174,7 @@ AIRVISUAL_API_KEY="your-airvisual-api-key"
 ### 🔒 การสร้าง Secret Keys
 
 ```bash
-# สร้าง NEXTAUTH_SECRET
+# สร้าง AUTH_SECRET
 openssl rand -base64 32
 
 # หรือใช้ script ที่เตรียมไว้
@@ -518,7 +516,7 @@ bun run env:status
 bun run scripts/test-db-connection.ts
 
 # ตรวจสอบ health endpoint
-curl https://localhost:4325/api/health
+curl http://localhost:4325/api/health
 
 # ดู detailed logs
 DEBUG=* bun run dev
@@ -574,7 +572,7 @@ DEBUG=* bun run dev
 - [ ] Prisma client generate สำเร็จ
 - [ ] Database schema push สำเร็จ
 - [ ] Development server รันได้ที่ port 4325
-- [ ] เข้าถึง https://localhost:4325 ได้
+- [ ] เข้าถึง http://localhost:4325 ได้
 - [ ] LINE Bot webhook ตั้งค่าถูกต้อง (ถ้าใช้)
 - [ ] Health check endpoint (/api/health) ตอบกลับ OK
 

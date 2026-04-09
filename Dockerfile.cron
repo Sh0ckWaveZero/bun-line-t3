@@ -1,5 +1,6 @@
 # Dockerfile.cron
 # 🔧 Multi-platform support for ARM64 (Raspberry Pi) และ AMD64
+# ⏰ Dedicated cron worker for TanStack Start API endpoints
 
 # ใช้ base image ที่มี cron และ curl (สำหรับเรียก API endpoint)
 # Alpine มีขนาดเล็กและมี cron (busybox-cron)
@@ -19,19 +20,11 @@ RUN apk add --no-cache curl ca-certificates tzdata
 ENV TZ=Asia/Bangkok
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# สร้างไดเรกทอรีสำหรับ cron scripts
 WORKDIR /app
 
-# คัดลอก crontab file เข้าไปในตำแหน่งที่ถูกต้อง
 COPY crontab /etc/crontabs/root
-
-# ให้สิทธิ์ execute กับ crontab (อาจไม่จำเป็นสำหรับ busybox-cron แต่ไม่เสียหาย)
-# RUN chmod 0644 /etc/crontabs/root
-
-# คัดลอก script ที่ cron job จะเรียก (ถ้ามี)
-# ในกรณีนี้ เราจะใช้ curl เรียก API endpoint โดยตรงจาก crontab
-# COPY scripts/checkout-reminder-cron.sh /usr/local/bin/checkout-reminder-cron.sh
-# RUN chmod +x /usr/local/bin/checkout-reminder-cron.sh
+COPY scripts/cron-request.sh /usr/local/bin/cron-request.sh
+RUN chmod 0644 /etc/crontabs/root && chmod +x /usr/local/bin/cron-request.sh
 
 # รัน cron daemon ใน foreground
 CMD ["crond", "-f", "-d", "8"]

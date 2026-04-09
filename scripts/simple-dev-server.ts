@@ -9,44 +9,10 @@ import { spawn } from "child_process";
 import { withProcessLock } from "./simple-lock";
 
 async function startDevServer() {
-  // Check for Turbopack flag
-  const useTurbopack =
-    process.argv.includes("--turbo") || process.env.USE_TURBOPACK === "true";
-  const devCommand = useTurbopack ? "dev:turbo" : "dev:basic";
+  console.log("🚀 Starting TanStack Start development server...");
+  console.log("🌐 Running Vite dev server on http://localhost:4325");
 
-  console.log(
-    `🚀 Starting development server${useTurbopack ? " (Turbopack)" : ""}...`,
-  );
-  console.log("📦 Starting Tailwind CSS watch mode...");
-
-  // Start Tailwind watch process
-  const tailwindProcess = spawn("bun", ["run", "tailwind:watch"], {
-    stdio: ["ignore", "pipe", "pipe"],
-    env: process.env,
-  });
-
-  // Handle Tailwind output
-  tailwindProcess.stdout?.on("data", (data) => {
-    const output = data.toString().trim();
-    if (output) {
-      console.log(`🎨 Tailwind: ${output}`);
-    }
-  });
-
-  tailwindProcess.stderr?.on("data", (data) => {
-    const error = data.toString().trim();
-    if (error && !error.includes("Done in")) {
-      console.log(`🎨 Tailwind: ${error}`);
-    }
-  });
-
-  // Small delay to let Tailwind start
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  console.log(
-    `🌐 Starting Next.js development server (${useTurbopack ? "Turbopack" : "Webpack"})...`,
-  );
-  const devProcess = spawn("bun", ["run", devCommand], {
+  const devProcess = spawn("bun", ["run", "dev"], {
     stdio: "inherit",
     env: { ...process.env, PORT: "4325" },
   });
@@ -54,7 +20,6 @@ async function startDevServer() {
   // Handle process cleanup
   const cleanup = () => {
     console.log("\n🛑 Stopping development server...");
-    tailwindProcess.kill("SIGTERM");
     devProcess.kill("SIGTERM");
     process.exit(0);
   };
@@ -63,15 +28,9 @@ async function startDevServer() {
   process.on("SIGINT", cleanup);
   process.on("SIGTERM", cleanup);
 
-  // Handle Tailwind process errors
-  tailwindProcess.on("error", (error) => {
-    console.error("❌ Tailwind watch failed:", error.message);
-  });
-
   // Wait for main dev process to end
   return new Promise<void>((resolve, reject) => {
     devProcess.on("close", (code) => {
-      tailwindProcess.kill("SIGTERM");
       if (code === 0) {
         console.log("✅ Development server stopped");
         resolve();
@@ -82,7 +41,6 @@ async function startDevServer() {
 
     devProcess.on("error", (error) => {
       console.error("❌ Failed to start development server:", error);
-      tailwindProcess.kill("SIGTERM");
       reject(error);
     });
   });

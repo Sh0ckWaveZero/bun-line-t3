@@ -1,4 +1,4 @@
-import { test, expect, describe, beforeEach, afterEach } from "bun:test";
+import { test, expect, describe } from "bun:test";
 
 // Simple unit tests for monitoring dashboard functionality
 describe("Monitoring Dashboard Unit Tests", () => {

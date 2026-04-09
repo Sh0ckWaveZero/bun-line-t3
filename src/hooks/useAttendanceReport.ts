@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@tanstack/react-router";
+import { useSession } from "@/lib/auth/client";
 import {
   AttendanceRecord,
   MonthlyAttendanceReport,
@@ -15,7 +15,7 @@ import {
 
 export const useAttendanceReport = () => {
   const { data: session, status } = useSession();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   // Report States
   const [report, setReport] = useState<MonthlyAttendanceReport | null>(null);
@@ -49,9 +49,9 @@ export const useAttendanceReport = () => {
   useEffect(() => {
     if (status === "unauthenticated") {
       sessionStorage.setItem("returnUrl", "/attendance-report");
-      router.push("/");
+      void navigate({ to: "/" });
     }
-  }, [status, router]);
+  }, [navigate, status]);
 
   // Fetch report when userId or selectedMonth changes
   useEffect(() => {

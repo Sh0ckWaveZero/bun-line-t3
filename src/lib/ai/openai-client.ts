@@ -46,26 +46,22 @@ ${params.availableCommands}
 
 ตอบกลับเฉพาะ JSON เท่านั้น ไม่ต้องมีคำอธิบายเพิ่มเติม`;
 
-  try {
-    const { text } = await generateText({
-      model: openai(modelName),
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: params.userMessage },
-      ],
-      temperature: 0.3,
-    });
+  const { text } = await generateText({
+    model: openai(modelName),
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: params.userMessage },
+    ],
+    temperature: 0.3,
+  });
 
-    const parsed = JSON.parse(text);
-    return {
-      command: parsed.command || null,
-      parameters: parsed.parameters || {},
-      reasoning: parsed.reasoning || "",
-      confidence: parsed.confidence || 0,
-    };
-  } catch (error) {
-    throw error;
-  }
+  const parsed = JSON.parse(text);
+  return {
+    command: parsed.command || null,
+    parameters: parsed.parameters || {},
+    reasoning: parsed.reasoning || "",
+    confidence: parsed.confidence || 0,
+  };
 }
 
 /**
@@ -80,18 +76,14 @@ export async function chat(params: {
     params.systemPrompt ||
     "คุณเป็นผู้ช่วย AI ที่เป็นมิตรและชาญฉลาด ตอบคำถามอย่างกระชับและเป็นประโยชน์";
 
-  try {
-    const { text } = await generateText({
-      model: openai(modelName),
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: params.message },
-      ],
-      temperature: 0.7,
-    });
+  const { text } = await generateText({
+    model: openai(modelName),
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: params.message },
+    ],
+    temperature: 0.7,
+  });
 
-    return { text };
-  } catch (error) {
-    throw error;
-  }
+  return { text };
 }

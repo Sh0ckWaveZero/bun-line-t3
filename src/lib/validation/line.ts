@@ -1657,7 +1657,7 @@ const leaveError = (message: string) => {
             action: {
               type: "uri",
               label: "เปิดหน้าลางาน",
-              uri: `${env.NEXTAUTH_URL}/leave`,
+              uri: `${env.APP_URL}/leave`,
             },
             color: "#5B7FD3",
           },
@@ -1736,7 +1736,7 @@ const monthlyReportMenu = () => {
               action: {
                 type: "uri",
                 label: "รายงานแบบละเอียดพร้อมกราฟ",
-                uri: `${env.NEXTAUTH_URL}/attendance-report`,
+                uri: `${env.APP_URL}/attendance-report`,
               },
               style: "link",
               margin: "md",
@@ -1966,7 +1966,7 @@ const monthlyReportSummary = (report: any) => {
           action: {
             type: "uri",
             label: "ดูรายละเอียดทั้งหมด",
-            uri: `${env.NEXTAUTH_URL}/attendance-report?month=${report.month}`,
+            uri: `${env.APP_URL}/attendance-report?month=${report.month}`,
           },
           style: "primary",
           color: "#5FB691",

@@ -2,8 +2,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/common/ToastProvider";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -26,10 +25,7 @@ export const LeaveForm = ({ onSubmit }: LeaveFormProps) => {
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
   const { showToast } = useToast();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const router = useRouter();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { data: session, status } = useSession();
+  const { status } = useSession();
 
   // ตั้งค่า default วันที่ลาเป็นวันนี้เมื่อโหลด component
   useEffect(() => {
@@ -193,7 +189,7 @@ export const LeaveForm = ({ onSubmit }: LeaveFormProps) => {
                       }`}
                     >
                       <div
-                        className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md ${
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${
                           type === leaveType.value
                             ? "bg-primary/20 text-primary"
                             : "bg-muted text-muted-foreground"

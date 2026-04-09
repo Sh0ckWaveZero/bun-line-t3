@@ -182,26 +182,30 @@ const setFormat = (
     case "hslArray":
       return HSVtoHSL(hsv);
 
-    case "hsl":
+    case "hsl": {
       const hsl = HSVtoHSL(hsv);
       return `hsl(${hsl[0]}, ${hsl[1]}%, ${hsl[2]}%)`;
+    }
 
-    case "hsla":
+    case "hsla": {
       const hslColor = HSVtoHSL(hsv);
       const alpha = options.alpha || getDeterministicAlpha();
       return `hsla(${hslColor[0]}, ${hslColor[1]}%, ${hslColor[2]}%, ${alpha})`;
+    }
 
     case "rgbArray":
       return HSVtoRGB(hsv as any);
 
-    case "rgb":
+    case "rgb": {
       const rgb = HSVtoRGB(hsv as any);
       return `rgb(${rgb.join(", ")})`;
+    }
 
-    case "rgba":
+    case "rgba": {
       const rgbColor = HSVtoRGB(hsv as any);
       const alpha2 = options.alpha || getDeterministicAlpha();
       return `rgba(${rgbColor.join(", ")}, ${alpha2})`;
+    }
 
     default:
       return HSVtoHex(hsv);

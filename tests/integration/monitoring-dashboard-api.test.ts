@@ -8,7 +8,7 @@ installCustomMatchers();
 // ทดสอบการเชื่อมต่อจริงระหว่าง UI และ API endpoints
 
 describe("Monitoring Dashboard API Integration", () => {
-  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const baseUrl = process.env.APP_URL || "http://localhost:4325";
 
   // 🔐 Test Authentication Required
   describe("Security & Authentication", () => {
@@ -119,7 +119,7 @@ describe("Monitoring Dashboard API Integration", () => {
     it("should respond within acceptable time", async () => {
       const startTime = Date.now();
 
-      const response = await fetch(`${baseUrl}/api/monitoring/dashboard`);
+      await fetch(`${baseUrl}/api/monitoring/dashboard`);
 
       const endTime = Date.now();
       const responseTime = endTime - startTime;
@@ -198,7 +198,7 @@ describe("Monitoring Dashboard API Integration", () => {
 
 // 🌐 Health Check API Integration
 describe("Health Check API Integration", () => {
-  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:4325";
+  const baseUrl = process.env.APP_URL || "http://localhost:4325";
 
   it("should provide basic health status", async () => {
     const response = await fetch(`${baseUrl}/api/health`);
@@ -238,7 +238,7 @@ describe("Health Check API Integration", () => {
 
 // 🎯 E2E Workflow Tests
 describe("Dashboard Workflow Integration", () => {
-  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const baseUrl = process.env.APP_URL || "http://localhost:4325";
 
   it("should complete full dashboard data loading workflow", async () => {
     // 1. Check health

@@ -1,17 +1,13 @@
 "use client";
 
+import { useClientOnlyMounted } from "@/hooks/useHydrationSafe";
 import { Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/lib/theme/theme-provider";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
 
 export function ThemeToggle() {
-  const { theme, setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const { theme, setTheme } = useTheme();
+  const mounted = useClientOnlyMounted();
 
   if (!mounted) {
     return (

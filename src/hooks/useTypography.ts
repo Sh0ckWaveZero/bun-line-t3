@@ -3,7 +3,7 @@
  * Custom hook for accessing typography classes with theme support
  */
 
-import { useTheme } from "next-themes";
+import { useTheme } from "@/lib/theme/theme-provider";
 import { TYPOGRAPHY, type TypographyLevel } from "@/lib/constants/typography";
 
 export const useTypography = () => {
