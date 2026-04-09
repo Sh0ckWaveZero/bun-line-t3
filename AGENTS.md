@@ -2,11 +2,11 @@
 
 ## Agent Skills
 
-> **For LLMs**: This project uses [Vercel Agent Skills](https://github.com/vercel-labs/agent-skills). Before creating React/Next.js components or UI code, reference the **Vercel React Best Practices** and **Web Design Guidelines** skills for performance optimization and accessibility compliance.
+> **For LLMs**: This project uses [Vercel Agent Skills](https://github.com/vercel-labs/agent-skills). Before creating React/TanStack Start components or UI code, reference the **Vercel React Best Practices** and **Web Design Guidelines** skills for performance optimization and accessibility compliance.
 
 ### Installed Skills (Global)
 
-- **vercel-react-best-practices** - React/Next.js performance optimization (data fetching, bundle size, re-renders)
+- **vercel-react-best-practices** - React/TanStack Start performance optimization (data fetching, bundle size, re-renders)
 - **web-design-guidelines** - UI audit against 100+ best practices (accessibility, dark mode, i18n)
 - **vercel:deploy** - Deploy to Vercel directly from conversation
 
@@ -14,10 +14,11 @@ Skills activate automatically when you describe relevant tasks naturally (e.g., 
 
 ## Commands
 
-- **Dev**: `bun run dev` (with process lock, Turbopack on :4325)
-- **Build**: `bun run build` (Next.js with Turbopack)
-- **Lint**: `bun run lint` (Next.js ESLint)
+- **Dev**: `bun run dev` (TanStack Start via Vite on :4325)
+- **Build**: `bun run build` (TanStack Start production build)
+- **Lint**: `bun run lint` (ESLint flat config)
 - **Format**: `bun run format` (Prettier with Tailwind plugin)
+- **Type Check**: `bun run type-check`
 - **Test All**: `bun test`
 - **Test Single**: `bun test <filename>` or `bun test <pattern>`
 - **Test Watch**: `bun test --watch`
@@ -45,11 +46,11 @@ Skills activate automatically when you describe relevant tasks naturally (e.g., 
 - Components: named exports (`export const LoginForm`)
 - Higher-order functions: `with/create/make` pattern (`withAuth`, `createValidator`)
 
-### React & Next.js 15
+### React & TanStack Start
 
-- Prefer Server Components (RSC) for security/performance
-- Minimize `'use client'` usage
-- Always use async versions of Next.js APIs (`await cookies()`, `await headers()`)
+- Prefer TanStack Start server routes and server functions for sensitive logic and data loading
+- Minimize client-only directives carried over from the old Next.js codebase
+- Use TanStack Router patterns (`createFileRoute`, route loaders, server handlers) instead of Next.js App Router APIs
 - Support dark/light mode in ALL components (use Tailwind `dark:` or CSS variables)
 
 ### Security & Validation

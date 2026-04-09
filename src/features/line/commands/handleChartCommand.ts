@@ -1,4 +1,3 @@
-import { NextRequest } from "next/server";
 import { sendMessage } from "@/lib/utils/line-utils";
 import { chartService } from "@/features/crypto/services/chart";
 import { ChartTemplates } from "@/features/line/templates/chart-templates";
@@ -8,48 +7,40 @@ import {
 } from "@/features/line/parsers/chart-parser";
 
 export async function handleChartCommand(
-  req: NextRequest,
+  req: Request,
   userId: string,
   params: ChartCommandParams,
 ): Promise<void> {
-  try {
-    const { symbol, exchange = "bitkub", type = "line" } = params;
+  const { symbol, exchange = "bitkub", type = "line" } = params;
 
-    if (type === "comparison") {
-      await handleComparisonChart(req, symbol);
-    } else {
-      await handleSingleChart(req, symbol, exchange);
-    }
-  } catch (error) {
-    throw error;
+  if (type === "comparison") {
+    await handleComparisonChart(req, symbol);
+  } else {
+    await handleSingleChart(req, symbol, exchange);
   }
 }
 
 async function handleComparisonChart(
-  req: NextRequest,
+  req: Request,
   symbol: string,
 ): Promise<void> {
   // Send loading message
   const loadingMessage = ChartTemplates.createLoadingMessage(symbol, true);
   await sendMessage(req, [loadingMessage]);
 
-  try {
-    const comparisonData = await chartService.generateComparisonChart(symbol);
-    const logoUrl = comparisonData.validCryptos[0]?.urlLogo;
-    const chartMessage = ChartTemplates.createComparisonChartCarousel(
-      symbol,
-      comparisonData.imageUrls,
-      logoUrl,
-    );
+  const comparisonData = await chartService.generateComparisonChart(symbol);
+  const logoUrl = comparisonData.validCryptos[0]?.urlLogo;
+  const chartMessage = ChartTemplates.createComparisonChartCarousel(
+    symbol,
+    comparisonData.imageUrls,
+    logoUrl,
+  );
 
-    await sendMessage(req, [chartMessage]);
-  } catch (error) {
-    throw error;
-  }
+  await sendMessage(req, [chartMessage]);
 }
 
 async function handleSingleChart(
-  req: NextRequest,
+  req: Request,
   symbol: string,
   exchange: string,
 ): Promise<void> {

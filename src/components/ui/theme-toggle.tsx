@@ -1,17 +1,13 @@
 "use client";
 
+import { useClientOnlyMounted } from "@/hooks/useHydrationSafe";
 import { Moon, Sun } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useTheme } from "@/lib/theme/theme-provider";
 
 const ThemeToggle = () => {
-  const { theme, setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const { theme, setTheme } = useTheme();
+  const mounted = useClientOnlyMounted();
 
   if (!mounted) {
     // Show skeleton with exact same structure

@@ -1,6 +1,6 @@
 # 🚀 Bun LINE T3 App
 
-Modern LINE Bot application built with T3 Stack, featuring comprehensive attendance management, cryptocurrency tracking, and air quality monitoring.
+Modern LINE Bot application built with Bun, TanStack Start, and React 19, featuring comprehensive attendance management, cryptocurrency tracking, and air quality monitoring.
 
 > **🛡️ Security-First Architecture** | **🔧 Docker-optimized** | **📱 LINE Integration** | **⚡ Production Ready**
 
@@ -42,7 +42,7 @@ Modern LINE Bot application built with T3 Stack, featuring comprehensive attenda
 ### 🔐 Authentication & Security
 
 - **LINE OAuth** - Seamless LINE account integration
-- **NextAuth.js** - Secure session management
+- **better-auth** - Secure session management for TanStack Start
 - **Type Safety** - Full TypeScript implementation
 
 ## 🏗️ Architecture
@@ -62,9 +62,9 @@ src/
 │   ├── database/        # Database connection & queries
 │   ├── constants/       # Application constants
 │   └── validation/      # Input validation schemas
-├── app/                 # 🌐 Next.js App Router
-│   ├── api/            # API routes
-│   └── (pages)/        # Application pages
+├── routes/              # 🌐 TanStack Start file-based routes
+│   ├── api/            # Server handlers and API endpoints
+│   └── *.tsx           # Application pages
 └── components/          # 🎨 Reusable UI components
 ```
 
@@ -73,7 +73,7 @@ src/
 - **Domain Separation** - Each feature is self-contained
 - **Barrel Exports** - Clean import paths with index files
 - **Type Safety** - Strict TypeScript throughout
-- **Server Components** - Next.js 15 RSC optimization
+- **Server Functions & Route Handlers** - TanStack Start server-side logic
 - **Path Aliases** - Clean imports with `@/` prefix
 
 For detailed architecture documentation, see [`BACKEND_ARCHITECTURE.md`](./docs/BACKEND_ARCHITECTURE.md)
@@ -97,7 +97,7 @@ See [`SECURITY_OPTIMIZATION_COMPLETE.md`](./docs/SECURITY_OPTIMIZATION_COMPLETE.
 
 - **Bun** >= 1.0.0
 - **Node.js** >= 18.0.0
-- **MySQL** database
+- **MongoDB** database
 - **LINE Developer Account**
 
 ### Installation
@@ -133,7 +133,7 @@ See [`SECURITY_OPTIMIZATION_COMPLETE.md`](./docs/SECURITY_OPTIMIZATION_COMPLETE.
    bun run dev
    ```
 
-The application will be available at `https://localhost:4325`
+The application will be available at `http://localhost:4325`
 
 ## ⚙️ Configuration
 
@@ -143,22 +143,22 @@ Create a `.env` file with the following variables:
 
 ```env
 # Database
-DATABASE_URL="mysql://user:password@localhost:3306/bun_line_t3"
+DATABASE_URL="mongodb://user:password@localhost:27017/bun_line_t3"
 
-# NextAuth.js
-NEXTAUTH_SECRET="your-secret-key"
-NEXTAUTH_URL="https://localhost:4325"
+# Better Auth
+AUTH_SECRET="your-secret-key"
+APP_URL="http://localhost:4325"
 
 # LINE Integration
 LINE_CLIENT_ID="your-line-client-id"
 LINE_CLIENT_SECRET="your-line-client-secret"
 LINE_CHANNEL_SECRET="your-line-channel-secret"
 LINE_CHANNEL_ACCESS="your-line-channel-access-token"
-LINE_MESSAGING_API="https://api.line.me/v2/bot"
+LINE_MESSAGING_API="https://api.line.me/v2/bot/message"
 
 # Application
 APP_ENV="development"
-FRONTEND_URL="https://localhost:4325"
+FRONTEND_URL="http://localhost:4325"
 JWT_EXPIRES_IN="1d"
 
 # External APIs
@@ -210,8 +210,8 @@ Comprehensive documentation is available in the `/docs` directory:
 - **TypeScript Strict Mode** - Full type safety
 - **ESLint + Prettier** - Code formatting and linting
 - **Functional Programming** - Declarative code patterns
-- **React 19** - Latest React features with RSC
-- **Next.js 15** - App Router with async components
+- **React 19** - Latest React features
+- **TanStack Start** - File-based routing with SSR and server handlers
 
 ### Development Commands
 
@@ -242,19 +242,19 @@ bun run scripts/test-attendance.ts
 
 ### Core Framework
 
-- **[Next.js 15](https://nextjs.org)** - React framework with App Router
-- **[React 19](https://react.dev)** - Latest React with Server Components
+- **[TanStack Start](https://tanstack.com/start/latest)** - React framework for SSR, routing, and server handlers
+- **[React 19](https://react.dev)** - Latest React features
 - **[TypeScript](https://typescriptlang.org)** - Type-safe JavaScript
 - **[Bun](https://bun.sh)** - Fast JavaScript runtime and package manager
 
 ### Database & ORM
 
 - **[Prisma](https://prisma.io)** - Type-safe database toolkit
-- **[MySQL](https://mysql.com)** - Relational database
+- **[MongoDB](https://www.mongodb.com)** - Document database
 
 ### Authentication
 
-- **[NextAuth.js](https://next-auth.js.org)** - Authentication library
+- **[better-auth](https://www.better-auth.com)** - Authentication library
 - **[LINE Login](https://developers.line.biz/en/docs/line-login/)** - LINE OAuth provider
 
 ### Styling & UI
@@ -276,14 +276,15 @@ bun run scripts/test-attendance.ts
 
 ## 📦 Scripts
 
-| Script                  | Description                           |
-| ----------------------- | ------------------------------------- |
-| `bun run dev`           | Start development server on port 4325 |
-| `bun run build`         | Build production application          |
-| `bun run start`         | Start production server               |
-| `bun run lint`          | Run ESLint code analysis              |
-| `bun run db:push`       | Push Prisma schema to database        |
-| `bun run seed:holidays` | Seed Thai holiday data for 2025       |
+| Script                  | Description                            |
+| ----------------------- | -------------------------------------- |
+| `bun run dev`           | Start development server on port 4325  |
+| `bun run build`         | Build production application           |
+| `bun run start`         | Preview the production build locally   |
+| `bun run start:prod`    | Start the TanStack Start server bundle |
+| `bun run lint`          | Run ESLint code analysis               |
+| `bun run db:push`       | Push Prisma schema to database         |
+| `bun run seed:holidays` | Seed Thai holiday data for 2025        |
 
 ## 🤝 Contributing
 
@@ -309,6 +310,6 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ---
 
-**Built with ❤️ using T3 Stack and modern web technologies**
+**Built with ❤️ using Bun, TanStack Start, and modern web technologies**
 
 For more information, visit our [documentation](./docs/) or contact the development team.

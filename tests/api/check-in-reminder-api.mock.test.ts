@@ -1,16 +1,7 @@
 import { describe, it, expect, mock, beforeEach } from "bun:test";
-import { GET } from "../../src/app/api/cron/check-in-reminder/route";
-import type { NextRequest } from "next/server";
+import { GET } from "../../src/routes/api/cron/check-in-reminder";
 
 // --- Mocks ---
-
-// Mock next/headers to prevent error during unit test
-const cronSecret = process.env.CRON_SECRET || "test-secret";
-const mockHeaders = new Headers();
-mockHeaders.set("Authorization", `Bearer ${cronSecret}`);
-mock.module("next/headers", () => ({
-  headers: () => mockHeaders,
-}));
 
 // Mock RateLimiter as it also uses headers
 mock.module("@/lib/utils/rate-limiter", () => ({
@@ -20,19 +11,23 @@ mock.module("@/lib/utils/rate-limiter", () => ({
 }));
 
 let pushMessageCallCount = 0;
-const sendPushMessageSpy = async (lineId: string, messages: any[]) => {
-  pushMessageCallCount++;
-  return Promise.resolve();
-};
-
-mock.module("@/lib/utils/line-push", () => ({
-  sendPushMessage: sendPushMessageSpy,
+mock.module("@/lib/utils/cron-working-day", () => ({
+  validateWorkingDay: async () => ({
+    isWorkingDay: true,
+  }),
 }));
 
-mock.module("@/features/attendance/services/holidays", () => ({
-  holidayService: {
-    isPublicHoliday: async () => false,
-    getHolidayInfo: async () => null,
+mock.module("@/lib/utils/cron-reminder-sender", () => ({
+  sendCheckInReminders: async () => {
+    pushMessageCallCount += 2;
+
+    return {
+      success: true,
+      sentCount: 2,
+      failedCount: 0,
+      messageText: "ทดสอบข้อความแจ้งเตือน",
+      totalUsers: 2,
+    };
   },
 }));
 
@@ -46,10 +41,7 @@ const mockAttendanceService = {
     return new Date(utcDate.getTime() + 7 * 60 * 60 * 1000);
   },
   isWorkingDay: async () => true,
-  getActiveLineUserIdsForCheckinReminder: async () => [
-    "test-user-1",
-    "test-user-2",
-  ],
+  getActiveLineUserIdsForCheckinReminder: async () => ["test-user-1", "test-user-2"],
 };
 
 mock.module("@/features/attendance/services/attendance", () => ({
@@ -71,7 +63,7 @@ describe("Unit Test: API Route /api/cron/check-in-reminder", () => {
       },
     });
 
-    const response = await GET(request as NextRequest);
+    const response = await GET(request);
     const data = await response.json();
 
     expect(response.status).toBe(200);

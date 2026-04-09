@@ -1,10 +1,9 @@
 "use client";
 
+import { Link, useRouterState } from "@tanstack/react-router";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { useSession } from "next-auth/react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useSession } from "@/lib/auth/client";
 import {
   LogOut,
   Menu,
@@ -18,7 +17,9 @@ import { useState, useEffect, useRef } from "react";
 
 export default function Header() {
   const { data: session } = useSession();
-  const pathname = usePathname();
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -38,8 +39,14 @@ export default function Header() {
 
   // Close mobile menu when route changes
   useEffect(() => {
-    setIsMobileMenuOpen(false);
-    setOpenDropdown(null);
+    const frame = window.requestAnimationFrame(() => {
+      setIsMobileMenuOpen(false);
+      setOpenDropdown(null);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
   }, [pathname]);
 
   // Close dropdown when clicking outside
@@ -69,7 +76,7 @@ export default function Header() {
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
         <div className="flex items-center">
           <Link
-            href="/"
+            to="/"
             className="mr-8 text-xl font-bold text-foreground drop-shadow-sm transition-colors hover:text-primary"
           >
             Bun <span className="text-[#07b53b]">LINE</span>{" "}
@@ -107,14 +114,14 @@ export default function Header() {
                   {openDropdown === "work" && (
                     <div className="absolute left-0 top-full z-50 mt-2 w-72 rounded-md border border-border bg-background py-3 shadow-lg">
                       <Link
-                        href="/attendance-report"
+                        to="/attendance-report"
                         className="block px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                         onClick={() => setOpenDropdown(null)}
                       >
                         📊 รายงานเข้างาน
                       </Link>
                       <Link
-                        href="/leave"
+                        to="/leave"
                         className="block px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                         onClick={() => setOpenDropdown(null)}
                       >
@@ -151,14 +158,14 @@ export default function Header() {
                       เครื่องมือสุ่ม
                     </div>
                     <Link
-                      href="/thai-names-generator"
+                      to="/thai-names-generator"
                       className="block px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                       onClick={() => setOpenDropdown(null)}
                     >
                       👤 สุ่มชื่อไทย
                     </Link>
                     <Link
-                      href="/thai-id"
+                      to="/thai-id"
                       className="block px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                       onClick={() => setOpenDropdown(null)}
                     >
@@ -190,7 +197,7 @@ export default function Header() {
                 {openDropdown === "help" && (
                   <div className="absolute left-0 top-full z-50 mt-2 w-72 rounded-md border border-border bg-background py-3 shadow-lg">
                     <Link
-                      href="/help"
+                      to="/help"
                       className="block px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                       onClick={() => setOpenDropdown(null)}
                     >
@@ -203,7 +210,7 @@ export default function Header() {
                           สำหรับผู้ดูแลระบบ
                         </div>
                         <Link
-                          href="/monitoring"
+                          to="/monitoring"
                           className="block px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                           onClick={() => setOpenDropdown(null)}
                         >
@@ -238,7 +245,7 @@ export default function Header() {
                 </span>
               </div>
               <Link
-                href="/logout"
+                to="/logout"
                 className="hover:bg-muted/50 group flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground drop-shadow-sm transition-all duration-200 hover:text-foreground"
               >
                 <LogOut className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
@@ -290,7 +297,7 @@ export default function Header() {
                   </h3>
                   <div className="flex flex-col space-y-3 pl-3">
                     <Link
-                      href="/attendance-report"
+                      to="/attendance-report"
                       className={`drop-shadow-sm transition-colors hover:text-foreground ${
                         pathname === "/attendance-report"
                           ? "font-medium text-foreground"
@@ -301,7 +308,7 @@ export default function Header() {
                       รายงานเข้างาน
                     </Link>
                     <Link
-                      href="/leave"
+                      to="/leave"
                       className={`drop-shadow-sm transition-colors hover:text-foreground ${
                         pathname === "/leave"
                           ? "font-medium text-foreground"
@@ -322,7 +329,7 @@ export default function Header() {
                 </h3>
                 <div className="flex flex-col space-y-3 pl-3">
                   <Link
-                    href="/thai-names-generator"
+                    to="/thai-names-generator"
                     className={`drop-shadow-sm transition-colors hover:text-foreground ${
                       pathname === "/thai-names-generator"
                         ? "font-medium text-foreground"
@@ -333,7 +340,7 @@ export default function Header() {
                     สุ่มชื่อไทย
                   </Link>
                   <Link
-                    href="/thai-id"
+                    to="/thai-id"
                     className={`drop-shadow-sm transition-colors hover:text-foreground ${
                       pathname.startsWith("/thai-id")
                         ? "font-medium text-foreground"
@@ -353,7 +360,7 @@ export default function Header() {
                 </h3>
                 <div className="flex flex-col space-y-3 pl-3">
                   <Link
-                    href="/help"
+                    to="/help"
                     className={`drop-shadow-sm transition-colors hover:text-foreground ${
                       pathname === "/help"
                         ? "font-medium text-foreground"
@@ -365,7 +372,7 @@ export default function Header() {
                   </Link>
                   {session && (
                     <Link
-                      href="/monitoring"
+                      to="/monitoring"
                       className={`drop-shadow-sm transition-colors hover:text-foreground ${
                         pathname === "/monitoring"
                           ? "font-medium text-foreground"

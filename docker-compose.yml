@@ -1,13 +1,13 @@
 # Docker Compose file - version field removed for compatibility (Compose V2+ doesn't require it)
 
-# 🛡️ SECURITY-FIRST Docker Compose สำหรับ Bun + Next.js + Prisma
+# 🛡️ SECURITY-FIRST Docker Compose สำหรับ Bun + TanStack Start + Prisma
 # ปรับปรุงตาม Docker Security Best Practices
 #
 # 🔐 ENVIRONMENT VARIABLES STRATEGY:
 # ===================================
 # 1. GitHub Actions จะ inject ค่า environment variables จาก repository secrets
 # 2. Docker Compose ใช้ค่าเหล่านั้นโดยตรง (ไม่ต้องพึ่งไฟล์ .env.prod)
-# 3. ครอบคลุม 17 required secrets: DATABASE_URL, NEXTAUTH_*, JWT_SECRET,
+# 3. ครอบคลุม required secrets เช่น DATABASE_URL, APP_URL, AUTH_SECRET, JWT_SECRET,
 #    INTERNAL_API_KEY, CRON_SECRET, LINE_* (6 secrets), AIRVISUAL_API_KEY,
 #    CMC_API_KEY, OPENAI_API_KEY, APP_DOMAIN, ALLOWED_DOMAINS
 # 4. Security: ไม่มีไฟล์ sensitive ใดๆ บน production server
@@ -23,8 +23,8 @@ services:
         - MAX_PARALLEL_BUILDS=1
         - NODE_OPTIONS=--max_old_space_size=2048
         - DATABASE_URL=${DATABASE_URL}
-        - NEXTAUTH_URL=${NEXTAUTH_URL}
-        - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+        - APP_URL=${APP_URL}
+        - AUTH_SECRET=${AUTH_SECRET}
         - OPENAI_API_KEY=${OPENAI_API_KEY}
       target: runner
       # 🔧 RASPBERRY PI: จำกัด memory สำหรับ build process
@@ -47,13 +47,13 @@ services:
       - NEXT_PUBLIC_APP_ENV=production
       - HOSTNAME=0.0.0.0
       - PORT=${PORT:-12914}
-      - FRONTEND_URL=${NEXTAUTH_URL}/
+      - APP_URL=${APP_URL}
+      - AUTH_SECRET=${AUTH_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL}
 
       # =============================================================================
       # Authentication & Security (GitHub Secrets)
       # =============================================================================
-      - NEXTAUTH_URL=${NEXTAUTH_URL}
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRES_IN=18144000000
       - INTERNAL_API_KEY=${INTERNAL_API_KEY}
@@ -118,7 +118,7 @@ services:
     # 🔐 SECURITY: Security และ resource limits
     security_opt:
       - no-new-privileges:true
-    read_only: false # Next.js standalone ต้องเขียนไฟล์ชั่วคราว
+    read_only: false # แอปมีการเขียนไฟล์ชั่วคราว/รูป chart ลง public/temp-charts
     tmpfs:
       - /tmp:rw,size=100m,mode=1777
       - /var/tmp:rw,size=50m,mode=1777
@@ -152,6 +152,7 @@ services:
       # =============================================================================
       - NODE_ENV=production
       - TZ=Asia/Bangkok
+      - CRON_BASE_URL=http://app:${PORT:-12914}
 
       # =============================================================================
       # Security: เฉพาะ CRON_SECRET ที่จำเป็นสำหรับ API calls
@@ -172,7 +173,7 @@ services:
 
     # ⏰ CRON HEALTH CHECK: ตรวจสอบว่า cron service ยังทำงานอยู่
     healthcheck:
-      test: ["CMD-SHELL", "pgrep -f 'node.*cron' || exit 1"]
+      test: ["CMD-SHELL", "pgrep -x crond >/dev/null || exit 1"]
       interval: 300s # ตรวจสอบทุก 5 นาที
       timeout: 10s
       retries: 3

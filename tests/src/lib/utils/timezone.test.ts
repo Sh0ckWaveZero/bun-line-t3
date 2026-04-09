@@ -4,7 +4,7 @@
  * และแสดงผลเป็นเวลาไทย (UTC+7)
  */
 
-import { describe, test, expect, beforeAll } from "bun:test";
+import { describe, test, expect } from "bun:test";
 
 // 🔧 Import functions ที่ต้องการทดสอบ
 const getCurrentUTCTime = (): Date => {

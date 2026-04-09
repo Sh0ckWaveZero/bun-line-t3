@@ -15,9 +15,10 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 # 📊 Configuration
-API_URL="${API_URL:-http://localhost:3000}"
+API_URL="${API_URL:-${APP_URL:-http://localhost:4325}}"
 REFRESH_INTERVAL="${REFRESH_INTERVAL:-30}"
 MAX_LOG_LINES="${MAX_LOG_LINES:-50}"
+MONITOR_PORT="${MONITOR_PORT:-4325}"
 
 print_header() {
     clear
@@ -79,10 +80,10 @@ check_processes() {
         echo -e "🟢 Active Node/Bun processes: ${node_processes}"
         
         # Check for specific processes
-        if pgrep -f "next-server" >/dev/null 2>&1; then
-            echo -e "🟢 Next.js server: ${GREEN}Running${NC}"
+        if pgrep -f "vite|bun dist/server/server.js|server.js" >/dev/null 2>&1; then
+            echo -e "🟢 TanStack Start server: ${GREEN}Running${NC}"
         else
-            echo -e "🔍 Next.js server: ${YELLOW}Not detected${NC}"
+            echo -e "🔍 TanStack Start server: ${YELLOW}Not detected${NC}"
         fi
         
     else
@@ -91,16 +92,16 @@ check_processes() {
     
     # Check ports
     if command -v lsof >/dev/null 2>&1; then
-        if lsof -i :3000 >/dev/null 2>&1; then
-            echo -e "🟢 Port 3000: ${GREEN}Active${NC}"
+        if lsof -i :"${MONITOR_PORT}" >/dev/null 2>&1; then
+            echo -e "🟢 Port ${MONITOR_PORT}: ${GREEN}Active${NC}"
         else
-            echo -e "🔍 Port 3000: ${YELLOW}Not in use${NC}"
+            echo -e "🔍 Port ${MONITOR_PORT}: ${YELLOW}Not in use${NC}"
         fi
     elif command -v ss >/dev/null 2>&1; then
-        if ss -ln | grep -q ":3000 "; then
-            echo -e "🟢 Port 3000: ${GREEN}Active${NC}"
+        if ss -ln | grep -q ":${MONITOR_PORT} "; then
+            echo -e "🟢 Port ${MONITOR_PORT}: ${GREEN}Active${NC}"
         else
-            echo -e "🔍 Port 3000: ${YELLOW}Not in use${NC}"
+            echo -e "🔍 Port ${MONITOR_PORT}: ${YELLOW}Not in use${NC}"
         fi
     fi
     echo ""
@@ -182,7 +183,7 @@ show_quick_actions() {
     echo -e "• ${GREEN}bun run dev${NC} - Start development server"
     echo -e "• ${GREEN}bun test${NC} - Run test suite"
     echo -e "• ${GREEN}./scripts/health-check.sh${NC} - Detailed health check"
-    echo -e "• ${GREEN}bun scripts/process-manager.ts list${NC} - Show active processes"
+    echo -e "• ${GREEN}bun scripts/simple-lock.ts list${NC} - Show active processes"
     echo -e "• ${GREEN}curl ${API_URL}/api/health${NC} - Basic health check"
     echo ""
 }
@@ -227,9 +228,10 @@ case "${1:-}" in
         echo "  --interval N   Set refresh interval to N seconds (default: 30)"
         echo ""
         echo "Environment Variables:"
-        echo "  API_URL            API endpoint (default: http://localhost:3000)"
+        echo "  API_URL            API endpoint (default: http://localhost:4325)"
         echo "  REFRESH_INTERVAL   Refresh interval in seconds (default: 30)"
         echo "  MAX_LOG_LINES      Max log lines to show (default: 50)"
+        echo "  MONITOR_PORT       Port to check locally (default: 4325)"
         exit 0
         ;;
     --once)

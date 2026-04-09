@@ -66,8 +66,9 @@ jobs:
 
           REQUIRED_SECRETS=(
             "DATABASE_URL"
-            "NEXTAUTH_URL"
-            "NEXTAUTH_SECRET"
+            "APP_URL"
+            "AUTH_SECRET"
+            "FRONTEND_URL"
             "JWT_SECRET"
             "INTERNAL_API_KEY"
             "CRON_SECRET"
@@ -102,8 +103,9 @@ jobs:
           echo "✅ All required secrets are configured"
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          APP_URL: ${{ secrets.APP_URL }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
@@ -219,15 +221,15 @@ jobs:
           NEXT_PUBLIC_APP_ENV=production
           HOSTNAME=localhost
           PORT=${{ secrets.PORT || '12914' }}
-          FRONTEND_URL="${{ secrets.NEXTAUTH_URL }}/"
+          APP_URL="${{ secrets.APP_URL }}"
+          FRONTEND_URL="${{ secrets.FRONTEND_URL }}"
 
           # =============================================================================
           # Authentication & Security
           # =============================================================================
 
-          # NextAuth Configuration
-          NEXTAUTH_URL="${{ secrets.NEXTAUTH_URL }}"
-          NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}"
+          # Better Auth Configuration
+          AUTH_SECRET="${{ secrets.AUTH_SECRET }}"
           JWT_SECRET="${{ secrets.JWT_SECRET }}"
           JWT_EXPIRES_IN=18144000000
 
@@ -311,8 +313,9 @@ jobs:
           if docker compose build $BUILD_ARGS \
             --build-arg BUILDKIT_INLINE_CACHE=1 \
             --build-arg DATABASE_URL="${{ secrets.DATABASE_URL }}" \
-            --build-arg NEXTAUTH_URL="${{ secrets.NEXTAUTH_URL }}" \
-            --build-arg NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}" \
+            --build-arg APP_URL="${{ secrets.APP_URL }}" \
+            --build-arg AUTH_SECRET="${{ secrets.AUTH_SECRET }}" \
+            --build-arg FRONTEND_URL="${{ secrets.FRONTEND_URL }}" \
             --build-arg OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
             --build-arg APP_DOMAIN="${{ secrets.APP_DOMAIN }}" \
             --build-arg ALLOWED_DOMAINS="${{ secrets.ALLOWED_DOMAINS }}"; then
@@ -330,7 +333,7 @@ jobs:
           echo "🔄 Build ล้มเหลว! กำลังทำ rollback..."
 
           # 🔍 ตรวจสอบ environment variables ที่จำเป็น
-          if [[ -z "$DATABASE_URL" || -z "$NEXTAUTH_URL" || -z "$NEXTAUTH_SECRET" ]]; then
+          if [[ -z "$DATABASE_URL" || -z "$APP_URL" || -z "$AUTH_SECRET" || -z "$FRONTEND_URL" ]]; then
             echo "❌ ตรวจพบว่า environment variables สำคัญไม่ถูกโหลด"
             echo "🔧 กรุณาตรวจสอบ GitHub Secrets configuration"
             exit 1
@@ -355,7 +358,7 @@ jobs:
             fi
 
             echo "✅ Rollback completed - services restored to previous version"
-            echo "🔗 Application should be accessible at: ${{ secrets.NEXTAUTH_URL }}"
+            echo "🔗 Application should be accessible at: ${{ secrets.APP_URL }}"
           else
             echo "⚠️ No backup found - this might be the first deployment"
             echo "🔧 ตรวจสอบ configuration และลองอีกครั้ง"
@@ -368,8 +371,9 @@ jobs:
           # 🔐 Environment variables สำหรับ rollback
           PORT: ${{ secrets.PORT || '12914' }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          APP_URL: ${{ secrets.APP_URL }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
@@ -417,8 +421,9 @@ jobs:
           # Override environment variables สำหรับ docker compose
           PORT: ${{ secrets.PORT || '12914' }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          APP_URL: ${{ secrets.APP_URL }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
@@ -482,7 +487,7 @@ jobs:
           echo "🔄 บริการเริ่มไม่สำเร็จหรือ health check ล้มเหลว! กำลังทำ rollback..."
 
           # 🔍 ตรวจสอบ environment variables ที่จำเป็น
-          if [[ -z "$DATABASE_URL" || -z "$NEXTAUTH_URL" || -z "$NEXTAUTH_SECRET" ]]; then
+          if [[ -z "$DATABASE_URL" || -z "$APP_URL" || -z "$AUTH_SECRET" || -z "$FRONTEND_URL" ]]; then
             echo "❌ ตรวจพบว่า environment variables สำคัญไม่ถูกโหลด"
             echo "🔧 กรุณาตรวจสอบ GitHub Secrets configuration"
             exit 1
@@ -512,7 +517,7 @@ jobs:
             sleep 15
             if docker compose ps | grep -q "Up"; then
               echo "✅ Rollback completed successfully"
-              echo "🔗 Previous version restored and accessible at: ${{ secrets.NEXTAUTH_URL }}"
+              echo "🔗 Previous version restored and accessible at: ${{ secrets.APP_URL }}"
 
               # Quick verification that rollback worked
               sleep 10
@@ -544,8 +549,9 @@ jobs:
           # 🔐 Environment variables สำหรับ rollback
           PORT: ${{ secrets.PORT || '12914' }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          APP_URL: ${{ secrets.APP_URL }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
@@ -602,7 +608,7 @@ jobs:
           echo "🔖 Commit: ${{ github.sha }}"
           echo "🌿 Branch: ${{ github.ref_name }}"
           echo "👤 Triggered by: ${{ github.actor }}"
-          echo "🔗 Application URL: ${{ secrets.NEXTAUTH_URL }}"
+          echo "🔗 Application URL: ${{ secrets.APP_URL }}"
 
           echo "🐳 Container Status:"
           docker compose ps --format "table {{.Name}}\t{{.State}}\t{{.Ports}}"
@@ -624,7 +630,7 @@ jobs:
           fi
 
           # ล้าง environment variables จาก shell history
-          unset DATABASE_URL NEXTAUTH_SECRET LINE_CHANNEL_SECRET LINE_CHANNEL_ACCESS
+          unset DATABASE_URL AUTH_SECRET APP_URL FRONTEND_URL LINE_CHANNEL_SECRET LINE_CHANNEL_ACCESS
           unset AIRVISUAL_API_KEY CMC_API_KEY ENCRYPTION_KEY HMAC_SECRET
 
           echo "✅ Security cleanup completed"
@@ -710,7 +716,7 @@ jobs:
           echo "🔖 Commit: ${{ github.sha }}"
           echo "🌿 Branch: ${{ github.ref_name }}"
           echo "👤 Triggered by: ${{ github.actor }}"
-          echo "🔗 Application URL: ${{ secrets.NEXTAUTH_URL }}"
+          echo "🔗 Application URL: ${{ secrets.APP_URL }}"
 
           # Container information
           echo "🐳 Running containers:"

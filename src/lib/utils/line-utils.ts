@@ -8,23 +8,19 @@ export const sendRequest = async (
   headers: any,
   body: any,
 ) => {
-  try {
-    const response = await fetch(url, {
-      method,
-      headers,
-      body: JSON.stringify(body),
-    });
-    if (!response.ok) {
-      const errorText = await response.text();
+  const response = await fetch(url, {
+    method,
+    headers,
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
 
-      throw new Error(
-        `Failed to send request: ${response.status} ${response.statusText} - ${errorText}`,
-      );
-    }
-    return response;
-  } catch (err: any) {
-    throw err;
+    throw new Error(
+      `Failed to send request: ${response.status} ${response.statusText} - ${errorText}`,
+    );
   }
+  return response;
 };
 
 export const sendLoadingAnimation = async (
@@ -136,12 +132,8 @@ export const sendPushMessage = async (req: any, payload: any) => {
     "Content-Type": "application/json",
     Authorization: `Bearer ${lineChannelAccessToken}`,
   };
-  try {
-    return sendRequest(`${env.LINE_MESSAGING_API}/push`, "POST", lineHeader, {
-      to: req.body.events[0].source.userId,
-      messages: payload,
-    });
-  } catch (err: any) {
-    throw err;
-  }
+  return sendRequest(`${env.LINE_MESSAGING_API}/push`, "POST", lineHeader, {
+    to: req.body.events[0].source.userId,
+    messages: payload,
+  });
 };

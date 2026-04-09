@@ -66,7 +66,7 @@ export const TypographyExample: React.FC = () => {
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {/* Blue Card */}
-          <div className="rounded-lg border border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100 p-4 dark:border-blue-700 dark:from-blue-900/30 dark:to-blue-800/30">
+          <div className="rounded-lg border border-blue-200 bg-linear-to-br from-blue-50 to-blue-100 p-4 dark:border-blue-700 dark:from-blue-900/30 dark:to-blue-800/30">
             <h4
               className={`${typography.classes.cardHeader} ${typography.getCardClass("blue", "header")}`}
             >
@@ -85,7 +85,7 @@ export const TypographyExample: React.FC = () => {
           </div>
 
           {/* Teal Card */}
-          <div className="rounded-lg border border-teal-200 bg-gradient-to-br from-teal-50 to-teal-100 p-4 dark:border-teal-700 dark:from-teal-900/30 dark:to-teal-800/30">
+          <div className="rounded-lg border border-teal-200 bg-linear-to-br from-teal-50 to-teal-100 p-4 dark:border-teal-700 dark:from-teal-900/30 dark:to-teal-800/30">
             <h4
               className={`${typography.classes.cardHeader} ${typography.getCardClass("teal", "header")}`}
             >
@@ -104,7 +104,7 @@ export const TypographyExample: React.FC = () => {
           </div>
 
           {/* Emerald Card */}
-          <div className="rounded-lg border border-emerald-200 bg-gradient-to-br from-emerald-50 to-emerald-100 p-4 dark:border-emerald-700 dark:from-emerald-900/30 dark:to-emerald-800/30">
+          <div className="rounded-lg border border-emerald-200 bg-linear-to-br from-emerald-50 to-emerald-100 p-4 dark:border-emerald-700 dark:from-emerald-900/30 dark:to-emerald-800/30">
             <h4
               className={`${typography.classes.cardHeader} ${typography.getCardClass("emerald", "header")}`}
             >

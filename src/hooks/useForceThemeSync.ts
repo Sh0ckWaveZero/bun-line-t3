@@ -1,14 +1,18 @@
 "use client";
 
-import { useTheme } from "next-themes";
+import { useTheme } from "@/lib/theme/theme-provider";
 import { useEffect, useCallback } from "react";
 
 export function useForceThemeSync() {
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
 
   const forceSync = useCallback(() => {
     const html = document.documentElement;
-    const stored = localStorage.getItem("theme-preference") || "light";
+    const storedValue = localStorage.getItem("theme-preference");
+    const stored =
+      storedValue === "dark" || storedValue === "system"
+        ? storedValue
+        : "light";
 
     // Step 1: Aggressive class removal
     html.classList.remove("light", "dark");
@@ -28,7 +32,7 @@ export function useForceThemeSync() {
     html.setAttribute("data-theme", stored);
     html.style.colorScheme = stored;
 
-    // Step 5: Force next-themes to re-sync
+    // Step 5: Force theme context to re-sync
     if (theme !== stored) {
       setTheme(stored);
     }
@@ -43,7 +47,7 @@ export function useForceThemeSync() {
         html.classList.add(stored);
       }
     }, 100);
-  }, [theme, resolvedTheme, setTheme]);
+  }, [theme, setTheme]);
 
   // Auto-sync on theme changes
   useEffect(() => {
@@ -59,7 +63,7 @@ export function useForceThemeSync() {
     if (!hasCorrectClass || hasWrongClass) {
       forceSync();
     }
-  }, [theme, resolvedTheme, forceSync]);
+  }, [theme, forceSync]);
 
   return { forceSync };
 }

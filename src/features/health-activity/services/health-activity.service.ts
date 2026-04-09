@@ -372,13 +372,14 @@ export class HealthActivityService {
         startDate.setHours(0, 0, 0, 0);
         endDate.setHours(23, 59, 59, 999);
         break;
-      case "weekly":
+      case "weekly": {
         const dayOfWeek = startDate.getDay();
         startDate.setDate(startDate.getDate() - dayOfWeek);
         startDate.setHours(0, 0, 0, 0);
         endDate.setDate(startDate.getDate() + 6);
         endDate.setHours(23, 59, 59, 999);
         break;
+      }
       case "monthly":
         startDate.setDate(1);
         startDate.setHours(0, 0, 0, 0);

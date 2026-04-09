@@ -117,7 +117,7 @@ src/
 
 - Development: HTTPS on localhost:4325 with self-signed certificates
 - Environment switching: Scripts in `scripts/switch-env.sh`
-- Required ENV vars: DATABASE*URL, NEXTAUTH_SECRET, LINE*\* credentials
+- Required ENV vars: DATABASE*URL, AUTH_SECRET, LINE*\* credentials
 
 ### Code Style Requirements
 

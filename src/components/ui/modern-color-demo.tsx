@@ -511,7 +511,7 @@ export function ModernColorDemo() {
             </div>
 
             {/* Card Text Colors */}
-            <div className="rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 p-6 shadow-card-modern">
+            <div className="rounded-xl bg-linear-to-br from-blue-50 to-blue-100 p-6 shadow-card-modern">
               <h4 className="mb-3 text-xl font-black text-text-card-primary">
                 Card Text Colors
               </h4>

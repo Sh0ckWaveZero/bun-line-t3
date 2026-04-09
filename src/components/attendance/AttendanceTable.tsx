@@ -11,6 +11,15 @@ import {
 import { AttendanceRecord, AttendanceTableProps } from "@/lib/types/attendance";
 import { LeaveStatusBadge } from "@/components/ui/LeaveStatusBadge";
 
+const EmptyTableMessage = () => (
+  <div
+    id="empty-table-message"
+    className="py-8 text-center text-gray-500 dark:text-gray-400"
+  >
+    ไม่มีข้อมูลการเข้างานในเดือนนี้
+  </div>
+);
+
 export const AttendanceTable: React.FC<AttendanceTableProps> = ({
   records,
   onEditRecord,
@@ -89,15 +98,6 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
     );
   };
 
-  const EmptyTableMessage = () => (
-    <div
-      id="empty-table-message"
-      className="py-8 text-center text-gray-500 dark:text-gray-400"
-    >
-      ไม่มีข้อมูลการเข้างานในเดือนนี้
-    </div>
-  );
-
   // Sort records to show latest first (descending order by workDate)
   const sortedRecords = [...records].sort(
     (a, b) => new Date(b.workDate).getTime() - new Date(a.workDate).getTime(),
@@ -128,12 +128,12 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
         <table id="attendance-table" className="relative min-w-full">
           <thead
             id="attendance-table-header"
-            className="border-b-2 border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 dark:border-gray-600 dark:from-gray-800 dark:to-gray-700"
+            className="border-b-2 border-gray-200 bg-linear-to-r from-gray-50 to-gray-100 dark:border-gray-600 dark:from-gray-800 dark:to-gray-700"
           >
             <tr id="attendance-table-header-row">
               <th
                 id="header-date"
-                className="sticky left-0 z-20 border-r border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 text-left
+                className="sticky left-0 z-20 border-r border-gray-200 bg-linear-to-r from-gray-50 to-gray-100 px-6 py-4 text-left
                   text-sm font-bold tracking-wide text-gray-900 before:absolute
                   before:bottom-0 before:right-0 before:top-0
                   before:w-px before:bg-gray-200 dark:border-gray-600 dark:from-gray-800 dark:to-gray-700 
@@ -201,7 +201,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                       <span
                         className={`font-medium ${
                           isToday
-                            ? "animate-pulse bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text font-bold text-transparent dark:from-blue-400 dark:to-purple-500"
+                            ? "animate-pulse bg-linear-to-r from-blue-500 to-purple-600 bg-clip-text font-bold text-transparent dark:from-blue-400 dark:to-purple-500"
                             : ""
                         }`}
                       >
@@ -213,7 +213,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                         })}
                       </span>
                       {isToday && (
-                        <span className="inline-flex animate-bounce items-center rounded-full bg-gradient-to-r from-blue-500 to-purple-600 px-2 py-0.5 text-xs font-medium text-white shadow-sm">
+                        <span className="inline-flex animate-bounce items-center rounded-full bg-linear-to-r from-blue-500 to-purple-600 px-2 py-0.5 text-xs font-medium text-white shadow-sm">
                           วันนี้
                         </span>
                       )}

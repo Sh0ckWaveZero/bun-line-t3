@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Loader2, Save, Settings, Bell, BellOff } from "lucide-react";
 import { useToast } from "@/components/common/ToastProvider";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth/client";
 
 interface UserSettings {
   enableCheckInReminders: boolean;

@@ -1,7 +1,5 @@
-import { describe, it, expect, beforeEach } from "bun:test";
+import { describe, it, expect } from "bun:test";
 import {
-  expectStatusToBeSecure,
-  expectEndpointToBeProtected,
   installCustomMatchers,
 } from "../helpers/test-matchers";
 
@@ -12,7 +10,7 @@ installCustomMatchers();
 // ทดสอบความปลอดภัยและ authorization เฉพาะเจาะจง
 
 describe("Monitoring Dashboard Security", () => {
-  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const baseUrl = process.env.APP_URL || "http://localhost:4325";
 
   // Cached server availability check
   let serverAvailable: boolean | null = null;
@@ -396,7 +394,7 @@ describe("Monitoring Dashboard Security", () => {
           if (errorData && errorData.error) {
             expect(typeof errorData.error).toBe("string");
           }
-        } catch (e) {
+        } catch {
           // If response is not JSON, that's also acceptable for security
           // (e.g., rate limiting might return plain text or service unavailable)
           expect(response.status).toBeOneOf([
@@ -442,7 +440,7 @@ describe("Monitoring Dashboard Security", () => {
 
 // 🔍 Security Audit Tests
 describe("Security Audit", () => {
-  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const baseUrl = process.env.APP_URL || "http://localhost:4325";
 
   // Reuse server availability check
   let serverAvailable: boolean | null = null;

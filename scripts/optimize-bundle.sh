@@ -12,31 +12,24 @@ echo ""
 
 case "$PHASE" in
   "analyze")
-    echo "📊 Installing bundle analyzer..."
-    bun add -D @next/bundle-analyzer
+    echo "📈 Running production build for bundle analysis..."
+    bun run build
 
     echo ""
-    echo "📈 Running bundle analysis..."
-    ANALYZE=true bun run build
-
-    echo ""
-    echo "✅ Analysis complete! Check .next/analyze/ for reports"
-    echo "   - Open client.html in your browser for client bundle"
-    echo "   - Open server.html in your browser for server bundle"
+    echo "📦 Largest client bundles:"
+    find dist/client/assets -type f \( -name "*.js" -o -name "*.css" \) -exec du -h {} + | sort -hr | head -10
     ;;
 
   "measure")
     echo "📏 Measuring current bundle sizes..."
     echo ""
 
-    # Build without Turbopack for accurate measurements
-    bun run tailwind:build
-    next build 2>&1 | tee build-output.txt
+    bun run build > build-output.txt 2>&1
 
     echo ""
     echo "📊 Bundle Size Summary:"
     echo "======================="
-    grep -E "First Load JS|Route" build-output.txt | head -20
+    find dist/client/assets -type f \( -name "*.js" -o -name "*.css" \) -exec du -h {} + | sort -hr | head -20
 
     echo ""
     echo "💾 Full output saved to: build-output.txt"
@@ -46,7 +39,7 @@ case "$PHASE" in
     echo "🔤 Optimizing font loading..."
     echo ""
     echo "ℹ️  Manual step required:"
-    echo "   1. Edit src/app/layout.tsx"
+    echo "   1. Edit src/routes/__root.tsx or the relevant provider/layout file"
     echo "   2. Update Prompt font configuration:"
     echo ""
     echo "   weight: ['300', '400', '600'], // Reduced from 9 weights"
@@ -105,19 +98,15 @@ EOF
     ;;
 
   "packages")
-    echo "📦 Optimizing package imports in next.config.mjs..."
+    echo "📦 Reviewing package-level chunking for Vite/TanStack Start..."
     echo ""
     echo "ℹ️  Manual step required:"
-    echo "   Add these packages to optimizePackageImports:"
+    echo "   Review heavy packages for route-level lazy loading:"
     echo ""
-    echo "   optimizePackageImports: ["
-    echo "     'date-fns',"
-    echo "     'date-fns-tz',"
-    echo "     'zod',"
-    echo "     'lucide-react',"
-    echo "     'chart.js',"
-    echo "     'react-chartjs-2',"
-    echo "   ],"
+    echo "   - chart.js / react-chartjs-2"
+    echo "   - d3"
+    echo "   - heavy route-only utilities"
+    echo "   - large Thai name generator datasets"
     ;;
 
   "test")
@@ -127,7 +116,7 @@ EOF
     # Measure before
     echo "1️⃣ Building current version..."
     bun run build > /tmp/before-build.txt 2>&1
-    BEFORE_SIZE=$(grep "First Load JS" /tmp/before-build.txt | head -1 | grep -oE "[0-9.]+ [kM]B" | head -1)
+    BEFORE_SIZE=$(find dist/client/assets -type f -name "*.js" -exec du -ch {} + | tail -1 | awk '{print $1}')
 
     echo "   Current size: $BEFORE_SIZE"
     echo ""

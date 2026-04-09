@@ -5,7 +5,6 @@
  */
 
 import { z } from "zod";
-import { NextResponse } from "next/server";
 
 /**
  * Formatted validation error issue
@@ -54,17 +53,17 @@ export function formatZodErrors(zodError: z.ZodError): FormattedValidationError 
 }
 
 /**
- * Create a NextResponse with formatted Zod error
+ * Create a Response with formatted Zod error
  * @param error - Zod validation error
  * @param status - HTTP status code (default: 400)
- * @returns NextResponse with formatted error
+ * @returns Response with formatted error
  */
 export function zodErrorResponse(
   error: z.ZodError,
   status: number = 400,
-): NextResponse {
+): Response {
   const formattedError = formatZodErrors(error);
-  return NextResponse.json(formattedError, { status });
+  return Response.json(formattedError, { status });
 }
 
 /**
@@ -82,7 +81,7 @@ export function zodErrorResponse(
 export function handleZodError(
   error: unknown,
   defaultStatus: number = 400,
-): NextResponse | null {
+): Response | null {
   if (error instanceof z.ZodError) {
     return zodErrorResponse(error, defaultStatus);
   }
@@ -143,10 +142,10 @@ export class ValidationErrorBuilder {
   }
 
   /**
-   * Get NextResponse
+   * Get Response
    */
-  toResponse(status: number = 400): NextResponse {
-    return NextResponse.json(this.build(), { status });
+  toResponse(status: number = 400): Response {
+    return Response.json(this.build(), { status });
   }
 }
 

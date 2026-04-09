@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "bun:test";
+import { describe, it, expect } from "bun:test";
 
 describe("Checkout Reminder API Dependencies", () => {
   it("should import required functions correctly", async () => {
@@ -31,7 +31,7 @@ describe("Checkout Reminder API Dependencies", () => {
 
   it("should validate API structure exists", async () => {
     // Test that the API route file can be imported
-    const routeModule = await import("@/app/api/checkout-reminder/route");
+    const routeModule = await import("@/routes/api/checkout-reminder");
 
     expect(typeof routeModule.GET).toBe("function");
   });

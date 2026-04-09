@@ -32,7 +32,6 @@ export async function cleanupTemporaryImages(
         const filePath = path.join(tempDir, file);
         const stats = await fs.stat(filePath);
         const fileAge = now - stats.mtime.getTime();
-        const fileAgeMinutes = Math.floor(fileAge / (60 * 1000));
 
         if (fileAge > maxAge) {
           await fs.unlink(filePath);
@@ -44,7 +43,7 @@ export async function cleanupTemporaryImages(
     }
 
     return { cleaned, errors, totalFiles };
-  } catch (error) {
+  } catch {
     return { cleaned, errors: errors + 1, totalFiles };
   }
 }

@@ -3,7 +3,7 @@
  * ทดสอบการทำงานของระบบลงเวลาทำงานจริงที่ใช้งานในแอป
  */
 
-import { describe, test, expect, beforeAll } from "bun:test";
+import { describe, test, expect } from "bun:test";
 
 describe("🔗 Attendance Service Integration Tests", () => {
   // ทดสอบการ import attendance service
@@ -17,7 +17,7 @@ describe("🔗 Attendance Service Integration Tests", () => {
       expect(typeof attendanceService.convertUTCToBangkok).toBe("function");
       expect(typeof attendanceService.formatThaiTime).toBe("function");
       expect(typeof attendanceService.formatThaiTimeOnly).toBe("function");
-    } catch (error) {
+    } catch {
       console.warn(
         "⚠️ Cannot import attendance service - testing with mock functions",
       );
@@ -46,7 +46,7 @@ describe("🔗 Attendance Service Integration Tests", () => {
       // ต้องแสดง 08:54 ไม่ใช่ 15:54
       expect(displayTime).toBe("08:54");
       expect(fullTime).toContain("08:54:46");
-    } catch (error) {
+    } catch {
       console.warn("⚠️ Cannot test with real service - using mock test");
       expect(true).toBe(true);
     }
@@ -73,7 +73,7 @@ describe("🔗 Attendance Service Integration Tests", () => {
 
         expect(timeValidation.valid).toBe(testTime.expected);
       }
-    } catch (error) {
+    } catch {
       console.warn("⚠️ Cannot test with real service");
       expect(true).toBe(true);
     }
@@ -103,7 +103,7 @@ describe("🔗 Attendance Service Integration Tests", () => {
 
         expect(isWorkingDay).toBe(testDay.expected);
       }
-    } catch (error) {
+    } catch {
       console.warn("⚠️ Cannot test working days with real service");
       expect(true).toBe(true);
     }
@@ -134,7 +134,7 @@ describe("🔗 Attendance Service Integration Tests", () => {
         const timeDiff = bangkokTime.getTime() - utcTime.getTime();
         expect(timeDiff).toBe(7 * 60 * 60 * 1000);
       }
-    } catch (error) {
+    } catch {
       console.warn("⚠️ Cannot test edge cases with real service");
       expect(true).toBe(true);
     }
@@ -186,7 +186,7 @@ describe("🎯 Real-world Scenario Tests", () => {
       expect(typeof fullDisplay).toBe("string");
       expect(displayTime).toMatch(/^\d{2}:\d{2}$/);
       expect(fullDisplay).toMatch(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2}$/);
-    } catch (error) {
+    } catch {
       console.warn("⚠️ Cannot simulate real scenario:", error);
       expect(true).toBe(true);
     }
@@ -228,7 +228,7 @@ describe("🎯 Real-world Scenario Tests", () => {
       console.log(
         `✅ Successfully processed ${results.length} concurrent check-ins`,
       );
-    } catch (error) {
+    } catch {
       console.warn("⚠️ Cannot test concurrent operations");
       expect(true).toBe(true);
     }

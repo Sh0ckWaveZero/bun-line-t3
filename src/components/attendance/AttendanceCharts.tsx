@@ -1,41 +1,33 @@
 "use client";
 
 import React from "react";
-import dynamic from "next/dynamic";
+import { Suspense, lazy } from "react";
 import { useChartTheme } from "@/hooks/useChartTheme";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import type { AttendanceChartsProps } from "@/lib/types/attendance";
 
 // Lazy load chart components for better bundle splitting
-const WorkingHoursTabContent = dynamic(
+const WorkingHoursTabContent = lazy(
   () =>
     import("./WorkingHoursTabContent").then((m) => ({
       default: m.WorkingHoursTabContent,
     })),
-  {
-    ssr: false, // Charts don't need SSR
-    loading: () => (
-      <div className="flex h-64 items-center justify-center text-gray-400 dark:text-gray-500">
-        กำลังโหลดกราฟ...
-      </div>
-    ),
-  },
 );
 
-const StatisticsTabContent = dynamic(
+const StatisticsTabContent = lazy(
   () =>
     import("./StatisticsTabContent").then((m) => ({
       default: m.StatisticsTabContent,
     })),
-  {
-    ssr: false, // Charts don't need SSR
-    loading: () => (
-      <div className="flex h-64 items-center justify-center text-gray-400 dark:text-gray-500">
-        กำลังโหลดกราฟ...
-      </div>
-    ),
-  },
 );
+
+function ChartFallback() {
+  return (
+    <div className="flex h-64 items-center justify-center text-gray-400 dark:text-gray-500">
+      กำลังโหลดกราฟ...
+    </div>
+  );
+}
 
 /**
  * Attendance Charts Component - REFACTORED
@@ -98,11 +90,15 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({
         </TabsList>
 
         <TabsContent value="working-hours">
-          <WorkingHoursTabContent records={report.attendanceRecords} />
+          <Suspense fallback={<ChartFallback />}>
+            <WorkingHoursTabContent records={report.attendanceRecords} />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="statistics">
-          <StatisticsTabContent report={report} />
+          <Suspense fallback={<ChartFallback />}>
+            <StatisticsTabContent report={report} />
+          </Suspense>
         </TabsContent>
       </Tabs>
     </div>

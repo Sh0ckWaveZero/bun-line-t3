@@ -100,7 +100,7 @@ export async function handleSpotifyCommand(
         messages = [createMoodSelectionMessage()];
         break;
 
-      case "mood-recommend":
+      case "mood-recommend": {
         // 🔄 Send loading animation for recommendations
         await sendLoadingAnimation(req, 10);
 
@@ -138,8 +138,9 @@ export async function handleSpotifyCommand(
           ),
         ];
         break;
+      }
 
-      case "search":
+      case "search": {
         // 🔄 Send loading animation for search
         await sendLoadingAnimation(req, 10);
 
@@ -201,6 +202,7 @@ export async function handleSpotifyCommand(
           ),
         ];
         break;
+      }
 
       default:
         messages = [createSpotifyErrorMessage("Invalid command")];
@@ -214,7 +216,7 @@ export async function handleSpotifyCommand(
 
     if (error instanceof Error) {
       switch (error.message) {
-        case "SPOTIFY_NOT_CONFIGURED":
+        case "SPOTIFY_NOT_CONFIGURED": {
           errorMsg =
             "🎵 Spotify ยังไม่ได้ตั้งค่า\n\n" +
             "กรุณาติดต่อผู้ดูแลระบบเพื่อ:\n" +
@@ -224,13 +226,15 @@ export async function handleSpotifyCommand(
             "📖 ดูรายละเอียดเพิ่มเติม:\n" +
             "src/features/spotify/README.md";
           break;
+        }
 
-        case "SPOTIFY_CONNECTION_ERROR":
+        case "SPOTIFY_CONNECTION_ERROR": {
           errorMsg =
             "⚠️ ไม่สามารถเชื่อมต่อ Spotify ได้\n\n" +
             "กรุณาลองใหม่อีกครั้ง\n" +
             "หรือติดต่อผู้ดูแลระบบถ้าปัญหาไม่หาย";
           break;
+        }
 
         case "SPOTIFY_RECOMMENDATIONS_ERROR":
           errorMsg =

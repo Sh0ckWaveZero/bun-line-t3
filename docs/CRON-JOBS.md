@@ -11,7 +11,7 @@ This document covers the automated cron job system for attendance reminders in t
 ```
 ┌─────────────────────┐    ┌─────────────────────┐    ┌─────────────────────┐
 │   Cron Container    │───▶│   API Endpoints     │───▶│   LINE Messaging    │
-│   (Docker/System)   │    │   (Next.js API)     │    │   (Push Messages)   │
+│   (Docker/System)   │    │ (TanStack Start API)│    │   (Push Messages)   │
 └─────────────────────┘    └─────────────────────┘    └─────────────────────┘
           │                           │                           │
           ▼                           ▼                           ▼
@@ -36,7 +36,7 @@ Our cron jobs use shared utilities for consistent behavior:
 
 **Purpose**: Sends morning check-in reminders to encourage users to log their work start time.
 
-**Schedule**: `0 1 * * 1-5` (01:00 UTC / 08:00 Bangkok, Monday-Friday)
+**Schedule**: `0 8 * * 1-5` (08:00 Bangkok, Monday-Friday)
 
 **Features**:
 
@@ -66,7 +66,7 @@ flowchart TD
 
 **Purpose**: Sends personalized checkout reminders based on individual check-in times and working hours.
 
-**Schedule**: `*/5 9-13 * * 1-5` (Every 5 minutes, 09:00-13:59 UTC / 16:00-20:59 Bangkok, Monday-Friday)
+**Schedule**: `*/5 16-20 * * 1-5` (Every 5 minutes, 16:00-20:59 Bangkok, Monday-Friday)
 
 **Features**:
 
@@ -107,6 +107,7 @@ flowchart TD
 ```bash
 # Required for all cron jobs
 CRON_SECRET=your_secure_secret_here
+CRON_BASE_URL=http://app:12914
 
 # LINE Integration
 LINE_CHANNEL_ACCESS=your_line_access_token
@@ -121,13 +122,13 @@ NODE_ENV=production
 
 ```bash
 # Check-in reminder - 8 AM Bangkok (Monday-Friday)
-0 1 * * 1-5 curl -H "Authorization: Bearer $CRON_SECRET" http://app:12914/api/cron/check-in-reminder
+0 8 * * 1-5 /usr/local/bin/cron-request.sh GET /api/cron/check-in-reminder
 
 # Enhanced checkout reminder - Every 5 minutes (4:40-8:00 PM Bangkok, Monday-Friday)
-*/5 9-13 * * 1-5 curl -H "Authorization: Bearer $CRON_SECRET" http://app:12914/api/cron/enhanced-checkout-reminder
+*/5 16-20 * * 1-5 /usr/local/bin/cron-request.sh GET /api/cron/enhanced-checkout-reminder
 
 # Auto checkout - Midnight cleanup
-0 0 * * * curl -H "Authorization: Bearer $CRON_SECRET" http://app:12914/api/cron/auto-checkout
+0 0 * * * /usr/local/bin/cron-request.sh GET /api/cron/auto-checkout
 ```
 
 ## API Reference
@@ -206,7 +207,7 @@ Authorization: Bearer {CRON_SECRET}
 
 ```typescript
 // Detailed validation for structured responses
-function validateCronAuth(req: NextRequest): AuthResult {
+function validateCronAuth(req: Request): AuthResult {
   // Returns: { success: boolean, error?: string, status?: number }
 }
 

@@ -34,13 +34,13 @@ print_info() {
 # Function to show current environment
 show_current_env() {
     if [ -f ".env.local" ]; then
-        local nextauth_url=$(grep "NEXTAUTH_URL=" .env.local | cut -d'=' -f2)
+        local app_url=$(grep "^APP_URL=" .env.local | cut -d'=' -f2)
         local app_env=$(grep "APP_ENV=" .env.local | cut -d'=' -f2)
         
         echo ""
         echo "=== Current Environment Configuration ==="
         echo "APP_ENV: $app_env"
-        echo "NEXTAUTH_URL: $nextauth_url"
+        echo "APP_URL: ${app_url:-<not-set>}"
         echo ""
     else
         print_warning "No .env.local file found"

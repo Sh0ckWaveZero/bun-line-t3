@@ -38,7 +38,7 @@ describe("AttendanceSummaryCards - Accessibility & Readability Manual Test", () 
   it("ควรมี contrast ratio ที่ผ่านมาตรฐาน WCAG 2.1 AA", () => {
     // ✅ การปรับปรุง contrast:
     const contrastImprovements = {
-      // เปลี่ยนจาก bg-gradient-to-br from-rose-50 to-pink-50
+      // เปลี่ยนจาก bg-linear-to-br from-rose-50 to-pink-50
       // เป็น bg-white dark:bg-gray-800 (contrast สูงกว่า)
       backgroundContrast: true,
 

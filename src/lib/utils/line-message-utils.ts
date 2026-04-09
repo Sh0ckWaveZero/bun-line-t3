@@ -31,10 +31,11 @@ export const replyRaw = async (
       case "gold":
         bubbleItems.push(bubbleTemplate.gold(infoItems[index]));
         break;
-      case "lotto":
+      case "lotto": {
         const bubble = bubbleTemplate.lottery(infoItems[0]);
         bubble.forEach((b: any) => bubbleItems.push(b));
         break;
+      }
       default:
         bubbleItems.push(bubbleTemplate.cryptoCurrency(infoItems[index]));
         break;

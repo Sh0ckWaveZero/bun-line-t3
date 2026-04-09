@@ -1,7 +1,7 @@
 "use client";
 
-import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useClientOnlyMounted } from "@/hooks/useHydrationSafe";
+import { useTheme } from "@/lib/theme/theme-provider";
 
 // Import optimized Chart.js registration
 import "@/lib/chart-registration";
@@ -15,11 +15,7 @@ export interface ChartThemeColors {
 
 export const useChartTheme = () => {
   const { theme, systemTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useClientOnlyMounted();
 
   const isDark =
     mounted &&

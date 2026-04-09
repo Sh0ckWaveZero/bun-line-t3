@@ -4,6 +4,7 @@
  */
 
 import React from "react";
+import { useMemo } from "react";
 import {
   useSafeTimestamp,
   useSuppressHydrationWarning,
@@ -87,11 +88,15 @@ export function SafeRandomContent({
 }: SafeRandomContentProps) {
   const mounted = useClientOnlyMounted();
   const suppressWarning = useSuppressHydrationWarning(!mounted);
+  const selectedItem = useMemo(() => {
+    if (!mounted || items.length === 0) {
+      return fallback;
+    }
 
-  // Use deterministic selection on server, random on client
-  const selectedItem = mounted
-    ? items[Math.floor(Math.random() * items.length)]
-    : fallback;
+    const stableIndex =
+      items.reduce((total, item) => total + item.length, 0) % items.length;
+    return items[stableIndex] ?? fallback;
+  }, [fallback, items, mounted]);
 
   return (
     <span className={className} suppressHydrationWarning={suppressWarning}>

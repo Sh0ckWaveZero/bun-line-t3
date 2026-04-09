@@ -137,7 +137,7 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
           className="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-700 dark:bg-blue-900/20"
         >
           <div id="timezone-info-content" className="flex items-start">
-            <div className="flex-shrink-0">
+            <div className="shrink-0">
               <svg
                 id="info-icon"
                 className="mt-0.5 h-4 w-4 text-blue-500 dark:text-blue-400"

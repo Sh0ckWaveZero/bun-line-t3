@@ -289,28 +289,19 @@ class SpotifyService {
 
     const query = moodQueries[mood] || mood;
 
-    try {
-      const result = await this.search(query, "track", limit);
+    const result = await this.search(query, "track", limit);
 
-      // Extract tracks from search results
-      if (result.tracks?.items && result.tracks.items.length > 0) {
-        return result.tracks.items;
-      }
-
-      // Fallback: try simpler query
-      const fallbackResult = await this.search(mood, "track", limit);
-
-      if (
-        fallbackResult.tracks?.items &&
-        fallbackResult.tracks.items.length > 0
-      ) {
-        return fallbackResult.tracks.items;
-      }
-
-      return [];
-    } catch (error) {
-      throw error;
+    if (result.tracks?.items && result.tracks.items.length > 0) {
+      return result.tracks.items;
     }
+
+    const fallbackResult = await this.search(mood, "track", limit);
+
+    if (fallbackResult.tracks?.items && fallbackResult.tracks.items.length > 0) {
+      return fallbackResult.tracks.items;
+    }
+
+    return [];
   }
 }
 

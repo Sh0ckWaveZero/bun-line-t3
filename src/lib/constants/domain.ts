@@ -10,7 +10,7 @@ import { env } from "@/env.mjs";
 /**
  * 🌐 Primary application domain | Domain หลักของแอปพลิเคชัน
  */
-export const APP_DOMAIN = env.APP_DOMAIN || "http://localhost:3000";
+export const APP_DOMAIN = env.APP_DOMAIN || "http://localhost:4325";
 
 /**
  * 🛡️ Allowed domains for security validation | Domain ที่อนุญาตสำหรับการตรวจสอบความปลอดภัย

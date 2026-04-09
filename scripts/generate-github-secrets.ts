@@ -18,15 +18,6 @@ function generateHexKey(byteLength: number): string {
   return randomBytes(byteLength).toString("hex");
 }
 
-function generateAlphanumeric(length: number): string {
-  const chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  const randomValues = randomBytes(length);
-  return Array.from(randomValues)
-    .map((byte) => chars[byte % chars.length])
-    .join("");
-}
-
 // 🎯 Generate all required secrets
 function generateSecrets() {
   console.log("🔐 GitHub Secrets Generator for Bun Line T3 Project");
@@ -35,7 +26,7 @@ function generateSecrets() {
 
   const secrets = {
     // 🔐 Authentication Secrets
-    NEXTAUTH_SECRET: generateSecureRandom(32),
+    AUTH_SECRET: generateSecureRandom(32),
     ENCRYPTION_KEY: generateHexKey(16), // 32 hex characters = 16 bytes
     HMAC_SECRET: generateSecureRandom(48),
 
@@ -47,7 +38,8 @@ function generateSecrets() {
     DATABASE_URL: "<mongodb://username:password@host:port/database>",
 
     // 🌐 Application URL (ต้องกำหนดเอง)
-    NEXTAUTH_URL: "<https://your-domain.com>",
+    APP_URL: "<https://your-domain.com>",
+    FRONTEND_URL: "<https://your-domain.com>",
 
     // 🌬️ API Keys (optional - ต้องสมัครเอง)
     AIRVISUAL_API_KEY: "<GET_FROM_AIRVISUAL_OPTIONAL>",
@@ -127,7 +119,7 @@ function generateSecrets() {
   console.log("");
   console.log("Generated secrets strength:");
   console.log(
-    `- NEXTAUTH_SECRET: ${secrets.NEXTAUTH_SECRET.length} characters (Recommended: 32+) ✅`,
+    `- AUTH_SECRET: ${secrets.AUTH_SECRET.length} characters (Recommended: 32+) ✅`,
   );
   console.log(
     `- ENCRYPTION_KEY: ${secrets.ENCRYPTION_KEY.length} hex chars (Required: 32) ✅`,

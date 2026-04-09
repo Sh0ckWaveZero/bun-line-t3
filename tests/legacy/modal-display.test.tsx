@@ -14,12 +14,6 @@ const mockWindow = {
 };
 
 // Mock DOM environment
-const mockDocument = {
-  createElement: mock(() => ({ setAttribute: mock() })),
-  body: { appendChild: mock(), removeChild: mock() },
-  getElementById: mock(() => ({ remove: mock() })),
-};
-
 describe("EditAttendanceModal - Configuration Tests", () => {
   const mockRecord: AttendanceRecord = {
     id: "test-1",
@@ -41,7 +35,7 @@ describe("EditAttendanceModal - Configuration Tests", () => {
     editData: mockEditData,
     updateLoading: false,
     onClose: mock(() => {}),
-    onEditDataChange: mock((data: EditAttendanceData) => {}),
+    onEditDataChange: mock((_data: EditAttendanceData) => {}),
     onUpdate: mock(() => Promise.resolve()),
   });
 

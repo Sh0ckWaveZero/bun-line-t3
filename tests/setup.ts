@@ -6,33 +6,34 @@
 import { beforeAll, afterAll } from "bun:test";
 import { installCustomMatchers } from "./helpers/test-matchers";
 
-// Mock Next.js environment variables
+// Mock application environment variables
 if (!process.env.NODE_ENV) {
   Object.defineProperty(process.env, "NODE_ENV", {
     value: "test",
     writable: true,
   });
 }
-process.env.NEXTAUTH_URL = "http://localhost:3000";
+process.env.APP_URL = "http://localhost:4325";
+process.env.FRONTEND_URL = "http://localhost:4325";
 
 // Setup DOM environment for React testing
-beforeAll(() => {
+beforeAll(async () => {
   // Install custom test matchers
   installCustomMatchers();
   // Set up DOM environment using happy-dom (faster than jsdom)
-  const { Window } = require("happy-dom");
+  const { Window } = await import("happy-dom");
   const window = new Window();
   const document = window.document;
 
   // Set global variables that React Testing Library expects
   global.window = window as any;
   global.document = document as any;
-  global.navigator = window.navigator;
-  global.HTMLElement = window.HTMLElement;
-  global.Element = window.Element;
-  global.Node = window.Node;
-  global.localStorage = window.localStorage;
-  global.sessionStorage = window.sessionStorage;
+  global.navigator = window.navigator as any;
+  global.HTMLElement = window.HTMLElement as any;
+  global.Element = window.Element as any;
+  global.Node = window.Node as any;
+  global.localStorage = window.localStorage as any;
+  global.sessionStorage = window.sessionStorage as any;
 
   // Mock requestAnimationFrame and cancelAnimationFrame
   global.requestAnimationFrame = (cb: FrameRequestCallback) => {

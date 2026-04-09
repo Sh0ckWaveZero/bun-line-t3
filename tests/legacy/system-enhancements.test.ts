@@ -1,4 +1,4 @@
-import { test, expect, describe, beforeAll, afterAll } from "bun:test";
+import { test, expect, describe } from "bun:test";
 
 // Rate limiter tests
 describe("Rate Limiter Tests", () => {
@@ -27,7 +27,6 @@ describe("Rate Limiter Tests", () => {
   });
 
   test("should reset after time window", async () => {
-    const pastTime = Date.now() - 70000; // 70 seconds ago
     const mockRateLimitReset = {
       allowed: true,
       remainingRequests: 5,

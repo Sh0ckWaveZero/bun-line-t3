@@ -5,7 +5,7 @@
 
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import {
-  validateNextAuthUrl,
+  validateAppUrl,
   getSafeRedirectUrl,
 } from "../../src/lib/security/url-validator";
 
@@ -22,69 +22,69 @@ describe("🔒 URL Security Integration Tests", () => {
   describe("🌐 LINE OAuth Debug API Integration", () => {
     test("✅ should return secure configuration", async () => {
       // Mock environment for testing
-      const originalEnv = process.env.NEXTAUTH_URL;
-      process.env.NEXTAUTH_URL = "https://your-app.example.com";
+      const originalEnv = process.env.APP_URL;
+      process.env.APP_URL = "https://your-app.example.com";
 
       try {
         // Test the URL validation logic similar to the API
-        const nextAuthUrl = process.env.NEXTAUTH_URL;
-        const validation = validateNextAuthUrl(nextAuthUrl);
+        const appUrl = process.env.APP_URL!;
+        const validation = validateAppUrl(appUrl);
 
         expect(validation.isValid).toBe(true);
         expect(validation.isProduction).toBe(true);
         expect(validation.hostname).toBe("your-app.example.com");
 
         // Test callback URL construction
-        const callbackUrl = `${nextAuthUrl}/api/auth/callback/line`;
-        const callbackValidation = validateNextAuthUrl(callbackUrl);
+        const callbackUrl = `${appUrl}/api/auth/callback/line`;
+        const callbackValidation = validateAppUrl(callbackUrl);
 
         expect(callbackValidation.isValid).toBe(true);
       } finally {
         // Restore original environment
         if (originalEnv) {
-          process.env.NEXTAUTH_URL = originalEnv;
+          process.env.APP_URL = originalEnv;
         } else {
-          delete process.env.NEXTAUTH_URL;
+          delete process.env.APP_URL;
         }
       }
     });
 
     test("🚨 should handle malicious environment configuration", () => {
-      const originalEnv = process.env.NEXTAUTH_URL;
-      process.env.NEXTAUTH_URL = "https://evil.com";
+      const originalEnv = process.env.APP_URL;
+      process.env.APP_URL = "https://evil.com";
 
       try {
-        const nextAuthUrl = process.env.NEXTAUTH_URL;
-        const validation = validateNextAuthUrl(nextAuthUrl);
+        const appUrl = process.env.APP_URL!;
+        const validation = validateAppUrl(appUrl);
 
         expect(validation.isValid).toBe(false);
         expect(validation.error).toContain("not in the allowed list");
 
         // Test safe fallback
         const safeUrl = getSafeRedirectUrl(
-          nextAuthUrl,
+          appUrl,
           "https://your-app.example.com",
         );
         expect(safeUrl).toBe("https://your-app.example.com");
       } finally {
         if (originalEnv) {
-          process.env.NEXTAUTH_URL = originalEnv;
+          process.env.APP_URL = originalEnv;
         } else {
-          delete process.env.NEXTAUTH_URL;
+          delete process.env.APP_URL;
         }
       }
     });
   });
 
-  describe("🔐 NextAuth Configuration Integration", () => {
+  describe("🔐 App URL Configuration Integration", () => {
     test("✅ should validate development configuration", () => {
       const devConfig = {
-        NEXTAUTH_URL: "http://localhost:3000",
-        callbackUrl: "http://localhost:3000/api/auth/callback/line",
+        APP_URL: "http://localhost:4325",
+        callbackUrl: "http://localhost:4325/api/auth/callback/line",
       };
 
-      const urlValidation = validateNextAuthUrl(devConfig.NEXTAUTH_URL);
-      const callbackValidation = validateNextAuthUrl(devConfig.callbackUrl);
+      const urlValidation = validateAppUrl(devConfig.APP_URL);
+      const callbackValidation = validateAppUrl(devConfig.callbackUrl);
 
       expect(urlValidation.isValid).toBe(true);
       expect(urlValidation.isDevelopment).toBe(true);
@@ -93,12 +93,12 @@ describe("🔒 URL Security Integration Tests", () => {
 
     test("✅ should validate production configuration", () => {
       const prodConfig = {
-        NEXTAUTH_URL: "https://your-app.example.com",
+        APP_URL: "https://your-app.example.com",
         callbackUrl: "https://your-app.example.com/api/auth/callback/line",
       };
 
-      const urlValidation = validateNextAuthUrl(prodConfig.NEXTAUTH_URL);
-      const callbackValidation = validateNextAuthUrl(prodConfig.callbackUrl);
+      const urlValidation = validateAppUrl(prodConfig.APP_URL);
+      const callbackValidation = validateAppUrl(prodConfig.callbackUrl);
 
       expect(urlValidation.isValid).toBe(true);
       expect(urlValidation.isProduction).toBe(true);
@@ -166,7 +166,7 @@ describe("🔒 URL Security Integration Tests", () => {
       ];
 
       maliciousOrigins.forEach((origin) => {
-        const validation = validateNextAuthUrl(origin);
+        const validation = validateAppUrl(origin);
         expect(validation.isValid).toBe(false);
         console.log(`✅ Blocked malicious origin: ${origin}`);
       });
@@ -196,7 +196,7 @@ describe("🔒 URL Security Integration Tests", () => {
 
       // Test 1000 URL validations
       for (let i = 0; i < 1000; i++) {
-        validateNextAuthUrl("https://your-app.example.com");
+        validateAppUrl("https://your-app.example.com");
       }
 
       const end = performance.now();
@@ -210,15 +210,13 @@ describe("🔒 URL Security Integration Tests", () => {
     test("should handle concurrent validations", async () => {
       const urls = [
         "https://your-app.example.com",
-        "http://localhost:3000",
+        "http://localhost:4325",
         "https://evil.com",
         "javascript:alert(1)",
         "https://example.com",
       ];
 
-      const promises = urls.map((url) =>
-        Promise.resolve(validateNextAuthUrl(url)),
-      );
+      const promises = urls.map((url) => Promise.resolve(validateAppUrl(url)));
 
       const results = await Promise.all(promises);
 
@@ -262,13 +260,13 @@ describe("🔒 URL Security Integration Tests", () => {
 describe("🔍 Environment-Specific Behavior", () => {
   test("should behave correctly in development", () => {
     const devUrls = [
-      "http://localhost:3000",
-      "http://127.0.0.1:3000",
+      "http://localhost:4325",
+      "http://127.0.0.1:4325",
       "http://localhost:4325",
     ];
 
     devUrls.forEach((url) => {
-      const validation = validateNextAuthUrl(url);
+      const validation = validateAppUrl(url);
       expect(validation.isValid).toBe(true);
       expect(validation.isDevelopment).toBe(true);
       expect(validation.isProduction).toBe(false);
@@ -283,7 +281,7 @@ describe("🔍 Environment-Specific Behavior", () => {
     ];
 
     prodUrls.forEach((url) => {
-      const validation = validateNextAuthUrl(url);
+      const validation = validateAppUrl(url);
       expect(validation.isValid).toBe(true);
       expect(validation.isDevelopment).toBe(false);
       expect(validation.isProduction).toBe(true);

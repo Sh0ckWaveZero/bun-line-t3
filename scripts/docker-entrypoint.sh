@@ -1,55 +1,37 @@
 #!/bin/sh
-# 🚀 Docker Entrypoint Script สำหรับ Bun + Next.js + Prisma
-# 🔐 SECURITY: Secure startup sequence with proper error handling
+# 🚀 Docker Entrypoint Script สำหรับ Bun + TanStack Start + Prisma
 
-set -e  # Exit on any error
+set -e
 
 echo "🔍 Verifying runtime environment..."
 
-# ตรวจสอบ Prisma Client
 if [ ! -d "node_modules/.prisma/client" ]; then
     echo "❌ Prisma Client not found"
     exit 1
 fi
 
-# ตรวจสอบ Next.js build output
-if [ ! -f "server.js" ] && [ ! -d ".next" ]; then
-    echo "❌ Next.js build output not found"
+if [ ! -f "dist/server/server.js" ] || [ ! -d "dist/client" ]; then
+    echo "❌ TanStack Start build output not found"
     exit 1
 fi
 
 echo "✅ Runtime environment verified"
 
-# 🗄️ Database Migration (ถ้าไม่ skip)
-if [ "$SKIP_DB_MIGRATIONS" != "true" ]; then
-    echo "🗄️ Running database migrations..."
-    if bunx prisma migrate deploy 2>/dev/null; then
-        echo "✅ Database migrations completed"
+if [ "${RUN_DB_PUSH:-false}" = "true" ]; then
+    echo "🗄️ Running prisma db push..."
+    if bunx prisma db push --skip-generate 2>/dev/null; then
+        echo "✅ Prisma schema synced"
     else
-        echo "⚠️ No migrations to run or database not available"
-    fi
-    
-    if bunx prisma generate 2>/dev/null; then
-        echo "✅ Prisma client regenerated"
-    else
-        echo "⚠️ Prisma client already exists"
+        echo "⚠️ Prisma schema sync failed or database not available"
     fi
 else
-    echo "⏭️ Database migrations skipped"
+    echo "⏭️ Prisma db push skipped (set RUN_DB_PUSH=true to enable)"
 fi
 
-# 🚀 Start Application
-echo "🚀 Starting Next.js application..."
+echo "🚀 Starting TanStack Start application..."
 
-# 🔧 SECURITY: Force bind to 0.0.0.0 for Docker networking
 export HOSTNAME=0.0.0.0
 export PORT=${PORT:-12914}
 
-if [ -f "server.js" ]; then
-    echo "✅ Using Next.js standalone mode"
-    echo "🌐 Binding to $HOSTNAME:$PORT"
-    exec node server.js
-else
-    echo "⚠️ Fallback to bun start"
-    exec bun start
-fi
+echo "🌐 Binding to $HOSTNAME:$PORT"
+exec bun dist/server/server.js

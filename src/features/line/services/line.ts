@@ -1,15 +1,26 @@
-import { NextApiRequest, NextApiResponse } from "next";
 import { handleLogin } from "../commands/handleLogin";
 import { handleLocation } from "../commands/handleLocation";
 import { handleSticker } from "../commands/handleSticker";
 import { handlePostback } from "../commands/handlePostback";
 import { handleText } from "../commands/handleText";
 
+interface LineApiRequest {
+  body?: {
+    events?: any[];
+  };
+}
+
+interface LineApiResponse {
+  json: (data: any) => any;
+  send: (data: any) => any;
+  status: (code: number) => LineApiResponse;
+}
+
 const handleEvent = async (
-  req: NextApiRequest,
-  res: NextApiResponse,
+  req: LineApiRequest,
+  res: LineApiResponse,
 ): Promise<any> => {
-  const events = req.body?.events;
+  const events = (req.body as any)?.events;
 
   if (!Array.isArray(events) || events.length === 0) {
     return res.status(400).json({ error: "No events to process" });

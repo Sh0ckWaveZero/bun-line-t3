@@ -1,6 +1,6 @@
 // src/components/ui/LineLoginButton.tsx
 "use client";
-import { signIn } from "next-auth/react";
+import { signIn } from "@/lib/auth/client";
 import React from "react";
 
 interface LineLoginButtonProps {

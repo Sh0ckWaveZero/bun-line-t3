@@ -28,27 +28,23 @@ export async function sendPushMessage(
     Authorization: `Bearer ${lineChannelAccessToken}`,
   };
 
-  try {
-    const response = await fetch(`${env.LINE_MESSAGING_API}/push`, {
-      method: "POST",
-      headers: lineHeader,
-      body: JSON.stringify({
-        to: userId,
-        messages: messages,
-      }),
-    });
+  const response = await fetch(`${env.LINE_MESSAGING_API}/push`, {
+    method: "POST",
+    headers: lineHeader,
+    body: JSON.stringify({
+      to: userId,
+      messages: messages,
+    }),
+  });
 
-    if (!response.ok) {
-      const errorBody = await response.text();
-      throw new Error(
-        `Failed to send push message: ${response.status} ${errorBody}`,
-      );
-    }
-
-    return response;
-  } catch (err: any) {
-    throw err;
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(
+      `Failed to send push message: ${response.status} ${errorBody}`,
+    );
   }
+
+  return response;
 }
 
 /**
@@ -219,7 +215,7 @@ async function saveImageFiles(
  */
 function generateImageUrls(fileInfo: FileInfo): UrlResult {
   const rawBaseUrl =
-    env.NEXTAUTH_URL || env.FRONTEND_URL || "https://line-login.midseelee.com";
+    env.APP_URL || env.FRONTEND_URL || "https://line-login.midseelee.com";
   const baseUrl = validateBaseUrl(rawBaseUrl);
 
   const originalUrl = `${baseUrl}/api/temp-charts/${fileInfo.originalFilename}`;
@@ -258,36 +254,32 @@ export async function sendChartImage(
   chartBuffer: Buffer,
   filename?: string,
 ): Promise<Response> {
-  try {
-    if (filename && typeof filename !== "string") {
-      throw new Error("Invalid filename parameter");
-    }
-
-    const { originalUrl, previewUrl } = await uploadImageToTemporaryHost(
-      chartBuffer,
-      filename,
-    );
-
-    const fetchOptions = {
-      method: "HEAD" as const,
-      headers: {
-        "User-Agent": "LINE-Bot-SDK",
-      },
-    };
-
-    try {
-      const testOriginal = await fetch(originalUrl, fetchOptions);
-      const testPreview = await fetch(previewUrl, fetchOptions);
-
-      if (!testOriginal.ok || !testPreview.ok) {
-        throw new Error("Image not accessible");
-      }
-    } catch {
-      // Continue even if verification fails
-    }
-
-    return await sendImageMessage(userId, originalUrl, previewUrl);
-  } catch (error) {
-    throw error;
+  if (filename && typeof filename !== "string") {
+    throw new Error("Invalid filename parameter");
   }
+
+  const { originalUrl, previewUrl } = await uploadImageToTemporaryHost(
+    chartBuffer,
+    filename,
+  );
+
+  const fetchOptions = {
+    method: "HEAD" as const,
+    headers: {
+      "User-Agent": "LINE-Bot-SDK",
+    },
+  };
+
+  try {
+    const testOriginal = await fetch(originalUrl, fetchOptions);
+    const testPreview = await fetch(previewUrl, fetchOptions);
+
+    if (!testOriginal.ok || !testPreview.ok) {
+      throw new Error("Image not accessible");
+    }
+  } catch {
+    // Continue even if verification fails
+  }
+
+  return await sendImageMessage(userId, originalUrl, previewUrl);
 }

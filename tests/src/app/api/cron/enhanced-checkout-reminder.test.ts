@@ -1,4 +1,4 @@
-import { describe, expect, test, beforeAll, afterAll, mock } from "bun:test";
+import { describe, expect, test, beforeAll, afterAll } from "bun:test";
 
 // Simple mock test without Next.js dependencies
 describe("Enhanced Checkout Reminder Logic Tests", () => {

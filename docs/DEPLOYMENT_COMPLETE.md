@@ -45,13 +45,13 @@ cp .env.example .env.production
 NODE_ENV=development
 NEXT_PUBLIC_APP_ENV=development
 FRONTEND_URL=https://localhost:4325
-NEXTAUTH_URL=https://localhost:4325
+APP_URL=https://localhost:4325
 
 # Database
 DATABASE_URL="mongodb://localhost:27017/bun_line_t3_dev"
 
 # Security
-NEXTAUTH_SECRET="dev-secret-key-change-in-production"
+AUTH_SECRET="dev-secret-key-change-in-production"
 JWT_EXPIRES_IN=1d
 
 # LINE Integration
@@ -175,8 +175,8 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=${DATABASE_URL}
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
-      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - AUTH_SECRET=${AUTH_SECRET}
+      - APP_URL=${APP_URL}
     depends_on:
       - mongodb
     restart: unless-stopped
@@ -341,12 +341,12 @@ pm2 startup
 
 ```env
 # Strong secrets for production
-NEXTAUTH_SECRET="$(openssl rand -base64 32)"
+AUTH_SECRET="$(openssl rand -base64 32)"
 CRON_SECRET_TOKEN="$(openssl rand -base64 32)"
 JWT_SECRET="$(openssl rand -base64 32)"
 
 # Production URLs
-NEXTAUTH_URL=https://yourdomain.com
+APP_URL=https://yourdomain.com
 FRONTEND_URL=https://yourdomain.com
 
 # Database with connection pooling
