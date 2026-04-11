@@ -98,10 +98,41 @@ const getOrderById = async (id: string) => {
 };
 
 /**
- * ดึง DCA order ด้วย round number
+ * ดึง DCA order ด้วย round number (scope ตาม lineUserId เสมอ)
  */
-const findByRound = async (round: number) => {
-  return db.dcaOrder.findFirst({ where: { round } });
+const findByRound = async (round: number, lineUserId: string) => {
+  return db.dcaOrder.findFirst({ where: { round, lineUserId } });
+};
+
+/**
+ * ดึง DCA orders หลายรอบพร้อมกัน (ใช้สำหรับ multi-delete)
+ */
+const findByRounds = async (rounds: number[], lineUserId: string) => {
+  return db.dcaOrder.findMany({
+    where: { round: { in: rounds }, lineUserId },
+    orderBy: { round: "asc" },
+  });
+};
+
+/**
+ * ตรวจหา orders ที่ซ้ำกัน (ใช้ก่อน import)
+ * key = lineUserId + coin + executedAt
+ */
+const findDuplicates = async (
+  lineUserId: string,
+  candidates: { coin: string; executedAt: Date }[],
+) => {
+  if (candidates.length === 0) return [];
+  return db.dcaOrder.findMany({
+    where: {
+      lineUserId,
+      OR: candidates.map((c) => ({
+        coin: c.coin,
+        executedAt: c.executedAt,
+      })),
+    },
+    select: { coin: true, executedAt: true },
+  });
 };
 
 /**
@@ -219,6 +250,16 @@ const parseBitkubDcaMessage = (
 };
 
 /**
+ * ดึง DCA orders ทั้งหมดของ user โดยไม่มี pagination (ใช้สำหรับ export)
+ */
+const listAllOrders = async (lineUserId: string) => {
+  return db.dcaOrder.findMany({
+    where: { lineUserId },
+    orderBy: { executedAt: "desc" },
+  });
+};
+
+/**
  * สรุปยอดรวมทั้งหมด
  */
 const getSummary = async (lineUserId?: string) => {
@@ -247,8 +288,11 @@ const getSummary = async (lineUserId?: string) => {
 export const dcaService = {
   createOrder,
   listOrders,
+  listAllOrders,
   getOrderById,
   findByRound,
+  findByRounds,
+  findDuplicates,
   deleteOrder,
   parseBitkubDcaMessage,
   getSummary,

@@ -255,6 +255,7 @@ model DcaOrder {
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
+  @@unique([lineUserId, coin, executedAt])
   @@index([orderId])
   @@index([lineUserId, executedAt])
   @@index([coin, executedAt])
