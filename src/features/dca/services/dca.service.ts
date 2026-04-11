@@ -9,6 +9,9 @@ import type {
 /**
  * สร้าง orderId รูปแบบ {COIN}DCA{padded 10 digit}
  * เช่น BTCDCA0000004700
+ *
+ * note: orderId อาจจะไม่ unique ระดับระบบ (ระหว่าง users ได้)
+ * แต่ id (ObjectId) จะเป็น unique ตัวจริง
  */
 const generateOrderId = (coin: string, round: number): string => {
   const paddedRound = round.toString().padStart(10, "0");
@@ -16,15 +19,18 @@ const generateOrderId = (coin: string, round: number): string => {
 };
 
 /**
- * ดึงรอบถัดไปสำหรับเหรียญที่ระบุ (นับจาก DCA orders ที่มีอยู่แล้ว)
+ * ดึงรอบถัดไปสำหรับเหรียญและ user ที่ระบุ
+ * คำนวณจากจำนวนรายการทั้งหมดของเหรียญและ user นั้น รองรับการ import ข้อมูลย้อนหลัง
  */
-const getNextRound = async (coin: string): Promise<number> => {
-  const latest = await db.dcaOrder.findFirst({
-    where: { coin: coin.toUpperCase() },
-    orderBy: { round: "desc" },
-    select: { round: true },
+const getNextRound = async (coin: string, lineUserId: string): Promise<number> => {
+  // นับจำนวนรายการทั้งหมดของเหรียญและ user นั้น เพื่อรองรับการ import ข้อมูลย้อนหลัง
+  const count = await db.dcaOrder.count({
+    where: {
+      coin: coin.toUpperCase(),
+      lineUserId,
+    },
   });
-  return (latest?.round ?? 0) + 1;
+  return count + 1;
 };
 
 /**
@@ -32,7 +38,7 @@ const getNextRound = async (coin: string): Promise<number> => {
  */
 const createOrder = async (input: CreateDcaOrderInput) => {
   const coin = input.coin.toUpperCase();
-  const round = await getNextRound(coin);
+  const round = await getNextRound(coin, input.lineUserId);
   const orderId = generateOrderId(coin, round);
 
   return db.dcaOrder.create({
