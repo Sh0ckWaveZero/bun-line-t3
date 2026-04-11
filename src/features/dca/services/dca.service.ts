@@ -9,6 +9,9 @@ import type {
 /**
  * สร้าง orderId รูปแบบ {COIN}DCA{padded 10 digit}
  * เช่น BTCDCA0000004700
+ *
+ * note: orderId อาจจะไม่ unique ระดับระบบ (ระหว่าง users ได้)
+ * แต่ id (ObjectId) จะเป็น unique ตัวจริง
  */
 const generateOrderId = (coin: string, round: number): string => {
   const paddedRound = round.toString().padStart(10, "0");

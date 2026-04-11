@@ -4,6 +4,7 @@
  */
 import { db } from "@/lib/database/db";
 import type { ApprovalStatus, LineApprovalRequest } from "@prisma/client";
+import { APPROVAL_STATUS } from "../constants/approval.constants";
 
 export interface CreateApprovalInput {
   lineUserId: string;
@@ -27,6 +28,7 @@ export interface UpdateApprovalInput {
   notifiedAt?: Date;
   displayName?: string;
   pictureUrl?: string;
+  statusMessage?: string;
 }
 
 export interface ApprovalListParams {
@@ -113,7 +115,7 @@ const create = async (
       pictureUrl: input.pictureUrl,
       statusMessage: input.statusMessage,
       reason: input.reason,
-      status: input.status ?? "PENDING",
+      status: input.status ?? APPROVAL_STATUS.PENDING,
       approvedBy: input.approvedBy,
       approvedAt: input.approvedAt,
       rejectReason: input.rejectReason,
@@ -293,9 +295,15 @@ const markNotified = async (id: string): Promise<LineApprovalRequest> => {
  */
 const getStats = async () => {
   const [pending, approved, rejected, accountsTotal] = await Promise.all([
-    db.lineApprovalRequest.count({ where: { status: "PENDING" } }),
-    db.lineApprovalRequest.count({ where: { status: "APPROVED" } }),
-    db.lineApprovalRequest.count({ where: { status: "REJECTED" } }),
+    db.lineApprovalRequest.count({
+      where: { status: APPROVAL_STATUS.PENDING },
+    }),
+    db.lineApprovalRequest.count({
+      where: { status: APPROVAL_STATUS.APPROVED },
+    }),
+    db.lineApprovalRequest.count({
+      where: { status: APPROVAL_STATUS.REJECTED },
+    }),
     db.account.count({ where: { provider: "line" } }),
   ]);
 

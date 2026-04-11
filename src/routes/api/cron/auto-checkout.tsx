@@ -3,12 +3,19 @@ import { env } from "@/env.mjs";
 import { attendanceService } from "@/features/attendance/services/attendance";
 import { db } from "@/lib/database/db";
 import { AttendanceStatusType } from "@prisma/client";
+import { checkCronLineApproval } from "@/lib/auth/approval-guard";
 
 /**
  * API handler สำหรับการลงชื่อออกงานอัตโนมัติตอนเที่ยงคืน
  * สำหรับพนักงานที่ลืมลงชื่อออกงาน
  */
 export async function GET() {
+  // 🔐 SECURITY: Check LINE Messaging API approval
+  const approvalCheck = await checkCronLineApproval();
+  if (!approvalCheck.approved) {
+    return approvalCheck.response!;
+  }
+
   try {
     const currentTime = new Date();
     const bangkokTime = new Date(

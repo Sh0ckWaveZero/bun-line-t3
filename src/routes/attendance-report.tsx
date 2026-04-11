@@ -28,6 +28,8 @@ import {
   MonthSelector,
 } from "@/components/attendance";
 import { useAttendanceReport } from "@/hooks/useAttendanceReport";
+import { PendingApprovalModal } from "@/components/auth/PendingApprovalModal";
+import { useLineApproval } from "@/hooks/useLineApproval";
 
 // Register Chart.js components
 ChartJS.register(
@@ -65,6 +67,8 @@ function AttendanceReportPage() {
     updateAttendance,
   } = useAttendanceReport();
 
+  const { needsApproval } = useLineApproval();
+
   // 🔐 SECURITY: Show loading while checking authentication
   if (status === "loading") {
     return <AuthLoadingScreen />;
@@ -76,7 +80,11 @@ function AttendanceReportPage() {
   }
 
   return (
-    <div id="attendance-report-page" className="min-h-screen w-full">
+    <>
+      {/* Pending Approval Modal */}
+      <PendingApprovalModal open={needsApproval} />
+
+      <div id="attendance-report-page" className="min-h-screen w-full">
       <div
         id="attendance-report-container"
         className="mx-auto max-w-full px-4 py-8"
@@ -193,6 +201,7 @@ function AttendanceReportPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 

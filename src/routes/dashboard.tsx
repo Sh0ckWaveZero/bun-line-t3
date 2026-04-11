@@ -5,6 +5,8 @@ import { useSession } from "@/lib/auth/client";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSafeHydration } from "@/hooks/useHydrationSafe";
+import { PendingApprovalModal } from "@/components/auth/PendingApprovalModal";
+import { useLineApproval } from "@/hooks/useLineApproval";
 import {
   Calendar,
   FileText,
@@ -20,6 +22,7 @@ function DashboardPage() {
   const { data: session, status } = useSession();
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
+  const { needsApproval, isLoading: approvalLoading, refetch } = useLineApproval();
 
   const todayLabel = useSafeHydration("...", () =>
     new Intl.DateTimeFormat("th-TH", {
@@ -54,12 +57,6 @@ function DashboardPage() {
     };
   }, [status]);
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      void navigate({ to: "/" });
-    }
-  }, [navigate, status]);
-
   if (status === "loading") {
     return (
       <div
@@ -77,6 +74,7 @@ function DashboardPage() {
     return null;
   }
 
+  // Quick actions configuration
   const quickActions = [
     {
       id: "attendance",
@@ -145,10 +143,15 @@ function DashboardPage() {
   ];
 
   return (
-    <div
-      id="dashboard-container"
-      className="container mx-auto max-w-6xl px-4 py-8"
-    >
+    <>
+      {/* Pending Approval Modal */}
+      <PendingApprovalModal open={needsApproval} />
+
+      {/* Dashboard Content */}
+      <div
+        id="dashboard-container"
+        className="container mx-auto max-w-6xl px-4 py-8"
+      >
       <div id="dashboard-content" className="space-y-8">
         {/* Header */}
         <div id="dashboard-header" className="space-y-2">
@@ -358,6 +361,7 @@ function DashboardPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 

@@ -31,6 +31,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { PendingApprovalModal } from "@/components/auth/PendingApprovalModal";
+import { useLineApproval } from "@/hooks/useLineApproval";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -280,6 +282,7 @@ function RejectDialog({
 function LineApprovalPage() {
   const { data: session, status: authStatus } = useSession();
   const navigate = useNavigate();
+  const { needsApproval } = useLineApproval();
 
   const [activeTab, setActiveTab] = useState<ApprovalTab>("ALL");
   const [listData, setListData] = useState<ListResponse | null>(null);
@@ -450,6 +453,36 @@ function LineApprovalPage() {
     }
   };
 
+  const handleUnlock = async (req: ApprovalRequest) => {
+    if (!req.approvalId) {
+      showToast("error", "ไม่พบคำขออนุมัติ");
+      return;
+    }
+    setActionLoading(req.id);
+    try {
+      const res = await fetch("/api/line/approvals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "unlock",
+          id: req.approvalId,
+        }),
+      });
+      const json = await res.json();
+      if (res.status === 403) {
+        setPermissionError(json.error ?? "คุณไม่มีสิทธิ์ดำเนินการนี้");
+        return;
+      }
+      if (!res.ok) throw new Error(json.error ?? "ปลดล็อคไม่สำเร็จ");
+      showToast("success", "ปลดล็อคผู้ใช้เรียบร้อยแล้ว ✅");
+      await Promise.all([fetchList(), fetchStats()]);
+    } catch (err: any) {
+      showToast("error", err.message ?? "เกิดข้อผิดพลาด");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   if (authStatus === "loading") {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -492,10 +525,14 @@ function LineApprovalPage() {
   }
 
   return (
-    <div
-      id="line-approval-page"
-      className="min-h-screen w-full bg-slate-50 pb-16 text-slate-950 dark:bg-[#15131f] dark:text-slate-100"
-    >
+    <>
+      {/* Pending Approval Modal */}
+      <PendingApprovalModal open={needsApproval} />
+
+      <div
+        id="line-approval-page"
+        className="min-h-screen w-full bg-slate-50 pb-16 text-slate-950 dark:bg-[#15131f] dark:text-slate-100"
+      >
       {/* Toast */}
       {toast && (
         <div
@@ -712,7 +749,19 @@ function LineApprovalPage() {
                             ? "ยกเลิก Admin"
                             : "ตั้งเป็น Admin"}
                       </Button>
-                      {req.status !== "REJECTED" && (
+                      {req.status === "REJECTED" && req.approvalId ? (
+                        <Button
+                          size="sm"
+                          className="gap-1.5 bg-blue-600 text-white hover:bg-blue-700"
+                          onClick={() => void handleUnlock(req)}
+                          disabled={actionLoading === req.id}
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                          {actionLoading === req.id
+                            ? "กำลังดำเนินการ..."
+                            : "ขอใหม่"}
+                        </Button>
+                      ) : (
                         <>
                           {req.status === "PENDING" && (
                             <Button
@@ -782,6 +831,7 @@ function LineApprovalPage() {
         isLoading={actionLoading !== null}
       />
     </div>
+    </>
   );
 }
 

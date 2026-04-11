@@ -7,6 +7,7 @@
  * - false → ไม่ผ่าน (new/pending/rejected) ได้ส่ง reply ไปให้ user แล้ว
  */
 import { approvalService } from "../services/approval.service";
+import { APPROVAL_CHECK_RESULT } from "../types/approval.types";
 
 /**
  * ดึงโปรไฟล์ LINE user จาก Messaging API
@@ -56,21 +57,21 @@ export const handleApprovalCheck = async (
   });
 
   switch (status) {
-    case "APPROVED":
+    case APPROVAL_CHECK_RESULT.APPROVED:
       // ✅ ผ่าน — ดำเนินการต่อ
       return true;
 
-    case "NEW":
+    case APPROVAL_CHECK_RESULT.NEW:
       // 🆕 สร้าง request ใหม่ — แจ้งให้รอ
       await approvalService.sendPendingNewMessage(userId);
       return false;
 
-    case "PENDING":
+    case APPROVAL_CHECK_RESULT.PENDING:
       // ⏳ ยังรออยู่ — แจ้งซ้ำ
       await approvalService.sendPendingMessage(userId);
       return false;
 
-    case "REJECTED":
+    case APPROVAL_CHECK_RESULT.REJECTED:
       // ❌ ถูกปฏิเสธ — แจ้งปฏิเสธ (ไม่ส่ง reason ซ้ำ เพราะส่งตอน reject ไปแล้ว)
       await approvalService.sendRejectedMessage(userId);
       return false;

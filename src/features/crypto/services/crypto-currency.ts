@@ -45,7 +45,8 @@ const isUrlSafeToFetch = (urlString: string): boolean => {
       hostname.startsWith("10.") ||
       hostname.startsWith("172.") ||
       hostname.endsWith(".local") ||
-      hostname.includes("internal")
+      hostname === "internal" ||
+      hostname.endsWith(".internal")
     ) {
       return false;
     }

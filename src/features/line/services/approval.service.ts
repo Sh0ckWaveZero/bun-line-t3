@@ -8,6 +8,14 @@ import { sendPushMessage } from "@/lib/utils/line-push";
 import { approvalBubbleTemplate } from "@/lib/validation/line-approval";
 import { flexMessage } from "@/lib/utils/line-message-utils";
 import type { ApprovalStatus, LineApprovalRequest } from "@prisma/client";
+import type { ApprovalCheckResult } from "../types/approval.types";
+import { APPROVAL_CHECK_RESULT } from "../types/approval.types";
+
+/**
+ * Constant สำหรับระบุว่าการอนุมัตินี้มาจากระบบ (auto-approval)
+ * ใช้กรณี admin ใน ADMIN_LINE_USER_IDS whitelist
+ */
+const ADMIN_WHITELIST_AUTO_APPROVER = "WHITELIST_AUTO";
 
 export interface LineUserProfile {
   userId: string;
@@ -48,7 +56,28 @@ export interface AccountApprovalItem {
  */
 const checkApprovalStatus = async (
   userProfile: LineUserProfile,
-): Promise<"APPROVED" | "PENDING" | "REJECTED" | "NEW"> => {
+): Promise<ApprovalCheckResult> => {
+  // 🔐 Admin whitelist check — ผู้อยู่ใน ADMIN_LINE_USER_IDS ได้รับอนุมัติอัตโนมัติ
+  if (isAdminLineUser(userProfile.userId)) {
+    const existing = await approvalRepository.findByLineUserId(
+      userProfile.userId,
+    );
+
+    // ถ้ายังไม่มี record หรือสถานะไม่ใช่ APPROVED → สร้าง/อัปเดตเป็น APPROVED
+    if (!existing || existing.status !== APPROVAL_CHECK_RESULT.APPROVED) {
+      await approvalRepository.upsertByLineUserId(userProfile.userId, {
+        status: APPROVAL_CHECK_RESULT.APPROVED,
+        displayName: userProfile.displayName,
+        pictureUrl: userProfile.pictureUrl,
+        statusMessage: userProfile.statusMessage,
+        approvedBy: ADMIN_WHITELIST_AUTO_APPROVER,
+        approvedAt: new Date(),
+      });
+    }
+
+    return APPROVAL_CHECK_RESULT.APPROVED;
+  }
+
   const existing = await approvalRepository.findByLineUserId(
     userProfile.userId,
   );
@@ -61,7 +90,7 @@ const checkApprovalStatus = async (
       pictureUrl: userProfile.pictureUrl,
       statusMessage: userProfile.statusMessage,
     });
-    return "NEW";
+    return APPROVAL_CHECK_RESULT.NEW;
   }
 
   // อัปเดตโปรไฟล์ล่าสุดถ้ามีการเปลี่ยนแปลง
@@ -81,15 +110,17 @@ const checkApprovalStatus = async (
   }
 
   // ตรวจสอบว่า APPROVED แต่หมดอายุแล้วหรือยัง
-  if (existing.status === "APPROVED" && existing.expiresAt) {
+  if (existing.status === APPROVAL_CHECK_RESULT.APPROVED && existing.expiresAt) {
     if (existing.expiresAt < new Date()) {
       // หมดอายุ → เปลี่ยนกลับเป็น PENDING
-      await approvalRepository.update(existing.id, { status: "PENDING" });
-      return "PENDING";
+      await approvalRepository.update(existing.id, {
+        status: APPROVAL_CHECK_RESULT.PENDING,
+      });
+      return APPROVAL_CHECK_RESULT.PENDING;
     }
   }
 
-  return existing.status;
+  return existing.status as ApprovalCheckResult;
 };
 
 /**
@@ -130,7 +161,7 @@ const approveUser = async (
   expiresAt?: Date,
 ): Promise<LineApprovalRequest> => {
   const record = await approvalRepository.update(id, {
-    status: "APPROVED",
+    status: APPROVAL_CHECK_RESULT.APPROVED,
     approvedBy: adminUserId,
     approvedAt: new Date(),
     expiresAt: expiresAt ?? null,
@@ -158,7 +189,7 @@ const rejectUser = async (
   rejectReason?: string,
 ): Promise<LineApprovalRequest> => {
   const record = await approvalRepository.update(id, {
-    status: "REJECTED",
+    status: APPROVAL_CHECK_RESULT.REJECTED,
     approvedBy: adminUserId,
     approvedAt: new Date(),
     rejectReason,
@@ -178,7 +209,7 @@ const rejectLineUser = async (
   rejectReason?: string,
 ): Promise<LineApprovalRequest> => {
   const record = await approvalRepository.upsertByLineUserId(lineUserId, {
-    status: "REJECTED",
+    status: APPROVAL_CHECK_RESULT.REJECTED,
     approvedBy: adminUserId,
     approvedAt: new Date(),
     rejectReason,
@@ -306,6 +337,25 @@ const setUserAdmin = async (params: {
 };
 
 /**
+ * Admin: ปลดล็อคผู้ใช้ที่ถูกปฏิเสธ เพื่อให้ขออนุมัติใหม่ได้
+ * - เปลี่ยนสถานะจาก REJECTED → PENDING
+ * - ล้าง rejectReason
+ */
+const unlockRejectedUser = async (
+  id: string,
+  adminUserId: string,
+): Promise<LineApprovalRequest> => {
+  const record = await approvalRepository.update(id, {
+    status: APPROVAL_CHECK_RESULT.PENDING,
+    rejectReason: null,
+    approvedBy: adminUserId,
+    approvedAt: new Date(),
+  });
+
+  return record;
+};
+
+/**
  * ดึง stats สำหรับ dashboard
  */
 const getStats = () => approvalRepository.getStats();
@@ -318,6 +368,7 @@ export const approvalService = {
   approveUser,
   rejectUser,
   rejectLineUser,
+  unlockRejectedUser,
   getApprovalList,
   getAccountApprovalList,
   setUserAdmin,
