@@ -37,8 +37,8 @@ import { Route as ApiHealthActivitySummaryRouteImport } from './routes/api/healt
 import { Route as ApiHealthActivityMetricsRouteImport } from './routes/api/health-activity/metrics'
 import { Route as ApiHealthActivityActivitiesRouteImport } from './routes/api/health-activity/activities'
 import { Route as ApiDebugLineOauthRouteImport } from './routes/api/debug/line-oauth'
+import { Route as ApiDebugDcaTestRouteImport } from './routes/api/debug/dca-test'
 import { Route as ApiDcaSummaryRouteImport } from './routes/api/dca/summary'
-import { Route as ApiDcaStreamRouteImport } from './routes/api/dca/stream'
 import { Route as ApiDcaIdRouteImport } from './routes/api/dca/$id'
 import { Route as ApiCronImageCleanupRouteImport } from './routes/api/cron/image-cleanup'
 import { Route as ApiCronEnhancedCheckoutReminderRouteImport } from './routes/api/cron/enhanced-checkout-reminder'
@@ -192,14 +192,14 @@ const ApiDebugLineOauthRoute = ApiDebugLineOauthRouteImport.update({
   path: '/api/debug/line-oauth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDebugDcaTestRoute = ApiDebugDcaTestRouteImport.update({
+  id: '/api/debug/dca-test',
+  path: '/api/debug/dca-test',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiDcaSummaryRoute = ApiDcaSummaryRouteImport.update({
   id: '/api/dca/summary',
   path: '/api/dca/summary',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiDcaStreamRoute = ApiDcaStreamRouteImport.update({
-  id: '/api/dca/stream',
-  path: '/api/dca/stream',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiDcaIdRoute = ApiDcaIdRouteImport.update({
@@ -276,8 +276,8 @@ export interface FileRoutesByFullPath {
   '/api/cron/enhanced-checkout-reminder': typeof ApiCronEnhancedCheckoutReminderRoute
   '/api/cron/image-cleanup': typeof ApiCronImageCleanupRoute
   '/api/dca/$id': typeof ApiDcaIdRoute
-  '/api/dca/stream': typeof ApiDcaStreamRoute
   '/api/dca/summary': typeof ApiDcaSummaryRoute
+  '/api/debug/dca-test': typeof ApiDebugDcaTestRoute
   '/api/debug/line-oauth': typeof ApiDebugLineOauthRoute
   '/api/health-activity/activities': typeof ApiHealthActivityActivitiesRoute
   '/api/health-activity/metrics': typeof ApiHealthActivityMetricsRoute
@@ -317,8 +317,8 @@ export interface FileRoutesByTo {
   '/api/cron/enhanced-checkout-reminder': typeof ApiCronEnhancedCheckoutReminderRoute
   '/api/cron/image-cleanup': typeof ApiCronImageCleanupRoute
   '/api/dca/$id': typeof ApiDcaIdRoute
-  '/api/dca/stream': typeof ApiDcaStreamRoute
   '/api/dca/summary': typeof ApiDcaSummaryRoute
+  '/api/debug/dca-test': typeof ApiDebugDcaTestRoute
   '/api/debug/line-oauth': typeof ApiDebugLineOauthRoute
   '/api/health-activity/activities': typeof ApiHealthActivityActivitiesRoute
   '/api/health-activity/metrics': typeof ApiHealthActivityMetricsRoute
@@ -359,8 +359,8 @@ export interface FileRoutesById {
   '/api/cron/enhanced-checkout-reminder': typeof ApiCronEnhancedCheckoutReminderRoute
   '/api/cron/image-cleanup': typeof ApiCronImageCleanupRoute
   '/api/dca/$id': typeof ApiDcaIdRoute
-  '/api/dca/stream': typeof ApiDcaStreamRoute
   '/api/dca/summary': typeof ApiDcaSummaryRoute
+  '/api/debug/dca-test': typeof ApiDebugDcaTestRoute
   '/api/debug/line-oauth': typeof ApiDebugLineOauthRoute
   '/api/health-activity/activities': typeof ApiHealthActivityActivitiesRoute
   '/api/health-activity/metrics': typeof ApiHealthActivityMetricsRoute
@@ -402,8 +402,8 @@ export interface FileRouteTypes {
     | '/api/cron/enhanced-checkout-reminder'
     | '/api/cron/image-cleanup'
     | '/api/dca/$id'
-    | '/api/dca/stream'
     | '/api/dca/summary'
+    | '/api/debug/dca-test'
     | '/api/debug/line-oauth'
     | '/api/health-activity/activities'
     | '/api/health-activity/metrics'
@@ -443,8 +443,8 @@ export interface FileRouteTypes {
     | '/api/cron/enhanced-checkout-reminder'
     | '/api/cron/image-cleanup'
     | '/api/dca/$id'
-    | '/api/dca/stream'
     | '/api/dca/summary'
+    | '/api/debug/dca-test'
     | '/api/debug/line-oauth'
     | '/api/health-activity/activities'
     | '/api/health-activity/metrics'
@@ -484,8 +484,8 @@ export interface FileRouteTypes {
     | '/api/cron/enhanced-checkout-reminder'
     | '/api/cron/image-cleanup'
     | '/api/dca/$id'
-    | '/api/dca/stream'
     | '/api/dca/summary'
+    | '/api/debug/dca-test'
     | '/api/debug/line-oauth'
     | '/api/health-activity/activities'
     | '/api/health-activity/metrics'
@@ -526,8 +526,8 @@ export interface RootRouteChildren {
   ApiCronEnhancedCheckoutReminderRoute: typeof ApiCronEnhancedCheckoutReminderRoute
   ApiCronImageCleanupRoute: typeof ApiCronImageCleanupRoute
   ApiDcaIdRoute: typeof ApiDcaIdRoute
-  ApiDcaStreamRoute: typeof ApiDcaStreamRoute
   ApiDcaSummaryRoute: typeof ApiDcaSummaryRoute
+  ApiDebugDcaTestRoute: typeof ApiDebugDcaTestRoute
   ApiDebugLineOauthRoute: typeof ApiDebugLineOauthRoute
   ApiHealthActivityActivitiesRoute: typeof ApiHealthActivityActivitiesRoute
   ApiHealthActivityMetricsRoute: typeof ApiHealthActivityMetricsRoute
@@ -738,18 +738,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDebugLineOauthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/debug/dca-test': {
+      id: '/api/debug/dca-test'
+      path: '/api/debug/dca-test'
+      fullPath: '/api/debug/dca-test'
+      preLoaderRoute: typeof ApiDebugDcaTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/dca/summary': {
       id: '/api/dca/summary'
       path: '/api/dca/summary'
       fullPath: '/api/dca/summary'
       preLoaderRoute: typeof ApiDcaSummaryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/dca/stream': {
-      id: '/api/dca/stream'
-      path: '/api/dca/stream'
-      fullPath: '/api/dca/stream'
-      preLoaderRoute: typeof ApiDcaStreamRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/dca/$id': {
@@ -868,8 +868,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCronEnhancedCheckoutReminderRoute: ApiCronEnhancedCheckoutReminderRoute,
   ApiCronImageCleanupRoute: ApiCronImageCleanupRoute,
   ApiDcaIdRoute: ApiDcaIdRoute,
-  ApiDcaStreamRoute: ApiDcaStreamRoute,
   ApiDcaSummaryRoute: ApiDcaSummaryRoute,
+  ApiDebugDcaTestRoute: ApiDebugDcaTestRoute,
   ApiDebugLineOauthRoute: ApiDebugLineOauthRoute,
   ApiHealthActivityActivitiesRoute: ApiHealthActivityActivitiesRoute,
   ApiHealthActivityMetricsRoute: ApiHealthActivityMetricsRoute,

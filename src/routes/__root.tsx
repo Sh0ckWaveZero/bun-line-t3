@@ -1,4 +1,7 @@
-import { AuthSessionProvider, type AppSession } from "@/lib/auth/session-context";
+import {
+  AuthSessionProvider,
+  type AppSession,
+} from "@/lib/auth/session-context";
 import Header from "@/components/common/Header";
 import Providers from "@/providers/app-providers";
 import {
@@ -12,6 +15,7 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import appCss from "../input.css?url";
+import dcaThemeCss from "@/styles/dca-theme.css?url";
 import { getServerAuthSession } from "@/lib/auth";
 
 interface RouterContext {
@@ -28,13 +32,28 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     return { session };
   },
   head: () => ({
-    links: [{ href: appCss, rel: "stylesheet" }],
+    links: [
+      { href: appCss, rel: "stylesheet" },
+      { href: dcaThemeCss, rel: "stylesheet" },
+      // Noto Sans Thai — Google Fonts
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      {
+        rel: "preconnect",
+        href: "https://fonts.gstatic.com",
+        crossOrigin: "anonymous",
+      },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@100..900&display=swap",
+      },
+    ],
     meta: [
       { charSet: "utf-8" },
       { content: "width=device-width, initial-scale=1", name: "viewport" },
       { title: "Bun LINE T3 App" },
       {
-        content: "LINE attendance, dashboard, and utilities built with TanStack Start",
+        content:
+          "LINE attendance, dashboard, and utilities built with TanStack Start",
         name: "description",
       },
     ],
@@ -56,7 +75,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body
         suppressHydrationWarning
-        className="min-h-screen bg-background text-foreground antialiased"
+        className="bg-background text-foreground min-h-screen antialiased"
       >
         <AuthSessionProvider session={session}>
           <Providers>
@@ -83,7 +102,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 function RootNotFound() {
   return (
     <section className="container mx-auto flex min-h-[60vh] max-w-2xl flex-col items-center justify-center gap-4 px-4 py-16 text-center">
-      <p className="text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground">
+      <p className="text-muted-foreground text-sm font-medium tracking-[0.2em] uppercase">
         404
       </p>
       <h1 className="text-3xl font-bold tracking-tight">ไม่พบหน้าที่ต้องการ</h1>
@@ -92,7 +111,7 @@ function RootNotFound() {
       </p>
       <Link
         to="/"
-        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+        className="bg-primary text-primary-foreground rounded-md px-4 py-2 text-sm font-medium transition-opacity hover:opacity-90"
       >
         กลับหน้าแรก
       </Link>

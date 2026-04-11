@@ -117,10 +117,12 @@ export const sendMessage = async (
     );
 
     return response;
-  } catch {
+  } catch (error) {
+    console.error("LINE reply failed, falling back to push:", error);
     try {
       return await sendPushMessage(req, payload);
-    } catch {
+    } catch (pushError) {
+      console.error("LINE push fallback failed:", pushError);
       return null;
     }
   }

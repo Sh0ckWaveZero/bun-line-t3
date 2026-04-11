@@ -266,10 +266,13 @@ const config: Config = {
         "4xl": "var(--radius-8)", // 2rem (32px)
         full: "var(--radius-full)", // 9999px
       },
-      // 🎨 Font Families - Updated Theme Fonts
+      // 🎨 Font Families - Noto Sans Thai เป็น font หลัก
       fontFamily: {
-        prompt: ["var(--font-prompt)", "Prompt", "sans-serif"],
-        sans: ["var(--font-prompt)", "Prompt", "sans-serif"],
+        // Noto Sans Thai — font หลักของทั้งแอป (ใช้ CSS variable)
+        "noto-sans-thai": ["var(--font-noto-sans-thai)"],
+        sans: ["var(--font-noto-sans-thai)"],
+        // Prompt — ยังคงใช้ได้ผ่าน class font-prompt
+        prompt: ["var(--font-prompt)", "Prompt", "var(--font-noto-sans-thai)"],
       },
       // 🔤 Font Weights - รองรับทุก weight ของ Prompt
       fontWeight: {

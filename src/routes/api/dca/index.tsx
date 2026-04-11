@@ -1,0 +1,90 @@
+/**
+ * DCA Orders API
+ * GET  /api/dca - รายการ DCA orders พร้อม pagination
+ * POST /api/dca - สร้าง DCA order ใหม่ (manual entry)
+ */
+import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
+import { dcaService } from "@/features/dca";
+import { dcaEventManager } from "@/lib/dca/event-manager";
+
+const createDcaSchema = z.object({
+  lineUserId: z.string().min(1, "ต้องระบุ LINE User ID"),
+  coin: z.string().min(1).max(20).default("BTC"),
+  amountTHB: z.number().positive("จำนวนเงินต้องมากกว่า 0"),
+  coinReceived: z.number().positive("จำนวนเหรียญต้องมากกว่า 0"),
+  pricePerCoin: z.number().positive("ราคาต่อเหรียญต้องมากกว่า 0"),
+  executedAt: z.string().transform((val) => new Date(val)),
+  note: z.string().optional(),
+  status: z.enum(["SUCCESS", "FAILED", "PENDING"]).optional(),
+});
+
+/**
+ * GET /api/dca
+ * Query params: page, limit, coin, lineUserId
+ */
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+
+    const page = parseInt(searchParams.get("page") ?? "1");
+    const limit = parseInt(searchParams.get("limit") ?? "10");
+    const coin = searchParams.get("coin") ?? undefined;
+    const lineUserId = searchParams.get("lineUserId") ?? undefined;
+
+    const result = await dcaService.listOrders({
+      page,
+      limit,
+      coin,
+      lineUserId,
+    });
+
+    return Response.json(result, { status: 200 });
+  } catch (error) {
+    console.error("DCA GET error:", error);
+    return Response.json({ error: "ไม่สามารถดึงข้อมูลได้" }, { status: 500 });
+  }
+}
+
+/**
+ * POST /api/dca
+ * Body: CreateDcaOrderInput
+ */
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const parsed = createDcaSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return Response.json(
+        { error: "ข้อมูลไม่ถูกต้อง", details: parsed.error.flatten() },
+        { status: 400 },
+      );
+    }
+
+    const order = await dcaService.createOrder(parsed.data);
+
+    // 🎉 Emit SSE event เพื่อให้ clients รับทราบ
+    dcaEventManager.emit({
+      type: "dca-order-created",
+      data: order,
+    });
+
+    return Response.json(order, { status: 201 });
+  } catch (error) {
+    console.error("DCA POST error:", error);
+    return Response.json(
+      { error: "ไม่สามารถบันทึกข้อมูลได้" },
+      { status: 500 },
+    );
+  }
+}
+
+export const Route = createFileRoute("/api/dca/")({
+  server: {
+    handlers: {
+      GET: ({ request }) => GET(request),
+      POST: ({ request }) => POST(request),
+    },
+  },
+});

@@ -34,16 +34,16 @@ const handleEvent = async (
         switch (event.message.type) {
           case "text":
             if (event.message.text.startsWith("/")) {
-              handleText(req, event.message.text);
+              await handleText(req, event.message.text);
             } else {
-              handleLogin(req, event.message.text);
+              await handleLogin(req, event.message.text);
             }
             break;
           case "sticker":
             await handleSticker(req, event);
             break;
           case "location":
-            handleLocation(req, event);
+            await handleLocation(req, event);
             break;
           default:
             res.status(401).send("Invalid token");
@@ -51,7 +51,7 @@ const handleEvent = async (
         }
         break;
       case "postback":
-        handlePostback(req, event);
+        await handlePostback(req, event);
         break;
       default:
         res.status(401).send("Invalid token");

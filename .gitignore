@@ -41,6 +41,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 
+# tanstack
+.tanstack/
+
 # AI logs - exclude from git to avoid cluttering
 logs/
 .locks/

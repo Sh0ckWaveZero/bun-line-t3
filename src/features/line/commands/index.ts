@@ -16,6 +16,7 @@ import { handleSettingsCommand } from "./handleSettingsCommand";
 import { handleIdGenerator } from "./handleIdGenerator";
 import { handleHealthCommand } from "./handleHealthCommand";
 import { handleAiCommand } from "./handleAiCommand";
+import { handleDcaCommand } from "./handleDcaCommand";
 
 const { sendMessage } = await import("@/lib/utils/line-utils");
 
@@ -185,6 +186,11 @@ export const handleCommand = async (
   // AI Assistant
   if (["ai", "ถาม", "ask", "คุย", "chat"].includes(command)) {
     await handleAiCommand(req, conditions);
+    return;
+  }
+  // Auto DCA
+  if (["dca", "ดีซีเอ", "auto-dca", "autodca"].includes(command)) {
+    await handleDcaCommand(req, conditions);
     return;
   }
   // Chart
