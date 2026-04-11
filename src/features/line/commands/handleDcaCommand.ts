@@ -1,7 +1,10 @@
 import { dcaService } from "@/features/dca";
 import { sendMessage } from "@/lib/utils/line-utils";
 import { dcaEventManager } from "@/lib/dca/event-manager";
-import { getPnLFromBitkub } from "@/features/dca/services/bitkub.service";
+import {
+  getBTCPrice,
+  calculatePnLPercent,
+} from "@/features/dca/services/bitkub.service";
 import { createDcaSummaryFlexMessage } from "@/lib/line-utils/flex-messages";
 
 // ========================
@@ -379,18 +382,28 @@ const handleDelete = async (req: any, args: string[]) => {
  * /dca
  */
 const handleSummary = async (req: any) => {
-  const userId = req.body?.events?.[0]?.source?.userId;
   const appUrl = process.env["APP_URL"] ?? process.env["NEXTAUTH_URL"] ?? "";
 
   try {
-    const [summary, latest] = await Promise.all([
-      dcaService.getSummary(userId),
+    // ดึงข้อมูลทั้งหมดพร้อมกัน รวมถึงราคาปัจจุบันจาก Bitkub
+    const [summary, latest, currentPrice] = await Promise.all([
+      dcaService.getSummary(), // ไม่ filter by userId — แสดงยอดรวมทั้งหมด
       dcaService.listOrders({ page: 1, limit: 1 }),
+      getBTCPrice(), // ดึงราคา BTC เสมอ ไม่รอ avgPrice
     ]);
 
     const lastOrder = latest.orders[0];
-    const avgPrice = summary.totalBTC > 0 ? summary.totalSpentTHB / summary.totalBTC : 0;
-    const pnlData = avgPrice > 0 ? await getPnLFromBitkub(avgPrice) : null;
+    const avgPrice =
+      summary.totalBTC > 0 ? summary.totalSpentTHB / summary.totalBTC : 0;
+
+    // คำนวณ PnL ถ้าได้ราคาและมียอดสะสม
+    const pnlData =
+      currentPrice && avgPrice > 0
+        ? {
+            currentPrice,
+            pnlPercent: calculatePnLPercent(avgPrice, currentPrice),
+          }
+        : null;
 
     // สร้าง Flex Message
     const flexMessage = createDcaSummaryFlexMessage(
@@ -399,7 +412,7 @@ const handleSummary = async (req: any) => {
         totalBTC: summary.totalBTC,
         totalRounds: summary.totalRounds,
         averagePrice: avgPrice,
-        currentPrice: pnlData?.currentPrice ?? null,
+        currentPrice: currentPrice ?? null,
         pnlPercent: pnlData?.pnlPercent ?? null,
         pnlValue:
           pnlData && summary.totalBTC > 0
