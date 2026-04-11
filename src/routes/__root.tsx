@@ -9,12 +9,15 @@ import {
   Scripts,
   Link,
   createRootRouteWithContext,
+  redirect,
 } from "@tanstack/react-router";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { getServerAuthSession } from "@/lib/auth";
+import { db } from "@/lib/database/db";
+import { isAdminLineUser } from "@/lib/auth/admin";
 import "../input.css";
 import "@/styles/dca-theme.css";
 
@@ -26,9 +29,109 @@ const fetchSession = createServerFn({ method: "GET" }).handler(async () => {
   return getServerAuthSession(getRequest());
 });
 
+const checkLineApproval = createServerFn({ method: "GET" }).handler(async () => {
+  const session = await getServerAuthSession(getRequest());
+
+  if (!session?.user?.id) {
+    return false;
+  }
+
+  // 1. Check if user has LINE account
+  const account = await db.account.findFirst({
+    where: {
+      userId: session.user.id,
+      provider: "line",
+    },
+    select: {
+      providerAccountId: true,
+      user: {
+        select: {
+          role: true,
+        },
+      },
+    },
+  });
+
+  if (!account) {
+    // No LINE account → no approval needed
+    return true;
+  }
+
+  const lineUserId = account.providerAccountId;
+
+  // 2. Admin whitelist → auto-approved
+  if (isAdminLineUser(lineUserId)) {
+    return true;
+  }
+
+  // 2.5. Admin role from database → auto-approved
+  if (account.user.role === "admin") {
+    return true;
+  }
+
+  // 3. Check database approval status
+  const approval = await db.lineApprovalRequest.findUnique({
+    where: {
+      lineUserId,
+    },
+    select: {
+      status: true,
+      expiresAt: true,
+    },
+  });
+
+  if (!approval) {
+    // Never requested → not approved
+    return false;
+  }
+
+  // 4. Check status
+  if (approval.status !== "APPROVED") {
+    return false;
+  }
+
+  // 5. Check expiration
+  if (approval.expiresAt && approval.expiresAt < new Date()) {
+    // Expired
+    return false;
+  }
+
+  return true;
+});
+
 export const Route = createRootRouteWithContext<RouterContext>()({
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
     const session = await fetchSession();
+
+    // ตรวจสอบ LINE approval สำหรับ protected routes
+    // Skip check สำหรับ:
+    // - Login page
+    // - Pending approval page
+    // - Public pages
+    const skipApprovalCheck = [
+      "/",
+      "/login",
+      "/logout",
+      "/pending-approval",
+      "/api",
+    ];
+
+    const shouldSkip = skipApprovalCheck.some((path) =>
+      location.pathname.startsWith(path),
+    );
+
+    if (!shouldSkip && session?.user?.id) {
+      // Call server function to check approval
+      const hasApproval = await checkLineApproval();
+
+      if (!hasApproval) {
+        // Redirect ไป pending approval page
+        throw redirect({
+          to: "/pending-approval",
+        });
+      }
+    }
+
     return { session };
   },
   head: () => ({

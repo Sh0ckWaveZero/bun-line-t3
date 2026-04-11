@@ -18,6 +18,7 @@ import {
   calculateUserReminderTime,
   calculateUserCompletionTime,
 } from "@/features/attendance/helpers/utils";
+import { checkCronLineApproval } from "@/lib/auth/approval-guard";
 
 /**
  * Enhanced Checkout Reminder with Dynamic Timing
@@ -30,6 +31,12 @@ export async function GET(request: Request) {
     const authHeader = request.headers.get("authorization");
     if (!validateSimpleCronAuth(authHeader)) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // 🔐 SECURITY: Check LINE Messaging API approval
+    const approvalCheck = await checkCronLineApproval();
+    if (!approvalCheck.approved) {
+      return approvalCheck.response!;
     }
 
     // Get current UTC time

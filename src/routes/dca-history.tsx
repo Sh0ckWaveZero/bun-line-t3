@@ -10,6 +10,8 @@ import { DcaInfoBox } from "@/features/dca/components/DcaInfoBox";
 import { DcaSummaryCards } from "@/features/dca/components/DcaSummaryCards";
 import { useDcaHistoryData } from "@/features/dca/hooks/useDcaHistoryData";
 import { useDcaRealtimeUpdates } from "@/features/dca/hooks/useDcaRealtimeUpdates";
+import { PendingApprovalModal } from "@/components/auth/PendingApprovalModal";
+import { useLineApproval } from "@/hooks/useLineApproval";
 
 function DcaHistoryPage() {
   const [page, setPage] = useState(1);
@@ -20,6 +22,8 @@ function DcaHistoryPage() {
     useDcaHistoryData(page, limit);
 
   useDcaRealtimeUpdates({ onUpdate: refetchAll });
+
+  const { needsApproval } = useLineApproval();
 
   const handleAddSuccess = useCallback(() => {
     setPage(1);
@@ -32,7 +36,11 @@ function DcaHistoryPage() {
   }, [refetchAll]);
 
   return (
-    <div id="dca-history-page" className="bg-background min-h-screen w-full">
+    <>
+      {/* Pending Approval Modal */}
+      <PendingApprovalModal open={needsApproval} />
+
+      <div id="dca-history-page" className="bg-background min-h-screen w-full">
       <div
         id="dca-history-container"
         className="container mx-auto max-w-7xl px-4 py-8"
@@ -99,6 +107,7 @@ function DcaHistoryPage() {
         />
       )}
     </div>
+    </>
   );
 }
 

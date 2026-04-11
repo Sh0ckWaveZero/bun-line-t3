@@ -337,6 +337,25 @@ const setUserAdmin = async (params: {
 };
 
 /**
+ * Admin: ปลดล็อคผู้ใช้ที่ถูกปฏิเสธ เพื่อให้ขออนุมัติใหม่ได้
+ * - เปลี่ยนสถานะจาก REJECTED → PENDING
+ * - ล้าง rejectReason
+ */
+const unlockRejectedUser = async (
+  id: string,
+  adminUserId: string,
+): Promise<LineApprovalRequest> => {
+  const record = await approvalRepository.update(id, {
+    status: APPROVAL_CHECK_RESULT.PENDING,
+    rejectReason: null,
+    approvedBy: adminUserId,
+    approvedAt: new Date(),
+  });
+
+  return record;
+};
+
+/**
  * ดึง stats สำหรับ dashboard
  */
 const getStats = () => approvalRepository.getStats();
@@ -349,6 +368,7 @@ export const approvalService = {
   approveUser,
   rejectUser,
   rejectLineUser,
+  unlockRejectedUser,
   getApprovalList,
   getAccountApprovalList,
   setUserAdmin,

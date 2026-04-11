@@ -12,21 +12,14 @@ import { env } from "@/env.mjs";
 export async function GET() {
   const session = await getServerAuthSession();
 
-  // 1. Session info
-  const sessionInfo = {
-    hasSession: !!session,
-    userId: session?.user?.id ?? null,
-    userName: session?.user?.name ?? null,
-  };
-
+  // 🔐 SECURITY: Check authentication
   if (!session?.user?.id) {
     return Response.json({
       error: "Not authenticated",
-      session: sessionInfo,
-    });
+    }, { status: 401 });
   }
 
-  // 2. Account info
+  // 🔐 SECURITY: Check LINE account
   const account = await db.account.findFirst({
     where: {
       userId: session.user.id,
@@ -38,26 +31,36 @@ export async function GET() {
     },
   });
 
+  if (!account) {
+    return Response.json({
+      error: "No LINE account found",
+    }, { status: 403 });
+  }
+
+  // 🔐 SECURITY: Check admin permission
+  const canManage = await canManageApprovalsAsync(account.providerAccountId);
+
+  if (!canManage) {
+    return Response.json({
+      error: "Forbidden: Admin access required",
+    }, { status: 403 });
+  }
+
+  // 1. Session info
+  const sessionInfo = {
+    hasSession: !!session,
+    userId: session?.user?.id ?? null,
+    userName: session?.user?.name ?? null,
+  };
+
+  // 2. Account info
   const accountInfo = {
     hasLineAccount: !!account,
     provider: account?.provider ?? null,
     lineUserId: account?.providerAccountId ?? null,
   };
 
-  if (!account) {
-    return Response.json({
-      error: "No LINE account found",
-      session: sessionInfo,
-      account: accountInfo,
-      hint: "Login ด้วย LINE ก่อน",
-    });
-  }
-
   // 3. Env config
-  const isDatabaseOrWhitelistAdmin = await canManageApprovalsAsync(
-    account.providerAccountId,
-  );
-
   const envConfig = {
     adminLineUserIds: env.ADMIN_LINE_USER_IDS ?? "NOT_SET",
     parsedIds: env.ADMIN_LINE_USER_IDS
@@ -65,7 +68,7 @@ export async function GET() {
       : [],
     yourLineUserId: account.providerAccountId,
     isInWhitelist: canManageApprovals(account.providerAccountId),
-    canManageWithDatabase: isDatabaseOrWhitelistAdmin,
+    canManageWithDatabase: canManage,
   };
 
   // 4. Detailed check
@@ -83,7 +86,7 @@ export async function GET() {
     whitelist: parsedIds,
     matchedIndex,
     isMatch: matchedIndex !== -1,
-    canManage: isDatabaseOrWhitelistAdmin,
+    canManage,
   };
 
   return Response.json({
@@ -91,7 +94,6 @@ export async function GET() {
     account: accountInfo,
     envConfig,
     details,
-    error: details.canManage ? null : "Not in whitelist or database admins",
   });
 }
 

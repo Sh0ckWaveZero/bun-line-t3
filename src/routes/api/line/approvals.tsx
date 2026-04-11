@@ -47,6 +47,10 @@ const setAdminSchema = z.object({
   isAdmin: z.boolean(),
 });
 
+const unlockSchema = z.object({
+  id: z.string().min(1, "ID ต้องไม่ว่าง"),
+});
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
@@ -260,9 +264,35 @@ export async function POST(request: Request): Promise<Response> {
       }
     }
 
+    if (action === "unlock") {
+      const parsed = unlockSchema.safeParse(body);
+      if (!parsed.success) {
+        return Response.json(
+          { error: "ข้อมูลไม่ถูกต้อง", details: parsed.error.flatten() },
+          { status: 400 },
+        );
+      }
+
+      try {
+        const record = await approvalService.unlockRejectedUser(
+          parsed.data.id,
+          adminLineUserId,
+        );
+
+        return Response.json({
+          message: "ปลดล็อคผู้ใช้เรียบร้อยแล้ว — สามารถขออนุมัติใหม่ได้",
+          data: record,
+        });
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "ปลดล็อคผู้ใช้ไม่สำเร็จ";
+        return Response.json({ error: message }, { status: 400 });
+      }
+    }
+
     return Response.json(
       {
-        error: "action ไม่ถูกต้อง — ใช้ approve, reject, stats, หรือ set-admin",
+        error: "action ไม่ถูกต้อง — ใช้ approve, reject, unlock, stats, หรือ set-admin",
       },
       { status: 400 },
     );

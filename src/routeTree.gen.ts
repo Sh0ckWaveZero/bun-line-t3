@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ThaiNamesGeneratorRouteImport } from './routes/thai-names-generator'
 import { Route as ThaiIdRouteImport } from './routes/thai-id'
+import { Route as PendingApprovalRouteImport } from './routes/pending-approval'
 import { Route as MonitoringRouteImport } from './routes/monitoring'
 import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as LoginRouteImport } from './routes/login'
@@ -47,6 +48,7 @@ import { Route as ApiCronEnhancedCheckoutReminderRouteImport } from './routes/ap
 import { Route as ApiCronCheckoutReminderRouteImport } from './routes/api/cron/checkout-reminder'
 import { Route as ApiCronCheckInReminderRouteImport } from './routes/api/cron/check-in-reminder'
 import { Route as ApiCronAutoCheckoutRouteImport } from './routes/api/cron/auto-checkout'
+import { Route as ApiAuthCheckLineApprovalRouteImport } from './routes/api/auth/check-line-approval'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiAttendanceUpdateRouteImport } from './routes/api/attendance/update'
 import { Route as ApiAdminDebugRouteImport } from './routes/api/admin/debug'
@@ -61,6 +63,11 @@ const ThaiNamesGeneratorRoute = ThaiNamesGeneratorRouteImport.update({
 const ThaiIdRoute = ThaiIdRouteImport.update({
   id: '/thai-id',
   path: '/thai-id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PendingApprovalRoute = PendingApprovalRouteImport.update({
+  id: '/pending-approval',
+  path: '/pending-approval',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MonitoringRoute = MonitoringRouteImport.update({
@@ -247,6 +254,12 @@ const ApiCronAutoCheckoutRoute = ApiCronAutoCheckoutRouteImport.update({
   path: '/api/cron/auto-checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAuthCheckLineApprovalRoute =
+  ApiAuthCheckLineApprovalRouteImport.update({
+    id: '/api/auth/check-line-approval',
+    path: '/api/auth/check-line-approval',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -285,6 +298,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/monitoring': typeof MonitoringRoute
+  '/pending-approval': typeof PendingApprovalRoute
   '/thai-id': typeof ThaiIdRoute
   '/thai-names-generator': typeof ThaiNamesGeneratorRoute
   '/api/attendance-push': typeof ApiAttendancePushRoute
@@ -297,6 +311,7 @@ export interface FileRoutesByFullPath {
   '/api/admin/debug': typeof ApiAdminDebugRoute
   '/api/attendance/update': typeof ApiAttendanceUpdateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/auth/check-line-approval': typeof ApiAuthCheckLineApprovalRoute
   '/api/cron/auto-checkout': typeof ApiCronAutoCheckoutRoute
   '/api/cron/check-in-reminder': typeof ApiCronCheckInReminderRoute
   '/api/cron/checkout-reminder': typeof ApiCronCheckoutReminderRoute
@@ -330,6 +345,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/monitoring': typeof MonitoringRoute
+  '/pending-approval': typeof PendingApprovalRoute
   '/thai-id': typeof ThaiIdRoute
   '/thai-names-generator': typeof ThaiNamesGeneratorRoute
   '/api/attendance-push': typeof ApiAttendancePushRoute
@@ -342,6 +358,7 @@ export interface FileRoutesByTo {
   '/api/admin/debug': typeof ApiAdminDebugRoute
   '/api/attendance/update': typeof ApiAttendanceUpdateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/auth/check-line-approval': typeof ApiAuthCheckLineApprovalRoute
   '/api/cron/auto-checkout': typeof ApiCronAutoCheckoutRoute
   '/api/cron/check-in-reminder': typeof ApiCronCheckInReminderRoute
   '/api/cron/checkout-reminder': typeof ApiCronCheckoutReminderRoute
@@ -376,6 +393,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/monitoring': typeof MonitoringRoute
+  '/pending-approval': typeof PendingApprovalRoute
   '/thai-id': typeof ThaiIdRoute
   '/thai-names-generator': typeof ThaiNamesGeneratorRoute
   '/api/attendance-push': typeof ApiAttendancePushRoute
@@ -388,6 +406,7 @@ export interface FileRoutesById {
   '/api/admin/debug': typeof ApiAdminDebugRoute
   '/api/attendance/update': typeof ApiAttendanceUpdateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/auth/check-line-approval': typeof ApiAuthCheckLineApprovalRoute
   '/api/cron/auto-checkout': typeof ApiCronAutoCheckoutRoute
   '/api/cron/check-in-reminder': typeof ApiCronCheckInReminderRoute
   '/api/cron/checkout-reminder': typeof ApiCronCheckoutReminderRoute
@@ -423,6 +442,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/logout'
     | '/monitoring'
+    | '/pending-approval'
     | '/thai-id'
     | '/thai-names-generator'
     | '/api/attendance-push'
@@ -435,6 +455,7 @@ export interface FileRouteTypes {
     | '/api/admin/debug'
     | '/api/attendance/update'
     | '/api/auth/$'
+    | '/api/auth/check-line-approval'
     | '/api/cron/auto-checkout'
     | '/api/cron/check-in-reminder'
     | '/api/cron/checkout-reminder'
@@ -468,6 +489,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/logout'
     | '/monitoring'
+    | '/pending-approval'
     | '/thai-id'
     | '/thai-names-generator'
     | '/api/attendance-push'
@@ -480,6 +502,7 @@ export interface FileRouteTypes {
     | '/api/admin/debug'
     | '/api/attendance/update'
     | '/api/auth/$'
+    | '/api/auth/check-line-approval'
     | '/api/cron/auto-checkout'
     | '/api/cron/check-in-reminder'
     | '/api/cron/checkout-reminder'
@@ -513,6 +536,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/logout'
     | '/monitoring'
+    | '/pending-approval'
     | '/thai-id'
     | '/thai-names-generator'
     | '/api/attendance-push'
@@ -525,6 +549,7 @@ export interface FileRouteTypes {
     | '/api/admin/debug'
     | '/api/attendance/update'
     | '/api/auth/$'
+    | '/api/auth/check-line-approval'
     | '/api/cron/auto-checkout'
     | '/api/cron/check-in-reminder'
     | '/api/cron/checkout-reminder'
@@ -559,6 +584,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
   MonitoringRoute: typeof MonitoringRoute
+  PendingApprovalRoute: typeof PendingApprovalRoute
   ThaiIdRoute: typeof ThaiIdRoute
   ThaiNamesGeneratorRoute: typeof ThaiNamesGeneratorRoute
   ApiAttendancePushRoute: typeof ApiAttendancePushRoute
@@ -571,6 +597,7 @@ export interface RootRouteChildren {
   ApiAdminDebugRoute: typeof ApiAdminDebugRoute
   ApiAttendanceUpdateRoute: typeof ApiAttendanceUpdateRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiAuthCheckLineApprovalRoute: typeof ApiAuthCheckLineApprovalRoute
   ApiCronAutoCheckoutRoute: typeof ApiCronAutoCheckoutRoute
   ApiCronCheckInReminderRoute: typeof ApiCronCheckInReminderRoute
   ApiCronCheckoutReminderRoute: typeof ApiCronCheckoutReminderRoute
@@ -605,6 +632,13 @@ declare module '@tanstack/react-router' {
       path: '/thai-id'
       fullPath: '/thai-id'
       preLoaderRoute: typeof ThaiIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pending-approval': {
+      id: '/pending-approval'
+      path: '/pending-approval'
+      fullPath: '/pending-approval'
+      preLoaderRoute: typeof PendingApprovalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/monitoring': {
@@ -859,6 +893,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCronAutoCheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/auth/check-line-approval': {
+      id: '/api/auth/check-line-approval'
+      path: '/api/auth/check-line-approval'
+      fullPath: '/api/auth/check-line-approval'
+      preLoaderRoute: typeof ApiAuthCheckLineApprovalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -943,6 +984,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,
   MonitoringRoute: MonitoringRoute,
+  PendingApprovalRoute: PendingApprovalRoute,
   ThaiIdRoute: ThaiIdRoute,
   ThaiNamesGeneratorRoute: ThaiNamesGeneratorRoute,
   ApiAttendancePushRoute: ApiAttendancePushRoute,
@@ -955,6 +997,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminDebugRoute: ApiAdminDebugRoute,
   ApiAttendanceUpdateRoute: ApiAttendanceUpdateRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiAuthCheckLineApprovalRoute: ApiAuthCheckLineApprovalRoute,
   ApiCronAutoCheckoutRoute: ApiCronAutoCheckoutRoute,
   ApiCronCheckInReminderRoute: ApiCronCheckInReminderRoute,
   ApiCronCheckoutReminderRoute: ApiCronCheckoutReminderRoute,

@@ -5,14 +5,29 @@ import { db } from "@/lib/database/db";
 import { flexMessage } from "@/lib/utils/line-message-utils";
 import { roundToOneDecimal } from "@/lib/utils/number";
 import { sendPushMessage } from "@/lib/utils/line-push";
+import { validateCronAuth } from "@/lib/utils/cron-auth";
+import { createErrorResponse } from "@/lib/utils/cron-response";
+import { checkCronLineApproval } from "@/lib/auth/approval-guard";
 
 /**
  * Vercel Cron Job for automated checkout reminders
  * This endpoint is called by Vercel's cron scheduler at 16:30 on weekdays
  * It finds all users who checked in but haven't checked out and sends them reminders
  */
-export async function GET(_req: Request) {
+export async function GET(req: Request) {
   try {
+    // 🔐 SECURITY: Authentication check for cron jobs
+    const authResult = validateCronAuth(req);
+    if (!authResult.success) {
+      return createErrorResponse(authResult.error!, authResult.status!);
+    }
+
+    // 🔐 SECURITY: Check LINE Messaging API approval
+    const approvalCheck = await checkCronLineApproval();
+    if (!approvalCheck.approved) {
+      return approvalCheck.response!;
+    }
+
     // Get all users who need checkout reminders AND have the setting enabled
     const usersNeedingReminder =
       await attendanceService.getUsersWithPendingCheckoutAndSettingsEnabled();
