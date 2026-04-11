@@ -8,7 +8,11 @@ import { LineLoginButton } from "@/components/ui/LineLoginButton";
 function LoginPage() {
   const { status } = useSession();
   const search = useSearch({ strict: false }) as { callbackUrl?: string };
-  const callbackUrl = typeof search.callbackUrl === "string" ? search.callbackUrl : "/";
+  // Only allow relative paths to prevent open redirect.
+  // Reject absolute URLs (https://evil.com) and protocol-relative URLs (//evil.com).
+  const rawCallback = typeof search.callbackUrl === "string" ? search.callbackUrl : "/";
+  const callbackUrl =
+    rawCallback.startsWith("/") && !rawCallback.startsWith("//") ? rawCallback : "/";
 
   React.useEffect(() => {
     if (status === "authenticated") {
