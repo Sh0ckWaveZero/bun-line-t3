@@ -7,6 +7,7 @@ export async function GET(req: Request) {
     "Cache-Control": "no-cache, no-transform",
     Connection: "keep-alive",
     "X-Accel-Buffering": "no", // ปิด buffering ใน nginx
+    "Alt-Svc": "clear", // บังคับ HTTP/1.1 ไม่ใช้ QUIC (HTTP/3) กับ SSE
   });
 
   const encoder = new TextEncoder();

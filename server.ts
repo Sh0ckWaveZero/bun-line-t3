@@ -2,6 +2,84 @@ import { stat } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
+// ─── SSE: DCA Stream ────────────────────────────────────────────────────────
+// Handle SSE โดยตรงใน Bun server เพื่อหลีกเลี่ยงปัญหา TanStack Start
+// buffer/close streaming response ก่อนเวลา (INTERNAL_ERROR err 2)
+//
+// globalThis.__dcaEventManager ถูก init โดย bundle ตอน import server entry
+// ด้านล่าง — server.ts access ผ่าน globalThis จึงใช้ instance เดียวกันเสมอ
+
+type DCAEventManagerLike = {
+  subscribe: (cb: (event: unknown) => void) => () => void;
+};
+
+function getDcaEventManager(): DCAEventManagerLike | undefined {
+  return (globalThis as Record<string, unknown>)
+    .__dcaEventManager as DCAEventManagerLike | undefined;
+}
+
+function handleDcaSseStream(request: Request): Response {
+  const encoder = new TextEncoder();
+
+  const stream = new ReadableStream({
+    start(controller) {
+      let closed = false;
+
+      const send = (chunk: string) => {
+        if (closed) return;
+        try {
+          controller.enqueue(encoder.encode(chunk));
+        } catch {
+          closed = true;
+        }
+      };
+
+      // ส่ง event แรกทันทีที่ connect
+      send(
+        `data: ${JSON.stringify({ type: "connected", timestamp: Date.now() })}\n\n`,
+      );
+
+      // Subscribe รับ DCA events จาก event manager (shared via globalThis)
+      const eventManager = getDcaEventManager();
+      const unsubscribe = eventManager?.subscribe((event) => {
+        send(`data: ${JSON.stringify(event)}\n\n`);
+      });
+
+      // Keep-alive ping ทุก 20 วินาที ป้องกัน proxy timeout
+      const pingInterval = setInterval(() => {
+        if (closed) {
+          clearInterval(pingInterval);
+          return;
+        }
+        send(`: ping\n\n`);
+      }, 20_000);
+
+      // Cleanup เมื่อ client disconnect
+      request.signal.addEventListener("abort", () => {
+        if (closed) return;
+        closed = true;
+        clearInterval(pingInterval);
+        unsubscribe?.();
+        try {
+          controller.close();
+        } catch {
+          // controller อาจถูก close ไปแล้ว
+        }
+      });
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache, no-transform",
+      Connection: "keep-alive",
+      "X-Accel-Buffering": "no",
+    },
+  });
+}
+// ────────────────────────────────────────────────────────────────────────────
+
 interface StaticFileResult {
   filePath: string;
   size: number;
@@ -143,6 +221,16 @@ const server = Bun.serve({
   port,
   hostname,
   async fetch(request) {
+    // ─── SSE endpoint: handle ก่อน TanStack Start ───────────────────────────
+    // TanStack Start's server route ไม่ support long-lived streaming response
+    // ทำให้ stream ปิดทันที (HTTP/2 INTERNAL_ERROR err 2)
+    // จึง handle โดยตรงใน Bun native server แทน
+    const url = new URL(request.url);
+    if (url.pathname === "/api/dca/stream" && request.method === "GET") {
+      return handleDcaSseStream(request);
+    }
+    // ────────────────────────────────────────────────────────────────────────
+
     const staticResponse = await serveStaticFile(request);
 
     if (staticResponse) {

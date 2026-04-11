@@ -101,7 +101,7 @@ export function createDcaSummaryFlexMessage(
     bodyContents[0].contents[1].color = pnlColor;
     bodyContents[1].contents[1].color = pnlColor;
   } else {
-    bodyContents.push(createMetricRow("PnL", "กำลังโหลดราคา"));
+    bodyContents.push(createMetricRow("PnL", "ไม่พบข้อมูลราคา"));
   }
 
   if (data.currentPrice !== null) {
