@@ -228,3 +228,35 @@ model HealthMetrics {
   @@unique([userId, date])
   @@map("health_metrics")
 }
+
+// ===========================
+// Auto DCA (Dollar Cost Averaging)
+// ===========================
+
+enum DcaStatus {
+  SUCCESS
+  FAILED
+  PENDING
+}
+
+model DcaOrder {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  orderId      String    @map("order_id") // เช่น BTCDCA0000004700
+  lineUserId   String    @map("line_user_id") // LINE user ID ที่บันทึกคำสั่งซื้อ
+  coin         String    @default("BTC") @map("coin") // BTC, ETH, ฯลฯ
+  amountTHB    Float     @map("amount_thb") // จำนวนเงินต่อรอบ (THB)
+  coinReceived Float     @map("coin_received") // จำนวนเหรียญที่ได้รับ
+  pricePerCoin Float     @map("price_per_coin") // ราคาต่อเหรียญ (THB)
+  round        Int       @map("round") // รอบที่
+  status       DcaStatus @default(SUCCESS) @map("status")
+  note         String?   @map("note") // หมายเหตุ
+  executedAt   DateTime  @map("executed_at") // วันที่ทำการ (จาก Time ใน message)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@index([orderId])
+  @@index([lineUserId, executedAt])
+  @@index([coin, executedAt])
+  @@index([round])
+  @@map("dca_orders")
+}

@@ -12,6 +12,7 @@ import {
   BarChart3,
   Clock,
   User,
+  Bitcoin,
 } from "lucide-react";
 
 function DashboardPage() {
@@ -36,7 +37,7 @@ function DashboardPage() {
         id="dashboard-loading"
         className="flex min-h-screen items-center justify-center"
       >
-        <div id="loading-text" className="text-lg text-muted-foreground">
+        <div id="loading-text" className="text-muted-foreground text-lg">
           กำลังโหลด...
         </div>
       </div>
@@ -84,6 +85,15 @@ function DashboardPage() {
       color: "text-orange-600 dark:text-orange-400",
       bgColor: "bg-orange-100 dark:bg-orange-900/20",
     },
+    {
+      id: "dca",
+      title: "Auto DCA",
+      description: "ประวัติคำสั่งซื้อ Bitcoin DCA",
+      icon: <Bitcoin className="h-6 w-6" />,
+      href: "/dca-history",
+      color: "text-yellow-600 dark:text-yellow-400",
+      bgColor: "bg-yellow-100 dark:bg-yellow-900/20",
+    },
   ];
 
   return (
@@ -129,7 +139,7 @@ function DashboardPage() {
                 <p id="user-name" className="font-semibold">
                   {session.user?.name}
                 </p>
-                <p id="user-email" className="text-sm text-muted-foreground">
+                <p id="user-email" className="text-muted-foreground text-sm">
                   {session.user?.email}
                 </p>
               </div>
@@ -157,7 +167,7 @@ function DashboardPage() {
                 <div id="stat-status-text">
                   <p
                     id="stat-status-label"
-                    className="text-sm text-muted-foreground"
+                    className="text-muted-foreground text-sm"
                   >
                     สถานะ
                   </p>
@@ -184,7 +194,7 @@ function DashboardPage() {
                 <div id="stat-date-text">
                   <p
                     id="stat-date-label"
-                    className="text-sm text-muted-foreground"
+                    className="text-muted-foreground text-sm"
                   >
                     วันนี้
                   </p>
@@ -211,7 +221,7 @@ function DashboardPage() {
                 <div id="stat-system-text">
                   <p
                     id="stat-system-label"
-                    className="text-sm text-muted-foreground"
+                    className="text-muted-foreground text-sm"
                   >
                     ระบบ
                   </p>
@@ -265,7 +275,7 @@ function DashboardPage() {
                         </h3>
                         <p
                           id={`action-${action.id}-description`}
-                          className="text-sm text-muted-foreground"
+                          className="text-muted-foreground text-sm"
                         >
                           {action.description}
                         </p>
