@@ -19,18 +19,15 @@ const generateOrderId = (coin: string, round: number): string => {
 };
 
 /**
- * ดึงรอบถัดไปสำหรับเหรียญและ user ที่ระบุ
- * คำนวณจากจำนวนรายการทั้งหมดของเหรียญและ user นั้น รองรับการ import ข้อมูลย้อนหลัง
+ * ดึงรอบถัดไปสำหรับ user และเหรียญที่ระบุ (นับแยกตาม lineUserId)
  */
 const getNextRound = async (coin: string, lineUserId: string): Promise<number> => {
-  // นับจำนวนรายการทั้งหมดของเหรียญและ user นั้น เพื่อรองรับการ import ข้อมูลย้อนหลัง
-  const count = await db.dcaOrder.count({
-    where: {
-      coin: coin.toUpperCase(),
-      lineUserId,
-    },
+  const latest = await db.dcaOrder.findFirst({
+    where: { coin: coin.toUpperCase(), lineUserId },
+    orderBy: { round: "desc" },
+    select: { round: true },
   });
-  return count + 1;
+  return (latest?.round ?? 0) + 1;
 };
 
 /**
