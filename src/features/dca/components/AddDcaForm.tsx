@@ -53,50 +53,27 @@ export const AddDcaForm = ({ onClose, onSuccess }: AddDcaFormProps) => {
               </div>
             )}
 
-            <div id="dca-add-coin-user-fields" className="grid grid-cols-2 gap-3">
-              <div id="dca-add-coin-field" className="space-y-1">
-                <label
-                  id="dca-add-coin-label"
-                  htmlFor="dca-add-coin-input"
-                  className="text-muted-foreground text-xs font-medium"
-                >
-                  เหรียญ
-                </label>
-                <Input
-                  id="dca-add-coin-input"
-                  value={form.coin}
-                  onChange={(e) =>
-                    setForm((current) => ({
-                      ...current,
-                      coin: e.target.value.toUpperCase(),
-                    }))
-                  }
-                  placeholder="BTC"
-                  className="h-9"
-                  required
-                />
-              </div>
-              <div id="dca-add-line-user-id-field" className="space-y-1">
-                <label
-                  id="dca-add-line-user-id-label"
-                  htmlFor="dca-add-line-user-id-input"
-                  className="text-muted-foreground text-xs font-medium"
-                >
-                  LINE User ID (ไม่บังคับ)
-                </label>
-                <Input
-                  id="dca-add-line-user-id-input"
-                  value={form.lineUserId}
-                  onChange={(e) =>
-                    setForm((current) => ({
-                      ...current,
-                      lineUserId: e.target.value,
-                    }))
-                  }
-                  placeholder="Uxxxxxxxx"
-                  className="h-9"
-                />
-              </div>
+            <div id="dca-add-coin-field" className="space-y-1">
+              <label
+                id="dca-add-coin-label"
+                htmlFor="dca-add-coin-input"
+                className="text-muted-foreground text-xs font-medium"
+              >
+                เหรียญ
+              </label>
+              <Input
+                id="dca-add-coin-input"
+                value={form.coin}
+                onChange={(e) =>
+                  setForm((current) => ({
+                    ...current,
+                    coin: e.target.value.toUpperCase(),
+                  }))
+                }
+                placeholder="BTC"
+                className="h-9"
+                required
+              />
             </div>
 
             <div id="dca-add-amount-field" className="space-y-1">

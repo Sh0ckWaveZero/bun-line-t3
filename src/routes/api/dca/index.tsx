@@ -1,15 +1,15 @@
 /**
  * DCA Orders API
- * GET  /api/dca - รายการ DCA orders พร้อม pagination
- * POST /api/dca - สร้าง DCA order ใหม่ (manual entry)
+ * GET  /api/dca - รายการ DCA orders พร้อม pagination (filter by session user)
+ * POST /api/dca - สร้าง DCA order ใหม่ (ใช้ LINE userId จาก session อัตโนมัติ)
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { dcaService } from "@/features/dca";
 import { dcaEventManager } from "@/lib/dca/event-manager";
+import { getLineUserId } from "@/lib/auth";
 
 const createDcaSchema = z.object({
-  lineUserId: z.string().min(1, "ต้องระบุ LINE User ID"),
   coin: z.string().min(1).max(20).default("BTC"),
   amountTHB: z.number().positive("จำนวนเงินต้องมากกว่า 0"),
   coinReceived: z.number().positive("จำนวนเหรียญต้องมากกว่า 0"),
@@ -21,16 +21,22 @@ const createDcaSchema = z.object({
 
 /**
  * GET /api/dca
- * Query params: page, limit, coin, lineUserId
+ * Query params: page, limit, coin
+ * lineUserId ดึงจาก session อัตโนมัติ
  */
 export async function GET(request: Request) {
   try {
+    const lineUserId = await getLineUserId(request);
+
+    if (!lineUserId) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
 
     const page = parseInt(searchParams.get("page") ?? "1");
     const limit = parseInt(searchParams.get("limit") ?? "10");
     const coin = searchParams.get("coin") ?? undefined;
-    const lineUserId = searchParams.get("lineUserId") ?? undefined;
 
     const result = await dcaService.listOrders({
       page,
@@ -48,10 +54,16 @@ export async function GET(request: Request) {
 
 /**
  * POST /api/dca
- * Body: CreateDcaOrderInput
+ * Body: CreateDcaOrderInput (ไม่ต้องส่ง lineUserId — ดึงจาก session เอง)
  */
 export async function POST(request: Request) {
   try {
+    const lineUserId = await getLineUserId(request);
+
+    if (!lineUserId) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const parsed = createDcaSchema.safeParse(body);
 
@@ -62,7 +74,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const order = await dcaService.createOrder(parsed.data);
+    const order = await dcaService.createOrder({
+      ...parsed.data,
+      lineUserId, // inject จาก session เสมอ
+    });
 
     // 🎉 Emit SSE event เพื่อให้ clients รับทราบ
     dcaEventManager.emit({

@@ -382,14 +382,15 @@ const handleDelete = async (req: any, args: string[]) => {
  * /dca
  */
 const handleSummary = async (req: any) => {
+  const userId = req.body?.events?.[0]?.source?.userId as string | undefined;
   const appUrl = process.env["APP_URL"] ?? process.env["NEXTAUTH_URL"] ?? "";
 
   try {
     // ดึงข้อมูลทั้งหมดพร้อมกัน รวมถึงราคาปัจจุบันจาก Bitkub
     const [summary, latest, currentPrice] = await Promise.all([
-      dcaService.getSummary(), // ไม่ filter by userId — แสดงยอดรวมทั้งหมด
-      dcaService.listOrders({ page: 1, limit: 1 }),
-      getBTCPrice(), // ดึงราคา BTC เสมอ ไม่รอ avgPrice
+      dcaService.getSummary(userId), // filter by LINE userId
+      dcaService.listOrders({ page: 1, limit: 1, lineUserId: userId }),
+      getBTCPrice(), // ดึงราคา BTC พร้อมกันเสมอ ไม่รอ avgPrice
     ]);
 
     const lastOrder = latest.orders[0];

@@ -11,7 +11,6 @@ export const useAddDcaOrder = ({
   onSuccess,
 }: UseAddDcaOrderOptions) => {
   const [form, setForm] = useState({
-    lineUserId: "",
     coin: "BTC",
     amountTHB: "",
     coinReceived: "",
@@ -32,7 +31,7 @@ export const useAddDcaOrder = ({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          lineUserId: form.lineUserId || "manual-entry",
+          // lineUserId ไม่ต้องส่ง — API ดึงจาก session เอง
           coin: form.coin,
           amountTHB: parseFloat(form.amountTHB),
           coinReceived: parseFloat(form.coinReceived),
