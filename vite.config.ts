@@ -43,7 +43,6 @@ export default defineConfig(({ mode }) => {
   const allowedHosts = getAllowedHosts(env);
 
   return {
-    base: "/", // Explicitly set base path to root
     define: {
       __APP_URL__: JSON.stringify(env.APP_URL ?? env.FRONTEND_URL ?? ""),
     },
@@ -56,17 +55,6 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       allowedHosts,
-    },
-    build: {
-      // Ensure assets are output correctly
-      assetsDir: "assets",
-      rollupOptions: {
-        output: {
-          assetFileNames: "assets/[name]-[hash][extname]",
-          chunkFileNames: "assets/[name]-[hash].js",
-          entryFileNames: "assets/[name]-[hash].js",
-        },
-      },
     },
   };
 });
