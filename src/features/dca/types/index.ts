@@ -60,3 +60,28 @@ export interface ParsedBitkubDcaMessage {
   coinReceived: number;
   executedAt: Date;
 }
+
+// ─── Export / Import ───────────────────────────────────────────────────────────
+
+/** รูปแบบแถวข้อมูลสำหรับ export (flat row ที่ใช้ใน CSV / Excel / JSON) */
+export interface DcaExportRow {
+  orderId: string;
+  executedAt: string;       // ISO 8601 string
+  coin: string;
+  amountTHB: number;
+  coinReceived: number;
+  pricePerCoin: number;
+  round: number;
+  status: string;
+  note: string;
+}
+
+/** รูปแบบไฟล์ที่รองรับ */
+export type ExportFormat = "csv" | "json" | "xlsx";
+
+/** ผลลัพธ์จากการ import */
+export interface ImportResult {
+  imported: number;
+  skipped: number;
+  errors: string[];
+}

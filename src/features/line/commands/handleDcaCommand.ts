@@ -1,4 +1,5 @@
 import { dcaService } from "@/features/dca";
+import { formatDate, formatTHB } from "@/features/dca/utils/format";
 import { sendMessage } from "@/lib/utils/line-utils";
 import { dcaEventManager } from "@/lib/dca/event-manager";
 import {
@@ -11,22 +12,21 @@ import { createDcaSummaryFlexMessage } from "@/lib/line-utils/flex-messages";
 // Helpers
 // ========================
 
-const formatTHB = (n: number) =>
-  n.toLocaleString("th-TH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-
-const formatDate = (date: Date) =>
-  new Intl.DateTimeFormat("th-TH", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "Asia/Bangkok",
-    hour12: false,
-  }).format(date);
+const buildAddSuccessText = (
+  order: { orderId: string; round: number },
+  data: { coin: string; amountTHB: number; coinReceived: number; pricePerCoin: number; executedAt: Date },
+) =>
+  [
+    `✅ บันทึก Auto DCA สำเร็จ!`,
+    ``,
+    `📋 รหัสคำสั่ง: ${order.orderId}`,
+    `🪙 เหรียญ: ${data.coin}`,
+    `💰 เงินที่ใช้: ${formatTHB(data.amountTHB)} บาท`,
+    `💎 ได้รับ: ${data.coinReceived.toFixed(8)} ${data.coin}`,
+    `📈 ราคา: ${formatTHB(data.pricePerCoin)} บาท/${data.coin}`,
+    `🔄 รอบที่: ${order.round}`,
+    `📅 วันที่: ${formatDate(data.executedAt)}`,
+  ].join("\n");
 
 // ========================
 // Sub-handlers
@@ -67,9 +67,10 @@ const handleHelp = async (req: any) => {
         "  /dca list",
         "  /dca ประวัติ",
         "",
-        "🔹 ลบรายการ (ระบุเลขรอบ):",
-        "  /dca ลบ [รอบที่]",
-        "  /dca del [รอบที่]",
+        "🔹 ลบรายการ (รองรับลบหลายรอบพร้อมกัน):",
+        "  /dca ลบ 5",
+        "  /dca del 3 7 12",
+        "  /dca del 3,7,12",
         "─────────────────────",
         "📌 /dca help — แสดงคำสั่งนี้",
       ].join("\n"),
@@ -126,27 +127,8 @@ const handleAdd = async (req: any, args: string[]) => {
       });
 
       // 🎉 Emit SSE event เพื่อให้ web clients รับทราบ
-      dcaEventManager.emit({
-        type: "dca-order-created",
-        data: order,
-      });
-
-      await sendMessage(req, [
-        {
-          type: "text",
-          text: [
-            `✅ บันทึก Auto DCA สำเร็จ!`,
-            ``,
-            `📋 รหัสคำสั่ง: ${order.orderId}`,
-            `🪙 เหรียญ: ${parsed.coin}`,
-            `💰 เงินที่ใช้: ${formatTHB(parsed.amountTHB)} บาท`,
-            `💎 ได้รับ: ${parsed.coinReceived.toFixed(8)} ${parsed.coin}`,
-            `📈 ราคา: ${formatTHB(parsed.pricePerCoin)} บาท/${parsed.coin}`,
-            `🔄 รอบที่: ${order.round}`,
-            `📅 วันที่: ${formatDate(parsed.executedAt)}`,
-          ].join("\n"),
-        },
-      ]);
+      dcaEventManager.emit({ type: "dca-order-created", data: order });
+      await sendMessage(req, [{ type: "text", text: buildAddSuccessText(order, parsed) }]);
     } catch (err) {
       console.error("❌ DCA add (bitkub mode) error:", err);
       await sendMessage(req, [
@@ -232,27 +214,9 @@ const handleAdd = async (req: any, args: string[]) => {
       executedAt,
     });
 
-    // 🎉 Emit SSE event เพื่อให้ web clients รับทราบ
-    dcaEventManager.emit({
-      type: "dca-order-created",
-      data: order,
-    });
-
+    dcaEventManager.emit({ type: "dca-order-created", data: order });
     await sendMessage(req, [
-      {
-        type: "text",
-        text: [
-          `✅ บันทึก Auto DCA สำเร็จ!`,
-          ``,
-          `📋 รหัสคำสั่ง: ${order.orderId}`,
-          `🪙 เหรียญ: ${coin}`,
-          `💰 เงินที่ใช้: ${formatTHB(amountTHB)} บาท`,
-          `💎 ได้รับ: ${coinReceived.toFixed(8)} ${coin}`,
-          `📈 ราคา: ${formatTHB(pricePerCoin)} บาท/${coin}`,
-          `🔄 รอบที่: ${order.round}`,
-          `📅 วันที่: ${formatDate(executedAt)}`,
-        ].join("\n"),
-      },
+      { type: "text", text: buildAddSuccessText(order, { coin, amountTHB, coinReceived, pricePerCoin, executedAt }) },
     ]);
   } catch (err) {
     console.error("❌ DCA add error:", err);
@@ -268,8 +232,10 @@ const handleAdd = async (req: any, args: string[]) => {
  * /dca list | /dca ประวัติ
  */
 const handleList = async (req: any) => {
+  const userId = req.body?.events?.[0]?.source?.userId as string | undefined;
+
   try {
-    const result = await dcaService.listOrders({ page: 1, limit: 5 });
+    const result = await dcaService.listOrders({ page: 1, limit: 5, lineUserId: userId });
 
     if (result.orders.length === 0) {
       await sendMessage(req, [
@@ -309,65 +275,125 @@ const handleList = async (req: any) => {
 };
 
 /**
- * ลบรายการด้วยเลขรอบ
+ * ลบรายการด้วยเลขรอบ — รองรับหลายรอบพร้อมกัน
  *
- * /dca ลบ [round] | /dca del [round]
+ * รูปแบบที่รองรับ:
+ *   /dca ลบ 5           → ลบรอบเดียว
+ *   /dca del 3 7 12     → ลบหลายรอบ (คั่นด้วย space)
+ *   /dca del 3,7,12     → ลบหลายรอบ (คั่นด้วย comma)
+ *   /dca del 3, 7, 12   → ลบหลายรอบ (คั่นด้วย comma + space)
  */
 const handleDelete = async (req: any, args: string[]) => {
-  const roundStr = args[0];
-  if (!roundStr) {
+  const userId = req.body?.events?.[0]?.source?.userId as string | undefined;
+
+  if (!userId) {
+    await sendMessage(req, [
+      { type: "text", text: "❌ ไม่สามารถระบุตัวตนผู้ใช้ได้ กรุณาลองใหม่" },
+    ]);
+    return;
+  }
+
+  if (args.length === 0) {
     await sendMessage(req, [
       {
         type: "text",
-        text: "❌ ระบุเลขรอบที่ต้องการลบ\n\nตัวอย่าง: /dca ลบ 56",
+        text: [
+          "❌ ระบุเลขรอบที่ต้องการลบ",
+          "",
+          "ลบรอบเดียว:     /dca ลบ 5",
+          "ลบหลายรอบ:     /dca ลบ 3 7 12",
+          "ลบหลายรอบ:     /dca ลบ 3,7,12",
+        ].join("\n"),
       },
     ]);
     return;
   }
 
-  const round = parseInt(roundStr);
-  if (isNaN(round) || round <= 0) {
+  // ─── Parse round numbers — รองรับ space และ/หรือ comma ───────────────────
+  const rawTokens = args.join(" ").split(/[\s,]+/).filter(Boolean);
+  const validRounds: number[] = [];
+  const invalidTokens: string[] = [];
+
+  for (const token of rawTokens) {
+    const n = parseInt(token);
+    if (isNaN(n) || n <= 0) {
+      invalidTokens.push(token);
+    } else if (!validRounds.includes(n)) {
+      validRounds.push(n);
+    }
+  }
+
+  if (invalidTokens.length > 0) {
     await sendMessage(req, [
       {
         type: "text",
-        text: `❌ เลขรอบไม่ถูกต้อง: "${roundStr}"\n\nตัวอย่าง: /dca ลบ 56`,
+        text: `❌ เลขรอบไม่ถูกต้อง: ${invalidTokens.map((t) => `"${t}"`).join(", ")}\n\nใช้ตัวเลขจำนวนเต็มบวกเท่านั้น`,
       },
     ]);
     return;
   }
 
   try {
-    // ค้นหาด้วย round number
-    const found = await dcaService.findByRound(round);
-    if (!found) {
+    // ─── ค้นหาทุกรอบพร้อมกัน (1 query) ──────────────────────────────────
+    const found = await dcaService.findByRounds(validRounds, userId);
+    const foundRounds = found.map((o) => o.round);
+    const notFoundRounds = validRounds.filter((r) => !foundRounds.includes(r));
+
+    if (found.length === 0) {
+      const roundList = validRounds.join(", ");
       await sendMessage(req, [
-        { type: "text", text: `❌ ไม่พบรายการรอบที่ ${round}` },
+        {
+          type: "text",
+          text: `❌ ไม่พบรายการรอบที่ ${roundList} ของคุณ`,
+        },
       ]);
       return;
     }
 
-    await dcaService.deleteOrder(found.id);
+    // ─── ลบทั้งหมดพร้อมกัน ────────────────────────────────────────────────
+    await Promise.all(
+      found.map((order) => dcaService.deleteOrder(order.id)),
+    );
 
-    // 🗑️ Emit SSE event เพื่อให้ web clients รับทราบ
-    dcaEventManager.emit({
-      type: "dca-order-deleted",
-      data: { id: found.id, round: found.round },
-    });
+    // 🗑️ Emit SSE event ต่อ order
+    for (const order of found) {
+      dcaEventManager.emit({
+        type: "dca-order-deleted",
+        data: { id: order.id, round: order.round },
+      });
+    }
 
-    await sendMessage(req, [
-      {
-        type: "text",
-        text: [
-          `🗑️ ลบรายการสำเร็จ`,
-          ``,
-          `📋 รหัส: ${found.orderId}`,
-          `🪙 เหรียญ: ${found.coin}`,
-          `🔄 รอบที่: ${found.round}`,
-          `💰 เงิน: ${formatTHB(found.amountTHB)} บาท`,
-          `📅 วันที่: ${formatDate(new Date(found.executedAt))}`,
-        ].join("\n"),
-      },
-    ]);
+    // ─── สรุปผลลัพธ์ ──────────────────────────────────────────────────────
+    const lines: string[] = [];
+
+    if (found.length === 1) {
+      // ลบรอบเดียว — แสดงรายละเอียด
+      const o = found[0]!;
+      lines.push(
+        `🗑️ ลบรายการสำเร็จ`,
+        ``,
+        `📋 รหัส: ${o.orderId}`,
+        `🪙 เหรียญ: ${o.coin}`,
+        `🔄 รอบที่: ${o.round}`,
+        `💰 เงิน: ${formatTHB(o.amountTHB)} บาท`,
+        `📅 วันที่: ${formatDate(new Date(o.executedAt))}`,
+      );
+    } else {
+      // ลบหลายรอบ — แสดงสรุปรายการ
+      lines.push(`🗑️ ลบสำเร็จ ${found.length} รายการ`, `─────────────────────`);
+      for (const o of found) {
+        lines.push(
+          `รอบที่ ${o.round} • ${o.coin} • ${formatTHB(o.amountTHB)} บาท`,
+        );
+      }
+    }
+
+    // แจ้งรอบที่ไม่พบ (ถ้ามี)
+    if (notFoundRounds.length > 0) {
+      lines.push(``, `⚠️ ไม่พบรอบที่: ${notFoundRounds.join(", ")}`);
+    }
+
+    await sendMessage(req, [{ type: "text", text: lines.join("\n") }]);
   } catch (err) {
     console.error("❌ DCA delete error:", err);
     await sendMessage(req, [
