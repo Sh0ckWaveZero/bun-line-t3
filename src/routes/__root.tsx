@@ -14,9 +14,9 @@ import { TanStackDevtools } from "@tanstack/react-devtools";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
-import appCss from "../input.css?url";
-import dcaThemeCss from "@/styles/dca-theme.css?url";
 import { getServerAuthSession } from "@/lib/auth";
+import "../input.css";
+import "@/styles/dca-theme.css";
 
 interface RouterContext {
   session: AppSession | null;
@@ -33,8 +33,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   },
   head: () => ({
     links: [
-      { href: appCss, rel: "stylesheet" },
-      { href: dcaThemeCss, rel: "stylesheet" },
       // Noto Sans Thai — Google Fonts
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       {
