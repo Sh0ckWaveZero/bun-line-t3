@@ -78,6 +78,12 @@ export const auth = betterAuth({
     fields: {
       emailVerified: "emailVerifiedFlag",
     },
+    additionalFields: {
+      role: {
+        type: "string",
+        defaultValue: "user",
+      },
+    },
   },
   session: {
     fields: {
@@ -156,7 +162,8 @@ export const auth = betterAuth({
 });
 
 /**
- * Server-side session helper for TanStack Start routes and server functions.
+ * Server-side session helper — returns basic session only (sessions + users queries).
+ * ไม่ query LINE account ที่นี่ เพื่อให้ caller รวม query ได้
  */
 export const getServerAuthSession = async (request?: Request) => {
   const activeRequest = request ?? getRequest();
@@ -170,11 +177,13 @@ export const getServerAuthSession = async (request?: Request) => {
 
   return {
     expires: toIsoString(session.session.expiresAt),
+    isAdmin: false, // caller ต้อง set ค่านี้หลัง query LINE account
     user: {
       email: session.user.email,
       id: session.user.id,
       image: session.user.image,
       name: session.user.name,
+      role: session.user.role ?? null,
     },
   } satisfies AppSession;
 };

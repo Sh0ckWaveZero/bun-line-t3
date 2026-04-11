@@ -4,11 +4,13 @@ import { createContext, useContext } from "react";
 
 export interface AppSession {
   expires: string;
+  isAdmin?: boolean;
   user?: {
     email?: string | null;
     id: string;
     image?: string | null;
     name?: string | null;
+    role?: string | null;
   };
 }
 

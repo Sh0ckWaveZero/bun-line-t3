@@ -240,10 +240,15 @@ export async function POST(request: Request) {
       }
     }
 
-    // ─── Step 4: Create orders แบบ parallel ──────────────────────────────
-    const createResults = await Promise.allSettled(
-      rowsToInsert.map(({ data, executedAt }) =>
-        dcaService.createOrder({
+    // ─── Step 4: Create orders แบบ sequential (เรียงตาม executedAt) ──────
+    // ต้องสร้างทีละรายการเพื่อให้ getNextRound() นับ round ต่อเนื่องกันถูกต้อง
+    // parallel จะทำให้ทุก row อ่าน round เดียวกัน (race condition)
+    rowsToInsert.sort((a, b) => a.executedAt.getTime() - b.executedAt.getTime());
+
+    for (const { data, executedAt, index } of rowsToInsert) {
+      const rowLabel = `แถวที่ ${index + 1}`;
+      try {
+        await dcaService.createOrder({
           lineUserId,
           coin: data.coin,
           amountTHB: data.amountTHB,
@@ -252,17 +257,10 @@ export async function POST(request: Request) {
           executedAt,
           status: data.status,
           note: data.note || undefined,
-        }),
-      ),
-    );
-
-    for (let i = 0; i < createResults.length; i++) {
-      const res = createResults[i]!;
-      const rowLabel = `แถวที่ ${rowsToInsert[i]!.index + 1}`;
-      if (res.status === "fulfilled") {
+        });
         result.imported++;
-      } else {
-        const msg = res.reason instanceof Error ? res.reason.message : "unknown error";
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "unknown error";
         result.errors.push(`${rowLabel}: บันทึกไม่สำเร็จ — ${msg}`);
         result.skipped++;
       }
