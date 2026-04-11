@@ -12,6 +12,21 @@
 
 Skills activate automatically when you describe relevant tasks naturally (e.g., "review my UI", "optimize this component", "deploy to production")
 
+<!-- intent-skills:start -->
+# Skill mappings - when working in these areas, load the linked skill file into context.
+skills:
+  - task: "React/TanStack Start setup, root route shell, hydration, or React Start imports"
+    load: "node_modules/@tanstack/react-start/skills/react-start/SKILL.md"
+  - task: "TanStack Start project structure, Vite plugin, route tree, or core Start conventions"
+    load: "node_modules/@tanstack/start-client-core/skills/start-core/SKILL.md"
+  - task: "Production deploy, Docker/Bun hosting, SSR mode, static assets, or prerendering"
+    load: "node_modules/@tanstack/start-client-core/skills/start-core/deployment/SKILL.md"
+  - task: "Server functions, server-only logic, useServerFn, validation, or server context utilities"
+    load: "node_modules/@tanstack/start-client-core/skills/start-core/server-functions/SKILL.md"
+  - task: "API routes under src/routes/api, HTTP handlers, request parsing, or route middleware"
+    load: "node_modules/@tanstack/start-client-core/skills/start-core/server-routes/SKILL.md"
+<!-- intent-skills:end -->
+
 ## Commands
 
 - **Dev**: `bun run dev` (TanStack Start via Vite on :4325)

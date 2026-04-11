@@ -1,0 +1,158 @@
+import { stat } from "node:fs/promises";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+
+interface StaticFileResult {
+  filePath: string;
+  size: number;
+  mtime: Date;
+}
+
+interface ServerEntry {
+  fetch: (request: Request) => Response | Promise<Response>;
+}
+
+const port = Number(process.env.PORT ?? 3000);
+const hostname = process.env.HOSTNAME ?? "0.0.0.0";
+const rootDir = process.cwd();
+const serverEntryModule = (await import(
+  pathToFileURL(path.join(rootDir, "dist", "server", "server.js")).href
+)) as { default: ServerEntry };
+const serverEntry = serverEntryModule.default;
+const staticRoots = [
+  path.join(rootDir, "dist", "client"),
+  path.join(rootDir, "public"),
+];
+
+const contentTypes: Record<string, string> = {
+  ".avif": "image/avif",
+  ".css": "text/css; charset=utf-8",
+  ".gif": "image/gif",
+  ".html": "text/html; charset=utf-8",
+  ".ico": "image/x-icon",
+  ".jpeg": "image/jpeg",
+  ".jpg": "image/jpeg",
+  ".js": "application/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".map": "application/json; charset=utf-8",
+  ".png": "image/png",
+  ".svg": "image/svg+xml",
+  ".ttf": "font/ttf",
+  ".txt": "text/plain; charset=utf-8",
+  ".webp": "image/webp",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+};
+
+function getRequestPath(request: Request) {
+  try {
+    return decodeURIComponent(new URL(request.url).pathname);
+  } catch {
+    return null;
+  }
+}
+
+function resolveStaticPath(root: string, requestPath: string) {
+  if (requestPath === "/" || requestPath.includes("\0")) {
+    return null;
+  }
+
+  const relativePath = path.normalize(requestPath).replace(/^[/\\]+/, "");
+  const filePath = path.join(root, relativePath);
+  const rootWithSeparator = root.endsWith(path.sep)
+    ? root
+    : `${root}${path.sep}`;
+
+  if (filePath !== root && !filePath.startsWith(rootWithSeparator)) {
+    return null;
+  }
+
+  return filePath;
+}
+
+async function findStaticFile(requestPath: string) {
+  for (const staticRoot of staticRoots) {
+    const filePath = resolveStaticPath(staticRoot, requestPath);
+
+    if (!filePath) {
+      continue;
+    }
+
+    try {
+      const fileStat = await stat(filePath);
+
+      if (!fileStat.isFile()) {
+        continue;
+      }
+
+      return {
+        filePath,
+        size: fileStat.size,
+        mtime: fileStat.mtime,
+      } satisfies StaticFileResult;
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
+}
+
+function getCacheControl(requestPath: string) {
+  if (requestPath.startsWith("/assets/")) {
+    return "public, max-age=31536000, immutable";
+  }
+
+  return "public, max-age=3600";
+}
+
+async function serveStaticFile(request: Request) {
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return null;
+  }
+
+  const requestPath = getRequestPath(request);
+
+  if (!requestPath) {
+    return null;
+  }
+
+  const staticFile = await findStaticFile(requestPath);
+
+  if (!staticFile) {
+    return null;
+  }
+
+  const headers = new Headers({
+    "Cache-Control": getCacheControl(requestPath),
+    "Content-Length": String(staticFile.size),
+    "Content-Type":
+      contentTypes[path.extname(staticFile.filePath).toLowerCase()] ??
+      "application/octet-stream",
+    "Last-Modified": staticFile.mtime.toUTCString(),
+  });
+
+  if (request.method === "HEAD") {
+    return new Response(null, { headers });
+  }
+
+  return new Response(Bun.file(staticFile.filePath), { headers });
+}
+
+const server = Bun.serve({
+  port,
+  hostname,
+  async fetch(request) {
+    const staticResponse = await serveStaticFile(request);
+
+    if (staticResponse) {
+      return staticResponse;
+    }
+
+    return serverEntry.fetch(request);
+  },
+});
+
+console.info(
+  `TanStack Start server listening on http://${hostname}:${server.port}`,
+);

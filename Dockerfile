@@ -140,6 +140,7 @@ COPY --from=build --chown=appuser:appgroup /app/public ./public
 COPY --from=prod-deps --chown=appuser:appgroup /app/node_modules ./node_modules
 COPY --from=build --chown=appuser:appgroup /app/prisma ./prisma
 COPY --from=build --chown=appuser:appgroup /app/package.json ./package.json
+COPY --from=build --chown=appuser:appgroup /app/server.ts ./server.ts
 COPY --from=build --chown=appuser:appgroup /app/scripts/docker-entrypoint.sh ./scripts/
 COPY --from=build --chown=appuser:appgroup /app/scripts/health-check.sh ./scripts/
 
