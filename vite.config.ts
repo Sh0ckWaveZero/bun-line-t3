@@ -3,6 +3,10 @@ import { devtools } from "@tanstack/devtools-vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function normalizeHost(value: string | undefined) {
   const input = value?.trim();
@@ -14,10 +18,12 @@ function normalizeHost(value: string | undefined) {
   try {
     return new URL(input).hostname;
   } catch {
-    return input
-      .replace(/^https?:\/\//, "")
-      .split("/")[0]
-      ?.split(":")[0] ?? null;
+    return (
+      input
+        .replace(/^https?:\/\//, "")
+        .split("/")[0]
+        ?.split(":")[0] ?? null
+    );
   }
 }
 
@@ -26,8 +32,12 @@ function getAllowedHosts(env: Record<string, string>) {
     .split(",")
     .map((value) => normalizeHost(value));
 
-  const urlHosts = [env.APP_URL, env.FRONTEND_URL, env.APP_DOMAIN, env.HOSTNAME]
-    .map((value) => normalizeHost(value));
+  const urlHosts = [
+    env.APP_URL,
+    env.FRONTEND_URL,
+    env.APP_DOMAIN,
+    env.HOSTNAME,
+  ].map((value) => normalizeHost(value));
 
   return Array.from(
     new Set(
@@ -51,6 +61,9 @@ export default defineConfig(({ mode }) => {
       allowedHosts,
     },
     resolve: {
+      alias: {
+        "@": path.resolve(dirname, "src"),
+      },
       tsconfigPaths: true,
     },
     server: {
