@@ -3,6 +3,7 @@ import { handleLocation } from "../commands/handleLocation";
 import { handleSticker } from "../commands/handleSticker";
 import { handlePostback } from "../commands/handlePostback";
 import { handleText } from "../commands/handleText";
+import { handleApprovalCheck } from "../commands/handleApprovalCheck";
 
 interface LineApiRequest {
   body?: {
@@ -24,6 +25,14 @@ const handleEvent = async (
 
   if (!Array.isArray(events) || events.length === 0) {
     return res.status(400).json({ error: "No events to process" });
+  }
+
+  // 🔒 ตรวจสอบการอนุมัติก่อนทำงาน
+  // ใช้ req แรกเพื่อ check user (กรณีหลาย events ใน batch ใช้ userId เดียวกัน)
+  const isApproved = await handleApprovalCheck(req);
+  if (!isApproved) {
+    // user ยังไม่ได้รับการอนุมัติ — ได้ส่งข้อความแจ้งไปแล้ว หยุดประมวลผล
+    return res.status(200).json({ message: "pending approval" });
   }
 
   for (let index = 0; index < events.length; index++) {

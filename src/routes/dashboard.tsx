@@ -2,7 +2,7 @@
 
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useSession } from "@/lib/auth/client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSafeHydration } from "@/hooks/useHydrationSafe";
 import {
@@ -13,17 +13,46 @@ import {
   Clock,
   User,
   Bitcoin,
+  MessageSquare,
 } from "lucide-react";
 
 function DashboardPage() {
   const { data: session, status } = useSession();
   const navigate = useNavigate();
+  const [isAdmin, setIsAdmin] = useState(false);
+
   const todayLabel = useSafeHydration("...", () =>
     new Intl.DateTimeFormat("th-TH", {
       day: "numeric",
       month: "short",
     }).format(new Date()),
   );
+
+  // Check admin status
+  useEffect(() => {
+    let isMounted = true;
+
+    if (status !== "authenticated") {
+      return;
+    }
+
+    fetch("/api/admin/check")
+      .then((res) => res.json())
+      .then((data) => {
+        if (isMounted) {
+          setIsAdmin(data.isAdmin ?? false);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setIsAdmin(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [status]);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -94,6 +123,25 @@ function DashboardPage() {
       color: "text-yellow-600 dark:text-yellow-400",
       bgColor: "bg-yellow-100 dark:bg-yellow-900/20",
     },
+    // 🔐 Admin menu (สำหรับ admin เท่านั้น)
+    ...(isAdmin
+      ? [
+          {
+            id: "line-approval",
+            title: "LINE Approval",
+            description: "จัดการคำขอใช้งาน LINE Messaging API",
+            icon: <MessageSquare className="h-6 w-6" />,
+            href: "/line-approval",
+            color: "text-emerald-600 dark:text-emerald-400",
+            bgColor: "bg-emerald-100 dark:bg-emerald-900/20",
+            badge: (
+              <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                Admin
+              </span>
+            ),
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -269,9 +317,10 @@ function DashboardPage() {
                       <div id={`action-${action.id}-text`} className="flex-1">
                         <h3
                           id={`action-${action.id}-title`}
-                          className="font-bold"
+                          className="flex items-center gap-2 font-bold"
                         >
                           {action.title}
+                          {"badge" in action && action.badge}
                         </h3>
                         <p
                           id={`action-${action.id}-description`}

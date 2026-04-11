@@ -14,6 +14,7 @@ import { Route as ThaiIdRouteImport } from './routes/thai-id'
 import { Route as MonitoringRouteImport } from './routes/monitoring'
 import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as LineApprovalRouteImport } from './routes/line-approval'
 import { Route as LeaveRouteImport } from './routes/leave'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as DcaHistoryRouteImport } from './routes/dca-history'
@@ -32,6 +33,7 @@ import { Route as ApiThaiIdValidateRouteImport } from './routes/api/thai-id/vali
 import { Route as ApiThaiIdGenerateRouteImport } from './routes/api/thai-id/generate'
 import { Route as ApiTempChartsFilenameRouteImport } from './routes/api/temp-charts/$filename'
 import { Route as ApiMonitoringDashboardRouteImport } from './routes/api/monitoring/dashboard'
+import { Route as ApiLineApprovalsRouteImport } from './routes/api/line/approvals'
 import { Route as ApiHealthEnhancedRouteImport } from './routes/api/health/enhanced'
 import { Route as ApiHealthActivitySummaryRouteImport } from './routes/api/health-activity/summary'
 import { Route as ApiHealthActivityMetricsRouteImport } from './routes/api/health-activity/metrics'
@@ -49,6 +51,8 @@ import { Route as ApiCronCheckInReminderRouteImport } from './routes/api/cron/ch
 import { Route as ApiCronAutoCheckoutRouteImport } from './routes/api/cron/auto-checkout'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiAttendanceUpdateRouteImport } from './routes/api/attendance/update'
+import { Route as ApiAdminDebugRouteImport } from './routes/api/admin/debug'
+import { Route as ApiAdminCheckRouteImport } from './routes/api/admin/check'
 import { Route as ApiUserSettingsNotificationsRouteImport } from './routes/api/user/settings/notifications'
 
 const ThaiNamesGeneratorRoute = ThaiNamesGeneratorRouteImport.update({
@@ -74,6 +78,11 @@ const LogoutRoute = LogoutRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LineApprovalRoute = LineApprovalRouteImport.update({
+  id: '/line-approval',
+  path: '/line-approval',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LeaveRoute = LeaveRouteImport.update({
@@ -166,6 +175,11 @@ const ApiMonitoringDashboardRoute = ApiMonitoringDashboardRouteImport.update({
   path: '/api/monitoring/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiLineApprovalsRoute = ApiLineApprovalsRouteImport.update({
+  id: '/approvals',
+  path: '/approvals',
+  getParentRoute: () => ApiLineRoute,
+} as any)
 const ApiHealthEnhancedRoute = ApiHealthEnhancedRouteImport.update({
   id: '/enhanced',
   path: '/enhanced',
@@ -255,6 +269,16 @@ const ApiAttendanceUpdateRoute = ApiAttendanceUpdateRouteImport.update({
   path: '/api/attendance/update',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminDebugRoute = ApiAdminDebugRouteImport.update({
+  id: '/api/admin/debug',
+  path: '/api/admin/debug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminCheckRoute = ApiAdminCheckRouteImport.update({
+  id: '/api/admin/check',
+  path: '/api/admin/check',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiUserSettingsNotificationsRoute =
   ApiUserSettingsNotificationsRouteImport.update({
     id: '/notifications',
@@ -269,6 +293,7 @@ export interface FileRoutesByFullPath {
   '/dca-history': typeof DcaHistoryRoute
   '/help': typeof HelpRoute
   '/leave': typeof LeaveRoute
+  '/line-approval': typeof LineApprovalRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/monitoring': typeof MonitoringRoute
@@ -279,7 +304,9 @@ export interface FileRoutesByFullPath {
   '/api/checkout-reminder': typeof ApiCheckoutReminderRoute
   '/api/health': typeof ApiHealthRouteWithChildren
   '/api/leave': typeof ApiLeaveRoute
-  '/api/line': typeof ApiLineRoute
+  '/api/line': typeof ApiLineRouteWithChildren
+  '/api/admin/check': typeof ApiAdminCheckRoute
+  '/api/admin/debug': typeof ApiAdminDebugRoute
   '/api/attendance/update': typeof ApiAttendanceUpdateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/cron/auto-checkout': typeof ApiCronAutoCheckoutRoute
@@ -297,6 +324,7 @@ export interface FileRoutesByFullPath {
   '/api/health-activity/metrics': typeof ApiHealthActivityMetricsRoute
   '/api/health-activity/summary': typeof ApiHealthActivitySummaryRoute
   '/api/health/enhanced': typeof ApiHealthEnhancedRoute
+  '/api/line/approvals': typeof ApiLineApprovalsRoute
   '/api/monitoring/dashboard': typeof ApiMonitoringDashboardRoute
   '/api/temp-charts/$filename': typeof ApiTempChartsFilenameRoute
   '/api/thai-id/generate': typeof ApiThaiIdGenerateRoute
@@ -312,6 +340,7 @@ export interface FileRoutesByTo {
   '/dca-history': typeof DcaHistoryRoute
   '/help': typeof HelpRoute
   '/leave': typeof LeaveRoute
+  '/line-approval': typeof LineApprovalRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/monitoring': typeof MonitoringRoute
@@ -322,7 +351,9 @@ export interface FileRoutesByTo {
   '/api/checkout-reminder': typeof ApiCheckoutReminderRoute
   '/api/health': typeof ApiHealthRouteWithChildren
   '/api/leave': typeof ApiLeaveRoute
-  '/api/line': typeof ApiLineRoute
+  '/api/line': typeof ApiLineRouteWithChildren
+  '/api/admin/check': typeof ApiAdminCheckRoute
+  '/api/admin/debug': typeof ApiAdminDebugRoute
   '/api/attendance/update': typeof ApiAttendanceUpdateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/cron/auto-checkout': typeof ApiCronAutoCheckoutRoute
@@ -340,6 +371,7 @@ export interface FileRoutesByTo {
   '/api/health-activity/metrics': typeof ApiHealthActivityMetricsRoute
   '/api/health-activity/summary': typeof ApiHealthActivitySummaryRoute
   '/api/health/enhanced': typeof ApiHealthEnhancedRoute
+  '/api/line/approvals': typeof ApiLineApprovalsRoute
   '/api/monitoring/dashboard': typeof ApiMonitoringDashboardRoute
   '/api/temp-charts/$filename': typeof ApiTempChartsFilenameRoute
   '/api/thai-id/generate': typeof ApiThaiIdGenerateRoute
@@ -356,6 +388,7 @@ export interface FileRoutesById {
   '/dca-history': typeof DcaHistoryRoute
   '/help': typeof HelpRoute
   '/leave': typeof LeaveRoute
+  '/line-approval': typeof LineApprovalRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/monitoring': typeof MonitoringRoute
@@ -366,7 +399,9 @@ export interface FileRoutesById {
   '/api/checkout-reminder': typeof ApiCheckoutReminderRoute
   '/api/health': typeof ApiHealthRouteWithChildren
   '/api/leave': typeof ApiLeaveRoute
-  '/api/line': typeof ApiLineRoute
+  '/api/line': typeof ApiLineRouteWithChildren
+  '/api/admin/check': typeof ApiAdminCheckRoute
+  '/api/admin/debug': typeof ApiAdminDebugRoute
   '/api/attendance/update': typeof ApiAttendanceUpdateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/cron/auto-checkout': typeof ApiCronAutoCheckoutRoute
@@ -384,6 +419,7 @@ export interface FileRoutesById {
   '/api/health-activity/metrics': typeof ApiHealthActivityMetricsRoute
   '/api/health-activity/summary': typeof ApiHealthActivitySummaryRoute
   '/api/health/enhanced': typeof ApiHealthEnhancedRoute
+  '/api/line/approvals': typeof ApiLineApprovalsRoute
   '/api/monitoring/dashboard': typeof ApiMonitoringDashboardRoute
   '/api/temp-charts/$filename': typeof ApiTempChartsFilenameRoute
   '/api/thai-id/generate': typeof ApiThaiIdGenerateRoute
@@ -401,6 +437,7 @@ export interface FileRouteTypes {
     | '/dca-history'
     | '/help'
     | '/leave'
+    | '/line-approval'
     | '/login'
     | '/logout'
     | '/monitoring'
@@ -412,6 +449,8 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/api/leave'
     | '/api/line'
+    | '/api/admin/check'
+    | '/api/admin/debug'
     | '/api/attendance/update'
     | '/api/auth/$'
     | '/api/cron/auto-checkout'
@@ -429,6 +468,7 @@ export interface FileRouteTypes {
     | '/api/health-activity/metrics'
     | '/api/health-activity/summary'
     | '/api/health/enhanced'
+    | '/api/line/approvals'
     | '/api/monitoring/dashboard'
     | '/api/temp-charts/$filename'
     | '/api/thai-id/generate'
@@ -444,6 +484,7 @@ export interface FileRouteTypes {
     | '/dca-history'
     | '/help'
     | '/leave'
+    | '/line-approval'
     | '/login'
     | '/logout'
     | '/monitoring'
@@ -455,6 +496,8 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/api/leave'
     | '/api/line'
+    | '/api/admin/check'
+    | '/api/admin/debug'
     | '/api/attendance/update'
     | '/api/auth/$'
     | '/api/cron/auto-checkout'
@@ -472,6 +515,7 @@ export interface FileRouteTypes {
     | '/api/health-activity/metrics'
     | '/api/health-activity/summary'
     | '/api/health/enhanced'
+    | '/api/line/approvals'
     | '/api/monitoring/dashboard'
     | '/api/temp-charts/$filename'
     | '/api/thai-id/generate'
@@ -487,6 +531,7 @@ export interface FileRouteTypes {
     | '/dca-history'
     | '/help'
     | '/leave'
+    | '/line-approval'
     | '/login'
     | '/logout'
     | '/monitoring'
@@ -498,6 +543,8 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/api/leave'
     | '/api/line'
+    | '/api/admin/check'
+    | '/api/admin/debug'
     | '/api/attendance/update'
     | '/api/auth/$'
     | '/api/cron/auto-checkout'
@@ -515,6 +562,7 @@ export interface FileRouteTypes {
     | '/api/health-activity/metrics'
     | '/api/health-activity/summary'
     | '/api/health/enhanced'
+    | '/api/line/approvals'
     | '/api/monitoring/dashboard'
     | '/api/temp-charts/$filename'
     | '/api/thai-id/generate'
@@ -531,6 +579,7 @@ export interface RootRouteChildren {
   DcaHistoryRoute: typeof DcaHistoryRoute
   HelpRoute: typeof HelpRoute
   LeaveRoute: typeof LeaveRoute
+  LineApprovalRoute: typeof LineApprovalRoute
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
   MonitoringRoute: typeof MonitoringRoute
@@ -541,7 +590,9 @@ export interface RootRouteChildren {
   ApiCheckoutReminderRoute: typeof ApiCheckoutReminderRoute
   ApiHealthRoute: typeof ApiHealthRouteWithChildren
   ApiLeaveRoute: typeof ApiLeaveRoute
-  ApiLineRoute: typeof ApiLineRoute
+  ApiLineRoute: typeof ApiLineRouteWithChildren
+  ApiAdminCheckRoute: typeof ApiAdminCheckRoute
+  ApiAdminDebugRoute: typeof ApiAdminDebugRoute
   ApiAttendanceUpdateRoute: typeof ApiAttendanceUpdateRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiCronAutoCheckoutRoute: typeof ApiCronAutoCheckoutRoute
@@ -601,6 +652,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/line-approval': {
+      id: '/line-approval'
+      path: '/line-approval'
+      fullPath: '/line-approval'
+      preLoaderRoute: typeof LineApprovalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/leave': {
@@ -729,6 +787,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMonitoringDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/line/approvals': {
+      id: '/api/line/approvals'
+      path: '/approvals'
+      fullPath: '/api/line/approvals'
+      preLoaderRoute: typeof ApiLineApprovalsRouteImport
+      parentRoute: typeof ApiLineRoute
+    }
     '/api/health/enhanced': {
       id: '/api/health/enhanced'
       path: '/enhanced'
@@ -848,6 +913,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAttendanceUpdateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/debug': {
+      id: '/api/admin/debug'
+      path: '/api/admin/debug'
+      fullPath: '/api/admin/debug'
+      preLoaderRoute: typeof ApiAdminDebugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/check': {
+      id: '/api/admin/check'
+      path: '/api/admin/check'
+      fullPath: '/api/admin/check'
+      preLoaderRoute: typeof ApiAdminCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/user/settings/notifications': {
       id: '/api/user/settings/notifications'
       path: '/notifications'
@@ -870,6 +949,17 @@ const ApiHealthRouteWithChildren = ApiHealthRoute._addFileChildren(
   ApiHealthRouteChildren,
 )
 
+interface ApiLineRouteChildren {
+  ApiLineApprovalsRoute: typeof ApiLineApprovalsRoute
+}
+
+const ApiLineRouteChildren: ApiLineRouteChildren = {
+  ApiLineApprovalsRoute: ApiLineApprovalsRoute,
+}
+
+const ApiLineRouteWithChildren =
+  ApiLineRoute._addFileChildren(ApiLineRouteChildren)
+
 interface ApiUserSettingsRouteChildren {
   ApiUserSettingsNotificationsRoute: typeof ApiUserSettingsNotificationsRoute
 }
@@ -889,6 +979,7 @@ const rootRouteChildren: RootRouteChildren = {
   DcaHistoryRoute: DcaHistoryRoute,
   HelpRoute: HelpRoute,
   LeaveRoute: LeaveRoute,
+  LineApprovalRoute: LineApprovalRoute,
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,
   MonitoringRoute: MonitoringRoute,
@@ -899,7 +990,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCheckoutReminderRoute: ApiCheckoutReminderRoute,
   ApiHealthRoute: ApiHealthRouteWithChildren,
   ApiLeaveRoute: ApiLeaveRoute,
-  ApiLineRoute: ApiLineRoute,
+  ApiLineRoute: ApiLineRouteWithChildren,
+  ApiAdminCheckRoute: ApiAdminCheckRoute,
+  ApiAdminDebugRoute: ApiAdminDebugRoute,
   ApiAttendanceUpdateRoute: ApiAttendanceUpdateRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiCronAutoCheckoutRoute: ApiCronAutoCheckoutRoute,
