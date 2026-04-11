@@ -69,15 +69,18 @@ export async function signIn(
 }
 
 export async function signOut(options?: AuthActionOptions) {
-  const callbackUrl =
-    options?.redirectTo ?? options?.callbackUrl ?? window.location.href;
-
   const result = await authClient.signOut();
 
   if (options?.redirect === false) {
     return result;
   }
 
+  // Strip any external host from the callback URL to prevent open redirect.
+  // buildAuthCallbackUrl extracts only pathname+search+hash and rebases it on
+  // the application's own origin, so passing an absolute external URL is safe.
+  const callbackUrl = buildAuthCallbackUrl(
+    options?.redirectTo ?? options?.callbackUrl,
+  );
   window.location.assign(callbackUrl);
   return result;
 }
