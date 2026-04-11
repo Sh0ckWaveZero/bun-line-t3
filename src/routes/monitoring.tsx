@@ -112,6 +112,7 @@ function MonitoringDashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const isAdmin = session?.isAdmin ?? false;
   const { mounted, getChartOptions, getDoughnutOptions } = useChartTheme();
   const { needsApproval } = useLineApproval();
 
@@ -135,20 +136,21 @@ function MonitoringDashboardPage() {
 
   // Auto-refresh effect
   useEffect(() => {
+    if (!isAdmin) return;
     fetchMonitoringData();
 
     if (autoRefresh) {
       const interval = setInterval(fetchMonitoringData, 30000); // 30 seconds
       return () => clearInterval(interval);
     }
-  }, [autoRefresh]);
+  }, [autoRefresh, isAdmin]);
 
   // Loading states
   if (status === "loading") return <AuthLoadingScreen />;
   if (!session) return <LoginPrompt />;
 
   // 🔐 SECURITY: Admin-only access
-  if (session.user?.role !== "admin") {
+  if (!isAdmin) {
     return (
       <div className="bg-background flex min-h-screen items-center justify-center p-4">
         <div className="border-border bg-card max-w-md rounded-xl border p-8 text-center shadow-lg">

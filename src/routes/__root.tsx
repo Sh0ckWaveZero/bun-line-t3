@@ -25,89 +25,54 @@ interface RouterContext {
   session: AppSession | null;
 }
 
-const fetchSession = createServerFn({ method: "GET" }).handler(async () => {
-  return getServerAuthSession(getRequest());
-});
-
-const checkLineApproval = createServerFn({ method: "GET" }).handler(async () => {
+/**
+ * Single server function: fetch session + compute isAdmin + check LINE approval
+ * รวมเป็น 1 call เพื่อลด DB round-trips (เดิม 2 calls × 3 queries = 6+ queries)
+ */
+const fetchSessionWithApproval = createServerFn({ method: "GET" }).handler(async () => {
   const session = await getServerAuthSession(getRequest());
 
   if (!session?.user?.id) {
-    return false;
+    return { session: null, hasApproval: true };
   }
 
-  // 1. Check if user has LINE account
+  // Query LINE account ครั้งเดียว — ใช้ทั้ง isAdmin และ approval check
   const account = await db.account.findFirst({
-    where: {
-      userId: session.user.id,
-      provider: "line",
-    },
+    where: { userId: session.user.id, provider: "line" },
     select: {
       providerAccountId: true,
-      user: {
-        select: {
-          role: true,
-        },
-      },
+      user: { select: { role: true } },
     },
   });
 
   if (!account) {
-    // No LINE account → no approval needed
-    return true;
+    return { session, hasApproval: true };
   }
 
   const lineUserId = account.providerAccountId;
+  const isAdmin = isAdminLineUser(lineUserId) || account.user.role === "admin";
 
-  // 2. Admin whitelist → auto-approved
-  if (isAdminLineUser(lineUserId)) {
-    return true;
+  // Merge isAdmin into session
+  const sessionWithAdmin = { ...session, isAdmin };
+
+  if (isAdmin) {
+    return { session: sessionWithAdmin, hasApproval: true };
   }
 
-  // 2.5. Admin role from database → auto-approved
-  if (account.user.role === "admin") {
-    return true;
-  }
-
-  // 3. Check database approval status
   const approval = await db.lineApprovalRequest.findUnique({
-    where: {
-      lineUserId,
-    },
-    select: {
-      status: true,
-      expiresAt: true,
-    },
+    where: { lineUserId },
+    select: { status: true, expiresAt: true },
   });
 
-  if (!approval) {
-    // Never requested → not approved
-    return false;
-  }
+  const hasApproval =
+    approval?.status === "APPROVED" &&
+    (!approval.expiresAt || approval.expiresAt >= new Date());
 
-  // 4. Check status
-  if (approval.status !== "APPROVED") {
-    return false;
-  }
-
-  // 5. Check expiration
-  if (approval.expiresAt && approval.expiresAt < new Date()) {
-    // Expired
-    return false;
-  }
-
-  return true;
+  return { session: sessionWithAdmin, hasApproval };
 });
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async ({ location }) => {
-    const session = await fetchSession();
-
-    // ตรวจสอบ LINE approval สำหรับ protected routes
-    // Skip check สำหรับ:
-    // - Login page
-    // - Pending approval page
-    // - Public pages
     const skipApprovalCheck = [
       "/",
       "/login",
@@ -115,21 +80,14 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       "/pending-approval",
       "/api",
     ];
-
     const shouldSkip = skipApprovalCheck.some((path) =>
       location.pathname.startsWith(path),
     );
 
-    if (!shouldSkip && session?.user?.id) {
-      // Call server function to check approval
-      const hasApproval = await checkLineApproval();
+    const { session, hasApproval } = await fetchSessionWithApproval();
 
-      if (!hasApproval) {
-        // Redirect ไป pending approval page
-        throw redirect({
-          to: "/pending-approval",
-        });
-      }
+    if (!shouldSkip && session?.user?.id && !hasApproval) {
+      throw redirect({ to: "/pending-approval" });
     }
 
     return { session };

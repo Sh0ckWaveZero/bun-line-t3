@@ -6,8 +6,7 @@ export function getRouter() {
     context: {
       session: null,
     },
-    defaultPreload: "intent",
-    defaultPreloadStaleTime: 0,
+    defaultPreload: false,
     routeTree,
     scrollRestoration: true,
   });

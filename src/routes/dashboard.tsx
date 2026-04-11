@@ -1,8 +1,7 @@
 "use client";
 
-import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { useSession } from "@/lib/auth/client";
-import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSafeHydration } from "@/hooks/useHydrationSafe";
 import { PendingApprovalModal } from "@/components/auth/PendingApprovalModal";
@@ -20,8 +19,7 @@ import {
 
 function DashboardPage() {
   const { data: session, status } = useSession();
-  const navigate = useNavigate();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const isAdmin = session?.isAdmin ?? false;
   const { needsApproval, isLoading: approvalLoading, refetch } = useLineApproval();
 
   const todayLabel = useSafeHydration("...", () =>
@@ -30,32 +28,6 @@ function DashboardPage() {
       month: "short",
     }).format(new Date()),
   );
-
-  // Check admin status
-  useEffect(() => {
-    let isMounted = true;
-
-    if (status !== "authenticated") {
-      return;
-    }
-
-    fetch("/api/admin/check")
-      .then((res) => res.json())
-      .then((data) => {
-        if (isMounted) {
-          setIsAdmin(data.isAdmin ?? false);
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setIsAdmin(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [status]);
 
   if (status === "loading") {
     return (

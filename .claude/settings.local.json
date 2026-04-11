@@ -58,7 +58,10 @@
       "Bash(git branch:*)",
       "Bash(bunx next lint:*)",
       "Bash(chmod:*)",
-      "Bash(tee:*)"
+      "Bash(tee:*)",
+      "Bash(gh pr:*)",
+      "Bash(git fetch:*)",
+      "Bash(git merge:*)"
     ],
     "deny": [
       "Read(**/.env*)",

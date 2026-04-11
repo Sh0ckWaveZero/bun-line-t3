@@ -1,36 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  validateAppUrl,
-  getSafeRedirectUrl,
-} from "@/lib/security/url-validator";
+import { validateAppUrl } from "@/lib/security/url-validator";
 
 export async function GET(request: Request) {
   try {
-    // 🛡️ Security: Force production URL for all environments
-    const PRODUCTION_URL = "https://your-app.example.com";
-
-    // 🔒 Security: Validate production URL
-    const productionUrlValidation = validateAppUrl(PRODUCTION_URL);
-    if (!productionUrlValidation.isValid) {
-      console.error(
-        `🚨 Security: Production URL failed validation: ${productionUrlValidation.error}`,
-      );
-    }
-
-    // 🛡️ Security: Validate environment URLs
-    const appUrl = process.env.APP_URL ?? PRODUCTION_URL;
-    const frontendUrl = process.env.FRONTEND_URL || PRODUCTION_URL;
+    // 🛡️ Security: Read URLs exclusively from env vars — no hardcoded fallback
+    // domains to prevent redirecting to a domain we don't own.
+    const appUrl = process.env.APP_URL ?? "";
+    const frontendUrl = process.env.FRONTEND_URL ?? "";
 
     const appUrlValidation = validateAppUrl(appUrl);
     const frontendValidation = validateAppUrl(frontendUrl);
 
-    // 🔒 Security: Use safe redirect URLs
-    const safeAppUrl = getSafeRedirectUrl(appUrl, PRODUCTION_URL);
-    const safeFrontendUrl = getSafeRedirectUrl(frontendUrl, PRODUCTION_URL);
+    // Only expose a safeAppUrl if it is actually validated; never fall back to a
+    // placeholder domain.
+    const safeAppUrl = appUrlValidation.isValid ? appUrl : null;
+    const safeFrontendUrl = frontendValidation.isValid ? frontendUrl : null;
 
     // 🛡️ Calculate callback URL with security validation
-    const callbackUrl = `${PRODUCTION_URL}/api/auth/callback/line`;
-    const callbackValidation = validateAppUrl(callbackUrl);
+    const callbackBase = safeAppUrl ?? "";
+    const callbackUrl = callbackBase ? `${callbackBase}/api/auth/callback/line` : null;
+    const callbackValidation = callbackUrl ? validateAppUrl(callbackUrl) : { isValid: false, error: "APP_URL not configured" };
 
     // Get configuration from environment variables
     const config = {
@@ -62,15 +51,11 @@ export async function GET(request: Request) {
           validated: callbackValidation,
           isSafe: callbackValidation.isValid,
         },
-        productionUrl: {
-          validated: productionUrlValidation,
-          isSafe: productionUrlValidation.isValid,
-        },
       },
 
       // Generated OAuth URL (using safe URLs only)
       oauthUrl: callbackValidation.isValid
-        ? `https://access.line.me/oauth2/v2.1/authorize?client_id=${process.env.LINE_CLIENT_ID}&scope=openid%20profile&response_type=code&redirect_uri=${encodeURIComponent(callbackUrl)}&state=test`
+        ? `https://access.line.me/oauth2/v2.1/authorize?client_id=${process.env.LINE_CLIENT_ID}&scope=openid%20profile&response_type=code&redirect_uri=${encodeURIComponent(callbackUrl!)}&state=test`
         : null,
 
       // Current request info
