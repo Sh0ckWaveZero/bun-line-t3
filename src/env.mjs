@@ -24,6 +24,8 @@ export const env = createEnv({
     JWT_EXPIRES_IN: z.string().default("1d"),
     LINE_MESSAGING_API: z.string().url(),
     LINE_CHANNEL_ACCESS: z.string(),
+    // 🔐 Admin LINE User IDs (comma separated) — สำหรับอนุมัติ/ปฏิเสธ LINE users
+    ADMIN_LINE_USER_IDS: z.string().optional().default("U2b569682d48c37664b6d0b92c2179a7f"), // ⚠️ TEMP DEBUG
     CMC_URL: z.string().url(),
     CMC_API_KEY: z.string(),
     FRONTEND_URL: z.string().url(),
