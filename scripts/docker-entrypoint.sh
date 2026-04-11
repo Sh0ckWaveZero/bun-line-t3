@@ -34,4 +34,4 @@ export HOSTNAME=0.0.0.0
 export PORT=${PORT:-12914}
 
 echo "🌐 Binding to $HOSTNAME:$PORT"
-exec bun dist/server/server.js
+exec bun server.ts
