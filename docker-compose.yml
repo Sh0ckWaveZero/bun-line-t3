@@ -73,6 +73,7 @@ services:
       - LINE_MESSAGING_API=https://api.line.me/v2/bot/message
       - LINE_GET_CONTENT=https://api-data.line.me/v2/bot/message
       - LINE_CHANNEL_SECRET=${LINE_CHANNEL_SECRET}
+      - ADMIN_LINE_USER_IDS=${ADMIN_LINE_USER_IDS:-}
 
       # =============================================================================
       # Database Configuration (GitHub Secrets)

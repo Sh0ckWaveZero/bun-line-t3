@@ -78,6 +78,7 @@ jobs:
             "LINE_LOGIN_CHANNEL_SECRET"
             "LINE_CHANNEL_ACCESS"
             "LINE_CHANNEL_SECRET"
+            "ADMIN_LINE_USER_IDS"
             "AIRVISUAL_API_KEY"
             "CMC_API_KEY"
             "OPENAI_API_KEY"
@@ -115,6 +116,7 @@ jobs:
           LINE_LOGIN_CHANNEL_SECRET: ${{ secrets.LINE_LOGIN_CHANNEL_SECRET }}
           LINE_CHANNEL_ACCESS: ${{ secrets.LINE_CHANNEL_ACCESS }}
           LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
+          ADMIN_LINE_USER_IDS: ${{ secrets.ADMIN_LINE_USER_IDS }}
           AIRVISUAL_API_KEY: ${{ secrets.AIRVISUAL_API_KEY }}
           CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -254,6 +256,7 @@ jobs:
           LINE_MESSAGING_API=https://api.line.me/v2/bot/message
           LINE_GET_CONTENT=https://api-data.line.me/v2/bot/message
           LINE_CHANNEL_SECRET="${{ secrets.LINE_CHANNEL_SECRET }}"
+          ADMIN_LINE_USER_IDS="${{ secrets.ADMIN_LINE_USER_IDS }}"
 
           # =============================================================================
           # Database Configuration
@@ -316,6 +319,7 @@ jobs:
             --build-arg APP_URL="${{ secrets.APP_URL }}" \
             --build-arg AUTH_SECRET="${{ secrets.AUTH_SECRET }}" \
             --build-arg FRONTEND_URL="${{ secrets.FRONTEND_URL }}" \
+            --build-arg ADMIN_LINE_USER_IDS="${{ secrets.ADMIN_LINE_USER_IDS }}" \
             --build-arg OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
             --build-arg APP_DOMAIN="${{ secrets.APP_DOMAIN }}" \
             --build-arg ALLOWED_DOMAINS="${{ secrets.ALLOWED_DOMAINS }}"; then
@@ -383,6 +387,7 @@ jobs:
           LINE_LOGIN_CHANNEL_SECRET: ${{ secrets.LINE_LOGIN_CHANNEL_SECRET }}
           LINE_CHANNEL_ACCESS: ${{ secrets.LINE_CHANNEL_ACCESS }}
           LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
+          ADMIN_LINE_USER_IDS: ${{ secrets.ADMIN_LINE_USER_IDS }}
           AIRVISUAL_API_KEY: ${{ secrets.AIRVISUAL_API_KEY }}
           CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -433,6 +438,7 @@ jobs:
           LINE_LOGIN_CHANNEL_SECRET: ${{ secrets.LINE_LOGIN_CHANNEL_SECRET }}
           LINE_CHANNEL_ACCESS: ${{ secrets.LINE_CHANNEL_ACCESS }}
           LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
+          ADMIN_LINE_USER_IDS: ${{ secrets.ADMIN_LINE_USER_IDS }}
           AIRVISUAL_API_KEY: ${{ secrets.AIRVISUAL_API_KEY }}
           CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -561,6 +567,7 @@ jobs:
           LINE_LOGIN_CHANNEL_SECRET: ${{ secrets.LINE_LOGIN_CHANNEL_SECRET }}
           LINE_CHANNEL_ACCESS: ${{ secrets.LINE_CHANNEL_ACCESS }}
           LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
+          ADMIN_LINE_USER_IDS: ${{ secrets.ADMIN_LINE_USER_IDS }}
           AIRVISUAL_API_KEY: ${{ secrets.AIRVISUAL_API_KEY }}
           CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
