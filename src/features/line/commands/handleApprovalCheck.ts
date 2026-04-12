@@ -38,10 +38,17 @@ export const handleApprovalCheck = async (
   req: any,
 ): Promise<boolean> => {
   const event = req.body?.events?.[0];
-  const userId: string | undefined = event?.source?.userId;
+  const source = event?.source;
 
-  // ถ้าไม่มี userId (group/room event ที่ไม่มี user) → ผ่านไปเลย
-  if (!userId) return true;
+  // ดึง userId จาก source (user, group, room ล้วนๆ มี userId ของผู้ส่ง)
+  const userId: string | undefined = source?.userId;
+
+  // ✅ รองรับทั้ง user, group, และ room events
+  // userId คือ ID ของผู้ส่งข้อความ ไม่ว่าจะอยู่ใน 1:1, group, หรือ room
+  if (!userId) {
+    console.warn("[handleApprovalCheck] Event ไม่มี userId - ข้ามการตรวจสอบ");
+    return false;
+  }
 
   // ดึงโปรไฟล์ LINE user
   const { LINE_CHANNEL_ACCESS } = process.env;

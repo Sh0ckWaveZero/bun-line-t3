@@ -146,6 +146,46 @@ export const auth = betterAuth({
             },
           };
         },
+        async after(account) {
+          // บันทึก LINE profile data ลง LineApprovalRequest เมื่อ user login ด้วย LINE
+          if (account.provider === "line") {
+            try {
+              const { db } = await import("../database/db");
+              const lineUserId = account.providerAccountId;
+
+              // ดึง user data เพื่อได้ name และ image
+              const user = await db.user.findUnique({
+                where: { id: account.userId },
+                select: { name: true, image: true },
+              });
+
+              // สร้างหรืออัปเดต LineApprovalRequest
+              await db.lineApprovalRequest.upsert({
+                where: { lineUserId },
+                create: {
+                  lineUserId,
+                  displayName: user?.name,
+                  pictureUrl: user?.image,
+                  statusMessage: null,
+                  status: "PENDING",
+                },
+                update: {
+                  displayName: user?.name,
+                  pictureUrl: user?.image,
+                  // ไม่อัปเดต status ถ้ามีอยู่แล้ว
+                },
+              });
+
+              console.info("[Auth] LINE profile saved to LineApprovalRequest", {
+                lineUserId,
+                displayName: user?.name,
+              });
+            } catch (error) {
+              console.error("[Auth] Failed to save LINE profile:", error);
+              // ไม่ throw error เพื่อไม่ให้กระทบการ login
+            }
+          }
+        },
       },
       update: {
         async before(account) {
