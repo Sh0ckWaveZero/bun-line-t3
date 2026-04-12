@@ -72,7 +72,11 @@ function Home() {
       className="home-page relative overflow-hidden"
     >
       {/* ── Background layers (z-0) ── */}
-      <div aria-hidden="true" className="home-aurora" />
+      <div aria-hidden="true" className="home-aurora">
+        <div className="home-aurora-blob" />
+        <div className="home-aurora-blob" />
+        <div className="home-aurora-blob" />
+      </div>
       <InteractiveDots />
 
       {/* ── Rings: centered at the split seam between upper/lower ── */}
@@ -158,8 +162,7 @@ function Home() {
 
       {/* ── Footer — pinned to bottom edge ── */}
       <footer className="absolute bottom-0 z-10 w-full py-4 text-center">
-        <p className="text-xs font-medium tracking-widest text-white/20"
-           style={{ fontFamily: "'Syne', sans-serif" }}>
+        <p className="home-footer-text">
           © 2021–{new Date().getFullYear()} MSL
         </p>
       </footer>

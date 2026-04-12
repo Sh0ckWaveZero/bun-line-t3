@@ -32,6 +32,28 @@ export const InteractiveDots: React.FC = () => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    // ── Dark mode detection ───────────────────────────────────────────────
+    // Only use Tailwind's .dark class (class-based strategy) — NOT prefers-color-scheme.
+    // Mixing both caused a bug: system=dark + app=light → isDark=true → white dots
+    // on light bg = invisible.
+    //
+    // Colors:
+    // - Dark mode: white → cold teal on #07071a bg
+    // - Light mode: warm slate → amber/rose on #f0f4fb bg
+    const isDarkRef2 = { current: false };
+    const updateScheme = () => {
+      isDarkRef2.current = document.documentElement.classList.contains("dark");
+    };
+    updateScheme();
+    // Watch for .dark class toggle (e.g. manual theme switch)
+    const classObserver = new MutationObserver(updateScheme);
+    classObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    // Dummy mq ref so cleanup code compiles unchanged
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+
     // ── Retina / HiDPI setup ──────────────────────────────────────────────
     const dpr = window.devicePixelRatio || 1;
 
@@ -108,16 +130,25 @@ export const InteractiveDots: React.FC = () => {
         const centerFade     = Math.max(0, 1 - distFromCenter / fadeR);
         if (centerFade <= 0) continue;
 
-        // ── Color: white at rest → cold teal when displaced ────────────
-        const disp     = Math.hypot(dot.x - dot.ox, dot.y - dot.oy);
-        const t        = Math.min(disp / 18, 1); // 0 = rest, 1 = max displaced
+        // ── Color: mode-aware lerp on displacement ──────────────────────
+        const disp = Math.hypot(dot.x - dot.ox, dot.y - dot.oy);
+        const t    = Math.min(disp / 18, 1); // 0 = rest · 1 = max displaced
 
-        // lerp: white (255,255,255) → teal (120,240,220)
-        const r = Math.round(255 - t * 135);
-        const g = Math.round(255 - t *  15);
-        const b = Math.round(255 - t *  35);
-
-        const baseOpacity = 0.04 + t * 0.22;  // subtle at rest, brighter displaced
+        let r: number, g: number, b: number, baseOpacity: number;
+        if (isDarkRef2.current) {
+          // Dark  : white → cold teal (120, 240, 220)
+          r = Math.round(255 - t * 135);
+          g = Math.round(255 - t *  15);
+          b = Math.round(255 - t *  35);
+          baseOpacity = 0.04 + t * 0.22;
+        } else {
+          // Light : warm slate (100, 110, 140) → amber/rose (240, 160, 140)
+          // Softer colors that work well on #f0f4fb background
+          r = Math.round(100 + t * 140);
+          g = Math.round(110 + t *  50);
+          b = Math.round(140 + t *   0);
+          baseOpacity = 0.20 + t * 0.35;   // More visible on light bg
+        }
         const opacity     = baseOpacity * centerFade;
 
         // ── Draw ────────────────────────────────────────────────────────
@@ -162,6 +193,8 @@ export const InteractiveDots: React.FC = () => {
       window.removeEventListener("touchend",   onTouchEnd);
       window.removeEventListener("resize",     resize);
       cancelAnimationFrame(rafRef.current);
+      classObserver.disconnect();
+      mq.removeEventListener("change", updateScheme);
     };
   }, []);
 

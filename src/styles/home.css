@@ -1,17 +1,134 @@
 /* ─── Home Page ─ "Void Garden" ────────────────────────────────────────────
-   Layout : Option B — title ↑ · [rings as hero] · button ↓
-            Spacer between title & button = rings visual size → rings show through
-   Font   : Syne 800
-   Motion : staggered CSS reveal · aurora pulse
+   Supports both Light & Dark mode via CSS custom properties
+   Strategy : Light = default · .dark class override · prefers-color-scheme fallback
+   Font      : Syne 800
+
+   Light mode: soft blue-gray bg (#f0f4fb) · warm amber/rose aurora · dark text
+   Dark mode: deep void bg (#07071a) · cool teal/purple aurora · light text
 ──────────────────────────────────────────────────────────────────────────── */
 @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&display=swap");
 
-/* ── Page base ───────────────────────────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════════════════
+   CSS CUSTOM PROPERTIES
+   ─────────────────────────────────────────────────────────────────────────
+   ความต่างระหว่าง light ↔ dark:
+     Light  → bg สว่าง (#f0f4fb) · aurora สีอุ่น (amber/rose) · text เข้ม
+     Dark   → bg เข้ม (#07071a) · aurora สีเย็น (teal/purple) · text สว่าง
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── shared base (ค่าที่เหมือนกันทุก mode) ───────────────────────────────── */
 .home-page {
-  background: #07071a;
+  --hp-title-line:    #06C755;  /* LINE green — ไม่เปลี่ยน */
+
+  /* Dashboard button hover/active */
+  --hp-out-bg-hover:     rgba(255,72,72,0.08);
+  --hp-out-border-hover: rgba(255,72,72,0.20);
+  --hp-out-color-hover:  rgba(255,130,130,0.88);
+
+  background: var(--hp-bg);
 }
 
-/* ── Aurora glows ────────────────────────────────────────────────────────── */
+/* ── Light mode (system = light, no .dark class) ─────────────────────────── */
+/*    bg สว่าง · aurora อุ่น: amber (top-right) + rose (bottom-left)         */
+/*    text เข้ม · cards โปร่งแสงน้อย                                          */
+.home-page:not(.dark) {
+  --hp-bg:            #f0f4fb;
+  --hp-avatar-border: #f0f4fb;
+
+  --hp-aurora-teal:   oklch(0.78 0.18 65 / 0.24);   /* amber warm - more visible on light */
+  --hp-aurora-purple: oklch(0.65 0.22 15 / 0.22);   /* rose/coral */
+
+  --hp-title-bun:     #1a1a3e;
+  --hp-title-t3:      #3d3db5;
+  --hp-title-app:     rgba(26,26,62,0.50);
+
+  --hp-card-bg:       rgba(255,255,255,0.72);
+  --hp-card-border:   rgba(100,100,150,0.18);
+
+  --hp-greeting:      rgba(80,80,120,0.70);
+  --hp-username:      #1a1a3e;
+
+  --hp-dash-bg:           oklch(0.55 0.18 205 / 0.15);
+  --hp-dash-border:       oklch(0.55 0.18 205 / 0.35);
+  --hp-dash-color:        #1a1a3e;
+  --hp-dash-bg-hover:     oklch(0.55 0.18 205 / 0.25);
+  --hp-dash-border-hover: oklch(0.55 0.18 205 / 0.55);
+  --hp-dash-glow:         oklch(0.55 0.18 205 / 0.18);
+
+  --hp-out-border:    rgba(80,80,120,0.20);
+  --hp-out-color:     rgba(80,80,120,0.60);
+
+  --hp-login-halo:    oklch(0.85 0.16 65 / 0.35);   /* warm amber halo */
+  --hp-footer:        rgba(80,80,120,0.45);
+}
+
+/* ── Dark mode (.dark class — Tailwind class-based) ──────────────────────── */
+/*    bg เข้ม · aurora เย็น: teal (top-right) + purple (bottom-left)         */
+/*    text สว่าง · cards โปร่งแสงมาก                                          */
+.dark .home-page {
+  --hp-bg:            #07071a;
+  --hp-avatar-border: #07071a;
+
+  --hp-aurora-teal:   oklch(0.62 0.22 188 / 0.16);
+  --hp-aurora-purple: oklch(0.50 0.30 298 / 0.18);
+
+  --hp-title-bun:     #e8e8ff;
+  --hp-title-t3:      oklch(0.78 0.17 207);
+  --hp-title-app:     rgba(232,232,255,0.25);
+
+  --hp-card-bg:       rgba(255,255,255,0.042);
+  --hp-card-border:   rgba(255,255,255,0.09);
+
+  --hp-greeting:      rgba(232,232,255,0.36);
+  --hp-username:      #e8e8ff;
+
+  --hp-dash-bg:           oklch(0.65 0.18 205 / 0.13);
+  --hp-dash-border:       oklch(0.65 0.18 205 / 0.26);
+  --hp-dash-color:        oklch(0.82 0.13 205);
+  --hp-dash-bg-hover:     oklch(0.65 0.18 205 / 0.22);
+  --hp-dash-border-hover: oklch(0.65 0.18 205 / 0.42);
+  --hp-dash-glow:         oklch(0.65 0.18 205 / 0.16);
+
+  --hp-out-border:    rgba(255,255,255,0.07);
+  --hp-out-color:     rgba(232,232,255,0.34);
+
+  --hp-login-halo:    oklch(0.65 0.22 145 / 0.22);
+  --hp-footer:        rgba(255,255,255,0.20);
+}
+
+/* ── System preference fallback (no .dark/.light class set) ─────────────── */
+@media (prefers-color-scheme: dark) {
+  .home-page {
+    --hp-aurora-teal:   oklch(0.62 0.22 188 / 0.16);
+    --hp-aurora-purple: oklch(0.50 0.30 298 / 0.18);
+    --hp-title-bun:     #e8e8ff;
+    --hp-title-t3:      oklch(0.78 0.17 207);
+    --hp-title-app:     rgba(232,232,255,0.25);
+    --hp-card-bg:       rgba(255,255,255,0.042);
+    --hp-card-border:   rgba(255,255,255,0.09);
+    --hp-greeting:      rgba(232,232,255,0.36);
+    --hp-username:      #e8e8ff;
+    --hp-dash-bg:       oklch(0.65 0.18 205 / 0.13);
+    --hp-dash-border:   oklch(0.65 0.18 205 / 0.26);
+    --hp-dash-color:    oklch(0.82 0.13 205);
+    --hp-dash-bg-hover:     oklch(0.65 0.18 205 / 0.22);
+    --hp-dash-border-hover: oklch(0.65 0.18 205 / 0.42);
+    --hp-dash-glow:         oklch(0.65 0.18 205 / 0.16);
+    --hp-out-border:    rgba(255,255,255,0.07);
+    --hp-out-color:     rgba(232,232,255,0.34);
+    --hp-login-halo:    oklch(0.65 0.22 145 / 0.22);
+    --hp-footer:        rgba(255,255,255,0.20);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   LAYOUT
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Aurora (Premium Mesh Gradient) ─────────────────────────────────────────
+   Multi-layer mesh gradient with subtle motion — creates depth and atmosphere
+   Light mode: warm, ethereal · Dark mode: cool, cosmic
+──────────────────────────────────────────────────────────────────────────── */
 .home-aurora {
   position: absolute;
   inset: 0;
@@ -19,41 +136,101 @@
   z-index: 0;
   overflow: hidden;
 }
-.home-aurora::before {
-  content: "";
-  position: absolute;
-  top: -20%;
-  right: -15%;
-  width: min(680px, 70vmax);
-  height: min(680px, 70vmax);
-  background: radial-gradient(circle, oklch(0.62 0.22 188 / 0.16) 0%, transparent 65%);
-  animation: aurora-drift 10s ease-in-out infinite alternate;
-}
-.home-aurora::after {
-  content: "";
-  position: absolute;
-  bottom: -20%;
-  left: -15%;
-  width: min(680px, 70vmax);
-  height: min(680px, 70vmax);
-  background: radial-gradient(circle, oklch(0.50 0.30 298 / 0.18) 0%, transparent 65%);
-  animation: aurora-drift 13s ease-in-out infinite alternate-reverse;
-}
-@keyframes aurora-drift {
-  from { transform: scale(1); }
-  to   { transform: scale(1.2) translate(3%, 3%); }
+
+/* ── Light Mode: Warm, ethereal glow ────────────────────────────────────── */
+.home-page:not(.dark) .home-aurora {
+  background:
+    /* Top-right warm amber */
+    radial-gradient(ellipse 80% 60% at 85% 20%, oklch(0.82 0.18 65 / 0.18) 0%, transparent 50%),
+    /* Bottom-left rose coral */
+    radial-gradient(ellipse 70% 50% at 15% 85%, oklch(0.72 0.20 25 / 0.15) 0%, transparent 45%),
+    /* Center subtle warmth */
+    radial-gradient(ellipse 90% 70% at 50% 50%, oklch(0.85 0.12 70 / 0.08) 0%, transparent 60%),
+    /* Base color */
+    var(--hp-bg);
+  animation: aurora-pulse-light 20s ease-in-out infinite alternate;
 }
 
+/* ── Dark Mode: Cool, cosmic glow ──────────────────────────────────────── */
+.dark .home-page .home-aurora {
+  background:
+    /* Top-right teal */
+    radial-gradient(ellipse 85% 65% at 80% 15%, oklch(0.68 0.22 188 / 0.22) 0%, transparent 55%),
+    /* Bottom-left purple */
+    radial-gradient(ellipse 75% 55% at 20% 90%, oklch(0.55 0.28 298 / 0.20) 0%, transparent 50%),
+    /* Top-left indigo accent */
+    radial-gradient(ellipse 60% 40% at 10% 20%, oklch(0.62 0.18 240 / 0.12) 0%, transparent 45%),
+    /* Center deep glow */
+    radial-gradient(ellipse 100% 80% at 50% 50%, oklch(0.45 0.18 220 / 0.08) 0%, transparent 65%),
+    /* Base color */
+    var(--hp-bg);
+  animation: aurora-pulse-dark 24s ease-in-out infinite alternate;
+}
+
+/* ── Subtle floating blobs for extra depth ───────────────────────────────── */
+.home-aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  mix-blend-mode: screen;
+  opacity: 0.5;
+  animation: aurora-blob-float 30s ease-in-out infinite;
+}
+
+.home-aurora-blob:nth-child(1) {
+  top: 10%; right: 15%;
+  width: min(400px, 45vmax);
+  height: min(400px, 45vmax);
+  background: radial-gradient(circle, var(--hp-aurora-teal) 0%, transparent 70%);
+  animation-delay: 0s;
+}
+
+.home-aurora-blob:nth-child(2) {
+  bottom: 15%; left: 10%;
+  width: min(350px, 40vmax);
+  height: min(350px, 40vmax);
+  background: radial-gradient(circle, var(--hp-aurora-purple) 0%, transparent 70%);
+  animation-delay: -10s;
+}
+
+.home-aurora-blob:nth-child(3) {
+  top: 50%; left: 50%;
+  width: min(300px, 35vmax);
+  height: min(300px, 35vmax);
+  background: radial-gradient(circle, var(--hp-aurora-teal) 0%, transparent 70%);
+  animation-delay: -20s;
+  opacity: 0.3;
+}
+
+/* ── Animations ───────────────────────────────────────────────────────────── */
+@keyframes aurora-pulse-light {
+  0%   { filter: brightness(1) blur(0px); }
+  50%  { filter: brightness(1.05) blur(1px); }
+  100% { filter: brightness(1.1) blur(2px); }
+}
+
+@keyframes aurora-pulse-dark {
+  0%   { filter: brightness(1) blur(0px); }
+  50%  { filter: brightness(1.08) blur(1px); }
+  100% { filter: brightness(1.15) blur(2px); }
+}
+
+@keyframes aurora-blob-float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(5%, -5%) scale(1.05);
+  }
+  50% {
+    transform: translate(-3%, 4%) scale(1.08);
+  }
+  75% {
+    transform: translate(4%, 3%) scale(1.03);
+  }
+}
 
 /* ── Content column ──────────────────────────────────────────────────────── */
-/*
-   Flex column, vertically centered.
-   A "spacer" div sits between title & CTA — its height ≈ rings visual size
-   so the rings (absolutely centered) show through the gap.
-
-   rings CSS: width 50vmin, max-width 300px, aspect-ratio 1
-   spacer = rings visual height + top/bottom breathing room
-*/
 .home-content {
   display: flex;
   flex-direction: column;
@@ -64,22 +241,22 @@
   gap: 0;
 }
 
-/* Gap that reveals the rings — sized to rings visual footprint */
 .home-rings-gap {
-  /* Guest: rings = min(50vmin, 300px) + breathing room */
   height: clamp(200px, calc(50vmin + 2rem), 340px);
   width: 1px;
   flex-shrink: 0;
   pointer-events: none;
 }
-
-/* Authenticated: small gap → card floats ON the rings as atmosphere */
 .home-rings-gap-sm {
   height: clamp(1rem, 2vh, 1.75rem);
   width: 1px;
   flex-shrink: 0;
   pointer-events: none;
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   COMPONENTS
+   ════════════════════════════════════════════════════════════════════════════ */
 
 /* ── Title ───────────────────────────────────────────────────────────────── */
 .home-title {
@@ -88,60 +265,47 @@
   letter-spacing: -0.03em;
   line-height: 1.05;
   text-align: center;
-
-  /* Responsive: wraps naturally on small screens, single line on desktop */
   font-size: clamp(2rem, 6vw, 5.25rem);
-
   opacity: 0;
   animation: home-reveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.08s forwards;
 }
-
-/* Responsive adjustments */
 @media (max-width: 480px) {
-  .home-title {
-    /* "Bun LINE T3" / "App" — two lines, comfortable */
-    font-size: clamp(2rem, 9.5vw, 2.5rem);
-    letter-spacing: -0.02em;
-  }
+  .home-title { font-size: clamp(2rem, 9.5vw, 2.5rem); letter-spacing: -0.02em; }
 }
 @media (min-width: 481px) and (max-width: 768px) {
-  .home-title {
-    font-size: clamp(2.5rem, 7vw, 3.75rem);
-  }
+  .home-title { font-size: clamp(2.5rem, 7vw, 3.75rem); }
 }
 
-.home-title-bun  { color: #e8e8ff; }
-.home-title-line { color: #06C755; }
-.home-title-t3   { color: oklch(0.78 0.17 207); }
+.home-title-bun  { color: var(--hp-title-bun); }
+.home-title-line { color: var(--hp-title-line); }
+.home-title-t3   { color: var(--hp-title-t3); }
 .home-title-app  {
-  color: rgba(232,232,255,0.25);
+  color: var(--hp-title-app);
   font-weight: 600;
   font-size: 0.72em;
   letter-spacing: -0.01em;
 }
 
-/* ── Login CTA wrapper ───────────────────────────────────────────────────── */
+/* ── Login wrapper ───────────────────────────────────────────────────────── */
 .home-login-wrapper {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-
   opacity: 0;
   animation: home-reveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards;
 }
-/* green glow halo behind button */
 .home-login-wrapper::before {
   content: "";
   position: absolute;
   inset: -20px -36px;
-  background: radial-gradient(ellipse, oklch(0.65 0.22 145 / 0.22) 0%, transparent 70%);
+  background: radial-gradient(ellipse, var(--hp-login-halo) 0%, transparent 70%);
   filter: blur(14px);
   pointer-events: none;
   z-index: -1;
 }
 
-/* ── Glass card (authenticated) ─────────────────────────────────────────── */
+/* ── Glass card ──────────────────────────────────────────────────────────── */
 .home-card {
   display: flex;
   flex-direction: column;
@@ -149,18 +313,16 @@
   gap: 1.25rem;
   padding: 2rem 1.75rem 1.75rem;
   width: min(320px, 88vw);
-
-  background: rgba(255,255,255,0.042);
-  border: 1px solid rgba(255,255,255,0.09);
+  background: var(--hp-card-bg);
+  border: 1px solid var(--hp-card-border);
   border-radius: 1.25rem;
   backdrop-filter: blur(28px) saturate(160%);
   -webkit-backdrop-filter: blur(28px) saturate(160%);
-
   opacity: 0;
   animation: home-reveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards;
 }
 
-/* ── Avatar gradient ring ────────────────────────────────────────────────── */
+/* ── Avatar ──────────────────────────────────────────────────────────────── */
 .home-avatar-wrapper {
   padding: 3px;
   border-radius: 50%;
@@ -175,7 +337,7 @@
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  border: 3px solid #07071a;
+  border: 3px solid var(--hp-avatar-border);
   object-fit: cover;
 }
 
@@ -193,23 +355,19 @@
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(232,232,255,0.36);
+  color: var(--hp-greeting);
 }
 .home-username {
   font-family: "Syne", sans-serif;
   font-size: 1.35rem;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #e8e8ff;
+  color: var(--hp-username);
 }
 
-/* ── Action buttons ──────────────────────────────────────────────────────── */
-.home-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  width: 100%;
-}
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+.home-actions { display: flex; flex-direction: column; gap: 0.5rem; width: 100%; }
+
 .home-btn-dashboard {
   display: flex;
   align-items: center;
@@ -217,9 +375,9 @@
   gap: 0.5rem;
   padding: 0.8rem 1.25rem;
   border-radius: 0.625rem;
-  background: oklch(0.65 0.18 205 / 0.13);
-  border: 1px solid oklch(0.65 0.18 205 / 0.26);
-  color: oklch(0.82 0.13 205);
+  background: var(--hp-dash-bg);
+  border: 1px solid var(--hp-dash-border);
+  color: var(--hp-dash-color);
   font-family: "Syne", sans-serif;
   font-size: 0.9rem;
   font-weight: 700;
@@ -228,9 +386,9 @@
     box-shadow 0.18s ease, transform 0.12s ease;
 }
 .home-btn-dashboard:hover {
-  background: oklch(0.65 0.18 205 / 0.22);
-  border-color: oklch(0.65 0.18 205 / 0.42);
-  box-shadow: 0 0 18px oklch(0.65 0.18 205 / 0.16);
+  background: var(--hp-dash-bg-hover);
+  border-color: var(--hp-dash-border-hover);
+  box-shadow: 0 0 18px var(--hp-dash-glow);
   transform: translateY(-1px);
 }
 .home-btn-dashboard:active { transform: translateY(0); }
@@ -243,8 +401,8 @@
   padding: 0.7rem 1.25rem;
   border-radius: 0.625rem;
   background: transparent;
-  border: 1px solid rgba(255,255,255,0.07);
-  color: rgba(232,232,255,0.34);
+  border: 1px solid var(--hp-out-border);
+  color: var(--hp-out-color);
   font-family: "Syne", sans-serif;
   font-size: 0.85rem;
   font-weight: 600;
@@ -252,9 +410,18 @@
   transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
 .home-btn-signout:hover {
-  background: rgba(255, 72, 72, 0.08);
-  border-color: rgba(255, 72, 72, 0.20);
-  color: rgba(255, 130, 130, 0.88);
+  background: var(--hp-out-bg-hover);
+  border-color: var(--hp-out-border-hover);
+  color: var(--hp-out-color-hover);
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+.home-footer-text {
+  font-family: "Syne", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--hp-footer);
 }
 
 /* ── Entrance animation ──────────────────────────────────────────────────── */
