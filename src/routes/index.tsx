@@ -8,6 +8,7 @@ import "@/styles/home.css";
 import { signOut, useSession } from "@/lib/auth/client";
 import { LineLoginButton } from "@/components/ui/LineLoginButton";
 import { useEffect } from "react";
+import { DEFAULT_AVATAR_SRC } from "@/lib/constants/avatar";
 
 // ─── Icons ────────────────────────────────────────────────────────────────
 
@@ -55,6 +56,7 @@ const IconSignOut = () => (
 function Home() {
   const { data: session, status } = useSession();
   const navigate = useNavigate();
+  const profileImageSrc = session?.user?.image?.trim() || DEFAULT_AVATAR_SRC;
 
   useEffect(() => {
     if (session && status === "authenticated") {
@@ -121,7 +123,7 @@ function Home() {
               <div id="profile-image-wrapper" className="home-avatar-wrapper">
                 <img
                   id="profile-image"
-                  src={session?.user?.image ?? "/images/otter.svg"}
+                  src={profileImageSrc}
                   className="home-avatar"
                   width={80}
                   height={80}

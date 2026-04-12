@@ -26,6 +26,12 @@
   --hp-out-color-hover:  rgba(255,130,130,0.88);
 
   background: var(--hp-bg);
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
 }
 
 /* ── Light mode (system = light, no .dark class) ─────────────────────────── */
@@ -236,8 +242,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100svh;
-  padding: 2rem 1.25rem;
+  width: 100%;
+  min-height: 0;
+  padding: 2rem 1.25rem 4.75rem;
   gap: 0;
 }
 

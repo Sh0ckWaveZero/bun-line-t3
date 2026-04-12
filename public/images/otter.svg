@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="Otter avatar">
+  <rect width="160" height="160" rx="80" fill="#d8f3dc"/>
+  <circle cx="80" cy="86" r="48" fill="#8b5e3c"/>
+  <circle cx="52" cy="54" r="18" fill="#8b5e3c"/>
+  <circle cx="108" cy="54" r="18" fill="#8b5e3c"/>
+  <circle cx="52" cy="54" r="10" fill="#c89f7a"/>
+  <circle cx="108" cy="54" r="10" fill="#c89f7a"/>
+  <ellipse cx="80" cy="96" rx="31" ry="25" fill="#f1d2b3"/>
+  <circle cx="64" cy="76" r="7" fill="#171717"/>
+  <circle cx="96" cy="76" r="7" fill="#171717"/>
+  <circle cx="66" cy="73" r="2" fill="#ffffff"/>
+  <circle cx="98" cy="73" r="2" fill="#ffffff"/>
+  <path d="M74 90c0-4 12-4 12 0 0 5-12 5-12 0Z" fill="#2b1d18"/>
+  <path d="M80 94v9" stroke="#2b1d18" stroke-width="4" stroke-linecap="round"/>
+  <path d="M68 107c7 7 17 7 24 0" fill="none" stroke="#2b1d18" stroke-width="4" stroke-linecap="round"/>
+  <path d="M45 95c10-3 19-2 27 2" fill="none" stroke="#5f3c28" stroke-width="3" stroke-linecap="round"/>
+  <path d="M43 107c11-5 21-6 31-2" fill="none" stroke="#5f3c28" stroke-width="3" stroke-linecap="round"/>
+  <path d="M115 95c-10-3-19-2-27 2" fill="none" stroke="#5f3c28" stroke-width="3" stroke-linecap="round"/>
+  <path d="M117 107c-11-5-21-6-31-2" fill="none" stroke="#5f3c28" stroke-width="3" stroke-linecap="round"/>
+</svg>

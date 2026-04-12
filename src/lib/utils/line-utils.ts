@@ -28,8 +28,13 @@ export const sendLoadingAnimation = async (
   loadingSeconds: number = 5,
 ) => {
   try {
-    const userId = req.body?.events?.[0]?.source?.userId;
+    const source = req.body?.events?.[0]?.source;
+    const userId = source?.userId;
+    const sourceType = source?.type;
+
+    // ต้องมี userId สำหรับแสดง loading animation
     if (!userId) {
+      console.warn("[sendLoadingAnimation] ไม่มี userId - ข้ามการแสดง loading");
       return;
     }
 
@@ -46,19 +51,21 @@ export const sendLoadingAnimation = async (
           method: "POST",
           headers: lineHeader,
           body: JSON.stringify({
-            chatId: userId,
+            chatId: userId, // chatId รองรับทั้ง userId, groupId, และ roomId
             loadingSeconds: Math.min(loadingSeconds, 60),
           }),
         },
       );
 
       if (loadingResponse.ok) {
+        console.info(`[sendLoadingAnimation] แสดง loading ที่ ${sourceType || "user"}: ${userId}`);
         return loadingResponse;
       }
     } catch {
       // Fallback to message
     }
 
+    // Fallback: ส่งข้อความแทน
     await fetch(env.LINE_MESSAGING_API, {
       method: "POST",
       headers: lineHeader,
@@ -74,7 +81,8 @@ export const sendLoadingAnimation = async (
     });
 
     return;
-  } catch {
+  } catch (error) {
+    console.error("[sendLoadingAnimation] ล้มเหลว:", error);
     return;
   }
 };
@@ -92,31 +100,37 @@ export const sendMessage = async (
 
   try {
     const replyToken = req.body?.events?.[0]?.replyToken;
-    const userId = req.body?.events?.[0]?.source?.userId;
+    const source = req.body?.events?.[0]?.source;
+    const userId = source?.userId;
+    const sourceType = source?.type; // "user", "group", หรือ "room"
 
-    if (!replyToken) {
-      return sendPushMessage(req, payload);
-    }
-
-    if (options?.showLoading && userId) {
-      try {
-        await sendLoadingAnimation(req, 5);
-      } catch {
-        // Skip loading animation
+    // ✅ ใช้ replyToken สำหรับตอบกลับ (รองรับทั้ง 1:1, group, และ room)
+    if (replyToken) {
+      if (options?.showLoading && userId) {
+        try {
+          await sendLoadingAnimation(req, 5);
+        } catch {
+          // Skip loading animation
+        }
       }
+
+      const response = await sendRequest(
+        `${env.LINE_MESSAGING_API}/reply`,
+        "POST",
+        lineHeader,
+        {
+          replyToken: replyToken,
+          messages: payload,
+        },
+      );
+
+      console.info(`[sendMessage] ส่ง reply ไปยัง ${sourceType || "user"}: ${userId || "unknown"}`);
+      return response;
     }
 
-    const response = await sendRequest(
-      `${env.LINE_MESSAGING_API}/reply`,
-      "POST",
-      lineHeader,
-      {
-        replyToken: replyToken,
-        messages: payload,
-      },
-    );
-
-    return response;
+    // ถ้าไม่มี replyToken ให้ fallback ไปใช้ push
+    console.warn("[sendMessage] ไม่มี replyToken - ใช้ push แทน");
+    return sendPushMessage(req, payload);
   } catch (error) {
     console.error("LINE reply failed, falling back to push:", error);
     try {
@@ -134,8 +148,24 @@ export const sendPushMessage = async (req: any, payload: any) => {
     "Content-Type": "application/json",
     Authorization: `Bearer ${lineChannelAccessToken}`,
   };
+
+  const source = req.body.events[0].source;
+  const userId = source?.userId;
+  const sourceType = source?.type; // "user", "group", หรือ "room"
+
+  // ต้องมี userId สำหรับการส่ง push message
+  if (!userId) {
+    console.error("[sendPushMessage] Event ไม่มี userId:", {
+      sourceType,
+      source,
+    });
+    throw new Error("Cannot send push message: missing userId");
+  }
+
+  console.info(`[sendPushMessage] ส่ง push ไปยัง ${sourceType || "user"}: ${userId}`);
+
   return sendRequest(`${env.LINE_MESSAGING_API}/push`, "POST", lineHeader, {
-    to: req.body.events[0].source.userId,
+    to: userId,
     messages: payload,
   });
 };

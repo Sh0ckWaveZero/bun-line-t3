@@ -18,6 +18,7 @@ import { getRequest } from "@tanstack/react-start/server";
 import { getServerAuthSession } from "@/lib/auth";
 import { db } from "@/lib/database/db";
 import { isAdminLineUser } from "@/lib/auth/admin";
+import { syncLineProfileToDatabase } from "@/lib/auth/line-profile-sync";
 import "../input.css";
 import "@/styles/dca-theme.css";
 
@@ -40,6 +41,7 @@ const fetchSessionWithApproval = createServerFn({ method: "GET" }).handler(async
   const account = await db.account.findFirst({
     where: { userId: session.user.id, provider: "line" },
     select: {
+      access_token: true,
       providerAccountId: true,
       user: { select: { role: true } },
     },
@@ -51,9 +53,24 @@ const fetchSessionWithApproval = createServerFn({ method: "GET" }).handler(async
 
   const lineUserId = account.providerAccountId;
   const isAdmin = isAdminLineUser(lineUserId) || account.user.role === "admin";
+  const syncedProfile = await syncLineProfileToDatabase({
+    accessToken: account.access_token,
+    fallbackDisplayName: session.user?.name,
+    fallbackPictureUrl: session.user?.image,
+    lineUserId,
+    userId: session.user.id,
+  });
 
   // Merge isAdmin into session
-  const sessionWithAdmin = { ...session, isAdmin };
+  const sessionWithAdmin = {
+    ...session,
+    isAdmin,
+    user: {
+      ...session.user,
+      image: syncedProfile.pictureUrl ?? session.user.image,
+      name: syncedProfile.displayName ?? session.user.name,
+    },
+  };
 
   if (isAdmin) {
     return { session: sessionWithAdmin, hasApproval: true };
@@ -63,6 +80,10 @@ const fetchSessionWithApproval = createServerFn({ method: "GET" }).handler(async
     where: { lineUserId },
     select: { status: true, expiresAt: true },
   });
+
+  if (!approval) {
+    return { session: sessionWithAdmin, hasApproval: false };
+  }
 
   const hasApproval =
     approval?.status === "APPROVED" &&
@@ -134,13 +155,13 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body
         suppressHydrationWarning
-        className="bg-background text-foreground min-h-screen antialiased"
+        className="bg-background text-foreground antialiased"
       >
         <AuthSessionProvider session={session}>
           <Providers>
             <div id="modal-root"></div>
             <Header />
-            <main id="main-content">{children}</main>
+            <div id="main-content">{children}</div>
           </Providers>
         </AuthSessionProvider>
         <TanStackDevtools

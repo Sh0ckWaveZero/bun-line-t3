@@ -4,6 +4,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useSession } from "@/lib/auth/client";
+import { DEFAULT_AVATAR_SRC } from "@/lib/constants/avatar";
 import {
   LogOut,
   Menu,
@@ -17,6 +18,7 @@ import { useState, useEffect, useRef } from "react";
 
 export default function Header() {
   const { data: session } = useSession();
+  const profileImageSrc = session?.user?.image?.trim() || DEFAULT_AVATAR_SRC;
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   });
@@ -233,7 +235,7 @@ export default function Header() {
               <div className="flex items-center space-x-2">
                 <Avatar className="border-border/50 size-8 border-2">
                   <AvatarImage
-                    src={session.user?.image || "/images/otter.svg"}
+                    src={profileImageSrc}
                     alt={session.user?.name || "User"}
                   />
                   <AvatarFallback>

@@ -15,7 +15,7 @@ export interface CreateApprovalInput {
   status?: ApprovalStatus;
   approvedBy?: string;
   approvedAt?: Date;
-  rejectReason?: string;
+  rejectReason?: string | null;
   expiresAt?: Date | null;
 }
 
@@ -23,7 +23,7 @@ export interface UpdateApprovalInput {
   status: ApprovalStatus;
   approvedBy?: string;
   approvedAt?: Date;
-  rejectReason?: string;
+  rejectReason?: string | null;
   expiresAt?: Date | null;
   notifiedAt?: Date;
   displayName?: string;

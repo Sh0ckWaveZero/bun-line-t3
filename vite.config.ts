@@ -56,7 +56,16 @@ export default defineConfig(({ mode }) => {
     define: {
       __APP_URL__: JSON.stringify(env.APP_URL ?? env.FRONTEND_URL ?? ""),
     },
-    plugins: [devtools(), tailwindcss(), tanstackStart(), viteReact()],
+    plugins: [
+      devtools({
+        consolePiping: { enabled: false },
+        enhancedLogs: { enabled: false },
+        injectSource: { enabled: false },
+      }),
+      tailwindcss(),
+      tanstackStart(),
+      viteReact(),
+    ],
     preview: {
       allowedHosts,
     },

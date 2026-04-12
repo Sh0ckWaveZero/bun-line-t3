@@ -5,6 +5,7 @@ import { getRequest } from "@tanstack/react-start/server";
 import { env } from "@/env.mjs";
 import { db } from "../database/db";
 import type { AppSession } from "./session-context";
+import { syncLineProfileToDatabase } from "./line-profile-sync";
 
 const LINE_FALLBACK_EMAIL_DOMAIN = "line.local";
 const DEFAULT_DEV_PORT = "4325";
@@ -61,6 +62,35 @@ const toIsoString = (value: Date | string) => {
   return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
 };
 
+const syncLineApprovalRequest = async (account: {
+  accountId: string;
+  accessToken?: string | null;
+  providerId: string;
+  userId: string;
+}) => {
+  if (account.providerId !== "line") {
+    return;
+  }
+
+  const lineUserId = account.accountId;
+  if (!lineUserId) {
+    return;
+  }
+
+  const user = await db.user.findUnique({
+    where: { id: account.userId },
+    select: { name: true, image: true },
+  });
+
+  await syncLineProfileToDatabase({
+    accessToken: account.accessToken,
+    fallbackDisplayName: user?.name,
+    fallbackPictureUrl: user?.image,
+    lineUserId,
+    userId: account.userId,
+  });
+};
+
 export const auth = betterAuth({
   baseURL: getAuthBaseUrl(),
   database: prismaAdapter(db, {
@@ -112,6 +142,7 @@ export const auth = betterAuth({
     line: {
       clientId: env.LINE_CLIENT_ID,
       clientSecret: env.LINE_CLIENT_SECRET,
+      overrideUserInfoOnSignIn: true,
       mapProfileToUser(profile) {
         const lineProfile = profile as {
           displayName?: string;
@@ -146,6 +177,13 @@ export const auth = betterAuth({
             },
           };
         },
+        async after(account) {
+          try {
+            await syncLineApprovalRequest(account);
+          } catch {
+            // ไม่ throw error เพื่อไม่ให้กระทบการ login
+          }
+        },
       },
       update: {
         async before(account) {
@@ -155,6 +193,13 @@ export const auth = betterAuth({
               expires_at: calculateExpiryDate(),
             },
           };
+        },
+        async after(account) {
+          try {
+            await syncLineApprovalRequest(account);
+          } catch {
+            // ไม่ throw error เพื่อไม่ให้กระทบการ login
+          }
         },
       },
     },
