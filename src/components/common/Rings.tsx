@@ -45,8 +45,9 @@ const Rings: React.FC<RingProps> = ({ count, id }) => {
   useEffect(() => {
     const pane = new Pane({ title: "Config", expanded: false });
 
-    pane.hidden =
-      process.env.NEXT_PUBLIC_APP_ENV !== "production" ? false : true;
+    // import.meta.env.PROD = true when built with `vite build` (production)
+    // process.env.NEXT_PUBLIC_APP_ENV is always undefined in Vite (Next.js syntax)
+    pane.hidden = import.meta.env.PROD;
 
     pane.addBinding(CONFIG, "radius", {
       min: 0,
