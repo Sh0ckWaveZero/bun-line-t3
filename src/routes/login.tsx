@@ -34,13 +34,15 @@ function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -right-40 -top-40 h-80 w-80 rounded-full bg-linear-to-br from-purple-400/20 to-pink-600/20 blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-linear-to-tr from-indigo-400/20 to-purple-600/20 blur-3xl"></div>
+    <main className="relative flex h-screen w-full items-center justify-center overflow-hidden">
+      {/* Gradient Background */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -right-40 -top-40 h-80 w-80 rounded-full bg-gradient-to-br from-purple-400/20 to-pink-600/20 blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-gradient-to-tr from-indigo-400/20 to-purple-600/20 blur-3xl"></div>
       </div>
 
-      <div className="relative w-full max-w-sm sm:max-w-md lg:max-w-lg">
+      {/* Content */}
+      <div className="relative z-10 w-full max-w-sm p-4 sm:max-w-md sm:p-6 lg:max-w-lg lg:p-8">
         <div className="rounded-lg bg-white/95 p-6 shadow-2xl backdrop-blur-xl sm:p-10 lg:p-14">
           <div className="mb-8 text-center">
             <div className="mb-6 text-8xl sm:text-9xl lg:text-[10rem]">🦦</div>
