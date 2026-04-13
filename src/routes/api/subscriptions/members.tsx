@@ -14,6 +14,7 @@ import {
   updateMember,
   removeMember,
 } from "@/features/subscriptions/services/member"
+import { BadRequestError, UnauthorizedError, NotFoundError, createErrorResponse } from "@/lib/errors/api-error"
 
 const addMemberSchema = z.object({
   subscriptionId: z.string().min(1),
@@ -67,20 +68,19 @@ export async function GET(request: Request) {
   try {
     const session = await getServerAuthSession(request)
     if (!session?.user?.id) {
-      return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 })
+      throw new UnauthorizedError()
     }
 
     const { searchParams } = new URL(request.url)
     const subscriptionId = searchParams.get("subscriptionId")
     if (!subscriptionId) {
-      return Response.json({ error: "กรุณาระบุ subscriptionId" }, { status: 400 })
+      throw new BadRequestError("กรุณาระบุ subscriptionId")
     }
 
     const members = await getMembersBySubscription(subscriptionId)
     return Response.json({ success: true, data: members })
   } catch (error) {
-    console.error("[GET /api/subscriptions/members]", error)
-    return Response.json({ error: "ไม่สามารถดึงข้อมูลสมาชิกได้" }, { status: 500 })
+    return createErrorResponse(error)
   }
 }
 
@@ -88,7 +88,7 @@ export async function POST(request: Request) {
   try {
     const session = await getServerAuthSession(request)
     if (!session?.user?.id) {
-      return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 })
+      throw new UnauthorizedError()
     }
 
     const body = await request.json()
@@ -112,9 +112,8 @@ export async function POST(request: Request) {
     }
     if (error instanceof z.ZodError) {
       console.error("[POST /api/subscriptions/members] ZodError:", error.issues)
-      return Response.json({ error: "ข้อมูลไม่ถูกต้อง", details: error.issues }, { status: 400 })
     }
-    return Response.json({ error: "ไม่สามารถเพิ่มสมาชิกได้", message: error instanceof Error ? error.message : "Unknown error" }, { status: 500 })
+    return createErrorResponse(error)
   }
 }
 
@@ -122,13 +121,13 @@ export async function PATCH(request: Request) {
   try {
     const session = await getServerAuthSession(request)
     if (!session?.user?.id) {
-      return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 })
+      throw new UnauthorizedError()
     }
 
     const { searchParams } = new URL(request.url)
     const memberId = searchParams.get("memberId")
     if (!memberId) {
-      return Response.json({ error: "กรุณาระบุ memberId" }, { status: 400 })
+      throw new BadRequestError("กรุณาระบุ memberId")
     }
 
     const body = await request.json()
@@ -138,10 +137,7 @@ export async function PATCH(request: Request) {
     return Response.json({ success: true, data: updated, message: "อัปเดตสมาชิกสำเร็จ" })
   } catch (error) {
     console.error("[PATCH /api/subscriptions/members]", error)
-    if (error instanceof z.ZodError) {
-      return Response.json({ error: "ข้อมูลไม่ถูกต้อง", details: error.issues }, { status: 400 })
-    }
-    return Response.json({ error: "ไม่สามารถอัปเดตสมาชิกได้" }, { status: 500 })
+    return createErrorResponse(error)
   }
 }
 
@@ -149,20 +145,20 @@ export async function DELETE(request: Request) {
   try {
     const session = await getServerAuthSession(request)
     if (!session?.user?.id) {
-      return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 })
+      throw new UnauthorizedError()
     }
 
     const { searchParams } = new URL(request.url)
     const memberId = searchParams.get("memberId")
     if (!memberId) {
-      return Response.json({ error: "กรุณาระบุ memberId" }, { status: 400 })
+      throw new BadRequestError("กรุณาระบุ memberId")
     }
 
     await removeMember(memberId)
     return Response.json({ success: true, message: "ลบสมาชิกสำเร็จ" })
   } catch (error) {
     console.error("[DELETE /api/subscriptions/members]", error)
-    return Response.json({ error: "ไม่สามารถลบสมาชิกได้" }, { status: 500 })
+    return createErrorResponse(error)
   }
 }
 

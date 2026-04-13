@@ -4,6 +4,7 @@ import {
 } from "@/lib/auth/session-context";
 import Header from "@/components/common/Header";
 import Providers from "@/providers/app-providers";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import {
   HeadContent,
   Scripts,
@@ -159,9 +160,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       >
         <AuthSessionProvider session={session}>
           <Providers>
-            <div id="modal-root"></div>
-            <Header />
-            <div id="main-content">{children}</div>
+            <ErrorBoundary>
+              <div id="modal-root"></div>
+              <Header />
+              <div id="main-content">{children}</div>
+            </ErrorBoundary>
           </Providers>
         </AuthSessionProvider>
         <TanStackDevtools
