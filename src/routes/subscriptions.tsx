@@ -300,6 +300,27 @@ function SubscriptionsPage() {
     },
   })
 
+  const generatePaymentsMutation = useMutation({
+    mutationFn: async (subscriptionId: string) => {
+      const res = await fetch(`/api/subscriptions/payments?subscriptionId=${subscriptionId}`, {
+        method: "POST",
+      })
+      if (!res.ok) {
+        const err = (await res.json()) as { error: string }
+        throw new Error(err.error)
+      }
+      return (await res.json()) as { created: number }
+    },
+    onSuccess: async (data) => {
+      await queryClient.invalidateQueries({ queryKey: ["subscription-detail", selectedId] })
+      if (data.created > 0) {
+        alert(`สร้าง payment สำเร็จ ${data.created} รายการ`)
+      } else {
+        alert("มี payment อยู่แล้วทั้งหมด")
+      }
+    },
+  })
+
   // ─── handlers ──────────────────────────────
 
   const handleMarkPaid = useCallback(
@@ -405,6 +426,36 @@ function SubscriptionsPage() {
           </button>
         </div>
 
+        {/* actions bar */}
+        {payments.length === 0 && (
+          <div className="mb-5 rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 p-6 text-center dark:border-gray-700 dark:bg-gray-800/50">
+            <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
+              ยังไม่มีรายการจ่ายเงินสำหรับเดือนนี้
+            </p>
+            <button
+              type="button"
+              onClick={() => generatePaymentsMutation.mutate(selectedId)}
+              disabled={generatePaymentsMutation.isPending}
+              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-60 dark:bg-indigo-500"
+            >
+              {generatePaymentsMutation.isPending ? (
+                <>
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  กำลังสร้าง...
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4" />
+                  สร้างรายการจ่ายเงิน
+                </>
+              )}
+            </button>
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-500">
+              ดึงข้อมูลสมาชิกทั้งหมดมาสร้าง payment อัตโนมัติ
+            </p>
+          </div>
+        )}
+
         {/* payment table */}
         {detailLoading ? (
           <div className="flex h-48 items-center justify-center rounded-2xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
@@ -460,6 +511,18 @@ function SubscriptionsPage() {
                       <p className="text-sm font-medium text-gray-900 dark:text-white">{m.name}</p>
                       {m.email && (
                         <p className="text-xs text-gray-400 dark:text-gray-500">{m.email}</p>
+                      )}
+                      {m.tags && (
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {m.tags.split(",").map((tag, i) => (
+                            <span
+                              key={i}
+                              className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
+                            >
+                              {tag.trim()}
+                            </span>
+                          ))}
+                        </div>
                       )}
                     </div>
                   </div>

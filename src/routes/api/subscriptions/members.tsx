@@ -26,10 +26,12 @@ const addMemberSchema = z.object({
     .transform((v) => new Date(v))
     .optional(),
   note: z.string().optional(),
+  tags: z.string().optional(),
 }).transform((data) => ({
   ...data,
   email: data.email === "" ? undefined : data.email,
   note: data.note === "" ? undefined : data.note,
+  tags: data.tags === "" ? undefined : data.tags,
 }))
 
 const updateMemberSchema = z.object({
@@ -43,6 +45,7 @@ const updateMemberSchema = z.object({
     .nullable()
     .optional(),
   note: z.string().nullable().optional(),
+  tags: z.string().nullable().optional(),
 })
 
 export async function GET(request: Request) {

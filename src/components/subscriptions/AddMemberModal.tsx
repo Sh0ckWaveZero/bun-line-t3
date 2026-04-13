@@ -27,6 +27,7 @@ export interface MemberFormData {
   email?: string
   shareAmount: number
   note?: string
+  tags?: string
 }
 
 export const AddMemberModal = ({
@@ -61,6 +62,7 @@ export const AddMemberModal = ({
           email: initialData.email ?? "",
           shareAmount: initialData.shareAmount,
           note: initialData.note ?? "",
+          tags: initialData.tags ?? "",
         })
       } else {
         // Create mode: คำนวณค่าเริ่มต้น
@@ -71,6 +73,7 @@ export const AddMemberModal = ({
           email: "",
           shareAmount: newSuggestedShare,
           note: "",
+          tags: "",
         })
       }
     }
@@ -186,6 +189,23 @@ export const AddMemberModal = ({
               placeholder="หมายเหตุเพิ่มเติม..."
               className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
             />
+          </div>
+
+          {/* tags */}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Tags (ไม่บังคับ)
+            </label>
+            <input
+              type="text"
+              value={form.tags}
+              onChange={(e) => setForm((p) => ({ ...p, tags: e.target.value }))}
+              placeholder="เช่น ครอบครัว,เพื่อน,ทำงาน"
+              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
+            />
+            <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+              คั่นด้วย comma เพื่อใส่หลาย tag
+            </p>
           </div>
 
           {/* actions */}

@@ -73,6 +73,7 @@ export async function addMember(input: CreateMemberInput) {
       shareAmount: input.shareAmount,
       joinedAt: input.joinedAt ?? new Date(),
       note: input.note ?? null,
+      tags: input.tags ?? null,
     },
   })
 
@@ -116,6 +117,7 @@ export async function updateMember(id: string, input: UpdateMemberInput) {
       ...(input.isActive !== undefined && { isActive: input.isActive }),
       ...(input.leftAt !== undefined && { leftAt: input.leftAt }),
       ...(input.note !== undefined && { note: input.note }),
+      ...(input.tags !== undefined && { tags: input.tags }),
     },
   })
 }

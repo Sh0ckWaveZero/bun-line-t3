@@ -26,7 +26,7 @@ const createSubscriptionSchema = z.object({
     .string()
     .transform((v) => new Date(v))
     .optional(),
-  logoUrl: z.string().url().optional(),
+  logoUrl: z.url().optional(),
   note: z.string().optional(),
 })
 

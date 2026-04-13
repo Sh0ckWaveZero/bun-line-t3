@@ -88,6 +88,7 @@ export interface SubscriptionMember {
   joinedAt: Date
   leftAt?: Date | null
   note?: string | null
+  tags?: string | null
   createdAt: Date
   updatedAt: Date
 }
@@ -100,6 +101,7 @@ export interface CreateMemberInput {
   shareAmount: number
   joinedAt?: Date
   note?: string
+  tags?: string
 }
 
 export interface UpdateMemberInput {
@@ -109,6 +111,7 @@ export interface UpdateMemberInput {
   isActive?: boolean
   leftAt?: Date | null
   note?: string | null
+  tags?: string | null
 }
 
 // ─────────────────────────────────────────────
