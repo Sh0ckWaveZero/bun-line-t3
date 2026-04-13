@@ -19,7 +19,7 @@ const addMemberSchema = z.object({
   subscriptionId: z.string().min(1),
   userId: z.string().optional(),
   name: z.string().min(1, "กรุณาระบุชื่อสมาชิก"),
-  email: z.string().email("อีเมลไม่ถูกต้อง").optional().or(z.literal("")),
+  email: z.string().optional(),
   shareAmount: z.number().nonnegative("จำนวนเงินต้องไม่ติดลบ"),
   joinedAt: z
     .string()
@@ -27,12 +27,27 @@ const addMemberSchema = z.object({
     .optional(),
   note: z.string().optional(),
   tags: z.string().optional(),
-}).transform((data) => ({
-  ...data,
-  email: data.email === "" ? undefined : data.email,
-  note: data.note === "" ? undefined : data.note,
-  tags: data.tags === "" ? undefined : data.tags,
-}))
+}).transform((data) => {
+  // Validate email separately (only if provided and not empty)
+  const email = data.email?.trim()
+  if (email && email !== "") {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      throw new Error("อีเมลไม่ถูกต้อง")
+    }
+  }
+
+  return {
+    subscriptionId: data.subscriptionId,
+    userId: data.userId,
+    name: data.name,
+    email: email && email !== "" ? email : undefined,
+    shareAmount: data.shareAmount,
+    joinedAt: data.joinedAt,
+    note: data.note?.trim() && data.note.trim() !== "" ? data.note.trim() : undefined,
+    tags: data.tags?.trim() && data.tags.trim() !== "" ? data.tags.trim() : undefined,
+  }
+})
 
 const updateMemberSchema = z.object({
   name: z.string().min(1).optional(),
