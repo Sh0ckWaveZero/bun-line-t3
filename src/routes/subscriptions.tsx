@@ -431,8 +431,8 @@ function SubscriptionsPage() {
 
         {/* actions bar */}
         {payments.length === 0 && (
-          <div className="mb-5 rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 p-6 text-center dark:border-gray-700 dark:bg-gray-800/50">
-            <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
+          <div className="mb-5 rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 p-6 text-center dark:border-gray-700 dark:bg-gray-800">
+            <p className="mb-3 text-sm text-gray-600 dark:text-gray-300">
               ยังไม่มีรายการจ่ายเงินสำหรับเดือนนี้
             </p>
             <button
@@ -453,7 +453,7 @@ function SubscriptionsPage() {
                 </>
               )}
             </button>
-            <p className="mt-2 text-xs text-gray-500 dark:text-gray-500">
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
               ดึงข้อมูลสมาชิกทั้งหมดมาสร้าง payment อัตโนมัติ
             </p>
           </div>

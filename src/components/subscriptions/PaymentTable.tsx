@@ -83,28 +83,28 @@ export const PaymentTable = ({
 
       {/* table */}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[520px] text-sm">
+        <table className="w-full min-w-[520px] text-sm" role="table" aria-label={`การจ่ายเงิน - ${formatBillingMonthThai(billingMonth)}`}>
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/40">
-              <th className="px-5 py-3 text-left text-xs font-medium tracking-wide text-gray-500 dark:text-gray-400">
+              <th className="px-5 py-3 text-left text-xs font-medium tracking-wide text-gray-500 dark:text-gray-400" scope="col">
                 สมาชิก
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium tracking-wide text-gray-500 dark:text-gray-400">
+              <th className="px-4 py-3 text-right text-xs font-medium tracking-wide text-gray-500 dark:text-gray-400" scope="col">
                 จำนวนเงิน
               </th>
-              <th className="px-4 py-3 text-center text-xs font-medium tracking-wide text-gray-500 dark:text-gray-400">
+              <th className="px-4 py-3 text-center text-xs font-medium tracking-wide text-gray-500 dark:text-gray-400" scope="col">
                 สถานะ
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium tracking-wide text-gray-500 dark:text-gray-400">
+              <th className="px-4 py-3 text-left text-xs font-medium tracking-wide text-gray-500 dark:text-gray-400" scope="col">
                 จ่ายเมื่อ
               </th>
-              <th className="px-5 py-3 text-right text-xs font-medium tracking-wide text-gray-500 dark:text-gray-400">
+              <th className="px-5 py-3 text-right text-xs font-medium tracking-wide text-gray-500 dark:text-gray-400" scope="col">
                 จัดการ
               </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-            {payments.map((payment) => {
+            {payments.map((payment, index) => {
               const member = memberMap.get(payment.memberId)
               return (
                 <tr
@@ -114,7 +114,10 @@ export const PaymentTable = ({
                   {/* member name */}
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-2.5">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 text-xs font-semibold text-white">
+                      <div
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 text-xs font-semibold text-white"
+                        aria-hidden="true"
+                      >
                         {(member?.name ?? "?").charAt(0).toUpperCase()}
                       </div>
                       <div>
@@ -196,7 +199,8 @@ export const PaymentTable = ({
                           type="button"
                           onClick={() => onEdit(payment)}
                           className="cursor-pointer rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
-                          aria-label="แก้ไข"
+                          aria-label="แก้ไขรายการจ่ายเงิน"
+                          id={`edit-payment-${payment.id}`}
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
@@ -208,7 +212,8 @@ export const PaymentTable = ({
                           type="button"
                           onClick={() => onDelete(payment.id)}
                           className="cursor-pointer rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
-                          aria-label="ลบ"
+                          aria-label="ลบรายการจ่ายเงิน"
+                          id={`delete-payment-${payment.id}`}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
