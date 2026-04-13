@@ -15,6 +15,7 @@ import { AddSubscriptionModal } from "@/components/subscriptions/AddSubscription
 import { AddMemberModal } from "@/components/subscriptions/AddMemberModal"
 import { EditPaymentModal } from "@/components/subscriptions/EditPaymentModal"
 import { ServiceIcon } from "@/components/subscriptions/ServiceIcon"
+import { ConfirmDialog, AlertDialogBox } from "@/components/ui/AlertDialog"
 import type {
   SubscriptionWithMembers,
   SubscriptionDetail,
@@ -114,6 +115,8 @@ function SubscriptionsPage() {
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null)
   const [deletingMemberId, setDeletingMemberId] = useState<string | null>(null)
   const [editingPayment, setEditingPayment] = useState<SubscriptionPayment | null>(null)
+  const [deletePaymentConfirm, setDeletePaymentConfirm] = useState<string | null>(null)
+  const [generateSuccessAlert, setGenerateSuccessAlert] = useState<{ created: number } | null>(null)
 
   // ─── queries ───────────────────────────────
 
@@ -313,11 +316,7 @@ function SubscriptionsPage() {
     },
     onSuccess: async (data) => {
       await queryClient.invalidateQueries({ queryKey: ["subscription-detail", selectedId] })
-      if (data.created > 0) {
-        alert(`สร้าง payment สำเร็จ ${data.created} รายการ`)
-      } else {
-        alert("มี payment อยู่แล้วทั้งหมด")
-      }
+      setGenerateSuccessAlert({ created: data.created })
     },
   })
 
@@ -341,10 +340,14 @@ function SubscriptionsPage() {
   }, [])
 
   const handleDeletePayment = useCallback((paymentId: string) => {
-    if (confirm("ยืนยันที่จะลบรายการจ่ายเงินนี้?")) {
-      deletePaymentMutation.mutate(paymentId)
+    setDeletePaymentConfirm(paymentId)
+  }, [])
+
+  const confirmDeletePayment = useCallback(() => {
+    if (deletePaymentConfirm) {
+      deletePaymentMutation.mutate(deletePaymentConfirm)
     }
-  }, [deletePaymentMutation])
+  }, [deletePaymentConfirm, deletePaymentMutation])
 
   // ─── auth guard ────────────────────────────
 
@@ -612,6 +615,36 @@ function SubscriptionsPage() {
           }
           onDelete={(paymentId) => deletePaymentMutation.mutateAsync(paymentId)}
         />
+
+        {/* delete payment confirmation dialog */}
+        <ConfirmDialog
+          open={!!deletePaymentConfirm}
+          onOpenChange={(open) => !open && setDeletePaymentConfirm(null)}
+          title="ยืนยันการลบรายการจ่ายเงิน?"
+          description="ข้อมูลการจ่ายเงินรายการนี้จะถูกลบถาวร คุณแน่ใจหรือไม่?"
+          confirmLabel="ลบรายการ"
+          cancelLabel="ยกเลิก"
+          onConfirm={confirmDeletePayment}
+          variant="danger"
+        />
+
+        {/* generate payments success alert */}
+        {generateSuccessAlert && (
+          <AlertDialogBox
+            open={!!generateSuccessAlert}
+            onOpenChange={(open) => !open && setGenerateSuccessAlert(null)}
+            title={
+              generateSuccessAlert.created > 0
+                ? "สร้างรายการจ่ายเงินสำเร็จ!"
+                : "มีรายการจ่ายเงินอยู่แล้ว"
+            }
+            description={
+              generateSuccessAlert.created > 0
+                ? `สร้างรายการจ่ายเงินสำเร็จ ${generateSuccessAlert.created} รายการ`
+                : "รายการจ่ายเงินสำหรับเดือนนี้มีอยู่แล้วทั้งหมด"
+            }
+          />
+        )}
 
         {/* edit subscription modal */}
         {editingSub && (
