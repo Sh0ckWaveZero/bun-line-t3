@@ -4,7 +4,7 @@
  * AddMemberModal — modal สำหรับเพิ่มสมาชิกใน subscription
  */
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { calculateEqualShare } from "@/features/subscriptions/helpers"
 import { X, Loader2 } from "lucide-react"
 
@@ -43,6 +43,20 @@ export const AddMemberModal = ({
     shareAmount: suggestedShare,
     note: "",
   })
+
+  // Reset form เมื่อ modal เปิดใหม่
+  useEffect(() => {
+    if (open) {
+      const newSuggestedShare = calculateEqualShare(totalPrice, currentMemberCount + 1)
+      setForm({
+        subscriptionId,
+        name: "",
+        email: "",
+        shareAmount: newSuggestedShare,
+        note: "",
+      })
+    }
+  }, [open, subscriptionId, totalPrice, currentMemberCount])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
