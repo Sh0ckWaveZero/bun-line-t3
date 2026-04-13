@@ -112,11 +112,23 @@ async function getActiveLineUserIdsForCheckinReminder(
     // Check if user has notifications enabled (default is true if no settings)
     const notificationsEnabled = user?.settings?.enableCheckInReminders ?? true;
 
+    // Check LINE permissions
+    const lineUserId = user?.accounts[0]?.providerAccountId;
+    let hasReminderPermission = false;
+    if (lineUserId) {
+      const approval = await db.lineApprovalRequest.findUnique({
+        where: { lineUserId },
+        select: { canReceiveReminders: true },
+      });
+      hasReminderPermission = approval?.canReceiveReminders ?? false;
+    }
+
     if (
       user &&
       user.accounts.length > 0 &&
       user.leaves.length === 0 &&
-      notificationsEnabled
+      notificationsEnabled &&
+      hasReminderPermission
     ) {
       return [user.accounts[0]?.providerAccountId].filter(
         (id): id is string => typeof id === "string",
@@ -142,14 +154,38 @@ async function getActiveLineUserIdsForCheckinReminder(
     },
   });
 
+  // Get all LINE user IDs for permission check
+  const lineUserIds = users
+    .map((u) => u.accounts[0]?.providerAccountId)
+    .filter((id): id is string => typeof id === "string");
+
+  // Fetch permissions for all LINE users
+  const approvals = await db.lineApprovalRequest.findMany({
+    where: {
+      lineUserId: { in: lineUserIds },
+    },
+    select: {
+      lineUserId: true,
+      canReceiveReminders: true,
+    },
+  });
+
+  // Create a map for quick lookup
+  const permissionMap = new Map(
+    approvals.map((a) => [a.lineUserId, a.canReceiveReminders ?? false]),
+  );
+
   return users
     .filter((u) => {
       const hasLineAccount = u.accounts.length > 0 && u.accounts[0];
       const notOnLeave = u.leaves.length === 0;
       // Default to true if user has no settings yet
       const notificationsEnabled = u.settings?.enableCheckInReminders ?? true;
+      // Check LINE permission
+      const lineUserId = u.accounts[0]?.providerAccountId;
+      const hasPermission = lineUserId ? (permissionMap.get(lineUserId) ?? false) : false;
 
-      return hasLineAccount && notOnLeave && notificationsEnabled;
+      return hasLineAccount && notOnLeave && notificationsEnabled && hasPermission;
     })
     .map((u) => u.accounts[0]?.providerAccountId)
     .filter((id): id is string => typeof id === "string");

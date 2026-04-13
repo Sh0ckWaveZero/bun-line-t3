@@ -14,7 +14,7 @@ import {
   updateMember,
   removeMember,
 } from "@/features/subscriptions/services/member"
-import { BadRequestError, UnauthorizedError, NotFoundError, createErrorResponse } from "@/lib/errors/api-error"
+import { BadRequestError, UnauthorizedError, ForbiddenError, NotFoundError, createErrorResponse } from "@/lib/errors/api-error"
 
 const addMemberSchema = z.object({
   subscriptionId: z.string().min(1),
@@ -71,6 +71,10 @@ export async function GET(request: Request) {
       throw new UnauthorizedError()
     }
 
+    if (!session.isAdmin) {
+      throw new ForbiddenError()
+    }
+
     const { searchParams } = new URL(request.url)
     const subscriptionId = searchParams.get("subscriptionId")
     if (!subscriptionId) {
@@ -89,6 +93,10 @@ export async function POST(request: Request) {
     const session = await getServerAuthSession(request)
     if (!session?.user?.id) {
       throw new UnauthorizedError()
+    }
+
+    if (!session.isAdmin) {
+      throw new ForbiddenError()
     }
 
     const body = await request.json()
@@ -124,6 +132,10 @@ export async function PATCH(request: Request) {
       throw new UnauthorizedError()
     }
 
+    if (!session.isAdmin) {
+      throw new ForbiddenError()
+    }
+
     const { searchParams } = new URL(request.url)
     const memberId = searchParams.get("memberId")
     if (!memberId) {
@@ -146,6 +158,10 @@ export async function DELETE(request: Request) {
     const session = await getServerAuthSession(request)
     if (!session?.user?.id) {
       throw new UnauthorizedError()
+    }
+
+    if (!session.isAdmin) {
+      throw new ForbiddenError()
     }
 
     const { searchParams } = new URL(request.url)

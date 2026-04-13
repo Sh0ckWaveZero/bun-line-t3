@@ -16,6 +16,7 @@ import {
   Briefcase,
   Wrench,
   HelpCircle,
+  Shield,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
@@ -96,6 +97,10 @@ export default function Header() {
             ref={dropdownRef}
           >
             <div className="flex items-center space-x-1">
+              {/* ═══════════════════════════════════════════════════════════
+                  กลุ่มหลัก: Dashboard & Features
+                  ═══════════════════════════════════════════════════════════ */}
+
               {/* Dashboard */}
               <Link
                 to="/dashboard"
@@ -134,6 +139,10 @@ export default function Header() {
                 <Calculator className="h-4 w-4" />
                 <span>DCA</span>
               </Link>
+
+              {/* ═══════════════════════════════════════════════════════════
+                  กลุ่มการทำงาน (แสดงเฉพาะ login แล้ว)
+                  ═══════════════════════════════════════════════════════════ */}
 
               {/* Work & Reports Dropdown */}
               {session && (
@@ -175,6 +184,10 @@ export default function Header() {
                   )}
                 </div>
               )}
+
+              {/* ═══════════════════════════════════════════════════════════
+                  กลุ่มเครื่องมือ & จัดการระบบ
+                  ═══════════════════════════════════════════════════════════ */}
 
               {/* Tools Dropdown */}
               <div className="relative">
@@ -219,6 +232,63 @@ export default function Header() {
                 )}
               </div>
 
+              {/* ═══════════════════════════════════════════════════════════
+                  กลุ่มจัดการระบบ (แสดงเฉพาะ admin)
+                  ═══════════════════════════════════════════════════════════ */}
+
+              {/* Admin Dropdown - แสดงเฉพาะ admin */}
+              {session?.isAdmin && (
+                <div className="relative">
+                  <button
+                    onClick={() =>
+                      setOpenDropdown(openDropdown === "admin" ? null : "admin")
+                    }
+                    className={`flex items-center space-x-2 rounded-md px-3 py-2 drop-shadow-sm transition-colors hover:bg-muted hover:text-foreground ${
+                      pathname === "/admin/line-permissions" || pathname === "/line-approval"
+                        ? "bg-muted font-medium text-foreground"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    <Shield className="h-4 w-4" />
+                    <span>จัดการระบบ</span>
+                    <ChevronDown
+                      className={`h-4 w-4 transition-transform ${openDropdown === "admin" ? "rotate-180" : ""}`}
+                    />
+                  </button>
+
+                  {openDropdown === "admin" && (
+                    <div className="absolute left-0 top-full z-50 mt-2 w-72 rounded-md border border-border bg-background py-3 shadow-lg">
+                      <div className="px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        LINE User Management
+                      </div>
+                      <Link
+                        to="/line-approval"
+                        className="block px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        onClick={() => setOpenDropdown(null)}
+                      >
+                        ✅ อนุมัติ LINE User
+                      </Link>
+
+                      <div className="my-1 border-t border-border"></div>
+                      <div className="px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Feature Permissions
+                      </div>
+                      <Link
+                        to="/admin/line-permissions"
+                        className="block px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        onClick={() => setOpenDropdown(null)}
+                      >
+                        🛡️ จัดการสิทธิ์ LINE Features
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ═══════════════════════════════════════════════════════════
+                  กลุ่มทั่วไป & ช่วยเหลือ
+                  ═══════════════════════════════════════════════════════════ */}
+
               {/* Help & General Dropdown */}
               <div className="relative">
                 <button
@@ -240,6 +310,9 @@ export default function Header() {
 
                 {openDropdown === "help" && (
                   <div className="absolute left-0 top-full z-50 mt-2 w-72 rounded-md border border-border bg-background py-3 shadow-lg">
+                    <div className="px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      เอกสาร & คำแนะนำ
+                    </div>
                     <Link
                       to="/help"
                       className="block px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
@@ -251,14 +324,14 @@ export default function Header() {
                       <>
                         <div className="my-1 border-t border-border"></div>
                         <div className="px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          สำหรับผู้ดูแลระบบ
+                          System Monitoring
                         </div>
                         <Link
                           to="/monitoring"
                           className="block px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                           onClick={() => setOpenDropdown(null)}
                         >
-                          📈 Monitoring
+                          📈 Monitoring Dashboard
                         </Link>
                       </>
                     )}
@@ -474,6 +547,42 @@ export default function Header() {
                   )}
                 </div>
               </div>
+
+              {/* Admin Section - แสดงเฉพาะ admin */}
+              {session?.isAdmin && (
+                <>
+                  <div className="my-4 border-t border-border"></div>
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      จัดการระบบ
+                    </h3>
+                    <div className="flex flex-col space-y-3 pl-8">
+                      <Link
+                        to="/line-approval"
+                        className={`drop-shadow-sm transition-colors hover:text-foreground ${
+                          pathname === "/line-approval"
+                            ? "font-medium text-foreground"
+                            : "text-muted-foreground"
+                        }`}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        ✅ อนุมัติ LINE User
+                      </Link>
+                      <Link
+                        to="/admin/line-permissions"
+                        className={`drop-shadow-sm transition-colors hover:text-foreground ${
+                          pathname === "/admin/line-permissions"
+                            ? "font-medium text-foreground"
+                            : "text-muted-foreground"
+                        }`}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        🛡️ จัดการสิทธิ์ LINE Features
+                      </Link>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </nav>
         </div>

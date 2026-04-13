@@ -134,6 +134,10 @@ export async function DELETE(request: Request) {
       return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 })
     }
 
+    if (!session.isAdmin) {
+      return Response.json({ error: "ไม่มีสิทธิ์เข้าถึงหน้านี้" }, { status: 403 })
+    }
+
     const { searchParams } = new URL(request.url)
     const paymentId = searchParams.get("paymentId")
     if (!paymentId) {

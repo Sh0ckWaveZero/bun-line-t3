@@ -37,6 +37,10 @@ export async function GET(request: Request) {
       return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 })
     }
 
+    if (!session.isAdmin) {
+      return Response.json({ error: "ไม่มีสิทธิ์เข้าถึงหน้านี้" }, { status: 403 })
+    }
+
     const subscriptions = await getSubscriptionsByOwner(session.user.id)
     return Response.json({ success: true, data: subscriptions })
   } catch (error) {
@@ -48,6 +52,13 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await getServerAuthSession(request)
+    if (!session?.user?.id) {
+      return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 })
+    }
+
+    if (!session.isAdmin) {
+      return Response.json({ error: "ไม่มีสิทธิ์เข้าถึงหน้านี้" }, { status: 403 })
+    }
     if (!session?.user?.id) {
       return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 })
     }

@@ -222,7 +222,7 @@ export const getServerAuthSession = async (request?: Request) => {
 
   return {
     expires: toIsoString(session.session.expiresAt),
-    isAdmin: false, // caller ต้อง set ค่านี้หลัง query LINE account
+    isAdmin: session.user.role === "admin",
     user: {
       email: session.user.email,
       id: session.user.id,

@@ -106,6 +106,49 @@ function SubscriptionsPage() {
   const isPending = status === "loading"
   const queryClient = useQueryClient()
 
+  // ─── auth guard ────────────────────────────
+
+  if (isPending) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-gray-500 dark:text-gray-400">กำลังโหลด...</p>
+      </div>
+    )
+  }
+
+  // Check if user is admin
+  if (!session?.isAdmin) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <div className="w-full max-w-md rounded-2xl border border-red-200 bg-red-50 p-8 text-center dark:border-red-800 dark:bg-red-900/20">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
+            🚫
+          </div>
+          <h1 className="mb-2 text-xl font-bold text-red-900 dark:text-red-300">
+            ไม่มีสิทธิ์เข้าถึง
+          </h1>
+          <p className="mb-6 text-sm text-red-700 dark:text-red-400">
+            หน้านี้สำหรับผู้ดูแลระบบเท่านั้น
+          </p>
+          <a
+            href="/"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 dark:bg-red-500"
+          >
+            กลับหน้าแรก
+          </a>
+        </div>
+      </div>
+    )
+  }
+
+  if (!session?.user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-gray-500 dark:text-gray-400">กรุณาเข้าสู่ระบบก่อน</p>
+      </div>
+    )
+  }
+
   // view state
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [billingMonth, setBillingMonth] = useState(getCurrentMonthLabel())
@@ -127,7 +170,7 @@ function SubscriptionsPage() {
   } = useQuery({
     queryKey: ["subscriptions"],
     queryFn: fetchSubscriptions,
-    enabled: !!session?.user?.id,
+    enabled: !!session?.user?.id && session.isAdmin,
   })
 
   const { data: detailData, isLoading: detailLoading } = useQuery({
@@ -349,23 +392,7 @@ function SubscriptionsPage() {
     }
   }, [deletePaymentConfirm, deletePaymentMutation])
 
-  // ─── auth guard ────────────────────────────
-
-  if (isPending) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-500 dark:text-gray-400">กำลังโหลด...</p>
-      </div>
-    )
-  }
-  if (!session?.user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-500 dark:text-gray-400">กรุณาเข้าสู่ระบบก่อน</p>
-      </div>
-    )
-  }
-
+  // Derived values (after queries are loaded)
   const selectedSub = selectedId ? subscriptions.find((s) => s.id === selectedId) : null
   const editingSub = editingSubId ? subscriptions.find((s) => s.id === editingSubId) : null
 

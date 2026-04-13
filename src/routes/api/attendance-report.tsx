@@ -3,6 +3,8 @@ import { z } from "zod";
 import { getServerAuthSession } from "@/lib/auth/auth";
 import { attendanceService } from "@/features/attendance/services/attendance";
 import { leaveService } from "@/features/attendance/services/leave";
+import { db } from "@/lib/database/db";
+import { canRequestAttendanceReport } from "@/lib/line/permissions";
 
 // Validation schema for query parameters
 const AttendanceReportQuerySchema = z.object({
@@ -68,6 +70,29 @@ export async function GET(req: Request) {
         },
         { status: 403 },
       );
+    }
+
+    // LINE Permission check - ต้องได้รับอนุมัติให้ขอรายงานเข้างาน
+    const lineAccount = await db.account.findFirst({
+      where: {
+        userId: validatedData.userId,
+        provider: "line",
+      },
+      select: {
+        providerAccountId: true,
+      },
+    });
+
+    if (lineAccount) {
+      const hasPermission = await canRequestAttendanceReport(lineAccount.providerAccountId);
+      if (!hasPermission) {
+        return Response.json(
+          {
+            error: "Forbidden - คุณยังไม่ได้รับอนุมัติให้ขอรายงานเข้างาน กรุณาติดต่อผู้ดูแลระบบ",
+          },
+          { status: 403 },
+        );
+      }
     }
 
     const report = await attendanceService.getMonthlyAttendanceReport(

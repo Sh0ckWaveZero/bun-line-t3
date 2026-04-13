@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getServerAuthSession } from "@/lib";
 import { leaveService } from "@/features/attendance/services/leave";
+import { db } from "@/lib/database/db";
+import { canRequestLeave } from "@/lib/line/permissions";
 
 export async function POST(req: Request) {
   try {
@@ -11,6 +13,31 @@ export async function POST(req: Request) {
         { status: 401 },
       );
     }
+
+    // LINE Permission check - ต้องได้รับอนุมัติให้ขอลา
+    const lineAccount = await db.account.findFirst({
+      where: {
+        userId: session.user.id,
+        provider: "line",
+      },
+      select: {
+        providerAccountId: true,
+      },
+    });
+
+    if (lineAccount) {
+      const hasPermission = await canRequestLeave(lineAccount.providerAccountId);
+      if (!hasPermission) {
+        return Response.json(
+          {
+            success: false,
+            message: "คุณยังไม่ได้รับอนุมัติให้ขอลางาน กรุณาติดต่อผู้ดูแลระบบ",
+          },
+          { status: 403 },
+        );
+      }
+    }
+
     let body: any;
     try {
       body = await req.json();
