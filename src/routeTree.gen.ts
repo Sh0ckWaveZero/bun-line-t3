@@ -56,6 +56,11 @@ import { Route as ApiAttendanceUpdateRouteImport } from './routes/api/attendance
 import { Route as ApiAdminDebugRouteImport } from './routes/api/admin/debug'
 import { Route as ApiAdminCheckRouteImport } from './routes/api/admin/check'
 import { Route as ApiUserSettingsNotificationsRouteImport } from './routes/api/user/settings/notifications'
+import { Route as SubscriptionsRouteImport } from './routes/subscriptions'
+import { Route as ApiSubscriptionsIndexRouteImport } from './routes/api/subscriptions/index'
+import { Route as ApiSubscriptionsSubscriptionIdRouteImport } from './routes/api/subscriptions/$subscriptionId'
+import { Route as ApiSubscriptionsMembersRouteImport } from './routes/api/subscriptions/members'
+import { Route as ApiSubscriptionsPaymentsRouteImport } from './routes/api/subscriptions/payments'
 
 const ThaiNamesGeneratorRoute = ThaiNamesGeneratorRouteImport.update({
   id: '/thai-names-generator',
@@ -298,6 +303,31 @@ const ApiUserSettingsNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => ApiUserSettingsRoute,
   } as any)
+const SubscriptionsRoute = SubscriptionsRouteImport.update({
+  id: '/subscriptions',
+  path: '/subscriptions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSubscriptionsIndexRoute = ApiSubscriptionsIndexRouteImport.update({
+  id: '/api/subscriptions/',
+  path: '/api/subscriptions/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSubscriptionsSubscriptionIdRoute = ApiSubscriptionsSubscriptionIdRouteImport.update({
+  id: '/api/subscriptions/$subscriptionId',
+  path: '/api/subscriptions/$subscriptionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSubscriptionsMembersRoute = ApiSubscriptionsMembersRouteImport.update({
+  id: '/api/subscriptions/members',
+  path: '/api/subscriptions/members',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSubscriptionsPaymentsRoute = ApiSubscriptionsPaymentsRouteImport.update({
+  id: '/api/subscriptions/payments',
+  path: '/api/subscriptions/payments',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -347,6 +377,11 @@ export interface FileRoutesByFullPath {
   '/api/user/settings': typeof ApiUserSettingsRouteWithChildren
   '/api/dca/': typeof ApiDcaIndexRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
+  '/subscriptions': typeof SubscriptionsRoute
+  '/api/subscriptions/': typeof ApiSubscriptionsIndexRoute
+  '/api/subscriptions/$subscriptionId': typeof ApiSubscriptionsSubscriptionIdRoute
+  '/api/subscriptions/members': typeof ApiSubscriptionsMembersRoute
+  '/api/subscriptions/payments': typeof ApiSubscriptionsPaymentsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -396,6 +431,11 @@ export interface FileRoutesByTo {
   '/api/user/settings': typeof ApiUserSettingsRouteWithChildren
   '/api/dca': typeof ApiDcaIndexRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
+  '/subscriptions': typeof SubscriptionsRoute
+  '/api/subscriptions': typeof ApiSubscriptionsIndexRoute
+  '/api/subscriptions/$subscriptionId': typeof ApiSubscriptionsSubscriptionIdRoute
+  '/api/subscriptions/members': typeof ApiSubscriptionsMembersRoute
+  '/api/subscriptions/payments': typeof ApiSubscriptionsPaymentsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -446,6 +486,11 @@ export interface FileRoutesById {
   '/api/user/settings': typeof ApiUserSettingsRouteWithChildren
   '/api/dca/': typeof ApiDcaIndexRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
+  '/subscriptions': typeof SubscriptionsRoute
+  '/api/subscriptions/': typeof ApiSubscriptionsIndexRoute
+  '/api/subscriptions/$subscriptionId': typeof ApiSubscriptionsSubscriptionIdRoute
+  '/api/subscriptions/members': typeof ApiSubscriptionsMembersRoute
+  '/api/subscriptions/payments': typeof ApiSubscriptionsPaymentsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -497,6 +542,11 @@ export interface FileRouteTypes {
     | '/api/user/settings'
     | '/api/dca/'
     | '/api/user/settings/notifications'
+    | '/subscriptions'
+    | '/api/subscriptions/'
+    | '/api/subscriptions/$subscriptionId'
+    | '/api/subscriptions/members'
+    | '/api/subscriptions/payments'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -546,6 +596,11 @@ export interface FileRouteTypes {
     | '/api/user/settings'
     | '/api/dca'
     | '/api/user/settings/notifications'
+    | '/subscriptions'
+    | '/api/subscriptions'
+    | '/api/subscriptions/$subscriptionId'
+    | '/api/subscriptions/members'
+    | '/api/subscriptions/payments'
   id:
     | '__root__'
     | '/'
@@ -595,6 +650,11 @@ export interface FileRouteTypes {
     | '/api/user/settings'
     | '/api/dca/'
     | '/api/user/settings/notifications'
+    | '/subscriptions'
+    | '/api/subscriptions/'
+    | '/api/subscriptions/$subscriptionId'
+    | '/api/subscriptions/members'
+    | '/api/subscriptions/payments'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -642,6 +702,11 @@ export interface RootRouteChildren {
   ApiThaiIdValidateRoute: typeof ApiThaiIdValidateRoute
   ApiUserSettingsRoute: typeof ApiUserSettingsRouteWithChildren
   ApiDcaIndexRoute: typeof ApiDcaIndexRoute
+  SubscriptionsRoute: typeof SubscriptionsRoute
+  ApiSubscriptionsIndexRoute: typeof ApiSubscriptionsIndexRoute
+  ApiSubscriptionsSubscriptionIdRoute: typeof ApiSubscriptionsSubscriptionIdRoute
+  ApiSubscriptionsMembersRoute: typeof ApiSubscriptionsMembersRoute
+  ApiSubscriptionsPaymentsRoute: typeof ApiSubscriptionsPaymentsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -975,6 +1040,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiUserSettingsNotificationsRouteImport
       parentRoute: typeof ApiUserSettingsRoute
     }
+    '/subscriptions': {
+      id: '/subscriptions'
+      path: '/subscriptions'
+      fullPath: '/subscriptions'
+      preLoaderRoute: typeof SubscriptionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/subscriptions/': {
+      id: '/api/subscriptions/'
+      path: '/api/subscriptions'
+      fullPath: '/api/subscriptions/'
+      preLoaderRoute: typeof ApiSubscriptionsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/subscriptions/$subscriptionId': {
+      id: '/api/subscriptions/$subscriptionId'
+      path: '/api/subscriptions/$subscriptionId'
+      fullPath: '/api/subscriptions/$subscriptionId'
+      preLoaderRoute: typeof ApiSubscriptionsSubscriptionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/subscriptions/members': {
+      id: '/api/subscriptions/members'
+      path: '/api/subscriptions/members'
+      fullPath: '/api/subscriptions/members'
+      preLoaderRoute: typeof ApiSubscriptionsMembersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/subscriptions/payments': {
+      id: '/api/subscriptions/payments'
+      path: '/api/subscriptions/payments'
+      fullPath: '/api/subscriptions/payments'
+      preLoaderRoute: typeof ApiSubscriptionsPaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1058,6 +1158,11 @@ const rootRouteChildren: RootRouteChildren = {
   ApiThaiIdValidateRoute: ApiThaiIdValidateRoute,
   ApiUserSettingsRoute: ApiUserSettingsRouteWithChildren,
   ApiDcaIndexRoute: ApiDcaIndexRoute,
+  SubscriptionsRoute: SubscriptionsRoute,
+  ApiSubscriptionsIndexRoute: ApiSubscriptionsIndexRoute,
+  ApiSubscriptionsSubscriptionIdRoute: ApiSubscriptionsSubscriptionIdRoute,
+  ApiSubscriptionsMembersRoute: ApiSubscriptionsMembersRoute,
+  ApiSubscriptionsPaymentsRoute: ApiSubscriptionsPaymentsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

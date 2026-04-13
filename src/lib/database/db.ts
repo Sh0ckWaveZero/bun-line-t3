@@ -21,7 +21,7 @@ const createClient = () =>
 const isCacheStale = (client: PrismaClient): boolean => {
   try {
     // ตรวจสอบ model ล่าสุดที่เพิ่มเข้ามา — ถ้าไม่มีแสดงว่า client เก่า
-    return !("lineApprovalRequest" in client);
+    return !("lineApprovalRequest" in client) || !("subscription" in client);
   } catch {
     return true;
   }
