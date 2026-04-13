@@ -10,6 +10,9 @@ import {
   Menu,
   X,
   ChevronDown,
+  Home,
+  Calculator,
+  Package,
   Briefcase,
   Wrench,
   HelpCircle,
@@ -92,7 +95,46 @@ export default function Header() {
             className="hidden items-center p-4 text-sm lg:flex"
             ref={dropdownRef}
           >
-            <div className="flex items-center space-x-10">
+            <div className="flex items-center space-x-1">
+              {/* Dashboard */}
+              <Link
+                to="/dashboard"
+                className={`flex items-center space-x-2 rounded-md px-3 py-2 drop-shadow-sm transition-colors hover:bg-muted hover:text-foreground ${
+                  pathname === "/dashboard"
+                    ? "bg-muted font-medium text-foreground"
+                    : "text-muted-foreground"
+                }`}
+              >
+                <Home className="h-4 w-4" />
+                <span>Dashboard</span>
+              </Link>
+
+              {/* Subscriptions */}
+              <Link
+                to="/subscriptions"
+                className={`flex items-center space-x-2 rounded-md px-3 py-2 drop-shadow-sm transition-colors hover:bg-muted hover:text-foreground ${
+                  pathname === "/subscriptions"
+                    ? "bg-muted font-medium text-foreground"
+                    : "text-muted-foreground"
+                }`}
+              >
+                <Package className="h-4 w-4" />
+                <span>Subscriptions</span>
+              </Link>
+
+              {/* DCA */}
+              <Link
+                to="/dca-history"
+                className={`flex items-center space-x-2 rounded-md px-3 py-2 drop-shadow-sm transition-colors hover:bg-muted hover:text-foreground ${
+                  pathname === "/dca-history" || pathname.startsWith("/dca-")
+                    ? "bg-muted font-medium text-foreground"
+                    : "text-muted-foreground"
+                }`}
+              >
+                <Calculator className="h-4 w-4" />
+                <span>DCA</span>
+              </Link>
+
               {/* Work & Reports Dropdown */}
               {session && (
                 <div className="relative">
@@ -100,9 +142,9 @@ export default function Header() {
                     onClick={() =>
                       setOpenDropdown(openDropdown === "work" ? null : "work")
                     }
-                    className={`flex items-center space-x-2 drop-shadow-sm transition-colors hover:text-foreground ${
+                    className={`flex items-center space-x-2 rounded-md px-3 py-2 drop-shadow-sm transition-colors hover:bg-muted hover:text-foreground ${
                       pathname === "/attendance-report" || pathname === "/leave"
-                        ? "font-medium text-foreground"
+                        ? "bg-muted font-medium text-foreground"
                         : "text-muted-foreground"
                     }`}
                   >
@@ -140,10 +182,10 @@ export default function Header() {
                   onClick={() =>
                     setOpenDropdown(openDropdown === "tools" ? null : "tools")
                   }
-                  className={`flex items-center space-x-2 drop-shadow-sm transition-colors hover:text-foreground ${
+                  className={`flex items-center space-x-2 rounded-md px-3 py-2 drop-shadow-sm transition-colors hover:bg-muted hover:text-foreground ${
                     pathname === "/thai-names-generator" ||
                     pathname.startsWith("/thai-id")
-                      ? "font-medium text-foreground"
+                      ? "bg-muted font-medium text-foreground"
                       : "text-muted-foreground"
                   }`}
                 >
@@ -183,9 +225,9 @@ export default function Header() {
                   onClick={() =>
                     setOpenDropdown(openDropdown === "help" ? null : "help")
                   }
-                  className={`flex items-center space-x-2 drop-shadow-sm transition-colors hover:text-foreground ${
+                  className={`flex items-center space-x-2 rounded-md px-3 py-2 drop-shadow-sm transition-colors hover:bg-muted hover:text-foreground ${
                     pathname === "/help" || pathname === "/monitoring"
-                      ? "font-medium text-foreground"
+                      ? "bg-muted font-medium text-foreground"
                       : "text-muted-foreground"
                   }`}
                 >
@@ -290,46 +332,90 @@ export default function Header() {
       {isMobileMenuOpen && (
         <div className="bg-background/95 block border-b border-border backdrop-blur-sm lg:hidden">
           <nav className="container mx-auto px-6 py-6">
-            <div className="space-y-8">
+            <div className="space-y-6">
+              {/* Main Navigation */}
+              <div className="space-y-3">
+                <Link
+                  to="/dashboard"
+                  className={`flex items-center space-x-3 drop-shadow-sm transition-colors hover:text-foreground ${
+                    pathname === "/dashboard"
+                      ? "font-medium text-foreground"
+                      : "text-muted-foreground"
+                  }`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Home className="h-5 w-5" />
+                  <span>Dashboard</span>
+                </Link>
+                <Link
+                  to="/subscriptions"
+                  className={`flex items-center space-x-3 drop-shadow-sm transition-colors hover:text-foreground ${
+                    pathname === "/subscriptions"
+                      ? "font-medium text-foreground"
+                      : "text-muted-foreground"
+                  }`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Package className="h-5 w-5" />
+                  <span>Subscriptions</span>
+                </Link>
+                <Link
+                  to="/dca-history"
+                  className={`flex items-center space-x-3 drop-shadow-sm transition-colors hover:text-foreground ${
+                    pathname === "/dca-history" || pathname.startsWith("/dca-")
+                      ? "font-medium text-foreground"
+                      : "text-muted-foreground"
+                  }`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Calculator className="h-5 w-5" />
+                  <span>DCA</span>
+                </Link>
+              </div>
+
               {/* Work & Reports Section */}
               {session && (
-                <div className="space-y-3">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    งาน & รายงาน
-                  </h3>
-                  <div className="flex flex-col space-y-3 pl-3">
-                    <Link
-                      to="/attendance-report"
-                      className={`drop-shadow-sm transition-colors hover:text-foreground ${
-                        pathname === "/attendance-report"
-                          ? "font-medium text-foreground"
-                          : "text-muted-foreground"
-                      }`}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      รายงานเข้างาน
-                    </Link>
-                    <Link
-                      to="/leave"
-                      className={`drop-shadow-sm transition-colors hover:text-foreground ${
-                        pathname === "/leave"
-                          ? "font-medium text-foreground"
-                          : "text-muted-foreground"
-                      }`}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      ลางาน
-                    </Link>
+                <>
+                  <div className="my-4 border-t border-border"></div>
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      งาน & รายงาน
+                    </h3>
+                    <div className="flex flex-col space-y-3 pl-8">
+                      <Link
+                        to="/attendance-report"
+                        className={`drop-shadow-sm transition-colors hover:text-foreground ${
+                          pathname === "/attendance-report"
+                            ? "font-medium text-foreground"
+                            : "text-muted-foreground"
+                        }`}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        รายงานเข้างาน
+                      </Link>
+                      <Link
+                        to="/leave"
+                        className={`drop-shadow-sm transition-colors hover:text-foreground ${
+                          pathname === "/leave"
+                            ? "font-medium text-foreground"
+                            : "text-muted-foreground"
+                        }`}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        ลางาน
+                      </Link>
+                    </div>
                   </div>
-                </div>
+                </>
               )}
 
               {/* Tools Section */}
+              <div className="my-4 border-t border-border"></div>
               <div className="space-y-3">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   เครื่องมือ
                 </h3>
-                <div className="flex flex-col space-y-3 pl-3">
+                <div className="flex flex-col space-y-3 pl-8">
                   <Link
                     to="/thai-names-generator"
                     className={`drop-shadow-sm transition-colors hover:text-foreground ${
@@ -356,11 +442,12 @@ export default function Header() {
               </div>
 
               {/* General Section */}
+              <div className="my-4 border-t border-border"></div>
               <div className="space-y-3">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   ทั่วไป
                 </h3>
-                <div className="flex flex-col space-y-3 pl-3">
+                <div className="flex flex-col space-y-3 pl-8">
                   <Link
                     to="/help"
                     className={`drop-shadow-sm transition-colors hover:text-foreground ${
