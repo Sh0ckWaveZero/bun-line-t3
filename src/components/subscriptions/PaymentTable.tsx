@@ -47,6 +47,7 @@ export const PaymentTable = ({
     .filter((p) => p.status === "PAID")
     .reduce((s, p) => s + p.amount, 0)
   const pendingCount = payments.filter((p) => p.status === "PENDING").length
+  const isFullyPaid = payments.length > 0 && pendingCount === 0 && paidAmount >= totalAmount
 
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
@@ -69,11 +70,15 @@ export const PaymentTable = ({
             </p>
           )}
         </div>
-        {pendingCount > 0 && (
+        {isFullyPaid ? (
+          <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+            ✓ จ่ายครบแล้ว
+          </span>
+        ) : pendingCount > 0 ? (
           <span className="rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-medium text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
             รอ {pendingCount} รายการ
           </span>
-        )}
+        ) : null}
       </div>
 
       {/* table */}
