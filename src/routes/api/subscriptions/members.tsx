@@ -19,14 +19,18 @@ const addMemberSchema = z.object({
   subscriptionId: z.string().min(1),
   userId: z.string().optional(),
   name: z.string().min(1, "กรุณาระบุชื่อสมาชิก"),
-  email: z.string().email("อีเมลไม่ถูกต้อง").optional(),
+  email: z.string().email("อีเมลไม่ถูกต้อง").optional().or(z.literal("")),
   shareAmount: z.number().nonnegative("จำนวนเงินต้องไม่ติดลบ"),
   joinedAt: z
     .string()
     .transform((v) => new Date(v))
     .optional(),
   note: z.string().optional(),
-})
+}).transform((data) => ({
+  ...data,
+  email: data.email === "" ? undefined : data.email,
+  note: data.note === "" ? undefined : data.note,
+}))
 
 const updateMemberSchema = z.object({
   name: z.string().min(1).optional(),

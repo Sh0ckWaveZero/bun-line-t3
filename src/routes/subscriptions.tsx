@@ -2,7 +2,7 @@
 
 /**
  * Subscription Tracker Page — /subscriptions
- * แสดงรายการ subscriptions ทั้งหมด พร้อม members และสถานะการจ่ายเงินรายเดือน
+ * รองรับ create / edit / delete subscription และสมาชิก
  */
 
 import { createFileRoute } from "@tanstack/react-router"
@@ -13,6 +13,7 @@ import { SubscriptionCard } from "@/components/subscriptions/SubscriptionCard"
 import { PaymentTable } from "@/components/subscriptions/PaymentTable"
 import { AddSubscriptionModal } from "@/components/subscriptions/AddSubscriptionModal"
 import { AddMemberModal } from "@/components/subscriptions/AddMemberModal"
+import { ServiceIcon } from "@/components/subscriptions/ServiceIcon"
 import type {
   SubscriptionWithMembers,
   SubscriptionDetail,
@@ -21,13 +22,22 @@ import type {
   MonthlySummary,
 } from "@/features/subscriptions/types"
 import { formatBillingMonthThai, getCurrentMonthLabel } from "@/features/subscriptions/helpers"
-import { SUBSCRIPTION_SERVICE_EMOJI, SUBSCRIPTION_SERVICE_LABELS } from "@/features/subscriptions/constants"
+import { SUBSCRIPTION_SERVICE_LABELS } from "@/features/subscriptions/constants"
 import type { SubscriptionFormData } from "@/components/subscriptions/AddSubscriptionModal"
 import type { MemberFormData } from "@/components/subscriptions/AddMemberModal"
-import { Plus, ArrowLeft, Users, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react"
+import {
+  Plus,
+  ArrowLeft,
+  Users,
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  Pencil,
+  Trash2,
+} from "lucide-react"
 
 // ─────────────────────────────────────────────
-// Route definition
+// Route
 // ─────────────────────────────────────────────
 
 export const Route = createFileRoute("/subscriptions")({
@@ -41,14 +51,18 @@ export const Route = createFileRoute("/subscriptions")({
 async function fetchSubscriptions(): Promise<SubscriptionWithMembers[]> {
   const res = await fetch("/api/subscriptions")
   if (!res.ok) throw new Error("ไม่สามารถดึงข้อมูล subscriptions ได้")
-  const json = await res.json() as { data: SubscriptionWithMembers[] }
+  const json = (await res.json()) as { data: SubscriptionWithMembers[] }
   return json.data
 }
 
 async function fetchSubscriptionDetail(
   subscriptionId: string,
   billingMonth: string,
-): Promise<{ detail: SubscriptionDetail; payments: SubscriptionPayment[]; summary: MonthlySummary }> {
+): Promise<{
+  detail: SubscriptionDetail
+  payments: SubscriptionPayment[]
+  summary: MonthlySummary
+}> {
   const [detailRes, paymentsRes] = await Promise.all([
     fetch(`/api/subscriptions/${subscriptionId}?billingMonth=${billingMonth}`),
     fetch(
@@ -56,18 +70,17 @@ async function fetchSubscriptionDetail(
     ),
   ])
   if (!detailRes.ok) throw new Error("ไม่สามารถดึงรายละเอียดได้")
-  const detailJson = await detailRes.json() as { data: SubscriptionDetail }
-  const paymentsJson = await paymentsRes.json() as { data: SubscriptionPayment[]; summary: MonthlySummary }
+  const detailJson = (await detailRes.json()) as { data: SubscriptionDetail }
+  const paymentsJson = (await paymentsRes.json()) as {
+    data: SubscriptionPayment[]
+    summary: MonthlySummary
+  }
   return {
     detail: detailJson.data,
     payments: paymentsJson.data,
     summary: paymentsJson.summary,
   }
 }
-
-// ─────────────────────────────────────────────
-// Billing month navigation
-// ─────────────────────────────────────────────
 
 function prevMonth(billingMonth: string): string {
   const [y, m] = billingMonth.split("-").map(Number) as [number, number]
@@ -94,7 +107,10 @@ function SubscriptionsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [billingMonth, setBillingMonth] = useState(getCurrentMonthLabel())
   const [showAddSub, setShowAddSub] = useState(false)
+  const [editingSubId, setEditingSubId] = useState<string | null>(null)
   const [showAddMember, setShowAddMember] = useState(false)
+  const [editingMemberId, setEditingMemberId] = useState<string | null>(null)
+  const [deletingMemberId, setDeletingMemberId] = useState<string | null>(null)
 
   // ─── queries ───────────────────────────────
 
@@ -108,10 +124,7 @@ function SubscriptionsPage() {
     enabled: !!session?.user?.id,
   })
 
-  const {
-    data: detailData,
-    isLoading: detailLoading,
-  } = useQuery({
+  const { data: detailData, isLoading: detailLoading } = useQuery({
     queryKey: ["subscription-detail", selectedId, billingMonth],
     queryFn: () => fetchSubscriptionDetail(selectedId!, billingMonth),
     enabled: !!selectedId,
@@ -127,12 +140,44 @@ function SubscriptionsPage() {
         body: JSON.stringify({ ...data, startDate: new Date(data.startDate).toISOString() }),
       })
       if (!res.ok) {
-        const err = await res.json() as { error: string }
+        const err = (await res.json()) as { error: string }
         throw new Error(err.error)
       }
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["subscriptions"] })
+    },
+  })
+
+  const updateSubMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: SubscriptionFormData }) => {
+      const res = await fetch(`/api/subscriptions/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...data, startDate: new Date(data.startDate).toISOString() }),
+      })
+      if (!res.ok) {
+        const err = (await res.json()) as { error: string }
+        throw new Error(err.error)
+      }
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["subscriptions"] })
+      void queryClient.invalidateQueries({ queryKey: ["subscription-detail", editingSubId] })
+    },
+  })
+
+  const deleteSubMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/subscriptions/${id}`, { method: "DELETE" })
+      if (!res.ok) {
+        const err = (await res.json()) as { error: string }
+        throw new Error(err.error)
+      }
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["subscriptions"] })
+      setSelectedId(null)
     },
   })
 
@@ -144,7 +189,7 @@ function SubscriptionsPage() {
         body: JSON.stringify(data),
       })
       if (!res.ok) {
-        const err = await res.json() as { error: string }
+        const err = (await res.json()) as { error: string }
         throw new Error(err.error)
       }
     },
@@ -154,15 +199,38 @@ function SubscriptionsPage() {
     },
   })
 
+  const deleteMemberMutation = useMutation({
+    mutationFn: async (memberId: string) => {
+      const res = await fetch(`/api/subscriptions/members?memberId=${memberId}`, {
+        method: "DELETE",
+      })
+      if (!res.ok) {
+        const err = (await res.json()) as { error: string }
+        throw new Error(err.error)
+      }
+    },
+    onSuccess: () => {
+      setDeletingMemberId(null)
+      void queryClient.invalidateQueries({ queryKey: ["subscription-detail", selectedId] })
+      void queryClient.invalidateQueries({ queryKey: ["subscriptions"] })
+    },
+  })
+
   const paymentMutation = useMutation({
-    mutationFn: async ({ paymentId, action }: { paymentId: string; action: "paid" | "unpaid" | "skip" }) => {
+    mutationFn: async ({
+      paymentId,
+      action,
+    }: {
+      paymentId: string
+      action: "paid" | "unpaid" | "skip"
+    }) => {
       const res = await fetch(`/api/subscriptions/payments?paymentId=${paymentId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action }),
       })
       if (!res.ok) {
-        const err = await res.json() as { error: string }
+        const err = (await res.json()) as { error: string }
         throw new Error(err.error)
       }
     },
@@ -195,7 +263,6 @@ function SubscriptionsPage() {
       </div>
     )
   }
-
   if (!session?.user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -205,6 +272,7 @@ function SubscriptionsPage() {
   }
 
   const selectedSub = selectedId ? subscriptions.find((s) => s.id === selectedId) : null
+  const editingSub = editingSubId ? subscriptions.find((s) => s.id === editingSubId) : null
 
   // ─── DETAIL VIEW ───────────────────────────
 
@@ -215,7 +283,7 @@ function SubscriptionsPage() {
 
     return (
       <div className="mx-auto min-h-screen max-w-3xl px-4 py-6 pb-24">
-        {/* back + title */}
+        {/* back + title + edit */}
         <div className="mb-6 flex items-center gap-3">
           <button
             type="button"
@@ -225,8 +293,8 @@ function SubscriptionsPage() {
             <ArrowLeft className="h-4 w-4" />
             กลับ
           </button>
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">{SUBSCRIPTION_SERVICE_EMOJI[selectedSub.service]}</span>
+          <div className="flex flex-1 items-center gap-2.5">
+            <ServiceIcon service={selectedSub.service} size={40} variant="badge" />
             <div>
               <h1 className="font-bold text-gray-900 dark:text-white">{selectedSub.name}</h1>
               <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -234,9 +302,18 @@ function SubscriptionsPage() {
               </p>
             </div>
           </div>
+          {/* edit button */}
+          <button
+            type="button"
+            onClick={() => setEditingSubId(selectedId)}
+            className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+          >
+            <Pencil className="h-4 w-4" />
+            แก้ไข
+          </button>
         </div>
 
-        {/* billing month selector */}
+        {/* billing month nav */}
         <div className="mb-5 flex items-center justify-between">
           <button
             type="button"
@@ -287,7 +364,7 @@ function SubscriptionsPage() {
             <button
               type="button"
               onClick={() => setShowAddMember(true)}
-              className="flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600"
+              className="flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-indigo-700 dark:bg-indigo-500"
             >
               <Plus className="h-3.5 w-3.5" />
               เพิ่มสมาชิก
@@ -313,9 +390,40 @@ function SubscriptionsPage() {
                       )}
                     </div>
                   </div>
-                  <span className="text-sm font-bold text-gray-800 dark:text-gray-200">
-                    {m.shareAmount.toLocaleString("th-TH")} ฿
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-gray-800 dark:text-gray-200">
+                      {m.shareAmount.toLocaleString("th-TH")} ฿
+                    </span>
+                    {/* delete member */}
+                    {deletingMemberId === m.id ? (
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setDeletingMemberId(null)}
+                          className="rounded-lg px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        >
+                          ยกเลิก
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteMemberMutation.mutate(m.id)}
+                          disabled={deleteMemberMutation.isPending}
+                          className="rounded-lg bg-red-100 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-200 disabled:opacity-60 dark:bg-red-900/30 dark:text-red-400"
+                        >
+                          ยืนยันลบ
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setDeletingMemberId(m.id)}
+                        className="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                        aria-label="ลบสมาชิก"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
           </div>
@@ -330,6 +438,19 @@ function SubscriptionsPage() {
           currentMemberCount={members.filter((m) => m.isActive).length}
           onSubmit={addMemberMutation.mutateAsync}
         />
+
+        {/* edit subscription modal */}
+        {editingSub && (
+          <AddSubscriptionModal
+            open={!!editingSubId}
+            onClose={() => setEditingSubId(null)}
+            initialData={editingSub}
+            onSubmit={(data) =>
+              updateSubMutation.mutateAsync({ id: editingSub.id, data })
+            }
+            onDelete={(id) => deleteSubMutation.mutateAsync(id)}
+          />
+        )}
       </div>
     )
   }
@@ -343,9 +464,7 @@ function SubscriptionsPage() {
       {/* header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            📦 Subscriptions
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">📦 Subscriptions</h1>
           <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
             จัดการ subscriptions และติดตามการจ่ายเงิน
           </p>
@@ -353,14 +472,14 @@ function SubscriptionsPage() {
         <button
           type="button"
           onClick={() => setShowAddSub(true)}
-          className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600"
+          className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 dark:bg-indigo-500"
         >
           <Plus className="h-4 w-4" />
           เพิ่มใหม่
         </button>
       </div>
 
-      {/* monthly summary banner */}
+      {/* monthly banner */}
       {subscriptions.length > 0 && (
         <div className="mb-6 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 p-5 text-white shadow-md">
           <p className="text-sm font-medium opacity-80">ค่าใช้จ่ายรวม / เดือน</p>
@@ -392,7 +511,7 @@ function SubscriptionsPage() {
           <button
             type="button"
             onClick={() => setShowAddSub(true)}
-            className="mt-5 flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 dark:bg-indigo-500"
+            className="mt-5 flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 dark:bg-indigo-500"
           >
             <Plus className="h-4 w-4" />
             เพิ่ม Subscription แรก
@@ -401,12 +520,17 @@ function SubscriptionsPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {subscriptions.map((sub) => (
-            <SubscriptionCard key={sub.id} subscription={sub} onSelect={setSelectedId} />
+            <SubscriptionCard
+              key={sub.id}
+              subscription={sub}
+              onSelect={setSelectedId}
+              onEdit={(id) => setEditingSubId(id)}
+            />
           ))}
         </div>
       )}
 
-      {/* refresh button */}
+      {/* refresh */}
       {subscriptions.length > 0 && (
         <div className="mt-6 flex justify-center">
           <button
@@ -420,12 +544,25 @@ function SubscriptionsPage() {
         </div>
       )}
 
-      {/* add subscription modal */}
+      {/* create modal */}
       <AddSubscriptionModal
         open={showAddSub}
         onClose={() => setShowAddSub(false)}
         onSubmit={createSubMutation.mutateAsync}
       />
+
+      {/* edit modal (list view) */}
+      {editingSub && (
+        <AddSubscriptionModal
+          open={!!editingSubId}
+          onClose={() => setEditingSubId(null)}
+          initialData={editingSub}
+          onSubmit={(data) =>
+            updateSubMutation.mutateAsync({ id: editingSub.id, data })
+          }
+          onDelete={(id) => deleteSubMutation.mutateAsync(id)}
+        />
+      )}
     </div>
   )
 }

@@ -1,33 +1,62 @@
 /**
  * ค่าคงที่สำหรับ Subscription Services
+ * Icons มาจาก simple-icons ผ่าน @/lib/icons/brand-icons
  */
 
+import { BRAND_ICONS } from "@/lib/icons/brand-icons"
 import type { SubscriptionService, SubscriptionPlanType, BillingCycle } from "../types"
 
+// re-export สำหรับ convenience
+export { BRAND_ICONS }
+
 // ─────────────────────────────────────────────
-// Service labels / metadata
+// Service labels
 // ─────────────────────────────────────────────
 
 export const SUBSCRIPTION_SERVICE_LABELS: Record<SubscriptionService, string> = {
   YOUTUBE: "YouTube Premium",
+  YOUTUBE_MUSIC: "YouTube Music",
   SPOTIFY: "Spotify",
+  APPLE_MUSIC: "Apple Music",
   NETFLIX: "Netflix",
+  APPLE_TV: "Apple TV+",
+  HBO_MAX: "Max (HBO Max)",
+  TWITCH: "Twitch",
+  STEAM: "Steam",
+  PLAYSTATION: "PlayStation Plus",
+  ICLOUD: "iCloud+",
+  LINE: "LINE",
+  GOOGLE_TV: "Google TV",
   OTHER: "อื่นๆ",
 }
 
-export const SUBSCRIPTION_SERVICE_COLORS: Record<SubscriptionService, string> = {
-  YOUTUBE: "#FF0000",
-  SPOTIFY: "#1DB954",
-  NETFLIX: "#E50914",
-  OTHER: "#6B7280",
-}
-
-export const SUBSCRIPTION_SERVICE_EMOJI: Record<SubscriptionService, string> = {
-  YOUTUBE: "▶️",
-  SPOTIFY: "🎵",
-  NETFLIX: "🎬",
-  OTHER: "📦",
-}
+/** หมวดหมู่ของ service (สำหรับแสดงใน picker) */
+export const SERVICE_CATEGORIES = {
+  streaming: {
+    label: "🎬 วิดีโอ",
+    services: ["NETFLIX", "APPLE_TV", "HBO_MAX", "GOOGLE_TV"] as SubscriptionService[],
+  },
+  music: {
+    label: "🎵 เพลง",
+    services: ["SPOTIFY", "YOUTUBE_MUSIC", "APPLE_MUSIC"] as SubscriptionService[],
+  },
+  social: {
+    label: "💬 Social / Live",
+    services: ["YOUTUBE", "TWITCH", "LINE"] as SubscriptionService[],
+  },
+  gaming: {
+    label: "🎮 เกม",
+    services: ["STEAM", "PLAYSTATION"] as SubscriptionService[],
+  },
+  cloud: {
+    label: "☁️ Cloud / Storage",
+    services: ["ICLOUD"] as SubscriptionService[],
+  },
+  other: {
+    label: "📦 อื่นๆ",
+    services: ["OTHER"] as SubscriptionService[],
+  },
+} as const
 
 // ─────────────────────────────────────────────
 // Plan type labels
@@ -53,24 +82,44 @@ export const BILLING_CYCLE_LABELS: Record<BillingCycle, string> = {
 }
 
 // ─────────────────────────────────────────────
-// Default prices (THB) — ราคาตลาด (ณ ปัจจุบัน)
+// Default prices (THB) — ราคาตลาด (โดยประมาณ)
 // ─────────────────────────────────────────────
 
 export const DEFAULT_PRICES: Record<SubscriptionService, { individual: number; family: number }> = {
   YOUTUBE: { individual: 179, family: 319 },
+  YOUTUBE_MUSIC: { individual: 99, family: 179 },
   SPOTIFY: { individual: 129, family: 199 },
+  APPLE_MUSIC: { individual: 99, family: 179 },
   NETFLIX: { individual: 219, family: 369 },
+  APPLE_TV: { individual: 99, family: 99 },
+  HBO_MAX: { individual: 199, family: 199 },
+  TWITCH: { individual: 179, family: 179 },
+  STEAM: { individual: 0, family: 0 },
+  PLAYSTATION: { individual: 199, family: 199 },
+  ICLOUD: { individual: 35, family: 109 },
+  LINE: { individual: 139, family: 139 },
+  GOOGLE_TV: { individual: 0, family: 0 },
   OTHER: { individual: 0, family: 0 },
 }
 
 // ─────────────────────────────────────────────
-// Max members per plan type
+// Max family members
 // ─────────────────────────────────────────────
 
 export const MAX_FAMILY_MEMBERS: Record<SubscriptionService, number> = {
   YOUTUBE: 6,
+  YOUTUBE_MUSIC: 6,
   SPOTIFY: 6,
+  APPLE_MUSIC: 6,
   NETFLIX: 6,
+  APPLE_TV: 6,
+  HBO_MAX: 5,
+  TWITCH: 1,
+  STEAM: 5,
+  PLAYSTATION: 1,
+  ICLOUD: 6,
+  LINE: 1,
+  GOOGLE_TV: 1,
   OTHER: 10,
 }
 

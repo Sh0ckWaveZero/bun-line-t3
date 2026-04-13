@@ -2,7 +2,21 @@
  * ไทป์และอินเทอร์เฟซสำหรับระบบติดตาม Subscription
  */
 
-export type SubscriptionService = "YOUTUBE" | "SPOTIFY" | "NETFLIX" | "OTHER"
+export type SubscriptionService =
+  | "YOUTUBE"
+  | "YOUTUBE_MUSIC"
+  | "SPOTIFY"
+  | "APPLE_MUSIC"
+  | "NETFLIX"
+  | "APPLE_TV"
+  | "HBO_MAX"
+  | "TWITCH"
+  | "STEAM"
+  | "PLAYSTATION"
+  | "ICLOUD"
+  | "LINE"
+  | "GOOGLE_TV"
+  | "OTHER"
 export type SubscriptionPlanType = "INDIVIDUAL" | "FAMILY"
 export type BillingCycle = "MONTHLY" | "YEARLY"
 export type PaymentStatus = "PENDING" | "PAID" | "SKIPPED"

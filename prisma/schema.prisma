@@ -188,8 +188,18 @@ model UserSettings {
 
 enum SubscriptionService {
   YOUTUBE
+  YOUTUBE_MUSIC
   SPOTIFY
+  APPLE_MUSIC
   NETFLIX
+  APPLE_TV
+  HBO_MAX
+  TWITCH
+  STEAM
+  PLAYSTATION
+  ICLOUD
+  LINE
+  GOOGLE_TV
   OTHER
 }
 
