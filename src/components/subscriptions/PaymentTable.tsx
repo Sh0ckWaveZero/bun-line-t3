@@ -11,7 +11,7 @@ import {
   PAYMENT_STATUS_BG,
 } from "@/features/subscriptions/constants"
 import { formatBillingMonthThai } from "@/features/subscriptions/helpers"
-import { CheckCircle2, Clock, SkipForward, RotateCcw } from "lucide-react"
+import { CheckCircle2, Clock, SkipForward, RotateCcw, Pencil, Trash2 } from "lucide-react"
 import { format } from "date-fns"
 import { th } from "date-fns/locale"
 
@@ -24,6 +24,8 @@ interface PaymentTableProps {
   onMarkPaid?: (paymentId: string) => void
   onUnmarkPaid?: (paymentId: string) => void
   onSkip?: (paymentId: string) => void
+  onEdit?: (payment: SubscriptionPayment) => void
+  onDelete?: (paymentId: string) => void
 }
 
 export const PaymentTable = ({
@@ -35,6 +37,8 @@ export const PaymentTable = ({
   onMarkPaid,
   onUnmarkPaid,
   onSkip,
+  onEdit,
+  onDelete,
 }: PaymentTableProps) => {
   const memberMap = new Map(members.map((m) => [m.id, m]))
 
@@ -151,6 +155,7 @@ export const PaymentTable = ({
                   {/* actions */}
                   <td className="px-5 py-3.5 text-right">
                     <div className="flex items-center justify-end gap-1.5">
+                      {/* status action buttons */}
                       {payment.status === "PENDING" && (
                         <>
                           <button
@@ -177,6 +182,30 @@ export const PaymentTable = ({
                         >
                           <RotateCcw className="h-3 w-3" />
                           ย้อนกลับ
+                        </button>
+                      )}
+
+                      {/* edit button */}
+                      {onEdit && (
+                        <button
+                          type="button"
+                          onClick={() => onEdit(payment)}
+                          className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                          aria-label="แก้ไข"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+
+                      {/* delete button */}
+                      {onDelete && (
+                        <button
+                          type="button"
+                          onClick={() => onDelete(payment.id)}
+                          className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                          aria-label="ลบ"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       )}
                     </div>

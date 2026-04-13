@@ -13,6 +13,7 @@ import { SubscriptionCard } from "@/components/subscriptions/SubscriptionCard"
 import { PaymentTable } from "@/components/subscriptions/PaymentTable"
 import { AddSubscriptionModal } from "@/components/subscriptions/AddSubscriptionModal"
 import { AddMemberModal } from "@/components/subscriptions/AddMemberModal"
+import { EditPaymentModal } from "@/components/subscriptions/EditPaymentModal"
 import { ServiceIcon } from "@/components/subscriptions/ServiceIcon"
 import type {
   SubscriptionWithMembers,
@@ -25,6 +26,7 @@ import { formatBillingMonthThai, getCurrentMonthLabel } from "@/features/subscri
 import { SUBSCRIPTION_SERVICE_LABELS } from "@/features/subscriptions/constants"
 import type { SubscriptionFormData } from "@/components/subscriptions/AddSubscriptionModal"
 import type { MemberFormData } from "@/components/subscriptions/AddMemberModal"
+import type { PaymentFormData } from "@/components/subscriptions/EditPaymentModal"
 import {
   Plus,
   ArrowLeft,
@@ -111,6 +113,7 @@ function SubscriptionsPage() {
   const [showAddMember, setShowAddMember] = useState(false)
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null)
   const [deletingMemberId, setDeletingMemberId] = useState<string | null>(null)
+  const [editingPayment, setEditingPayment] = useState<SubscriptionPayment | null>(null)
 
   // ─── queries ───────────────────────────────
 
@@ -258,6 +261,45 @@ function SubscriptionsPage() {
     },
   })
 
+  const updatePaymentMutation = useMutation({
+    mutationFn: async ({ paymentId, data }: { paymentId: string; data: PaymentFormData }) => {
+      const res = await fetch(`/api/subscriptions/payments?paymentId=${paymentId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: data.amount,
+          status: data.status,
+          paidAt: data.paidAt ? new Date(data.paidAt) : undefined,
+          note: data.note || null,
+        }),
+      })
+      if (!res.ok) {
+        const err = (await res.json()) as { error: string }
+        throw new Error(err.error)
+      }
+    },
+    onSuccess: () => {
+      setEditingPayment(null)
+      void queryClient.invalidateQueries({ queryKey: ["subscription-detail", selectedId] })
+    },
+  })
+
+  const deletePaymentMutation = useMutation({
+    mutationFn: async (paymentId: string) => {
+      const res = await fetch(`/api/subscriptions/payments?paymentId=${paymentId}`, {
+        method: "DELETE",
+      })
+      if (!res.ok) {
+        const err = (await res.json()) as { error: string }
+        throw new Error(err.error)
+      }
+    },
+    onSuccess: () => {
+      setEditingPayment(null)
+      void queryClient.invalidateQueries({ queryKey: ["subscription-detail", selectedId] })
+    },
+  })
+
   // ─── handlers ──────────────────────────────
 
   const handleMarkPaid = useCallback(
@@ -272,6 +314,16 @@ function SubscriptionsPage() {
     (paymentId: string) => paymentMutation.mutate({ paymentId, action: "skip" }),
     [paymentMutation],
   )
+
+  const handleEditPayment = useCallback((payment: SubscriptionPayment) => {
+    setEditingPayment(payment)
+  }, [])
+
+  const handleDeletePayment = useCallback((paymentId: string) => {
+    if (confirm("ยืนยันที่จะลบรายการจ่ายเงินนี้?")) {
+      deletePaymentMutation.mutate(paymentId)
+    }
+  }, [deletePaymentMutation])
 
   // ─── auth guard ────────────────────────────
 
@@ -368,6 +420,8 @@ function SubscriptionsPage() {
             onMarkPaid={handleMarkPaid}
             onUnmarkPaid={handleUnmarkPaid}
             onSkip={handleSkip}
+            onEdit={handleEditPayment}
+            onDelete={handleDeletePayment}
           />
         )}
 
@@ -484,6 +538,17 @@ function SubscriptionsPage() {
             }
           />
         )}
+
+        {/* edit payment modal */}
+        <EditPaymentModal
+          open={!!editingPayment}
+          onClose={() => setEditingPayment(null)}
+          payment={editingPayment}
+          onSubmit={(data) =>
+            updatePaymentMutation.mutateAsync({ paymentId: editingPayment!.id, data })
+          }
+          onDelete={(paymentId) => deletePaymentMutation.mutateAsync(paymentId)}
+        />
 
         {/* edit subscription modal */}
         {editingSub && (

@@ -14,6 +14,8 @@ import {
   markPaymentPaid,
   unmarkPaymentPaid,
   skipPayment,
+  updatePayment,
+  deletePayment,
   generateNextMonthPayments,
 } from "@/features/subscriptions/services/payment"
 import { getSubscriptionMonthlySummary } from "@/features/subscriptions/services/subscription"
@@ -63,11 +65,14 @@ export async function GET(request: Request) {
 }
 
 const patchPaymentSchema = z.object({
-  action: z.enum(["paid", "unpaid", "skip"]),
+  action: z.enum(["paid", "unpaid", "skip"]).optional(),
   paidAt: z
     .string()
     .transform((v) => new Date(v))
     .optional(),
+  amount: z.number().nonnegative().optional(),
+  status: z.enum(["PENDING", "PAID", "SKIPPED"]).optional(),
+  note: z.string().nullable().optional(),
 })
 
 export async function PATCH(request: Request) {
@@ -84,28 +89,62 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json()
-    const { action, paidAt } = patchPaymentSchema.parse(body)
+    const input = patchPaymentSchema.parse(body)
 
-    let updated
-    switch (action) {
-      case "paid":
-        updated = await markPaymentPaid(paymentId, session.user.id, paidAt)
-        return Response.json({ success: true, data: updated, message: "บันทึกการจ่ายเงินสำเร็จ" })
-      case "unpaid":
-        updated = await unmarkPaymentPaid(paymentId)
-        return Response.json({ success: true, data: updated, message: "ยกเลิกการจ่ายเงินสำเร็จ" })
-      case "skip":
-        updated = await skipPayment(paymentId)
-        return Response.json({ success: true, data: updated, message: "ข้าม payment สำเร็จ" })
-      default:
-        return Response.json({ error: "action ไม่ถูกต้อง" }, { status: 400 })
+    // Legacy: รองรับ action-based updates (paid/unpaid/skip)
+    if (input.action) {
+      let updated
+      switch (input.action) {
+        case "paid":
+          updated = await markPaymentPaid(paymentId, session.user.id, input.paidAt)
+          return Response.json({ success: true, data: updated, message: "บันทึกการจ่ายเงินสำเร็จ" })
+        case "unpaid":
+          updated = await unmarkPaymentPaid(paymentId)
+          return Response.json({ success: true, data: updated, message: "ยกเลิกการจ่ายเงินสำเร็จ" })
+        case "skip":
+          updated = await skipPayment(paymentId)
+          return Response.json({ success: true, data: updated, message: "ข้าม payment สำเร็จ" })
+        default:
+          return Response.json({ error: "action ไม่ถูกต้อง" }, { status: 400 })
+      }
     }
+
+    // New: custom field updates
+    const updated = await updatePayment(paymentId, {
+      ...(input.amount !== undefined && { amount: input.amount }),
+      ...(input.status !== undefined && { status: input.status }),
+      ...(input.paidAt !== undefined && { paidAt: input.paidAt }),
+      ...(input.note !== undefined && { note: input.note }),
+    })
+
+    return Response.json({ success: true, data: updated, message: "อัปเดตการจ่ายเงินสำเร็จ" })
   } catch (error) {
     console.error("[PATCH /api/subscriptions/payments]", error)
     if (error instanceof z.ZodError) {
       return Response.json({ error: "ข้อมูลไม่ถูกต้อง", details: error.issues }, { status: 400 })
     }
     return Response.json({ error: "ไม่สามารถอัปเดตการจ่ายเงินได้" }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const session = await getServerAuthSession(request)
+    if (!session?.user?.id) {
+      return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const paymentId = searchParams.get("paymentId")
+    if (!paymentId) {
+      return Response.json({ error: "กรุณาระบุ paymentId" }, { status: 400 })
+    }
+
+    await deletePayment(paymentId)
+    return Response.json({ success: true, message: "ลบรายการจ่ายเงินสำเร็จ" })
+  } catch (error) {
+    console.error("[DELETE /api/subscriptions/payments]", error)
+    return Response.json({ error: "ไม่สามารถลบรายการจ่ายเงินได้" }, { status: 500 })
   }
 }
 
@@ -140,6 +179,7 @@ export const Route = createFileRoute("/api/subscriptions/payments")({
       GET: ({ request }) => GET(request),
       PATCH: ({ request }) => PATCH(request),
       POST: ({ request }) => POST(request),
+      DELETE: ({ request }) => DELETE(request),
     },
   },
 })

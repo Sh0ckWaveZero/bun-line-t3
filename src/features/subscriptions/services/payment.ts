@@ -101,6 +101,13 @@ export async function updatePayment(
   return row as SubscriptionPayment
 }
 
+/** ลบ payment */
+export async function deletePayment(paymentId: string): Promise<void> {
+  await db.subscriptionPayment.delete({
+    where: { id: paymentId },
+  })
+}
+
 /**
  * Generate payment record สำหรับเดือนถัดไป (เรียกจาก cron หรือ manual trigger)
  */
