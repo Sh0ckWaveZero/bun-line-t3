@@ -182,6 +182,112 @@ model UserSettings {
   @@map("user_settings")
 }
 
+// ===========================
+// Subscription Tracker
+// ===========================
+
+enum SubscriptionService {
+  YOUTUBE
+  YOUTUBE_MUSIC
+  SPOTIFY
+  APPLE_MUSIC
+  NETFLIX
+  APPLE_TV
+  HBO_MAX
+  TWITCH
+  STEAM
+  PLAYSTATION
+  ICLOUD
+  LINE
+  GOOGLE_TV
+  OTHER
+}
+
+enum SubscriptionPlanType {
+  INDIVIDUAL
+  FAMILY
+}
+
+enum BillingCycle {
+  MONTHLY
+  YEARLY
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  SKIPPED
+}
+
+model Subscription {
+  id             String               @id @default(auto()) @map("_id") @db.ObjectId
+  name           String               @map("name") // ชื่อ subscription เช่น "Netflix Family"
+  service        SubscriptionService  @map("service") // YOUTUBE, SPOTIFY, NETFLIX, OTHER
+  planType       SubscriptionPlanType @default(INDIVIDUAL) @map("plan_type") // INDIVIDUAL, FAMILY
+  billingCycle   BillingCycle         @default(MONTHLY) @map("billing_cycle") // MONTHLY, YEARLY
+  totalPrice     Float                @map("total_price") // ราคาทั้งหมด (THB)
+  currency       String               @default("THB") @map("currency")
+  billingDay     Int                  @map("billing_day") // วันที่ตัดเงิน (1-31)
+  ownerId        String               @map("owner_id") @db.ObjectId // user ที่เป็นเจ้าของ/จัดการ
+  isActive       Boolean              @default(true) @map("is_active")
+  startDate      DateTime             @map("start_date")
+  endDate        DateTime?            @map("end_date")
+  logoUrl        String?              @map("logo_url") // รูปโลโก้ service
+  note           String?              @map("note")
+  createdAt      DateTime             @default(now()) @map("created_at")
+  updatedAt      DateTime             @updatedAt @map("updated_at")
+  members        SubscriptionMember[]
+  payments       SubscriptionPayment[]
+
+  @@index([ownerId, isActive])
+  @@index([service, isActive])
+  @@map("subscriptions")
+}
+
+model SubscriptionMember {
+  id             String               @id @default(auto()) @map("_id") @db.ObjectId
+  subscriptionId String               @map("subscription_id") @db.ObjectId
+  userId         String?              @map("user_id") @db.ObjectId // optional - link to system user
+  name           String               @map("name") // ชื่อสมาชิก
+  email          String?              @map("email") // อีเมล (optional)
+  shareAmount    Float                @map("share_amount") // จำนวนเงินที่สมาชิกต้องจ่าย (THB)
+  isActive       Boolean              @default(true) @map("is_active")
+  joinedAt       DateTime             @default(now()) @map("joined_at")
+  leftAt         DateTime?            @map("left_at")
+  note           String?              @map("note")
+  tags           String?              @map("tags") // คั่นด้วย comma เช่น "ครอบครัว,Netflix"
+  createdAt      DateTime             @default(now()) @map("created_at")
+  updatedAt      DateTime             @updatedAt @map("updated_at")
+  subscription   Subscription         @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  payments       SubscriptionPayment[]
+
+  @@index([subscriptionId, isActive])
+  @@map("subscription_members")
+}
+
+model SubscriptionPayment {
+  id             String               @id @default(auto()) @map("_id") @db.ObjectId
+  subscriptionId String               @map("subscription_id") @db.ObjectId
+  memberId       String               @map("member_id") @db.ObjectId
+  billingMonth   String               @map("billing_month") // YYYY-MM format
+  amount         Float                @map("amount") // จำนวนเงินที่จ่าย (THB)
+  status         PaymentStatus        @default(PENDING) @map("status")
+  paidAt         DateTime?            @map("paid_at") // วันที่จ่ายจริง
+  dueDate        DateTime             @map("due_date") // วันที่ครบกำหนดจ่าย
+  paidBy         String?              @map("paid_by") @db.ObjectId // userId ที่บันทึกการจ่าย
+  note           String?              @map("note")
+  createdAt      DateTime             @default(now()) @map("created_at")
+  updatedAt      DateTime             @updatedAt @map("updated_at")
+  subscription   Subscription         @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  member         SubscriptionMember   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, billingMonth])
+  @@index([subscriptionId, billingMonth])
+  @@index([memberId, status])
+  @@index([billingMonth, status])
+  @@map("subscription_payments")
+}
+
 enum ActivityType {
   WALKING
   RUNNING
@@ -274,20 +380,26 @@ enum ApprovalStatus {
 }
 
 model LineApprovalRequest {
-  id            String         @id @default(auto()) @map("_id") @db.ObjectId
-  lineUserId    String         @unique @map("line_user_id") // LINE user ID
-  displayName   String?        @map("display_name") // ชื่อที่แสดงใน LINE
-  pictureUrl    String?        @map("picture_url") // รูปโปรไฟล์ LINE
-  statusMessage String?        @map("status_message") // สถานะ LINE
-  reason        String?        @map("reason") // เหตุผลที่ขอใช้งาน
-  rejectReason  String?        @map("reject_reason") // เหตุผลที่ปฏิเสธ (ถ้ามี)
-  status        ApprovalStatus @default(PENDING) @map("status")
-  approvedBy    String?        @map("approved_by") // admin user id ที่อนุมัติ
-  approvedAt    DateTime?      @map("approved_at") // วันที่อนุมัติ
-  expiresAt     DateTime?      @map("expires_at") // null = ไม่หมดอายุ
-  notifiedAt    DateTime?      @map("notified_at") // วันที่แจ้งเตือน LINE ผู้ใช้
-  createdAt     DateTime       @default(now()) @map("created_at")
-  updatedAt     DateTime       @updatedAt @map("updated_at")
+  id                         String  @id @default(auto()) @map("_id") @db.ObjectId
+  lineUserId                 String  @unique @map("line_user_id") // LINE user ID
+  displayName                String? @map("display_name") // ชื่อที่แสดงใน LINE
+  pictureUrl                 String? @map("picture_url") // รูปโปรไฟล์ LINE
+  statusMessage              String? @map("status_message") // สถานะ LINE
+  reason                     String? @map("reason") // เหตุผลที่ขอใช้งาน
+  rejectReason               String? @map("reject_reason") // เหตุผลที่ปฏิเสธ (ถ้ามี)
+  status                     ApprovalStatus @default(PENDING) @map("status")
+  approvedBy                 String? @map("approved_by") // admin user id ที่อนุมัติ
+  approvedAt                 DateTime? @map("approved_at") // วันที่อนุมัติ
+  expiresAt                  DateTime? @map("expires_at") // null = ไม่หมดอายุ
+  notifiedAt                 DateTime? @map("notified_at") // วันที่แจ้งเตือน LINE ผู้ใช้
+
+  // Feature permissions
+  canRequestAttendanceReport Boolean  @default(false) @map("can_request_attendance_report") // ขอรายงานเข้างานได้
+  canRequestLeave            Boolean  @default(false) @map("can_request_leave") // ขอลาได้
+  canReceiveReminders        Boolean  @default(false) @map("can_receive_reminders") // รับแจ้งเตือนเช็คอิน/เอาท์ได้
+
+  createdAt                  DateTime @default(now()) @map("created_at")
+  updatedAt                  DateTime @updatedAt @map("updated_at")
 
   @@index([status])
   @@index([lineUserId, status])

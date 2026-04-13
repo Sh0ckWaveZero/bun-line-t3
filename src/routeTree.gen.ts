@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ThaiNamesGeneratorRouteImport } from './routes/thai-names-generator'
 import { Route as ThaiIdRouteImport } from './routes/thai-id'
+import { Route as SubscriptionsRouteImport } from './routes/subscriptions'
 import { Route as PendingApprovalRouteImport } from './routes/pending-approval'
 import { Route as MonitoringRouteImport } from './routes/monitoring'
 import { Route as LogoutRouteImport } from './routes/logout'
@@ -28,12 +29,18 @@ import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiCheckoutReminderRouteImport } from './routes/api/checkout-reminder'
 import { Route as ApiAttendanceReportRouteImport } from './routes/api/attendance-report'
 import { Route as ApiAttendancePushRouteImport } from './routes/api/attendance-push'
+import { Route as AdminLinePermissionsRouteImport } from './routes/admin/line-permissions'
+import { Route as ApiSubscriptionsIndexRouteImport } from './routes/api/subscriptions/index'
 import { Route as ApiDcaIndexRouteImport } from './routes/api/dca/index'
 import { Route as ApiUserSettingsRouteImport } from './routes/api/user/settings'
 import { Route as ApiThaiIdValidateRouteImport } from './routes/api/thai-id/validate'
 import { Route as ApiThaiIdGenerateRouteImport } from './routes/api/thai-id/generate'
 import { Route as ApiTempChartsFilenameRouteImport } from './routes/api/temp-charts/$filename'
+import { Route as ApiSubscriptionsPaymentsRouteImport } from './routes/api/subscriptions/payments'
+import { Route as ApiSubscriptionsMembersRouteImport } from './routes/api/subscriptions/members'
+import { Route as ApiSubscriptionsSubscriptionIdRouteImport } from './routes/api/subscriptions/$subscriptionId'
 import { Route as ApiMonitoringDashboardRouteImport } from './routes/api/monitoring/dashboard'
+import { Route as ApiLinePermissionsRouteImport } from './routes/api/line/permissions'
 import { Route as ApiLineApprovalsRouteImport } from './routes/api/line/approvals'
 import { Route as ApiHealthEnhancedRouteImport } from './routes/api/health/enhanced'
 import { Route as ApiHealthActivitySummaryRouteImport } from './routes/api/health-activity/summary'
@@ -65,6 +72,11 @@ const ThaiNamesGeneratorRoute = ThaiNamesGeneratorRouteImport.update({
 const ThaiIdRoute = ThaiIdRouteImport.update({
   id: '/thai-id',
   path: '/thai-id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SubscriptionsRoute = SubscriptionsRouteImport.update({
+  id: '/subscriptions',
+  path: '/subscriptions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PendingApprovalRoute = PendingApprovalRouteImport.update({
@@ -152,6 +164,16 @@ const ApiAttendancePushRoute = ApiAttendancePushRouteImport.update({
   path: '/api/attendance-push',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminLinePermissionsRoute = AdminLinePermissionsRouteImport.update({
+  id: '/admin/line-permissions',
+  path: '/admin/line-permissions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSubscriptionsIndexRoute = ApiSubscriptionsIndexRouteImport.update({
+  id: '/api/subscriptions/',
+  path: '/api/subscriptions/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiDcaIndexRoute = ApiDcaIndexRouteImport.update({
   id: '/api/dca/',
   path: '/api/dca/',
@@ -177,10 +199,32 @@ const ApiTempChartsFilenameRoute = ApiTempChartsFilenameRouteImport.update({
   path: '/api/temp-charts/$filename',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSubscriptionsPaymentsRoute =
+  ApiSubscriptionsPaymentsRouteImport.update({
+    id: '/api/subscriptions/payments',
+    path: '/api/subscriptions/payments',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiSubscriptionsMembersRoute = ApiSubscriptionsMembersRouteImport.update({
+  id: '/api/subscriptions/members',
+  path: '/api/subscriptions/members',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSubscriptionsSubscriptionIdRoute =
+  ApiSubscriptionsSubscriptionIdRouteImport.update({
+    id: '/api/subscriptions/$subscriptionId',
+    path: '/api/subscriptions/$subscriptionId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiMonitoringDashboardRoute = ApiMonitoringDashboardRouteImport.update({
   id: '/api/monitoring/dashboard',
   path: '/api/monitoring/dashboard',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiLinePermissionsRoute = ApiLinePermissionsRouteImport.update({
+  id: '/permissions',
+  path: '/permissions',
+  getParentRoute: () => ApiLineRoute,
 } as any)
 const ApiLineApprovalsRoute = ApiLineApprovalsRouteImport.update({
   id: '/approvals',
@@ -311,8 +355,10 @@ export interface FileRoutesByFullPath {
   '/logout': typeof LogoutRoute
   '/monitoring': typeof MonitoringRoute
   '/pending-approval': typeof PendingApprovalRoute
+  '/subscriptions': typeof SubscriptionsRoute
   '/thai-id': typeof ThaiIdRoute
   '/thai-names-generator': typeof ThaiNamesGeneratorRoute
+  '/admin/line-permissions': typeof AdminLinePermissionsRoute
   '/api/attendance-push': typeof ApiAttendancePushRoute
   '/api/attendance-report': typeof ApiAttendanceReportRoute
   '/api/checkout-reminder': typeof ApiCheckoutReminderRoute
@@ -340,12 +386,17 @@ export interface FileRoutesByFullPath {
   '/api/health-activity/summary': typeof ApiHealthActivitySummaryRoute
   '/api/health/enhanced': typeof ApiHealthEnhancedRoute
   '/api/line/approvals': typeof ApiLineApprovalsRoute
+  '/api/line/permissions': typeof ApiLinePermissionsRoute
   '/api/monitoring/dashboard': typeof ApiMonitoringDashboardRoute
+  '/api/subscriptions/$subscriptionId': typeof ApiSubscriptionsSubscriptionIdRoute
+  '/api/subscriptions/members': typeof ApiSubscriptionsMembersRoute
+  '/api/subscriptions/payments': typeof ApiSubscriptionsPaymentsRoute
   '/api/temp-charts/$filename': typeof ApiTempChartsFilenameRoute
   '/api/thai-id/generate': typeof ApiThaiIdGenerateRoute
   '/api/thai-id/validate': typeof ApiThaiIdValidateRoute
   '/api/user/settings': typeof ApiUserSettingsRouteWithChildren
   '/api/dca/': typeof ApiDcaIndexRoute
+  '/api/subscriptions/': typeof ApiSubscriptionsIndexRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
 }
 export interface FileRoutesByTo {
@@ -360,8 +411,10 @@ export interface FileRoutesByTo {
   '/logout': typeof LogoutRoute
   '/monitoring': typeof MonitoringRoute
   '/pending-approval': typeof PendingApprovalRoute
+  '/subscriptions': typeof SubscriptionsRoute
   '/thai-id': typeof ThaiIdRoute
   '/thai-names-generator': typeof ThaiNamesGeneratorRoute
+  '/admin/line-permissions': typeof AdminLinePermissionsRoute
   '/api/attendance-push': typeof ApiAttendancePushRoute
   '/api/attendance-report': typeof ApiAttendanceReportRoute
   '/api/checkout-reminder': typeof ApiCheckoutReminderRoute
@@ -389,12 +442,17 @@ export interface FileRoutesByTo {
   '/api/health-activity/summary': typeof ApiHealthActivitySummaryRoute
   '/api/health/enhanced': typeof ApiHealthEnhancedRoute
   '/api/line/approvals': typeof ApiLineApprovalsRoute
+  '/api/line/permissions': typeof ApiLinePermissionsRoute
   '/api/monitoring/dashboard': typeof ApiMonitoringDashboardRoute
+  '/api/subscriptions/$subscriptionId': typeof ApiSubscriptionsSubscriptionIdRoute
+  '/api/subscriptions/members': typeof ApiSubscriptionsMembersRoute
+  '/api/subscriptions/payments': typeof ApiSubscriptionsPaymentsRoute
   '/api/temp-charts/$filename': typeof ApiTempChartsFilenameRoute
   '/api/thai-id/generate': typeof ApiThaiIdGenerateRoute
   '/api/thai-id/validate': typeof ApiThaiIdValidateRoute
   '/api/user/settings': typeof ApiUserSettingsRouteWithChildren
   '/api/dca': typeof ApiDcaIndexRoute
+  '/api/subscriptions': typeof ApiSubscriptionsIndexRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
 }
 export interface FileRoutesById {
@@ -410,8 +468,10 @@ export interface FileRoutesById {
   '/logout': typeof LogoutRoute
   '/monitoring': typeof MonitoringRoute
   '/pending-approval': typeof PendingApprovalRoute
+  '/subscriptions': typeof SubscriptionsRoute
   '/thai-id': typeof ThaiIdRoute
   '/thai-names-generator': typeof ThaiNamesGeneratorRoute
+  '/admin/line-permissions': typeof AdminLinePermissionsRoute
   '/api/attendance-push': typeof ApiAttendancePushRoute
   '/api/attendance-report': typeof ApiAttendanceReportRoute
   '/api/checkout-reminder': typeof ApiCheckoutReminderRoute
@@ -439,12 +499,17 @@ export interface FileRoutesById {
   '/api/health-activity/summary': typeof ApiHealthActivitySummaryRoute
   '/api/health/enhanced': typeof ApiHealthEnhancedRoute
   '/api/line/approvals': typeof ApiLineApprovalsRoute
+  '/api/line/permissions': typeof ApiLinePermissionsRoute
   '/api/monitoring/dashboard': typeof ApiMonitoringDashboardRoute
+  '/api/subscriptions/$subscriptionId': typeof ApiSubscriptionsSubscriptionIdRoute
+  '/api/subscriptions/members': typeof ApiSubscriptionsMembersRoute
+  '/api/subscriptions/payments': typeof ApiSubscriptionsPaymentsRoute
   '/api/temp-charts/$filename': typeof ApiTempChartsFilenameRoute
   '/api/thai-id/generate': typeof ApiThaiIdGenerateRoute
   '/api/thai-id/validate': typeof ApiThaiIdValidateRoute
   '/api/user/settings': typeof ApiUserSettingsRouteWithChildren
   '/api/dca/': typeof ApiDcaIndexRoute
+  '/api/subscriptions/': typeof ApiSubscriptionsIndexRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
 }
 export interface FileRouteTypes {
@@ -461,8 +526,10 @@ export interface FileRouteTypes {
     | '/logout'
     | '/monitoring'
     | '/pending-approval'
+    | '/subscriptions'
     | '/thai-id'
     | '/thai-names-generator'
+    | '/admin/line-permissions'
     | '/api/attendance-push'
     | '/api/attendance-report'
     | '/api/checkout-reminder'
@@ -490,12 +557,17 @@ export interface FileRouteTypes {
     | '/api/health-activity/summary'
     | '/api/health/enhanced'
     | '/api/line/approvals'
+    | '/api/line/permissions'
     | '/api/monitoring/dashboard'
+    | '/api/subscriptions/$subscriptionId'
+    | '/api/subscriptions/members'
+    | '/api/subscriptions/payments'
     | '/api/temp-charts/$filename'
     | '/api/thai-id/generate'
     | '/api/thai-id/validate'
     | '/api/user/settings'
     | '/api/dca/'
+    | '/api/subscriptions/'
     | '/api/user/settings/notifications'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -510,8 +582,10 @@ export interface FileRouteTypes {
     | '/logout'
     | '/monitoring'
     | '/pending-approval'
+    | '/subscriptions'
     | '/thai-id'
     | '/thai-names-generator'
+    | '/admin/line-permissions'
     | '/api/attendance-push'
     | '/api/attendance-report'
     | '/api/checkout-reminder'
@@ -539,12 +613,17 @@ export interface FileRouteTypes {
     | '/api/health-activity/summary'
     | '/api/health/enhanced'
     | '/api/line/approvals'
+    | '/api/line/permissions'
     | '/api/monitoring/dashboard'
+    | '/api/subscriptions/$subscriptionId'
+    | '/api/subscriptions/members'
+    | '/api/subscriptions/payments'
     | '/api/temp-charts/$filename'
     | '/api/thai-id/generate'
     | '/api/thai-id/validate'
     | '/api/user/settings'
     | '/api/dca'
+    | '/api/subscriptions'
     | '/api/user/settings/notifications'
   id:
     | '__root__'
@@ -559,8 +638,10 @@ export interface FileRouteTypes {
     | '/logout'
     | '/monitoring'
     | '/pending-approval'
+    | '/subscriptions'
     | '/thai-id'
     | '/thai-names-generator'
+    | '/admin/line-permissions'
     | '/api/attendance-push'
     | '/api/attendance-report'
     | '/api/checkout-reminder'
@@ -588,12 +669,17 @@ export interface FileRouteTypes {
     | '/api/health-activity/summary'
     | '/api/health/enhanced'
     | '/api/line/approvals'
+    | '/api/line/permissions'
     | '/api/monitoring/dashboard'
+    | '/api/subscriptions/$subscriptionId'
+    | '/api/subscriptions/members'
+    | '/api/subscriptions/payments'
     | '/api/temp-charts/$filename'
     | '/api/thai-id/generate'
     | '/api/thai-id/validate'
     | '/api/user/settings'
     | '/api/dca/'
+    | '/api/subscriptions/'
     | '/api/user/settings/notifications'
   fileRoutesById: FileRoutesById
 }
@@ -609,8 +695,10 @@ export interface RootRouteChildren {
   LogoutRoute: typeof LogoutRoute
   MonitoringRoute: typeof MonitoringRoute
   PendingApprovalRoute: typeof PendingApprovalRoute
+  SubscriptionsRoute: typeof SubscriptionsRoute
   ThaiIdRoute: typeof ThaiIdRoute
   ThaiNamesGeneratorRoute: typeof ThaiNamesGeneratorRoute
+  AdminLinePermissionsRoute: typeof AdminLinePermissionsRoute
   ApiAttendancePushRoute: typeof ApiAttendancePushRoute
   ApiAttendanceReportRoute: typeof ApiAttendanceReportRoute
   ApiCheckoutReminderRoute: typeof ApiCheckoutReminderRoute
@@ -637,11 +725,15 @@ export interface RootRouteChildren {
   ApiHealthActivityMetricsRoute: typeof ApiHealthActivityMetricsRoute
   ApiHealthActivitySummaryRoute: typeof ApiHealthActivitySummaryRoute
   ApiMonitoringDashboardRoute: typeof ApiMonitoringDashboardRoute
+  ApiSubscriptionsSubscriptionIdRoute: typeof ApiSubscriptionsSubscriptionIdRoute
+  ApiSubscriptionsMembersRoute: typeof ApiSubscriptionsMembersRoute
+  ApiSubscriptionsPaymentsRoute: typeof ApiSubscriptionsPaymentsRoute
   ApiTempChartsFilenameRoute: typeof ApiTempChartsFilenameRoute
   ApiThaiIdGenerateRoute: typeof ApiThaiIdGenerateRoute
   ApiThaiIdValidateRoute: typeof ApiThaiIdValidateRoute
   ApiUserSettingsRoute: typeof ApiUserSettingsRouteWithChildren
   ApiDcaIndexRoute: typeof ApiDcaIndexRoute
+  ApiSubscriptionsIndexRoute: typeof ApiSubscriptionsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -658,6 +750,13 @@ declare module '@tanstack/react-router' {
       path: '/thai-id'
       fullPath: '/thai-id'
       preLoaderRoute: typeof ThaiIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/subscriptions': {
+      id: '/subscriptions'
+      path: '/subscriptions'
+      fullPath: '/subscriptions'
+      preLoaderRoute: typeof SubscriptionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pending-approval': {
@@ -779,6 +878,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAttendancePushRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/line-permissions': {
+      id: '/admin/line-permissions'
+      path: '/admin/line-permissions'
+      fullPath: '/admin/line-permissions'
+      preLoaderRoute: typeof AdminLinePermissionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/subscriptions/': {
+      id: '/api/subscriptions/'
+      path: '/api/subscriptions'
+      fullPath: '/api/subscriptions/'
+      preLoaderRoute: typeof ApiSubscriptionsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/dca/': {
       id: '/api/dca/'
       path: '/api/dca'
@@ -814,12 +927,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTempChartsFilenameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/subscriptions/payments': {
+      id: '/api/subscriptions/payments'
+      path: '/api/subscriptions/payments'
+      fullPath: '/api/subscriptions/payments'
+      preLoaderRoute: typeof ApiSubscriptionsPaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/subscriptions/members': {
+      id: '/api/subscriptions/members'
+      path: '/api/subscriptions/members'
+      fullPath: '/api/subscriptions/members'
+      preLoaderRoute: typeof ApiSubscriptionsMembersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/subscriptions/$subscriptionId': {
+      id: '/api/subscriptions/$subscriptionId'
+      path: '/api/subscriptions/$subscriptionId'
+      fullPath: '/api/subscriptions/$subscriptionId'
+      preLoaderRoute: typeof ApiSubscriptionsSubscriptionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/monitoring/dashboard': {
       id: '/api/monitoring/dashboard'
       path: '/api/monitoring/dashboard'
       fullPath: '/api/monitoring/dashboard'
       preLoaderRoute: typeof ApiMonitoringDashboardRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/line/permissions': {
+      id: '/api/line/permissions'
+      path: '/permissions'
+      fullPath: '/api/line/permissions'
+      preLoaderRoute: typeof ApiLinePermissionsRouteImport
+      parentRoute: typeof ApiLineRoute
     }
     '/api/line/approvals': {
       id: '/api/line/approvals'
@@ -992,10 +1133,12 @@ const ApiHealthRouteWithChildren = ApiHealthRoute._addFileChildren(
 
 interface ApiLineRouteChildren {
   ApiLineApprovalsRoute: typeof ApiLineApprovalsRoute
+  ApiLinePermissionsRoute: typeof ApiLinePermissionsRoute
 }
 
 const ApiLineRouteChildren: ApiLineRouteChildren = {
   ApiLineApprovalsRoute: ApiLineApprovalsRoute,
+  ApiLinePermissionsRoute: ApiLinePermissionsRoute,
 }
 
 const ApiLineRouteWithChildren =
@@ -1025,8 +1168,10 @@ const rootRouteChildren: RootRouteChildren = {
   LogoutRoute: LogoutRoute,
   MonitoringRoute: MonitoringRoute,
   PendingApprovalRoute: PendingApprovalRoute,
+  SubscriptionsRoute: SubscriptionsRoute,
   ThaiIdRoute: ThaiIdRoute,
   ThaiNamesGeneratorRoute: ThaiNamesGeneratorRoute,
+  AdminLinePermissionsRoute: AdminLinePermissionsRoute,
   ApiAttendancePushRoute: ApiAttendancePushRoute,
   ApiAttendanceReportRoute: ApiAttendanceReportRoute,
   ApiCheckoutReminderRoute: ApiCheckoutReminderRoute,
@@ -1053,11 +1198,15 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHealthActivityMetricsRoute: ApiHealthActivityMetricsRoute,
   ApiHealthActivitySummaryRoute: ApiHealthActivitySummaryRoute,
   ApiMonitoringDashboardRoute: ApiMonitoringDashboardRoute,
+  ApiSubscriptionsSubscriptionIdRoute: ApiSubscriptionsSubscriptionIdRoute,
+  ApiSubscriptionsMembersRoute: ApiSubscriptionsMembersRoute,
+  ApiSubscriptionsPaymentsRoute: ApiSubscriptionsPaymentsRoute,
   ApiTempChartsFilenameRoute: ApiTempChartsFilenameRoute,
   ApiThaiIdGenerateRoute: ApiThaiIdGenerateRoute,
   ApiThaiIdValidateRoute: ApiThaiIdValidateRoute,
   ApiUserSettingsRoute: ApiUserSettingsRouteWithChildren,
   ApiDcaIndexRoute: ApiDcaIndexRoute,
+  ApiSubscriptionsIndexRoute: ApiSubscriptionsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
