@@ -8,6 +8,8 @@ import { useState, useEffect } from "react"
 import { calculateEqualShare } from "@/features/subscriptions/helpers"
 import { X, Loader2 } from "lucide-react"
 
+import type { SubscriptionMember } from "@/features/subscriptions/types"
+
 interface AddMemberModalProps {
   open: boolean
   onClose: () => void
@@ -15,6 +17,8 @@ interface AddMemberModalProps {
   totalPrice: number
   currentMemberCount: number
   onSubmit: (data: MemberFormData) => Promise<void>
+  /** ถ้ามี initialData = edit mode */
+  initialData?: SubscriptionMember
 }
 
 export interface MemberFormData {
@@ -32,7 +36,9 @@ export const AddMemberModal = ({
   totalPrice,
   currentMemberCount,
   onSubmit,
+  initialData,
 }: AddMemberModalProps) => {
+  const isEdit = !!initialData?.id
   const [isLoading, setIsLoading] = useState(false)
   const suggestedShare = calculateEqualShare(totalPrice, currentMemberCount + 1)
 
@@ -47,16 +53,28 @@ export const AddMemberModal = ({
   // Reset form เมื่อ modal เปิดใหม่
   useEffect(() => {
     if (open) {
-      const newSuggestedShare = calculateEqualShare(totalPrice, currentMemberCount + 1)
-      setForm({
-        subscriptionId,
-        name: "",
-        email: "",
-        shareAmount: newSuggestedShare,
-        note: "",
-      })
+      if (initialData) {
+        // Edit mode: ใช้ค่าเดิม
+        setForm({
+          subscriptionId,
+          name: initialData.name,
+          email: initialData.email ?? "",
+          shareAmount: initialData.shareAmount,
+          note: initialData.note ?? "",
+        })
+      } else {
+        // Create mode: คำนวณค่าเริ่มต้น
+        const newSuggestedShare = calculateEqualShare(totalPrice, currentMemberCount + 1)
+        setForm({
+          subscriptionId,
+          name: "",
+          email: "",
+          shareAmount: newSuggestedShare,
+          note: "",
+        })
+      }
     }
-  }, [open, subscriptionId, totalPrice, currentMemberCount])
+  }, [open, initialData, subscriptionId, totalPrice, currentMemberCount])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -75,7 +93,9 @@ export const AddMemberModal = ({
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center">
       <div className="w-full max-w-md rounded-t-3xl bg-white shadow-2xl dark:bg-gray-900 sm:rounded-2xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">เพิ่มสมาชิก</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            {isEdit ? "แก้ไขสมาชิก" : "เพิ่มสมาชิก"}
+          </h2>
           <button
             type="button"
             onClick={onClose}
@@ -183,7 +203,7 @@ export const AddMemberModal = ({
               className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-60 dark:bg-indigo-500"
             >
               {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-              {isLoading ? "กำลังเพิ่ม..." : "เพิ่มสมาชิก"}
+              {isLoading ? (isEdit ? "กำลังบันทึก..." : "กำลังเพิ่ม...") : isEdit ? "บันทึก" : "เพิ่มสมาชิก"}
             </button>
           </div>
         </form>

@@ -216,6 +216,25 @@ function SubscriptionsPage() {
     },
   })
 
+  const updateMemberMutation = useMutation({
+    mutationFn: async ({ memberId, data }: { memberId: string; data: MemberFormData }) => {
+      const res = await fetch(`/api/subscriptions/members?memberId=${memberId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+      if (!res.ok) {
+        const err = (await res.json()) as { error: string }
+        throw new Error(err.error)
+      }
+    },
+    onSuccess: () => {
+      setEditingMemberId(null)
+      void queryClient.invalidateQueries({ queryKey: ["subscription-detail", selectedId] })
+      void queryClient.invalidateQueries({ queryKey: ["subscriptions"] })
+    },
+  })
+
   const paymentMutation = useMutation({
     mutationFn: async ({
       paymentId,
@@ -394,7 +413,7 @@ function SubscriptionsPage() {
                     <span className="text-sm font-bold text-gray-800 dark:text-gray-200">
                       {m.shareAmount.toLocaleString("th-TH")} ฿
                     </span>
-                    {/* delete member */}
+                    {/* actions */}
                     {deletingMemberId === m.id ? (
                       <div className="flex gap-1">
                         <button
@@ -414,14 +433,26 @@ function SubscriptionsPage() {
                         </button>
                       </div>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => setDeletingMemberId(m.id)}
-                        className="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
-                        aria-label="ลบสมาชิก"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      <div className="flex gap-0.5">
+                        {/* edit button */}
+                        <button
+                          type="button"
+                          onClick={() => setEditingMemberId(m.id)}
+                          className="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                          aria-label="แก้ไข"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        {/* delete button */}
+                        <button
+                          type="button"
+                          onClick={() => setDeletingMemberId(m.id)}
+                          className="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                          aria-label="ลบสมาชิก"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -438,6 +469,21 @@ function SubscriptionsPage() {
           currentMemberCount={members.filter((m) => m.isActive).length}
           onSubmit={addMemberMutation.mutateAsync}
         />
+
+        {/* edit member modal */}
+        {editingMemberId && (
+          <AddMemberModal
+            open={!!editingMemberId}
+            onClose={() => setEditingMemberId(null)}
+            subscriptionId={selectedId}
+            totalPrice={selectedSub.totalPrice}
+            currentMemberCount={members.filter((m) => m.isActive).length}
+            initialData={members.find((m) => m.id === editingMemberId)}
+            onSubmit={(data) =>
+              updateMemberMutation.mutateAsync({ memberId: editingMemberId, data })
+            }
+          />
+        )}
 
         {/* edit subscription modal */}
         {editingSub && (
