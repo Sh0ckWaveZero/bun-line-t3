@@ -383,7 +383,7 @@ function SubscriptionsPage() {
           <button
             type="button"
             onClick={() => setSelectedId(null)}
-            className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+            className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
           >
             <ArrowLeft className="h-4 w-4" />
             กลับ
@@ -401,7 +401,7 @@ function SubscriptionsPage() {
           <button
             type="button"
             onClick={() => setEditingSubId(selectedId)}
-            className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+            className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
           >
             <Pencil className="h-4 w-4" />
             แก้ไข
@@ -413,7 +413,7 @@ function SubscriptionsPage() {
           <button
             type="button"
             onClick={() => setBillingMonth(prevMonth(billingMonth))}
-            className="rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+            className="cursor-pointer rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -423,7 +423,7 @@ function SubscriptionsPage() {
           <button
             type="button"
             onClick={() => setBillingMonth(nextMonth(billingMonth))}
-            className="rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+            className="cursor-pointer rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
@@ -439,7 +439,7 @@ function SubscriptionsPage() {
               type="button"
               onClick={() => generatePaymentsMutation.mutate(selectedId)}
               disabled={generatePaymentsMutation.isPending}
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-60 dark:bg-indigo-500"
+              className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-60 dark:bg-indigo-500"
             >
               {generatePaymentsMutation.isPending ? (
                 <>
@@ -491,7 +491,7 @@ function SubscriptionsPage() {
             <button
               type="button"
               onClick={() => setShowAddMember(true)}
-              className="flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-indigo-700 dark:bg-indigo-500"
+              className="cursor-pointer flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-indigo-700 dark:bg-indigo-500"
             >
               <Plus className="h-3.5 w-3.5" />
               เพิ่มสมาชิก
@@ -558,7 +558,7 @@ function SubscriptionsPage() {
                         <button
                           type="button"
                           onClick={() => setEditingMemberId(m.id)}
-                          className="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                          className="cursor-pointer rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
                           aria-label="แก้ไข"
                         >
                           <Pencil className="h-3.5 w-3.5" />
@@ -567,7 +567,7 @@ function SubscriptionsPage() {
                         <button
                           type="button"
                           onClick={() => setDeletingMemberId(m.id)}
-                          className="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                          className="cursor-pointer rounded-full p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                           aria-label="ลบสมาชิก"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -679,7 +679,7 @@ function SubscriptionsPage() {
         <button
           type="button"
           onClick={() => setShowAddSub(true)}
-          className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 dark:bg-indigo-500"
+          className="cursor-pointer flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 dark:bg-indigo-500"
         >
           <Plus className="h-4 w-4" />
           เพิ่มใหม่
@@ -743,7 +743,7 @@ function SubscriptionsPage() {
           <button
             type="button"
             onClick={() => void refetchList()}
-            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm text-gray-600 shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+            className="cursor-pointer flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm text-gray-600 shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
           >
             <RefreshCw className="h-4 w-4" />
             รีเฟรช

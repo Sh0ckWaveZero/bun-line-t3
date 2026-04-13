@@ -173,7 +173,7 @@ export const PaymentTable = ({
                           <button
                             type="button"
                             onClick={() => onSkip?.(payment.id)}
-                            className="rounded-lg bg-gray-100 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"
+                            className="cursor-pointer rounded-lg bg-gray-100 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"
                           >
                             ข้าม
                           </button>
@@ -183,7 +183,7 @@ export const PaymentTable = ({
                         <button
                           type="button"
                           onClick={() => onUnmarkPaid?.(payment.id)}
-                          className="flex items-center gap-1 rounded-lg bg-gray-100 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"
+                          className="cursor-pointer flex items-center gap-1 rounded-lg bg-gray-100 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"
                         >
                           <RotateCcw className="h-3 w-3" />
                           ย้อนกลับ
@@ -195,7 +195,7 @@ export const PaymentTable = ({
                         <button
                           type="button"
                           onClick={() => onEdit(payment)}
-                          className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                          className="cursor-pointer rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
                           aria-label="แก้ไข"
                         >
                           <Pencil className="h-3.5 w-3.5" />
@@ -207,7 +207,7 @@ export const PaymentTable = ({
                         <button
                           type="button"
                           onClick={() => onDelete(payment.id)}
-                          className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                          className="cursor-pointer rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                           aria-label="ลบ"
                         >
                           <Trash2 className="h-3.5 w-3.5" />

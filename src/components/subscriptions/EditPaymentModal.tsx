@@ -96,7 +96,7 @@ export const EditPaymentModal = ({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="cursor-pointer rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
           >
             <X className="h-5 w-5" />
           </button>
@@ -212,7 +212,7 @@ export const EditPaymentModal = ({
               <button
                 type="button"
                 onClick={() => setShowDeleteConfirm(true)}
-                className="flex items-center gap-1.5 rounded-xl border border-red-200 px-3 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-red-200 px-3 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -220,14 +220,14 @@ export const EditPaymentModal = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-xl border border-gray-300 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+              className="cursor-pointer flex-1 rounded-xl border border-gray-300 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
             >
               ยกเลิก
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-60 dark:bg-indigo-500 dark:hover:bg-indigo-600"
+              className="cursor-pointer flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-60 dark:bg-indigo-500 dark:hover:bg-indigo-600"
             >
               {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
               {isLoading ? "กำลังบันทึก..." : "บันทึก"}

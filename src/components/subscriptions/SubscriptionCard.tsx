@@ -57,7 +57,7 @@ export const SubscriptionCard = ({ subscription, onSelect, onEdit }: Subscriptio
       <button
         type="button"
         onClick={() => onSelect?.(id)}
-        className="w-full p-5 text-left"
+        className="w-full cursor-pointer p-5 text-left"
       >
         {/* header — brand icon + title */}
         <div className="flex items-center gap-3">

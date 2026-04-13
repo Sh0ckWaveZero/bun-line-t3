@@ -119,7 +119,7 @@ export const ServiceIconPickerModal = ({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800"
+            className="cursor-pointer rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800"
           >
             <X className="h-5 w-5" />
           </button>

@@ -102,7 +102,7 @@ export const AddMemberModal = ({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="cursor-pointer rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
           >
             <X className="h-5 w-5" />
           </button>
@@ -169,7 +169,7 @@ export const AddMemberModal = ({
                 <button
                   type="button"
                   onClick={() => setForm((p) => ({ ...p, shareAmount: suggestedShare }))}
-                  className="shrink-0 rounded-xl border border-indigo-300 bg-indigo-50 px-3 py-2.5 text-xs font-medium text-indigo-700 transition-colors hover:bg-indigo-100 dark:border-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300"
+                  className="cursor-pointer shrink-0 rounded-xl border border-indigo-300 bg-indigo-50 px-3 py-2.5 text-xs font-medium text-indigo-700 transition-colors hover:bg-indigo-100 dark:border-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300"
                 >
                   แบ่งเท่ากัน
                 </button>
@@ -213,14 +213,14 @@ export const AddMemberModal = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-xl border border-gray-300 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+              className="cursor-pointer flex-1 rounded-xl border border-gray-300 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
             >
               ยกเลิก
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-60 dark:bg-indigo-500"
+              className="cursor-pointer flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-60 dark:bg-indigo-500"
             >
               {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
               {isLoading ? (isEdit ? "กำลังบันทึก..." : "กำลังเพิ่ม...") : isEdit ? "บันทึก" : "เพิ่มสมาชิก"}
