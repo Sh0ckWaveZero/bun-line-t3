@@ -64,6 +64,8 @@ export async function getMemberPaymentSummaries(
 
 /** เพิ่มสมาชิกใหม่ และ auto-generate payments ที่ขาดอยู่ */
 export async function addMember(input: CreateMemberInput) {
+  console.log("[addMember] Creating member with input:", input)
+
   const member = await db.subscriptionMember.create({
     data: {
       subscriptionId: input.subscriptionId,
@@ -77,17 +79,25 @@ export async function addMember(input: CreateMemberInput) {
     },
   })
 
+  console.log("[addMember] Member created:", member)
+
   // Auto-generate payments ที่ยังขาดอยู่
   const subscription = await db.subscription.findUnique({
     where: { id: input.subscriptionId },
   })
+  console.log("[addMember] Subscription found:", subscription)
+
   if (subscription) {
     const missingMonths = getMissingBillingMonths(
       member.joinedAt,
       [], // ใหม่ทั้งหมด
     )
+    console.log("[addMember] Missing billing months:", missingMonths)
+
     for (const billingMonth of missingMonths) {
       const dueDate = getDueDate(subscription.billingDay, billingMonth)
+      console.log("[addMember] Creating payment for month:", billingMonth, "due date:", dueDate)
+
       await db.subscriptionPayment.upsert({
         where: { memberId_billingMonth: { memberId: member.id, billingMonth } },
         create: {
@@ -103,6 +113,7 @@ export async function addMember(input: CreateMemberInput) {
     }
   }
 
+  console.log("[addMember] Member creation complete")
   return member
 }
 

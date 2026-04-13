@@ -92,19 +92,29 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
+    console.log("[POST /api/subscriptions/members] Request body:", body)
+
     const input = addMemberSchema.parse(body)
+    console.log("[POST /api/subscriptions/members] Parsed input:", input)
+
     const member = await addMember(input)
+    console.log("[POST /api/subscriptions/members] Created member:", member)
 
     return Response.json(
       { success: true, data: member, message: "เพิ่มสมาชิกสำเร็จ" },
       { status: 201 },
     )
   } catch (error) {
-    console.error("[POST /api/subscriptions/members]", error)
+    console.error("[POST /api/subscriptions/members] Error:", error)
+    if (error instanceof Error) {
+      console.error("[POST /api/subscriptions/members] Error message:", error.message)
+      console.error("[POST /api/subscriptions/members] Error stack:", error.stack)
+    }
     if (error instanceof z.ZodError) {
+      console.error("[POST /api/subscriptions/members] ZodError:", error.issues)
       return Response.json({ error: "ข้อมูลไม่ถูกต้อง", details: error.issues }, { status: 400 })
     }
-    return Response.json({ error: "ไม่สามารถเพิ่มสมาชิกได้" }, { status: 500 })
+    return Response.json({ error: "ไม่สามารถเพิ่มสมาชิกได้", message: error instanceof Error ? error.message : "Unknown error" }, { status: 500 })
   }
 }
 
