@@ -254,6 +254,20 @@ export const auth = betterAuth({
     },
   },
   databaseHooks: {
+    session: {
+      create: {
+        async before(session) {
+          // Handle duplicate session token from OAuth callback retries
+          // (e.g. Cloudflare Tunnel retrying the LINE callback request)
+          try {
+            await db.session.deleteMany({ where: { token: session.token } });
+          } catch {
+            // ignore — if delete fails, let create proceed and surface the real error
+          }
+          return { data: session };
+        },
+      },
+    },
     account: {
       create: {
         async after(account) {
