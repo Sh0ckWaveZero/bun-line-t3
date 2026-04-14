@@ -102,7 +102,7 @@ export const auth = betterAuth({
     },
   },
   plugins: [tanstackStartCookies()],
-  secret: env.AUTH_SECRET ?? env.LINE_CHANNEL_SECRET,
+  secret: env.AUTH_SECRET,
   trustedOrigins: getTrustedOrigins(),
   user: {
     fields: {
