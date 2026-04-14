@@ -52,22 +52,21 @@ cat > "$OUTPUT_FILE" << EOF
 # 🌐 Application URLs (REQUIRED)
 # =============================================================================
 
-# Main application URL - used for OAuth callbacks
+# Main application URL - used for OAuth callbacks, frontend, and domain validation
+# This is the PRIMARY URL variable - all others fall back to this
 APP_URL=https://$PRODUCTION_DOMAIN
 
-# Frontend URL - should match APP_URL for single-domain setups
-FRONTEND_URL=https://$PRODUCTION_DOMAIN
-
-# Application domain for security validation
-APP_DOMAIN=https://$PRODUCTION_DOMAIN
+# Allowed domains for security validation (comma-separated)
+# IMPORTANT: Include all domain variants you use
 
 # =============================================================================
 # 🔐 Security Configuration (REQUIRED)
 # =============================================================================
 
-# Allowed domains for URL validation (comma-separated)
-# IMPORTANT: Include all domain variants you use
-ALLOWED_DOMAINS=$PRODUCTION_DOMAIN,www.$PRODUCTION_DOMAIN
+# Allowed domains for security validation (comma-separated)
+# IMPORTANT: Include only the domain(s) you actually use
+# For single-domain setup, just use the main domain
+ALLOWED_DOMAINS=$PRODUCTION_DOMAIN
 
 # Auth secret for session management (generate with: openssl rand -base64 32)
 AUTH_SECRET=YOUR_AUTH_SECRET_HERE
