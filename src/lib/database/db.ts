@@ -31,7 +31,9 @@ const createClient = () => {
               e.code === "P2002" &&
               typeof token === "string"
             ) {
-              await base.session.deleteMany({ where: { token } }).catch(() => {});
+              console.log("[DB] session.create P2002 caught — deleting stale token and retrying");
+              const { count } = await base.session.deleteMany({ where: { token } }).catch(() => ({ count: 0 }));
+              console.log("[DB] deleted stale sessions:", count);
               return await query(args);
             }
             throw e;
