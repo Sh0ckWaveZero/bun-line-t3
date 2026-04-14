@@ -1,4 +1,4 @@
-export { dcaService } from "./services/dca.service";
+export { dcaService } from "./services/dca.service.server";
 export type {
   DcaOrder,
   CreateDcaOrderInput,

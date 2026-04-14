@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { getServerAuthSession } from "@/lib/auth/auth";
-import { attendanceService } from "@/features/attendance/services/attendance";
-import { leaveService } from "@/features/attendance/services/leave";
+import { attendanceService } from "@/features/attendance/services/attendance.server";
+import { leaveService } from "@/features/attendance/services/leave.server";
 import { db } from "@/lib/database/db";
 import { canRequestAttendanceReport } from "@/lib/line/permissions";
 

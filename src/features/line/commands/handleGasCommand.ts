@@ -1,4 +1,4 @@
-import { exchangeService } from "@/features/crypto/services/exchange";
+import { exchangeService } from "@/features/crypto/services/exchange.server";
 import { getFlexMessage, replyNotFound } from "@/lib/utils/line-message-utils";
 
 export const handleGasCommand = async (conditions: any[], req: any) => {

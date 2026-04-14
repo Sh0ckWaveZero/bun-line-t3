@@ -1,5 +1,5 @@
-import { attendanceService } from "@/features/attendance/services/attendance";
-import { holidayService } from "@/features/attendance/services/holidays";
+import { attendanceService } from "@/features/attendance/services/attendance.server";
+import { holidayService } from "@/features/attendance/services/holidays.server";
 
 interface WorkingDayResult {
   isWorkingDay: boolean;

@@ -13,8 +13,8 @@ import {
   addMember,
   updateMember,
   removeMember,
-} from "@/features/subscriptions/services/member"
-import { BadRequestError, UnauthorizedError, ForbiddenError, NotFoundError, createErrorResponse } from "@/lib/errors/api-error"
+} from "@/features/subscriptions/services/member.server"
+import { BadRequestError, UnauthorizedError, ForbiddenError, createErrorResponse } from "@/lib/errors/api-error"
 
 const addMemberSchema = z.object({
   subscriptionId: z.string().min(1),

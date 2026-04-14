@@ -1,5 +1,5 @@
 import { CRYPTO_CURRENCIES_LIST } from "@/lib/constants/common.constant";
-import { cmcService } from "./cmc";
+import { cmcService } from "./cmc.server";
 
 const mapSymbolsThai = (symbols: string): string => {
   const currency: string =

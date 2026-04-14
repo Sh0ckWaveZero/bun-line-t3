@@ -1,9 +1,9 @@
 import { d3ChartGenerator } from "@/lib/utils/chart-generator-d3";
 import { uploadImageToTemporaryHost } from "@/lib/utils/line-messaging";
 import type { UploadResult } from "@/lib/types/line-messaging";
-import { exchangeService } from "./exchange";
-import { bitkubHistoryService } from "./bitkub-history";
-import { binanceHistoryService } from "./binance-history";
+import { exchangeService } from "./exchange.server";
+import { bitkubHistoryService } from "./bitkub-history.server";
+import { binanceHistoryService } from "./binance-history.server";
 import { CryptoInfo } from "../types/crypto.interface";
 
 export type ChartImageUrls = UploadResult;

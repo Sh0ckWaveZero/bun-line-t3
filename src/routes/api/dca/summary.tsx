@@ -9,7 +9,7 @@ import { dcaService } from "@/features/dca";
 import {
   getBTCPrice,
   calculatePnLPercent,
-} from "@/features/dca/services/bitkub.service";
+} from "@/features/dca/services/bitkub.service.server";
 import { getLineUserId } from "@/lib/auth";
 
 interface DcaSummaryWithPnL {

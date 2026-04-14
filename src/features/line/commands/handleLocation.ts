@@ -1,4 +1,4 @@
-import { airVisualService } from "@/features/air-quality/services/airvisual";
+import { airVisualService } from "@/features/air-quality/services/airvisual.server";
 import { sendMessage } from "../../../lib/utils/line-utils";
 import { flexMessage, replyNotFound } from "@/lib/utils/line-message-utils";
 

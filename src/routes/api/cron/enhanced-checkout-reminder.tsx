@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { bubbleTemplate } from "@/lib/validation/line";
-import { attendanceService } from "@/features/attendance/services/attendance";
+import { attendanceService } from "@/features/attendance/services/attendance.server";
 import { db } from "@/lib/database/db";
 import { roundToOneDecimal } from "@/lib/utils/number";
 import {

@@ -1,5 +1,5 @@
 import { CryptoInfo } from "@/features/crypto/types/crypto.interface";
-import { ChartImageUrls } from "@/features/crypto/services/chart";
+import { ChartImageUrls } from "@/features/crypto/services/chart.server";
 
 export interface LineFlexMessage {
   type: "flex";

@@ -9,7 +9,7 @@
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { getServerAuthSession } from "@/lib/auth/auth";
-import { approvalService } from "@/features/line/services/approval.service";
+import { approvalService } from "@/features/line/services/approval.service.server";
 import { canManageApprovalsAsync } from "@/lib/auth/admin";
 import { db } from "@/lib/database/db";
 import { z } from "zod";

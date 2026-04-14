@@ -1,6 +1,6 @@
 // Attendance validation helpers
 import { WORKPLACE_POLICIES } from "../constants/workplace-policies";
-import { holidayService } from "../services/holidays";
+import { holidayService } from "../services/holidays.server";
 
 export const isWorkingDay = async (date: Date): Promise<boolean> => {
   // Check if it's a weekend (Saturday = 6, Sunday = 0)

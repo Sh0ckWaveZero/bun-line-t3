@@ -25,7 +25,6 @@ import {
   RefreshCw,
   Clock,
   Users,
-  ShieldCheck,
 } from "lucide-react";
 import {
   AuthLoadingScreen,

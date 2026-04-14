@@ -4,7 +4,7 @@
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { getServerAuthSession } from "@/lib/auth/auth";
-import { healthActivityService } from "@/features/health-activity/services/health-activity.service";
+import { healthActivityService } from "@/features/health-activity/services/health-activity.service.server";
 
 /**
  * GET - Get activity summary

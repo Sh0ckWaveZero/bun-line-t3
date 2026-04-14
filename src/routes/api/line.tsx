@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { env } from "@/env.mjs";
-import { lineService } from "@/features/line/services/line";
+import { lineService } from "@/features/line/services/line.server";
 import { utils } from "@/lib/validation";
 import crypto from "node:crypto";
 

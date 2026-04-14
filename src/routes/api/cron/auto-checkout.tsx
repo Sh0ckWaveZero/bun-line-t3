@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { env } from "@/env.mjs";
-import { attendanceService } from "@/features/attendance/services/attendance";
+import { attendanceService } from "@/features/attendance/services/attendance.server";
 import { db } from "@/lib/database/db";
 import { AttendanceStatusType } from "@prisma/client";
 import { checkCronLineApproval } from "@/lib/auth/approval-guard";

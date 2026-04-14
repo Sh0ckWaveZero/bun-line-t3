@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { attendanceService } from "@/features/attendance/services/attendance";
+import { attendanceService } from "@/features/attendance/services/attendance.server";
 import { bubbleTemplate } from "@/lib/validation/line";
 import { db } from "@/lib/database/db";
 import { flexMessage } from "@/lib/utils/line-message-utils";

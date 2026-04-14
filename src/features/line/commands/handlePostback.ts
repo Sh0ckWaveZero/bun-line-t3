@@ -1,4 +1,4 @@
-import { attendanceService } from "@/features/attendance/services/attendance";
+import { attendanceService } from "@/features/attendance/services/attendance.server";
 import { db } from "../../../lib/database/db";
 import { bubbleTemplate } from "@/lib/validation/line";
 import { sendMessage } from "../../../lib/utils/line-utils";

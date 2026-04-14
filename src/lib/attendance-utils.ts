@@ -2,7 +2,7 @@
 // ✅ ยูทิลิตี้ร่วมสำหรับคำสั่งการทำงาน
 
 import { db } from "@/lib/database";
-import { attendanceService } from "@/features/attendance/services/attendance";
+import { attendanceService } from "@/features/attendance/services/attendance.server";
 import { utils } from "@/lib/validation";
 
 export interface UserAuthResult {

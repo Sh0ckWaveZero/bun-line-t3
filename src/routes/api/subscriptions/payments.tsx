@@ -17,8 +17,8 @@ import {
   updatePayment,
   deletePayment,
   generateNextMonthPayments,
-} from "@/features/subscriptions/services/payment"
-import { getSubscriptionMonthlySummary } from "@/features/subscriptions/services/subscription"
+} from "@/features/subscriptions/services/payment.server"
+import { getSubscriptionMonthlySummary } from "@/features/subscriptions/services/subscription.server"
 import { getCurrentMonthLabel } from "@/features/subscriptions/helpers"
 
 export async function GET(request: Request) {

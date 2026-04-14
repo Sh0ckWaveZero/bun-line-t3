@@ -66,7 +66,7 @@ const convertUTCToThaiTime = (utcDate: Date): Date => {
   return new Date(utcDate.getTime() + 7 * 60 * 60 * 1000);
 };
 
-const { holidayService } = await import("../services/holidays");
+const { holidayService } = await import("../services/holidays.server");
 
 /**
  * ตรวจสอบว่าวันที่ที่ระบุเป็นวันทำงานหรือไม่ (จันทร์-ศุกร์ และไม่ตรงวันหยุด)

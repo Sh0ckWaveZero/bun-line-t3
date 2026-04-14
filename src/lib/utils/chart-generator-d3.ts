@@ -2,7 +2,7 @@ import * as d3 from "d3";
 import { createCanvas, registerFont } from "canvas";
 import path from "path";
 import fs from "fs";
-import { bitkubHistoryService } from "@/features/crypto/services/bitkub-history";
+import { bitkubHistoryService } from "@/features/crypto/services/bitkub-history.server";
 import { CHART_COLORS, getColorByTrend } from "./chart-colors";
 import {
   LARGE_CHART_CONFIG,
@@ -86,7 +86,7 @@ export class D3ChartGenerator {
       exchange.toLowerCase() === "bn"
     ) {
       const { binanceHistoryService } = await import(
-        "@/features/crypto/services/binance-history"
+        "@/features/crypto/services/binance-history.server"
       );
       historicalData = await binanceHistoryService.getPopularCryptoHistory(
         symbol,

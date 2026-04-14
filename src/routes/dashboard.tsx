@@ -20,7 +20,7 @@ import {
 function DashboardPage() {
   const { data: session, status } = useSession();
   const isAdmin = session?.isAdmin ?? false;
-  const { needsApproval, isLoading: approvalLoading, refetch } = useLineApproval();
+  const { needsApproval } = useLineApproval();
 
   const todayLabel = useSafeHydration("...", () =>
     new Intl.DateTimeFormat("th-TH", {

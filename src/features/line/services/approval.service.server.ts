@@ -2,7 +2,7 @@
  * LINE Approval Service
  * Business logic สำหรับ LINE Messaging API Approval Flow
  */
-import { approvalRepository } from "./approval.repository";
+import { approvalRepository } from "./approval.repository.server";
 import { canManageApprovals, isAdminLineUser } from "@/lib/auth/admin";
 import { sendPushMessage } from "@/lib/utils/line-push";
 import { approvalBubbleTemplate } from "@/lib/validation/line-approval";

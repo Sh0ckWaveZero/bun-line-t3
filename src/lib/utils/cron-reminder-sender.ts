@@ -1,5 +1,5 @@
 import { env } from "@/env.mjs";
-import { attendanceService } from "@/features/attendance/services/attendance";
+import { attendanceService } from "@/features/attendance/services/attendance.server";
 import { getCheckInMessage } from "@/lib/constants/checkin-reminder-messages";
 import { sendPushMessage } from "@/lib/utils/line-push";
 

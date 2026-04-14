@@ -66,6 +66,24 @@ export async function getAllSubscriptions(): Promise<SubscriptionWithMembers[]> 
   return rows as SubscriptionWithMembers[]
 }
 
+/** ดึง subscriptions ที่ user เป็นเจ้าของ หรือเป็นสมาชิก */
+export async function getSubscriptionsForUser(userId: string): Promise<SubscriptionWithMembers[]> {
+  const rows = await db.subscription.findMany({
+    where: {
+      isActive: true,
+      OR: [
+        { ownerId: userId },
+        { members: { some: { userId, isActive: true } } },
+      ],
+    },
+    include: {
+      members: { where: { isActive: true }, orderBy: { joinedAt: "asc" } },
+    },
+    orderBy: { createdAt: "desc" },
+  })
+  return rows as SubscriptionWithMembers[]
+}
+
 /** สรุปการจ่ายเงินรายเดือนของ subscription */
 export async function getSubscriptionMonthlySummary(
   subscriptionId: string,

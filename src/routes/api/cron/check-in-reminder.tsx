@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { attendanceService } from "@/features/attendance/services/attendance";
+import { attendanceService } from "@/features/attendance/services/attendance.server";
 import { RateLimiter } from "@/lib/utils/rate-limiter";
 import { validateCronAuth } from "@/lib/utils/cron-auth";
 import { validateReminderTime } from "@/lib/utils/cron-time-validation";

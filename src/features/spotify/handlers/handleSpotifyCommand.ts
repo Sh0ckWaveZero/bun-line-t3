@@ -5,7 +5,7 @@
  */
 
 import type { LineMessage } from "@/lib/types/line-messaging";
-import { spotifyService } from "../services/spotifyService";
+import { spotifyService } from "../services/spotifyService.server";
 import {
   createSpotifyRecommendationsCarousel,
   createMoodSelectionMessage,

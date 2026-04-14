@@ -1,7 +1,7 @@
 import * as cheerio from "cheerio";
 
-import { cmcService } from "./cmc";
-import { cryptoCurrencyService } from "./crypto-currency";
+import { cmcService } from "./cmc.server";
+import { cryptoCurrencyService } from "./crypto-currency.server";
 import { CryptoInfo } from "../types/crypto.interface";
 import { utils } from "@/lib/validation";
 import { env } from "@/env.mjs";

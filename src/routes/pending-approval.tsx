@@ -10,7 +10,6 @@ import { useSession } from "@/lib/auth/client";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Clock, MessageSquare, ShieldCheck } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 function PendingApprovalPage() {

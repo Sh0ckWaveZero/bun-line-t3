@@ -8,10 +8,10 @@ import { createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 import { getServerAuthSession } from "@/lib/auth/auth"
 import {
-  getSubscriptionsByOwner,
+  getSubscriptionsForUser,
   createSubscription,
   generateMissingPayments,
-} from "@/features/subscriptions/services/subscription"
+} from "@/features/subscriptions/services/subscription.server"
 
 const createSubscriptionSchema = z.object({
   name: z.string().min(1, "กรุณาระบุชื่อ subscription"),
@@ -37,11 +37,8 @@ export async function GET(request: Request) {
       return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 })
     }
 
-    if (!session.isAdmin) {
-      return Response.json({ error: "ไม่มีสิทธิ์เข้าถึงหน้านี้" }, { status: 403 })
-    }
-
-    const subscriptions = await getSubscriptionsByOwner(session.user.id)
+    // ดึง subscriptions ที่ user เป็นเจ้าของ หรือเป็นสมาชิก
+    const subscriptions = await getSubscriptionsForUser(session.user.id)
     return Response.json({ success: true, data: subscriptions })
   } catch (error) {
     console.error("[GET /api/subscriptions]", error)
