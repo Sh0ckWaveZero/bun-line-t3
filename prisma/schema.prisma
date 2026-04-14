@@ -86,7 +86,6 @@ model VerificationToken {
   updatedAt  DateTime? @updatedAt @map("updated_at")
 
   @@unique([identifier, token])
-  @@map("verification_tokens")
 }
 
 enum AttendanceStatusType {

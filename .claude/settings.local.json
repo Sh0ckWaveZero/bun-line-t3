@@ -61,7 +61,15 @@
       "Bash(tee:*)",
       "Bash(gh pr:*)",
       "Bash(git fetch:*)",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
+      "Bash(git pull:*)",
+      "mcp__MongoDB__list-databases",
+      "mcp__MongoDB__connect",
+      "mcp__MongoDB__find",
+      "Bash(gh secret:*)",
+      "mcp__MongoDB__list-collections",
+      "mcp__MongoDB__count",
+      "Bash(gh run:*)"
     ],
     "deny": [
       "Read(**/.env*)",
