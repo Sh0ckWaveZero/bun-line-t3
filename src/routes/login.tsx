@@ -54,9 +54,9 @@ function LoginPage() {
   }
 
   return (
-    <main className="relative flex h-screen w-full items-center justify-center overflow-hidden">
-      {/* Gradient Background */}
-      <div className="pointer-events-none absolute inset-0">
+    <main className="relative flex h-screen w-full items-center justify-center overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Gradient Background - ensure pointer-events-none */}
+      <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -right-40 -top-40 h-80 w-80 rounded-full bg-gradient-to-br from-purple-400/20 to-pink-600/20 blur-3xl"></div>
         <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-gradient-to-tr from-indigo-400/20 to-purple-600/20 blur-3xl"></div>
       </div>

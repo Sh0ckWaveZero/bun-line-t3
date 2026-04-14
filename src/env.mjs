@@ -13,10 +13,7 @@ export const env = createEnv({
     APP_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
-    AUTH_SECRET:
-      process.env.APP_ENV === "production"
-        ? z.string().min(1)
-        : z.string().min(1).optional(),
+    AUTH_SECRET: z.string().min(32, "AUTH_SECRET must be at least 32 characters"),
     APP_URL: z.string().url(),
     LINE_CLIENT_ID: z.string(),
     LINE_CLIENT_SECRET: z.string(),
@@ -46,7 +43,10 @@ export const env = createEnv({
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL,
     APP_ENV: process.env.APP_ENV,
-    AUTH_SECRET: process.env.AUTH_SECRET,
+    AUTH_SECRET: process.env.AUTH_SECRET ||
+      (process.env.APP_ENV === "development"
+        ? "development-secret-key-min-32-chars-long-please-change-in-production"
+        : undefined),
     APP_URL: process.env.APP_URL ?? process.env.FRONTEND_URL,
     LINE_CLIENT_ID: process.env.LINE_CLIENT_ID,
     LINE_CLIENT_SECRET: process.env.LINE_CLIENT_SECRET,
