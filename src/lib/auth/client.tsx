@@ -12,14 +12,10 @@ interface AuthActionOptions {
 export const authClient = createAuthClient();
 
 function getAuthOrigin() {
-  if (typeof window !== "undefined") {
-    return window.location.origin;
-  }
-
   try {
-    return __APP_URL__ ? new URL(__APP_URL__).origin : "";
+    return __APP_URL__ ? new URL(__APP_URL__).origin : window.location.origin;
   } catch {
-    return "";
+    return window.location.origin;
   }
 }
 
@@ -64,13 +60,6 @@ export async function signIn(
   const callbackUrl = buildAuthCallbackUrl(
     options?.redirectTo ?? options?.callbackUrl,
   );
-
-  if (provider === "line" && options?.redirect !== false) {
-    const signInUrl = new URL("/api/auth/sign-in/line", window.location.origin);
-    signInUrl.searchParams.set("callbackURL", callbackUrl);
-    window.location.assign(signInUrl.toString());
-    return;
-  }
 
   return authClient.signIn.social({
     callbackURL: callbackUrl,
