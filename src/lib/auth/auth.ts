@@ -39,7 +39,6 @@ const getTrustedOrigins = () =>
         env.APP_URL,
         env.FRONTEND_URL,
         env.APP_DOMAIN,
-        "https://line-login.midseelee.com",
         ...(env.APP_ENV === "development"
           ? [getLocalDevOrigin(), getLoopbackDevOrigin()]
           : []),
