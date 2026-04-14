@@ -1,10 +1,34 @@
 import type { Prisma } from "@prisma/client";
 import { db } from "../src/lib/database/db";
 
+interface MongoIndex {
+  key?: Record<string, unknown>;
+  name?: string;
+}
+
 async function runCommand(name: string, command: Prisma.InputJsonObject) {
   console.log(`Running ${name}...`);
   const result = await db.$runCommandRaw(command);
   console.log(`${name} result:`, JSON.stringify(result));
+}
+
+async function dropLegacyIndex(collection: string, fieldName: string) {
+  const result = await db.$runCommandRaw({
+    listIndexes: collection,
+  });
+  const indexes = (result as { cursor?: { firstBatch?: MongoIndex[] } }).cursor
+    ?.firstBatch;
+
+  const legacyIndex = indexes?.find((index) => index.key?.[fieldName] === 1);
+  if (!legacyIndex?.name) {
+    console.log(`No legacy ${collection}.${fieldName} index found`);
+    return;
+  }
+
+  await runCommand(`drop legacy ${collection}.${legacyIndex.name} index`, {
+    dropIndexes: collection,
+    index: legacyIndex.name,
+  });
 }
 
 async function migrateBetterAuthCanonical() {
@@ -76,6 +100,8 @@ async function migrateBetterAuthCanonical() {
         },
       ],
     });
+
+    await dropLegacyIndex("sessions", "session_token");
 
     await runCommand("users canonical fields", {
       update: "users",

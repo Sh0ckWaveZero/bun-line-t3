@@ -5,6 +5,9 @@ const globalForPrisma = globalThis as unknown as {
   prisma: any | undefined;
 };
 
+const isUniqueConstraintError = (error: unknown) =>
+  error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
+
 const createClient = () => {
   const base = new PrismaClient({
     log:
@@ -27,18 +30,38 @@ const createClient = () => {
             return await query(args);
           }
 
-          // Use upsert to handle duplicate tokens atomically
-          // - If token exists: update with new data (extendsAt, updatedAt, etc.)
-          // - If token doesn't exist: insert new session
-          return await (base as PrismaClient).session.upsert({
-            where: { token },
-            create: args.data as Prisma.SessionCreateInput,
-            update: {
-              expiresAt: (args.data as Prisma.SessionCreateInput).expiresAt,
-              updatedAt: new Date(),
-              // Keep other fields (userId, ipAddress, userAgent) unchanged
-            },
-          });
+          const data = args.data as Prisma.SessionCreateInput;
+          const update = {
+            expiresAt: data.expiresAt,
+            updatedAt: new Date(),
+            // Keep other fields (userId, ipAddress, userAgent) unchanged
+          };
+
+          try {
+            // MongoDB upsert can still lose a concurrent insert race on unique indexes.
+            return await (base as PrismaClient).session.upsert({
+              where: { token },
+              create: data,
+              update,
+            });
+          } catch (error) {
+            if (!isUniqueConstraintError(error)) {
+              throw error;
+            }
+
+            const existingSession = await (base as PrismaClient).session.findUnique({
+              where: { token },
+            });
+
+            if (!existingSession) {
+              throw error;
+            }
+
+            return await (base as PrismaClient).session.update({
+              where: { token },
+              data: update,
+            });
+          }
         },
       },
     },
