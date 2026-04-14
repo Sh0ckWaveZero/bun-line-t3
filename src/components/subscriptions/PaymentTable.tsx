@@ -33,7 +33,7 @@ export const PaymentTable = ({
   members,
   billingMonth,
   summary,
-  currentUserId,
+  currentUserId: _currentUserId,
   onMarkPaid,
   onUnmarkPaid,
   onSkip,
@@ -104,7 +104,7 @@ export const PaymentTable = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-            {payments.map((payment, index) => {
+            {payments.map((payment) => {
               const member = memberMap.get(payment.memberId)
               return (
                 <tr

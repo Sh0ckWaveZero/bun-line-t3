@@ -2,7 +2,7 @@
  * Handle Health Activity Commands
  * Provides health and fitness tracking via LINE bot
  */
-import { healthActivityService } from "@/features/health-activity/services/health-activity.service";
+import { healthActivityService } from "@/features/health-activity/services/health-activity.service.server";
 import { ActivityFormatter } from "@/features/health-activity/helpers/activity-formatter";
 import { db } from "@/lib/database/db";
 

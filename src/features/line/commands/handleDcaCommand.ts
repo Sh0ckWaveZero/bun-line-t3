@@ -5,7 +5,7 @@ import { dcaEventManager } from "@/lib/dca/event-manager";
 import {
   getBTCPrice,
   calculatePnLPercent,
-} from "@/features/dca/services/bitkub.service";
+} from "@/features/dca/services/bitkub.service.server";
 import { createDcaSummaryFlexMessage } from "@/lib/line-utils/flex-messages";
 
 // ========================

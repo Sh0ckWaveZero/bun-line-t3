@@ -57,11 +57,39 @@ function LinePermissionsPage() {
   const { data: session, status } = useSession()
   const queryClient = useQueryClient()
 
-  // State
+  // ─── State (must be before any early return) ──
+
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all")
   const [searchQuery, setSearchQuery] = useState("")
 
-  // ─── Auth Guard ──────────────────────────────
+  // ─── Queries (must be before any early return) ─
+
+  const { data: approvals = [], isLoading } = useQuery({
+    queryKey: ["line-permissions"],
+    queryFn: fetchPermissions,
+    enabled: !!session?.isAdmin,
+  })
+
+  // ─── Mutations (must be before any early return) ─
+
+  const updatePermissionMutation = useMutation({
+    mutationFn: async ({ lineUserId, permissions }: { lineUserId: string; permissions: Partial<LineApproval> }) => {
+      const res = await fetch("/api/line/permissions", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lineUserId, ...permissions }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || "ไม่สามารถอัปเดตสิทธิ์ได้")
+      }
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["line-permissions"] })
+    },
+  })
+
+  // ─── Auth Guard (after all hooks) ────────────
 
   if (status === "loading") {
     return (
@@ -94,32 +122,6 @@ function LinePermissionsPage() {
       </div>
     )
   }
-
-  // ─── Queries ─────────────────────────────────
-
-  const { data: approvals = [], isLoading } = useQuery({
-    queryKey: ["line-permissions"],
-    queryFn: fetchPermissions,
-  })
-
-  // ─── Mutations ───────────────────────────────
-
-  const updatePermissionMutation = useMutation({
-    mutationFn: async ({ lineUserId, permissions }: { lineUserId: string; permissions: Partial<LineApproval> }) => {
-      const res = await fetch("/api/line/permissions", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lineUserId, ...permissions }),
-      })
-      if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.error || "ไม่สามารถอัปเดตสิทธิ์ได้")
-      }
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["line-permissions"] })
-    },
-  })
 
   // ─── Handlers ────────────────────────────────
 

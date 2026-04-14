@@ -6,7 +6,7 @@
  * - true  → ผ่าน (approved) ดำเนินการต่อได้
  * - false → ไม่ผ่าน (new/pending/rejected) ได้ส่ง reply ไปให้ user แล้ว
  */
-import { approvalService } from "../services/approval.service";
+import { approvalService } from "../services/approval.service.server";
 import { APPROVAL_CHECK_RESULT } from "../types/approval.types";
 
 /**

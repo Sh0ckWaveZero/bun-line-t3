@@ -133,9 +133,6 @@ export const ServiceIconGridItem = ({
   selected = false,
   onClick,
 }: ServiceIconGridItemProps) => {
-  const icon = BRAND_ICONS[service]
-  const bgColor = `#${icon.hex}`
-
   return (
     <button
       type="button"

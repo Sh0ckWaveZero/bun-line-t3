@@ -48,6 +48,35 @@ skills:
 - TypeScript strict mode with `noUncheckedIndexedAccess`
 - Prefer interfaces over types for objects, avoid enums (use const maps)
 
+### Project Structure
+
+```
+src/
+├── routes/             # TanStack Start file-based routes
+│   ├── api/**          # HTTP handlers (thin layer: parse → call service → respond)
+│   └── *.tsx           # Page components
+├── features/<domain>/  # Server-only business logic (NEVER import in client code)
+│   ├── services/       # *.server.ts — DB queries, external APIs (server-only)
+│   ├── types/          # Shared types (isomorphic — safe everywhere)
+│   ├── helpers/        # Pure functions (isomorphic — safe everywhere)
+│   ├── constants/      # Shared constants (isomorphic — safe everywhere)
+│   └── index.ts        # Re-exports barrel
+├── components/<domain>/# React UI components (client)
+├── hooks/              # React hooks (client)
+└── lib/                # Shared infra (auth, db, utils)
+```
+
+**File naming conventions (TanStack Start):**
+- `*.server.ts` — server-only code (Prisma, secrets, external APIs) — **never import in components/hooks**
+- `*.tsx` — React components (client-safe)
+- `*.ts` — isomorphic code (pure functions, types, constants)
+
+**Separation rules:**
+- `features/*/services/*.server.ts` is the **Service/Repository layer** shared by both:
+  - `routes/api/**` — REST HTTP handlers
+  - `features/line/commands/**` — LINE Bot command handlers
+- Never put React components or hooks inside `features/` — use `components/` and `hooks/` instead
+
 ### Imports & Structure
 
 - Use path aliases: `@/`, `@/features/*`, `@/lib/*`, `@/components/*`, `@/hooks/*`

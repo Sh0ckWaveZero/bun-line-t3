@@ -1,4 +1,4 @@
-import { attendanceService } from "@/features/attendance/services/attendance";
+import { attendanceService } from "@/features/attendance/services/attendance.server";
 import { bubbleTemplate } from "@/lib/validation/line";
 import { db } from "@/lib/database";
 import { flexMessage } from "@/lib/utils/line-message-utils";

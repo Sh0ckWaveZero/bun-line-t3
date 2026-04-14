@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { env } from "@/env.mjs";
 import { bubbleTemplate } from "@/lib/validation/line";
-import { attendanceService } from "@/features/attendance/services/attendance";
+import { attendanceService } from "@/features/attendance/services/attendance.server";
 import { db } from "@/lib/database/db";
 import type {
   LineMessage,

@@ -151,7 +151,7 @@ export const checkCronLineApproval = async (): Promise<{
     }
 
     return { approved: true };
-  } catch (error) {
+  } catch {
     return {
       approved: false,
       response: Response.json(

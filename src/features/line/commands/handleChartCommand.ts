@@ -1,5 +1,5 @@
 import { sendMessage } from "@/lib/utils/line-utils";
-import { chartService } from "@/features/crypto/services/chart";
+import { chartService } from "@/features/crypto/services/chart.server";
 import { ChartTemplates } from "@/features/line/templates/chart-templates";
 import {
   ChartParser,

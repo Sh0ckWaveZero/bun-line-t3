@@ -2,7 +2,8 @@
 
 /**
  * Subscription Tracker Page — /subscriptions
- * รองรับ create / edit / delete subscription และสมาชิก
+ * รองรับ create / edit / delete subscription และสมาชิก (admin)
+ * ผู้ใช้ทั่วไปสามารถดู subscriptions ที่ตัวเองเป็นสมาชิกได้
  */
 
 import { createFileRoute } from "@tanstack/react-router"
@@ -106,50 +107,8 @@ function SubscriptionsPage() {
   const isPending = status === "loading"
   const queryClient = useQueryClient()
 
-  // ─── auth guard ────────────────────────────
+  // ─── ALL hooks must be declared before any conditional return ───
 
-  if (isPending) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-500 dark:text-gray-400">กำลังโหลด...</p>
-      </div>
-    )
-  }
-
-  // Check if user is admin
-  if (!session?.isAdmin) {
-    return (
-      <div className="flex min-h-screen items-center justify-center px-4">
-        <div className="w-full max-w-md rounded-2xl border border-red-200 bg-red-50 p-8 text-center dark:border-red-800 dark:bg-red-900/20">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
-            🚫
-          </div>
-          <h1 className="mb-2 text-xl font-bold text-red-900 dark:text-red-300">
-            ไม่มีสิทธิ์เข้าถึง
-          </h1>
-          <p className="mb-6 text-sm text-red-700 dark:text-red-400">
-            หน้านี้สำหรับผู้ดูแลระบบเท่านั้น
-          </p>
-          <a
-            href="/"
-            className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 dark:bg-red-500"
-          >
-            กลับหน้าแรก
-          </a>
-        </div>
-      </div>
-    )
-  }
-
-  if (!session?.user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-500 dark:text-gray-400">กรุณาเข้าสู่ระบบก่อน</p>
-      </div>
-    )
-  }
-
-  // view state
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [billingMonth, setBillingMonth] = useState(getCurrentMonthLabel())
   const [showAddSub, setShowAddSub] = useState(false)
@@ -170,7 +129,7 @@ function SubscriptionsPage() {
   } = useQuery({
     queryKey: ["subscriptions"],
     queryFn: fetchSubscriptions,
-    enabled: !!session?.user?.id && session.isAdmin,
+    enabled: !!session?.user?.id,
   })
 
   const { data: detailData, isLoading: detailLoading } = useQuery({
@@ -179,7 +138,7 @@ function SubscriptionsPage() {
     enabled: !!selectedId,
   })
 
-  // ─── mutations ─────────────────────────────
+  // ─── mutations (admin-only actions) ────────
 
   const createSubMutation = useMutation({
     mutationFn: async (data: SubscriptionFormData) => {
@@ -392,7 +351,29 @@ function SubscriptionsPage() {
     }
   }, [deletePaymentConfirm, deletePaymentMutation])
 
-  // Derived values (after queries are loaded)
+  // ─── auth guard (after all hooks) ──────────
+
+  if (isPending) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-gray-500 dark:text-gray-400">กำลังโหลด...</p>
+      </div>
+    )
+  }
+
+  if (!session?.user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-gray-500 dark:text-gray-400">กรุณาเข้าสู่ระบบก่อน</p>
+      </div>
+    )
+  }
+
+  // ─── derived values ────────────────────────
+
+  const isAdmin = session.isAdmin
+  const currentUserId = session.user.id
+
   const selectedSub = selectedId ? subscriptions.find((s) => s.id === selectedId) : null
   const editingSub = editingSubId ? subscriptions.find((s) => s.id === editingSubId) : null
 
@@ -424,15 +405,17 @@ function SubscriptionsPage() {
               </p>
             </div>
           </div>
-          {/* edit button */}
-          <button
-            type="button"
-            onClick={() => setEditingSubId(selectedId)}
-            className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
-          >
-            <Pencil className="h-4 w-4" />
-            แก้ไข
-          </button>
+          {/* edit button — admin only */}
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => setEditingSubId(selectedId)}
+              className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+            >
+              <Pencil className="h-4 w-4" />
+              แก้ไข
+            </button>
+          )}
         </div>
 
         {/* billing month nav */}
@@ -456,8 +439,8 @@ function SubscriptionsPage() {
           </button>
         </div>
 
-        {/* actions bar */}
-        {payments.length === 0 && (
+        {/* generate payments — admin only */}
+        {isAdmin && payments.length === 0 && (
           <div className="mb-5 rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 p-6 text-center dark:border-gray-700 dark:bg-gray-800">
             <p className="mb-3 text-sm text-gray-600 dark:text-gray-300">
               ยังไม่มีรายการจ่ายเงินสำหรับเดือนนี้
@@ -486,6 +469,15 @@ function SubscriptionsPage() {
           </div>
         )}
 
+        {/* empty state for regular users */}
+        {!isAdmin && payments.length === 0 && !detailLoading && (
+          <div className="mb-5 rounded-2xl border border-gray-200 bg-gray-50 p-6 text-center dark:border-gray-700 dark:bg-gray-800">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              ยังไม่มีรายการจ่ายเงินสำหรับเดือนนี้
+            </p>
+          </div>
+        )}
+
         {/* payment table */}
         {detailLoading ? (
           <div className="flex h-48 items-center justify-center rounded-2xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
@@ -497,7 +489,7 @@ function SubscriptionsPage() {
             members={members}
             billingMonth={billingMonth}
             summary={summary}
-            currentUserId={session.user.id}
+            currentUserId={currentUserId}
             onMarkPaid={handleMarkPaid}
             onUnmarkPaid={handleUnmarkPaid}
             onSkip={handleSkip}
@@ -515,14 +507,17 @@ function SubscriptionsPage() {
                 สมาชิก ({members.filter((m) => m.isActive).length} คน)
               </h2>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowAddMember(true)}
-              className="cursor-pointer flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-indigo-700 dark:bg-indigo-500"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              เพิ่มสมาชิก
-            </button>
+            {/* add member — admin only */}
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => setShowAddMember(true)}
+                className="cursor-pointer flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-indigo-700 dark:bg-indigo-500"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                เพิ่มสมาชิก
+              </button>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -560,46 +555,46 @@ function SubscriptionsPage() {
                     <span className="text-sm font-bold text-gray-800 dark:text-gray-200">
                       {m.shareAmount.toLocaleString("th-TH")} ฿
                     </span>
-                    {/* actions */}
-                    {deletingMemberId === m.id ? (
-                      <div className="flex gap-1">
-                        <button
-                          type="button"
-                          onClick={() => setDeletingMemberId(null)}
-                          className="rounded-lg px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
-                        >
-                          ยกเลิก
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => deleteMemberMutation.mutate(m.id)}
-                          disabled={deleteMemberMutation.isPending}
-                          className="rounded-lg bg-red-100 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-200 disabled:opacity-60 dark:bg-red-900/30 dark:text-red-400"
-                        >
-                          ยืนยันลบ
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex gap-0.5">
-                        {/* edit button */}
-                        <button
-                          type="button"
-                          onClick={() => setEditingMemberId(m.id)}
-                          className="cursor-pointer rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
-                          aria-label="แก้ไข"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                        {/* delete button */}
-                        <button
-                          type="button"
-                          onClick={() => setDeletingMemberId(m.id)}
-                          className="cursor-pointer rounded-full p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
-                          aria-label="ลบสมาชิก"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
+                    {/* actions — admin only */}
+                    {isAdmin && (
+                      deletingMemberId === m.id ? (
+                        <div className="flex gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setDeletingMemberId(null)}
+                            className="rounded-lg px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            ยกเลิก
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => deleteMemberMutation.mutate(m.id)}
+                            disabled={deleteMemberMutation.isPending}
+                            className="rounded-lg bg-red-100 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-200 disabled:opacity-60 dark:bg-red-900/30 dark:text-red-400"
+                          >
+                            ยืนยันลบ
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-0.5">
+                          <button
+                            type="button"
+                            onClick={() => setEditingMemberId(m.id)}
+                            className="cursor-pointer rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                            aria-label="แก้ไข"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeletingMemberId(m.id)}
+                            className="cursor-pointer rounded-full p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                            aria-label="ลบสมาชิก"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      )
                     )}
                   </div>
                 </div>
@@ -607,18 +602,20 @@ function SubscriptionsPage() {
           </div>
         </div>
 
-        {/* add member modal */}
-        <AddMemberModal
-          open={showAddMember}
-          onClose={() => setShowAddMember(false)}
-          subscriptionId={selectedId}
-          totalPrice={selectedSub.totalPrice}
-          currentMemberCount={members.filter((m) => m.isActive).length}
-          onSubmit={addMemberMutation.mutateAsync}
-        />
+        {/* add member modal — admin only */}
+        {isAdmin && (
+          <AddMemberModal
+            open={showAddMember}
+            onClose={() => setShowAddMember(false)}
+            subscriptionId={selectedId}
+            totalPrice={selectedSub.totalPrice}
+            currentMemberCount={members.filter((m) => m.isActive).length}
+            onSubmit={addMemberMutation.mutateAsync}
+          />
+        )}
 
-        {/* edit member modal */}
-        {editingMemberId && (
+        {/* edit member modal — admin only */}
+        {isAdmin && editingMemberId && (
           <AddMemberModal
             open={!!editingMemberId}
             onClose={() => setEditingMemberId(null)}
@@ -673,8 +670,8 @@ function SubscriptionsPage() {
           />
         )}
 
-        {/* edit subscription modal */}
-        {editingSub && (
+        {/* edit subscription modal — admin only */}
+        {isAdmin && editingSub && (
           <AddSubscriptionModal
             open={!!editingSubId}
             onClose={() => setEditingSubId(null)}
@@ -700,17 +697,22 @@ function SubscriptionsPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">📦 Subscriptions</h1>
           <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-            จัดการ subscriptions และติดตามการจ่ายเงิน
+            {isAdmin
+              ? "จัดการ subscriptions และติดตามการจ่ายเงิน"
+              : "ติดตามสถานะการจ่ายเงินของคุณ"}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowAddSub(true)}
-          className="cursor-pointer flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 dark:bg-indigo-500"
-        >
-          <Plus className="h-4 w-4" />
-          เพิ่มใหม่
-        </button>
+        {/* add button — admin only */}
+        {isAdmin && (
+          <button
+            type="button"
+            onClick={() => setShowAddSub(true)}
+            className="cursor-pointer flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 dark:bg-indigo-500"
+          >
+            <Plus className="h-4 w-4" />
+            เพิ่มใหม่
+          </button>
+        )}
       </div>
 
       {/* monthly banner */}
@@ -737,19 +739,21 @@ function SubscriptionsPage() {
         <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 py-20 text-center dark:border-gray-700">
           <span className="mb-4 text-5xl">📦</span>
           <p className="text-base font-semibold text-gray-700 dark:text-gray-300">
-            ยังไม่มี Subscription
+            {isAdmin ? "ยังไม่มี Subscription" : "คุณยังไม่ได้เป็นสมาชิก Subscription ใดๆ"}
           </p>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            กดปุ่ม "เพิ่มใหม่" เพื่อเริ่มต้น
+            {isAdmin ? 'กดปุ่ม "เพิ่มใหม่" เพื่อเริ่มต้น' : "ติดต่อผู้ดูแลระบบเพื่อเพิ่มเป็นสมาชิก"}
           </p>
-          <button
-            type="button"
-            onClick={() => setShowAddSub(true)}
-            className="mt-5 flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 dark:bg-indigo-500"
-          >
-            <Plus className="h-4 w-4" />
-            เพิ่ม Subscription แรก
-          </button>
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => setShowAddSub(true)}
+              className="mt-5 flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 dark:bg-indigo-500"
+            >
+              <Plus className="h-4 w-4" />
+              เพิ่ม Subscription แรก
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
@@ -758,7 +762,7 @@ function SubscriptionsPage() {
               key={sub.id}
               subscription={sub}
               onSelect={setSelectedId}
-              onEdit={(id) => setEditingSubId(id)}
+              onEdit={isAdmin ? (id) => setEditingSubId(id) : undefined}
             />
           ))}
         </div>
@@ -778,15 +782,17 @@ function SubscriptionsPage() {
         </div>
       )}
 
-      {/* create modal */}
-      <AddSubscriptionModal
-        open={showAddSub}
-        onClose={() => setShowAddSub(false)}
-        onSubmit={createSubMutation.mutateAsync}
-      />
+      {/* create modal — admin only */}
+      {isAdmin && (
+        <AddSubscriptionModal
+          open={showAddSub}
+          onClose={() => setShowAddSub(false)}
+          onSubmit={createSubMutation.mutateAsync}
+        />
+      )}
 
-      {/* edit modal (list view) */}
-      {editingSub && (
+      {/* edit modal (list view) — admin only */}
+      {isAdmin && editingSub && (
         <AddSubscriptionModal
           open={!!editingSubId}
           onClose={() => setEditingSubId(null)}

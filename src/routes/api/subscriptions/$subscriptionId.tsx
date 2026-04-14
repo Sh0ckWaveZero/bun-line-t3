@@ -12,7 +12,7 @@ import {
   getSubscriptionDetail,
   updateSubscription,
   deactivateSubscription,
-} from "@/features/subscriptions/services/subscription"
+} from "@/features/subscriptions/services/subscription.server"
 import { getCurrentMonthLabel } from "@/features/subscriptions/helpers"
 
 const updateSubscriptionSchema = z.object({
@@ -46,10 +46,6 @@ export async function GET(request: Request) {
       return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 })
     }
 
-    if (!session.isAdmin) {
-      return Response.json({ error: "ไม่มีสิทธิ์เข้าถึงหน้านี้" }, { status: 403 })
-    }
-
     const subscriptionId = getSubscriptionId(request)
     const { searchParams } = new URL(request.url)
     const billingMonth = searchParams.get("billingMonth") ?? getCurrentMonthLabel()
@@ -57,6 +53,14 @@ export async function GET(request: Request) {
     const detail = await getSubscriptionDetail(subscriptionId, billingMonth)
     if (!detail) {
       return Response.json({ error: "ไม่พบ subscription" }, { status: 404 })
+    }
+
+    // ตรวจสอบสิทธิ์: ต้องเป็นเจ้าของ, admin, หรือเป็นสมาชิก
+    const isMember = detail.members.some(
+      (m) => m.userId === session.user.id && m.isActive,
+    )
+    if (!session.isAdmin && detail.ownerId !== session.user.id && !isMember) {
+      return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง subscription นี้" }, { status: 403 })
     }
 
     return Response.json({ success: true, data: detail })

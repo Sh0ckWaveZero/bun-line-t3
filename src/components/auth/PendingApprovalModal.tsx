@@ -18,14 +18,14 @@
  * }
  * ```
  */
-import { Clock, MessageSquare, ShieldCheck, X } from "lucide-react";
+import { Clock, MessageSquare, ShieldCheck } from "lucide-react";
 
 interface PendingApprovalModalProps {
   open: boolean;
   onClose?: () => void;
 }
 
-export function PendingApprovalModal({ open, onClose }: PendingApprovalModalProps) {
+export function PendingApprovalModal({ open, onClose: _onClose }: PendingApprovalModalProps) {
   if (!open) {
     return null;
   }
