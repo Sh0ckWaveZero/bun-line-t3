@@ -1,6 +1,45 @@
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
+// 🔍 Custom validation for ALLOWED_DOMAINS in production
+const allowedDomainsSchema = z.string().min(1).refine((val) => {
+  const isProduction = process.env.APP_ENV === "production" || process.env.NODE_ENV === "production";
+
+  if (isProduction) {
+    // In production, ALLOWED_DOMAINS must be configured
+    if (!val || val.trim() === "") {
+      console.error(`
+╔══════════════════════════════════════════════════════════════════════╗
+║  🔴 CRITICAL: ALLOWED_DOMAINS is required in production!             ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+ALLOWED_DOMAINS must be set in production environment.
+
+🔧 Fix: Add to your environment variables:
+   ALLOWED_DOMAINS=your-domain.com,www.your-domain.com
+`);
+      // Allow validation to pass but log error (handled at runtime)
+      return true;
+    }
+
+    // Validate format (comma-separated domains)
+    const domains = val.split(",").map((d) => d.trim()).filter(Boolean);
+    if (domains.length === 0) {
+      return false;
+    }
+
+    // Validate each domain format
+    for (const domain of domains) {
+      if (!/^[a-zA-Z0-9][a-zA-Z0-9-_.]*[a-zA-Z0-9]*\.[a-zA-Z]{2,}$/.test(domain)) {
+        console.error(`❌ Invalid domain format in ALLOWED_DOMAINS: "${domain}"`);
+        return false;
+      }
+    }
+  }
+
+  return true;
+}, "ALLOWED_DOMAINS must be a comma-separated list of valid domains (e.g., example.com,www.example.com)");
+
 export const env = createEnv({
   server: {
     DATABASE_URL: z
@@ -31,7 +70,7 @@ export const env = createEnv({
     CRON_SECRET: z.string().optional(),
     // 🔐 Security: Domain configuration through environment (NO DEFAULTS - must be explicitly set)
     APP_DOMAIN: z.string().url(),
-    ALLOWED_DOMAINS: z.string().min(1),
+    ALLOWED_DOMAINS: allowedDomainsSchema,
     // 🧪 Development Test User ID
     DEV_TEST_USER_ID: z.string().optional(),
     // 🤖 AI Assistant Configuration

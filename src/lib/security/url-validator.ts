@@ -23,7 +23,34 @@ function getAllowedDomains(): string[] {
   if (process.env.ALLOWED_DOMAINS) {
     return process.env.ALLOWED_DOMAINS.split(",").map((d) => d.trim());
   }
-  // fallback เดิม
+
+  // ⚠️ CRITICAL: In production, ALLOWED_DOMAINS is REQUIRED
+  if (process.env.NODE_ENV === "production" || process.env.APP_ENV === "production") {
+    console.error(`
+╔══════════════════════════════════════════════════════════════════════╗
+║  🔴 SECURITY WARNING: ALLOWED_DOMAINS not configured!               ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+Production environment requires ALLOWED_DOMAINS to be set!
+
+🔧 Fix: Add this to your environment variables:
+   ALLOWED_DOMAINS=your-domain.com,www.your-domain.com
+
+❌ What will break:
+   - LINE Login OAuth callbacks
+   - All social provider logins
+   - Cross-origin requests
+   - URL redirects
+
+✅ Current behavior: Only localhost requests will be allowed
+`);
+  }
+
+  // fallback เดิม - development only
+  if (process.env.NODE_ENV !== "production" && process.env.APP_ENV !== "production") {
+    console.warn("[URL Validator] ALLOWED_DOMAINS not set, using localhost fallback (development only)");
+  }
+
   return ["localhost", "127.0.0.1"];
 }
 

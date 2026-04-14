@@ -6,6 +6,7 @@ import { env } from "@/env.mjs";
 import { db } from "../database/db";
 import type { AppSession } from "./session-context";
 import { syncLineProfileToDatabase } from "./line-profile-sync";
+import { isAllowedHost } from "@/lib/security/url-validator";
 
 const LINE_FALLBACK_EMAIL_DOMAIN = "line.local";
 const DEFAULT_DEV_PORT = "4325";
@@ -58,6 +59,81 @@ const getTrustedOrigins = () => {
   return uniqueOrigins;
 };
 
+// 🔍 Validate ALLOWED_DOMAINS configuration in production
+const validateProductionDomains = () => {
+  if (env.APP_ENV !== "production") {
+    return; // Skip validation in development
+  }
+
+  const allowedDomains = env.ALLOWED_DOMAINS || "";
+  const domainsList = allowedDomains.split(",").map((d) => d.trim()).filter(Boolean);
+
+  // ⚠️ Warning: ALLOWED_DOMAINS not configured
+  if (domainsList.length === 0 || allowedDomains === "") {
+    console.error(`
+╔══════════════════════════════════════════════════════════════════════╗
+║  🔴 CRITICAL: ALLOWED_DOMAINS not configured in production!         ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+This will cause LINE Login and ALL OAuth callbacks to FAIL!
+
+🔧 Fix: Add this to your environment variables or GitHub Secrets:
+   ALLOWED_DOMAINS=your-domain.com,www.your-domain.com
+
+📝 Replace "your-domain.com" with your actual production domain.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Current Configuration:
+  APP_URL: ${env.APP_URL}
+  FRONTEND_URL: ${env.FRONTEND_URL}
+  APP_DOMAIN: ${env.APP_DOMAIN}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+What will break without ALLOWED_DOMAINS:
+  ❌ LINE Login OAuth callbacks
+  ❌ All social provider logins
+  ❌ Cross-origin requests
+  ❌ URL redirects
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`);
+    return;
+  }
+
+  // ✅ Validate each trusted origin against ALLOWED_DOMAINS
+  const trustedOrigins = getTrustedOrigins();
+  const invalidOrigins: string[] = [];
+
+  for (const origin of trustedOrigins) {
+    try {
+      const url = new URL(origin);
+      const hostname = url.hostname;
+
+      if (!isAllowedHost(hostname, "production")) {
+        invalidOrigins.push(origin);
+        console.warn(`[Auth] ⚠️ Origin "${origin}" is NOT in ALLOWED_DOMAINS!`);
+      }
+    } catch {
+      // Invalid URL, skip
+    }
+  }
+
+  if (invalidOrigins.length > 0) {
+    console.warn(`
+[Auth] ⚠️ Warning: Some trusted origins are NOT in ALLOWED_DOMAINS:
+${invalidOrigins.map((o) => `  - ${o}`).join("\n")}
+
+This may cause OAuth callbacks to fail!
+
+Current ALLOWED_DOMAINS: ${domainsList.join(", ")}
+`);
+  } else {
+    console.log(`
+[Auth] ✅ All trusted origins validated against ALLOWED_DOMAINS:
+  Domains: ${domainsList.join(", ")}
+`);
+  }
+};
+
 const createSyntheticLineEmail = (lineUserId: string) => {
   const normalizedId =
     lineUserId
@@ -108,6 +184,9 @@ const syncLineApprovalRequest = async (account: {
     throw error;
   }
 };
+
+// 🔍 Validate production domain configuration at startup
+validateProductionDomains();
 
 export const auth = betterAuth({
   baseURL: getAuthBaseUrl(),
