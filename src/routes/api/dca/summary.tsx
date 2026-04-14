@@ -2,7 +2,7 @@
  * DCA Summary API
  * GET /api/dca/summary - ดึงสรุปยอดรวม DCA พร้อม PnL จาก Bitkub
  *
- * ดึง LINE User ID จาก session อัตโนมัติ — ไม่ต้องส่ง query param
+ * รับ lineUserId จาก query และ validate กับ session user
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { dcaService } from "@/features/dca";
@@ -10,7 +10,7 @@ import {
   getBTCPrice,
   calculatePnLPercent,
 } from "@/features/dca/services/bitkub.service.server";
-import { getLineUserId } from "@/lib/auth";
+import { getAuthorizedLineUserId } from "@/lib/auth";
 
 interface DcaSummaryWithPnL {
   totalSpentTHB: number;
@@ -25,8 +25,11 @@ interface DcaSummaryWithPnL {
 
 export async function GET(request: Request) {
   try {
-    // ดึง LINE User ID จาก session
-    const lineUserId = await getLineUserId(request);
+    const { searchParams } = new URL(request.url);
+    const lineUserId = await getAuthorizedLineUserId(
+      request,
+      searchParams.get("lineUserId"),
+    );
 
     if (!lineUserId) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });

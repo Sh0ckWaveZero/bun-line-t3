@@ -12,7 +12,12 @@ import * as XLSX from "xlsx";
 import { z } from "zod";
 import { dcaService } from "@/features/dca";
 import type { ExportFormat, ImportResult } from "@/features/dca/types";
-import { getLineUserId } from "@/lib/auth";
+import { getAuthorizedLineUserId } from "@/lib/auth";
+
+interface DcaDuplicateIdentity {
+  coin: string;
+  executedAt: Date;
+}
 
 const VALID_FORMATS: ExportFormat[] = ["csv", "json", "xlsx"];
 
@@ -60,12 +65,22 @@ const importRowSchema = z.object({
   executedAt: z
     .union([z.string(), z.number()])
     .transform(normalizeExecutedAt)
-    .refine((v) => v.length > 0 && !isNaN(new Date(v).getTime()), "executedAt ไม่ใช่วันที่ที่ถูกต้อง"),
-  coin: z.string().min(1).max(20).transform((v) => v.toUpperCase()),
+    .refine(
+      (v) => v.length > 0 && !isNaN(new Date(v).getTime()),
+      "executedAt ไม่ใช่วันที่ที่ถูกต้อง",
+    ),
+  coin: z
+    .string()
+    .min(1)
+    .max(20)
+    .transform((v) => v.toUpperCase()),
   amountTHB: positiveFloat("amountTHB"),
   coinReceived: positiveFloat("coinReceived"),
   pricePerCoin: positiveFloat("pricePerCoin"),
-  status: z.enum(["SUCCESS", "FAILED", "PENDING"]).optional().default("SUCCESS"),
+  status: z
+    .enum(["SUCCESS", "FAILED", "PENDING"])
+    .optional()
+    .default("SUCCESS"),
   note: z.string().optional().default(""),
 });
 
@@ -74,17 +89,24 @@ const importRowSchema = z.object({
 /** Parse JSON file → raw row array */
 const parseJson = (text: string): unknown[] => {
   const parsed = JSON.parse(text);
-  if (!Array.isArray(parsed)) throw new Error("JSON ต้องเป็น array ของ objects");
+  if (!Array.isArray(parsed))
+    throw new Error("JSON ต้องเป็น array ของ objects");
   return parsed;
 };
 
 /** Parse CSV text → raw row array */
 const parseCsv = (text: string): Record<string, string>[] => {
   // filter empty lines ก่อน (trailing newlines, blank lines กลางไฟล์)
-  const lines = text.trim().split(/\r?\n/).filter((l) => l.trim().length > 0);
-  if (lines.length < 2) throw new Error("CSV ต้องมีอย่างน้อย 1 แถวข้อมูล (นอกจาก header)");
+  const lines = text
+    .trim()
+    .split(/\r?\n/)
+    .filter((l) => l.trim().length > 0);
+  if (lines.length < 2)
+    throw new Error("CSV ต้องมีอย่างน้อย 1 แถวข้อมูล (นอกจาก header)");
 
-  const headers = lines[0]!.split(",").map((h) => h.trim().replace(/^"|"$/g, ""));
+  const headers = lines[0]!
+    .split(",")
+    .map((h) => h.trim().replace(/^"|"$/g, ""));
 
   return lines.slice(1).map((line, idx) => {
     // Simple CSV parse ที่รองรับ quoted fields
@@ -131,11 +153,6 @@ const parseXlsx = (buffer: ArrayBuffer): unknown[] => {
 
 export async function POST(request: Request) {
   try {
-    const lineUserId = await getLineUserId(request);
-    if (!lineUserId) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const contentType = request.headers.get("content-type") ?? "";
     if (!contentType.includes("multipart/form-data")) {
       return Response.json(
@@ -145,10 +162,22 @@ export async function POST(request: Request) {
     }
 
     const formData = await request.formData();
+    const requestedLineUserId = formData.get("lineUserId");
+    const lineUserId = await getAuthorizedLineUserId(
+      request,
+      typeof requestedLineUserId === "string" ? requestedLineUserId : null,
+    );
+    if (!lineUserId) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const file = formData.get("file");
 
     if (!file || !(file instanceof File)) {
-      return Response.json({ error: "ไม่พบไฟล์ (field name: file)" }, { status: 400 });
+      return Response.json(
+        { error: "ไม่พบไฟล์ (field name: file)" },
+        { status: 400 },
+      );
     }
 
     const fileName = file.name.toLowerCase();
@@ -192,7 +221,9 @@ export async function POST(request: Request) {
       const parsed = importRowSchema.safeParse(rawRows[i]);
 
       if (!parsed.success) {
-        const msg = parsed.error.issues.map((e: { message: string }) => e.message).join(", ");
+        const msg = parsed.error.issues
+          .map((e: { message: string }) => e.message)
+          .join(", ");
         result.errors.push(`${rowLabel}: ${msg}`);
         result.skipped++;
         continue;
@@ -223,10 +254,17 @@ export async function POST(request: Request) {
     // ─── Step 3: ตรวจซ้ำกับ DB (1 query) ────────────────────────────────
     const existingInDb = await dcaService.findDuplicates(
       lineUserId,
-      uniqueInFile.map((r) => ({ coin: r.data.coin, executedAt: r.executedAt })),
+      uniqueInFile.map((r) => ({
+        coin: r.data.coin,
+        executedAt: r.executedAt,
+      })),
     );
 
-    const dupInDbKeys = new Set(existingInDb.map((d) => dupKey(d.coin, d.executedAt)));
+    const dupInDbKeys = new Set(
+      (existingInDb as DcaDuplicateIdentity[]).map((duplicate) =>
+        dupKey(duplicate.coin, duplicate.executedAt),
+      ),
+    );
     const rowsToInsert: ValidRow[] = [];
 
     for (const row of uniqueInFile) {
@@ -243,7 +281,9 @@ export async function POST(request: Request) {
     // ─── Step 4: Create orders แบบ sequential (เรียงตาม executedAt) ──────
     // ต้องสร้างทีละรายการเพื่อให้ getNextRound() นับ round ต่อเนื่องกันถูกต้อง
     // parallel จะทำให้ทุก row อ่าน round เดียวกัน (race condition)
-    rowsToInsert.sort((a, b) => a.executedAt.getTime() - b.executedAt.getTime());
+    rowsToInsert.sort(
+      (a, b) => a.executedAt.getTime() - b.executedAt.getTime(),
+    );
 
     for (const { data, executedAt, index } of rowsToInsert) {
       const rowLabel = `แถวที่ ${index + 1}`;
@@ -269,7 +309,8 @@ export async function POST(request: Request) {
     return Response.json(result, { status: 200 });
   } catch (error) {
     console.error("DCA import error:", error);
-    const msg = error instanceof Error ? error.message : "ไม่สามารถนำเข้าข้อมูลได้";
+    const msg =
+      error instanceof Error ? error.message : "ไม่สามารถนำเข้าข้อมูลได้";
     return Response.json({ error: msg }, { status: 500 });
   }
 }

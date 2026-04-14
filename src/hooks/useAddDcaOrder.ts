@@ -1,5 +1,6 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
+import { useAuthSession } from "@/lib/auth/session-context";
 
 interface UseAddDcaOrderOptions {
   onClose: () => void;
@@ -10,6 +11,7 @@ export const useAddDcaOrder = ({
   onClose,
   onSuccess,
 }: UseAddDcaOrderOptions) => {
+  const lineUserId = useAuthSession()?.user?.lineUserId;
   const [form, setForm] = useState({
     coin: "BTC",
     amountTHB: "",
@@ -27,11 +29,15 @@ export const useAddDcaOrder = ({
     setIsLoading(true);
 
     try {
+      if (!lineUserId) {
+        throw new Error("ไม่พบ LINE user ID");
+      }
+
       const res = await fetch("/api/dca/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          // lineUserId ไม่ต้องส่ง — API ดึงจาก session เอง
+          lineUserId,
           coin: form.coin,
           amountTHB: parseFloat(form.amountTHB),
           coinReceived: parseFloat(form.coinReceived),

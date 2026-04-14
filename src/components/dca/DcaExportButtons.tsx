@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Download, FileJson, FileSpreadsheet, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ExportFormat } from "@/features/dca/types";
+import { useAuthSession } from "@/lib/auth/session-context";
 
 interface ExportOption {
   format: ExportFormat;
@@ -10,9 +11,13 @@ interface ExportOption {
 }
 
 const EXPORT_OPTIONS: ExportOption[] = [
-  { format: "csv",  label: "CSV",   icon: <FileText className="h-3.5 w-3.5" /> },
-  { format: "json", label: "JSON",  icon: <FileJson className="h-3.5 w-3.5" /> },
-  { format: "xlsx", label: "Excel", icon: <FileSpreadsheet className="h-3.5 w-3.5" /> },
+  { format: "csv", label: "CSV", icon: <FileText className="h-3.5 w-3.5" /> },
+  { format: "json", label: "JSON", icon: <FileJson className="h-3.5 w-3.5" /> },
+  {
+    format: "xlsx",
+    label: "Excel",
+    icon: <FileSpreadsheet className="h-3.5 w-3.5" />,
+  },
 ];
 
 interface DcaExportButtonsProps {
@@ -20,13 +25,20 @@ interface DcaExportButtonsProps {
 }
 
 export const DcaExportButtons = ({ disabled }: DcaExportButtonsProps) => {
+  const lineUserId = useAuthSession()?.user?.lineUserId;
   const [loading, setLoading] = useState<ExportFormat | null>(null);
 
   const handleExport = async (format: ExportFormat) => {
     if (loading) return;
+    if (!lineUserId) {
+      alert("ไม่พบ LINE user ID");
+      return;
+    }
+
     setLoading(format);
     try {
-      const res = await fetch(`/api/dca/export?format=${format}`);
+      const params = new URLSearchParams({ format, lineUserId });
+      const res = await fetch(`/api/dca/export?${params.toString()}`);
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(
@@ -78,7 +90,7 @@ export const DcaExportButtons = ({ disabled }: DcaExportButtonsProps) => {
           variant="outline"
           size="sm"
           onClick={() => void handleExport(format)}
-          disabled={disabled || loading !== null}
+          disabled={disabled || !lineUserId || loading !== null}
           className="h-8 gap-1.5 px-2.5 text-xs"
           aria-label={`ส่งออกเป็น ${label}`}
         >

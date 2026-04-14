@@ -7,28 +7,37 @@
 import { createFileRoute } from "@tanstack/react-router";
 import * as XLSX from "xlsx";
 import { dcaService } from "@/features/dca";
-import type { DcaExportRow, ExportFormat } from "@/features/dca/types";
-import { getLineUserId } from "@/lib/auth";
+import type {
+  DcaExportRow,
+  DcaOrder,
+  ExportFormat,
+} from "@/features/dca/types";
+import { getAuthorizedLineUserId } from "@/lib/auth";
 
 const EXPORT_COLUMNS: (keyof DcaExportRow)[] = [
-  "orderId", "executedAt", "coin", "amountTHB",
-  "coinReceived", "pricePerCoin", "round", "status", "note",
+  "orderId",
+  "executedAt",
+  "coin",
+  "amountTHB",
+  "coinReceived",
+  "pricePerCoin",
+  "round",
+  "status",
+  "note",
 ];
 
 /** แปลง DcaOrder array เป็น flat row สำหรับ export */
-const toExportRows = (
-  orders: Awaited<ReturnType<typeof dcaService.listAllOrders>>,
-): DcaExportRow[] =>
-  orders.map((o) => ({
-    orderId: o.orderId,
-    executedAt: o.executedAt.toISOString(),
-    coin: o.coin,
-    amountTHB: o.amountTHB,
-    coinReceived: o.coinReceived,
-    pricePerCoin: o.pricePerCoin,
-    round: o.round,
-    status: o.status,
-    note: o.note ?? "",
+const toExportRows = (orders: DcaOrder[]): DcaExportRow[] =>
+  orders.map((order) => ({
+    orderId: order.orderId,
+    executedAt: order.executedAt.toISOString(),
+    coin: order.coin,
+    amountTHB: order.amountTHB,
+    coinReceived: order.coinReceived,
+    pricePerCoin: order.pricePerCoin,
+    round: order.round,
+    status: order.status,
+    note: order.note ?? "",
   }));
 
 /** สร้าง CSV string จาก rows */
@@ -53,11 +62,11 @@ const buildXlsx = (rows: DcaExportRow[]): Buffer => {
   ws["!cols"] = [
     { wch: 20 }, // orderId
     { wch: 26 }, // executedAt
-    { wch: 8 },  // coin
+    { wch: 8 }, // coin
     { wch: 14 }, // amountTHB
     { wch: 16 }, // coinReceived
     { wch: 16 }, // pricePerCoin
-    { wch: 8 },  // round
+    { wch: 8 }, // round
     { wch: 10 }, // status
     { wch: 30 }, // note
   ];
@@ -73,12 +82,15 @@ const buildXlsx = (rows: DcaExportRow[]): Buffer => {
  */
 export async function GET(request: Request) {
   try {
-    const lineUserId = await getLineUserId(request);
+    const { searchParams } = new URL(request.url);
+    const lineUserId = await getAuthorizedLineUserId(
+      request,
+      searchParams.get("lineUserId"),
+    );
     if (!lineUserId) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
     const format = (searchParams.get("format") ?? "json") as ExportFormat;
 
     if (!["csv", "json", "xlsx"].includes(format)) {
@@ -130,7 +142,10 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error("DCA export error:", error);
-    return Response.json({ error: "ไม่สามารถส่งออกข้อมูลได้" }, { status: 500 });
+    return Response.json(
+      { error: "ไม่สามารถส่งออกข้อมูลได้" },
+      { status: 500 },
+    );
   }
 }
 

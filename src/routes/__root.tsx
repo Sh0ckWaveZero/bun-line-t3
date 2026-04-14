@@ -16,7 +16,7 @@ import { TanStackDevtools } from "@tanstack/react-devtools";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
-import { getServerAuthSession } from "@/lib/auth";
+import { getLineUserId, getServerAuthSession } from "@/lib/auth";
 import { db } from "@/lib/database/db";
 import { isAdminLineUser } from "@/lib/auth/admin";
 import { syncLineProfileToDatabase } from "@/lib/auth/line-profile-sync";
@@ -31,67 +31,73 @@ interface RouterContext {
  * Single server function: fetch session + compute isAdmin + check LINE approval
  * รวมเป็น 1 call เพื่อลด DB round-trips (เดิม 2 calls × 3 queries = 6+ queries)
  */
-const fetchSessionWithApproval = createServerFn({ method: "GET" }).handler(async () => {
-  const session = await getServerAuthSession(getRequest());
+const fetchSessionWithApproval = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const session = await getServerAuthSession(getRequest());
 
-  if (!session?.user?.id) {
-    return { session: null, hasApproval: true };
-  }
+    if (!session?.user?.id) {
+      return { session: null, hasApproval: true };
+    }
 
-  // Query LINE account ครั้งเดียว — ใช้ทั้ง isAdmin และ approval check
-  const account = await db.account.findFirst({
-    where: { userId: session.user.id, providerId: "line" },
-    select: {
-      accessToken: true,
-      accountId: true,
-      user: { select: { role: true } },
-    },
-  });
+    // Query LINE account ครั้งเดียว — ใช้ทั้ง isAdmin และ approval check
+    const account = await db.account.findFirst({
+      where: { userId: session.user.id, providerId: "line" },
+      select: {
+        accessToken: true,
+        accountId: true,
+        user: { select: { role: true } },
+      },
+    });
 
-  if (!account) {
-    return { session, hasApproval: true };
-  }
+    if (!account) {
+      return { session, hasApproval: true };
+    }
 
-  const lineUserId = account.accountId;
-  const isAdmin = isAdminLineUser(lineUserId) || account.user.role === "admin";
-  const syncedProfile = await syncLineProfileToDatabase({
-    accessToken: account.accessToken,
-    fallbackDisplayName: session.user?.name,
-    fallbackPictureUrl: session.user?.image,
-    lineUserId,
-    userId: session.user.id,
-  });
+    const lineUserId = account.accountId;
+    const canonicalLineUserId = await getLineUserId(getRequest());
+    const effectiveLineUserId = canonicalLineUserId ?? lineUserId;
+    const isAdmin =
+      isAdminLineUser(effectiveLineUserId) || account.user.role === "admin";
+    const syncedProfile = await syncLineProfileToDatabase({
+      accessToken: account.accessToken,
+      fallbackDisplayName: session.user?.name,
+      fallbackPictureUrl: session.user?.image,
+      lineUserId,
+      userId: session.user.id,
+    });
 
-  // Merge isAdmin into session
-  const sessionWithAdmin = {
-    ...session,
-    isAdmin,
-    user: {
-      ...session.user,
-      image: syncedProfile.pictureUrl ?? session.user.image,
-      name: syncedProfile.displayName ?? session.user.name,
-    },
-  };
+    // Merge isAdmin into session
+    const sessionWithAdmin = {
+      ...session,
+      isAdmin,
+      user: {
+        ...session.user,
+        image: syncedProfile.pictureUrl ?? session.user.image,
+        lineUserId: effectiveLineUserId,
+        name: syncedProfile.displayName ?? session.user.name,
+      },
+    };
 
-  if (isAdmin) {
-    return { session: sessionWithAdmin, hasApproval: true };
-  }
+    if (isAdmin) {
+      return { session: sessionWithAdmin, hasApproval: true };
+    }
 
-  const approval = await db.lineApprovalRequest.findUnique({
-    where: { lineUserId },
-    select: { status: true, expiresAt: true },
-  });
+    const approval = await db.lineApprovalRequest.findUnique({
+      where: { lineUserId: effectiveLineUserId },
+      select: { status: true, expiresAt: true },
+    });
 
-  if (!approval) {
-    return { session: sessionWithAdmin, hasApproval: false };
-  }
+    if (!approval) {
+      return { session: sessionWithAdmin, hasApproval: false };
+    }
 
-  const hasApproval =
-    approval?.status === "APPROVED" &&
-    (!approval.expiresAt || approval.expiresAt >= new Date());
+    const hasApproval =
+      approval?.status === "APPROVED" &&
+      (!approval.expiresAt || approval.expiresAt >= new Date());
 
-  return { session: sessionWithAdmin, hasApproval };
-});
+    return { session: sessionWithAdmin, hasApproval };
+  },
+);
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async ({ location }) => {

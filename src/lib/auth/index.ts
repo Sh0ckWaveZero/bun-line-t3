@@ -1,2 +1,6 @@
 export { auth, getServerAuthSession } from "./auth";
-export { getLineUserId } from "./line-user-id";
+export {
+  getAuthorizedLineUserId,
+  getLineUserId,
+  getLineUserIds,
+} from "./line-user-id";

@@ -8,13 +8,30 @@ import {
 } from "@/features/dca/services/bitkub.service.server";
 import { createDcaSummaryFlexMessage } from "@/lib/line-utils/flex-messages";
 
+interface DcaOrderForCommand {
+  id: string;
+  orderId: string;
+  coin: string;
+  amountTHB: number;
+  coinReceived: number;
+  pricePerCoin: number;
+  round: number;
+  executedAt: Date;
+}
+
 // ========================
 // Helpers
 // ========================
 
 const buildAddSuccessText = (
   order: { orderId: string; round: number },
-  data: { coin: string; amountTHB: number; coinReceived: number; pricePerCoin: number; executedAt: Date },
+  data: {
+    coin: string;
+    amountTHB: number;
+    coinReceived: number;
+    pricePerCoin: number;
+    executedAt: Date;
+  },
 ) =>
   [
     `✅ บันทึก Auto DCA สำเร็จ!`,
@@ -108,7 +125,14 @@ const stripDcaAddPrefix = (fullText: string): string => {
  *   /dca add 107.99 BTC 0.00004634 2330307.8 2026-04-11
  */
 const handleAdd = async (req: any, args: string[]) => {
-  const userId = req.body?.events?.[0]?.source?.userId ?? "line-bot-manual";
+  const userId = req.body?.events?.[0]?.source?.userId as string | undefined;
+
+  if (!userId) {
+    await sendMessage(req, [
+      { type: "text", text: "❌ ไม่สามารถระบุตัวตนผู้ใช้ได้ กรุณาลองใหม่" },
+    ]);
+    return;
+  }
 
   // ─── โหมด 1: ลอง parse ข้อความ Bitkub จาก full message text ───
   const fullText = getFullMessageText(req);
@@ -128,7 +152,9 @@ const handleAdd = async (req: any, args: string[]) => {
 
       // 🎉 Emit SSE event เพื่อให้ web clients รับทราบ
       dcaEventManager.emit({ type: "dca-order-created", data: order });
-      await sendMessage(req, [{ type: "text", text: buildAddSuccessText(order, parsed) }]);
+      await sendMessage(req, [
+        { type: "text", text: buildAddSuccessText(order, parsed) },
+      ]);
     } catch (err) {
       console.error("❌ DCA add (bitkub mode) error:", err);
       await sendMessage(req, [
@@ -216,7 +242,16 @@ const handleAdd = async (req: any, args: string[]) => {
 
     dcaEventManager.emit({ type: "dca-order-created", data: order });
     await sendMessage(req, [
-      { type: "text", text: buildAddSuccessText(order, { coin, amountTHB, coinReceived, pricePerCoin, executedAt }) },
+      {
+        type: "text",
+        text: buildAddSuccessText(order, {
+          coin,
+          amountTHB,
+          coinReceived,
+          pricePerCoin,
+          executedAt,
+        }),
+      },
     ]);
   } catch (err) {
     console.error("❌ DCA add error:", err);
@@ -234,8 +269,19 @@ const handleAdd = async (req: any, args: string[]) => {
 const handleList = async (req: any) => {
   const userId = req.body?.events?.[0]?.source?.userId as string | undefined;
 
+  if (!userId) {
+    await sendMessage(req, [
+      { type: "text", text: "❌ ไม่สามารถระบุตัวตนผู้ใช้ได้ กรุณาลองใหม่" },
+    ]);
+    return;
+  }
+
   try {
-    const result = await dcaService.listOrders({ page: 1, limit: 5, lineUserId: userId });
+    const result = await dcaService.listOrders({
+      page: 1,
+      limit: 5,
+      lineUserId: userId,
+    });
 
     if (result.orders.length === 0) {
       await sendMessage(req, [
@@ -310,7 +356,10 @@ const handleDelete = async (req: any, args: string[]) => {
   }
 
   // ─── Parse round numbers — รองรับ space และ/หรือ comma ───────────────────
-  const rawTokens = args.join(" ").split(/[\s,]+/).filter(Boolean);
+  const rawTokens = args
+    .join(" ")
+    .split(/[\s,]+/)
+    .filter(Boolean);
   const validRounds: number[] = [];
   const invalidTokens: string[] = [];
 
@@ -335,8 +384,11 @@ const handleDelete = async (req: any, args: string[]) => {
 
   try {
     // ─── ค้นหาทุกรอบพร้อมกัน (1 query) ──────────────────────────────────
-    const found = await dcaService.findByRounds(validRounds, userId);
-    const foundRounds = found.map((o) => o.round);
+    const found = (await dcaService.findByRounds(
+      validRounds,
+      userId,
+    )) as DcaOrderForCommand[];
+    const foundRounds = found.map((order) => order.round);
     const notFoundRounds = validRounds.filter((r) => !foundRounds.includes(r));
 
     if (found.length === 0) {
@@ -351,9 +403,7 @@ const handleDelete = async (req: any, args: string[]) => {
     }
 
     // ─── ลบทั้งหมดพร้อมกัน ────────────────────────────────────────────────
-    await Promise.all(
-      found.map((order) => dcaService.deleteOrder(order.id)),
-    );
+    await Promise.all(found.map((order) => dcaService.deleteOrder(order.id)));
 
     // 🗑️ Emit SSE event ต่อ order
     for (const order of found) {
@@ -410,6 +460,13 @@ const handleDelete = async (req: any, args: string[]) => {
 const handleSummary = async (req: any) => {
   const userId = req.body?.events?.[0]?.source?.userId as string | undefined;
   const appUrl = process.env["APP_URL"] ?? process.env["NEXTAUTH_URL"] ?? "";
+
+  if (!userId) {
+    await sendMessage(req, [
+      { type: "text", text: "❌ ไม่สามารถระบุตัวตนผู้ใช้ได้ กรุณาลองใหม่" },
+    ]);
+    return;
+  }
 
   try {
     // ดึงข้อมูลทั้งหมดพร้อมกัน รวมถึงราคาปัจจุบันจาก Bitkub

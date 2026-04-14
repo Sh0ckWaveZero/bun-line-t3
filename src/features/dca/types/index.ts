@@ -66,7 +66,7 @@ export interface ParsedBitkubDcaMessage {
 /** รูปแบบแถวข้อมูลสำหรับ export (flat row ที่ใช้ใน CSV / Excel / JSON) */
 export interface DcaExportRow {
   orderId: string;
-  executedAt: string;       // ISO 8601 string
+  executedAt: string; // ISO 8601 string
   coin: string;
   amountTHB: number;
   coinReceived: number;

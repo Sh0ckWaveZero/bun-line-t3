@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { ImportResult } from "@/features/dca/types";
+import { useAuthSession } from "@/lib/auth/session-context";
 
 interface DcaImportModalProps {
   onClose: () => void;
@@ -34,6 +35,7 @@ const FileIcon = ({ name }: { name: string }) => {
 type Step = "select" | "uploading" | "result";
 
 export const DcaImportModal = ({ onClose, onSuccess }: DcaImportModalProps) => {
+  const lineUserId = useAuthSession()?.user?.lineUserId;
   const [step, setStep] = useState<Step>("select");
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -80,7 +82,12 @@ export const DcaImportModal = ({ onClose, onSuccess }: DcaImportModalProps) => {
     setError(null);
 
     try {
+      if (!lineUserId) {
+        throw new Error("ไม่พบ LINE user ID");
+      }
+
       const fd = new FormData();
+      fd.append("lineUserId", lineUserId);
       fd.append("file", file);
 
       const res = await fetch("/api/dca/import", {
@@ -124,7 +131,7 @@ export const DcaImportModal = ({ onClose, onSuccess }: DcaImportModalProps) => {
         {/* Header */}
         <div
           id="dca-import-modal-header"
-          className="flex items-center justify-between border-b border-border px-5 py-4"
+          className="border-border flex items-center justify-between border-b px-5 py-4"
         >
           <div className="flex items-center gap-2">
             <Upload className="h-5 w-5 text-yellow-400" />
@@ -155,7 +162,7 @@ export const DcaImportModal = ({ onClose, onSuccess }: DcaImportModalProps) => {
                 className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-6 py-10 transition-colors ${
                   dragOver
                     ? "border-yellow-400 bg-yellow-400/10"
-                    : "border-border hover:border-yellow-400/50 hover:bg-muted/30"
+                    : "border-border hover:bg-muted/30 hover:border-yellow-400/50"
                 }`}
               >
                 <Upload
@@ -217,19 +224,23 @@ export const DcaImportModal = ({ onClose, onSuccess }: DcaImportModalProps) => {
               {/* Format hint */}
               <div
                 id="dca-import-format-hint"
-                className="rounded-lg bg-muted/30 px-4 py-3 text-xs text-muted-foreground space-y-1"
+                className="bg-muted/30 text-muted-foreground space-y-1 rounded-lg px-4 py-3 text-xs"
               >
-                <p className="font-medium text-foreground">คอลัมน์ที่จำเป็น:</p>
+                <p className="text-foreground font-medium">คอลัมน์ที่จำเป็น:</p>
                 <p>
                   <span className="font-mono text-yellow-400">executedAt</span>,{" "}
                   <span className="font-mono text-yellow-400">coin</span>,{" "}
                   <span className="font-mono text-yellow-400">amountTHB</span>,{" "}
-                  <span className="font-mono text-yellow-400">coinReceived</span>,{" "}
-                  <span className="font-mono text-yellow-400">pricePerCoin</span>
+                  <span className="font-mono text-yellow-400">
+                    coinReceived
+                  </span>
+                  ,{" "}
+                  <span className="font-mono text-yellow-400">
+                    pricePerCoin
+                  </span>
                 </p>
                 <p>
-                  คอลัมน์เสริม:{" "}
-                  <span className="font-mono">status</span>,{" "}
+                  คอลัมน์เสริม: <span className="font-mono">status</span>,{" "}
                   <span className="font-mono">note</span>
                 </p>
               </div>
@@ -256,10 +267,12 @@ export const DcaImportModal = ({ onClose, onSuccess }: DcaImportModalProps) => {
           {step === "uploading" && (
             <div
               id="dca-import-step-uploading"
-              className="flex flex-col items-center justify-center py-12 gap-4"
+              className="flex flex-col items-center justify-center gap-4 py-12"
             >
               <span className="h-10 w-10 animate-spin rounded-full border-4 border-yellow-400 border-t-transparent" />
-              <p className="text-sm text-muted-foreground">กำลังนำเข้าข้อมูล…</p>
+              <p className="text-muted-foreground text-sm">
+                กำลังนำเข้าข้อมูล…
+              </p>
             </div>
           )}
 
@@ -269,25 +282,27 @@ export const DcaImportModal = ({ onClose, onSuccess }: DcaImportModalProps) => {
               <div
                 id="dca-import-result-summary"
                 className={`flex items-start gap-3 rounded-lg px-4 py-4 ${
-                  result.imported > 0
-                    ? "bg-green-500/10"
-                    : "bg-muted/40"
+                  result.imported > 0 ? "bg-green-500/10" : "bg-muted/40"
                 }`}
               >
                 {result.imported > 0 ? (
                   <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-400" />
                 ) : (
-                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+                  <AlertCircle className="text-muted-foreground mt-0.5 h-5 w-5 shrink-0" />
                 )}
                 <div className="space-y-0.5">
                   <p className="text-sm font-medium">
                     นำเข้าสำเร็จ{" "}
-                    <span className="text-green-400">{result.imported}</span> รายการ
+                    <span className="text-green-400">{result.imported}</span>{" "}
+                    รายการ
                     {result.skipped > 0 && (
                       <>
                         {" "}
                         · ข้าม{" "}
-                        <span className="text-red-400">{result.skipped}</span> รายการ
+                        <span className="text-red-400">
+                          {result.skipped}
+                        </span>{" "}
+                        รายการ
                       </>
                     )}
                   </p>
@@ -300,12 +315,9 @@ export const DcaImportModal = ({ onClose, onSuccess }: DcaImportModalProps) => {
                   <p className="text-xs font-medium text-red-400">
                     รายการที่ข้าม ({result.errors.length}):
                   </p>
-                  <ul className="max-h-40 overflow-y-auto rounded-lg bg-red-500/10 px-4 py-3 space-y-1">
+                  <ul className="max-h-40 space-y-1 overflow-y-auto rounded-lg bg-red-500/10 px-4 py-3">
                     {result.errors.map((e, i) => (
-                      <li
-                        key={i}
-                        className="text-xs text-red-300"
-                      >
+                      <li key={i} className="text-xs text-red-300">
                         • {e}
                       </li>
                     ))}

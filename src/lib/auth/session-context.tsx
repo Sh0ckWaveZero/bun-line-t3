@@ -9,6 +9,7 @@ export interface AppSession {
     email?: string | null;
     id: string;
     image?: string | null;
+    lineUserId?: string | null;
     name?: string | null;
     role?: string | null;
   };

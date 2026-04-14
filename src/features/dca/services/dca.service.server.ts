@@ -1,4 +1,5 @@
 import { db } from "@/lib/database/db";
+import type { DcaOrder, Prisma } from "@prisma/client";
 import type {
   CreateDcaOrderInput,
   DcaOrderListParams,
@@ -18,10 +19,40 @@ const generateOrderId = (coin: string, round: number): string => {
   return `${coin.toUpperCase()}DCA${paddedRound}`;
 };
 
+const normalizeLineUserIds = (
+  lineUserIds: string | string[] | undefined,
+): string[] =>
+  Array.from(
+    new Set(
+      (Array.isArray(lineUserIds) ? lineUserIds : [lineUserIds])
+        .map((lineUserId) => lineUserId?.trim())
+        .filter((lineUserId): lineUserId is string => Boolean(lineUserId)),
+    ),
+  );
+
+const applyLineUserFilter = (
+  where: Prisma.DcaOrderWhereInput,
+  lineUserIds: string | string[] | undefined,
+) => {
+  const normalizedIds = normalizeLineUserIds(lineUserIds);
+
+  if (normalizedIds.length === 1) {
+    where.lineUserId = normalizedIds[0];
+    return;
+  }
+
+  if (normalizedIds.length > 1) {
+    where.lineUserId = { in: normalizedIds };
+  }
+};
+
 /**
  * ดึงรอบถัดไปสำหรับ user และเหรียญที่ระบุ (นับแยกตาม lineUserId)
  */
-const getNextRound = async (coin: string, lineUserId: string): Promise<number> => {
+const getNextRound = async (
+  coin: string,
+  lineUserId: string,
+): Promise<number> => {
   const latest = await db.dcaOrder.findFirst({
     where: { coin: coin.toUpperCase(), lineUserId },
     orderBy: { round: "desc" },
@@ -64,9 +95,9 @@ const listOrders = async (
   const limit = Math.min(50, Math.max(1, params.limit ?? 10));
   const skip = (page - 1) * limit;
 
-  const where: Record<string, unknown> = {};
+  const where: Prisma.DcaOrderWhereInput = {};
   if (params.coin) where.coin = params.coin.toUpperCase();
-  if (params.lineUserId) where.lineUserId = params.lineUserId;
+  applyLineUserFilter(where, params.lineUserId);
 
   const [orders, total] = await Promise.all([
     db.dcaOrder.findMany({
@@ -116,18 +147,20 @@ const findByRounds = async (rounds: number[], lineUserId: string) => {
  * key = lineUserId + coin + executedAt
  */
 const findDuplicates = async (
-  lineUserId: string,
+  lineUserIds: string | string[],
   candidates: { coin: string; executedAt: Date }[],
 ) => {
   if (candidates.length === 0) return [];
+  const where: Prisma.DcaOrderWhereInput = {
+    OR: candidates.map((c) => ({
+      coin: c.coin,
+      executedAt: c.executedAt,
+    })),
+  };
+  applyLineUserFilter(where, lineUserIds);
+
   return db.dcaOrder.findMany({
-    where: {
-      lineUserId,
-      OR: candidates.map((c) => ({
-        coin: c.coin,
-        executedAt: c.executedAt,
-      })),
-    },
+    where,
     select: { coin: true, executedAt: true },
   });
 };
@@ -249,9 +282,12 @@ const parseBitkubDcaMessage = (
 /**
  * ดึง DCA orders ทั้งหมดของ user โดยไม่มี pagination (ใช้สำหรับ export)
  */
-const listAllOrders = async (lineUserId: string) => {
+const listAllOrders = async (lineUserIds: string | string[]) => {
+  const where: Prisma.DcaOrderWhereInput = {};
+  applyLineUserFilter(where, lineUserIds);
+
   return db.dcaOrder.findMany({
-    where: { lineUserId },
+    where,
     orderBy: { executedAt: "desc" },
   });
 };
@@ -259,11 +295,16 @@ const listAllOrders = async (lineUserId: string) => {
 /**
  * สรุปยอดรวมทั้งหมด
  */
-const getSummary = async (lineUserId?: string) => {
-  const where: Record<string, unknown> = {};
-  if (lineUserId) where.lineUserId = lineUserId;
+const getSummary = async (lineUserIds: string | string[]) => {
+  const normalizedIds = normalizeLineUserIds(lineUserIds);
+  if (normalizedIds.length === 0) {
+    return { totalSpentTHB: 0, totalBTC: 0, totalRounds: 0 };
+  }
 
-  const orders = await db.dcaOrder.findMany({
+  const where: Prisma.DcaOrderWhereInput = {};
+  applyLineUserFilter(where, normalizedIds);
+
+  const orders = (await db.dcaOrder.findMany({
     where,
     select: {
       amountTHB: true,
@@ -271,12 +312,18 @@ const getSummary = async (lineUserId?: string) => {
       pricePerCoin: true,
       coin: true,
     },
-  });
+  })) as Pick<
+    DcaOrder,
+    "amountTHB" | "coinReceived" | "pricePerCoin" | "coin"
+  >[];
 
-  const totalSpentTHB = orders.reduce((sum, o) => sum + o.amountTHB, 0);
+  const totalSpentTHB = orders.reduce(
+    (sum: number, order) => sum + order.amountTHB,
+    0,
+  );
   const totalBTC = orders
-    .filter((o) => o.coin === "BTC")
-    .reduce((sum, o) => sum + o.coinReceived, 0);
+    .filter((order) => order.coin === "BTC")
+    .reduce((sum: number, order) => sum + order.coinReceived, 0);
   const totalRounds = orders.length;
 
   return { totalSpentTHB, totalBTC, totalRounds };
