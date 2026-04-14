@@ -147,7 +147,9 @@ DATABASE_URL="mongodb://user:password@localhost:27017/bun_line_t3"
 
 # Better Auth
 AUTH_SECRET="your-secret-key"
-APP_URL="http://localhost:4325"
+# Application URLs
+APP_URL="http://localhost:4325"           # Primary URL (used for OAuth, frontend, domain validation)
+ALLOWED_DOMAINS="localhost,127.0.0.1"   # Security: domains allowed for redirects/validation
 
 # LINE Integration
 LINE_CLIENT_ID="your-line-client-id"
@@ -158,7 +160,6 @@ LINE_MESSAGING_API="https://api.line.me/v2/bot/message"
 
 # Application
 APP_ENV="development"
-FRONTEND_URL="http://localhost:4325"
 JWT_EXPIRES_IN="1d"
 
 # External APIs

@@ -100,7 +100,7 @@ export const env = createEnv({
     AIRVISUAL_API_KEY: process.env.AIRVISUAL_API_KEY,
     INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
     CRON_SECRET: process.env.CRON_SECRET,
-    APP_DOMAIN: process.env.APP_DOMAIN,
+    APP_DOMAIN: process.env.APP_DOMAIN ?? process.env.APP_URL,
     ALLOWED_DOMAINS: process.env.ALLOWED_DOMAINS,
     DEV_TEST_USER_ID: process.env.DEV_TEST_USER_ID,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,

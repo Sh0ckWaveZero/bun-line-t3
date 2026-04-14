@@ -4,9 +4,11 @@
 
 ### Core Configuration
 ```bash
+# Primary URL - used for OAuth, frontend, and domain validation
+# This is the ONLY URL variable you need for single-domain setups
 APP_URL=https://your-production-domain.com
-FRONTEND_URL=https://your-production-domain.com
-APP_DOMAIN=https://your-production-domain.com
+
+# Security: Domains allowed for redirects/validation
 ALLOWED_DOMAINS=your-production-domain.com
 ```
 
@@ -134,10 +136,9 @@ curl https://your-production-domain.com/api/debug/line-oauth
 Add/update these secrets in GitHub Repository Settings:
 
 ```bash
-# Required - Core Application URLs
+# Required - Core Application Configuration
 APP_URL=https://your-production-domain.com
-FRONTEND_URL=https://your-production-domain.com
-APP_DOMAIN=https://your-production-domain.com
+ALLOWED_DOMAINS=your-production-domain.com
 
 # Required - Security
 ALLOWED_DOMAINS=your-production-domain.com,www.your-production-domain.com
