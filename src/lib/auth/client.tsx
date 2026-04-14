@@ -12,10 +12,14 @@ interface AuthActionOptions {
 export const authClient = createAuthClient();
 
 function getAuthOrigin() {
-  try {
-    return __APP_URL__ ? new URL(__APP_URL__).origin : window.location.origin;
-  } catch {
+  if (typeof window !== "undefined") {
     return window.location.origin;
+  }
+
+  try {
+    return __APP_URL__ ? new URL(__APP_URL__).origin : "";
+  } catch {
+    return "";
   }
 }
 

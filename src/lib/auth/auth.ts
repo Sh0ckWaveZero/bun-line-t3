@@ -122,9 +122,10 @@ export const auth = betterAuth({
     },
   },
   account: {
-    // ใช้ "cookie" strategy เพื่อเก็บ OAuth state ใน encrypted cookie แทน DB + signed cookie
-    // แก้ปัญหา tanstackStartCookies ไม่สามารถ forward signed cookie ได้ถูกต้องใน production
-    storeStateStrategy: "cookie",
+    // เก็บ OAuth state ใน DB เพื่อให้ LINE callback ยังทำงานได้เมื่อ browser/webview
+    // ที่เริ่ม login กับ browser ที่รับ callback ไม่ได้แชร์ OAuth state cookie กัน
+    storeStateStrategy: "database",
+    skipStateCookieCheck: true,
     fields: {
       accountId: "providerAccountId",
       providerId: "provider",
