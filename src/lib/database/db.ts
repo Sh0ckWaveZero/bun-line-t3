@@ -16,28 +16,29 @@ const createClient = () => {
   // Intercept session.create to handle duplicate token errors (P2002).
   // better-auth can generate the same session token when the LINE OAuth
   // callback is retried (e.g. Cloudflare Tunnel retry). The unique index
-  // on `sessions.token` rejects the second insert — delete the stale
-  // record and retry so the caller gets a valid session instead of a 500.
+  // on `sessions.token` rejects the second insert — use upsert instead of
+  // delete+retry to avoid race conditions.
   return base.$extends({
     query: {
       session: {
         async create({ args, query }) {
-          try {
+          const token = (args.data as Record<string, unknown>)?.token;
+          if (typeof token !== "string") {
             return await query(args);
-          } catch (e: unknown) {
-            const token = (args.data as Record<string, unknown>)?.token;
-            if (
-              e instanceof Prisma.PrismaClientKnownRequestError &&
-              e.code === "P2002" &&
-              typeof token === "string"
-            ) {
-              console.log("[DB] session.create P2002 caught — deleting stale token and retrying");
-              const { count } = await base.session.deleteMany({ where: { token } }).catch(() => ({ count: 0 }));
-              console.log("[DB] deleted stale sessions:", count);
-              return await query(args);
-            }
-            throw e;
           }
+
+          // Use upsert to handle duplicate tokens atomically
+          // - If token exists: update with new data (extendsAt, updatedAt, etc.)
+          // - If token doesn't exist: insert new session
+          return await (base as PrismaClient).session.upsert({
+            where: { token },
+            create: args.data as Prisma.SessionCreateInput,
+            update: {
+              expiresAt: (args.data as Prisma.SessionCreateInput).expiresAt,
+              updatedAt: new Date(),
+              // Keep other fields (userId, ipAddress, userAgent) unchanged
+            },
+          });
         },
       },
     },
