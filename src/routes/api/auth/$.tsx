@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { env } from "@/env.mjs";
 import { auth } from "@/lib/auth";
 
 const AUTH_ERROR_PATH = "/api/auth/error";
@@ -7,8 +8,8 @@ const LINE_CALLBACK_PATH = "/api/auth/callback/line";
 const shouldHandleAuthErrorRedirect = (pathname: string) =>
   pathname === LINE_CALLBACK_PATH || pathname === AUTH_ERROR_PATH;
 
-const createLoginErrorRedirect = (requestUrl: URL, error: string) => {
-  const loginUrl = new URL("/login", requestUrl.origin);
+const createLoginErrorRedirect = (error: string) => {
+  const loginUrl = new URL("/login", new URL(env.APP_URL).origin);
   loginUrl.searchParams.set("authError", error);
   return Response.redirect(loginUrl, 302);
 };
@@ -36,7 +37,7 @@ const handleAuthRequest = async (request: Request) => {
     return response;
   }
 
-  return createLoginErrorRedirect(requestUrl, error);
+  return createLoginErrorRedirect(error);
 };
 
 export const Route = createFileRoute("/api/auth/$")({
