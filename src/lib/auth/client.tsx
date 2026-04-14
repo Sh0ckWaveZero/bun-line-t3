@@ -64,6 +64,7 @@ export async function signIn(
   return authClient.signIn.social({
     callbackURL: callbackUrl,
     disableRedirect: options?.redirect === false,
+    errorCallbackURL: buildAuthCallbackUrl("/login?authError=line_oauth"),
     provider,
   });
 }

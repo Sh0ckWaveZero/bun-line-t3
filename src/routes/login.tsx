@@ -5,14 +5,34 @@ import React from "react";
 import { useSession } from "@/lib/auth/client";
 import { LineLoginButton } from "@/components/ui/LineLoginButton";
 
+const AUTH_ERROR_MESSAGES: Record<string, string> = {
+  invalid_code: "รหัสยืนยันจาก LINE ใช้ไม่ได้หรือหมดอายุ กรุณาเข้าสู่ระบบใหม่อีกครั้ง",
+  line_oauth: "เข้าสู่ระบบด้วย LINE ไม่สำเร็จ กรุณาเริ่มใหม่อีกครั้ง",
+  please_restart_the_process:
+    "ลิงก์เข้าสู่ระบบหมดอายุแล้ว กรุณากด LINE Login ใหม่จากหน้านี้",
+  state_mismatch:
+    "เซสชันเข้าสู่ระบบไม่ตรงกัน กรุณากด LINE Login ใหม่จากหน้านี้",
+};
+
 function LoginPage() {
   const { status } = useSession();
-  const search = useSearch({ strict: false }) as { callbackUrl?: string };
+  const search = useSearch({ strict: false }) as {
+    authError?: string;
+    callbackUrl?: string;
+    error?: string;
+  };
   // Only allow relative paths to prevent open redirect.
   // Reject absolute URLs (https://evil.com) and protocol-relative URLs (//evil.com).
   const rawCallback = typeof search.callbackUrl === "string" ? search.callbackUrl : "/";
   const callbackUrl =
     rawCallback.startsWith("/") && !rawCallback.startsWith("//") ? rawCallback : "/";
+  const authError = search.authError ?? search.error;
+  const authErrorMessage =
+    authError && AUTH_ERROR_MESSAGES[authError]
+      ? AUTH_ERROR_MESSAGES[authError]
+      : authError
+        ? "เข้าสู่ระบบไม่สำเร็จ กรุณากด LINE Login ใหม่อีกครั้ง"
+        : null;
 
   React.useEffect(() => {
     if (status === "authenticated") {
@@ -56,6 +76,15 @@ function LoginPage() {
           </div>
 
           <div className="space-y-6">
+            {authErrorMessage ? (
+              <div
+                role="alert"
+                className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200"
+              >
+                {authErrorMessage}
+              </div>
+            ) : null}
+
             <LineLoginButton
               callbackUrl={callbackUrl}
               className="w-full transform py-3 text-base font-semibold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg sm:py-4 sm:text-lg"
