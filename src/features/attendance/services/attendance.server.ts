@@ -96,8 +96,8 @@ async function getActiveLineUserIdsForCheckinReminder(
       where: { id: testUserId },
       select: {
         accounts: {
-          where: { provider: "line" },
-          select: { providerAccountId: true },
+          where: { providerId: "line" },
+          select: { accountId: true },
         },
         leaves: {
           where: { date: todayString, isActive: true },
@@ -113,7 +113,7 @@ async function getActiveLineUserIdsForCheckinReminder(
     const notificationsEnabled = user?.settings?.enableCheckInReminders ?? true;
 
     // Check LINE permissions
-    const lineUserId = user?.accounts[0]?.providerAccountId;
+    const lineUserId = user?.accounts[0]?.accountId;
     let hasReminderPermission = false;
     if (lineUserId) {
       const approval = await db.lineApprovalRequest.findUnique({
@@ -130,7 +130,7 @@ async function getActiveLineUserIdsForCheckinReminder(
       notificationsEnabled &&
       hasReminderPermission
     ) {
-      return [user.accounts[0]?.providerAccountId].filter(
+      return [user.accounts[0]?.accountId].filter(
         (id): id is string => typeof id === "string",
       );
     } else {
@@ -141,8 +141,8 @@ async function getActiveLineUserIdsForCheckinReminder(
   const users = await db.user.findMany({
     select: {
       accounts: {
-        where: { provider: "line" },
-        select: { providerAccountId: true },
+        where: { providerId: "line" },
+        select: { accountId: true },
       },
       leaves: {
         where: { date: todayString, isActive: true },
@@ -156,7 +156,7 @@ async function getActiveLineUserIdsForCheckinReminder(
 
   // Get all LINE user IDs for permission check
   const lineUserIds = users
-    .map((u) => u.accounts[0]?.providerAccountId)
+    .map((u) => u.accounts[0]?.accountId)
     .filter((id): id is string => typeof id === "string");
 
   // Fetch permissions for all LINE users
@@ -182,12 +182,12 @@ async function getActiveLineUserIdsForCheckinReminder(
       // Default to true if user has no settings yet
       const notificationsEnabled = u.settings?.enableCheckInReminders ?? true;
       // Check LINE permission
-      const lineUserId = u.accounts[0]?.providerAccountId;
+      const lineUserId = u.accounts[0]?.accountId;
       const hasPermission = lineUserId ? (permissionMap.get(lineUserId) ?? false) : false;
 
       return hasLineAccount && notOnLeave && notificationsEnabled && hasPermission;
     })
-    .map((u) => u.accounts[0]?.providerAccountId)
+    .map((u) => u.accounts[0]?.accountId)
     .filter((id): id is string => typeof id === "string");
 }
 

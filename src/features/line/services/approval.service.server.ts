@@ -264,21 +264,21 @@ const getAccountApprovalList = async (params?: {
     take: limit,
   });
 
-  const lineUserIds = accounts.data.map((account) => account.providerAccountId);
+  const lineUserIds = accounts.data.map((account) => account.accountId);
   const approvals = await approvalRepository.findByLineUserIds(lineUserIds);
   const approvalByLineUserId = new Map(
     approvals.map((approval) => [approval.lineUserId, approval]),
   );
 
   const data = accounts.data.map((account): AccountApprovalItem => {
-    const approval = approvalByLineUserId.get(account.providerAccountId);
+    const approval = approvalByLineUserId.get(account.accountId);
     const createdAt = approval?.createdAt ?? account.createdAt ?? new Date();
 
     return {
       id: approval?.id ?? `account:${account.id}`,
       approvalId: approval?.id ?? null,
       accountId: account.id,
-      lineUserId: account.providerAccountId,
+      lineUserId: account.accountId,
       displayName: approval?.displayName ?? account.user.name,
       pictureUrl: approval?.pictureUrl ?? account.user.image,
       statusMessage: approval?.statusMessage ?? null,
@@ -294,7 +294,7 @@ const getAccountApprovalList = async (params?: {
       userName: account.user.name,
       userEmail: account.user.email,
       isAdmin:
-        canManageApprovals(account.providerAccountId) ||
+        canManageApprovals(account.accountId) ||
         account.user.role === "admin",
     };
   });

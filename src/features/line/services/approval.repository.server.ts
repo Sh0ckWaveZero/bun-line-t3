@@ -187,7 +187,7 @@ const findLineAccounts = async (params: LineAccountListParams = {}) => {
 
   const [data, total] = await Promise.all([
     db.account.findMany({
-      where: { provider: "line" },
+      where: { providerId: "line" },
       include: {
         user: {
           select: {
@@ -203,7 +203,7 @@ const findLineAccounts = async (params: LineAccountListParams = {}) => {
       skip,
       take,
     }),
-    db.account.count({ where: { provider: "line" } }),
+    db.account.count({ where: { providerId: "line" } }),
   ]);
 
   return { data, total };
@@ -219,8 +219,8 @@ const findDatabaseAdminLineUserIds = async (
 
   const accounts = await db.account.findMany({
     where: {
-      provider: "line",
-      providerAccountId: {
+      providerId: "line",
+      accountId: {
         in: lineUserIds,
       },
       user: {
@@ -228,11 +228,11 @@ const findDatabaseAdminLineUserIds = async (
       },
     },
     select: {
-      providerAccountId: true,
+      accountId: true,
     },
   });
 
-  return new Set(accounts.map((account) => account.providerAccountId));
+  return new Set(accounts.map((account) => account.accountId));
 };
 
 /**
@@ -244,8 +244,8 @@ const updateAdminByLineUserId = async (
 ) => {
   const account = await db.account.findFirst({
     where: {
-      provider: "line",
-      providerAccountId: lineUserId,
+      providerId: "line",
+      accountId: lineUserId,
     },
     select: {
       userId: true,
@@ -304,7 +304,7 @@ const getStats = async () => {
     db.lineApprovalRequest.count({
       where: { status: APPROVAL_STATUS.REJECTED },
     }),
-    db.account.count({ where: { provider: "line" } }),
+    db.account.count({ where: { providerId: "line" } }),
   ]);
 
   return {

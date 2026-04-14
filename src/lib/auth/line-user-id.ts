@@ -4,7 +4,7 @@ import { getServerAuthSession } from "./auth";
 /**
  * ดึง LINE User ID จาก session ของ user ที่ login อยู่
  *
- * LINE User ID เก็บอยู่ใน Account.providerAccountId (provider = "line")
+ * LINE User ID เก็บอยู่ใน Account.accountId (provider = "line")
  * ซึ่งเป็น `sub` ที่ได้จาก LINE OAuth (เช่น Ub1234567890)
  *
  * @returns LINE User ID หรือ null ถ้าไม่ได้ login / ไม่มี LINE account
@@ -17,10 +17,10 @@ export async function getLineUserId(request: Request): Promise<string | null> {
   const account = await db.account.findFirst({
     where: {
       userId: session.user.id,
-      provider: "line",
+      providerId: "line",
     },
-    select: { providerAccountId: true },
+    select: { accountId: true },
   });
 
-  return account?.providerAccountId ?? null;
+  return account?.accountId ?? null;
 }

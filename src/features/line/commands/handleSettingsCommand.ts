@@ -11,8 +11,8 @@ export const handleSettingsCommand = async (req: any, conditions: any[]) => {
     // Find user by LINE userId
     const account = await prisma.account.findFirst({
       where: {
-        providerAccountId: userId,
-        provider: "line",
+        accountId: userId,
+        providerId: "line",
       },
       include: {
         user: {

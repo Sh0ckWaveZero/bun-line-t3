@@ -3,12 +3,10 @@ import { db } from "@/lib/database/db";
 
 interface UpdateUserInput {
   userId: string;
-  email?: string | null;
-  emailVerified?: Date | null;
-  emailVerifiedFlag?: boolean | null;
+  email?: string;
+  emailVerified?: boolean;
   image?: string | null;
-  is_verified?: boolean | null;
-  name?: string | null;
+  name?: string;
 }
 
 export class UsersRepository {
@@ -21,7 +19,7 @@ export class UsersRepository {
             {
               accounts: {
                 some: {
-                  providerAccountId: userId,
+                  accountId: userId,
                 },
               },
             },

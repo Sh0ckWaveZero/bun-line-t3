@@ -157,7 +157,7 @@ export async function GET(request: Request) {
           const userAccount = await db.account.findFirst({
             where: {
               userId,
-              provider: "line",
+              providerId: "line",
             },
           });
 
@@ -186,7 +186,7 @@ export async function GET(request: Request) {
             ),
           ];
 
-          await sendPushMessage(userAccount.providerAccountId, payload);
+          await sendPushMessage(userAccount.accountId, payload);
 
           // Update reminder status in database
           await db.workAttendance.update({
@@ -199,7 +199,7 @@ export async function GET(request: Request) {
 
           return {
             userId,
-            lineUserId: userAccount.providerAccountId.substring(0, 8) + "...",
+            lineUserId: userAccount.accountId.substring(0, 8) + "...",
             status: "sent",
             reminderType,
             remindersSent: `${reminderType === "10min" ? "1" : "2"}/2`,

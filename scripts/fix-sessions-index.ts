@@ -24,7 +24,7 @@ async function fixSessionsIndex() {
     for (const dup of duplicates) {
       const sessions = await db.session.findMany({
         where: { userId: dup.userId },
-        orderBy: { expires: "desc" },
+        orderBy: { expiresAt: "desc" },
       });
 
       // Keep latest, delete others

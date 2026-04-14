@@ -18,15 +18,15 @@ export async function POST(req: Request) {
     const lineAccount = await db.account.findFirst({
       where: {
         userId: session.user.id,
-        provider: "line",
+        providerId: "line",
       },
       select: {
-        providerAccountId: true,
+        accountId: true,
       },
     });
 
     if (lineAccount) {
-      const hasPermission = await canRequestLeave(lineAccount.providerAccountId);
+      const hasPermission = await canRequestLeave(lineAccount.accountId);
       if (!hasPermission) {
         return Response.json(
           {

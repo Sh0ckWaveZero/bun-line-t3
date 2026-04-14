@@ -4,7 +4,7 @@ import { env } from "@/env.mjs";
 
 /**
  * ส่ง push message ไปยัง LINE userId
- * @param userId LINE userId (providerAccountId)
+ * @param userId LINE userId (accountId)
  * @param messages ข้อมูล message (array)
  * @returns Promise<Response>
  */

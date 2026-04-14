@@ -25,10 +25,10 @@ export async function GET(request: Request) {
     const account = await db.account.findFirst({
       where: {
         userId: session.user.id,
-        provider: "line",
+        providerId: "line",
       },
       select: {
-        providerAccountId: true,
+        accountId: true,
       },
     });
 
@@ -46,7 +46,7 @@ export async function GET(request: Request) {
     return Response.json({
       approved,
       hasLineAccount: true,
-      lineUserId: account.providerAccountId,
+      lineUserId: account.accountId,
     });
   } catch (error) {
     console.error("[/api/auth/check-line-approval]", error);

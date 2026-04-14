@@ -4,7 +4,6 @@ import { bubbleTemplate } from "@/lib/validation/line";
 import { sendMessage } from "../../../lib/utils/line-utils";
 import { flexMessage } from "@/lib/utils/line-message-utils";
 import { AttendanceStatusType } from "@prisma/client";
-import { utils } from "@/lib/validation";
 import { handleCheckIn } from "./handleCheckIn";
 import { handleCheckOut } from "./handleCheckOut";
 import { handleWorkStatus } from "./handleWorkStatus";
@@ -16,12 +15,9 @@ export const handlePostback = async (req: any, event: any) => {
   const userId = req.body.events[0].source.userId;
   const data = event.postback.data;
   const userPermission: any = await db.account.findFirst({
-    where: { providerAccountId: userId },
+    where: { accountId: userId },
   });
-  const isPermissionExpired =
-    !userPermission ||
-    !utils.compareDate(userPermission?.expires_at, new Date().toISOString());
-  if (isPermissionExpired) {
+  if (!userPermission) {
     const payload = bubbleTemplate.signIn();
     return sendMessage(req, flexMessage(payload));
   }

@@ -7,7 +7,7 @@ import { sendMessage } from "@/lib/utils/line-utils";
 export const handleWorkAttendanceCommand = async (req: any) => {
   const userId = req.body.events[0].source.userId;
   const userAccount = await db.account.findFirst({
-    where: { providerAccountId: userId },
+    where: { accountId: userId },
   });
   if (!userAccount) {
     const payload = bubbleTemplate.signIn();

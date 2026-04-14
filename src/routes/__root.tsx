@@ -40,10 +40,10 @@ const fetchSessionWithApproval = createServerFn({ method: "GET" }).handler(async
 
   // Query LINE account ครั้งเดียว — ใช้ทั้ง isAdmin และ approval check
   const account = await db.account.findFirst({
-    where: { userId: session.user.id, provider: "line" },
+    where: { userId: session.user.id, providerId: "line" },
     select: {
-      access_token: true,
-      providerAccountId: true,
+      accessToken: true,
+      accountId: true,
       user: { select: { role: true } },
     },
   });
@@ -52,10 +52,10 @@ const fetchSessionWithApproval = createServerFn({ method: "GET" }).handler(async
     return { session, hasApproval: true };
   }
 
-  const lineUserId = account.providerAccountId;
+  const lineUserId = account.accountId;
   const isAdmin = isAdminLineUser(lineUserId) || account.user.role === "admin";
   const syncedProfile = await syncLineProfileToDatabase({
-    accessToken: account.access_token,
+    accessToken: account.accessToken,
     fallbackDisplayName: session.user?.name,
     fallbackPictureUrl: session.user?.image,
     lineUserId,

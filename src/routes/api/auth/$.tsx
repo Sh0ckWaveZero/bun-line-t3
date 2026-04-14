@@ -14,15 +14,36 @@ const createLoginErrorRedirect = (error: string) => {
   return Response.redirect(loginUrl, 302);
 };
 
+const logAuthFailure = (message: string, requestUrl: URL, response?: Response) => {
+  console.error("[Auth Handler] " + message, {
+    authError: requestUrl.searchParams.get("error"),
+    hasCode: requestUrl.searchParams.has("code"),
+    hasState: requestUrl.searchParams.has("state"),
+    path: requestUrl.pathname,
+    responseStatus: response?.status,
+  });
+};
+
 const handleAuthRequest = async (request: Request) => {
   try {
+    const requestUrl = new URL(request.url);
+
     console.log("[Auth Handler] Processing request:", {
       method: request.method,
       url: request.url,
     });
 
+    if (requestUrl.pathname === AUTH_ERROR_PATH) {
+      const error = requestUrl.searchParams.get("error") ?? "line_oauth";
+      return createLoginErrorRedirect(error);
+    }
+
     const response = await auth.handler(request);
-    const requestUrl = new URL(request.url);
+
+    if (response.status >= 500 && shouldHandleAuthErrorRedirect(requestUrl.pathname)) {
+      logAuthFailure("Auth provider returned an internal error", requestUrl, response);
+      return createLoginErrorRedirect("line_oauth");
+    }
 
     if (!shouldHandleAuthErrorRedirect(requestUrl.pathname)) {
       return response;

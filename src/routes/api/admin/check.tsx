@@ -17,10 +17,10 @@ export async function GET() {
   const account = await db.account.findFirst({
     where: {
       userId: session.user.id,
-      provider: "line",
+      providerId: "line",
     },
     select: {
-      providerAccountId: true,
+      accountId: true,
     },
   });
 
@@ -28,7 +28,7 @@ export async function GET() {
     return Response.json({ isAdmin: false });
   }
 
-  const isAdmin = await canManageApprovalsAsync(account.providerAccountId);
+  const isAdmin = await canManageApprovalsAsync(account.accountId);
   return Response.json({ isAdmin });
 }
 

@@ -10,14 +10,6 @@ import { syncLineProfileToDatabase } from "./line-profile-sync";
 const LINE_FALLBACK_EMAIL_DOMAIN = "line.local";
 const DEFAULT_DEV_PORT = "4325";
 
-const calculateExpiryDate = () => {
-  const MILLISECONDS_IN_A_DAY = 24 * 60 * 60 * 1000;
-  const SECONDS_IN_A_MILLISECOND = 1 / 1000;
-  return Math.floor(
-    (Date.now() + 90 * MILLISECONDS_IN_A_DAY) * SECONDS_IN_A_MILLISECOND,
-  );
-};
-
 const getLocalDevOrigin = () => {
   const port = process.env.PORT || DEFAULT_DEV_PORT;
   return `http://localhost:${port}`;
@@ -131,20 +123,11 @@ export const auth = betterAuth({
   secret: env.AUTH_SECRET,
   trustedOrigins: getTrustedOrigins(),
   user: {
-    fields: {
-      emailVerified: "emailVerifiedFlag",
-    },
     additionalFields: {
       role: {
         type: "string",
         defaultValue: "user",
       },
-    },
-  },
-  session: {
-    fields: {
-      expiresAt: "expires",
-      token: "sessionToken",
     },
   },
   account: {
@@ -153,20 +136,6 @@ export const auth = betterAuth({
     // be returned on the callback. Keep Better Auth's database-backed state
     // + PKCE checks for security, but do not require the extra cookie binding.
     skipStateCookieCheck: true,
-    fields: {
-      accountId: "providerAccountId",
-      providerId: "provider",
-      accessToken: "access_token",
-      refreshToken: "refresh_token",
-      idToken: "id_token",
-    },
-  },
-  verification: {
-    modelName: "verificationToken",
-    fields: {
-      expiresAt: "expires",
-      value: "token",
-    },
   },
   socialProviders: {
     line: {
@@ -204,14 +173,6 @@ export const auth = betterAuth({
   databaseHooks: {
     account: {
       create: {
-        async before(account) {
-          return {
-            data: {
-              ...account,
-              expires_at: calculateExpiryDate(),
-            },
-          };
-        },
         async after(account) {
           try {
             await syncLineApprovalRequest(account);
@@ -222,14 +183,6 @@ export const auth = betterAuth({
         },
       },
       update: {
-        async before(account) {
-          return {
-            data: {
-              ...account,
-              expires_at: calculateExpiryDate(),
-            },
-          };
-        },
         async after(account) {
           try {
             await syncLineApprovalRequest(account);

@@ -151,7 +151,7 @@ async function sendAutoCheckoutNotification(
     const userAccount = await db.account.findFirst({
       where: {
         userId,
-        provider: "line",
+        providerId: "line",
       },
     });
 
@@ -181,7 +181,7 @@ async function sendAutoCheckoutNotification(
         Authorization: `Bearer ${lineChannelAccessToken}`,
       },
       body: JSON.stringify({
-        to: userAccount.providerAccountId,
+        to: userAccount.accountId,
         messages: [message],
       }),
     });

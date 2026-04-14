@@ -103,7 +103,7 @@ export async function GET(req: Request) {
           const userAccount = await db.account.findFirst({
             where: {
               userId,
-              provider: "line", // Make sure we're getting LINE accounts
+              providerId: "line", // Make sure we're getting LINE accounts
             },
           });
 
@@ -167,11 +167,11 @@ export async function GET(req: Request) {
           ];
 
           // Send the push message
-          await sendPushMessage(userAccount.providerAccountId, payload);
+          await sendPushMessage(userAccount.accountId, payload);
 
           return {
             userId,
-            lineUserId: userAccount.providerAccountId,
+            lineUserId: userAccount.accountId,
             status: "success",
           };
         } catch (error: any) {
