@@ -122,10 +122,7 @@ export const auth = betterAuth({
     },
   },
   account: {
-    // เก็บ OAuth state ใน DB เพื่อให้ LINE callback ยังทำงานได้เมื่อ browser/webview
-    // ที่เริ่ม login กับ browser ที่รับ callback ไม่ได้แชร์ OAuth state cookie กัน
-    storeStateStrategy: "database",
-    skipStateCookieCheck: true,
+    skipStateCookieCheck: env.APP_ENV === "development",
     fields: {
       accountId: "providerAccountId",
       providerId: "provider",

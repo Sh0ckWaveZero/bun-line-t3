@@ -63,7 +63,6 @@ import { Route as ApiAttendanceUpdateRouteImport } from './routes/api/attendance
 import { Route as ApiAdminDebugRouteImport } from './routes/api/admin/debug'
 import { Route as ApiAdminCheckRouteImport } from './routes/api/admin/check'
 import { Route as ApiUserSettingsNotificationsRouteImport } from './routes/api/user/settings/notifications'
-import { Route as ApiAuthSignInLineRouteImport } from './routes/api/auth/sign-in/line'
 
 const ThaiNamesGeneratorRoute = ThaiNamesGeneratorRouteImport.update({
   id: '/thai-names-generator',
@@ -343,11 +342,6 @@ const ApiUserSettingsNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => ApiUserSettingsRoute,
   } as any)
-const ApiAuthSignInLineRoute = ApiAuthSignInLineRouteImport.update({
-  id: '/api/auth/sign-in/line',
-  path: '/api/auth/sign-in/line',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -403,7 +397,6 @@ export interface FileRoutesByFullPath {
   '/api/user/settings': typeof ApiUserSettingsRouteWithChildren
   '/api/dca/': typeof ApiDcaIndexRoute
   '/api/subscriptions/': typeof ApiSubscriptionsIndexRoute
-  '/api/auth/sign-in/line': typeof ApiAuthSignInLineRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
 }
 export interface FileRoutesByTo {
@@ -460,7 +453,6 @@ export interface FileRoutesByTo {
   '/api/user/settings': typeof ApiUserSettingsRouteWithChildren
   '/api/dca': typeof ApiDcaIndexRoute
   '/api/subscriptions': typeof ApiSubscriptionsIndexRoute
-  '/api/auth/sign-in/line': typeof ApiAuthSignInLineRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
 }
 export interface FileRoutesById {
@@ -518,7 +510,6 @@ export interface FileRoutesById {
   '/api/user/settings': typeof ApiUserSettingsRouteWithChildren
   '/api/dca/': typeof ApiDcaIndexRoute
   '/api/subscriptions/': typeof ApiSubscriptionsIndexRoute
-  '/api/auth/sign-in/line': typeof ApiAuthSignInLineRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
 }
 export interface FileRouteTypes {
@@ -577,7 +568,6 @@ export interface FileRouteTypes {
     | '/api/user/settings'
     | '/api/dca/'
     | '/api/subscriptions/'
-    | '/api/auth/sign-in/line'
     | '/api/user/settings/notifications'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -634,7 +624,6 @@ export interface FileRouteTypes {
     | '/api/user/settings'
     | '/api/dca'
     | '/api/subscriptions'
-    | '/api/auth/sign-in/line'
     | '/api/user/settings/notifications'
   id:
     | '__root__'
@@ -691,7 +680,6 @@ export interface FileRouteTypes {
     | '/api/user/settings'
     | '/api/dca/'
     | '/api/subscriptions/'
-    | '/api/auth/sign-in/line'
     | '/api/user/settings/notifications'
   fileRoutesById: FileRoutesById
 }
@@ -746,7 +734,6 @@ export interface RootRouteChildren {
   ApiUserSettingsRoute: typeof ApiUserSettingsRouteWithChildren
   ApiDcaIndexRoute: typeof ApiDcaIndexRoute
   ApiSubscriptionsIndexRoute: typeof ApiSubscriptionsIndexRoute
-  ApiAuthSignInLineRoute: typeof ApiAuthSignInLineRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1129,13 +1116,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiUserSettingsNotificationsRouteImport
       parentRoute: typeof ApiUserSettingsRoute
     }
-    '/api/auth/sign-in/line': {
-      id: '/api/auth/sign-in/line'
-      path: '/api/auth/sign-in/line'
-      fullPath: '/api/auth/sign-in/line'
-      preLoaderRoute: typeof ApiAuthSignInLineRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -1227,7 +1207,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiUserSettingsRoute: ApiUserSettingsRouteWithChildren,
   ApiDcaIndexRoute: ApiDcaIndexRoute,
   ApiSubscriptionsIndexRoute: ApiSubscriptionsIndexRoute,
-  ApiAuthSignInLineRoute: ApiAuthSignInLineRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
