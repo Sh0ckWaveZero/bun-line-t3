@@ -76,15 +76,15 @@ export async function GET(req: Request) {
     const lineAccount = await db.account.findFirst({
       where: {
         userId: validatedData.userId,
-        provider: "line",
+        providerId: "line",
       },
       select: {
-        providerAccountId: true,
+        accountId: true,
       },
     });
 
     if (lineAccount) {
-      const hasPermission = await canRequestAttendanceReport(lineAccount.providerAccountId);
+      const hasPermission = await canRequestAttendanceReport(lineAccount.accountId);
       if (!hasPermission) {
         return Response.json(
           {

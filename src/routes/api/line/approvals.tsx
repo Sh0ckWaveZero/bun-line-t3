@@ -54,7 +54,7 @@ const unlockSchema = z.object({
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
- * ดึง LINE userId (providerAccountId) จาก session
+ * ดึง LINE userId (accountId) จาก session
  */
 const getLineUserIdFromSession = async (
   userId: string,
@@ -62,13 +62,13 @@ const getLineUserIdFromSession = async (
   const account = await db.account.findFirst({
     where: {
       userId,
-      provider: "line", // LINE provider
+      providerId: "line", // LINE provider
     },
     select: {
-      providerAccountId: true,
+      accountId: true,
     },
   });
-  return account?.providerAccountId ?? null;
+  return account?.accountId ?? null;
 };
 
 /**

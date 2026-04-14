@@ -18,10 +18,10 @@ export const isLineUserApproved = async (userId: string): Promise<boolean> => {
   const account = await db.account.findFirst({
     where: {
       userId,
-      provider: "line",
+      providerId: "line",
     },
     select: {
-      providerAccountId: true,
+      accountId: true,
       user: {
         select: {
           role: true,
@@ -35,7 +35,7 @@ export const isLineUserApproved = async (userId: string): Promise<boolean> => {
     return true;
   }
 
-  const lineUserId = account.providerAccountId;
+  const lineUserId = account.accountId;
 
   // 2. Admin whitelist → auto-approved
   if (isAdminLineUser(lineUserId)) {

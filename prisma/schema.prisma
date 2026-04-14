@@ -14,78 +14,71 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Necessary for Better Auth and legacy LINE permission checks
+// Better Auth core models
 model Account {
   id                    String    @id @default(auto()) @map("_id") @db.ObjectId
-  userId                String    @map("user_id") @db.ObjectId
-  provider              String
-  type                  String    @default("oauth")
-  providerAccountId     String    @unique @map("provider_account_id")
-  refresh_token         String?   @db.String
-  access_token          String?   @db.String
-  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
-  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
-  verified_request      DateTime?
-  verification_id       String?
-  is_verified           Boolean   @default(false)
-  expires_at            Int?      @default(0)
-  token_type            String?
+  accountId             String
+  providerId            String
+  userId                String    @db.ObjectId
+  accessToken           String?   @db.String
+  refreshToken          String?   @db.String
+  idToken               String?   @db.String
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
   scope                 String?
-  id_token              String?   @db.String
   password              String?
-  session_state         String?
-  createdAt             DateTime? @default(now()) @map("created_at")
-  updatedAt             DateTime? @updatedAt @map("updated_at")
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([provider, providerAccountId])
+  @@unique([providerId, accountId])
+  @@index([userId])
   @@map("accounts")
 }
 
 model Session {
-  id           String    @id @default(auto()) @map("_id") @db.ObjectId
-  sessionToken String    @unique @map("session_token")
-  userId       String    @map("user_id") @db.ObjectId
-  expires      DateTime
-  ipAddress    String?   @map("ip_address")
-  userAgent    String?   @map("user_agent")
-  createdAt    DateTime? @default(now()) @map("created_at")
-  updatedAt    DateTime? @updatedAt @map("updated_at")
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  token     String   @unique
+  userId    String   @db.ObjectId
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("sessions")
 }
 
 model User {
-  id                String           @id @default(auto()) @map("_id") @db.ObjectId
-  name              String?
-  email             String?          @unique
-  emailVerified     DateTime?        @map("email_verified")
-  emailVerifiedFlag Boolean?         @default(false) @map("email_verified_flag")
-  is_verified       Boolean?         @default(false)
-  role              String           @default("user")
-  image             String?
-  createdAt         DateTime?        @default(now()) @map("created_at")
-  updatedAt         DateTime?        @updatedAt @map("updated_at")
-  accounts          Account[]
-  sessions          Session[]
-  workAttendances   WorkAttendance[]
-  leaves            Leave[]
-  settings          UserSettings?
+  id              String           @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  email           String           @unique
+  emailVerified   Boolean          @default(false)
+  image           String?
+  role            String           @default("user")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  accounts        Account[]
+  sessions        Session[]
+  workAttendances WorkAttendance[]
+  leaves          Leave[]
+  settings        UserSettings?
 
   @@map("users")
 }
 
-model VerificationToken {
-  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+model Verification {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
   identifier String
-  token      String    @unique
-  expires    DateTime
-  createdAt  DateTime? @default(now()) @map("created_at")
-  updatedAt  DateTime? @updatedAt @map("updated_at")
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  @@unique([identifier, token])
+  @@index([identifier])
+  @@map("verifications")
 }
 
 enum AttendanceStatusType {
@@ -219,24 +212,24 @@ enum PaymentStatus {
 }
 
 model Subscription {
-  id             String               @id @default(auto()) @map("_id") @db.ObjectId
-  name           String               @map("name") // ชื่อ subscription เช่น "Netflix Family"
-  service        SubscriptionService  @map("service") // YOUTUBE, SPOTIFY, NETFLIX, OTHER
-  planType       SubscriptionPlanType @default(INDIVIDUAL) @map("plan_type") // INDIVIDUAL, FAMILY
-  billingCycle   BillingCycle         @default(MONTHLY) @map("billing_cycle") // MONTHLY, YEARLY
-  totalPrice     Float                @map("total_price") // ราคาทั้งหมด (THB)
-  currency       String               @default("THB") @map("currency")
-  billingDay     Int                  @map("billing_day") // วันที่ตัดเงิน (1-31)
-  ownerId        String               @map("owner_id") @db.ObjectId // user ที่เป็นเจ้าของ/จัดการ
-  isActive       Boolean              @default(true) @map("is_active")
-  startDate      DateTime             @map("start_date")
-  endDate        DateTime?            @map("end_date")
-  logoUrl        String?              @map("logo_url") // รูปโลโก้ service
-  note           String?              @map("note")
-  createdAt      DateTime             @default(now()) @map("created_at")
-  updatedAt      DateTime             @updatedAt @map("updated_at")
-  members        SubscriptionMember[]
-  payments       SubscriptionPayment[]
+  id           String                @id @default(auto()) @map("_id") @db.ObjectId
+  name         String                @map("name") // ชื่อ subscription เช่น "Netflix Family"
+  service      SubscriptionService   @map("service") // YOUTUBE, SPOTIFY, NETFLIX, OTHER
+  planType     SubscriptionPlanType  @default(INDIVIDUAL) @map("plan_type") // INDIVIDUAL, FAMILY
+  billingCycle BillingCycle          @default(MONTHLY) @map("billing_cycle") // MONTHLY, YEARLY
+  totalPrice   Float                 @map("total_price") // ราคาทั้งหมด (THB)
+  currency     String                @default("THB") @map("currency")
+  billingDay   Int                   @map("billing_day") // วันที่ตัดเงิน (1-31)
+  ownerId      String                @map("owner_id") @db.ObjectId // user ที่เป็นเจ้าของ/จัดการ
+  isActive     Boolean               @default(true) @map("is_active")
+  startDate    DateTime              @map("start_date")
+  endDate      DateTime?             @map("end_date")
+  logoUrl      String?               @map("logo_url") // รูปโลโก้ service
+  note         String?               @map("note")
+  createdAt    DateTime              @default(now()) @map("created_at")
+  updatedAt    DateTime              @updatedAt @map("updated_at")
+  members      SubscriptionMember[]
+  payments     SubscriptionPayment[]
 
   @@index([ownerId, isActive])
   @@index([service, isActive])
@@ -244,20 +237,20 @@ model Subscription {
 }
 
 model SubscriptionMember {
-  id             String               @id @default(auto()) @map("_id") @db.ObjectId
-  subscriptionId String               @map("subscription_id") @db.ObjectId
-  userId         String?              @map("user_id") @db.ObjectId // optional - link to system user
-  name           String               @map("name") // ชื่อสมาชิก
-  email          String?              @map("email") // อีเมล (optional)
-  shareAmount    Float                @map("share_amount") // จำนวนเงินที่สมาชิกต้องจ่าย (THB)
-  isActive       Boolean              @default(true) @map("is_active")
-  joinedAt       DateTime             @default(now()) @map("joined_at")
-  leftAt         DateTime?            @map("left_at")
-  note           String?              @map("note")
-  tags           String?              @map("tags") // คั่นด้วย comma เช่น "ครอบครัว,Netflix"
-  createdAt      DateTime             @default(now()) @map("created_at")
-  updatedAt      DateTime             @updatedAt @map("updated_at")
-  subscription   Subscription         @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  id             String                @id @default(auto()) @map("_id") @db.ObjectId
+  subscriptionId String                @map("subscription_id") @db.ObjectId
+  userId         String?               @map("user_id") @db.ObjectId // optional - link to system user
+  name           String                @map("name") // ชื่อสมาชิก
+  email          String?               @map("email") // อีเมล (optional)
+  shareAmount    Float                 @map("share_amount") // จำนวนเงินที่สมาชิกต้องจ่าย (THB)
+  isActive       Boolean               @default(true) @map("is_active")
+  joinedAt       DateTime              @default(now()) @map("joined_at")
+  leftAt         DateTime?             @map("left_at")
+  note           String?               @map("note")
+  tags           String?               @map("tags") // คั่นด้วย comma เช่น "ครอบครัว,Netflix"
+  createdAt      DateTime              @default(now()) @map("created_at")
+  updatedAt      DateTime              @updatedAt @map("updated_at")
+  subscription   Subscription          @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
   payments       SubscriptionPayment[]
 
   @@index([subscriptionId, isActive])
@@ -265,20 +258,20 @@ model SubscriptionMember {
 }
 
 model SubscriptionPayment {
-  id             String               @id @default(auto()) @map("_id") @db.ObjectId
-  subscriptionId String               @map("subscription_id") @db.ObjectId
-  memberId       String               @map("member_id") @db.ObjectId
-  billingMonth   String               @map("billing_month") // YYYY-MM format
-  amount         Float                @map("amount") // จำนวนเงินที่จ่าย (THB)
-  status         PaymentStatus        @default(PENDING) @map("status")
-  paidAt         DateTime?            @map("paid_at") // วันที่จ่ายจริง
-  dueDate        DateTime             @map("due_date") // วันที่ครบกำหนดจ่าย
-  paidBy         String?              @map("paid_by") @db.ObjectId // userId ที่บันทึกการจ่าย
-  note           String?              @map("note")
-  createdAt      DateTime             @default(now()) @map("created_at")
-  updatedAt      DateTime             @updatedAt @map("updated_at")
-  subscription   Subscription         @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
-  member         SubscriptionMember   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  id             String             @id @default(auto()) @map("_id") @db.ObjectId
+  subscriptionId String             @map("subscription_id") @db.ObjectId
+  memberId       String             @map("member_id") @db.ObjectId
+  billingMonth   String             @map("billing_month") // YYYY-MM format
+  amount         Float              @map("amount") // จำนวนเงินที่จ่าย (THB)
+  status         PaymentStatus      @default(PENDING) @map("status")
+  paidAt         DateTime?          @map("paid_at") // วันที่จ่ายจริง
+  dueDate        DateTime           @map("due_date") // วันที่ครบกำหนดจ่าย
+  paidBy         String?            @map("paid_by") @db.ObjectId // userId ที่บันทึกการจ่าย
+  note           String?            @map("note")
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+  subscription   Subscription       @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  member         SubscriptionMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@unique([memberId, billingMonth])
   @@index([subscriptionId, billingMonth])
@@ -379,26 +372,26 @@ enum ApprovalStatus {
 }
 
 model LineApprovalRequest {
-  id                         String  @id @default(auto()) @map("_id") @db.ObjectId
-  lineUserId                 String  @unique @map("line_user_id") // LINE user ID
-  displayName                String? @map("display_name") // ชื่อที่แสดงใน LINE
-  pictureUrl                 String? @map("picture_url") // รูปโปรไฟล์ LINE
-  statusMessage              String? @map("status_message") // สถานะ LINE
-  reason                     String? @map("reason") // เหตุผลที่ขอใช้งาน
-  rejectReason               String? @map("reject_reason") // เหตุผลที่ปฏิเสธ (ถ้ามี)
-  status                     ApprovalStatus @default(PENDING) @map("status")
-  approvedBy                 String? @map("approved_by") // admin user id ที่อนุมัติ
-  approvedAt                 DateTime? @map("approved_at") // วันที่อนุมัติ
-  expiresAt                  DateTime? @map("expires_at") // null = ไม่หมดอายุ
-  notifiedAt                 DateTime? @map("notified_at") // วันที่แจ้งเตือน LINE ผู้ใช้
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  lineUserId    String         @unique @map("line_user_id") // LINE user ID
+  displayName   String?        @map("display_name") // ชื่อที่แสดงใน LINE
+  pictureUrl    String?        @map("picture_url") // รูปโปรไฟล์ LINE
+  statusMessage String?        @map("status_message") // สถานะ LINE
+  reason        String?        @map("reason") // เหตุผลที่ขอใช้งาน
+  rejectReason  String?        @map("reject_reason") // เหตุผลที่ปฏิเสธ (ถ้ามี)
+  status        ApprovalStatus @default(PENDING) @map("status")
+  approvedBy    String?        @map("approved_by") // admin user id ที่อนุมัติ
+  approvedAt    DateTime?      @map("approved_at") // วันที่อนุมัติ
+  expiresAt     DateTime?      @map("expires_at") // null = ไม่หมดอายุ
+  notifiedAt    DateTime?      @map("notified_at") // วันที่แจ้งเตือน LINE ผู้ใช้
 
   // Feature permissions
-  canRequestAttendanceReport Boolean  @default(false) @map("can_request_attendance_report") // ขอรายงานเข้างานได้
-  canRequestLeave            Boolean  @default(false) @map("can_request_leave") // ขอลาได้
-  canReceiveReminders        Boolean  @default(false) @map("can_receive_reminders") // รับแจ้งเตือนเช็คอิน/เอาท์ได้
+  canRequestAttendanceReport Boolean @default(false) @map("can_request_attendance_report") // ขอรายงานเข้างานได้
+  canRequestLeave            Boolean @default(false) @map("can_request_leave") // ขอลาได้
+  canReceiveReminders        Boolean @default(false) @map("can_receive_reminders") // รับแจ้งเตือนเช็คอิน/เอาท์ได้
 
-  createdAt                  DateTime @default(now()) @map("created_at")
-  updatedAt                  DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([status])
   @@index([lineUserId, status])

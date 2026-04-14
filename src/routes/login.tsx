@@ -14,6 +14,27 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
     "เซสชันเข้าสู่ระบบไม่ตรงกัน กรุณากด LINE Login ใหม่จากหน้านี้",
 };
 
+const getSafeCallbackUrl = (value: unknown) => {
+  if (typeof value !== "string") {
+    return "/";
+  }
+
+  if (!value.startsWith("/") || value.startsWith("//")) {
+    return "/";
+  }
+
+  try {
+    const url = new URL(value, "http://localhost");
+    url.searchParams.delete("authError");
+    url.searchParams.delete("error");
+    const nextUrl = `${url.pathname}${url.search}${url.hash}`;
+
+    return nextUrl === "/login" ? "/" : nextUrl;
+  } catch {
+    return "/";
+  }
+};
+
 function LoginPage() {
   const { status } = useSession();
   const search = useSearch({ strict: false }) as {
@@ -21,11 +42,7 @@ function LoginPage() {
     callbackUrl?: string;
     error?: string;
   };
-  // Only allow relative paths to prevent open redirect.
-  // Reject absolute URLs (https://evil.com) and protocol-relative URLs (//evil.com).
-  const rawCallback = typeof search.callbackUrl === "string" ? search.callbackUrl : "/";
-  const callbackUrl =
-    rawCallback.startsWith("/") && !rawCallback.startsWith("//") ? rawCallback : "/";
+  const callbackUrl = getSafeCallbackUrl(search.callbackUrl);
   const authError = search.authError ?? search.error;
   const authErrorMessage =
     authError && AUTH_ERROR_MESSAGES[authError]

@@ -9,7 +9,7 @@ export const handleLeaveCommandWrapper = async (
 ) => {
   const userId = req.body.events[0].source.userId;
   const userAccount = await db.account.findFirst({
-    where: { providerAccountId: userId },
+    where: { accountId: userId },
   });
   if (!userAccount?.userId) {
     const payload = bubbleTemplate.signIn();

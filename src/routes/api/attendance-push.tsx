@@ -94,7 +94,7 @@ export async function POST(req: Request) {
 
     // Find user account to get internal userId
     const userAccount = await db.account.findFirst({
-      where: { providerAccountId: userId },
+      where: { accountId: userId },
     });
 
     let payload: LineMessage[];

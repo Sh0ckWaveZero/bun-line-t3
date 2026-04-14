@@ -30,6 +30,7 @@
     "debug:line-oauth": "echo 'Open http://localhost:4325/line-oauth-debug in your browser'",
     "seed:holidays": "tsx scripts/seed-holidays-2025.ts",
     "migrate:user-settings": "bun scripts/migrate-user-settings.ts",
+    "migrate:better-auth": "bun scripts/migrate-better-auth-canonical.ts",
     "generate:secrets": "bun scripts/generate-secrets.ts",
     "secrets:generate": "bun scripts/generate-github-secrets.ts generate",
     "secrets:info": "bun scripts/generate-github-secrets.ts info",

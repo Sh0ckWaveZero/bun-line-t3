@@ -51,7 +51,7 @@ export async function GET(req: Request) {
           const userAccount = await db.account.findFirst({
             where: {
               userId,
-              provider: "line",
+              providerId: "line",
             },
           });
 
@@ -89,11 +89,11 @@ export async function GET(req: Request) {
           ];
 
           // Send the push message
-          await sendPushMessage(userAccount.providerAccountId, payload);
+          await sendPushMessage(userAccount.accountId, payload);
 
           return {
             userId,
-            lineUserId: userAccount.providerAccountId.substring(0, 8) + "...",
+            lineUserId: userAccount.accountId.substring(0, 8) + "...",
             status: "success",
           };
         } catch (error: any) {

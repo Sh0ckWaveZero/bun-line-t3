@@ -3,7 +3,6 @@
 
 import { db } from "@/lib/database";
 import { attendanceService } from "@/features/attendance/services/attendance.server";
-import { utils } from "@/lib/validation";
 
 export interface UserAuthResult {
   userAccount: any | null;
@@ -28,7 +27,7 @@ export const checkUserAuth = async (
 ): Promise<UserAuthResult> => {
   try {
     const userAccount = await db.account.findFirst({
-      where: { providerAccountId: lineUserId },
+      where: { accountId: lineUserId },
     });
 
     if (!userAccount) {
@@ -40,18 +39,11 @@ export const checkUserAuth = async (
       };
     }
 
-    const isExpired =
-      !userAccount.expires_at ||
-      !utils.compareDate(
-        userAccount.expires_at.toString(),
-        new Date().toISOString(),
-      );
-
     return {
       userAccount,
       userId: userAccount.userId,
-      isExpired,
-      needsSignIn: isExpired,
+      isExpired: false,
+      needsSignIn: false,
     };
   } catch (error) {
     console.error("Error checking user auth:", error);

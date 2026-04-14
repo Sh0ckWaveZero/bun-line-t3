@@ -23,11 +23,11 @@ export async function GET() {
   const account = await db.account.findFirst({
     where: {
       userId: session.user.id,
-      provider: "line",
+      providerId: "line",
     },
     select: {
-      providerAccountId: true,
-      provider: true,
+      accountId: true,
+      providerId: true,
     },
   });
 
@@ -38,7 +38,7 @@ export async function GET() {
   }
 
   // 🔐 SECURITY: Check admin permission
-  const canManage = await canManageApprovalsAsync(account.providerAccountId);
+  const canManage = await canManageApprovalsAsync(account.accountId);
 
   if (!canManage) {
     return Response.json({
@@ -56,8 +56,8 @@ export async function GET() {
   // 2. Account info
   const accountInfo = {
     hasLineAccount: !!account,
-    provider: account?.provider ?? null,
-    lineUserId: account?.providerAccountId ?? null,
+    provider: account?.providerId ?? null,
+    lineUserId: account?.accountId ?? null,
   };
 
   // 3. Env config
@@ -66,8 +66,8 @@ export async function GET() {
     parsedIds: env.ADMIN_LINE_USER_IDS
       ? env.ADMIN_LINE_USER_IDS.split(",").map((id) => id.trim())
       : [],
-    yourLineUserId: account.providerAccountId,
-    isInWhitelist: canManageApprovals(account.providerAccountId),
+    yourLineUserId: account.accountId,
+    isInWhitelist: canManageApprovals(account.accountId),
     canManageWithDatabase: canManage,
   };
 
@@ -77,11 +77,11 @@ export async function GET() {
     : [];
 
   const matchedIndex = parsedIds.findIndex(
-    (id) => id === account.providerAccountId,
+    (id) => id === account.accountId,
   );
 
   const details = {
-    yourLineUserId: account.providerAccountId,
+    yourLineUserId: account.accountId,
     whitelistLength: parsedIds.length,
     whitelist: parsedIds,
     matchedIndex,

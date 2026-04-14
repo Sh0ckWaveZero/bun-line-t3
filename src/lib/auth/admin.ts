@@ -7,7 +7,7 @@ import { db } from "@/lib/database/db";
 
 /**
  * ตรวจสอบว่า LINE userId อยู่ใน whitelist admin หรือไม่
- * @param lineUserId LINE userId (providerAccountId)
+ * @param lineUserId LINE userId (accountId)
  * @returns true ถ้าเป็น admin
  */
 export const isAdminLineUser = (lineUserId: string): boolean => {
@@ -60,8 +60,8 @@ export const canManageApprovalsAsync = async (
 
   const account = await db.account.findFirst({
     where: {
-      provider: "line",
-      providerAccountId: lineUserId,
+      providerId: "line",
+      accountId: lineUserId,
       user: {
         role: "admin",
       },

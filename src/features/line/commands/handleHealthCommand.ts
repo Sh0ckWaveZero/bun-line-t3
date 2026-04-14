@@ -14,7 +14,7 @@ export async function handleHealthCommand(req: any): Promise<void> {
 
   // Get user account
   const userAccount = await db.account.findFirst({
-    where: { providerAccountId: userId },
+    where: { accountId: userId },
   });
 
   if (!userAccount?.userId) {
