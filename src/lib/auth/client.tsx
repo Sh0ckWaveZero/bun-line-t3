@@ -65,6 +65,13 @@ export async function signIn(
     options?.redirectTo ?? options?.callbackUrl,
   );
 
+  if (provider === "line" && options?.redirect !== false) {
+    const signInUrl = new URL("/api/auth/sign-in/line", window.location.origin);
+    signInUrl.searchParams.set("callbackURL", callbackUrl);
+    window.location.assign(signInUrl.toString());
+    return;
+  }
+
   return authClient.signIn.social({
     callbackURL: callbackUrl,
     disableRedirect: options?.redirect === false,
