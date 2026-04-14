@@ -133,25 +133,22 @@ export async function GET(request: Request) {
       );
     }
 
-      // Generated OAuth URL (using safe URLs only)
-      oauthUrl: callbackValidation.isValid
-        ? `https://access.line.me/oauth2/v2.1/authorize?client_id=${process.env.LINE_CLIENT_ID}&scope=openid%20profile&response_type=code&redirect_uri=${encodeURIComponent(callbackUrl!)}&state=test`
-        : null,
+    // Add remaining fields
+    config.oauthUrl = callbackValidation.isValid
+      ? `https://access.line.me/oauth2/v2.1/authorize?client_id=${process.env.LINE_CLIENT_ID}&scope=openid%20profile&response_type=code&redirect_uri=${encodeURIComponent(callbackUrl!)}&state=test`
+      : null;
 
-      // Current request info
-      requestUrl: request.url,
-      requestHost: request.headers.get("host"),
+    config.requestUrl = request.url;
+    config.requestHost = request.headers.get("host");
 
-      // All relevant env vars (sanitized)
-      envVars: {
-        APP_URL: process.env.APP_URL,
-        FRONTEND_URL: process.env.FRONTEND_URL,
-        LINE_CLIENT_ID: process.env.LINE_CLIENT_ID
-          ? "***configured***"
-          : "Not configured",
-        HOSTNAME: process.env.HOSTNAME,
-        PORT: process.env.PORT,
-      },
+    config.envVars = {
+      APP_URL: process.env.APP_URL,
+      FRONTEND_URL: process.env.FRONTEND_URL,
+      LINE_CLIENT_ID: process.env.LINE_CLIENT_ID
+        ? "***configured***"
+        : "Not configured",
+      HOSTNAME: process.env.HOSTNAME,
+      PORT: process.env.PORT,
     };
 
     return Response.json(config, {
