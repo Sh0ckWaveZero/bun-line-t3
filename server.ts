@@ -231,10 +231,28 @@ const server = Bun.serve({
     }
     // ────────────────────────────────────────────────────────────────────────
 
-    // 🔒 Handle X-Forwarded-* headers from reverse proxy
+    // 🔒 Handle X-Forwarded-* headers from reverse proxy / Cloudflare
     // This fixes OAuth callbacks by preserving the original HTTPS protocol
-    const forwardedProto = request.headers.get("x-forwarded-proto");
-    const forwardedHost = request.headers.get("x-forwarded-host");
+
+    // Try X-Forwarded-Proto (standard reverse proxies)
+    let forwardedProto = request.headers.get("x-forwarded-proto");
+
+    // Cloudflare Tunnel: Check CF-Visitor header
+    if (!forwardedProto) {
+      const cfVisitor = request.headers.get("cf-visitor");
+      if (cfVisitor) {
+        try {
+          const visitorData = JSON.parse(cfVisitor);
+          if (visitorData.scheme) {
+            forwardedProto = visitorData.scheme;
+          }
+        } catch {
+          // Invalid JSON, ignore
+        }
+      }
+    }
+
+    const forwardedHost = request.headers.get("x-forwarded-host") || request.headers.get("x-forwarded-host");
     const forwardedFor = request.headers.get("x-forwarded-for");
 
     if (forwardedProto || forwardedHost) {

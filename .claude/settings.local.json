@@ -69,7 +69,8 @@
       "Bash(gh secret:*)",
       "mcp__MongoDB__list-collections",
       "mcp__MongoDB__count",
-      "Bash(gh run:*)"
+      "Bash(gh run:*)",
+      "Read(//tmp/**)"
     ],
     "deny": [
       "Read(**/.env*)",
