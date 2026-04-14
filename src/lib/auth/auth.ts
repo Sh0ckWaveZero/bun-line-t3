@@ -122,7 +122,11 @@ export const auth = betterAuth({
     },
   },
   account: {
-    skipStateCookieCheck: env.APP_ENV === "development",
+    // LINE Login can complete in a different browser context than the one that
+    // started the flow, so the signed state cookie may not be returned on the
+    // callback. Keep Better Auth's database-backed state + PKCE checks, but do
+    // not require the extra cookie binding.
+    skipStateCookieCheck: true,
     fields: {
       accountId: "providerAccountId",
       providerId: "provider",
