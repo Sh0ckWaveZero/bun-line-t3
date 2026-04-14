@@ -122,7 +122,9 @@ export const auth = betterAuth({
     },
   },
   account: {
-    skipStateCookieCheck: env.APP_ENV === "development",
+    // ใช้ "cookie" strategy เพื่อเก็บ OAuth state ใน encrypted cookie แทน DB + signed cookie
+    // แก้ปัญหา tanstackStartCookies ไม่สามารถ forward signed cookie ได้ถูกต้องใน production
+    storeStateStrategy: "cookie",
     fields: {
       accountId: "providerAccountId",
       providerId: "provider",
