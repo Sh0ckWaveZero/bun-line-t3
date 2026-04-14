@@ -231,6 +231,40 @@ const server = Bun.serve({
     }
     // ────────────────────────────────────────────────────────────────────────
 
+    // 🔒 Handle X-Forwarded-* headers from reverse proxy
+    // This fixes OAuth callbacks by preserving the original HTTPS protocol
+    const forwardedProto = request.headers.get("x-forwarded-proto");
+    const forwardedHost = request.headers.get("x-forwarded-host");
+    const forwardedFor = request.headers.get("x-forwarded-for");
+
+    if (forwardedProto || forwardedHost) {
+      // Reconstruct URL with forwarded headers
+      const protocol = forwardedProto ?? url.protocol;
+      const host = forwardedHost ?? url.host;
+      const forwardedUrl = new URL(request.url);
+
+      if (forwardedProto) {
+        forwardedUrl.protocol = protocol;
+      }
+      if (forwardedHost) {
+        forwardedUrl.host = host;
+      }
+
+      // Create new request with corrected URL
+      request = new Request(forwardedUrl.toString(), {
+        method: request.method,
+        headers: request.headers,
+        body: request.body,
+        // @ts-ignore - duplex property is required for Node.js fetch
+        duplex: "half",
+      });
+
+      // Log for debugging
+      if (process.env.APP_ENV === "production") {
+        console.log(`[Proxy] Forwarded request: ${protocol}//${host}${forwardedUrl.pathname}`);
+      }
+    }
+
     const staticResponse = await serveStaticFile(request);
 
     if (staticResponse) {

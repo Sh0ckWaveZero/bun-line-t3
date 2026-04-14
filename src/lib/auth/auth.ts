@@ -194,9 +194,13 @@ export const auth = betterAuth({
     provider: "mongodb",
   }),
   advanced: {
+    useSecureCookies: env.APP_ENV === "production",
     database: {
       generateId: false,
     },
+    // 🔒 Trust X-Forwarded-* headers from reverse proxy
+    // Required for HTTPS detection behind load balancers/reverse proxies
+    cookiePrefix: env.APP_ENV === "production" ? "__Secure-" : "",
   },
   plugins: [tanstackStartCookies()],
   secret: env.AUTH_SECRET,
