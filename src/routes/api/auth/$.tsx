@@ -15,29 +15,46 @@ const createLoginErrorRedirect = (error: string) => {
 };
 
 const handleAuthRequest = async (request: Request) => {
-  const response = await auth.handler(request);
-  const requestUrl = new URL(request.url);
+  try {
+    console.log("[Auth Handler] Processing request:", {
+      method: request.method,
+      url: request.url,
+    });
 
-  if (!shouldHandleAuthErrorRedirect(requestUrl.pathname)) {
-    return response;
+    const response = await auth.handler(request);
+    const requestUrl = new URL(request.url);
+
+    if (!shouldHandleAuthErrorRedirect(requestUrl.pathname)) {
+      return response;
+    }
+
+    const location = response.headers.get("location");
+    if (!location) {
+      return response;
+    }
+
+    const redirectUrl = new URL(location, requestUrl.origin);
+    if (redirectUrl.pathname !== AUTH_ERROR_PATH) {
+      return response;
+    }
+
+    const error = redirectUrl.searchParams.get("error");
+    if (!error) {
+      return response;
+    }
+
+    return createLoginErrorRedirect(error);
+  } catch (error) {
+    console.error("[Auth Handler] Error processing auth request:", error);
+
+    // Return a more specific error for debugging
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const loginUrl = new URL("/login", new URL(env.APP_URL).origin);
+    loginUrl.searchParams.set("authError", "line_oauth");
+    loginUrl.searchParams.set("error", errorMessage);
+
+    return Response.redirect(loginUrl, 302);
   }
-
-  const location = response.headers.get("location");
-  if (!location) {
-    return response;
-  }
-
-  const redirectUrl = new URL(location, requestUrl.origin);
-  if (redirectUrl.pathname !== AUTH_ERROR_PATH) {
-    return response;
-  }
-
-  const error = redirectUrl.searchParams.get("error");
-  if (!error) {
-    return response;
-  }
-
-  return createLoginErrorRedirect(error);
 };
 
 export const Route = createFileRoute("/api/auth/$")({

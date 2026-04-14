@@ -32,21 +32,39 @@ const getAuthBaseUrl = () => {
   return env.APP_URL;
 };
 
-const getTrustedOrigins = () =>
-  Array.from(
-    new Set(
-      [
-        env.APP_URL,
-        env.FRONTEND_URL,
-        env.APP_DOMAIN,
-        ...(env.APP_ENV === "development"
-          ? [getLocalDevOrigin(), getLoopbackDevOrigin()]
-          : []),
-      ].map((url) => {
-        return new URL(url).origin;
-      }),
-    ),
-  );
+const getTrustedOrigins = () => {
+  const origins = [
+    env.APP_URL,
+    env.FRONTEND_URL,
+    env.APP_DOMAIN,
+    ...(env.APP_ENV === "development"
+      ? [getLocalDevOrigin(), getLoopbackDevOrigin()]
+      : []),
+  ];
+
+  // Support comma-separated URLs in environment variables
+  const expandedOrigins = origins.flatMap((url) => {
+    if (!url) return [];
+    return url
+      .split(",")
+      .map((u) => {
+        const trimmed = u.trim();
+        try {
+          const origin = new URL(trimmed).origin;
+          return origin;
+        } catch {
+          console.warn(`[Auth] Invalid URL in trusted origins: "${trimmed}"`);
+          return null;
+        }
+      })
+      .filter((origin): origin is string => origin !== null);
+  });
+
+  const uniqueOrigins = Array.from(new Set(expandedOrigins));
+  console.log(`[Auth] Trusted origins:`, uniqueOrigins);
+
+  return uniqueOrigins;
+};
 
 const createSyntheticLineEmail = (lineUserId: string) => {
   const normalizedId =
@@ -59,7 +77,9 @@ const createSyntheticLineEmail = (lineUserId: string) => {
 };
 
 const toIsoString = (value: Date | string) => {
-  return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
+  return value instanceof Date
+    ? value.toISOString()
+    : new Date(value).toISOString();
 };
 
 const syncLineApprovalRequest = async (account: {
@@ -74,21 +94,27 @@ const syncLineApprovalRequest = async (account: {
 
   const lineUserId = account.accountId;
   if (!lineUserId) {
+    console.warn("[LINE Profile Sync] Missing LINE user ID");
     return;
   }
 
-  const user = await db.user.findUnique({
-    where: { id: account.userId },
-    select: { name: true, image: true },
-  });
+  try {
+    const user = await db.user.findUnique({
+      where: { id: account.userId },
+      select: { name: true, image: true },
+    });
 
-  await syncLineProfileToDatabase({
-    accessToken: account.accessToken,
-    fallbackDisplayName: user?.name,
-    fallbackPictureUrl: user?.image,
-    lineUserId,
-    userId: account.userId,
-  });
+    await syncLineProfileToDatabase({
+      accessToken: account.accessToken,
+      fallbackDisplayName: user?.name,
+      fallbackPictureUrl: user?.image,
+      lineUserId,
+      userId: account.userId,
+    });
+  } catch (error) {
+    console.error("[LINE Profile Sync] Database sync failed:", error);
+    throw error;
+  }
 };
 
 export const auth = betterAuth({
@@ -122,10 +148,10 @@ export const auth = betterAuth({
     },
   },
   account: {
-    // LINE Login can complete in a different browser context than the one that
-    // started the flow, so the signed state cookie may not be returned on the
-    // callback. Keep Better Auth's database-backed state + PKCE checks, but do
-    // not require the extra cookie binding.
+    // LINE Login can complete in a different browser context (e.g., LINE app)
+    // than the one that started the flow, so the signed state cookie may not
+    // be returned on the callback. Keep Better Auth's database-backed state
+    // + PKCE checks for security, but do not require the extra cookie binding.
     skipStateCookieCheck: true,
     fields: {
       accountId: "providerAccountId",
@@ -136,6 +162,7 @@ export const auth = betterAuth({
     },
   },
   verification: {
+    modelName: "verificationToken",
     fields: {
       expiresAt: "expires",
       value: "token",
@@ -146,6 +173,7 @@ export const auth = betterAuth({
       clientId: env.LINE_CLIENT_ID,
       clientSecret: env.LINE_CLIENT_SECRET,
       overrideUserInfoOnSignIn: true,
+      enableStateParam: true,
       mapProfileToUser(profile) {
         const lineProfile = profile as {
           displayName?: string;
@@ -157,6 +185,10 @@ export const auth = betterAuth({
           userId?: string;
         };
         const lineUserId = lineProfile.sub ?? lineProfile.userId ?? "";
+
+        if (!lineUserId) {
+          throw new Error("Invalid LINE profile: missing user ID");
+        }
 
         return {
           email:
@@ -183,8 +215,9 @@ export const auth = betterAuth({
         async after(account) {
           try {
             await syncLineApprovalRequest(account);
-          } catch {
+          } catch (error) {
             // ไม่ throw error เพื่อไม่ให้กระทบการ login
+            console.error("[LINE Profile Sync Error]", error);
           }
         },
       },
@@ -200,8 +233,9 @@ export const auth = betterAuth({
         async after(account) {
           try {
             await syncLineApprovalRequest(account);
-          } catch {
+          } catch (error) {
             // ไม่ throw error เพื่อไม่ให้กระทบการ login
+            console.error("[LINE Profile Sync Error]", error);
           }
         },
       },
