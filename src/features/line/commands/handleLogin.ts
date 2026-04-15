@@ -1,8 +1,8 @@
-import { db } from "../../../lib/database/db";
 import { bubbleTemplate } from "@/lib/validation/line";
 import { sendMessage } from "../../../lib/utils/line-utils";
 import { flexMessage } from "@/lib/utils/line-message-utils";
 import { handleText } from "./handleText";
+import { getLineUserAccount } from "../utils/getLineUserAccount";
 
 export const handleLogin = async (req: any, message: string) => {
   const prefix = message[0] || "";
@@ -11,10 +11,8 @@ export const handleLogin = async (req: any, message: string) => {
     return;
   }
 
-  const userId = req.body?.events?.[0]?.source?.userId;
-  const userPermission: any = await db.account.findFirst({
-    where: { accountId: userId },
-  });
+  const event = req.body?.events?.[0];
+  const userPermission = await getLineUserAccount(event);
 
   if (!userPermission) {
     const payload = bubbleTemplate.signIn();
