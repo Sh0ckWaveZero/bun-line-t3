@@ -179,6 +179,10 @@ const syncLineApprovalRequest = async (account: {
       lineUserId,
       userId: account.userId,
     });
+
+    console.log(
+      `[LINE Profile Sync] Successfully synced profile for LINE user: ${lineUserId}`,
+    );
   } catch (error) {
     console.error("[LINE Profile Sync] Database sync failed:", error);
     throw error;
@@ -219,6 +223,14 @@ export const auth = betterAuth({
     // be returned on the callback. Keep Better Auth's database-backed state
     // + PKCE checks for security, but do not require the extra cookie binding.
     skipStateCookieCheck: true,
+    // Enable account linking to handle existing accounts gracefully
+    accountLinking: {
+      enabled: true,
+      // Allow users to sign in with the same provider (important for LINE)
+      // Better Auth will use existing account instead of creating duplicate
+      allowDifferentProviders: true,
+      trustedProviders: ["line"],
+    },
   },
   socialProviders: {
     line: {
@@ -256,6 +268,55 @@ export const auth = betterAuth({
   databaseHooks: {
     account: {
       create: {
+        async before(account) {
+          // Check if account already exists to prevent unique constraint violations
+          const existing = await db.account.findUnique({
+            where: {
+              providerId_accountId: {
+                providerId: account.providerId,
+                accountId: account.accountId,
+              },
+            },
+            select: {
+              id: true,
+              userId: true,
+            },
+          });
+
+          if (existing) {
+            console.log(
+              `[Auth] Account already exists for ${account.providerId}:${account.accountId} (userId: ${existing.userId})`,
+            );
+
+            // Update existing account with new tokens/data
+            await db.account.update({
+              where: {
+                providerId_accountId: {
+                  providerId: account.providerId,
+                  accountId: account.accountId,
+                },
+              },
+              data: {
+                accessToken: account.accessToken,
+                refreshToken: account.refreshToken,
+                idToken: account.idToken,
+                accessTokenExpiresAt: account.accessTokenExpiresAt,
+                refreshTokenExpiresAt: account.refreshTokenExpiresAt,
+                scope: account.scope,
+                updatedAt: new Date(),
+              },
+            });
+
+            console.log(
+              `[Auth] Updated existing account tokens for ${account.providerId}:${account.accountId}`,
+            );
+
+            // Return null to prevent creation - we've updated the existing account
+            return null;
+          }
+
+          return account;
+        },
         async after(account) {
           try {
             await syncLineApprovalRequest(account);

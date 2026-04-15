@@ -31,7 +31,7 @@ export interface DcaOrderListParams {
   page?: number;
   limit?: number;
   coin?: string;
-  lineUserId?: string;
+  lineUserId?: string | string[];
 }
 
 export interface DcaOrderListResult {

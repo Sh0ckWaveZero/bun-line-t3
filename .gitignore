@@ -57,3 +57,4 @@ prisma/generated/*
 public/temp-charts/*
 
 /dist
+scripts/delete-old-line-accounts.ts
