@@ -4,12 +4,19 @@ import { attendanceService } from "@/features/attendance/services/attendance.ser
 import { db } from "@/lib/database/db";
 import { AttendanceStatusType } from "@prisma/client";
 import { checkCronLineApproval } from "@/lib/auth/approval-guard";
+import { validateSimpleCronAuth } from "@/lib/utils/cron-auth";
 
 /**
  * API handler สำหรับการลงชื่อออกงานอัตโนมัติตอนเที่ยงคืน
  * สำหรับพนักงานที่ลืมลงชื่อออกงาน
  */
-export async function GET() {
+export async function GET(request: Request) {
+  // 🔐 SECURITY: Verify bearer token from cron scheduler
+  const authHeader = request.headers.get("authorization");
+  if (!validateSimpleCronAuth(authHeader)) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   // 🔐 SECURITY: Check LINE Messaging API approval
   const approvalCheck = await checkCronLineApproval();
   if (!approvalCheck.approved) {
@@ -18,9 +25,6 @@ export async function GET() {
 
   try {
     const currentTime = new Date();
-    const bangkokTime = new Date(
-      currentTime.toLocaleString("en-US", { timeZone: "Asia/Bangkok" }),
-    );
 
     // ค้นหาพนักงานที่ยังไม่ลงชื่อออกงานในวันนี้
     const usersWithoutCheckout =
@@ -53,9 +57,9 @@ export async function GET() {
             };
           }
 
-          // คำนวณเวลาลงชื่อออกงานอัตโนมัติ (เที่ยงคืนของวันถัดไป)
-          const autoCheckoutTime = new Date(bangkokTime);
-          autoCheckoutTime.setHours(23, 59, 59, 999);
+          // คำนวณเวลาลงชื่อออกงานอัตโนมัติ: 23:59:59 Bangkok = 16:59:59 UTC
+          const autoCheckoutTime = new Date(currentTime);
+          autoCheckoutTime.setUTCHours(16, 59, 59, 999);
 
           // อัปเดต WorkAttendance record ด้วยการลงชื่อออกงานอัตโนมัติ
           await db.workAttendance.update({
@@ -130,7 +134,7 @@ export async function GET() {
 export const Route = createFileRoute("/api/cron/auto-checkout")({
   server: {
     handlers: {
-      GET: () => GET(),
+      GET: ({ request }) => GET(request),
     },
   },
 });

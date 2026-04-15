@@ -1,5 +1,5 @@
 // Helper functions for attendance module
-import { getCurrentUTCTime } from "../../../lib/utils/datetime";
+import { getTodayDateString } from "../../../lib/utils/datetime";
 import { db } from "../../../lib/database/db";
 import { AttendanceStatusType } from "@prisma/client";
 
@@ -17,7 +17,7 @@ export const getUsersWithPendingCheckout = async (): Promise<string[]> => {
       return [process.env.DEV_TEST_USER_ID];
     }
 
-    const todayDate = getCurrentUTCTime().toISOString().split("T")[0];
+    const todayDate = getTodayDateString();
 
     // Get all attendance records for today with status checked_in (either on time or late)
     const pendingCheckouts = await db.workAttendance.findMany({
@@ -58,7 +58,7 @@ export const getUsersWithPendingCheckoutAndSettingsEnabled = async (): Promise<
       return [process.env.DEV_TEST_USER_ID];
     }
 
-    const todayDate = getCurrentUTCTime().toISOString().split("T")[0];
+    const todayDate = getTodayDateString();
 
     // Get all attendance records for today with status checked_in (either on time or late)
     // AND include user settings to check if checkout reminders are enabled
@@ -152,11 +152,13 @@ export const calculateUserCompletionTime = (checkInTime: Date): Date => {
 
 /**
  * Check if user should receive 10-minute reminder now
+ * Tolerance is 3 minutes to ensure no reminders are missed with a 5-minute cron interval
+ * (worst case: reminder falls at midpoint between cron ticks = 2.5 min away)
  */
 export const shouldReceive10MinReminder = (
   checkInTime: Date,
   currentTime: Date,
-  toleranceMinutes: number = 2,
+  toleranceMinutes: number = 3,
 ): boolean => {
   const reminderTime = calculateUserReminderTime(checkInTime);
   // ใช้ currentTime ตรง ๆ (UTC) ไม่ต้องแปลงซ้ำ
@@ -168,11 +170,12 @@ export const shouldReceive10MinReminder = (
 
 /**
  * Check if user should receive final reminder (9-hour completion)
+ * Tolerance is 3 minutes to ensure no reminders are missed with a 5-minute cron interval
  */
 export const shouldReceiveFinalReminder = (
   checkInTime: Date,
   currentTime: Date,
-  toleranceMinutes: number = 2,
+  toleranceMinutes: number = 3,
 ): boolean => {
   const completionTime = calculateUserCompletionTime(checkInTime);
   // ใช้ currentTime ตรง ๆ (UTC) ไม่ต้องแปลงซ้ำ
@@ -205,7 +208,7 @@ export const shouldReceiveReminderNow = (
  */
 export const getUsersNeedingDynamicReminder = async (currentTime: Date) => {
   try {
-    const todayDate = getCurrentUTCTime().toISOString().split("T")[0];
+    const todayDate = getTodayDateString();
 
     // Get all attendance records for today with status checked_in
     const pendingCheckouts = await db.workAttendance.findMany({

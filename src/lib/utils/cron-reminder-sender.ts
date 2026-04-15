@@ -32,9 +32,20 @@ export async function sendCheckInReminders(
     };
   }
 
-  const currentHour = new Date().getHours();
+  const currentBangkokHour = parseInt(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Bangkok",
+      hour: "numeric",
+      hour12: false,
+    }).format(new Date()),
+    10,
+  );
   const timeOfDay =
-    currentHour < 12 ? "morning" : currentHour < 17 ? "afternoon" : "evening";
+    currentBangkokHour < 12
+      ? "morning"
+      : currentBangkokHour < 17
+        ? "afternoon"
+        : "evening";
   const dayOfWeek = new Intl.DateTimeFormat("th-TH", {
     weekday: "long",
   }).format(new Date());
