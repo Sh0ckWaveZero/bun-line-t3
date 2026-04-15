@@ -5,6 +5,7 @@ import { db } from "@/lib/database/db";
 import { roundToOneDecimal } from "@/lib/utils/number";
 import {
   getCurrentUTCTime,
+  getTodayDateString,
   formatUTCTimeAsThaiTime,
 } from "@/lib/utils/datetime";
 import { validateSimpleCronAuth } from "@/lib/utils/cron-auth";
@@ -83,7 +84,7 @@ export async function GET(request: Request) {
           const attendance = await db.workAttendance.findFirst({
             where: {
               userId,
-              workDate: getCurrentUTCTime().toISOString().split("T")[0],
+              workDate: getTodayDateString(),
               status: {
                 in: ["CHECKED_IN_ON_TIME", "CHECKED_IN_LATE"],
               },

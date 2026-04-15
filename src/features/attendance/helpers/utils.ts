@@ -1,5 +1,5 @@
 // Helper functions for attendance module
-import { getCurrentUTCTime } from "../../../lib/utils/datetime";
+import { getTodayDateString } from "../../../lib/utils/datetime";
 import { db } from "../../../lib/database/db";
 import { AttendanceStatusType } from "@prisma/client";
 
@@ -17,7 +17,7 @@ export const getUsersWithPendingCheckout = async (): Promise<string[]> => {
       return [process.env.DEV_TEST_USER_ID];
     }
 
-    const todayDate = getCurrentUTCTime().toISOString().split("T")[0];
+    const todayDate = getTodayDateString();
 
     // Get all attendance records for today with status checked_in (either on time or late)
     const pendingCheckouts = await db.workAttendance.findMany({
@@ -44,7 +44,8 @@ export const getUsersWithPendingCheckout = async (): Promise<string[]> => {
 
 /**
  * Get users who need checkout reminders and have checkout reminders enabled
- * @returns Array of user IDs who need checkout reminders AND have the setting enabled
+ * Filters by both UserSettings.enableCheckOutReminders AND LineApprovalRequest.canReceiveReminders
+ * @returns Array of user IDs who need checkout reminders AND have the permission granted
  */
 export const getUsersWithPendingCheckoutAndSettingsEnabled = async (): Promise<
   string[]
@@ -58,10 +59,10 @@ export const getUsersWithPendingCheckoutAndSettingsEnabled = async (): Promise<
       return [process.env.DEV_TEST_USER_ID];
     }
 
-    const todayDate = getCurrentUTCTime().toISOString().split("T")[0];
+    const todayDate = getTodayDateString();
 
     // Get all attendance records for today with status checked_in (either on time or late)
-    // AND include user settings to check if checkout reminders are enabled
+    // AND include user settings and LINE account to check all permission layers
     const pendingCheckouts = await db.workAttendance.findMany({
       where: {
         workDate: todayDate,
@@ -81,16 +82,38 @@ export const getUsersWithPendingCheckoutAndSettingsEnabled = async (): Promise<
                 enableCheckOutReminders: true,
               },
             },
+            accounts: {
+              where: { providerId: "line" },
+              select: { accountId: true },
+            },
           },
         },
       },
     });
 
-    // Filter users who have checkout reminders enabled (default is true if no settings)
+    // Collect all LINE user IDs to batch-fetch permissions
+    const lineUserIds = pendingCheckouts
+      .map((r) => r.user.accounts[0]?.accountId)
+      .filter((id): id is string => typeof id === "string");
+
+    // Batch-fetch canReceiveReminders from LineApprovalRequest
+    const approvals = await db.lineApprovalRequest.findMany({
+      where: { lineUserId: { in: lineUserIds } },
+      select: { lineUserId: true, canReceiveReminders: true },
+    });
+    const permissionMap = new Map(
+      approvals.map((a) => [a.lineUserId, a.canReceiveReminders ?? false]),
+    );
+
+    // Filter users who:
+    // 1. Have checkout reminders enabled in UserSettings (default true)
+    // 2. Have canReceiveReminders = true in LineApprovalRequest (admin permission)
     const filteredUsers = pendingCheckouts.filter((record) => {
       const checkoutEnabled =
         record.user.settings?.enableCheckOutReminders ?? true;
-      return checkoutEnabled;
+      const lineUserId = record.user.accounts[0]?.accountId;
+      const hasPermission = lineUserId ? (permissionMap.get(lineUserId) ?? false) : false;
+      return checkoutEnabled && hasPermission;
     });
 
     // Extract just the user IDs
@@ -152,11 +175,13 @@ export const calculateUserCompletionTime = (checkInTime: Date): Date => {
 
 /**
  * Check if user should receive 10-minute reminder now
+ * Tolerance is 3 minutes to ensure no reminders are missed with a 5-minute cron interval
+ * (worst case: reminder falls at midpoint between cron ticks = 2.5 min away)
  */
 export const shouldReceive10MinReminder = (
   checkInTime: Date,
   currentTime: Date,
-  toleranceMinutes: number = 2,
+  toleranceMinutes: number = 3,
 ): boolean => {
   const reminderTime = calculateUserReminderTime(checkInTime);
   // ใช้ currentTime ตรง ๆ (UTC) ไม่ต้องแปลงซ้ำ
@@ -168,11 +193,12 @@ export const shouldReceive10MinReminder = (
 
 /**
  * Check if user should receive final reminder (9-hour completion)
+ * Tolerance is 3 minutes to ensure no reminders are missed with a 5-minute cron interval
  */
 export const shouldReceiveFinalReminder = (
   checkInTime: Date,
   currentTime: Date,
-  toleranceMinutes: number = 2,
+  toleranceMinutes: number = 3,
 ): boolean => {
   const completionTime = calculateUserCompletionTime(checkInTime);
   // ใช้ currentTime ตรง ๆ (UTC) ไม่ต้องแปลงซ้ำ
@@ -205,7 +231,7 @@ export const shouldReceiveReminderNow = (
  */
 export const getUsersNeedingDynamicReminder = async (currentTime: Date) => {
   try {
-    const todayDate = getCurrentUTCTime().toISOString().split("T")[0];
+    const todayDate = getTodayDateString();
 
     // Get all attendance records for today with status checked_in
     const pendingCheckouts = await db.workAttendance.findMany({
