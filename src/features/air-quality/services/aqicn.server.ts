@@ -1,31 +1,17 @@
 import { AqiData } from "../aqi_data";
-import type {
-  OpenMeteoAirQualityResponse,
-  OpenMeteoWeatherResponse,
-} from "../types/open-meteo";
+import type { AqicnResponse } from "../types/aqicn";
 
-const fetchAirQuality = (
-  latitude: number,
-  longitude: number,
-): Promise<OpenMeteoAirQualityResponse> =>
-  fetch(
-    `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${latitude}&longitude=${longitude}&current=pm2_5,us_aqi`,
+const fetchAqicn = (latitude: number, longitude: number): Promise<AqicnResponse> => {
+  const token = process.env.AQICN_TOKEN;
+  return fetch(
+    `https://api.waqi.info/feed/geo:${latitude};${longitude}/?token=${token}`,
   ).then((r) => r.json());
-
-const fetchWeather = (
-  latitude: number,
-  longitude: number,
-): Promise<OpenMeteoWeatherResponse> =>
-  fetch(
-    `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m&wind_speed_unit=kmh`,
-  ).then((r) => r.json());
+};
 
 const getAirQualityData = async (latitude: number, longitude: number) => {
-  const [aq, weather] = await Promise.all([
-    fetchAirQuality(latitude, longitude),
-    fetchWeather(latitude, longitude),
-  ]);
-  return { aq, weather };
+  const data = await fetchAqicn(latitude, longitude);
+  if (data.status !== "ok") throw new Error("AQICN API error");
+  return data;
 };
 
 const aqiToLevel = (val: number): string => {
@@ -37,16 +23,12 @@ const aqiToLevel = (val: number): string => {
   return "unknown";
 };
 
-const buildBubble = (
-  aq: OpenMeteoAirQualityResponse,
-  weather: OpenMeteoWeatherResponse,
-  locationName: string,
-) => {
-  const aqi = Math.round(aq.current.us_aqi);
-  const pm25 = aq.current.pm2_5.toFixed(1);
-  const tp = weather.current.temperature_2m;
-  const hu = weather.current.relative_humidity_2m;
-  const ws = Math.round(weather.current.wind_speed_10m);
+const buildBubble = (data: AqicnResponse, locationName: string) => {
+  const aqi = data.data.aqi;
+  const pm25 = (data.data.iaqi.pm25?.v ?? 0).toFixed(1);
+  const tp = data.data.iaqi.t?.v ?? 0;
+  const hu = data.data.iaqi.h?.v ?? 0;
+  const ws = Math.round(data.data.iaqi.w?.v ?? 0);
 
   const level = aqiToLevel(aqi);
   const objAqi = AqiData.find((item) => item.level === level);
@@ -113,7 +95,7 @@ const buildBubble = (
                       {
                         type: "text",
                         text: "US AQI+",
-                        size: "xxs",
+                        size: "xs",
                         color: textColor,
                         align: "center",
                       },
@@ -123,7 +105,7 @@ const buildBubble = (
                   {
                     type: "text",
                     text: objAqi?.description ?? "",
-                    size: "lg",
+                    size: "md",
                     weight: "bold",
                     color: textColor,
                     wrap: true,
@@ -152,7 +134,7 @@ const buildBubble = (
                   },
                   {
                     type: "text",
-                    text: `${pm25} µg/m³`,
+                    text: `${pm25}\u00A0µg/m³`,
                     color: textColor,
                     size: "sm",
                     align: "end",
@@ -172,7 +154,7 @@ const buildBubble = (
             paddingEnd: "xl",
             contents: [
               { icon: "🌡️", value: `${tp}°` },
-              { icon: "💨", value: `${ws} km/h` },
+              { icon: "💨", value: `${ws}\u00A0km/h` },
               { icon: "💧", value: `${hu}%` },
             ].map(({ icon, value }) => ({
               type: "box",
@@ -185,7 +167,7 @@ const buildBubble = (
                 {
                   type: "text",
                   text: icon,
-                  size: "lg",
+                  size: "sm",
                   flex: 0,
                 },
                 {
@@ -205,7 +187,7 @@ const buildBubble = (
   ];
 };
 
-export const openMeteoService = {
+export const aqicnService = {
   getAirQualityData,
   buildBubble,
 };

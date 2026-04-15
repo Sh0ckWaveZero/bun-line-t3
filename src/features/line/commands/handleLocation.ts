@@ -1,4 +1,4 @@
-import { openMeteoService } from "@/features/air-quality/services/open-meteo.server";
+import { aqicnService } from "@/features/air-quality/services/aqicn.server";
 import { sendMessage } from "../../../lib/utils/line-utils";
 import { flexMessage, replyNotFound } from "@/lib/utils/line-message-utils";
 import { getLineUserAccount } from "../utils/getLineUserAccount";
@@ -9,12 +9,9 @@ export const handleLocation = async (req: any, event: any) => {
     if (!account) return;
 
     const { latitude, longitude, address } = event.message;
-    const { aq, weather } = await openMeteoService.getAirQualityData(
-      latitude,
-      longitude,
-    );
+    const data = await aqicnService.getAirQualityData(latitude, longitude);
 
-    const msg = openMeteoService.buildBubble(aq, weather, address ?? "ตำแหน่งของคุณ");
+    const msg = aqicnService.buildBubble(data, address ?? "ตำแหน่งของคุณ");
     sendMessage(req, flexMessage(msg));
   } catch (err: any) {
     console.error("Location handling error:", err);

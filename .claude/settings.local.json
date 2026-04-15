@@ -70,7 +70,9 @@
       "mcp__MongoDB__list-collections",
       "mcp__MongoDB__count",
       "Bash(gh run:*)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(git *)"
     ],
     "deny": [
       "Read(**/.env*)",
