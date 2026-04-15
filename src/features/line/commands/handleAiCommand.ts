@@ -1,4 +1,3 @@
-import { spotifyHandler } from "@/features/spotify/handlers/handleSpotifyCommand";
 import { handleCommandRouting } from "@/features/line/commands/ai/command-routing";
 import { handleChatMode } from "@/features/line/commands/ai/chat-mode";
 import { sendAIHelp } from "@/features/line/commands/ai/help";
@@ -31,17 +30,6 @@ export async function handleAiCommand(req: any, conditions: string[]) {
     // Handle help command
     if (subCommand === "help" || subCommand === "ช่วยเหลือ") {
       await sendAIHelp(req);
-      return;
-    }
-
-    // Handle Spotify command
-    if (
-      subCommand === "spotify" ||
-      subCommand === "เพลง" ||
-      subCommand === "music"
-    ) {
-      const fullText = `/ai ${conditions.join(" ")}`;
-      await spotifyHandler.handle(req, fullText);
       return;
     }
 

@@ -30,9 +30,7 @@ export interface CommandDefinition {
     | "work"
     | "info"
     | "utility"
-    | "health"
-    | "settings"
-    | "music";
+    | "settings";
 }
 
 export const LINE_COMMANDS: CommandDefinition[] = [
@@ -246,93 +244,6 @@ export const LINE_COMMANDS: CommandDefinition[] = [
   },
 
   // ============================================================================
-  // Health & Activity Commands
-  // ============================================================================
-  {
-    command: "health",
-    aliases: ["สุขภาพ", "กิจกรรม", "activity"],
-    descriptionTH: "ดูข้อมูลสุขภาพและกิจกรรม",
-    descriptionEN: "View health and activity data",
-    keywords: ["health", "สุขภาพ", "กิจกรรม", "activity", "ออกกำลังกาย"],
-    examples: ["/health", "/สุขภาพ", "ดูข้อมูลสุขภาพ"],
-    category: "health",
-  },
-
-  // ============================================================================
-  // Music Commands
-  // ============================================================================
-  {
-    command: "spotify",
-    aliases: ["เพลง", "music"],
-    descriptionTH: "แนะนำเพลงจาก Spotify ตาม mood หรือค้นหาเพลง",
-    descriptionEN: "Get music recommendations from Spotify by mood or search",
-    keywords: [
-      "spotify",
-      "เพลง",
-      "music",
-      "แนะนำเพลง",
-      "ฟังเพลง",
-      "เพลงมีความสุข",
-      "เพลงเศร้า",
-      "เพลงกระฉับกระเฉง",
-      "เพลงชิล",
-      "เพลงปาร์ตี้",
-      "เพลงสมาธิ",
-      "happy",
-      "sad",
-      "energetic",
-      "chill",
-      "party",
-      "focus",
-      "recommend",
-      "song",
-      "artist",
-      "ศิลปิน",
-      "นักร้อง",
-      "ฮิต",
-      "เพลงฮิต",
-      "ติดชาร์ต",
-      "top",
-      "hits",
-      "popular",
-      "trending",
-      "ปัจจุบัน",
-      "ยอดนิยม",
-    ],
-    parameters: [
-      {
-        name: "mood",
-        type: "optional",
-        description: "Mood type: happy, sad, energetic, chill, party, focus",
-      },
-      {
-        name: "query",
-        type: "optional",
-        description:
-          "Artist, song name, or search term (e.g., 'top hits', 'trending', 'popular Thai songs')",
-      },
-    ],
-    examples: [
-      "/ai spotify",
-      "/ai spotify happy",
-      "/ai เพลง sad",
-      "/ai แนะนำเพลงมีความสุข",
-      "/ai เพลง คิมแฮนึล",
-      "อยากฟังเพลงชิลๆ",
-      "แนะนำเพลงปาร์ตี้หน่อย",
-      "เพลงสำหรับมีสมาธิ",
-      "เพลงฮิตในปัจจุบัน",
-      "เพลงติดชาร์ต",
-      "อยากฟังเพลงยอดนิยม",
-      "top hits Thailand",
-      "อยากฟังเพลงของ Clash ไทย",
-      "เพลง Bodyslam",
-      "เพลงของ The Toys",
-    ],
-    category: "music",
-  },
-
-  // ============================================================================
   // Utility Commands
   // ============================================================================
   {
@@ -402,8 +313,6 @@ export function formatCommandsForAI(): string {
     crypto: "📊 คริปโตเคอร์เรนซี (Cryptocurrency)",
     work: "💼 การทำงาน (Work Attendance)",
     info: "ℹ️ ข้อมูล (Information)",
-    health: "🏃 สุขภาพ (Health & Activity)",
-    music: "🎵 เพลง (Music Recommendations)",
     utility: "🔧 เครื่องมือ (Utilities)",
     settings: "⚙️ ตั้งค่า (Settings)",
   };

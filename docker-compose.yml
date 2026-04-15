@@ -91,10 +91,6 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - MCP_AI_MODEL=${MCP_AI_MODEL:-gpt-5-nano}
 
-      # Spotify Integration (Optional - defaults to empty if not configured)
-      - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID:-}
-      - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET:-}
-
       # =============================================================================
       # Domain Security Configuration (GitHub Secrets)
       # =============================================================================
