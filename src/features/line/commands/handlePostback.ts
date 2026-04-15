@@ -1,5 +1,4 @@
 import { attendanceService } from "@/features/attendance/services/attendance.server";
-import { db } from "../../../lib/database/db";
 import { bubbleTemplate } from "@/lib/validation/line";
 import { sendMessage } from "../../../lib/utils/line-utils";
 import { flexMessage } from "@/lib/utils/line-message-utils";
@@ -10,17 +9,15 @@ import { handleWorkStatus } from "./handleWorkStatus";
 import { handleCheckInMenu } from "./handleCheckInMenu";
 import { handleMonthlyReport } from "./handleMonthlyReport";
 import { handleReportMenu } from "./handleReportMenu";
+import { getLineUserAccount } from "../utils/getLineUserAccount";
 
 export const handlePostback = async (req: any, event: any) => {
-  const userId = req.body.events[0].source.userId;
-  const data = event.postback.data;
-  const userPermission: any = await db.account.findFirst({
-    where: { accountId: userId },
-  });
+  const userPermission = await getLineUserAccount(event);
   if (!userPermission) {
     const payload = bubbleTemplate.signIn();
     return sendMessage(req, flexMessage(payload));
   }
+  const data = event.postback.data;
   const params = new URLSearchParams(data);
   const action = params.get("action");
   switch (action) {

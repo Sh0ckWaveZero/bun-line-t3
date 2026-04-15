@@ -1,5 +1,6 @@
 import { sendMessage } from "@/lib/utils/line-utils";
 import { getConsolationMessage } from "@/lib/utils/ai-message-generator";
+import { getLineUserAccount } from "../utils/getLineUserAccount";
 
 /**
  * Handle sticker messages from LINE users
@@ -31,9 +32,12 @@ function isSadSticker(keywords: string[]): boolean {
  */
 export const handleSticker = async (
   req: any,
-  event: StickerEvent,
+  event: StickerEvent & { source?: { userId?: string } },
 ): Promise<void> => {
   try {
+    const account = await getLineUserAccount(event);
+    if (!account) return;
+
     if (!event.message?.keywords || !Array.isArray(event.message.keywords)) {
       return;
     }

@@ -55,7 +55,7 @@ const handleEvent = async (
             await handleLocation(req, event);
             break;
           default:
-            res.status(401).send("Invalid token");
+            // ประเภทข้อความที่ไม่รองรับ — ไม่ต้องทำอะไร LINE ต้องการแค่ 200 OK
             break;
         }
         break;
@@ -63,7 +63,8 @@ const handleEvent = async (
         await handlePostback(req, event);
         break;
       default:
-        res.status(401).send("Invalid token");
+        // event type ที่ไม่รองรับ — ไม่ต้องทำอะไร LINE ต้องการแค่ 200 OK
+        break;
     }
   }
 };
