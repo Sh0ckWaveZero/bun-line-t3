@@ -65,7 +65,6 @@ export const env = createEnv({
     CMC_URL: z.string().url(),
     CMC_API_KEY: z.string(),
     FRONTEND_URL: z.string().url(),
-    AIRVISUAL_API_KEY: z.string(),
     INTERNAL_API_KEY: z.string().optional(),
     CRON_SECRET: z.string().optional(),
     // 🔐 Security: Domain configuration through environment (NO DEFAULTS - must be explicitly set)
@@ -97,7 +96,6 @@ export const env = createEnv({
     CMC_URL: process.env.CMC_URL,
     CMC_API_KEY: process.env.CMC_API_KEY,
     FRONTEND_URL: process.env.FRONTEND_URL,
-    AIRVISUAL_API_KEY: process.env.AIRVISUAL_API_KEY,
     INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
     CRON_SECRET: process.env.CRON_SECRET,
     APP_DOMAIN: process.env.APP_DOMAIN ?? process.env.APP_URL,
