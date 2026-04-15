@@ -11,7 +11,6 @@ on:
       - "*.md"
       - ".vscode/**"
 
-  # Manual deployment trigger พร้อม options
   workflow_dispatch:
     inputs:
       force_rebuild:
@@ -33,17 +32,14 @@ on:
           - production
           - staging
 
-# 🔐 Security: กำหนด permissions อย่างจำกัด
 permissions:
   contents: read
   actions: read
   security-events: write
 
-# 🛡️ Environment Variables: จาก GitHub Secrets เท่านั้น
 env:
   DOCKER_BUILDKIT: 1
   COMPOSE_DOCKER_CLI_BUILD: 1
-  # ตั้งค่า timezone สำหรับ logs
   TZ: Asia/Bangkok
 
 jobs:
@@ -51,7 +47,7 @@ jobs:
   security-check:
     name: 🔐 Security & Environment Validation
     runs-on: self-hosted
-    timeout-minutes: 10
+    timeout-minutes: 5
 
     steps:
       - name: 📥 Checkout Repository
@@ -62,46 +58,25 @@ jobs:
 
       - name: 🔍 Validate Required Secrets
         run: |
-          echo "🔐 ตรวจสอบ GitHub Secrets ที่จำเป็น..."
-
           REQUIRED_SECRETS=(
-            "DATABASE_URL"
-            "APP_URL"
-            "AUTH_SECRET"
-            "FRONTEND_URL"
-            "JWT_SECRET"
-            "INTERNAL_API_KEY"
-            "CRON_SECRET"
-            "LINE_CLIENT_ID"
-            "LINE_CLIENT_SECRET"
-            "LINE_LOGIN_CHANNEL_ID"
-            "LINE_LOGIN_CHANNEL_SECRET"
-            "LINE_CHANNEL_ACCESS"
-            "LINE_CHANNEL_SECRET"
-            "ADMIN_LINE_USER_IDS"
-            "AIRVISUAL_API_KEY"
-            "CMC_API_KEY"
-            "OPENAI_API_KEY"
-            "APP_DOMAIN"
-            "ALLOWED_DOMAINS"
+            "DATABASE_URL" "APP_URL" "AUTH_SECRET" "FRONTEND_URL"
+            "JWT_SECRET" "INTERNAL_API_KEY" "CRON_SECRET"
+            "LINE_CLIENT_ID" "LINE_CLIENT_SECRET"
+            "LINE_LOGIN_CHANNEL_ID" "LINE_LOGIN_CHANNEL_SECRET"
+            "LINE_CHANNEL_ACCESS" "LINE_CHANNEL_SECRET" "ADMIN_LINE_USER_IDS"
+            "AQICN_TOKEN" "CMC_API_KEY" "OPENAI_API_KEY"
+            "APP_DOMAIN" "ALLOWED_DOMAINS"
           )
-
           MISSING_SECRETS=()
-
           for secret in "${REQUIRED_SECRETS[@]}"; do
-            if [[ -z "${!secret}" ]]; then
-              MISSING_SECRETS+=("$secret")
-            fi
+            [[ -z "${!secret}" ]] && MISSING_SECRETS+=("$secret")
           done
-
           if [[ ${#MISSING_SECRETS[@]} -gt 0 ]]; then
-            echo "❌ Missing required secrets:"
-            printf '%s\n' "${MISSING_SECRETS[@]}"
+            echo "❌ Missing secrets: ${MISSING_SECRETS[*]}"
             echo "กรุณาตั้งค่า GitHub Secrets ใน Repository Settings"
             exit 1
           fi
-
-          echo "✅ All required secrets are configured"
+          echo "✅ All required secrets configured"
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           APP_URL: ${{ secrets.APP_URL }}
@@ -117,57 +92,29 @@ jobs:
           LINE_CHANNEL_ACCESS: ${{ secrets.LINE_CHANNEL_ACCESS }}
           LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
           ADMIN_LINE_USER_IDS: ${{ secrets.ADMIN_LINE_USER_IDS }}
-          AIRVISUAL_API_KEY: ${{ secrets.AIRVISUAL_API_KEY }}
+          AQICN_TOKEN: ${{ secrets.AQICN_TOKEN }}
           CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          MCP_AI_MODEL: ${{ secrets.MCP_AI_MODEL }}
           APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
           ALLOWED_DOMAINS: ${{ secrets.ALLOWED_DOMAINS }}
 
       - name: 🖥️ System Resource Check
         run: |
-          echo "🖥️ ตรวจสอบ system resources..."
-
-          # Memory check
           AVAILABLE_MEMORY=$(free -m | awk 'NR==2{printf "%.0f", $7}')
-          REQUIRED_MEMORY=1024
+          [[ $AVAILABLE_MEMORY -lt 1024 ]] \
+            && echo "⚠️ Low memory: ${AVAILABLE_MEMORY}MB" \
+            || echo "✅ Memory: ${AVAILABLE_MEMORY}MB"
 
-          if [[ $AVAILABLE_MEMORY -lt $REQUIRED_MEMORY ]]; then
-            echo "⚠️ Warning: Available memory: ${AVAILABLE_MEMORY}MB (recommended: ${REQUIRED_MEMORY}MB+)"
-          else
-            echo "✅ Memory: ${AVAILABLE_MEMORY}MB available"
-          fi
-
-          # Disk space check
           AVAILABLE_DISK=$(df -BM /var/lib/docker 2>/dev/null | awk 'NR==2{print $4}' | sed 's/M//' || echo "1000")
-          REQUIRED_DISK=2048
-
-          if [[ $AVAILABLE_DISK -lt $REQUIRED_DISK ]]; then
-            echo "❌ Insufficient disk space: ${AVAILABLE_DISK}MB (required: ${REQUIRED_DISK}MB+)"
-            exit 1
-          else
-            echo "✅ Disk space: ${AVAILABLE_DISK}MB available"
-          fi
-
-          # Docker service check
-          if ! systemctl is-active --quiet docker; then
-            echo "❌ Docker service is not running"
+          if [[ $AVAILABLE_DISK -lt 2048 ]]; then
+            echo "❌ Insufficient disk space: ${AVAILABLE_DISK}MB (required: 2048MB+)"
             exit 1
           fi
-          echo "✅ Docker service is running"
+          echo "✅ Disk: ${AVAILABLE_DISK}MB"
 
-      - name: 🧹 Pre-deployment Cleanup
-        run: |
-          echo "🧹 ล้างข้อมูลเก่าเพื่อเตรียมพร้อม deployment..."
-
-          # ลบ dangling images และ unused volumes
-          docker image prune -f || true
-          docker volume prune -f || true
-
-          # ลบ build cache เก่า (เก็บไว้ 24 ชั่วโมง)
-          docker builder prune --filter "until=24h" -f || true
-
-          echo "✅ Cleanup completed"
+          systemctl is-active --quiet docker \
+            && echo "✅ Docker running" \
+            || { echo "❌ Docker not running"; exit 1; }
 
   # Job 2: Build และ Deploy
   deploy:
@@ -182,138 +129,58 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: 💾 Create Backup of Current State
+      - name: 🏷️ Tag Current Images for Rollback
         run: |
-          echo "💾 สร้างสำรองของสถานะปัจจุบัน..."
-
-          # สร้าง backup directory with timestamp
-          BACKUP_DIR="/tmp/backup-$(date +%Y%m%d-%H%M%S)"
-          mkdir -p "$BACKUP_DIR"
-
-          # Backup current docker images (ถ้ามี)
-          if docker images | grep -q "bun-line-t3"; then
-            echo "Creating image backup..."
-            docker save -o "$BACKUP_DIR/current-images.tar" \
-              $(docker images --format "{{.Repository}}:{{.Tag}}" | grep "bun-line-t3" | head -5)
-            echo "✅ Docker images backed up"
-          else
-            echo "ℹ️ No existing images to backup"
-          fi
-
-          # Backup docker compose state
-          docker compose config > "$BACKUP_DIR/docker-compose-state.yml" 2>/dev/null || true
-
-          # Save backup path for later use
-          echo "BACKUP_DIR=$BACKUP_DIR" >> $GITHUB_ENV
-          echo "✅ Backup created at: $BACKUP_DIR"
+          docker tag bun-line-t3-app:latest bun-line-t3-app:previous 2>/dev/null || true
+          docker tag bun-line-t3-cron:latest bun-line-t3-cron:previous 2>/dev/null || true
+          echo "✅ Current images tagged as :previous"
 
       - name: 🔧 Setup Environment File
         run: |
-          echo "🔧 สร้าง .env.prod จาก GitHub Secrets..."
-
           cat > .env.prod << EOF
-          # =============================================================================
-          # Environment Configuration (Generated from GitHub Secrets)
-          # Generated at: $(date -Iseconds)
-          # Commit: ${{ github.sha }}
-          # =============================================================================
-
-          # Application Environment
+          NODE_ENV=production
           APP_ENV=production
           NEXT_PUBLIC_APP_ENV=production
           HOSTNAME=localhost
           PORT=${{ secrets.PORT || '12914' }}
           APP_URL="${{ secrets.APP_URL }}"
           FRONTEND_URL="${{ secrets.FRONTEND_URL }}"
-
-          # =============================================================================
-          # Authentication & Security
-          # =============================================================================
-
-          # Better Auth Configuration
           AUTH_SECRET="${{ secrets.AUTH_SECRET }}"
           JWT_SECRET="${{ secrets.JWT_SECRET }}"
           JWT_EXPIRES_IN=18144000000
-
-          # Internal API Security
           INTERNAL_API_KEY="${{ secrets.INTERNAL_API_KEY }}"
-
-          # Cron Job Security
           CRON_SECRET="${{ secrets.CRON_SECRET }}"
-
-          # =============================================================================
-          # LINE Integration
-          # =============================================================================
-
-          # LINE Login Provider
           LINE_CLIENT_ID="${{ secrets.LINE_CLIENT_ID }}"
           LINE_CLIENT_SECRET="${{ secrets.LINE_CLIENT_SECRET }}"
           LINE_LOGIN_CHANNEL_ID="${{ secrets.LINE_LOGIN_CHANNEL_ID }}"
           LINE_LOGIN_CHANNEL_SECRET="${{ secrets.LINE_LOGIN_CHANNEL_SECRET }}"
-
-          # LINE Messaging API
           LINE_CHANNEL_ACCESS="${{ secrets.LINE_CHANNEL_ACCESS }}"
           LINE_MESSAGING_API=https://api.line.me/v2/bot/message
           LINE_GET_CONTENT=https://api-data.line.me/v2/bot/message
           LINE_CHANNEL_SECRET="${{ secrets.LINE_CHANNEL_SECRET }}"
           ADMIN_LINE_USER_IDS="${{ secrets.ADMIN_LINE_USER_IDS }}"
-
-          # =============================================================================
-          # Database Configuration
-          # =============================================================================
-
-          # MongoDB
           MONGODB_URI="${{ secrets.DATABASE_URL }}"
           DATABASE_URL="${{ secrets.DATABASE_URL }}"
           DB_NAME=linebot
-
-          # =============================================================================
-          # External API Keys
-          # =============================================================================
-
-          # Air Quality Monitoring
-          AIRVISUAL_API_KEY="${{ secrets.AIRVISUAL_API_KEY }}"
-
-          # Cryptocurrency Market Data
+          AQICN_TOKEN="${{ secrets.AQICN_TOKEN }}"
           CMC_API_KEY="${{ secrets.CMC_API_KEY }}"
           CMC_URL=https://pro-api.coinmarketcap.com
-
-          # OpenAI API Configuration
           OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}"
           MCP_AI_MODEL="${{ secrets.MCP_AI_MODEL || 'gpt-5-nano' }}"
-
-          # =============================================================================
-          # Domain Security Configuration
-          # =============================================================================
-
-          # Application Domain & Security
+          SPOTIFY_CLIENT_ID="${{ secrets.SPOTIFY_CLIENT_ID }}"
+          SPOTIFY_CLIENT_SECRET="${{ secrets.SPOTIFY_CLIENT_SECRET }}"
           APP_DOMAIN="${{ secrets.APP_DOMAIN }}"
           ALLOWED_DOMAINS="${{ secrets.ALLOWED_DOMAINS }}"
           EOF
-
-          # Set secure permissions
           chmod 600 .env.prod
-          echo "✅ Environment file created with secure permissions"
+          echo "✅ Environment file created"
 
       - name: 🏗️ Build Application
-        id: build_app
-        continue-on-error: true
         run: |
-          echo "🏗️ Building application..."
-
-          # Enable BuildKit for faster builds with caching
-          export DOCKER_BUILDKIT=1
-          export COMPOSE_DOCKER_CLI_BUILD=1
-
-          # Force rebuild if manual trigger is enabled
           BUILD_ARGS=""
-          if [[ "${{ github.event.inputs.force_rebuild }}" == "true" ]]; then
-            echo "🔄 Force rebuild enabled - pulling base images..."
-            BUILD_ARGS="--pull --no-cache"
-          fi
+          [[ "${{ github.event.inputs.force_rebuild }}" == "true" ]] && BUILD_ARGS="--pull --no-cache"
 
-          # Build with cache and parallel options
-          if docker compose build $BUILD_ARGS \
+          docker compose build $BUILD_ARGS \
             --build-arg BUILDKIT_INLINE_CACHE=1 \
             --build-arg DATABASE_URL="${{ secrets.DATABASE_URL }}" \
             --build-arg APP_URL="${{ secrets.APP_URL }}" \
@@ -322,237 +189,15 @@ jobs:
             --build-arg ADMIN_LINE_USER_IDS="${{ secrets.ADMIN_LINE_USER_IDS }}" \
             --build-arg OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
             --build-arg APP_DOMAIN="${{ secrets.APP_DOMAIN }}" \
-            --build-arg ALLOWED_DOMAINS="${{ secrets.ALLOWED_DOMAINS }}"; then
-            echo "✅ Build completed successfully"
-            echo "BUILD_SUCCESS=true" >> $GITHUB_OUTPUT
-          else
-            echo "❌ Build failed"
-            echo "BUILD_SUCCESS=false" >> $GITHUB_OUTPUT
-            exit 1
-          fi
+            --build-arg ALLOWED_DOMAINS="${{ secrets.ALLOWED_DOMAINS }}"
+          echo "✅ Build completed"
 
-      - name: 🔄 Rollback on Build Failure
-        if: steps.build_app.outcome == 'failure'
+      - name: 🚀 Deploy Services
         run: |
-          echo "🔄 Build ล้มเหลว! กำลังทำ rollback..."
-
-          # 🔍 ตรวจสอบ environment variables ที่จำเป็น
-          if [[ -z "$DATABASE_URL" || -z "$APP_URL" || -z "$AUTH_SECRET" || -z "$FRONTEND_URL" ]]; then
-            echo "❌ ตรวจพบว่า environment variables สำคัญไม่ถูกโหลด"
-            echo "🔧 กรุณาตรวจสอบ GitHub Secrets configuration"
-            exit 1
-          fi
-
-          # ตรวจสอบว่ามี backup หรือไม่
-          if [[ -f "$BACKUP_DIR/current-images.tar" ]]; then
-            echo "📦 Restoring previous Docker images..."
-            docker load -i "$BACKUP_DIR/current-images.tar"
-
-            # ตรวจสอบว่ามี .env.prod หรือไม่ และโหลดให้ docker compose
-            if [[ -f ".env.prod" ]]; then
-              echo "🔧 Using existing .env.prod for rollback..."
-              # Restart services with previous images และ environment variables
-              docker compose --env-file .env.prod down --timeout 30 || true
-              docker compose --env-file .env.prod up -d
-            else
-              echo "⚠️ No .env.prod found, using environment variables directly..."
-              # Restart services with previous images
-              docker compose down --timeout 30 || true
-              docker compose up -d
-            fi
-
-            echo "✅ Rollback completed - services restored to previous version"
-            echo "🔗 Application should be accessible at: ${{ secrets.APP_URL }}"
-          else
-            echo "⚠️ No backup found - this might be the first deployment"
-            echo "🔧 ตรวจสอบ configuration และลองอีกครั้ง"
-          fi
-
-          # ออกจาก workflow แต่ไม่ให้ fail (เพราะได้ rollback แล้ว)
-          echo "::warning::Build failed but rollback completed successfully"
-          exit 1
-        env:
-          # 🔐 Environment variables สำหรับ rollback
-          PORT: ${{ secrets.PORT || '12914' }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          APP_URL: ${{ secrets.APP_URL }}
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
-          LINE_CLIENT_ID: ${{ secrets.LINE_CLIENT_ID }}
-          LINE_CLIENT_SECRET: ${{ secrets.LINE_CLIENT_SECRET }}
-          LINE_LOGIN_CHANNEL_ID: ${{ secrets.LINE_LOGIN_CHANNEL_ID }}
-          LINE_LOGIN_CHANNEL_SECRET: ${{ secrets.LINE_LOGIN_CHANNEL_SECRET }}
-          LINE_CHANNEL_ACCESS: ${{ secrets.LINE_CHANNEL_ACCESS }}
-          LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
-          ADMIN_LINE_USER_IDS: ${{ secrets.ADMIN_LINE_USER_IDS }}
-          AIRVISUAL_API_KEY: ${{ secrets.AIRVISUAL_API_KEY }}
-          CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
-          ALLOWED_DOMAINS: ${{ secrets.ALLOWED_DOMAINS }}
-
-      - name: 🛑 Stop Existing Services
-        if: steps.build_app.outputs.BUILD_SUCCESS == 'true'
-        run: |
-          echo "🛑 หยุดบริการที่ทำงานอยู่..."
-
-          # ตรวจสอบ services ที่ทำงานอยู่ด้วย timeout protection
-          if timeout 10 docker compose ps 2>/dev/null | grep -q "Up" 2>/dev/null; then
-            echo "Stopping existing services..."
-            docker compose down --timeout 30 || true
-          else
-            echo "No running services found or docker compose not responding"
-          fi
-
-      - name: 🚀 Start Services
-        id: start_services
-        if: steps.build_app.outputs.BUILD_SUCCESS == 'true'
-        run: |
-          echo "🚀 เริ่มต้นบริการ..."
-
-          # Start services with new images
-          if docker compose up -d; then
-            echo "✅ Services started successfully"
-            echo "SERVICES_STARTED=true" >> $GITHUB_OUTPUT
-          else
-            echo "❌ Failed to start services"
-            echo "SERVICES_STARTED=false" >> $GITHUB_OUTPUT
-            exit 1
-          fi
-        env:
-          # Override environment variables สำหรับ docker compose
-          PORT: ${{ secrets.PORT || '12914' }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          APP_URL: ${{ secrets.APP_URL }}
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
-          LINE_CLIENT_ID: ${{ secrets.LINE_CLIENT_ID }}
-          LINE_CLIENT_SECRET: ${{ secrets.LINE_CLIENT_SECRET }}
-          LINE_LOGIN_CHANNEL_ID: ${{ secrets.LINE_LOGIN_CHANNEL_ID }}
-          LINE_LOGIN_CHANNEL_SECRET: ${{ secrets.LINE_LOGIN_CHANNEL_SECRET }}
-          LINE_CHANNEL_ACCESS: ${{ secrets.LINE_CHANNEL_ACCESS }}
-          LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
-          ADMIN_LINE_USER_IDS: ${{ secrets.ADMIN_LINE_USER_IDS }}
-          AIRVISUAL_API_KEY: ${{ secrets.AIRVISUAL_API_KEY }}
-          CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
-          ALLOWED_DOMAINS: ${{ secrets.ALLOWED_DOMAINS }}
-
-      - name: 🏥 Quick Health Check After Startup
-        id: health_check
-        if: steps.start_services.outputs.SERVICES_STARTED == 'true'
-        continue-on-error: true
-        run: |
-          echo "🏥 ตรวจสอบสุขภาพเบื้องต้นหลังเริ่มบริการ..."
-
-          # Wait for services to be ready
-          sleep 20
-
-          # Check if containers are running with timeout protection
-          if ! timeout 10 docker compose ps 2>/dev/null | grep -q "Up" 2>/dev/null; then
-            echo "❌ Containers are not running properly or docker compose not responding"
-            echo "📋 Attempting to get container status directly..."
-            docker ps --filter "name=bun-line-t3" || true
-            echo "HEALTH_CHECK_PASSED=false" >> $GITHUB_OUTPUT
-            exit 1
-          fi
-
-          # Test basic connectivity with retries
-          PORT="${{ secrets.PORT || '12914' }}"
-          MAX_ATTEMPTS=5
-          ATTEMPT=1
-
-          while [[ $ATTEMPT -le $MAX_ATTEMPTS ]]; do
-            echo "Health check attempt $ATTEMPT/$MAX_ATTEMPTS..."
-
-            if curl -f -s -m 10 "http://localhost:$PORT/api/health" > /dev/null 2>&1; then
-              echo "✅ Basic health check passed"
-              echo "HEALTH_CHECK_PASSED=true" >> $GITHUB_OUTPUT
-              exit 0
-            else
-              if [[ $ATTEMPT -eq $MAX_ATTEMPTS ]]; then
-                echo "⚠️ Health check endpoint not responding after $MAX_ATTEMPTS attempts"
-                echo "HEALTH_CHECK_PASSED=false" >> $GITHUB_OUTPUT
-                exit 1
-              fi
-              sleep 5
-              ((ATTEMPT++))
-            fi
-          done
-
-      - name: 🔄 Rollback on Startup or Health Check Failure
-        if: steps.health_check.outcome == 'failure' || steps.start_services.outcome == 'failure'
-        run: |
-          echo "🔄 บริการเริ่มไม่สำเร็จหรือ health check ล้มเหลว! กำลังทำ rollback..."
-
-          # 🔍 ตรวจสอบ environment variables ที่จำเป็น
-          if [[ -z "$DATABASE_URL" || -z "$APP_URL" || -z "$AUTH_SECRET" || -z "$FRONTEND_URL" ]]; then
-            echo "❌ ตรวจพบว่า environment variables สำคัญไม่ถูกโหลด"
-            echo "🔧 กรุณาตรวจสอบ GitHub Secrets configuration"
-            exit 1
-          fi
-
-          # Stop current failed deployment
-          echo "🛑 Stopping failed deployment..."
           docker compose down --timeout 30 || true
-
-          # ตรวจสอบว่ามี backup หรือไม่
-          if [[ -f "$BACKUP_DIR/current-images.tar" ]]; then
-            echo "📦 Restoring previous Docker images..."
-            docker load -i "$BACKUP_DIR/current-images.tar"
-
-            # ตรวจสอบว่ามี .env.prod หรือไม่ และโหลดให้ docker compose
-            if [[ -f ".env.prod" ]]; then
-              echo "🔧 Using existing .env.prod for rollback..."
-              # Restart services with previous images และ environment variables
-              docker compose --env-file .env.prod up -d
-            else
-              echo "⚠️ No .env.prod found, using environment variables directly..."
-              # Restart services with previous images
-              docker compose up -d
-            fi
-
-            # Wait and check if rollback was successful
-            sleep 15
-            if docker compose ps | grep -q "Up"; then
-              echo "✅ Rollback completed successfully"
-              echo "🔗 Previous version restored and accessible at: ${{ secrets.APP_URL }}"
-
-              # Quick verification that rollback worked
-              sleep 10
-              if curl -f -s -m 10 "http://localhost:${{ secrets.PORT || '12914' }}/api/health" > /dev/null 2>&1; then
-                echo "✅ Rollback verification: Application is healthy"
-              else
-                echo "⚠️ Rollback verification: Health check failed but containers are running"
-              fi
-            else
-              echo "❌ Rollback failed - containers not starting"
-              echo "🔧 Manual intervention required - checking logs..."
-              docker compose logs --tail=50
-              exit 1
-            fi
-          else
-            echo "⚠️ No backup found - this might be the first deployment"
-            echo "🔧 First deployment failed - please check configuration and try again"
-            echo "📋 Current container status:"
-            docker compose ps
-            echo "📋 Recent logs:"
-            docker compose logs --tail=30
-            exit 1
-          fi
-
-          # Mark as warning (deployment failed but rollback succeeded)
-          echo "::warning::Deployment failed but rollback completed successfully. Previous version is running."
-          exit 1
+          docker compose up -d
+          echo "✅ Services started"
         env:
-          # 🔐 Environment variables สำหรับ rollback
           PORT: ${{ secrets.PORT || '12914' }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           APP_URL: ${{ secrets.APP_URL }}
@@ -568,192 +213,79 @@ jobs:
           LINE_CHANNEL_ACCESS: ${{ secrets.LINE_CHANNEL_ACCESS }}
           LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
           ADMIN_LINE_USER_IDS: ${{ secrets.ADMIN_LINE_USER_IDS }}
-          AIRVISUAL_API_KEY: ${{ secrets.AIRVISUAL_API_KEY }}
+          AQICN_TOKEN: ${{ secrets.AQICN_TOKEN }}
           CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
           ALLOWED_DOMAINS: ${{ secrets.ALLOWED_DOMAINS }}
 
-      - name: 🧹 Cleanup Old Backup
-        if: steps.health_check.outputs.HEALTH_CHECK_PASSED == 'true'
+      - name: 🏥 Health Check
+        if: github.event.inputs.skip_health_checks != 'true'
         run: |
-          echo "🧹 ล้างข้อมูล backup เก่า..."
-
-          # ตรวจสอบว่ามี backup directories หรือไม่
-          if ls /tmp/backup-* >/dev/null 2>&1; then
-            # นับจำนวน backup ทั้งหมด
-            TOTAL_BACKUPS=$(ls -1d /tmp/backup-* 2>/dev/null | wc -l)
-            echo "ℹ️ Found $TOTAL_BACKUPS backup directories"
-
-            # ถ้ามีมากกว่า 3 ตัว ให้ลบอันเก่า
-            if [ "$TOTAL_BACKUPS" -gt 3 ]; then
-              echo "Removing old backups (keeping 3 newest)..."
-              # ใช้ stat เพื่อเรียงตามเวลาแล้วลบอันเก่า
-              cd /tmp && for dir in backup-*; do
-                stat -f "%m %N" "$dir" 2>/dev/null
-              done | sort -nr | tail -n +4 | cut -d' ' -f2- | while read -r backup_dir; do
-                echo "Removing old backup: $backup_dir"
-                rm -rf "$backup_dir" 2>/dev/null || true
-              done
+          PORT="${{ secrets.PORT || '12914' }}"
+          for i in {1..10}; do
+            echo "Health check $i/10..."
+            if curl -f -s -m 10 "http://localhost:$PORT/api/health" > /dev/null; then
+              echo "✅ Application healthy"
+              exit 0
             fi
+            sleep 10
+          done
+          echo "❌ Health check failed after 10 attempts"
+          docker compose logs --tail=50
+          exit 1
 
-            # แสดงจำนวน backup ที่เหลือ
-            REMAINING_BACKUPS=$(ls -1d /tmp/backup-* 2>/dev/null | wc -l)
-            echo "ℹ️ Remaining backups: $REMAINING_BACKUPS"
-            ls -1t /tmp/backup-* 2>/dev/null | head -3
-          else
-            echo "ℹ️ No backup directories found to clean up"
-          fi
-
-          echo "✅ Old backups cleaned up"
-
-      - name: 🎉 Deployment Success Summary
-        if: steps.health_check.outputs.HEALTH_CHECK_PASSED == 'true'
+      - name: 🔄 Rollback on Failure
+        if: failure()
         run: |
-          echo "🎉 Deployment สำเร็จ!"
-          echo "📅 Deployed at: $(date -Iseconds)"
-          echo "🔖 Commit: ${{ github.sha }}"
-          echo "🌿 Branch: ${{ github.ref_name }}"
-          echo "👤 Triggered by: ${{ github.actor }}"
-          echo "🔗 Application URL: ${{ secrets.APP_URL }}"
+          echo "🔄 Rolling back to previous version..."
+          docker compose down --timeout 30 || true
+          docker tag bun-line-t3-app:previous bun-line-t3-app:latest 2>/dev/null || true
+          docker tag bun-line-t3-cron:previous bun-line-t3-cron:latest 2>/dev/null || true
+          docker compose up -d
+          echo "✅ Rollback completed"
+        env:
+          PORT: ${{ secrets.PORT || '12914' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          APP_URL: ${{ secrets.APP_URL }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          LINE_CLIENT_ID: ${{ secrets.LINE_CLIENT_ID }}
+          LINE_CLIENT_SECRET: ${{ secrets.LINE_CLIENT_SECRET }}
+          LINE_LOGIN_CHANNEL_ID: ${{ secrets.LINE_LOGIN_CHANNEL_ID }}
+          LINE_LOGIN_CHANNEL_SECRET: ${{ secrets.LINE_LOGIN_CHANNEL_SECRET }}
+          LINE_CHANNEL_ACCESS: ${{ secrets.LINE_CHANNEL_ACCESS }}
+          LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
+          ADMIN_LINE_USER_IDS: ${{ secrets.ADMIN_LINE_USER_IDS }}
+          AQICN_TOKEN: ${{ secrets.AQICN_TOKEN }}
+          CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
+          ALLOWED_DOMAINS: ${{ secrets.ALLOWED_DOMAINS }}
 
-          echo "🐳 Container Status:"
-          docker compose ps --format "table {{.Name}}\t{{.State}}\t{{.Ports}}"
-
-          echo "📊 Resource Usage:"
-          docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}"
-
-          echo "✅ Deployment pipeline completed successfully with rollback protection!"
+      - name: 🧹 Post-deploy Cleanup
+        if: success()
+        run: |
+          docker image prune -f || true
+          docker volume prune -f || true
+          echo "✅ Cleanup completed"
 
       - name: 🔐 Security Cleanup
         if: always()
         run: |
-          echo "🔐 ล้างข้อมูลสำคัญ..."
+          [[ -f .env.prod ]] && shred -fz -n 1 .env.prod && echo "✅ Environment file deleted"
+          unset DATABASE_URL AUTH_SECRET APP_URL FRONTEND_URL
+          unset LINE_CHANNEL_SECRET LINE_CHANNEL_ACCESS
+          unset AQICN_TOKEN CMC_API_KEY OPENAI_API_KEY
 
-          # ลบไฟล์ environment variables อย่างปลอดภัย
-          if [[ -f .env.prod ]]; then
-            shred -vfz -n 3 .env.prod
-            echo "✅ Environment file securely deleted"
-          fi
-
-          # ล้าง environment variables จาก shell history
-          unset DATABASE_URL AUTH_SECRET APP_URL FRONTEND_URL LINE_CHANNEL_SECRET LINE_CHANNEL_ACCESS
-          unset AIRVISUAL_API_KEY CMC_API_KEY ENCRYPTION_KEY HMAC_SECRET
-
-          echo "✅ Security cleanup completed"
-
-  # Job 3: Health Checks และ Monitoring
-  monitor:
-    name: 🏥 Health Checks & Monitoring
-    runs-on: self-hosted
-    needs: deploy
-    timeout-minutes: 10
-    if: github.event.inputs.skip_health_checks != 'true'
-
-    steps:
-      - name: ⏱️ Wait for Service Startup
+      - name: 🎉 Deployment Summary
+        if: success()
         run: |
-          echo "⏱️ รอให้บริการเริ่มต้น..."
-          sleep 30
-
-      - name: 🏥 Application Health Check
-        run: |
-          echo "🏥 ตรวจสอบสุขภาพแอปพลิเคชัน..."
-
-          HEALTH_URL="http://localhost:${{ secrets.PORT || '12914' }}/api/health"
-          MAX_ATTEMPTS=10
-          ATTEMPT=1
-
-          while [[ $ATTEMPT -le $MAX_ATTEMPTS ]]; do
-            echo "Health check attempt $ATTEMPT/$MAX_ATTEMPTS..."
-
-            if curl -f -s -m 10 "$HEALTH_URL" > /dev/null; then
-              echo "✅ Application is healthy"
-              break
-            else
-              if [[ $ATTEMPT -eq $MAX_ATTEMPTS ]]; then
-                echo "❌ Application health check failed after $MAX_ATTEMPTS attempts"
-                docker compose logs --tail=50
-                exit 1
-              fi
-              echo "⏳ Waiting 10 seconds before retry..."
-              sleep 10
-              ((ATTEMPT++))
-            fi
-          done
-
-      - name: 🔍 Service Status Check
-        run: |
-          echo "🔍 ตรวจสอบสถานะบริการ..."
-
-          # Check container status with timeout and error handling
-          if ! timeout 15 docker compose ps 2>/dev/null | grep -E "(Up|healthy)" 2>/dev/null; then
-            echo "❌ Services are not running properly or not responding"
-            echo "📋 Attempting alternative status check..."
-            docker ps --filter "name=bun-line-t3" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" || true
-            echo "📋 Recent logs:"
-            timeout 30 docker compose logs --tail=100 2>/dev/null || docker logs $(docker ps -q --filter "name=bun-line-t3") --tail=50 2>/dev/null || true
-            exit 1
-          fi
-
-          echo "✅ All services are running"
-
-      - name: 📊 Resource Usage Report
-        run: |
-          echo "📊 รายงานการใช้ทรัพยากร..."
-
-          echo "=== Docker Container Stats ==="
-          docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}"
-
-          echo "=== System Resource Usage ==="
-          echo "Memory Usage:"
-          free -h
-
-          echo "Disk Usage:"
-          df -h /var/lib/docker
-
-          echo "✅ Resource report completed"
-
-      - name: 📝 Deployment Summary
-        run: |
-          echo "📝 สรุปการ deployment..."
-
-          echo "🎉 Deployment completed successfully!"
-          echo "📅 Deployed at: $(date -Iseconds)"
-          echo "🔖 Commit: ${{ github.sha }}"
-          echo "🌿 Branch: ${{ github.ref_name }}"
-          echo "👤 Triggered by: ${{ github.actor }}"
-          echo "🔗 Application URL: ${{ secrets.APP_URL }}"
-
-          # Container information
-          echo "🐳 Running containers:"
+          echo "🎉 Deploy สำเร็จ!"
+          echo "📅 $(date -Iseconds) | 🔖 ${{ github.sha }} | 🌿 ${{ github.ref_name }}"
+          echo "👤 ${{ github.actor }} → 🔗 ${{ secrets.APP_URL }}"
           docker compose ps --format "table {{.Name}}\t{{.State}}\t{{.Ports}}"
-
-  # Job 4: Post-deployment Verification (เฉพาะ production)
-  verify:
-    name: ✅ Post-deployment Verification
-    runs-on: self-hosted
-    needs: monitor
-    timeout-minutes: 5
-    if: github.ref == 'refs/heads/main' && github.event.inputs.skip_health_checks != 'true'
-
-    steps:
-      - name: 🔍 LINE Bot Health Check
-        run: |
-          echo "🔍 ตรวจสอบสุขภาพ LINE Bot..."
-
-          # Test webhook endpoint (ถ้ามี test endpoint)
-          WEBHOOK_URL="http://localhost:${{ secrets.PORT || '12914' }}/api/line"
-
-          if curl -f -s -m 10 -X POST "$WEBHOOK_URL" \
-             -H "Content-Type: application/json" \
-             -d '{"events":[],"destination":"test"}' > /dev/null; then
-            echo "✅ LINE Bot webhook is responsive"
-          else
-            echo "⚠️ LINE Bot webhook test failed (may be normal for production)"
-          fi
-
-      - name: 📧 Notification (Future Enhancement)
-        run: |
-          echo "📧 ส่งการแจ้งเตือน deployment สำเร็จ..."
-          echo "ℹ️ การแจ้งเตือนจะถูกเพิ่มในอนาคต (LINE Notify, Slack, etc.)"
+          docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}"

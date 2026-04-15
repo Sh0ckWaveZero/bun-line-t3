@@ -1,4 +1,4 @@
 // Air Quality feature exports
-export * from "./services/open-meteo.server";
-export * from "./types/open-meteo";
+export * from "./services/aqicn.server";
+export * from "./types/aqicn";
 export { AqiData, weatherIcons } from "./aqi_data";
