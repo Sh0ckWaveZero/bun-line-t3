@@ -29,12 +29,12 @@ await withProcessLock('dev-server', async () => {
 
 ## 🛠️ Utility Scripts
 
-| Script                       | Purpose                      | Usage                                    |
-| ---------------------------- | ---------------------------- | ---------------------------------------- | ----- |
-| `generate-secrets.ts`        | 🔑 Generate secure secrets   | `bun scripts/generate-secrets.ts`        |
-| `generate-github-secrets.ts` | 🔐 GitHub secrets management | `bun scripts/generate-github-secrets.ts` |
-| `docker-entrypoint.sh`       | 🐳 Docker container startup  | Used in Dockerfile                       |
-| `switch-env.sh`              | 🔀 Environment switcher      | `./scripts/switch-env.sh dev             | prod` |
+| Script                       | Purpose                            | Usage                                        |
+| ---------------------------- | ---------------------------------- | -------------------------------------------- |
+| `generate-secrets.ts`        | 🔑 Generate secure secrets         | `bun scripts/generate-secrets.ts`            |
+| `generate-github-secrets.ts` | 🔐 GitHub secrets management       | `bun scripts/generate-github-secrets.ts`     |
+| `docker-entrypoint.sh`       | 🐳 Docker container startup        | Used in Dockerfile                           |
+| `switch-env.sh`              | 🔀 Environment switcher            | `./scripts/switch-env.sh dev               | prod` |
 
 ## 🎯 Quick Start
 

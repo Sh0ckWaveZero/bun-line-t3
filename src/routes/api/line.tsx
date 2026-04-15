@@ -9,10 +9,6 @@ export async function POST(req: Request) {
     const body = await req.json();
     const data = JSON.stringify(body);
 
-    // Debug: Log raw body length
-    console.log("📦 [/api/line] Raw body length:", data.length);
-    console.log("📦 [/api/line] Body preview:", data.slice(0, 200) + "...");
-
     const secret = env.LINE_CHANNEL_SECRET;
     const signature = crypto
       .createHmac("SHA256", secret as string)
@@ -23,19 +19,9 @@ export async function POST(req: Request) {
     // Compare your signature and header's signature
     const lineSignature = req.headers.get("x-line-signature");
 
-    console.log("🔐 [/api/line] Secret length:", secret?.length);
-    console.log("🔐 [/api/line] Secret preview:", secret?.slice(0, 10) + "...");
-    console.log("🔐 [/api/line] Expected signature:", signature);
-    console.log("🔐 [/api/line] Received signature:", lineSignature);
-
     if (signature !== lineSignature) {
       console.error("❌ [/api/line] Unauthorized - signature mismatch");
-
-      // ⚠️ TEMPORARY: Skip signature check for debugging
-      console.warn(
-        "⚠️ [/api/line] PROCEEDING WITHOUT SIGNATURE CHECK (DEBUG MODE)",
-      );
-      // return Response.json({ message: "Unauthorized" }, { status: 401 });
+      return Response.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     // set webhook
@@ -47,7 +33,6 @@ export async function POST(req: Request) {
     const compatibleReq = {
       body,
       headers: Object.fromEntries(req.headers.entries()),
-      // Add missing properties that might be used
       query: {},
       cookies: {},
       method: "POST",
@@ -67,24 +52,6 @@ export async function POST(req: Request) {
         return data;
       },
     } as any;
-
-    // Send loading indicator immediately for each event
-    // This provides instant visual feedback to user
-    // Extract userId from any event type (message, postback, etc.)
-    const events = body.events || [];
-    const userIds = new Set<string>();
-
-    for (const event of events) {
-      // Get userId from various event source types
-      const userId =
-        event.source?.userId || // Standard message/postback events
-        event.source?.groupId || // Group events
-        event.source?.roomId; // Room events
-
-      if (userId) {
-        userIds.add(userId);
-      }
-    }
 
     await lineService.handleEvent(compatibleReq, compatibleRes);
 
