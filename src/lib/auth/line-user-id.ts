@@ -34,7 +34,6 @@ const findApprovedProfileLineUserIds = async (
       where: {
         ...activeApprovalWhere,
         pictureUrl: session.user.image,
-        ...(session.user.name ? { displayName: session.user.name } : {}),
       },
       select: { lineUserId: true },
       orderBy: { updatedAt: "desc" },

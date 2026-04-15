@@ -7,7 +7,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { dcaService } from "@/features/dca";
 import { dcaEventManager } from "@/lib/dca/event-manager";
-import { getAuthorizedLineUserId } from "@/lib/auth";
+import { getAuthorizedLineUserId, getLineUserIds } from "@/lib/auth";
 
 const createDcaSchema = z.object({
   lineUserId: z.string().min(1).optional(),
@@ -28,12 +28,22 @@ const createDcaSchema = z.object({
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const lineUserId = await getAuthorizedLineUserId(
-      request,
-      searchParams.get("lineUserId"),
-    );
+    const lineUserIds = await getLineUserIds(request);
 
-    if (!lineUserId) {
+    if (lineUserIds.length === 0) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // validate requestedLineUserId ถ้ามีการส่งมา
+    const requestedLineUserId = searchParams.get("lineUserId")?.trim();
+    const idsToQuery =
+      requestedLineUserId && !lineUserIds.includes(requestedLineUserId)
+        ? null
+        : requestedLineUserId
+          ? [requestedLineUserId]
+          : lineUserIds;
+
+    if (!idsToQuery) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -45,7 +55,7 @@ export async function GET(request: Request) {
       page,
       limit,
       coin,
-      lineUserId,
+      lineUserId: idsToQuery,
     });
 
     return Response.json(result, { status: 200 });
