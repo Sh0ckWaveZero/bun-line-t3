@@ -43,10 +43,6 @@ import { Route as ApiMonitoringDashboardRouteImport } from './routes/api/monitor
 import { Route as ApiLinePermissionsRouteImport } from './routes/api/line/permissions'
 import { Route as ApiLineApprovalsRouteImport } from './routes/api/line/approvals'
 import { Route as ApiHealthEnhancedRouteImport } from './routes/api/health/enhanced'
-import { Route as ApiHealthActivitySummaryRouteImport } from './routes/api/health-activity/summary'
-import { Route as ApiHealthActivityMetricsRouteImport } from './routes/api/health-activity/metrics'
-import { Route as ApiHealthActivityActivitiesRouteImport } from './routes/api/health-activity/activities'
-import { Route as ApiDebugLineOauthRouteImport } from './routes/api/debug/line-oauth'
 import { Route as ApiDcaSummaryRouteImport } from './routes/api/dca/summary'
 import { Route as ApiDcaStreamRouteImport } from './routes/api/dca/stream'
 import { Route as ApiDcaImportRouteImport } from './routes/api/dca/import'
@@ -236,29 +232,6 @@ const ApiHealthEnhancedRoute = ApiHealthEnhancedRouteImport.update({
   path: '/enhanced',
   getParentRoute: () => ApiHealthRoute,
 } as any)
-const ApiHealthActivitySummaryRoute =
-  ApiHealthActivitySummaryRouteImport.update({
-    id: '/api/health-activity/summary',
-    path: '/api/health-activity/summary',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiHealthActivityMetricsRoute =
-  ApiHealthActivityMetricsRouteImport.update({
-    id: '/api/health-activity/metrics',
-    path: '/api/health-activity/metrics',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiHealthActivityActivitiesRoute =
-  ApiHealthActivityActivitiesRouteImport.update({
-    id: '/api/health-activity/activities',
-    path: '/api/health-activity/activities',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiDebugLineOauthRoute = ApiDebugLineOauthRouteImport.update({
-  id: '/api/debug/line-oauth',
-  path: '/api/debug/line-oauth',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiDcaSummaryRoute = ApiDcaSummaryRouteImport.update({
   id: '/api/dca/summary',
   path: '/api/dca/summary',
@@ -380,10 +353,6 @@ export interface FileRoutesByFullPath {
   '/api/dca/import': typeof ApiDcaImportRoute
   '/api/dca/stream': typeof ApiDcaStreamRoute
   '/api/dca/summary': typeof ApiDcaSummaryRoute
-  '/api/debug/line-oauth': typeof ApiDebugLineOauthRoute
-  '/api/health-activity/activities': typeof ApiHealthActivityActivitiesRoute
-  '/api/health-activity/metrics': typeof ApiHealthActivityMetricsRoute
-  '/api/health-activity/summary': typeof ApiHealthActivitySummaryRoute
   '/api/health/enhanced': typeof ApiHealthEnhancedRoute
   '/api/line/approvals': typeof ApiLineApprovalsRoute
   '/api/line/permissions': typeof ApiLinePermissionsRoute
@@ -436,10 +405,6 @@ export interface FileRoutesByTo {
   '/api/dca/import': typeof ApiDcaImportRoute
   '/api/dca/stream': typeof ApiDcaStreamRoute
   '/api/dca/summary': typeof ApiDcaSummaryRoute
-  '/api/debug/line-oauth': typeof ApiDebugLineOauthRoute
-  '/api/health-activity/activities': typeof ApiHealthActivityActivitiesRoute
-  '/api/health-activity/metrics': typeof ApiHealthActivityMetricsRoute
-  '/api/health-activity/summary': typeof ApiHealthActivitySummaryRoute
   '/api/health/enhanced': typeof ApiHealthEnhancedRoute
   '/api/line/approvals': typeof ApiLineApprovalsRoute
   '/api/line/permissions': typeof ApiLinePermissionsRoute
@@ -493,10 +458,6 @@ export interface FileRoutesById {
   '/api/dca/import': typeof ApiDcaImportRoute
   '/api/dca/stream': typeof ApiDcaStreamRoute
   '/api/dca/summary': typeof ApiDcaSummaryRoute
-  '/api/debug/line-oauth': typeof ApiDebugLineOauthRoute
-  '/api/health-activity/activities': typeof ApiHealthActivityActivitiesRoute
-  '/api/health-activity/metrics': typeof ApiHealthActivityMetricsRoute
-  '/api/health-activity/summary': typeof ApiHealthActivitySummaryRoute
   '/api/health/enhanced': typeof ApiHealthEnhancedRoute
   '/api/line/approvals': typeof ApiLineApprovalsRoute
   '/api/line/permissions': typeof ApiLinePermissionsRoute
@@ -551,10 +512,6 @@ export interface FileRouteTypes {
     | '/api/dca/import'
     | '/api/dca/stream'
     | '/api/dca/summary'
-    | '/api/debug/line-oauth'
-    | '/api/health-activity/activities'
-    | '/api/health-activity/metrics'
-    | '/api/health-activity/summary'
     | '/api/health/enhanced'
     | '/api/line/approvals'
     | '/api/line/permissions'
@@ -607,10 +564,6 @@ export interface FileRouteTypes {
     | '/api/dca/import'
     | '/api/dca/stream'
     | '/api/dca/summary'
-    | '/api/debug/line-oauth'
-    | '/api/health-activity/activities'
-    | '/api/health-activity/metrics'
-    | '/api/health-activity/summary'
     | '/api/health/enhanced'
     | '/api/line/approvals'
     | '/api/line/permissions'
@@ -663,10 +616,6 @@ export interface FileRouteTypes {
     | '/api/dca/import'
     | '/api/dca/stream'
     | '/api/dca/summary'
-    | '/api/debug/line-oauth'
-    | '/api/health-activity/activities'
-    | '/api/health-activity/metrics'
-    | '/api/health-activity/summary'
     | '/api/health/enhanced'
     | '/api/line/approvals'
     | '/api/line/permissions'
@@ -720,10 +669,6 @@ export interface RootRouteChildren {
   ApiDcaImportRoute: typeof ApiDcaImportRoute
   ApiDcaStreamRoute: typeof ApiDcaStreamRoute
   ApiDcaSummaryRoute: typeof ApiDcaSummaryRoute
-  ApiDebugLineOauthRoute: typeof ApiDebugLineOauthRoute
-  ApiHealthActivityActivitiesRoute: typeof ApiHealthActivityActivitiesRoute
-  ApiHealthActivityMetricsRoute: typeof ApiHealthActivityMetricsRoute
-  ApiHealthActivitySummaryRoute: typeof ApiHealthActivitySummaryRoute
   ApiMonitoringDashboardRoute: typeof ApiMonitoringDashboardRoute
   ApiSubscriptionsSubscriptionIdRoute: typeof ApiSubscriptionsSubscriptionIdRoute
   ApiSubscriptionsMembersRoute: typeof ApiSubscriptionsMembersRoute
@@ -976,34 +921,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHealthEnhancedRouteImport
       parentRoute: typeof ApiHealthRoute
     }
-    '/api/health-activity/summary': {
-      id: '/api/health-activity/summary'
-      path: '/api/health-activity/summary'
-      fullPath: '/api/health-activity/summary'
-      preLoaderRoute: typeof ApiHealthActivitySummaryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/health-activity/metrics': {
-      id: '/api/health-activity/metrics'
-      path: '/api/health-activity/metrics'
-      fullPath: '/api/health-activity/metrics'
-      preLoaderRoute: typeof ApiHealthActivityMetricsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/health-activity/activities': {
-      id: '/api/health-activity/activities'
-      path: '/api/health-activity/activities'
-      fullPath: '/api/health-activity/activities'
-      preLoaderRoute: typeof ApiHealthActivityActivitiesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/debug/line-oauth': {
-      id: '/api/debug/line-oauth'
-      path: '/api/debug/line-oauth'
-      fullPath: '/api/debug/line-oauth'
-      preLoaderRoute: typeof ApiDebugLineOauthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/dca/summary': {
       id: '/api/dca/summary'
       path: '/api/dca/summary'
@@ -1193,10 +1110,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiDcaImportRoute: ApiDcaImportRoute,
   ApiDcaStreamRoute: ApiDcaStreamRoute,
   ApiDcaSummaryRoute: ApiDcaSummaryRoute,
-  ApiDebugLineOauthRoute: ApiDebugLineOauthRoute,
-  ApiHealthActivityActivitiesRoute: ApiHealthActivityActivitiesRoute,
-  ApiHealthActivityMetricsRoute: ApiHealthActivityMetricsRoute,
-  ApiHealthActivitySummaryRoute: ApiHealthActivitySummaryRoute,
   ApiMonitoringDashboardRoute: ApiMonitoringDashboardRoute,
   ApiSubscriptionsSubscriptionIdRoute: ApiSubscriptionsSubscriptionIdRoute,
   ApiSubscriptionsMembersRoute: ApiSubscriptionsMembersRoute,

@@ -18,20 +18,7 @@ export async function sendAIHelp(req: any) {
    • /ai สร้างกราฟ BTC จาก binance
    • /ai ขอลาวันที่ 10 มกราคม
 
-2️⃣ แนะนำเพลง Spotify:
-   /ai spotify [mood/ค้นหา]
-   /ai เพลง [mood/ค้นหา]
-
-   ตัวอย่าง:
-   • /ai spotify happy - เพลงมีความสุข
-   • /ai spotify sad - เพลงเศร้า
-   • /ai spotify energetic - เพลงกระฉับกระเฉง
-   • /ai spotify chill - เพลงชิล
-   • /ai spotify party - เพลงปาร์ตี้
-   • /ai spotify focus - เพลงสำหรับมีสมาธิ
-   • /ai spotify คิมแฮนึล - ค้นหาและแนะนำเพลง
-
-3️⃣ สนทนา (จำบริบท):
+2️⃣ สนทนา (จำบริบท):
    /ai chat [ข้อความ]
    /ai คุย [ข้อความ]
 
@@ -39,7 +26,7 @@ export async function sendAIHelp(req: any) {
    • /ai chat สวัสดี
    • /ai คุย วันนี้อากาศเป็นอย่างไร
 
-4️⃣ ดูคำสั่ง:
+3️⃣ ดูคำสั่ง:
    /ai help
    /ai ช่วยเหลือ
 
@@ -50,13 +37,13 @@ export async function sendAIHelp(req: any) {
 • โหมด chat สำหรับสนทนาทั่วไป
 
 📚 คำสั่งที่รองรับ:
-• 🎵 เพลง: แนะนำเพลงจาก Spotify
 • 💰 คริปโต: ราคาเหรียญ, กราฟ
 • 👔 การทำงาน: เช็คชื่อเข้า/ออก, รายงาน, ลา
 • 📊 ข้อมูล: ทอง, หวย, น้ำมัน
 • 🛠️ เครื่องมือ: สุ่มเลขบัตร, ตั้งค่า
 
-🔋 Powered by GPT-4o via MCP + Spotify API`;
+
+🔋 Powered by GPT-4o via MCP`;
 
   await sendMessage(req, [
     {
