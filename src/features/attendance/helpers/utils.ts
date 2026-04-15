@@ -44,7 +44,8 @@ export const getUsersWithPendingCheckout = async (): Promise<string[]> => {
 
 /**
  * Get users who need checkout reminders and have checkout reminders enabled
- * @returns Array of user IDs who need checkout reminders AND have the setting enabled
+ * Filters by both UserSettings.enableCheckOutReminders AND LineApprovalRequest.canReceiveReminders
+ * @returns Array of user IDs who need checkout reminders AND have the permission granted
  */
 export const getUsersWithPendingCheckoutAndSettingsEnabled = async (): Promise<
   string[]
@@ -61,7 +62,7 @@ export const getUsersWithPendingCheckoutAndSettingsEnabled = async (): Promise<
     const todayDate = getTodayDateString();
 
     // Get all attendance records for today with status checked_in (either on time or late)
-    // AND include user settings to check if checkout reminders are enabled
+    // AND include user settings and LINE account to check all permission layers
     const pendingCheckouts = await db.workAttendance.findMany({
       where: {
         workDate: todayDate,
@@ -81,16 +82,38 @@ export const getUsersWithPendingCheckoutAndSettingsEnabled = async (): Promise<
                 enableCheckOutReminders: true,
               },
             },
+            accounts: {
+              where: { providerId: "line" },
+              select: { accountId: true },
+            },
           },
         },
       },
     });
 
-    // Filter users who have checkout reminders enabled (default is true if no settings)
+    // Collect all LINE user IDs to batch-fetch permissions
+    const lineUserIds = pendingCheckouts
+      .map((r) => r.user.accounts[0]?.accountId)
+      .filter((id): id is string => typeof id === "string");
+
+    // Batch-fetch canReceiveReminders from LineApprovalRequest
+    const approvals = await db.lineApprovalRequest.findMany({
+      where: { lineUserId: { in: lineUserIds } },
+      select: { lineUserId: true, canReceiveReminders: true },
+    });
+    const permissionMap = new Map(
+      approvals.map((a) => [a.lineUserId, a.canReceiveReminders ?? false]),
+    );
+
+    // Filter users who:
+    // 1. Have checkout reminders enabled in UserSettings (default true)
+    // 2. Have canReceiveReminders = true in LineApprovalRequest (admin permission)
     const filteredUsers = pendingCheckouts.filter((record) => {
       const checkoutEnabled =
         record.user.settings?.enableCheckOutReminders ?? true;
-      return checkoutEnabled;
+      const lineUserId = record.user.accounts[0]?.accountId;
+      const hasPermission = lineUserId ? (permissionMap.get(lineUserId) ?? false) : false;
+      return checkoutEnabled && hasPermission;
     });
 
     // Extract just the user IDs
