@@ -1,5 +1,4 @@
 import { betterAuth } from "better-auth";
-import { prismaAdapter } from "better-auth/adapters/prisma";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { env } from "@/env.mjs";
@@ -7,6 +6,7 @@ import { db } from "../database/db";
 import type { AppSession } from "./session-context";
 import { syncLineProfileToDatabase } from "./line-profile-sync";
 import { isAllowedHost } from "@/lib/security/url-validator";
+import { createCustomPrismaAdapter } from "./prisma-adapter";
 
 const LINE_FALLBACK_EMAIL_DOMAIN = "line.local";
 const DEFAULT_DEV_PORT = "4325";
@@ -194,7 +194,7 @@ validateProductionDomains();
 
 export const auth = betterAuth({
   baseURL: getAuthBaseUrl(),
-  database: prismaAdapter(db, {
+  database: createCustomPrismaAdapter(db, {
     provider: "mongodb",
   }),
   advanced: {
@@ -268,55 +268,6 @@ export const auth = betterAuth({
   databaseHooks: {
     account: {
       create: {
-        async before(account) {
-          // Check if account already exists to prevent unique constraint violations
-          const existing = await db.account.findUnique({
-            where: {
-              providerId_accountId: {
-                providerId: account.providerId,
-                accountId: account.accountId,
-              },
-            },
-            select: {
-              id: true,
-              userId: true,
-            },
-          });
-
-          if (existing) {
-            console.log(
-              `[Auth] Account already exists for ${account.providerId}:${account.accountId} (userId: ${existing.userId})`,
-            );
-
-            // Update existing account with new tokens/data
-            await db.account.update({
-              where: {
-                providerId_accountId: {
-                  providerId: account.providerId,
-                  accountId: account.accountId,
-                },
-              },
-              data: {
-                accessToken: account.accessToken,
-                refreshToken: account.refreshToken,
-                idToken: account.idToken,
-                accessTokenExpiresAt: account.accessTokenExpiresAt,
-                refreshTokenExpiresAt: account.refreshTokenExpiresAt,
-                scope: account.scope,
-                updatedAt: new Date(),
-              },
-            });
-
-            console.log(
-              `[Auth] Updated existing account tokens for ${account.providerId}:${account.accountId}`,
-            );
-
-            // Return null to prevent creation - we've updated the existing account
-            return null;
-          }
-
-          return account;
-        },
         async after(account) {
           try {
             await syncLineApprovalRequest(account);
