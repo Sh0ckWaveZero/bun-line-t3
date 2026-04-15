@@ -12,8 +12,23 @@ import {
   createRootRouteWithContext,
   redirect,
 } from "@tanstack/react-router";
-import { TanStackDevtools } from "@tanstack/react-devtools";
-import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { lazy, Suspense } from "react";
+
+const TanStackDevtools = import.meta.env.DEV
+  ? lazy(() =>
+      import("@tanstack/react-devtools").then((m) => ({
+        default: m.TanStackDevtools,
+      })),
+    )
+  : () => null;
+
+const TanStackRouterDevtoolsPanel = import.meta.env.DEV
+  ? lazy(() =>
+      import("@tanstack/react-router-devtools").then((m) => ({
+        default: m.TanStackRouterDevtoolsPanel,
+      })),
+    )
+  : () => null;
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { getLineUserId, getServerAuthSession } from "@/lib/auth";
@@ -173,15 +188,19 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             </ErrorBoundary>
           </Providers>
         </AuthSessionProvider>
-        <TanStackDevtools
-          config={{ position: "bottom-right" }}
-          plugins={[
-            {
-              name: "TanStack Router",
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-          ]}
-        />
+        {import.meta.env.DEV && (
+          <Suspense fallback={null}>
+            <TanStackDevtools
+              config={{ position: "bottom-right" }}
+              plugins={[
+                {
+                  name: "TanStack Router",
+                  render: <TanStackRouterDevtoolsPanel />,
+                },
+              ]}
+            />
+          </Suspense>
+        )}
         <Scripts />
       </body>
     </html>
