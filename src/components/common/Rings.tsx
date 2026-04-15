@@ -1,5 +1,4 @@
 import React, { useEffect, useCallback } from "react";
-import { Pane } from "tweakpane";
 import { CONFIG } from "@/lib/constants/config";
 
 interface RingProps {
@@ -43,11 +42,13 @@ const Rings: React.FC<RingProps> = ({ count, id }) => {
   }, []);
 
   useEffect(() => {
-    const pane = new Pane({ title: "Config", expanded: false });
+    if (import.meta.env.PROD) {
+      UPDATE();
+      return;
+    }
 
-    // import.meta.env.PROD = true when built with `vite build` (production)
-    // process.env.NEXT_PUBLIC_APP_ENV is always undefined in Vite (Next.js syntax)
-    pane.hidden = import.meta.env.PROD;
+    import("tweakpane").then(({ Pane }) => {
+    const pane = new Pane({ title: "Config", expanded: false });
 
     pane.addBinding(CONFIG, "radius", {
       min: 0,
@@ -101,6 +102,7 @@ const Rings: React.FC<RingProps> = ({ count, id }) => {
     pane.on("change", UPDATE);
 
     UPDATE();
+    }); // end import("tweakpane").then
   }, [UPDATE]);
 
   return (
