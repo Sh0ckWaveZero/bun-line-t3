@@ -48,9 +48,14 @@ export const isLineUserApproved = async (userId: string): Promise<boolean> => {
   }
 
   // 3. ตรวจสอบจากฐานข้อมูล
-  const approval = await db.lineApprovalRequest.findUnique({
+  // ค้นหาด้วยทั้ง lineUserId (Bot channel) และ loginLineUserId (Login channel)
+  // เพราะ LINE ออก userId คนละตัวต่อ channel
+  const approval = await db.lineApprovalRequest.findFirst({
     where: {
-      lineUserId,
+      OR: [
+        { lineUserId },
+        { loginLineUserId: lineUserId },
+      ],
     },
     select: {
       status: true,

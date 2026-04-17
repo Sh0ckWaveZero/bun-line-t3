@@ -19,7 +19,6 @@ import {
   calculateUserReminderTime,
   calculateUserCompletionTime,
 } from "@/features/attendance/helpers/utils";
-import { checkCronLineApproval } from "@/lib/auth/approval-guard";
 
 /**
  * Enhanced Checkout Reminder with Dynamic Timing
@@ -32,12 +31,6 @@ export async function GET(request: Request) {
     const authHeader = request.headers.get("authorization");
     if (!validateSimpleCronAuth(authHeader)) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // 🔐 SECURITY: Check LINE Messaging API approval
-    const approvalCheck = await checkCronLineApproval();
-    if (!approvalCheck.approved) {
-      return approvalCheck.response!;
     }
 
     // Get current UTC time
@@ -154,23 +147,30 @@ export async function GET(request: Request) {
             };
           }
 
-          // Find the LINE account associated with this user
+          // ดึง LINE Login channel ID ก่อน
           const userAccount = await db.account.findFirst({
-            where: {
-              userId,
-              providerId: "line",
-            },
+            where: { userId, providerId: "line" },
+            select: { accountId: true },
           });
 
           if (!userAccount) {
-            return {
-              userId,
-              status: "skipped",
-              reason: "No LINE account found",
-            };
+            return { userId, status: "skipped", reason: "No LINE account found" };
           }
 
-          // Send the personalized push message
+          // หา Messaging API user ID จาก lineApprovalRequest
+          // (account.accountId อาจเป็น LINE Login channel ID ที่ต่างจาก Messaging API ID)
+          const approval = await db.lineApprovalRequest.findFirst({
+            where: {
+              OR: [
+                { lineUserId: userAccount.accountId },
+                { loginLineUserId: userAccount.accountId },
+              ],
+            },
+            select: { lineUserId: true },
+          });
+
+          const pushTargetId = approval?.lineUserId ?? userAccount.accountId;
+
           const payload = [
             {
               type: "text",
@@ -187,7 +187,7 @@ export async function GET(request: Request) {
             ),
           ];
 
-          await sendPushMessage(userAccount.accountId, payload);
+          await sendPushMessage(pushTargetId, payload);
 
           // Update reminder status in database
           await db.workAttendance.update({
@@ -200,7 +200,7 @@ export async function GET(request: Request) {
 
           return {
             userId,
-            lineUserId: userAccount.accountId.substring(0, 8) + "...",
+            lineUserId: pushTargetId.substring(0, 8) + "...",
             status: "sent",
             reminderType,
             remindersSent: `${reminderType === "10min" ? "1" : "2"}/2`,

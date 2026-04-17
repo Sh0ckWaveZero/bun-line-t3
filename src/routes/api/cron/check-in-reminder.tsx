@@ -11,7 +11,6 @@ import {
   createReminderSentResponse,
   createNoUsersResponse,
 } from "@/lib/utils/cron-response";
-import { checkCronLineApproval } from "@/lib/auth/approval-guard";
 
 /**
  * Morning Check-in Reminder Cron Job
@@ -30,12 +29,6 @@ export async function GET(req: Request) {
     const authResult = validateCronAuth(req);
     if (!authResult.success) {
       return createErrorResponse(authResult.error!, authResult.status!);
-    }
-
-    // 🔐 SECURITY: Check LINE Messaging API approval
-    const approvalCheck = await checkCronLineApproval();
-    if (!approvalCheck.approved) {
-      return approvalCheck.response!;
     }
 
     // Get current time and convert to Bangkok timezone

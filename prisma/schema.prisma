@@ -372,18 +372,19 @@ enum ApprovalStatus {
 }
 
 model LineApprovalRequest {
-  id            String         @id @default(auto()) @map("_id") @db.ObjectId
-  lineUserId    String         @unique @map("line_user_id") // LINE user ID
-  displayName   String?        @map("display_name") // ชื่อที่แสดงใน LINE
-  pictureUrl    String?        @map("picture_url") // รูปโปรไฟล์ LINE
-  statusMessage String?        @map("status_message") // สถานะ LINE
-  reason        String?        @map("reason") // เหตุผลที่ขอใช้งาน
-  rejectReason  String?        @map("reject_reason") // เหตุผลที่ปฏิเสธ (ถ้ามี)
-  status        ApprovalStatus @default(PENDING) @map("status")
-  approvedBy    String?        @map("approved_by") // admin user id ที่อนุมัติ
-  approvedAt    DateTime?      @map("approved_at") // วันที่อนุมัติ
-  expiresAt     DateTime?      @map("expires_at") // null = ไม่หมดอายุ
-  notifiedAt    DateTime?      @map("notified_at") // วันที่แจ้งเตือน LINE ผู้ใช้
+  id              String         @id @default(auto()) @map("_id") @db.ObjectId
+  lineUserId      String         @unique @map("line_user_id") // LINE Messaging API (Bot) user ID
+  loginLineUserId String?        @unique @map("login_line_user_id") // LINE Login (web app) user ID — อาจต่างจาก Bot channel
+  displayName     String?        @map("display_name") // ชื่อที่แสดงใน LINE
+  pictureUrl      String?        @map("picture_url") // รูปโปรไฟล์ LINE
+  statusMessage   String?        @map("status_message") // สถานะ LINE
+  reason          String?        @map("reason") // เหตุผลที่ขอใช้งาน
+  rejectReason    String?        @map("reject_reason") // เหตุผลที่ปฏิเสธ (ถ้ามี)
+  status          ApprovalStatus @default(PENDING) @map("status")
+  approvedBy      String?        @map("approved_by") // admin user id ที่อนุมัติ
+  approvedAt      DateTime?      @map("approved_at") // วันที่อนุมัติ
+  expiresAt       DateTime?      @map("expires_at") // null = ไม่หมดอายุ
+  notifiedAt      DateTime?      @map("notified_at") // วันที่แจ้งเตือน LINE ผู้ใช้
 
   // Feature permissions
   canRequestAttendanceReport Boolean @default(false) @map("can_request_attendance_report") // ขอรายงานเข้างานได้
