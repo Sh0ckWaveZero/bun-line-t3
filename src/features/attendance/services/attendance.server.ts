@@ -86,6 +86,33 @@ async function isWorkingDay(date: Date): Promise<boolean> {
  * @param todayString วันที่รูปแบบ YYYY-MM-DD (Bangkok)
  * @returns string[] LINE userId
  */
+/**
+ * ดึง Messaging API user ID สำหรับ push notification
+ * account.accountId = LINE Login channel ID (อาจต่างจาก Messaging API channel ID)
+ * ต้อง push ด้วย lineApprovalRequest.lineUserId (Messaging API ID เสมอ)
+ */
+async function resolveMessagingApiUserId(
+  loginChannelId: string,
+): Promise<{ messagingUserId: string; canReceiveReminders: boolean } | null> {
+  const approval = await db.lineApprovalRequest.findFirst({
+    where: {
+      OR: [
+        { lineUserId: loginChannelId },
+        { loginLineUserId: loginChannelId },
+      ],
+    },
+    select: {
+      lineUserId: true,
+      canReceiveReminders: true,
+    },
+  });
+  if (!approval) return null;
+  return {
+    messagingUserId: approval.lineUserId,
+    canReceiveReminders: approval.canReceiveReminders ?? false,
+  };
+}
+
 async function getActiveLineUserIdsForCheckinReminder(
   todayString: string,
 ): Promise<string[]> {
@@ -109,33 +136,18 @@ async function getActiveLineUserIdsForCheckinReminder(
       },
     });
 
-    // Check if user has notifications enabled (default is true if no settings)
     const notificationsEnabled = user?.settings?.enableCheckInReminders ?? true;
+    const loginChannelId = user?.accounts[0]?.accountId;
 
-    // Check LINE permissions
-    const lineUserId = user?.accounts[0]?.accountId;
-    let hasReminderPermission = false;
-    if (lineUserId) {
-      const approval = await db.lineApprovalRequest.findUnique({
-        where: { lineUserId },
-        select: { canReceiveReminders: true },
-      });
-      hasReminderPermission = approval?.canReceiveReminders ?? false;
-    }
-
-    if (
-      user &&
-      user.accounts.length > 0 &&
-      user.leaves.length === 0 &&
-      notificationsEnabled &&
-      hasReminderPermission
-    ) {
-      return [user.accounts[0]?.accountId].filter(
-        (id): id is string => typeof id === "string",
-      );
-    } else {
+    if (!loginChannelId || !user || user.leaves.length > 0 || !notificationsEnabled) {
       return [];
     }
+
+    // ใช้ Messaging API user ID สำหรับ push (ไม่ใช่ Login channel ID)
+    const resolved = await resolveMessagingApiUserId(loginChannelId);
+    if (!resolved?.canReceiveReminders) return [];
+
+    return [resolved.messagingUserId];
   }
 
   const users = await db.user.findMany({
@@ -154,41 +166,57 @@ async function getActiveLineUserIdsForCheckinReminder(
     },
   });
 
-  // Get all LINE user IDs for permission check
-  const lineUserIds = users
-    .map((u) => u.accounts[0]?.accountId)
-    .filter((id): id is string => typeof id === "string");
+  type UserQueryResult = (typeof users)[number];
 
-  // Fetch permissions for all LINE users
+  // กรอง users ที่ผ่านเงื่อนไขเบื้องต้นก่อน
+  const candidates = users.filter((u: UserQueryResult) => {
+    const hasLineAccount = u.accounts.length > 0 && !!u.accounts[0]?.accountId;
+    const notOnLeave = u.leaves.length === 0;
+    const notificationsEnabled = u.settings?.enableCheckInReminders ?? true;
+    return hasLineAccount && notOnLeave && notificationsEnabled;
+  });
+
+  // Get all candidate login channel IDs
+  const loginChannelIds = candidates
+    .map((u: UserQueryResult) => u.accounts[0]?.accountId)
+    .filter((id: string | undefined): id is string => Boolean(id));
+
+  // ดึง approvals โดยรองรับทั้ง lineUserId และ loginLineUserId
+  // (LINE Login channel ID อาจต่างจาก Messaging API channel ID)
   const approvals = await db.lineApprovalRequest.findMany({
     where: {
-      lineUserId: { in: lineUserIds },
+      canReceiveReminders: true,
+      OR: [
+        { lineUserId: { in: loginChannelIds } },
+        { loginLineUserId: { in: loginChannelIds } },
+      ],
     },
     select: {
       lineUserId: true,
-      canReceiveReminders: true,
+      loginLineUserId: true,
     },
   });
 
-  // Create a map for quick lookup
-  const permissionMap = new Map(
-    approvals.map((a) => [a.lineUserId, a.canReceiveReminders ?? false]),
-  );
+  // สร้าง map: loginChannelId → messagingApiUserId
+  const messagingIdMap = new Map<string, string>();
+  for (const a of approvals) {
+    // lineUserId เป็น Messaging API ID (ใช้ push)
+    if (a.loginLineUserId && loginChannelIds.includes(a.loginLineUserId)) {
+      messagingIdMap.set(a.loginLineUserId, a.lineUserId);
+    } else if (loginChannelIds.includes(a.lineUserId)) {
+      messagingIdMap.set(a.lineUserId, a.lineUserId);
+    }
+  }
 
-  return users
-    .filter((u) => {
-      const hasLineAccount = u.accounts.length > 0 && u.accounts[0];
-      const notOnLeave = u.leaves.length === 0;
-      // Default to true if user has no settings yet
-      const notificationsEnabled = u.settings?.enableCheckInReminders ?? true;
-      // Check LINE permission
-      const lineUserId = u.accounts[0]?.accountId;
-      const hasPermission = lineUserId ? (permissionMap.get(lineUserId) ?? false) : false;
-
-      return hasLineAccount && notOnLeave && notificationsEnabled && hasPermission;
-    })
-    .map((u) => u.accounts[0]?.accountId)
-    .filter((id): id is string => typeof id === "string");
+  // คืน Messaging API user IDs สำหรับ push notification
+  const result: string[] = [];
+  for (const u of candidates) {
+    const loginId = u.accounts[0]?.accountId;
+    if (!loginId) continue;
+    const messagingId = messagingIdMap.get(loginId);
+    if (messagingId) result.push(messagingId);
+  }
+  return result;
 }
 
 const checkIn = async (userId: string): Promise<CheckInResult> => {
@@ -491,7 +519,7 @@ const getMonthlyAttendanceReport = async (
       parseInt(monthNum) - 1,
     );
     const processedRecords: AttendanceRecord[] = attendanceRecords.map(
-      (record) => {
+      (record: typeof attendanceRecords[number]) => {
         let hoursWorked: number | null = null;
         if (record.checkInTime && record.checkOutTime) {
           const timeDiff =
