@@ -16,7 +16,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Calendar as CalendarIcon,
-  Download,
   Upload,
   Plus,
   CalendarPlus,
@@ -112,28 +111,6 @@ function CalendarPage() {
   const getLeaveForDate = (date: Date) => {
     const dateStr = format(date, "yyyy-MM-dd");
     return leaves.find((l) => l.date === dateStr);
-  };
-
-  const handleExport = async (format: "json" | "csv") => {
-    const year = getYear(currentDate);
-    try {
-      const response = await fetch(
-        `/api/holidays?year=${year}&export=${format}`,
-      );
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `holidays-${year}.${format}`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      }
-    } catch (error) {
-      console.error("Error exporting holidays:", error);
-    }
   };
 
   const buddhistYear = getYear(currentDate) + 543;
@@ -246,11 +223,11 @@ function CalendarPage() {
   return (
     <div
       id="calendar-page"
-      className="bg-background text-foreground min-h-screen"
+      className="bg-background text-foreground h-[calc(100svh-3.5rem)] overflow-hidden sm:h-auto sm:min-h-screen sm:overflow-visible"
     >
       <main
         id="calendar-main"
-        className="mx-auto flex h-svh w-full max-w-7xl flex-col overflow-hidden px-2 py-2 sm:block sm:h-auto sm:min-h-screen sm:overflow-visible sm:px-5 sm:py-5 lg:px-6 lg:py-8"
+        className="mx-auto flex h-full w-full max-w-7xl flex-col overflow-hidden px-2 py-2 sm:block sm:h-auto sm:min-h-screen sm:overflow-visible sm:px-5 sm:py-5 lg:px-6 lg:py-8"
       >
         <section
           id="calendar-hero"
@@ -318,32 +295,17 @@ function CalendarPage() {
 
         <section
           id="calendar-toolbar"
-          className="border-border bg-card mb-2 grid grid-cols-[auto_minmax(0,1fr)] gap-2 rounded-lg border p-2 shadow-sm sm:mb-4 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:p-3"
+          className="border-border bg-card mb-2 grid grid-cols-[auto_minmax(0,1fr)_auto] gap-2 rounded-lg border p-2 shadow-sm sm:mb-4 sm:grid-cols-[auto_minmax(0,1fr)_auto_auto] sm:items-center sm:p-3"
         >
-          <div
-            id="calendar-month-navigation"
-            className="grid grid-cols-2 gap-1 sm:flex sm:gap-2"
+          <Button
+            id="calendar-prev-month"
+            onClick={() => navigateMonth("prev")}
+            variant="outline"
+            size="sm"
           >
-            <Button
-              id="calendar-prev-month"
-              onClick={() => navigateMonth("prev")}
-              variant="outline"
-              size="sm"
-            >
-              <ChevronLeft className="mr-2 h-4 w-4" />
-              ก่อน
-            </Button>
-
-            <Button
-              id="calendar-next-month"
-              onClick={() => navigateMonth("next")}
-              variant="outline"
-              size="sm"
-            >
-              ถัด
-              <ChevronRight className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
+            <ChevronLeft className="mr-2 h-4 w-4" />
+            ก่อน
+          </Button>
 
           <div
             id="calendar-month-picker"
@@ -386,64 +348,30 @@ function CalendarPage() {
             </select>
           </div>
 
+          <Button
+            id="calendar-next-month"
+            onClick={() => navigateMonth("next")}
+            variant="outline"
+            size="sm"
+          >
+            ถัด
+            <ChevronRight className="ml-2 h-4 w-4" />
+          </Button>
+
           <div
             id="calendar-action-buttons"
-            className="col-span-2 grid grid-cols-5 gap-1 sm:col-span-1 sm:flex sm:flex-wrap sm:justify-end sm:gap-2"
+            className="col-span-3 flex justify-end sm:col-span-1"
           >
             <Button
               id="calendar-request-leave"
               onClick={() => setShowLeaveModal(true)}
               variant="default"
               size="sm"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-2 text-xs sm:h-9 sm:px-3"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 w-full px-3 text-xs sm:h-9 sm:w-auto"
               aria-label="แจ้งลา"
             >
-              <Plus className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">แจ้งลา</span>
-            </Button>
-            <Button
-              id="calendar-add-holiday"
-              onClick={() => setShowHolidayModal(true)}
-              variant="outline"
-              size="sm"
-              className="h-8 px-2 text-xs sm:h-9 sm:px-3"
-              aria-label="เพิ่มวันหยุด"
-            >
-              <CalendarPlus className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">เพิ่มวันหยุด</span>
-            </Button>
-            <Button
-              id="calendar-import-holidays"
-              onClick={() => setShowImportModal(true)}
-              variant="outline"
-              size="sm"
-              className="h-8 px-2 text-xs sm:h-9 sm:px-3"
-              aria-label="นำเข้า"
-            >
-              <Upload className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">นำเข้า</span>
-            </Button>
-            <Button
-              id="calendar-export-json"
-              onClick={() => handleExport("json")}
-              variant="outline"
-              size="sm"
-              className="h-8 px-2 text-xs sm:h-9 sm:px-3"
-              aria-label="ส่งออก JSON"
-            >
-              <Download className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">JSON</span>
-            </Button>
-            <Button
-              id="calendar-export-csv"
-              onClick={() => handleExport("csv")}
-              variant="outline"
-              size="sm"
-              className="h-8 px-2 text-xs sm:col-span-1 sm:h-9 sm:px-3"
-              aria-label="ส่งออก CSV"
-            >
-              <Download className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">CSV</span>
+              <Plus className="mr-2 h-4 w-4" />
+              แจ้งลา
             </Button>
           </div>
         </section>
