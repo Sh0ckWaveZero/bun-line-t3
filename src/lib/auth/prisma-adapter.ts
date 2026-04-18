@@ -58,10 +58,10 @@ const syncLineApprovalRequest = async (account: {
  */
 export function createCustomPrismaAdapter(
   prisma: PrismaClient,
-  options?: { provider?: "mongodb" },
+  options?: { provider?: "postgresql" },
 ) {
   const baseAdapterFactory = prismaAdapter(prisma, {
-    provider: options?.provider ?? "mongodb",
+    provider: options?.provider ?? "postgresql",
   });
 
   // Return a factory function so better-auth takes the correct branch:

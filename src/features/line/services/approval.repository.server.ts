@@ -1,6 +1,6 @@
 /**
  * LINE Approval Repository
- * จัดการข้อมูล LineApprovalRequest ใน MongoDB ผ่าน Prisma
+ * จัดการข้อมูล LineApprovalRequest ผ่าน Prisma
  */
 import { db } from "@/lib/database/db";
 import type { ApprovalStatus, LineApprovalRequest } from "@prisma/client";

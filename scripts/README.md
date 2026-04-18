@@ -1,67 +1,138 @@
-# 🔧 Scripts Directory
+# Scripts Directory
 
-Simple และเฉพาะเจาะจง - ป้องกันการรัน `bun run dev` ซ้ำ
+## 📁 Directory Structure
 
-## 🎯 Core Tools
+```
+scripts/
+├── migrations/          # Database migrations (one-time, historical)
+├── db/                  # Database operations (seeding, checks, maintenance)
+├── devops/              # DevOps & deployment scripts
+├── monitoring/          # Health checks & monitoring
+├── secrets/             # Secrets generation scripts
+├── tests/               # Test & debug utilities
+├── archive/             # Deprecated/unused scripts
+└── README.md            # This file
+```
 
-### `simple-dev-server.ts` - Dev Server with Process Lock
+---
 
-ป้องกันการรัน bun run dev ซ้ำ
+## 🔄 migrations/
+
+Database migration scripts (typically one-time use, kept for reference)
+
+- `migrate-mongodb-to-postgres.ts` - MongoDB → PostgreSQL data migration
+- `migrate-better-auth-canonical.ts` - Better Auth canonical fields migration
+- `migrate-user-settings.ts` - User settings schema migration
+
+---
+
+## 💾 db/
+
+Database operations: seeding, health checks, maintenance
+
+- `seed-admin-roles.ts` - Create admin user accounts
+- `check-indexes.ts` - Verify database indexes
+- `create-missing-indexes.ts` - Create missing database indexes
+- `delete-old-line-accounts.ts` - Clean up unused LINE accounts
+- `update-holiday-notifications.ts` - Update holiday notification settings
+
+---
+
+## 🚀 devops/
+
+DevOps, deployment, and environment management
+
+- `docker-entrypoint.sh` - Docker container entrypoint
+- `switch-env.sh` - Switch between dev/prod environments
+- `deploy-oauth-fix.sh` - Deploy LINE OAuth fixes
+- `update-cloudflare-tunnel.sh` - Update Cloudflare tunnel config
+- `cron-request.sh` - Cron job request handler
+- `optimize-bundle.sh` - Bundle optimization
+
+---
+
+## 📊 monitoring/
+
+Health checks and monitoring utilities
+
+- `health-check.sh` - General health check
+- `monitoring-dashboard.sh` - Open monitoring dashboard
+- `check-line-oauth.sh` - Check LINE OAuth status
+- `check-proxy-headers.sh` - Verify proxy headers
+
+---
+
+## 🔐 secrets/
+
+Secrets and configuration generation
+
+- `generate-secrets.ts` - Generate app secrets
+- `generate-github-secrets.ts` - Generate GitHub Actions secrets
+- `generate-github-secrets.sh` - Shell wrapper for GitHub secrets
+
+---
+
+## 🧪 tests/
+
+Test and debug utilities
+
+- `test-line-webhook.ts` - Test LINE webhook endpoints
+
+---
+
+## 📦 archive/
+
+Deprecated or unused scripts (kept for historical reference)
+
+- `convert-thai-names-corpus.ts`
+- `fix-holidays.ts`
+- `fix-sessions-index.ts`
+- `fix-users-email.ts`
+- `simple-dev-server.ts`
+- `simple-lock.ts`
+- `test-line-oauth-fix.sh`
+
+---
+
+## 📝 NPM Scripts
+
+Key scripts available via `bun run`:
 
 ```bash
-bun run dev              # Start dev server with lock protection
-bun run dev:force        # Force start dev server
+# Database
+bun run db:migrate              # Run Prisma migrations
+bun run db:generate             # Generate Prisma client
+bun run db:studio               # Open Prisma Studio
+bun run db:check-indexes        # Check database indexes
+bun run db:create-indexes       # Create missing indexes
+bun run seed:admin              # Seed admin roles
+
+# Migrations
+bun run migrate:mongo-to-pg     # Migrate MongoDB → PostgreSQL
+bun run migrate:mongo-to-pg:dry # Dry run migration
+
+# Secrets
+bun run generate:secrets        # Generate app secrets
+bun run secrets:generate        # Generate GitHub secrets
+bun run secrets:validate        # Validate GitHub secrets
+
+# Health
+bun run health:check            # Run health check
+bun run health:monitoring       # Open monitoring dashboard
+bun run health:line-oauth       # Check LINE OAuth
+
+# DevOps
+bun run env:dev                 # Switch to dev environment
+bun run env:prod                # Switch to prod environment
+bun run env:status              # Show current environment
 ```
 
-### `simple-lock.ts` - Simple Process Lock
+---
 
-ระบบป้องกันการรัน process ซ้ำ (สำหรับ dev server)
+## ⚙️ Adding New Scripts
 
-```bash
-bun scripts/simple-lock.ts list    # ดูรายการ dev processes ที่รัน
+1. Place the script in the appropriate subdirectory
+2. Add an npm script to `package.json` if needed
+3. Document the script in this README
+4. Use descriptive filenames with kebab-case
 
-# ใช้ใน Code
-import { withProcessLock } from './scripts/simple-lock'
-await withProcessLock('dev-server', async () => {
-  // Start development server
-})
-```
-
-## 🛠️ Utility Scripts
-
-| Script                       | Purpose                            | Usage                                        |
-| ---------------------------- | ---------------------------------- | -------------------------------------------- |
-| `generate-secrets.ts`        | 🔑 Generate secure secrets         | `bun scripts/generate-secrets.ts`            |
-| `generate-github-secrets.ts` | 🔐 GitHub secrets management       | `bun scripts/generate-github-secrets.ts`     |
-| `docker-entrypoint.sh`       | 🐳 Docker container startup        | Used in Dockerfile                           |
-| `switch-env.sh`              | 🔀 Environment switcher            | `./scripts/switch-env.sh dev               | prod` |
-
-## 🎯 Quick Start
-
-```bash
-# เริ่ม development server (จะป้องกันการรันซ้ำ)
-bun run dev
-
-# หยุด development server
-# กด Ctrl+C ใน terminal ที่รัน dev server
-```
-
-## 🎭 พฤติกรรมเมื่อ Dev Server รันซ้ำ
-
-เมื่อพยายามรัน `bun run dev` หรือ `npm run dev` ซ้ำ:
-
-```
-⚠️  Process 'dev-server' is already running (PID: 12345)
-   Started at: 6/14/2025, 10:30:15 AM
-   Please wait for it to finish or stop it with Ctrl+C.
-🚫 Exiting because process is already running.
-```
-
-## 💡 Best Practices
-
-- ✅ **ใช้ Ctrl+C เพื่อหยุด dev server**: Lock files จะถูกล้างอัตโนมัติ
-- ✅ **รัน `npm run dev` ได้เลย**: ระบบจะตรวจสอบให้เองว่ารันอยู่หรือไม่
-
-## � Legacy Scripts
-
-Scripts อื่นๆ ที่ไม่เกี่ยวข้องกับ dev server ถูกย้ายไป `legacy/` directory แล้ว

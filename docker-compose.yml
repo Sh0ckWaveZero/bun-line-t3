@@ -79,8 +79,6 @@ services:
       # Database Configuration (GitHub Secrets)
       # =============================================================================
       - DATABASE_URL=${DATABASE_URL}
-      - MONGODB_URI=${DATABASE_URL}
-      - DB_NAME=linebot
 
       # =============================================================================
       # External API Keys (6 GitHub Secrets)

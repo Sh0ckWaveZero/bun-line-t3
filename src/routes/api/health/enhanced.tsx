@@ -85,7 +85,7 @@ export async function GET(request: Request) {
 
     // 1. Database Health Check
     try {
-      await db.$runCommandRaw({ ping: 1 });
+      await db.$queryRaw`SELECT 1`;
       healthCheck.checks.database = true;
       healthCheck.metrics.databaseStatus = "connected";
     } catch (dbError) {
@@ -94,7 +94,7 @@ export async function GET(request: Request) {
       healthCheck.metrics.databaseStatus = "disconnected";
       healthScore -= 30;
       alerts.push("Database connection failed");
-      recommendations.push("Check DATABASE_URL and MongoDB server status");
+      recommendations.push("Check DATABASE_URL and PostgreSQL server status");
     }
 
     // 2. Memory Usage Check

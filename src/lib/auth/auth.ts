@@ -8,6 +8,7 @@ import { syncLineProfileToDatabase } from "./line-profile-sync";
 import { isAllowedHost } from "@/lib/security/url-validator";
 import { createCustomPrismaAdapter } from "./prisma-adapter";
 
+
 const LINE_FALLBACK_EMAIL_DOMAIN = "line.local";
 const DEFAULT_DEV_PORT = "4325";
 
@@ -195,7 +196,7 @@ validateProductionDomains();
 export const auth = betterAuth({
   baseURL: getAuthBaseUrl(),
   database: createCustomPrismaAdapter(db, {
-    provider: "mongodb",
+    provider: "postgresql",
   }),
   advanced: {
     useSecureCookies: env.APP_ENV === "production",

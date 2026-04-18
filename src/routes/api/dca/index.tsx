@@ -27,10 +27,25 @@ const createDcaSchema = z.object({
  */
 export async function GET(request: Request) {
   try {
+    console.log(`🌐 [DCA GET] Incoming request:`, {
+      url: request.url,
+      method: request.method,
+    });
+
     const { searchParams } = new URL(request.url);
+
+    console.log(`🔍 [DCA GET] Query params:`, {
+      page: searchParams.get("page"),
+      limit: searchParams.get("limit"),
+      lineUserId: searchParams.get("lineUserId"),
+    });
+
     const lineUserIds = await getLineUserIds(request);
 
+    console.log(`📊 [DCA GET] Got ${lineUserIds.length} lineUserIds`);
+
     if (lineUserIds.length === 0) {
+      console.log(`❌ [DCA GET] No lineUserIds found - unauthorized`);
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 

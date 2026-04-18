@@ -125,14 +125,38 @@ const stripDcaAddPrefix = (fullText: string): string => {
  *   /dca add 107.99 BTC 0.00004634 2330307.8 2026-04-11
  */
 const handleAdd = async (req: any, args: string[]) => {
-  const userId = req.body?.events?.[0]?.source?.userId as string | undefined;
+  const botUserId = req.body?.events?.[0]?.source?.userId as string | undefined;
 
-  if (!userId) {
+  console.log(`🤖 [DCA Add] Bot User ID from webhook:`, botUserId);
+
+  if (!botUserId) {
     await sendMessage(req, [
       { type: "text", text: "❌ ไม่สามารถระบุตัวตนผู้ใช้ได้ กรุณาลองใหม่" },
     ]);
     return;
   }
+
+  // 🔍 พยายามใช้ Login User ID ถ้ามีการ approve แล้ว (รองรับกรณีคนละ Channel)
+  // หา approval ที่มี Bot User ID นี้และเชื่อมกับ Login User ID
+  const { db } = await import("@/lib/database/db");
+  const approval = await db.lineApprovalRequest.findFirst({
+    where: {
+      lineUserId: botUserId,
+      status: "APPROVED",
+      loginLineUserId: { not: null },
+    },
+    select: { loginLineUserId: true },
+  });
+
+  // ใช้ Login User ID ถ้ามี ไม่งั้นใช้ Bot User ID
+  const userId = approval?.loginLineUserId || botUserId;
+
+  console.log(`🔗 [DCA Add] User ID mapping:`, {
+    botUserId,
+    loginUserId: approval?.loginLineUserId || null,
+    finalUserId: userId,
+    source: approval?.loginLineUserId ? "Login User ID (from approval)" : "Bot User ID (fallback)",
+  });
 
   // ─── โหมด 1: ลอง parse ข้อความ Bitkub จาก full message text ───
   const fullText = getFullMessageText(req);
@@ -330,14 +354,36 @@ const handleList = async (req: any) => {
  *   /dca del 3, 7, 12   → ลบหลายรอบ (คั่นด้วย comma + space)
  */
 const handleDelete = async (req: any, args: string[]) => {
-  const userId = req.body?.events?.[0]?.source?.userId as string | undefined;
+  const botUserId = req.body?.events?.[0]?.source?.userId as string | undefined;
 
-  if (!userId) {
+  console.log(`🤖 [DCA Delete] Bot User ID from webhook:`, botUserId);
+
+  if (!botUserId) {
     await sendMessage(req, [
       { type: "text", text: "❌ ไม่สามารถระบุตัวตนผู้ใช้ได้ กรุณาลองใหม่" },
     ]);
     return;
   }
+
+  // 🔍 พยายามใช้ Login User ID ถ้ามีการ approve แล้ว
+  const { db } = await import("@/lib/database/db");
+  const approval = await db.lineApprovalRequest.findFirst({
+    where: {
+      lineUserId: botUserId,
+      status: "APPROVED",
+      loginLineUserId: { not: null },
+    },
+    select: { loginLineUserId: true },
+  });
+
+  const userId = approval?.loginLineUserId || botUserId;
+
+  console.log(`🔗 [DCA Delete] User ID mapping:`, {
+    botUserId,
+    loginUserId: approval?.loginLineUserId || null,
+    finalUserId: userId,
+    source: approval?.loginLineUserId ? "Login User ID (from approval)" : "Bot User ID (fallback)",
+  });
 
   if (args.length === 0) {
     await sendMessage(req, [

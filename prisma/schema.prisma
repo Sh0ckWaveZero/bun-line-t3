@@ -2,27 +2,23 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider      = "prisma-client-js"
-  // native: macOS development
-  // linux-musl-openssl-3.0.x: Docker Alpine (x86_64)
-  // linux-musl-arm64-openssl-3.0.x: Raspberry Pi (ARM64)
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]
+  provider      = "prisma-client"
+  output        = "./generated"
 }
 
 datasource db {
-  provider = "mongodb"
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
 }
 
 // Better Auth core models
 model Account {
-  id                    String    @id @default(auto()) @map("_id") @db.ObjectId
+  id                    String    @id @default(cuid())
   accountId             String
   providerId            String
-  userId                String    @db.ObjectId
-  accessToken           String?   @db.String
-  refreshToken          String?   @db.String
-  idToken               String?   @db.String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
   accessTokenExpiresAt  DateTime?
   refreshTokenExpiresAt DateTime?
   scope                 String?
@@ -37,9 +33,9 @@ model Account {
 }
 
 model Session {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @default(cuid())
   token     String   @unique
-  userId    String   @db.ObjectId
+  userId    String
   expiresAt DateTime
   ipAddress String?
   userAgent String?
@@ -52,7 +48,7 @@ model Session {
 }
 
 model User {
-  id              String           @id @default(auto()) @map("_id") @db.ObjectId
+  id              String           @id @default(cuid())
   name            String
   email           String           @unique
   emailVerified   Boolean          @default(false)
@@ -70,7 +66,7 @@ model User {
 }
 
 model Verification {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  id         String   @id @default(cuid())
   identifier String
   value      String
   expiresAt  DateTime
@@ -90,7 +86,7 @@ enum AttendanceStatusType {
 }
 
 model Cmc {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @default(cuid())
   no        Int
   name      String
   symbol    String
@@ -102,17 +98,17 @@ model Cmc {
 }
 
 model WorkAttendance {
-  id                String               @id @default(auto()) @map("_id") @db.ObjectId
-  userId            String               @map("user_id") @db.ObjectId
+  id                String               @id @default(cuid())
+  userId            String               @map("user_id")
   checkInTime       DateTime             @map("check_in_time")
   checkOutTime      DateTime?            @map("check_out_time")
   workDate          String               @map("work_date") // YYYY-MM-DD format
   status            AttendanceStatusType @default(CHECKED_IN_ON_TIME)
   hoursWorked       Float?               @map("hours_worked")
-  leaveId           String?              @map("leave_id") @db.ObjectId
+  leaveId           String?              @map("leave_id")
   // Checkout reminder tracking
-  reminderSent10Min Boolean              @default(false) @map("reminder_sent_10min") // ส่งแจ้งเตือน 10 นาทีก่อนแล้ว
-  reminderSentFinal Boolean              @default(false) @map("reminder_sent_final") // ส่งแจ้งเตือนครบ 9 ชั่วโมงแล้ว
+  reminderSent10Min Boolean              @default(false) @map("reminder_sent_10min")
+  reminderSentFinal Boolean              @default(false) @map("reminder_sent_final")
   createdAt         DateTime             @default(now()) @map("created_at")
   updatedAt         DateTime             @updatedAt @map("updated_at")
   user              User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -123,12 +119,12 @@ model WorkAttendance {
 }
 
 model PublicHoliday {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          String   @id @default(cuid())
   date        String   @unique @map("date") // YYYY-MM-DD format
   nameEnglish String   @map("name_english")
   nameThai    String   @map("name_thai")
   year        Int      @map("year")
-  type        String   @default("national") @map("type") // national, royal, religious, special
+  type        String   @default("national") @map("type")
   isActive    Boolean  @default(true) @map("is_active")
   description String?  @map("description")
   createdAt   DateTime @default(now()) @map("created_at")
@@ -140,10 +136,10 @@ model PublicHoliday {
 }
 
 model Leave {
-  id              String           @id @default(auto()) @map("_id") @db.ObjectId
-  userId          String           @map("user_id") @db.ObjectId
+  id              String           @id @default(cuid())
+  userId          String           @map("user_id")
   date            String           @map("date") // YYYY-MM-DD
-  type            String           @default("personal") // personal, sick, vacation, etc.
+  type            String           @default("personal")
   reason          String?          @map("reason")
   isActive        Boolean          @default(true) @map("is_active")
   createdAt       DateTime         @default(now()) @map("created_at")
@@ -156,8 +152,8 @@ model Leave {
 }
 
 model UserSettings {
-  id                         String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId                     String   @unique @map("user_id") @db.ObjectId
+  id                         String   @id @default(cuid())
+  userId                     String   @unique @map("user_id")
   // Notification preferences
   enableCheckInReminders     Boolean  @default(true) @map("enable_checkin_reminders")
   enableCheckOutReminders    Boolean  @default(true) @map("enable_checkout_reminders")
@@ -212,22 +208,22 @@ enum PaymentStatus {
 }
 
 model Subscription {
-  id           String                @id @default(auto()) @map("_id") @db.ObjectId
-  name         String                @map("name") // ชื่อ subscription เช่น "Netflix Family"
-  service      SubscriptionService   @map("service") // YOUTUBE, SPOTIFY, NETFLIX, OTHER
-  planType     SubscriptionPlanType  @default(INDIVIDUAL) @map("plan_type") // INDIVIDUAL, FAMILY
-  billingCycle BillingCycle          @default(MONTHLY) @map("billing_cycle") // MONTHLY, YEARLY
-  totalPrice   Float                 @map("total_price") // ราคาทั้งหมด (THB)
-  currency     String                @default("THB") @map("currency")
-  billingDay   Int                   @map("billing_day") // วันที่ตัดเงิน (1-31)
-  ownerId      String                @map("owner_id") @db.ObjectId // user ที่เป็นเจ้าของ/จัดการ
-  isActive     Boolean               @default(true) @map("is_active")
-  startDate    DateTime              @map("start_date")
-  endDate      DateTime?             @map("end_date")
-  logoUrl      String?               @map("logo_url") // รูปโลโก้ service
-  note         String?               @map("note")
-  createdAt    DateTime              @default(now()) @map("created_at")
-  updatedAt    DateTime              @updatedAt @map("updated_at")
+  id           String               @id @default(cuid())
+  name         String               @map("name")
+  service      SubscriptionService  @map("service")
+  planType     SubscriptionPlanType @default(INDIVIDUAL) @map("plan_type")
+  billingCycle BillingCycle         @default(MONTHLY) @map("billing_cycle")
+  totalPrice   Float                @map("total_price")
+  currency     String               @default("THB") @map("currency")
+  billingDay   Int                  @map("billing_day")
+  ownerId      String               @map("owner_id")
+  isActive     Boolean              @default(true) @map("is_active")
+  startDate    DateTime             @map("start_date")
+  endDate      DateTime?            @map("end_date")
+  logoUrl      String?              @map("logo_url")
+  note         String?              @map("note")
+  createdAt    DateTime             @default(now()) @map("created_at")
+  updatedAt    DateTime             @updatedAt @map("updated_at")
   members      SubscriptionMember[]
   payments     SubscriptionPayment[]
 
@@ -237,20 +233,20 @@ model Subscription {
 }
 
 model SubscriptionMember {
-  id             String                @id @default(auto()) @map("_id") @db.ObjectId
-  subscriptionId String                @map("subscription_id") @db.ObjectId
-  userId         String?               @map("user_id") @db.ObjectId // optional - link to system user
-  name           String                @map("name") // ชื่อสมาชิก
-  email          String?               @map("email") // อีเมล (optional)
-  shareAmount    Float                 @map("share_amount") // จำนวนเงินที่สมาชิกต้องจ่าย (THB)
-  isActive       Boolean               @default(true) @map("is_active")
-  joinedAt       DateTime              @default(now()) @map("joined_at")
-  leftAt         DateTime?             @map("left_at")
-  note           String?               @map("note")
-  tags           String?               @map("tags") // คั่นด้วย comma เช่น "ครอบครัว,Netflix"
-  createdAt      DateTime              @default(now()) @map("created_at")
-  updatedAt      DateTime              @updatedAt @map("updated_at")
-  subscription   Subscription          @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  id             String              @id @default(cuid())
+  subscriptionId String              @map("subscription_id")
+  userId         String?             @map("user_id")
+  name           String              @map("name")
+  email          String?             @map("email")
+  shareAmount    Float               @map("share_amount")
+  isActive       Boolean             @default(true) @map("is_active")
+  joinedAt       DateTime            @default(now()) @map("joined_at")
+  leftAt         DateTime?           @map("left_at")
+  note           String?             @map("note")
+  tags           String?             @map("tags")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+  subscription   Subscription        @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
   payments       SubscriptionPayment[]
 
   @@index([subscriptionId, isActive])
@@ -258,15 +254,15 @@ model SubscriptionMember {
 }
 
 model SubscriptionPayment {
-  id             String             @id @default(auto()) @map("_id") @db.ObjectId
-  subscriptionId String             @map("subscription_id") @db.ObjectId
-  memberId       String             @map("member_id") @db.ObjectId
+  id             String             @id @default(cuid())
+  subscriptionId String             @map("subscription_id")
+  memberId       String             @map("member_id")
   billingMonth   String             @map("billing_month") // YYYY-MM format
-  amount         Float              @map("amount") // จำนวนเงินที่จ่าย (THB)
+  amount         Float              @map("amount")
   status         PaymentStatus      @default(PENDING) @map("status")
-  paidAt         DateTime?          @map("paid_at") // วันที่จ่ายจริง
-  dueDate        DateTime           @map("due_date") // วันที่ครบกำหนดจ่าย
-  paidBy         String?            @map("paid_by") @db.ObjectId // userId ที่บันทึกการจ่าย
+  paidAt         DateTime?          @map("paid_at")
+  dueDate        DateTime           @map("due_date")
+  paidBy         String?            @map("paid_by")
   note           String?            @map("note")
   createdAt      DateTime           @default(now()) @map("created_at")
   updatedAt      DateTime           @updatedAt @map("updated_at")
@@ -291,8 +287,8 @@ enum ActivityType {
 }
 
 model HealthActivity {
-  id           String       @id @default(auto()) @map("_id") @db.ObjectId
-  userId       String       @map("user_id") @db.ObjectId
+  id           String       @id @default(cuid())
+  userId       String       @map("user_id")
   activityType ActivityType @map("activity_type")
   date         DateTime     @map("date")
   duration     Float        @map("duration") // in minutes
@@ -310,8 +306,8 @@ model HealthActivity {
 }
 
 model HealthMetrics {
-  id               String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId           String   @map("user_id") @db.ObjectId
+  id               String   @id @default(cuid())
+  userId           String   @map("user_id")
   date             DateTime @map("date")
   weight           Float?   @map("weight") // in kg
   height           Float?   @map("height") // in cm
@@ -339,17 +335,17 @@ enum DcaStatus {
 }
 
 model DcaOrder {
-  id           String    @id @default(auto()) @map("_id") @db.ObjectId
-  orderId      String    @map("order_id") // เช่น BTCDCA0000004700
-  lineUserId   String    @map("line_user_id") // LINE user ID ที่บันทึกคำสั่งซื้อ
-  coin         String    @default("BTC") @map("coin") // BTC, ETH, ฯลฯ
-  amountTHB    Float     @map("amount_thb") // จำนวนเงินต่อรอบ (THB)
-  coinReceived Float     @map("coin_received") // จำนวนเหรียญที่ได้รับ
-  pricePerCoin Float     @map("price_per_coin") // ราคาต่อเหรียญ (THB)
-  round        Int       @map("round") // รอบที่
+  id           String    @id @default(cuid())
+  orderId      String    @map("order_id")
+  lineUserId   String    @map("line_user_id")
+  coin         String    @default("BTC") @map("coin")
+  amountTHB    Float     @map("amount_thb")
+  coinReceived Float     @map("coin_received")
+  pricePerCoin Float     @map("price_per_coin")
+  round        Int       @map("round")
   status       DcaStatus @default(SUCCESS) @map("status")
-  note         String?   @map("note") // หมายเหตุ
-  executedAt   DateTime  @map("executed_at") // วันที่ทำการ (จาก Time ใน message)
+  note         String?   @map("note")
+  executedAt   DateTime  @map("executed_at")
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
@@ -372,24 +368,24 @@ enum ApprovalStatus {
 }
 
 model LineApprovalRequest {
-  id              String         @id @default(auto()) @map("_id") @db.ObjectId
-  lineUserId      String         @unique @map("line_user_id") // LINE Messaging API (Bot) user ID
-  loginLineUserId String?        @unique @map("login_line_user_id") // LINE Login (web app) user ID — อาจต่างจาก Bot channel
-  displayName     String?        @map("display_name") // ชื่อที่แสดงใน LINE
-  pictureUrl      String?        @map("picture_url") // รูปโปรไฟล์ LINE
-  statusMessage   String?        @map("status_message") // สถานะ LINE
-  reason          String?        @map("reason") // เหตุผลที่ขอใช้งาน
-  rejectReason    String?        @map("reject_reason") // เหตุผลที่ปฏิเสธ (ถ้ามี)
+  id              String         @id @default(cuid())
+  lineUserId      String         @unique @map("line_user_id")
+  loginLineUserId String?        @unique @map("login_line_user_id")
+  displayName     String?        @map("display_name")
+  pictureUrl      String?        @map("picture_url")
+  statusMessage   String?        @map("status_message")
+  reason          String?        @map("reason")
+  rejectReason    String?        @map("reject_reason")
   status          ApprovalStatus @default(PENDING) @map("status")
-  approvedBy      String?        @map("approved_by") // admin user id ที่อนุมัติ
-  approvedAt      DateTime?      @map("approved_at") // วันที่อนุมัติ
-  expiresAt       DateTime?      @map("expires_at") // null = ไม่หมดอายุ
-  notifiedAt      DateTime?      @map("notified_at") // วันที่แจ้งเตือน LINE ผู้ใช้
+  approvedBy      String?        @map("approved_by")
+  approvedAt      DateTime?      @map("approved_at")
+  expiresAt       DateTime?      @map("expires_at")
+  notifiedAt      DateTime?      @map("notified_at")
 
   // Feature permissions
-  canRequestAttendanceReport Boolean @default(false) @map("can_request_attendance_report") // ขอรายงานเข้างานได้
-  canRequestLeave            Boolean @default(false) @map("can_request_leave") // ขอลาได้
-  canReceiveReminders        Boolean @default(false) @map("can_receive_reminders") // รับแจ้งเตือนเช็คอิน/เอาท์ได้
+  canRequestAttendanceReport Boolean @default(false) @map("can_request_attendance_report")
+  canRequestLeave            Boolean @default(false) @map("can_request_leave")
+  canReceiveReminders        Boolean @default(false) @map("can_receive_reminders")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

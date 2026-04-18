@@ -110,7 +110,8 @@ RUN --mount=type=cache,target=/root/.bun/install/cache \
     bun install --production --frozen-lockfile
 
 COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=build /app/node_modules/@prisma/client ./node_modules/@prisma/client
+COPY --from=build /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=build /app/node_modules/pg ./node_modules/pg
 
 ###################
 # 🚀 RUNTIME STAGE
@@ -141,15 +142,15 @@ COPY --from=build --chown=appuser:appgroup /app/dist ./dist
 COPY --from=build --chown=appuser:appgroup /app/public ./public
 COPY --from=prod-deps --chown=appuser:appgroup /app/node_modules ./node_modules
 COPY --from=build --chown=appuser:appgroup /app/prisma ./prisma
+COPY --from=build --chown=appuser:appgroup /app/prisma.config.ts ./prisma.config.ts
 COPY --from=build --chown=appuser:appgroup /app/package.json ./package.json
 COPY --from=build --chown=appuser:appgroup /app/server.ts ./server.ts
-COPY --from=build --chown=appuser:appgroup /app/scripts/docker-entrypoint.sh ./scripts/
-COPY --from=build --chown=appuser:appgroup /app/scripts/health-check.sh ./scripts/
+COPY --from=build --chown=appuser:appgroup /app/scripts ./scripts
 
-RUN chmod +x ./scripts/docker-entrypoint.sh ./scripts/health-check.sh && \
+RUN chmod +x ./scripts/devops/docker-entrypoint.sh ./scripts/monitoring/health-check.sh && \
     test -f dist/server/server.js || (echo "❌ TanStack Start server bundle missing" && exit 1) && \
     test -d dist/client || (echo "❌ TanStack Start client bundle missing" && exit 1) && \
-    test -d node_modules/.prisma/client || (echo "❌ Prisma Client missing" && exit 1) && \
+    (test -d prisma/generated/client || test -d node_modules/@prisma/client) || (echo "❌ Prisma Client missing" && exit 1) && \
     echo "✅ Runtime dependencies verified"
 
 USER appuser
@@ -157,7 +158,7 @@ USER appuser
 EXPOSE 12914
 
 HEALTHCHECK --interval=60s --timeout=10s --start-period=30s --retries=3 \
-    CMD ["curl", "-f", "http://localhost:12914/api/health"]
+    CMD ["./scripts/monitoring/health-check.sh"]
 
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["./scripts/docker-entrypoint.sh"]
+CMD ["./scripts/devops/docker-entrypoint.sh"]
