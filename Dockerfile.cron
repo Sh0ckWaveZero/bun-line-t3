@@ -23,7 +23,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 WORKDIR /app
 
 COPY crontab /etc/crontabs/root
-COPY scripts/cron-request.sh /usr/local/bin/cron-request.sh
+COPY scripts/devops/cron-request.sh /usr/local/bin/cron-request.sh
 RUN chmod 0644 /etc/crontabs/root && chmod +x /usr/local/bin/cron-request.sh
 
 # รัน cron daemon ใน foreground

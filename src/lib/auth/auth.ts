@@ -161,13 +161,35 @@ const syncLineApprovalRequest = async (account: {
     return;
   }
 
-  const lineUserId = account.accountId;
-  if (!lineUserId) {
-    console.warn("[LINE Profile Sync] Missing LINE user ID");
+  const lineLoginUserId = account.accountId;
+  if (!lineLoginUserId) {
+    console.warn("[LINE Profile Sync] Missing LINE Login user ID");
     return;
   }
 
   try {
+    // ดึง LINE Messaging API user ID จาก LineApprovalRequest (ถ้ามี)
+    const approvalRequest = await db.lineApprovalRequest.findFirst({
+      where: {
+        loginLineUserId: lineLoginUserId,
+        status: "APPROVED",
+      },
+      select: { lineUserId: true },
+    });
+
+    const lineMessagingApiUserId = approvalRequest?.lineUserId;
+
+    // อัปเดต LINE Messaging API user ID ใน Account record
+    if (lineMessagingApiUserId) {
+      await db.account.update({
+        where: { id: account.id },
+        data: { lineMessagingApiUserId },
+      });
+      console.log(
+        `[LINE Profile Sync] Linked LINE Login ID ${lineLoginUserId} → Messaging API ID ${lineMessagingApiUserId}`,
+      );
+    }
+
     const user = await db.user.findUnique({
       where: { id: account.userId },
       select: { name: true, image: true },
@@ -177,12 +199,12 @@ const syncLineApprovalRequest = async (account: {
       accessToken: account.accessToken,
       fallbackDisplayName: user?.name,
       fallbackPictureUrl: user?.image,
-      lineUserId,
+      lineUserId: lineLoginUserId,
       userId: account.userId,
     });
 
     console.log(
-      `[LINE Profile Sync] Successfully synced profile for LINE user: ${lineUserId}`,
+      `[LINE Profile Sync] Successfully synced profile for LINE user: ${lineLoginUserId}`,
     );
   } catch (error) {
     console.error("[LINE Profile Sync] Database sync failed:", error);
@@ -272,6 +294,41 @@ export const auth = betterAuth({
         async after(account) {
           try {
             await syncLineApprovalRequest(account);
+
+            // After syncing LINE Messaging API ID, check if we need to link accounts
+            if (account.providerId === "line") {
+              const updatedAccount = await db.account.findUnique({
+                where: { id: account.id },
+                select: { id: true, userId: true, lineMessagingApiUserId: true },
+              });
+
+              if (updatedAccount?.lineMessagingApiUserId) {
+                // Check if another account has the same LINE Messaging API ID
+                const duplicateAccount = await db.account.findFirst({
+                  where: {
+                    id: { not: updatedAccount.id },
+                    providerId: "line",
+                    lineMessagingApiUserId: updatedAccount.lineMessagingApiUserId,
+                  },
+                  select: { id: true, userId: true },
+                });
+
+                if (duplicateAccount) {
+                  console.log(
+                    `[Account Linking] Found duplicate LINE Messaging API ID: ${updatedAccount.lineMessagingApiUserId}`,
+                  );
+                  console.log(
+                    `[Account Linking] Current account userId: ${updatedAccount.userId}, duplicate account userId: ${duplicateAccount.userId}`,
+                  );
+
+                  // TODO: Implement account merging logic
+                  // For now, just log the warning
+                  console.warn(
+                    `[Account Linking] ⚠️ Multiple accounts found for LINE Messaging API ID ${updatedAccount.lineMessagingApiUserId}. Consider implementing auto-merge logic.`,
+                  );
+                }
+              }
+            }
           } catch (error) {
             // ไม่ throw error เพื่อไม่ให้กระทบการ login
             console.error("[LINE Profile Sync Error]", error);
