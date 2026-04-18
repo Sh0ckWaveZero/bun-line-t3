@@ -129,8 +129,8 @@ function CalendarPage() {
   return (
     <div className="container mx-auto p-4 max-w-7xl">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">ปฏิทินวันหยุดและวันลา</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-3xl font-bold mb-2 dark:text-gray-100">ปฏิทินวันหยุดและวันลา</h1>
+        <p className="text-muted-foreground dark:text-gray-400">
           ดูวันหยุดราชการและวันลางานในปฏิทิน
         </p>
       </div>
@@ -143,8 +143,8 @@ function CalendarPage() {
         </Button>
 
         <div className="flex items-center gap-2">
-          <CalendarIcon className="h-5 w-5" />
-          <h2 className="text-xl font-semibold">
+          <CalendarIcon className="h-5 w-5 dark:text-gray-300" />
+          <h2 className="text-xl font-semibold dark:text-gray-100">
             {format(currentDate, "MMMM yyyy", { locale: th })} ({buddhistYear})
           </h2>
         </div>
@@ -199,11 +199,11 @@ function CalendarPage() {
       </div>
 
       {/* Calendar Grid */}
-      <Card className="p-6">
+      <Card className="p-6 dark:bg-gray-900 dark:border-gray-700">
         {loading ? (
           <div className="text-center py-8">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <p className="mt-2 text-muted-foreground">กำลังโหลดข้อมูล...</p>
+            <p className="mt-2 text-muted-foreground dark:text-gray-400">กำลังโหลดข้อมูล...</p>
           </div>
         ) : (
           <div className="grid grid-cols-7 gap-2">
@@ -211,7 +211,7 @@ function CalendarPage() {
             {weekDays.map((day) => (
               <div
                 key={day}
-                className="text-center font-semibold text-sm p-2 bg-muted rounded"
+                className="text-center font-semibold text-sm p-2 bg-muted rounded dark:bg-gray-800 dark:text-gray-200"
               >
                 {day}
               </div>
@@ -233,29 +233,30 @@ function CalendarPage() {
                   key={date.toISOString()}
                   className={cn(
                     "min-h-24 p-2 border rounded-lg transition-colors hover:bg-accent",
-                    isToday && "border-primary border-2",
-                    holiday && "bg-red-50 border-red-200",
-                    leave && "bg-blue-50 border-blue-200",
-                    holiday && leave && "bg-purple-50 border-purple-200",
+                    "dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-gray-800",
+                    isToday && "border-primary border-2 dark:border-primary",
+                    holiday && "bg-red-50 border-red-200 dark:bg-red-950/30 dark:border-red-900",
+                    leave && "bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-900",
+                    holiday && leave && "bg-purple-50 border-purple-200 dark:bg-purple-950/30 dark:border-purple-900",
                   )}
                 >
-                  <div className="font-semibold text-sm mb-1">
+                  <div className="font-semibold text-sm mb-1 dark:text-gray-100">
                     {format(date, "d")}
                   </div>
 
                   {holiday && (
-                    <div className="text-xs bg-red-500 text-white p-1 rounded mb-1">
+                    <div className="text-xs bg-red-500 text-white p-1 rounded mb-1 dark:bg-red-700 dark:text-red-100">
                       <div className="font-semibold">{holiday.nameThai}</div>
                       {holiday.type !== "national" && (
-                        <div className="text-xs opacity-80">({holiday.type})</div>
+                        <div className="text-xs opacity-80 dark:opacity-90">({holiday.type})</div>
                       )}
                     </div>
                   )}
 
                   {leave && (
-                    <div className="text-xs bg-blue-500 text-white p-1 rounded">
+                    <div className="text-xs bg-blue-500 text-white p-1 rounded dark:bg-blue-700 dark:text-blue-100">
                       <div className="font-semibold">วันลา</div>
-                      <div className="text-xs opacity-80">
+                      <div className="text-xs opacity-80 dark:opacity-90">
                         {leave.type === "personal" && "ลากิจ"}
                         {leave.type === "sick" && "ลาป่วย"}
                         {leave.type === "vacation" && "ลาพักผ่อน"}
@@ -271,9 +272,9 @@ function CalendarPage() {
 
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-        <Card className="p-4">
-          <h3 className="font-semibold mb-2">สถิติเดือนนี้</h3>
-          <div className="space-y-2 text-sm">
+        <Card className="p-4 dark:bg-gray-900 dark:border-gray-700">
+          <h3 className="font-semibold mb-2 dark:text-gray-100">สถิติเดือนนี้</h3>
+          <div className="space-y-2 text-sm dark:text-gray-300">
             <div className="flex justify-between">
               <span>วันหยุดราชการ:</span>
               <span className="font-semibold">{holidays.length} วัน</span>
@@ -291,9 +292,9 @@ function CalendarPage() {
           </div>
         </Card>
 
-        <Card className="p-4">
-          <h3 className="font-semibold mb-2">วันหยุดทั้งหมดในปี {buddhistYear}</h3>
-          <div className="text-sm">
+        <Card className="p-4 dark:bg-gray-900 dark:border-gray-700">
+          <h3 className="font-semibold mb-2 dark:text-gray-100">วันหยุดทั้งหมดในปี {buddhistYear}</h3>
+          <div className="text-sm dark:text-gray-300">
             <div className="flex justify-between">
               <span>วันหยุดราชการ:</span>
               <span className="font-semibold">
@@ -304,9 +305,9 @@ function CalendarPage() {
           </div>
         </Card>
 
-        <Card className="p-4">
-          <h3 className="font-semibold mb-2">จัดการวันหยุด</h3>
-          <p className="text-xs text-muted-foreground mb-2">
+        <Card className="p-4 dark:bg-gray-900 dark:border-gray-700">
+          <h3 className="font-semibold mb-2 dark:text-gray-100">จัดการวันหยุด</h3>
+          <p className="text-xs text-muted-foreground mb-2 dark:text-gray-400">
             Admin เท่านั้นที่สามารถเพิ่ม/แก้ไขวันหยุดได้
           </p>
           <div className="space-y-2">

@@ -180,6 +180,13 @@ export default function Header() {
                       >
                         🏖️ ลางาน
                       </Link>
+                      <Link
+                        to="/calendar"
+                        className="block px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        onClick={() => setOpenDropdown(null)}
+                      >
+                        📅 ปฏิทินวันหยุด
+                      </Link>
                     </div>
                   )}
                 </div>
@@ -476,6 +483,17 @@ export default function Header() {
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
                         ลางาน
+                      </Link>
+                      <Link
+                        to="/calendar"
+                        className={`drop-shadow-sm transition-colors hover:text-foreground ${
+                          pathname === "/calendar"
+                            ? "font-medium text-foreground"
+                            : "text-muted-foreground"
+                        }`}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        ปฏิทินวันหยุด
                       </Link>
                     </div>
                   </div>
