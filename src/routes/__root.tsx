@@ -150,16 +150,30 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@100..900&display=swap",
       },
+      {
+        rel: "manifest",
+        href: "/manifest.json",
+      },
+      {
+        rel: "apple-touch-icon",
+        href: "/icon-192x192.png",
+      },
     ],
     meta: [
       { charSet: "utf-8" },
-      { content: "width=device-width, initial-scale=1", name: "viewport" },
+      { content: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no", name: "viewport" },
       { title: "Bun LINE T3 App" },
       {
         content:
           "LINE attendance, dashboard, and utilities built with TanStack Start",
         name: "description",
       },
+      { name: "theme-color", content: "#07b53b" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "apple-mobile-web-app-title", content: "Calendar" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "application-name", content: "Calendar" },
     ],
   }),
   notFoundComponent: RootNotFound,
@@ -190,6 +204,21 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             </ErrorBoundary>
           </Providers>
         </AuthSessionProvider>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/sw.js').then((reg) => {
+                    console.log('Service Worker registered', reg);
+                  }).catch((err) => {
+                    console.log('Service Worker registration failed', err);
+                  });
+                });
+              }
+            `,
+          }}
+        />
         {import.meta.env.DEV && (
           <Suspense fallback={null}>
             <TanStackDevtools

@@ -1,0 +1,41 @@
+{
+  "name": "Bun LINE T3 - Calendar",
+  "short_name": "Calendar",
+  "description": "ปฏิทินวันหยุดและวันลางาน",
+  "start_url": "/calendar/mobile",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#07b53b",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "shortcuts": [
+    {
+      "name": "เดือนนี้",
+      "short_name": "เดือนนี้",
+      "description": "ดูวันหยุดและวันลาเดือนนี้",
+      "url": "/calendar/mobile",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "หน้าหลัก",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

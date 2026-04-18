@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create PWA Icons</title>
+    <style>
+        body {
+            font-family: 'Noto Sans Thai', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .icon-preview {
+            display: inline-block;
+            margin: 20px;
+            text-align: center;
+        }
+        .icon-box {
+            width: 192px;
+            height: 192px;
+            background: linear-gradient(135deg, #07b53b 0%, #069a31 100%);
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px auto;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        .icon-box.large {
+            width: 512px;
+            height: 512px;
+            border-radius: 110px;
+        }
+        .calendar-icon {
+            font-size: 120px;
+            color: white;
+        }
+        .icon-box.large .calendar-icon {
+            font-size: 320px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .instructions {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>📱 สร้าง PWA Icons สำหรับ Calendar</h1>
+
+    <div class="warning">
+        <strong>⚠️ คำเตือน:</strong> นี่คือ HTML preview เท่านั้น คุณต้อง:
+        <ol>
+            <li>ใช้เครื่องมือ/เว็บไซต์สร้าง PNG icons จริง</li>
+            <li>บันทึกเป็น <code>icon-192x192.png</code> และ <code>icon-512x512.png</code></li>
+            <li>วางไฟล์ไว้ในโฟลเดอร์ <code>public/</code></li>
+        </ol>
+    </div>
+
+    <div class="instructions">
+        <h2>วิธีสร้าง Icons:</h2>
+        <ol>
+            <li><strong>ใช้ฟรีทูลิตี:</strong>
+                <ul>
+                    <li><a href="https://realfavicongenerator.netlify.app/" target="_blank">RealFaviconGenerator.net</a></li>
+                    <li><a href="https://www.favicon-generator.org/" target="_blank">Favicon Generator</a></li>
+                </ul>
+            </li>
+            <li><strong>หรือใช้ Design Tools:</strong>
+                <ul>
+                    <li>Figma: Export เป็น PNG 192x192 และ 512x512</li>
+                    <li>Canva: สร้าง rounded square icons</li>
+                </ul>
+            </li>
+            <li><strong>Spec ที่ต้องการ:</strong>
+                <ul>
+                    <li>192x192px PNG (maskable)</li>
+                    <li>512x512px PNG (maskable)</li>
+                    <li>พื้นหลัง: gradient #07b53b → #069a31</li>
+                    <li>Icon: 📅 หรือ ตัวอักษร</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+
+    <h2>Preview:</h2>
+
+    <div class="icon-preview">
+        <div class="icon-box">
+            <div class="calendar-icon">📅</div>
+        </div>
+        <p>192x192</p>
+    </div>
+
+    <div class="icon-preview">
+        <div class="icon-box large">
+            <div class="calendar-icon">📅</div>
+        </div>
+        <p>512x512</p>
+    </div>
+
+    <div class="instructions">
+        <h2>แนะนำ Icon Design:</h2>
+        <ul>
+            <li>ใช้ gradient สีเขียว (#07b53b → #069a31) ตาม brand colors</li>
+            <li>ใช้ rounded corners (40px radius สำหรับ 192px)</li>
+            <li>Icon ควรมีคอนทราสต์สูง (light color on dark bg)</li>
+            <li>เว้น text หรือ details ที่จะ illegible เมื่อย่อขนาด</li>
+        </ul>
+
+        <h2>Tools ที่แนะนำ:</h2>
+        <ul>
+            <li><strong>Canva:</strong> สร้าง icon ด้วย templates → Export PNG</li>
+            <li><strong>Figma:</strong> Design → Export PNG 2x</li>
+            <li><strong>Sketch:</strong> Design → Export</li>
+            <li><strong>Online:</strong>
+                <a href="https://www.canva.com/create/designs/facebook-cover-photo" target="_blank">Canva Cover Maker</a> → resize to 192x192
+            </li>
+        </ul>
+    </div>
+
+    <script>
+        // เตือน user ว่านี่คือ preview เท่านั้น
+        console.log('นี่คือ HTML preview สำหรับ PWA icons');
+        console.log('กรุณาสร้าง PNG icons จริงและวางไว้ใน public/ folder');
+    </script>
+</body>
+</html>
