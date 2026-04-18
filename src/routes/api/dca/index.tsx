@@ -7,7 +7,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { dcaService } from "@/features/dca";
 import { dcaEventManager } from "@/lib/dca/event-manager";
-import { getAuthorizedLineUserId, getLineUserIds } from "@/lib/auth";
+import { getAuthorizedLineUserId } from "@/lib/auth";
 
 const createDcaSchema = z.object({
   lineUserId: z.string().min(1).optional(),
@@ -40,25 +40,15 @@ export async function GET(request: Request) {
       lineUserId: searchParams.get("lineUserId"),
     });
 
-    const lineUserIds = await getLineUserIds(request);
+    const lineUserId = await getAuthorizedLineUserId(
+      request,
+      searchParams.get("lineUserId"),
+    );
 
-    console.log(`📊 [DCA GET] Got ${lineUserIds.length} lineUserIds`);
+    console.log(`📊 [DCA GET] Authorized lineUserId:`, lineUserId);
 
-    if (lineUserIds.length === 0) {
-      console.log(`❌ [DCA GET] No lineUserIds found - unauthorized`);
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // validate requestedLineUserId ถ้ามีการส่งมา
-    const requestedLineUserId = searchParams.get("lineUserId")?.trim();
-    const idsToQuery =
-      requestedLineUserId && !lineUserIds.includes(requestedLineUserId)
-        ? null
-        : requestedLineUserId
-          ? [requestedLineUserId]
-          : lineUserIds;
-
-    if (!idsToQuery) {
+    if (!lineUserId) {
+      console.log(`❌ [DCA GET] No lineUserId found - unauthorized`);
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -70,7 +60,7 @@ export async function GET(request: Request) {
       page,
       limit,
       coin,
-      lineUserId: idsToQuery,
+      lineUserId,
     });
 
     return Response.json(result, { status: 200 });
@@ -107,7 +97,7 @@ export async function POST(request: Request) {
 
     const order = await dcaService.createOrder({
       ...parsed.data,
-      lineUserId, // inject จาก session เสมอ
+      lineUserId,
     });
 
     // 🎉 Emit SSE event เพื่อให้ clients รับทราบ

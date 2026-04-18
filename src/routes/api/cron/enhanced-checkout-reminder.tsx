@@ -151,21 +151,19 @@ export async function GET(request: Request) {
           const userAccount = await db.account.findFirst({
             where: { userId, providerId: "line" },
             select: { accountId: true },
+            orderBy: { updatedAt: "desc" },
           });
 
           if (!userAccount) {
-            return { userId, status: "skipped", reason: "No LINE account found" };
+            return {
+              userId,
+              status: "skipped",
+              reason: "No LINE account found",
+            };
           }
 
-          // หา Messaging API user ID จาก lineApprovalRequest
-          // (account.accountId อาจเป็น LINE Login channel ID ที่ต่างจาก Messaging API ID)
-          const approval = await db.lineApprovalRequest.findFirst({
-            where: {
-              OR: [
-                { lineUserId: userAccount.accountId },
-                { loginLineUserId: userAccount.accountId },
-              ],
-            },
+          const approval = await db.lineApprovalRequest.findUnique({
+            where: { lineUserId: userAccount.accountId },
             select: { lineUserId: true },
           });
 

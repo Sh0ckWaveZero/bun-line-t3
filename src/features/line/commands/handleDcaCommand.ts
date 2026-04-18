@@ -19,9 +19,38 @@ interface DcaOrderForCommand {
   executedAt: Date;
 }
 
+interface DcaLineUserIdentity {
+  botUserId: string;
+  primaryLineUserId: string;
+}
+
 // ========================
 // Helpers
 // ========================
+
+const getDcaLineUserIdentity = async (
+  req: any,
+  logScope: string,
+): Promise<DcaLineUserIdentity | null> => {
+  const botUserId = req.body?.events?.[0]?.source?.userId as string | undefined;
+
+  console.log(`🤖 [${logScope}] Bot User ID from webhook:`, botUserId);
+
+  if (!botUserId) return null;
+
+  // DCA command ใช้ userId จาก LINE Messaging API webhook เป็น data key เสมอ
+  // ห้าม mapping ไป LINE Login/Better Auth userId เพราะเป็นคนละ channel identity
+  const primaryLineUserId = botUserId;
+
+  console.log(`🔗 [${logScope}] User ID mapping:`, {
+    botUserId,
+    loginUserId: primaryLineUserId,
+    finalUserId: primaryLineUserId,
+    source: "Bot User ID (webhook)",
+  });
+
+  return { botUserId, primaryLineUserId };
+};
 
 const buildAddSuccessText = (
   order: { orderId: string; round: number },
@@ -125,38 +154,14 @@ const stripDcaAddPrefix = (fullText: string): string => {
  *   /dca add 107.99 BTC 0.00004634 2330307.8 2026-04-11
  */
 const handleAdd = async (req: any, args: string[]) => {
-  const botUserId = req.body?.events?.[0]?.source?.userId as string | undefined;
+  const identity = await getDcaLineUserIdentity(req, "DCA Add");
 
-  console.log(`🤖 [DCA Add] Bot User ID from webhook:`, botUserId);
-
-  if (!botUserId) {
+  if (!identity) {
     await sendMessage(req, [
       { type: "text", text: "❌ ไม่สามารถระบุตัวตนผู้ใช้ได้ กรุณาลองใหม่" },
     ]);
     return;
   }
-
-  // 🔍 พยายามใช้ Login User ID ถ้ามีการ approve แล้ว (รองรับกรณีคนละ Channel)
-  // หา approval ที่มี Bot User ID นี้และเชื่อมกับ Login User ID
-  const { db } = await import("@/lib/database/db");
-  const approval = await db.lineApprovalRequest.findFirst({
-    where: {
-      lineUserId: botUserId,
-      status: "APPROVED",
-      loginLineUserId: { not: null },
-    },
-    select: { loginLineUserId: true },
-  });
-
-  // ใช้ Login User ID ถ้ามี ไม่งั้นใช้ Bot User ID
-  const userId = approval?.loginLineUserId || botUserId;
-
-  console.log(`🔗 [DCA Add] User ID mapping:`, {
-    botUserId,
-    loginUserId: approval?.loginLineUserId || null,
-    finalUserId: userId,
-    source: approval?.loginLineUserId ? "Login User ID (from approval)" : "Bot User ID (fallback)",
-  });
 
   // ─── โหมด 1: ลอง parse ข้อความ Bitkub จาก full message text ───
   const fullText = getFullMessageText(req);
@@ -166,7 +171,7 @@ const handleAdd = async (req: any, args: string[]) => {
   if (parsed) {
     try {
       const order = await dcaService.createOrder({
-        lineUserId: userId,
+        lineUserId: identity.primaryLineUserId,
         coin: parsed.coin,
         amountTHB: parsed.amountTHB,
         coinReceived: parsed.coinReceived,
@@ -256,7 +261,7 @@ const handleAdd = async (req: any, args: string[]) => {
 
   try {
     const order = await dcaService.createOrder({
-      lineUserId: userId,
+      lineUserId: identity.primaryLineUserId,
       coin,
       amountTHB,
       coinReceived,
@@ -291,9 +296,9 @@ const handleAdd = async (req: any, args: string[]) => {
  * /dca list | /dca ประวัติ
  */
 const handleList = async (req: any) => {
-  const userId = req.body?.events?.[0]?.source?.userId as string | undefined;
+  const identity = await getDcaLineUserIdentity(req, "DCA List");
 
-  if (!userId) {
+  if (!identity) {
     await sendMessage(req, [
       { type: "text", text: "❌ ไม่สามารถระบุตัวตนผู้ใช้ได้ กรุณาลองใหม่" },
     ]);
@@ -304,7 +309,7 @@ const handleList = async (req: any) => {
     const result = await dcaService.listOrders({
       page: 1,
       limit: 5,
-      lineUserId: userId,
+      lineUserId: identity.primaryLineUserId,
     });
 
     if (result.orders.length === 0) {
@@ -354,36 +359,14 @@ const handleList = async (req: any) => {
  *   /dca del 3, 7, 12   → ลบหลายรอบ (คั่นด้วย comma + space)
  */
 const handleDelete = async (req: any, args: string[]) => {
-  const botUserId = req.body?.events?.[0]?.source?.userId as string | undefined;
+  const identity = await getDcaLineUserIdentity(req, "DCA Delete");
 
-  console.log(`🤖 [DCA Delete] Bot User ID from webhook:`, botUserId);
-
-  if (!botUserId) {
+  if (!identity) {
     await sendMessage(req, [
       { type: "text", text: "❌ ไม่สามารถระบุตัวตนผู้ใช้ได้ กรุณาลองใหม่" },
     ]);
     return;
   }
-
-  // 🔍 พยายามใช้ Login User ID ถ้ามีการ approve แล้ว
-  const { db } = await import("@/lib/database/db");
-  const approval = await db.lineApprovalRequest.findFirst({
-    where: {
-      lineUserId: botUserId,
-      status: "APPROVED",
-      loginLineUserId: { not: null },
-    },
-    select: { loginLineUserId: true },
-  });
-
-  const userId = approval?.loginLineUserId || botUserId;
-
-  console.log(`🔗 [DCA Delete] User ID mapping:`, {
-    botUserId,
-    loginUserId: approval?.loginLineUserId || null,
-    finalUserId: userId,
-    source: approval?.loginLineUserId ? "Login User ID (from approval)" : "Bot User ID (fallback)",
-  });
 
   if (args.length === 0) {
     await sendMessage(req, [
@@ -432,7 +415,7 @@ const handleDelete = async (req: any, args: string[]) => {
     // ─── ค้นหาทุกรอบพร้อมกัน (1 query) ──────────────────────────────────
     const found = (await dcaService.findByRounds(
       validRounds,
-      userId,
+      identity.primaryLineUserId,
     )) as DcaOrderForCommand[];
     const foundRounds = found.map((order) => order.round);
     const notFoundRounds = validRounds.filter((r) => !foundRounds.includes(r));
@@ -504,10 +487,10 @@ const handleDelete = async (req: any, args: string[]) => {
  * /dca
  */
 const handleSummary = async (req: any) => {
-  const userId = req.body?.events?.[0]?.source?.userId as string | undefined;
+  const identity = await getDcaLineUserIdentity(req, "DCA Summary");
   const appUrl = process.env["APP_URL"] ?? process.env["NEXTAUTH_URL"] ?? "";
 
-  if (!userId) {
+  if (!identity) {
     await sendMessage(req, [
       { type: "text", text: "❌ ไม่สามารถระบุตัวตนผู้ใช้ได้ กรุณาลองใหม่" },
     ]);
@@ -517,8 +500,12 @@ const handleSummary = async (req: any) => {
   try {
     // ดึงข้อมูลทั้งหมดพร้อมกัน รวมถึงราคาปัจจุบันจาก Bitkub
     const [summary, latest, currentPrice] = await Promise.all([
-      dcaService.getSummary(userId), // filter by LINE userId
-      dcaService.listOrders({ page: 1, limit: 1, lineUserId: userId }),
+      dcaService.getSummary(identity.primaryLineUserId),
+      dcaService.listOrders({
+        page: 1,
+        limit: 1,
+        lineUserId: identity.primaryLineUserId,
+      }),
       getBTCPrice(), // ดึงราคา BTC พร้อมกันเสมอ ไม่รอ avgPrice
     ]);
 

@@ -157,6 +157,7 @@ async function sendAutoCheckoutNotification(
         userId,
         providerId: "line",
       },
+      orderBy: { updatedAt: "desc" },
     });
 
     if (!userAccount) {

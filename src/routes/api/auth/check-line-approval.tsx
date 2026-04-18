@@ -15,10 +15,7 @@ export async function GET(request: Request) {
     const session = await getServerAuthSession(request);
 
     if (!session?.user?.id) {
-      return Response.json(
-        { error: "Not authenticated" },
-        { status: 401 },
-      );
+      return Response.json({ error: "Not authenticated" }, { status: 401 });
     }
 
     // Check if user has LINE account
@@ -30,6 +27,7 @@ export async function GET(request: Request) {
       select: {
         accountId: true,
       },
+      orderBy: { updatedAt: "desc" },
     });
 
     // If no LINE account, user doesn't need approval
@@ -50,10 +48,7 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error("[/api/auth/check-line-approval]", error);
-    return Response.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 

@@ -15,12 +15,7 @@ const AttendanceReportQuerySchema = z.object({
     .refine((month) => {
       const [year, monthNum] = month.split("-").map(Number);
       if (!year || !monthNum) return false;
-      return (
-        year >= 2020 &&
-        year <= 2100 &&
-        monthNum >= 1 &&
-        monthNum <= 12
-      );
+      return year >= 2020 && year <= 2100 && monthNum >= 1 && monthNum <= 12;
     }, "Month must be valid (2020-2100, 01-12)"),
 });
 
@@ -81,14 +76,18 @@ export async function GET(req: Request) {
       select: {
         accountId: true,
       },
+      orderBy: { updatedAt: "desc" },
     });
 
     if (lineAccount) {
-      const hasPermission = await canRequestAttendanceReport(lineAccount.accountId);
+      const hasPermission = await canRequestAttendanceReport(
+        lineAccount.accountId,
+      );
       if (!hasPermission) {
         return Response.json(
           {
-            error: "Forbidden - คุณยังไม่ได้รับอนุมัติให้ขอรายงานเข้างาน กรุณาติดต่อผู้ดูแลระบบ",
+            error:
+              "Forbidden - คุณยังไม่ได้รับอนุมัติให้ขอรายงานเข้างาน กรุณาติดต่อผู้ดูแลระบบ",
           },
           { status: 403 },
         );

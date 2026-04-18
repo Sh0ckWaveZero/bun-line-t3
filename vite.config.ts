@@ -72,9 +72,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         "@": path.resolve(dirname, "src"),
-        "@prisma/client": path.resolve(dirname, "prisma/generated"),
       },
-      tsconfigPaths: true,
     },
     server: {
       allowedHosts,
@@ -87,6 +85,13 @@ export default defineConfig(({ mode }) => {
           /^pg/,
         ],
       },
+    },
+    optimizeDeps: {
+      exclude: ["@prisma/client", "@prisma/adapter-pg"],
+    },
+    ssr: {
+      external: ["@prisma/client", "@prisma/adapter-pg", "pg"],
+      noExternal: [],
     },
   };
 });

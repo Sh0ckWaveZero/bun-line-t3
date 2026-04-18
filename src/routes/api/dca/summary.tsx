@@ -10,7 +10,7 @@ import {
   getBTCPrice,
   calculatePnLPercent,
 } from "@/features/dca/services/bitkub.service.server";
-import { getLineUserIds } from "@/lib/auth";
+import { getAuthorizedLineUserId } from "@/lib/auth";
 
 interface DcaSummaryWithPnL {
   totalSpentTHB: number;
@@ -26,28 +26,18 @@ interface DcaSummaryWithPnL {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const lineUserIds = await getLineUserIds(request);
+    const lineUserId = await getAuthorizedLineUserId(
+      request,
+      searchParams.get("lineUserId"),
+    );
 
-    if (lineUserIds.length === 0) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // validate requestedLineUserId ถ้ามีการส่งมา
-    const requestedLineUserId = searchParams.get("lineUserId")?.trim();
-    const idsToQuery =
-      requestedLineUserId && !lineUserIds.includes(requestedLineUserId)
-        ? null
-        : requestedLineUserId
-          ? [requestedLineUserId]
-          : lineUserIds;
-
-    if (!idsToQuery) {
+    if (!lineUserId) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // ดึงข้อมูลทั้งหมดพร้อมกัน รวมถึงราคาปัจจุบัน
     const [summary, currentPrice] = await Promise.all([
-      dcaService.getSummary(idsToQuery),
+      dcaService.getSummary(lineUserId),
       getBTCPrice(),
     ]);
 

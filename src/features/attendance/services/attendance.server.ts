@@ -43,6 +43,10 @@ import { WORKPLACE_POLICIES } from "../constants/workplace-policies";
 import { db } from "@/lib/database";
 import { selectRandomElement } from "@/lib/crypto-random";
 
+interface ReminderApproval {
+  lineUserId: string;
+}
+
 // Helper functions for UTC to Thai time display conversion
 const formatUTCTimeAsThaiTime = (utcDate: Date): string => {
   const thaiTime = new Date(utcDate.getTime() + 7 * 60 * 60 * 1000);
@@ -87,20 +91,13 @@ async function isWorkingDay(date: Date): Promise<boolean> {
  * @returns string[] LINE userId
  */
 /**
- * ดึง Messaging API user ID สำหรับ push notification
- * account.accountId = LINE Login channel ID (อาจต่างจาก Messaging API channel ID)
- * ต้อง push ด้วย lineApprovalRequest.lineUserId (Messaging API ID เสมอ)
+ * ดึง LINE user ID สำหรับ push notification จาก ID เดียวกับ account เท่านั้น
  */
 async function resolveMessagingApiUserId(
   loginChannelId: string,
 ): Promise<{ messagingUserId: string; canReceiveReminders: boolean } | null> {
-  const approval = await db.lineApprovalRequest.findFirst({
-    where: {
-      OR: [
-        { lineUserId: loginChannelId },
-        { loginLineUserId: loginChannelId },
-      ],
-    },
+  const approval = await db.lineApprovalRequest.findUnique({
+    where: { lineUserId: loginChannelId },
     select: {
       lineUserId: true,
       canReceiveReminders: true,
@@ -125,6 +122,8 @@ async function getActiveLineUserIdsForCheckinReminder(
         accounts: {
           where: { providerId: "line" },
           select: { accountId: true },
+          orderBy: { updatedAt: "desc" },
+          take: 1,
         },
         leaves: {
           where: { date: todayString, isActive: true },
@@ -139,11 +138,15 @@ async function getActiveLineUserIdsForCheckinReminder(
     const notificationsEnabled = user?.settings?.enableCheckInReminders ?? true;
     const loginChannelId = user?.accounts[0]?.accountId;
 
-    if (!loginChannelId || !user || user.leaves.length > 0 || !notificationsEnabled) {
+    if (
+      !loginChannelId ||
+      !user ||
+      user.leaves.length > 0 ||
+      !notificationsEnabled
+    ) {
       return [];
     }
 
-    // ใช้ Messaging API user ID สำหรับ push (ไม่ใช่ Login channel ID)
     const resolved = await resolveMessagingApiUserId(loginChannelId);
     if (!resolved?.canReceiveReminders) return [];
 
@@ -155,6 +158,8 @@ async function getActiveLineUserIdsForCheckinReminder(
       accounts: {
         where: { providerId: "line" },
         select: { accountId: true },
+        orderBy: { updatedAt: "desc" },
+        take: 1,
       },
       leaves: {
         where: { date: todayString, isActive: true },
@@ -176,45 +181,27 @@ async function getActiveLineUserIdsForCheckinReminder(
     return hasLineAccount && notOnLeave && notificationsEnabled;
   });
 
-  // Get all candidate login channel IDs
   const loginChannelIds = candidates
     .map((u: UserQueryResult) => u.accounts[0]?.accountId)
     .filter((id: string | undefined): id is string => Boolean(id));
 
-  // ดึง approvals โดยรองรับทั้ง lineUserId และ loginLineUserId
-  // (LINE Login channel ID อาจต่างจาก Messaging API channel ID)
-  const approvals = await db.lineApprovalRequest.findMany({
+  const approvals = (await db.lineApprovalRequest.findMany({
     where: {
       canReceiveReminders: true,
-      OR: [
-        { lineUserId: { in: loginChannelIds } },
-        { loginLineUserId: { in: loginChannelIds } },
-      ],
+      lineUserId: { in: loginChannelIds },
     },
     select: {
       lineUserId: true,
-      loginLineUserId: true,
     },
-  });
+  })) as ReminderApproval[];
 
-  // สร้าง map: loginChannelId → messagingApiUserId
-  const messagingIdMap = new Map<string, string>();
-  for (const a of approvals) {
-    // lineUserId เป็น Messaging API ID (ใช้ push)
-    if (a.loginLineUserId && loginChannelIds.includes(a.loginLineUserId)) {
-      messagingIdMap.set(a.loginLineUserId, a.lineUserId);
-    } else if (loginChannelIds.includes(a.lineUserId)) {
-      messagingIdMap.set(a.lineUserId, a.lineUserId);
-    }
-  }
+  const reminderAllowedIds = new Set(approvals.map((a) => a.lineUserId));
 
-  // คืน Messaging API user IDs สำหรับ push notification
   const result: string[] = [];
   for (const u of candidates) {
     const loginId = u.accounts[0]?.accountId;
     if (!loginId) continue;
-    const messagingId = messagingIdMap.get(loginId);
-    if (messagingId) result.push(messagingId);
+    if (reminderAllowedIds.has(loginId)) result.push(loginId);
   }
   return result;
 }
@@ -519,7 +506,7 @@ const getMonthlyAttendanceReport = async (
       parseInt(monthNum) - 1,
     );
     const processedRecords: AttendanceRecord[] = attendanceRecords.map(
-      (record: typeof attendanceRecords[number]) => {
+      (record: (typeof attendanceRecords)[number]) => {
         let hoursWorked: number | null = null;
         if (record.checkInTime && record.checkOutTime) {
           const timeDiff =

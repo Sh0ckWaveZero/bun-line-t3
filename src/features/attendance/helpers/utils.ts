@@ -3,6 +3,23 @@ import { getTodayDateString } from "../../../lib/utils/datetime";
 import { db } from "../../../lib/database/db";
 import { AttendanceStatusType } from "@prisma/client";
 
+interface PendingCheckoutRecord {
+  userId: string;
+}
+
+interface PendingCheckoutWithSettings {
+  userId: string;
+  user: {
+    accounts: Array<{ accountId: string }>;
+    settings: { enableCheckOutReminders: boolean } | null;
+  };
+}
+
+interface LineReminderPermission {
+  canReceiveReminders: boolean | null;
+  lineUserId: string;
+}
+
 /**
  * Finds all users who checked in today but haven't checked out yet
  * @returns Array of user IDs who need checkout reminders
@@ -20,7 +37,7 @@ export const getUsersWithPendingCheckout = async (): Promise<string[]> => {
     const todayDate = getTodayDateString();
 
     // Get all attendance records for today with status checked_in (either on time or late)
-    const pendingCheckouts = await db.workAttendance.findMany({
+    const pendingCheckouts = (await db.workAttendance.findMany({
       where: {
         workDate: todayDate,
         status: {
@@ -33,7 +50,7 @@ export const getUsersWithPendingCheckout = async (): Promise<string[]> => {
       select: {
         userId: true,
       },
-    });
+    })) as PendingCheckoutRecord[];
 
     // Extract just the user IDs
     return pendingCheckouts.map((record) => record.userId);
@@ -63,7 +80,7 @@ export const getUsersWithPendingCheckoutAndSettingsEnabled = async (): Promise<
 
     // Get all attendance records for today with status checked_in (either on time or late)
     // AND include user settings and LINE account to check all permission layers
-    const pendingCheckouts = await db.workAttendance.findMany({
+    const pendingCheckouts = (await db.workAttendance.findMany({
       where: {
         workDate: todayDate,
         status: {
@@ -85,11 +102,13 @@ export const getUsersWithPendingCheckoutAndSettingsEnabled = async (): Promise<
             accounts: {
               where: { providerId: "line" },
               select: { accountId: true },
+              orderBy: { updatedAt: "desc" },
+              take: 1,
             },
           },
         },
       },
-    });
+    })) as PendingCheckoutWithSettings[];
 
     // Collect all LINE user IDs to batch-fetch permissions
     const lineUserIds = pendingCheckouts
@@ -97,10 +116,10 @@ export const getUsersWithPendingCheckoutAndSettingsEnabled = async (): Promise<
       .filter((id): id is string => typeof id === "string");
 
     // Batch-fetch canReceiveReminders from LineApprovalRequest
-    const approvals = await db.lineApprovalRequest.findMany({
+    const approvals = (await db.lineApprovalRequest.findMany({
       where: { lineUserId: { in: lineUserIds } },
       select: { lineUserId: true, canReceiveReminders: true },
-    });
+    })) as LineReminderPermission[];
     const permissionMap = new Map(
       approvals.map((a) => [a.lineUserId, a.canReceiveReminders ?? false]),
     );
@@ -112,7 +131,9 @@ export const getUsersWithPendingCheckoutAndSettingsEnabled = async (): Promise<
       const checkoutEnabled =
         record.user.settings?.enableCheckOutReminders ?? true;
       const lineUserId = record.user.accounts[0]?.accountId;
-      const hasPermission = lineUserId ? (permissionMap.get(lineUserId) ?? false) : false;
+      const hasPermission = lineUserId
+        ? (permissionMap.get(lineUserId) ?? false)
+        : false;
       return checkoutEnabled && hasPermission;
     });
 

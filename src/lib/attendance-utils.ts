@@ -27,7 +27,10 @@ export const checkUserAuth = async (
 ): Promise<UserAuthResult> => {
   try {
     const userAccount = await db.account.findFirst({
-      where: { accountId: lineUserId },
+      where: {
+        providerId: "line",
+        accountId: lineUserId,
+      },
     });
 
     if (!userAccount) {

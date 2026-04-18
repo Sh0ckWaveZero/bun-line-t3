@@ -23,6 +23,7 @@ export async function POST(req: Request) {
       select: {
         accountId: true,
       },
+      orderBy: { updatedAt: "desc" },
     });
 
     if (lineAccount) {
