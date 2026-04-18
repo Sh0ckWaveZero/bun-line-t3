@@ -24,6 +24,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AttendanceReportRouteImport } from './routes/attendance-report'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CalendarMobileRouteImport } from './routes/calendar.mobile'
 import { Route as ApiLineRouteImport } from './routes/api/line'
 import { Route as ApiLeaveRouteImport } from './routes/api/leave'
 import { Route as ApiHolidaysRouteImport } from './routes/api/holidays'
@@ -136,6 +137,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const CalendarMobileRoute = CalendarMobileRouteImport.update({
+  id: '/mobile',
+  path: '/mobile',
+  getParentRoute: () => CalendarRoute,
 } as any)
 const ApiLineRoute = ApiLineRouteImport.update({
   id: '/api/line',
@@ -331,7 +337,7 @@ const ApiUserSettingsNotificationsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/attendance-report': typeof AttendanceReportRoute
-  '/calendar': typeof CalendarRoute
+  '/calendar': typeof CalendarRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/dca-history': typeof DcaHistoryRoute
   '/help': typeof HelpRoute
@@ -352,6 +358,7 @@ export interface FileRoutesByFullPath {
   '/api/holidays': typeof ApiHolidaysRoute
   '/api/leave': typeof ApiLeaveRoute
   '/api/line': typeof ApiLineRouteWithChildren
+  '/calendar/mobile': typeof CalendarMobileRoute
   '/api/admin/check': typeof ApiAdminCheckRoute
   '/api/admin/debug': typeof ApiAdminDebugRoute
   '/api/attendance/update': typeof ApiAttendanceUpdateRoute
@@ -385,7 +392,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/attendance-report': typeof AttendanceReportRoute
-  '/calendar': typeof CalendarRoute
+  '/calendar': typeof CalendarRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/dca-history': typeof DcaHistoryRoute
   '/help': typeof HelpRoute
@@ -406,6 +413,7 @@ export interface FileRoutesByTo {
   '/api/holidays': typeof ApiHolidaysRoute
   '/api/leave': typeof ApiLeaveRoute
   '/api/line': typeof ApiLineRouteWithChildren
+  '/calendar/mobile': typeof CalendarMobileRoute
   '/api/admin/check': typeof ApiAdminCheckRoute
   '/api/admin/debug': typeof ApiAdminDebugRoute
   '/api/attendance/update': typeof ApiAttendanceUpdateRoute
@@ -440,7 +448,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/attendance-report': typeof AttendanceReportRoute
-  '/calendar': typeof CalendarRoute
+  '/calendar': typeof CalendarRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/dca-history': typeof DcaHistoryRoute
   '/help': typeof HelpRoute
@@ -461,6 +469,7 @@ export interface FileRoutesById {
   '/api/holidays': typeof ApiHolidaysRoute
   '/api/leave': typeof ApiLeaveRoute
   '/api/line': typeof ApiLineRouteWithChildren
+  '/calendar/mobile': typeof CalendarMobileRoute
   '/api/admin/check': typeof ApiAdminCheckRoute
   '/api/admin/debug': typeof ApiAdminDebugRoute
   '/api/attendance/update': typeof ApiAttendanceUpdateRoute
@@ -517,6 +526,7 @@ export interface FileRouteTypes {
     | '/api/holidays'
     | '/api/leave'
     | '/api/line'
+    | '/calendar/mobile'
     | '/api/admin/check'
     | '/api/admin/debug'
     | '/api/attendance/update'
@@ -571,6 +581,7 @@ export interface FileRouteTypes {
     | '/api/holidays'
     | '/api/leave'
     | '/api/line'
+    | '/calendar/mobile'
     | '/api/admin/check'
     | '/api/admin/debug'
     | '/api/attendance/update'
@@ -625,6 +636,7 @@ export interface FileRouteTypes {
     | '/api/holidays'
     | '/api/leave'
     | '/api/line'
+    | '/calendar/mobile'
     | '/api/admin/check'
     | '/api/admin/debug'
     | '/api/attendance/update'
@@ -659,7 +671,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AttendanceReportRoute: typeof AttendanceReportRoute
-  CalendarRoute: typeof CalendarRoute
+  CalendarRoute: typeof CalendarRouteWithChildren
   DashboardRoute: typeof DashboardRoute
   DcaHistoryRoute: typeof DcaHistoryRoute
   HelpRoute: typeof HelpRoute
@@ -813,6 +825,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/calendar/mobile': {
+      id: '/calendar/mobile'
+      path: '/mobile'
+      fullPath: '/calendar/mobile'
+      preLoaderRoute: typeof CalendarMobileRouteImport
+      parentRoute: typeof CalendarRoute
     }
     '/api/line': {
       id: '/api/line'
@@ -1076,6 +1095,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface CalendarRouteChildren {
+  CalendarMobileRoute: typeof CalendarMobileRoute
+}
+
+const CalendarRouteChildren: CalendarRouteChildren = {
+  CalendarMobileRoute: CalendarMobileRoute,
+}
+
+const CalendarRouteWithChildren = CalendarRoute._addFileChildren(
+  CalendarRouteChildren,
+)
+
 interface ApiHealthRouteChildren {
   ApiHealthEnhancedRoute: typeof ApiHealthEnhancedRoute
 }
@@ -1116,7 +1147,7 @@ const ApiUserSettingsRouteWithChildren = ApiUserSettingsRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AttendanceReportRoute: AttendanceReportRoute,
-  CalendarRoute: CalendarRoute,
+  CalendarRoute: CalendarRouteWithChildren,
   DashboardRoute: DashboardRoute,
   DcaHistoryRoute: DcaHistoryRoute,
   HelpRoute: HelpRoute,
