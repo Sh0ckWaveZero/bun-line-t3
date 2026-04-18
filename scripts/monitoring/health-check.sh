@@ -94,8 +94,10 @@ check_database() {
     echo "-------------------------"
 
     if [[ -n "${DATABASE_URL:-}" ]]; then
-        if [[ "$DATABASE_URL" =~ ^mongodb ]]; then
-            print_status "OK" "Database URL format is valid (MongoDB)"
+        if [[ "$DATABASE_URL" =~ ^postgres ]] || [[ "$DATABASE_URL" =~ ^postgresql ]]; then
+            print_status "OK" "Database URL format is valid (PostgreSQL)"
+        elif [[ "$DATABASE_URL" =~ ^mongodb ]]; then
+            print_status "WARNING" "Database URL is MongoDB (should be PostgreSQL for v7)"
         else
             print_status "WARNING" "Database URL format may be invalid"
         fi

@@ -8,13 +8,12 @@ export async function POST(req: Request) {
   try {
     const rawBody = await req.text();
     const body = JSON.parse(rawBody);
-
     const secret = env.LINE_CHANNEL_SECRET;
+    console.log(secret)
     const signature = crypto
       .createHmac("SHA256", secret as string)
       .update(rawBody)
-      .digest("base64")
-      .toString();
+      .digest("base64");
 
     // Compare your signature and header's signature
     const lineSignature = req.headers.get("x-line-signature");
@@ -28,6 +27,22 @@ export async function POST(req: Request) {
     if (utils.isEmpty(body?.events)) {
       return Response.json({ message: "ok" }, { status: 200 });
     }
+
+    // 📋 Log Bot User IDs ทุก event
+    const events = body.events || [];
+    events.forEach((event: any, index: number) => {
+      const botUserId = event?.source?.userId;
+      const eventType = event?.type;
+      const messageType = event?.message?.type;
+
+      console.log(`📨 [LINE Webhook] Event ${index + 1}/${events.length}:`, {
+        eventType,
+        messageType,
+        botUserId,
+        timestamp: event.timestamp,
+        replyToken: event.replyToken?.substring(0, 10) + "...",
+      });
+    });
 
     // Create a more complete compatible request object for lineService
     const compatibleReq = {

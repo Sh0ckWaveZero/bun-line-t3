@@ -1,15 +1,22 @@
 import { PrismaClient, Prisma } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 const globalForPrisma = globalThis as unknown as {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   prisma: any | undefined;
+  prismaUrl: string | undefined;
 };
 
 const isUniqueConstraintError = (error: unknown) =>
   error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
 
 const createClient = () => {
+  const adapter = new PrismaPg({
+    connectionString: process.env.DATABASE_URL!,
+  });
+
   const base = new PrismaClient({
+    adapter,
     log:
       process.env.NODE_ENV === "development"
         ? ["query", "error", "warn"]
@@ -38,7 +45,6 @@ const createClient = () => {
           };
 
           try {
-            // MongoDB upsert can still lose a concurrent insert race on unique indexes.
             return await (base as PrismaClient).session.upsert({
               where: { token },
               create: data,
@@ -70,12 +76,15 @@ const createClient = () => {
 
 /**
  * ตรวจสอบว่า cached instance มี model ครบหรือไม่
+ * หรือ DATABASE_URL เปลี่ยนไปหลังจาก cache ถูกสร้าง
  * ป้องกัน "Cannot read properties of undefined" หลัง schema เปลี่ยน
  * โดยที่ dev server ยังไม่ถูก restart
  */
 const isCacheStale = (client: PrismaClient): boolean => {
   try {
-    return !("lineApprovalRequest" in client) || !("subscription" in client);
+    // ตรวจสอบว่า DATABASE_URL เปลี่ยนหรือเปล่า (เช่น แก้ .env.local แล้ว HMR reload)
+    if (globalForPrisma.prismaUrl !== process.env.DATABASE_URL) return true;
+    return !("lineApprovalRequest" in client) || !("subscription" in client) || !("workAttendance" in client);
   } catch {
     return true;
   }
@@ -85,7 +94,10 @@ const cached = globalForPrisma.prisma;
 export const db =
   cached && !isCacheStale(cached) ? cached : createClient();
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = db;
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = db;
+  globalForPrisma.prismaUrl = process.env.DATABASE_URL;
+}
 
 // Test database connection
 db.$connect()

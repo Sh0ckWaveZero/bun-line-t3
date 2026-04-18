@@ -92,7 +92,7 @@ export async function GET() {
 
     // 2. Database connectivity check
     try {
-      await db.$runCommandRaw({ ping: 1 });
+      await db.$queryRaw`SELECT 1`;
       healthCheck.database = "connected";
       healthCheck.checks.database = true;
     } catch (dbError) {

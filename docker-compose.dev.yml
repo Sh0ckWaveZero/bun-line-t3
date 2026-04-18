@@ -1,0 +1,37 @@
+# Development-only: MongoDB Replica Set สำหรับ dev environment
+# ใช้คำสั่ง: docker compose -f docker-compose.dev.yml up -d
+#
+# สาเหตุที่ต้องใช้ Replica Set:
+#   @better-auth/prisma-adapter ใช้ $transaction → MongoDB ต้องเป็น Replica Set
+#   MongoDB standalone (ค่า default) ไม่รองรับ transactions
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: bun-line-t3-mongodb-dev
+    # เปิด replica set mode ทันที
+    command: mongod --replSet rs0 --bind_ip_all
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_dev_data:/data/db
+      - mongodb_dev_config:/data/configdb
+    healthcheck:
+      test: |
+        mongosh --quiet --eval "
+          try { rs.status(); quit(0) } catch(e) {
+            rs.initiate({_id:'rs0', members:[{_id:0, host:'localhost:27017'}]});
+            quit(0)
+          }
+        "
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+volumes:
+  mongodb_dev_data:
+    driver: local
+  mongodb_dev_config:
+    driver: local

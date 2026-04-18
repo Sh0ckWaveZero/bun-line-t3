@@ -12,7 +12,7 @@ import type {
  * เช่น BTCDCA0000004700
  *
  * note: orderId อาจจะไม่ unique ระดับระบบ (ระหว่าง users ได้)
- * แต่ id (ObjectId) จะเป็น unique ตัวจริง
+ * แต่ id (Prisma cuid) จะเป็น unique ตัวจริง
  */
 const generateOrderId = (coin: string, round: number): string => {
   const paddedRound = round.toString().padStart(10, "0");

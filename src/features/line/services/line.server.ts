@@ -23,20 +23,36 @@ const handleEvent = async (
 ): Promise<any> => {
   const events = (req.body as any)?.events;
 
+  console.log(`📬 [lineService.handleEvent] Received ${events?.length || 0} events`);
+
   if (!Array.isArray(events) || events.length === 0) {
     return res.status(400).json({ error: "No events to process" });
   }
 
   // 🔒 ตรวจสอบการอนุมัติก่อนทำงาน
   // ใช้ req แรกเพื่อ check user (กรณีหลาย events ใน batch ใช้ userId เดียวกัน)
+  console.log(`🔒 [lineService.handleEvent] Checking approval...`);
   const isApproved = await handleApprovalCheck(req);
+
+  console.log(`✅ [lineService.handleEvent] Approval check result:`, {
+    isApproved,
+    eventType: events[0]?.type,
+    messageType: events[0]?.message?.type,
+  });
+
   if (!isApproved) {
     // user ยังไม่ได้รับการอนุมัติ — ได้ส่งข้อความแจ้งไปแล้ว หยุดประมวลผล
+    console.log(`⏸️ [lineService.handleEvent] User not approved - returning pending approval`);
     return res.status(200).json({ message: "pending approval" });
   }
 
   for (let index = 0; index < events.length; index++) {
     const event = events[index];
+    console.log(`🔄 [lineService.handleEvent] Processing event ${index + 1}/${events.length}:`, {
+      type: event.type,
+      messageType: event.message?.type,
+      text: event.message?.text?.substring(0, 50),
+    });
 
     switch (event.type) {
       case "message":

@@ -1,17 +1,23 @@
 #!/bin/sh
-# 🚀 Docker Entrypoint Script สำหรับ Bun + TanStack Start + Prisma
+# 🚀 Docker Entrypoint Script สำหรับ Bun + TanStack Start + Prisma v7
 
 set -e
 
 echo "🔍 Verifying runtime environment..."
 
-if [ ! -d "node_modules/.prisma/client" ]; then
-    echo "❌ Prisma Client not found"
+# Check for Prisma v7 client (supports both custom alias and default location)
+if [ ! -d "prisma/generated/client" ] && [ ! -d "node_modules/@prisma/client" ]; then
+    echo "❌ Prisma Client not found (checked prisma/generated/client and node_modules/@prisma/client)"
     exit 1
 fi
 
-if [ ! -f "dist/server/server.js" ] || [ ! -d "dist/client" ]; then
-    echo "❌ TanStack Start build output not found"
+if [ ! -f "dist/server/server.js" ] && [ ! -f "dist/index/index.js" ]; then
+    echo "❌ TanStack Start server bundle not found"
+    exit 1
+fi
+
+if [ ! -d "dist/client" ] && [ ! -d "dist/assets" ]; then
+    echo "❌ TanStack Start client bundle not found"
     exit 1
 fi
 

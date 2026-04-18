@@ -92,20 +92,38 @@ const findApprovedProfileLineUserIds = async (
  */
 export async function getLineUserId(request: Request): Promise<string | null> {
   const lineUserIds = await getLineUserIds(request);
-  return lineUserIds[0] ?? null;
+  const primaryId = lineUserIds[0] ?? null;
+
+  console.log(`🎯 [getLineUserId] Primary User ID:`, {
+    primaryId,
+    totalIds: lineUserIds.length,
+    allIds: lineUserIds,
+  });
+
+  return primaryId;
 }
 
 /**
- * ดึง LINE User IDs ที่เกี่ยวข้องกับ session user
+ * ดึง LINE User IDs ทั้งหมดที่เกี่ยวข้องกับ session user
  *
- * LINE Login กับ LINE Messaging API อาจให้ userId คนละตัวถ้าอยู่คนละ provider
- * จึงเลือก approved bot/approval ID ที่ profile ตรงกันก่อน แล้วค่อย fallback
- * เป็น LINE Login accountId เพื่อไม่ให้ Auto DCA ถูกบันทึกใต้ user ผิดตัว
+ * รองรับกรณีที่ LINE Login channel ID ≠ Messaging API (Bot) channel ID
+ * → คืนทั้ง lineUserId (Bot) และ loginLineUserId (Login) ทั้งคู่
+ *
+ * Priority:
+ * 1. Bot IDs ที่ link กับ Login IDs ผ่าน approval
+ * 2. Login IDs จาก account (LINE Login OAuth)
+ * 3. Bot IDs ที่ match ผ่าน profile (pictureUrl, displayName)
  */
 export async function getLineUserIds(request: Request): Promise<string[]> {
   const session = await getServerAuthSession(request);
 
   if (!session?.user?.id) return [];
+
+  console.log(`🔍 [getLineUserIds] Session user:`, {
+    userId: session.user.id,
+    email: session.user.email,
+    name: session.user.name,
+  });
 
   const accounts = await db.account.findMany({
     where: {
@@ -123,8 +141,9 @@ export async function getLineUserIds(request: Request): Promise<string[]> {
     (accounts as LineAccountIdentity[]).map((account) => account.accountId),
   );
 
-  // ค้นหา approved records ที่ link ไว้ (รองรับ Login channel ID ≠ Bot channel ID)
-  // ตรวจสอบทั้ง lineUserId และ loginLineUserId
+  console.log(`📋 [getLineUserIds] Login User IDs (from OAuth):`, accountLineUserIds);
+
+  // 1. หา Bot IDs ที่ link ผ่าน approval (loginLineUserId ตรงกับ account IDs)
   const linkedApprovals = await db.lineApprovalRequest.findMany({
     where: {
       status: "APPROVED",
@@ -136,16 +155,36 @@ export async function getLineUserIds(request: Request): Promise<string[]> {
     select: { lineUserId: true, loginLineUserId: true },
   });
 
-  const linkedIds = uniqueIds(
-    linkedApprovals.flatMap((a: { lineUserId: string; loginLineUserId: string | null }) => [a.lineUserId, a.loginLineUserId]),
+  console.log(`🔗 [getLineUserIds] Linked approvals:`, linkedApprovals.map(a => ({
+    botId: a.lineUserId,
+    loginId: a.loginLineUserId,
+  })));
+
+  const linkedBotIds = uniqueIds(
+    linkedApprovals.flatMap((a: { lineUserId: string; loginLineUserId: string | null }) => [
+      a.lineUserId,
+      a.loginLineUserId,
+    ]),
   );
 
+  // 2. หา Bot IDs ที่ match ผ่าน profile (pictureUrl, displayName)
   const approvedProfileLineUserIds = await findApprovedProfileLineUserIds(
     session,
     accountLineUserIds,
   );
 
-  return uniqueIds([...linkedIds, ...approvedProfileLineUserIds, ...accountLineUserIds]);
+  console.log(`👤 [getLineUserIds] Profile-matched Bot IDs:`, approvedProfileLineUserIds);
+
+  // 3. รวมทุกอย่าง: Bot IDs (จาก linked + profile) + Login IDs (จาก account)
+  const allIds = uniqueIds([
+    ...linkedBotIds,
+    ...approvedProfileLineUserIds,
+    ...accountLineUserIds,
+  ]);
+
+  console.log(`✅ [getLineUserIds] Final User IDs (${allIds.length}):`, allIds);
+
+  return allIds;
 }
 
 /**
@@ -160,10 +199,25 @@ export async function getAuthorizedLineUserId(
 
   const normalizedRequestedLineUserId = requestedLineUserId?.trim();
   if (!normalizedRequestedLineUserId) {
-    return lineUserIds[0] ?? null;
+    const primaryId = lineUserIds[0] ?? null;
+
+    console.log(`✅ [getAuthorizedLineUserId] Using primary ID (no request):`, {
+      primaryId,
+      totalIds: lineUserIds.length,
+    });
+
+    return primaryId;
   }
 
-  return lineUserIds.includes(normalizedRequestedLineUserId)
-    ? normalizedRequestedLineUserId
-    : null;
+  const isAuthorized = lineUserIds.includes(normalizedRequestedLineUserId);
+  const authorizedId = isAuthorized ? normalizedRequestedLineUserId : null;
+
+  console.log(`🔐 [getAuthorizedLineUserId] Authorization check:`, {
+    requestedId: normalizedRequestedLineUserId,
+    authorizedId,
+    isAuthorized,
+    availableIds: lineUserIds,
+  });
+
+  return authorizedId;
 }
