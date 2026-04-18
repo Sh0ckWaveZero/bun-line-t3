@@ -79,5 +79,14 @@ export default defineConfig(({ mode }) => {
     server: {
       allowedHosts,
     },
+    build: {
+      rollupOptions: {
+        external: [
+          /^@prisma\/client/,
+          /^@prisma\/adapter-pg/,
+          /^pg/,
+        ],
+      },
+    },
   };
 });
