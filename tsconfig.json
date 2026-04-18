@@ -75,6 +75,7 @@
   ],
   "exclude": [
     "node_modules",
+    "prisma/generated",
     "**/*.test.ts",
     "**/*.test.tsx"
   ]

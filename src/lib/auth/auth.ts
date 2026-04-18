@@ -8,7 +8,6 @@ import { syncLineProfileToDatabase } from "./line-profile-sync";
 import { isAllowedHost } from "@/lib/security/url-validator";
 import { createCustomPrismaAdapter } from "./prisma-adapter";
 
-
 const LINE_FALLBACK_EMAIL_DOMAIN = "line.local";
 const DEFAULT_DEV_PORT = "4325";
 
@@ -67,7 +66,10 @@ const validateProductionDomains = () => {
   }
 
   const allowedDomains = env.ALLOWED_DOMAINS || "";
-  const domainsList = allowedDomains.split(",").map((d) => d.trim()).filter(Boolean);
+  const domainsList = allowedDomains
+    .split(",")
+    .map((d) => d.trim())
+    .filter(Boolean);
 
   // ⚠️ Warning: ALLOWED_DOMAINS not configured
   if (domainsList.length === 0 || allowedDomains === "") {
@@ -168,28 +170,6 @@ const syncLineApprovalRequest = async (account: {
   }
 
   try {
-    // ดึง LINE Messaging API user ID จาก LineApprovalRequest (ถ้ามี)
-    const approvalRequest = await db.lineApprovalRequest.findFirst({
-      where: {
-        loginLineUserId: lineLoginUserId,
-        status: "APPROVED",
-      },
-      select: { lineUserId: true },
-    });
-
-    const lineMessagingApiUserId = approvalRequest?.lineUserId;
-
-    // อัปเดต LINE Messaging API user ID ใน Account record
-    if (lineMessagingApiUserId) {
-      await db.account.update({
-        where: { id: account.id },
-        data: { lineMessagingApiUserId },
-      });
-      console.log(
-        `[LINE Profile Sync] Linked LINE Login ID ${lineLoginUserId} → Messaging API ID ${lineMessagingApiUserId}`,
-      );
-    }
-
     const user = await db.user.findUnique({
       where: { id: account.userId },
       select: { name: true, image: true },
@@ -246,13 +226,9 @@ export const auth = betterAuth({
     // be returned on the callback. Keep Better Auth's database-backed state
     // + PKCE checks for security, but do not require the extra cookie binding.
     skipStateCookieCheck: true,
-    // Enable account linking to handle existing accounts gracefully
     accountLinking: {
-      enabled: true,
-      // Allow users to sign in with the same provider (important for LINE)
-      // Better Auth will use existing account instead of creating duplicate
-      allowDifferentProviders: true,
-      trustedProviders: ["line"],
+      enabled: false,
+      disableImplicitLinking: true,
     },
   },
   socialProviders: {
@@ -278,10 +254,8 @@ export const auth = betterAuth({
         }
 
         return {
-          email:
-            lineProfile.email?.toLowerCase() ??
-            createSyntheticLineEmail(lineUserId),
-          emailVerified: Boolean(lineProfile.email),
+          email: createSyntheticLineEmail(lineUserId),
+          emailVerified: false,
           image: lineProfile.picture ?? lineProfile.pictureUrl,
           name: lineProfile.name ?? lineProfile.displayName ?? "LINE User",
         };
@@ -294,41 +268,6 @@ export const auth = betterAuth({
         async after(account) {
           try {
             await syncLineApprovalRequest(account);
-
-            // After syncing LINE Messaging API ID, check if we need to link accounts
-            if (account.providerId === "line") {
-              const updatedAccount = await db.account.findUnique({
-                where: { id: account.id },
-                select: { id: true, userId: true, lineMessagingApiUserId: true },
-              });
-
-              if (updatedAccount?.lineMessagingApiUserId) {
-                // Check if another account has the same LINE Messaging API ID
-                const duplicateAccount = await db.account.findFirst({
-                  where: {
-                    id: { not: updatedAccount.id },
-                    providerId: "line",
-                    lineMessagingApiUserId: updatedAccount.lineMessagingApiUserId,
-                  },
-                  select: { id: true, userId: true },
-                });
-
-                if (duplicateAccount) {
-                  console.log(
-                    `[Account Linking] Found duplicate LINE Messaging API ID: ${updatedAccount.lineMessagingApiUserId}`,
-                  );
-                  console.log(
-                    `[Account Linking] Current account userId: ${updatedAccount.userId}, duplicate account userId: ${duplicateAccount.userId}`,
-                  );
-
-                  // TODO: Implement account merging logic
-                  // For now, just log the warning
-                  console.warn(
-                    `[Account Linking] ⚠️ Multiple accounts found for LINE Messaging API ID ${updatedAccount.lineMessagingApiUserId}. Consider implementing auto-merge logic.`,
-                  );
-                }
-              }
-            }
           } catch (error) {
             // ไม่ throw error เพื่อไม่ให้กระทบการ login
             console.error("[LINE Profile Sync Error]", error);

@@ -1,27 +1,26 @@
 import { sendMessage } from "../../../lib/utils/line-utils";
 import { replyNotFound } from "@/lib/utils/line-message-utils";
 import { db as prisma } from "@/lib/database/db";
+import { getLineUserAccount } from "@/features/line/utils/getLineUserAccount";
 
 export const handleSettingsCommand = async (req: any, conditions: any[]) => {
   try {
-    const userId = req.body.events[0].source.userId;
     const originalText = req.body.events[0].message.text;
     const command = originalText.split(" ")[0]?.slice(1).toLowerCase();
 
-    // Find user by LINE userId
-    const account = await prisma.account.findFirst({
-      where: {
-        accountId: userId,
-        providerId: "line",
-      },
-      include: {
-        user: {
+    const lineAccount = await getLineUserAccount(req.body.events[0]);
+    const account = lineAccount
+      ? await prisma.account.findUnique({
+          where: { id: lineAccount.id },
           include: {
-            settings: true,
+            user: {
+              include: {
+                settings: true,
+              },
+            },
           },
-        },
-      },
-    });
+        })
+      : null;
 
     if (!account || !account.user) {
       // Detect language from command

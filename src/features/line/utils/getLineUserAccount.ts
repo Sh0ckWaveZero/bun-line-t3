@@ -8,6 +8,12 @@ export const getLineUserAccount = async (event: any) => {
   const userId: string | undefined = event?.source?.userId;
   if (!userId) return null;
 
-  const account = await db.account.findFirst({ where: { accountId: userId } });
+  const account = await db.account.findFirst({
+    where: {
+      providerId: "line",
+      accountId: userId,
+    },
+  });
+
   return account ?? null;
 };

@@ -105,6 +105,7 @@ export async function GET(req: Request) {
               userId,
               providerId: "line", // Make sure we're getting LINE accounts
             },
+            orderBy: { updatedAt: "desc" },
           });
 
           if (!userAccount) {

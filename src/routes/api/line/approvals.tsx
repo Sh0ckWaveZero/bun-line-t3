@@ -67,6 +67,7 @@ const getLineUserIdFromSession = async (
     select: {
       accountId: true,
     },
+    orderBy: { updatedAt: "desc" },
   });
   return account?.accountId ?? null;
 };
@@ -292,7 +293,8 @@ export async function POST(request: Request): Promise<Response> {
 
     return Response.json(
       {
-        error: "action ไม่ถูกต้อง — ใช้ approve, reject, unlock, stats, หรือ set-admin",
+        error:
+          "action ไม่ถูกต้อง — ใช้ approve, reject, unlock, stats, หรือ set-admin",
       },
       { status: 400 },
     );

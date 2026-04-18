@@ -5,6 +5,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { dcaService } from "@/features/dca";
 import { dcaEventManager } from "@/lib/dca/event-manager";
+import { getAuthorizedLineUserId } from "@/lib/auth";
 
 /**
  * DELETE /api/dca/$id
@@ -15,9 +16,23 @@ export async function DELETE(request: Request, id: string) {
       return Response.json({ error: "ต้องระบุ ID" }, { status: 400 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const lineUserId = await getAuthorizedLineUserId(
+      request,
+      searchParams.get("lineUserId"),
+    );
+
+    if (!lineUserId) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const existing = await dcaService.getOrderById(id);
     if (!existing) {
       return Response.json({ error: "ไม่พบข้อมูล" }, { status: 404 });
+    }
+
+    if (existing.lineUserId !== lineUserId) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     await dcaService.deleteOrder(id);

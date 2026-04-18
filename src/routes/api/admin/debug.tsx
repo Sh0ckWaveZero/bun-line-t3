@@ -14,9 +14,12 @@ export async function GET() {
 
   // 🔐 SECURITY: Check authentication
   if (!session?.user?.id) {
-    return Response.json({
-      error: "Not authenticated",
-    }, { status: 401 });
+    return Response.json(
+      {
+        error: "Not authenticated",
+      },
+      { status: 401 },
+    );
   }
 
   // 🔐 SECURITY: Check LINE account
@@ -29,21 +32,28 @@ export async function GET() {
       accountId: true,
       providerId: true,
     },
+    orderBy: { updatedAt: "desc" },
   });
 
   if (!account) {
-    return Response.json({
-      error: "No LINE account found",
-    }, { status: 403 });
+    return Response.json(
+      {
+        error: "No LINE account found",
+      },
+      { status: 403 },
+    );
   }
 
   // 🔐 SECURITY: Check admin permission
   const canManage = await canManageApprovalsAsync(account.accountId);
 
   if (!canManage) {
-    return Response.json({
-      error: "Forbidden: Admin access required",
-    }, { status: 403 });
+    return Response.json(
+      {
+        error: "Forbidden: Admin access required",
+      },
+      { status: 403 },
+    );
   }
 
   // 1. Session info
@@ -76,9 +86,7 @@ export async function GET() {
     ? env.ADMIN_LINE_USER_IDS.split(",").map((id) => id.trim())
     : [];
 
-  const matchedIndex = parsedIds.findIndex(
-    (id) => id === account.accountId,
-  );
+  const matchedIndex = parsedIds.findIndex((id) => id === account.accountId);
 
   const details = {
     yourLineUserId: account.accountId,

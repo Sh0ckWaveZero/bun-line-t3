@@ -1,13 +1,10 @@
-import { db } from "@/lib/database";
 import { bubbleTemplate } from "@/lib/validation/line";
 import { sendMessage } from "@/lib/utils/line-utils";
 import { flexMessage } from "@/lib/utils/line-message-utils";
+import { getLineUserAccount } from "@/features/line/utils/getLineUserAccount";
 
 export const handleStatusCommand = async (req: any) => {
-  const statusUserId = req.body.events[0].source.userId;
-  const statusUserAccount = await db.account.findFirst({
-    where: { accountId: statusUserId },
-  });
+  const statusUserAccount = await getLineUserAccount(req.body.events[0]);
   if (!statusUserAccount) {
     const payload = bubbleTemplate.signIn();
     return sendMessage(req, flexMessage(payload));

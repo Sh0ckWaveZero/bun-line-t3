@@ -53,6 +53,7 @@ certificates
 .flaskenv*
 !.env.project
 .env.vault
+prisma/generated
 prisma/generated/*
 public/temp-charts/*
 

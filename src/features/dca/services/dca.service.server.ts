@@ -47,7 +47,7 @@ const applyLineUserFilter = (
 };
 
 /**
- * ดึงรอบถัดไปสำหรับ user และเหรียญที่ระบุ (นับแยกตาม lineUserId)
+ * ดึงรอบถัดไปสำหรับ user และเหรียญที่ระบุ (นับแยกตาม lineUserId ของ channel นี้เท่านั้น)
  */
 const getNextRound = async (
   coin: string,
@@ -66,6 +66,19 @@ const getNextRound = async (
  */
 const createOrder = async (input: CreateDcaOrderInput) => {
   const coin = input.coin.toUpperCase();
+  const duplicate = await db.dcaOrder.findFirst({
+    where: {
+      lineUserId: input.lineUserId,
+      coin,
+      executedAt: input.executedAt,
+    },
+    select: { orderId: true },
+  });
+
+  if (duplicate) {
+    throw new Error(`DCA order already exists: ${duplicate.orderId}`);
+  }
+
   const round = await getNextRound(coin, input.lineUserId);
   const orderId = generateOrderId(coin, round);
 

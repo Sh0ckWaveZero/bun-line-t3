@@ -1,14 +1,11 @@
 import { db } from "@/lib/database/db";
 import { getServerAuthSession } from "./auth";
-import type { AppSession } from "./session-context";
 
 interface LineAccountIdentity {
+  id: string;
   accountId: string;
-}
-
-interface LineApprovalIdentity {
-  lineUserId: string;
-  loginLineUserId: string | null;
+  lineMessagingApiUserId: string | null;
+  updatedAt: Date;
 }
 
 const uniqueIds = (lineUserIds: Array<string | null | undefined>): string[] =>
@@ -19,68 +16,6 @@ const uniqueIds = (lineUserIds: Array<string | null | undefined>): string[] =>
         .filter((lineUserId): lineUserId is string => Boolean(lineUserId)),
     ),
   );
-
-/**
- * ดึง LINE user IDs ทั้งหมดที่ approved และตรงกับ session profile นี้
- *
- * รองรับกรณีที่ LINE Login channel ID ≠ Messaging API (Bot) channel ID
- * → คืน lineUserId (Bot) และ loginLineUserId (Login) ทั้งคู่
- */
-const findApprovedProfileLineUserIds = async (
-  session: AppSession,
-  accountLineUserIds: string[],
-): Promise<string[]> => {
-  const now = new Date();
-  const activeApprovalWhere = {
-    status: "APPROVED" as const,
-    OR: [{ expiresAt: null }, { expiresAt: { gte: now } }],
-  };
-
-  const extractAllIds = (approvals: LineApprovalIdentity[]): string[] =>
-    uniqueIds(
-      approvals.flatMap((a) => [a.lineUserId, a.loginLineUserId]),
-    );
-
-  if (session.user?.image) {
-    const approvals = await db.lineApprovalRequest.findMany({
-      where: {
-        ...activeApprovalWhere,
-        pictureUrl: session.user.image,
-      },
-      select: { lineUserId: true, loginLineUserId: true },
-      orderBy: { updatedAt: "desc" },
-    });
-
-    const matchedIds = extractAllIds(approvals as LineApprovalIdentity[]);
-    if (matchedIds.length > 0) {
-      return [
-        ...matchedIds.filter(
-          (lineUserId) => !accountLineUserIds.includes(lineUserId),
-        ),
-        ...matchedIds.filter((lineUserId) =>
-          accountLineUserIds.includes(lineUserId),
-        ),
-      ];
-    }
-  }
-
-  if (!session.user?.name) return [];
-
-  const approvals = await db.lineApprovalRequest.findMany({
-    where: {
-      ...activeApprovalWhere,
-      displayName: session.user.name,
-    },
-    select: { lineUserId: true, loginLineUserId: true },
-    orderBy: { updatedAt: "desc" },
-  });
-  const matchedIds = extractAllIds(approvals as LineApprovalIdentity[]);
-
-  // ชื่อซ้ำกันได้ จึง fallback ด้วยชื่อเฉพาะเมื่อ match ได้ record เดียวเท่านั้น
-  if (approvals.length !== 1) return [];
-
-  return matchedIds;
-};
 
 /**
  * ดึง LINE User ID จาก session ของ user ที่ login อยู่
@@ -104,15 +39,8 @@ export async function getLineUserId(request: Request): Promise<string | null> {
 }
 
 /**
- * ดึง LINE User IDs ทั้งหมดที่เกี่ยวข้องกับ session user
- *
- * รองรับกรณีที่ LINE Login channel ID ≠ Messaging API (Bot) channel ID
- * → คืนทั้ง lineUserId (Bot) และ loginLineUserId (Login) ทั้งคู่
- *
- * Priority:
- * 1. Bot IDs ที่ link กับ Login IDs ผ่าน approval
- * 2. Login IDs จาก account (LINE Login OAuth)
- * 3. Bot IDs ที่ match ผ่าน profile (pictureUrl, displayName)
+ * ดึง LINE User ID ของ session นี้จาก LINE OAuth account โดยตรงเท่านั้น
+ * ไม่ merge ID จาก approval/profile matching เพื่อกันการ map ข้าม user
  */
 export async function getLineUserIds(request: Request): Promise<string[]> {
   const session = await getServerAuthSession(request);
@@ -132,59 +60,61 @@ export async function getLineUserIds(request: Request): Promise<string[]> {
     },
     select: {
       accountId: true,
+      id: true,
+      lineMessagingApiUserId: true,
       updatedAt: true,
     },
     orderBy: { updatedAt: "desc" },
   });
 
-  const accountLineUserIds = uniqueIds(
-    (accounts as LineAccountIdentity[]).map((account) => account.accountId),
+  const accountIdentities = accounts as LineAccountIdentity[];
+  const primaryAccount = accountIdentities.find((account) =>
+    Boolean(account.accountId.trim()),
   );
 
-  console.log(`📋 [getLineUserIds] Login User IDs (from OAuth):`, accountLineUserIds);
+  if (primaryAccount && accountIdentities.length > 1) {
+    const staleAccountIds = accountIdentities
+      .filter((account) => account.id !== primaryAccount.id)
+      .map((account) => account.id);
 
-  // 1. หา Bot IDs ที่ link ผ่าน approval (loginLineUserId ตรงกับ account IDs)
-  const linkedApprovals = await db.lineApprovalRequest.findMany({
-    where: {
-      status: "APPROVED",
-      OR: [
-        { lineUserId: { in: accountLineUserIds } },
-        { loginLineUserId: { in: accountLineUserIds } },
-      ],
-    },
-    select: { lineUserId: true, loginLineUserId: true },
+    if (staleAccountIds.length > 0) {
+      await db.account.deleteMany({
+        where: {
+          id: { in: staleAccountIds },
+          providerId: "line",
+          userId: session.user.id,
+        },
+      });
+
+      console.warn(`🧹 [getLineUserIds] Removed duplicate LINE accounts:`, {
+        keptAccountId: primaryAccount.accountId,
+        removedAccountIds: accountIdentities
+          .filter((account) => staleAccountIds.includes(account.id))
+          .map((account) => account.accountId),
+        userId: session.user.id,
+      });
+    }
+  }
+
+  const activeAccounts = primaryAccount ? [primaryAccount] : [];
+  const lineUserIds = uniqueIds([primaryAccount?.accountId]);
+
+  console.log(`📋 [getLineUserIds] LINE OAuth accounts:`, {
+    accounts: activeAccounts.map((account) => ({
+      id: account.id,
+      accountId: account.accountId,
+      storedMessagingId: account.lineMessagingApiUserId,
+      updatedAt: account.updatedAt,
+    })),
+    selectedAccountId: primaryAccount?.accountId ?? null,
   });
 
-  console.log(`🔗 [getLineUserIds] Linked approvals:`, linkedApprovals.map(a => ({
-    botId: a.lineUserId,
-    loginId: a.loginLineUserId,
-  })));
-
-  const linkedBotIds = uniqueIds(
-    linkedApprovals.flatMap((a: { lineUserId: string; loginLineUserId: string | null }) => [
-      a.lineUserId,
-      a.loginLineUserId,
-    ]),
+  console.log(
+    `✅ [getLineUserIds] Final User IDs (${lineUserIds.length}):`,
+    lineUserIds,
   );
 
-  // 2. หา Bot IDs ที่ match ผ่าน profile (pictureUrl, displayName)
-  const approvedProfileLineUserIds = await findApprovedProfileLineUserIds(
-    session,
-    accountLineUserIds,
-  );
-
-  console.log(`👤 [getLineUserIds] Profile-matched Bot IDs:`, approvedProfileLineUserIds);
-
-  // 3. รวมทุกอย่าง: Bot IDs (จาก linked + profile) + Login IDs (จาก account)
-  const allIds = uniqueIds([
-    ...linkedBotIds,
-    ...approvedProfileLineUserIds,
-    ...accountLineUserIds,
-  ]);
-
-  console.log(`✅ [getLineUserIds] Final User IDs (${allIds.length}):`, allIds);
-
-  return allIds;
+  return lineUserIds;
 }
 
 /**

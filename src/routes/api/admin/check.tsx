@@ -22,6 +22,7 @@ export async function GET() {
     select: {
       accountId: true,
     },
+    orderBy: { updatedAt: "desc" },
   });
 
   if (!account) {

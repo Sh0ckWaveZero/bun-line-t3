@@ -1,16 +1,13 @@
-import { db } from "@/lib/database";
 import { bubbleTemplate } from "@/lib/validation/line";
 import { sendMessage } from "@/lib/utils/line-utils";
 import { flexMessage } from "@/lib/utils/line-message-utils";
+import { getLineUserAccount } from "@/features/line/utils/getLineUserAccount";
 
 export const handleLeaveCommandWrapper = async (
   conditions: any[],
   req: any,
 ) => {
-  const userId = req.body.events[0].source.userId;
-  const userAccount = await db.account.findFirst({
-    where: { accountId: userId },
-  });
+  const userAccount = await getLineUserAccount(req.body.events[0]);
   if (!userAccount?.userId) {
     const payload = bubbleTemplate.signIn();
     return sendMessage(req, flexMessage(payload));

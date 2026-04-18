@@ -62,6 +62,7 @@ const fetchSessionWithApproval = createServerFn({ method: "GET" }).handler(
         accountId: true,
         user: { select: { role: true } },
       },
+      orderBy: { updatedAt: "desc" },
     });
 
     if (!account) {

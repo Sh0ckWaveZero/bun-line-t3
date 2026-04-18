@@ -11,12 +11,12 @@ export async function GET(request: Request) {
   try {
     const session = await getServerAuthSession(request);
 
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { id: session.user.id },
       include: { settings: true },
     });
 
@@ -33,10 +33,7 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error("Error fetching notification settings:", error);
-    return Response.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -53,7 +50,7 @@ export async function PUT(request: Request) {
   try {
     const session = await getServerAuthSession(request);
 
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -61,7 +58,7 @@ export async function PUT(request: Request) {
     const { enableCheckInReminders } = notificationSettingsSchema.parse(body);
 
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { id: session.user.id },
       include: { settings: true },
     });
 
@@ -104,9 +101,6 @@ export async function PUT(request: Request) {
     }
 
     console.error("Error updating notification settings:", error);
-    return Response.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }
