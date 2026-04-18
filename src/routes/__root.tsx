@@ -37,6 +37,7 @@ import { isAdminLineUser } from "@/lib/auth/admin";
 import { syncLineProfileToDatabase } from "@/lib/auth/line-profile-sync";
 import "../input.css";
 import "@/styles/dca-theme.css";
+import "react-day-picker/style.css";
 
 interface RouterContext {
   session: AppSession | null;
