@@ -112,7 +112,8 @@ RUN --mount=type=cache,target=/root/.bun/install/cache \
 # Copy Prisma dependencies
 COPY --from=build /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=build /app/node_modules/pg ./node_modules/pg
-COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
+RUN mkdir -p ./node_modules/.prisma
+COPY --from=build /app/prisma/generated ./node_modules/.prisma/client
 
 ###################
 # 🚀 RUNTIME STAGE
@@ -145,8 +146,6 @@ COPY --from=prod-deps --chown=appuser:appgroup /app/node_modules ./node_modules
 COPY --from=build --chown=appuser:appgroup /app/prisma ./prisma
 COPY --from=build --chown=appuser:appgroup /app/prisma.config.ts ./prisma.config.ts
 
-# Create symlink for custom location (prisma/generated → node_modules/.prisma/client)
-RUN cd prisma && ln -sf ../node_modules/.prisma/client generated && cd ..
 COPY --from=build --chown=appuser:appgroup /app/package.json ./package.json
 COPY --from=build --chown=appuser:appgroup /app/server.ts ./server.ts
 COPY --from=build --chown=appuser:appgroup /app/scripts ./scripts
@@ -154,7 +153,7 @@ COPY --from=build --chown=appuser:appgroup /app/scripts ./scripts
 RUN chmod +x ./scripts/devops/docker-entrypoint.sh ./scripts/monitoring/health-check.sh && \
     test -f dist/server/server.js || (echo "❌ TanStack Start server bundle missing" && exit 1) && \
     test -d dist/client || (echo "❌ TanStack Start client bundle missing" && exit 1) && \
-    (test -f node_modules/.prisma/default.js || test -f prisma/generated/default.js) || (echo "❌ Prisma Client missing" && exit 1) && \
+    (test -f node_modules/.prisma/client/default.js || test -f prisma/generated/default.js) || (echo "❌ Prisma Client missing" && exit 1) && \
     echo "✅ Runtime dependencies verified"
 
 USER appuser
