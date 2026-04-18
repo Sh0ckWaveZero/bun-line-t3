@@ -53,7 +53,7 @@
         "./src/lib/validation/*"
       ],
       "@prisma/client": [
-        "./prisma/generated/client"
+        "./prisma/generated"
       ]
     },
     "types": [

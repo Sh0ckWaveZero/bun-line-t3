@@ -72,7 +72,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         "@": path.resolve(dirname, "src"),
-        "@prisma/client": path.resolve(dirname, "prisma/generated/client"),
+        "@prisma/client": path.resolve(dirname, "prisma/generated"),
       },
       tsconfigPaths: true,
     },
