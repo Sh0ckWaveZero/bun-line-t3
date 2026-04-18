@@ -138,9 +138,9 @@ certificates/
 # Scripts (keep only essential startup scripts)
 # =============================================================================
 scripts/
-!scripts/docker-entrypoint.sh
-!scripts/health-check.sh
-!scripts/cron-request.sh
+!scripts/devops/docker-entrypoint.sh
+!scripts/monitoring/health-check.sh
+!scripts/devops/cron-request.sh
 
 # =============================================================================
 # Database Files
