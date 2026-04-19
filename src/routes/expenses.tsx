@@ -99,13 +99,14 @@ interface SummaryCardProps {
   icon: React.ReactNode;
   iconBg: string;
   id: string;
+  className?: string;
 }
 
-function SummaryCard({ label, amount, icon, iconBg, id }: SummaryCardProps) {
+function SummaryCard({ label, amount, icon, iconBg, id, className }: SummaryCardProps) {
   return (
     <Card
       id={`summary-card-${id}`}
-      className="border-border/70 bg-card/85 hover:border-theme-hover dark:bg-card/70 relative overflow-hidden border transition-colors"
+      className={`border-border/70 bg-card/85 hover:border-theme-hover dark:bg-card/70 relative overflow-hidden border transition-colors ${className || ""}`}
     >
       <div
         id={`summary-card-accent-${id}`}
@@ -148,10 +149,11 @@ function SummaryCard({ label, amount, icon, iconBg, id }: SummaryCardProps) {
 
 interface TransactionRowProps {
   tx: TransactionWithCategory;
+  onEdit?: (tx: TransactionWithCategory) => void;
   onDelete: (id: string) => void;
 }
 
-function TransactionRow({ tx, onDelete }: TransactionRowProps) {
+function TransactionRow({ tx, onEdit, onDelete }: TransactionRowProps) {
   const isIncome = tx.type === "INCOME";
   const rowTone = isIncome
     ? "border-card-green bg-card-green/70 dark:bg-card-green/40"
@@ -194,11 +196,11 @@ function TransactionRow({ tx, onDelete }: TransactionRowProps) {
         </div>
         <div
           id={`transaction-actions-${tx.id}`}
-          className="flex shrink-0 items-center gap-1.5 sm:gap-2"
+          className="flex shrink-0 items-center gap-1 sm:gap-1.5"
         >
           <span
             id={`transaction-amount-${tx.id}`}
-            className="text-xs font-bold tabular-nums sm:text-sm"
+            className="text-xs font-bold tabular-nums sm:text-sm mr-1 sm:mr-2"
             style={{
               color: isIncome
                 ? TRANSACTION_TYPE_COLORS.INCOME
@@ -208,15 +210,27 @@ function TransactionRow({ tx, onDelete }: TransactionRowProps) {
             {isIncome ? "+" : "-"}
             {formatAmount(tx.amount)}
           </span>
+          {onEdit && (
+            <Button
+              id={`transaction-edit-btn-${tx.id}`}
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground/30 hover:text-primary hover:bg-primary/10 h-7 w-7 sm:h-8 sm:w-8 transition-colors"
+              onClick={() => onEdit(tx)}
+              aria-label="แก้ไข"
+            >
+              <Edit size={14} />
+            </Button>
+          )}
           <Button
             id={`transaction-delete-btn-${tx.id}`}
             variant="ghost"
             size="icon"
-            className="text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 h-7 w-7 opacity-0 transition-all group-hover:opacity-100 sm:h-8 sm:w-8"
+            className="text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 h-7 w-7 sm:h-8 sm:w-8 transition-colors"
             onClick={() => onDelete(tx.id)}
             aria-label="ลบ"
           >
-            <Trash2 size={12} />
+            <Trash2 size={14} />
           </Button>
         </div>
       </CardContent>
@@ -394,20 +408,20 @@ function CategoryManagerModal({
         {/* Header */}
         <div
           id="category-manager-header"
-          className="relative flex shrink-0 items-center justify-center px-6 pt-6 pb-3"
+          className="border-border/50 relative flex shrink-0 items-center justify-center border-b px-6 py-4"
         >
           <h3
             id="category-manager-title"
-            className="text-foreground text-center text-2xl font-bold sm:text-3xl"
+            className="text-foreground text-center text-xl font-bold sm:text-2xl"
           >
             หมวดหมู่
           </h3>
           <Button
             id="category-manager-close-btn"
-            variant="outline"
+            variant="ghost"
             size="icon"
             onClick={() => onOpenChange(false)}
-            className="border-foreground/80 text-foreground hover:bg-muted absolute top-5 right-5 h-12 w-12 rounded-lg bg-transparent"
+            className="text-muted-foreground hover:bg-muted absolute top-1/2 right-4 h-10 w-10 -translate-y-1/2 rounded-full"
           >
             <X id="category-manager-close-icon" size={22} />
           </Button>
@@ -558,28 +572,28 @@ function AddCategoryModal({
           {/* Header */}
           <div
             id="add-category-modal-header"
-            className="relative flex shrink-0 items-center justify-center px-6 pt-6 pb-3"
+            className="border-border/50 relative flex shrink-0 items-center justify-center border-b px-6 py-4"
           >
             <h3
               id="add-category-modal-title"
-              className="text-foreground text-center text-2xl font-bold"
+              className="text-foreground text-center text-lg font-bold"
             >
               {editMode ? "แก้ไขหมวดหมู่" : "หมวดหมู่"}
             </h3>
             <Button
               id="add-category-close-btn"
-              variant="outline"
+              variant="ghost"
               size="icon"
               onClick={() => onOpenChange(false)}
-              className="border-foreground/80 text-foreground hover:bg-muted absolute top-5 right-5 h-10 w-10 rounded-lg bg-transparent"
+              className="text-muted-foreground hover:bg-muted absolute top-1/2 right-4 h-8 w-8 -translate-y-1/2 rounded-full"
             >
-              <X id="add-category-close-icon" size={20} />
+              <X id="add-category-close-icon" size={18} />
             </Button>
           </div>
 
           <div
             id="add-category-modal-content"
-            className="min-h-0 flex-1 overflow-y-auto px-6 pt-4 pb-6"
+            className="min-h-0 flex-1 overflow-y-auto px-6 py-6"
           >
             <form
               id="add-category-form"
@@ -678,6 +692,7 @@ interface AddTransactionModalProps {
   onSave: (input: Omit<CreateTransactionInput, "userId">) => Promise<void>;
   isLoading: boolean;
   onAddCategory: () => void;
+  editData?: TransactionWithCategory | null;
 }
 
 function AddTransactionModal({
@@ -687,12 +702,31 @@ function AddTransactionModal({
   onSave,
   isLoading,
   onAddCategory,
+  editData,
 }: AddTransactionModalProps) {
   const [type, setType] = useState<"INCOME" | "EXPENSE">("EXPENSE");
   const [categoryId, setCategoryId] = useState("");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [transDate, setTransDate] = useState(() => toTransDate());
+
+  useEffect(() => {
+    if (open) {
+      if (editData) {
+        setType(editData.type);
+        setCategoryId(editData.categoryId);
+        setAmount(editData.amount.toString());
+        setNote(editData.note || "");
+        setTransDate(editData.transDate);
+      } else {
+        setType("EXPENSE");
+        setCategoryId("");
+        setAmount("");
+        setNote("");
+        setTransDate(toTransDate());
+      }
+    }
+  }, [open, editData]);
 
   const filtered = categories.filter((c) => c.isActive);
 
@@ -717,28 +751,28 @@ function AddTransactionModal({
         {/* Header */}
         <div
           id="add-transaction-modal-header"
-          className="relative flex shrink-0 items-center justify-center px-6 pt-6 pb-3"
+          className="border-border/50 relative flex shrink-0 items-center justify-center border-b px-6 py-4"
         >
           <h3
             id="add-transaction-modal-title"
-            className="text-foreground text-center text-2xl font-bold"
+            className="text-foreground text-center text-lg font-bold"
           >
-            เพิ่มรายการ
+            {editData ? "แก้ไขรายการ" : "เพิ่มรายการ"}
           </h3>
           <Button
             id="add-transaction-close-btn"
-            variant="outline"
+            variant="ghost"
             size="icon"
             onClick={() => onOpenChange(false)}
-            className="border-foreground/80 text-foreground hover:bg-muted absolute top-5 right-5 h-10 w-10 rounded-lg bg-transparent"
+            className="text-muted-foreground hover:bg-muted absolute top-1/2 right-4 h-8 w-8 -translate-y-1/2 rounded-full"
           >
-            <X id="add-transaction-close-icon" size={20} />
+            <X id="add-transaction-close-icon" size={18} />
           </Button>
         </div>
 
         <div
           id="add-transaction-modal-content"
-          className="min-h-0 flex-1 overflow-y-auto px-6 pt-4 pb-6 sm:px-8 sm:pt-6 sm:pb-8"
+          className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6 sm:py-6"
         >
           <form
             id="add-transaction-form"
@@ -746,30 +780,34 @@ function AddTransactionModal({
             className="space-y-4"
           >
             {/* ประเภท */}
-            <div id="transaction-type-group" className="grid grid-cols-2 gap-3">
-              {(["EXPENSE", "INCOME"] as const).map((t) => (
-                <Button
-                  key={t}
-                  id={`transaction-type-${t.toLowerCase()}-btn`}
-                  type="button"
-                  variant={type === t ? "default" : "outline"}
-                  className={`h-12 rounded-lg text-base font-semibold ${
-                    type === t
-                      ? "bg-foreground text-background hover:bg-foreground/90"
-                      : "border-border bg-background text-foreground hover:bg-muted"
-                  }`}
-                  onClick={() => {
-                    setType(t);
-                  }}
-                >
-                  {t === "INCOME" ? (
-                    <TrendingUp className="h-4 w-4" />
-                  ) : (
-                    <TrendingDown className="h-4 w-4" />
-                  )}
-                  {t === "INCOME" ? "รายรับ" : "รายจ่าย"}
-                </Button>
-              ))}
+            <div id="transaction-type-group" className="grid grid-cols-2 gap-2 rounded-xl bg-muted/50 p-1">
+              {(["EXPENSE", "INCOME"] as const).map((t) => {
+                const isSelected = type === t;
+                const activeClass =
+                  t === "EXPENSE"
+                    ? "bg-red-500 text-white shadow-sm"
+                    : "bg-emerald-500 text-white shadow-sm";
+                const inactiveClass = "text-muted-foreground hover:text-foreground hover:bg-muted";
+                
+                return (
+                  <button
+                    key={t}
+                    id={`transaction-type-${t.toLowerCase()}-btn`}
+                    type="button"
+                    className={`flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-all ${
+                      isSelected ? activeClass : inactiveClass
+                    }`}
+                    onClick={() => setType(t)}
+                  >
+                    {t === "INCOME" ? (
+                      <TrendingUp className="h-4 w-4" />
+                    ) : (
+                      <TrendingDown className="h-4 w-4" />
+                    )}
+                    {t === "INCOME" ? "รายรับ" : "รายจ่าย"}
+                  </button>
+                );
+              })}
             </div>
 
             {/* หมวดหมู่ */}
@@ -870,7 +908,11 @@ function AddTransactionModal({
               <Button
                 id="transaction-save-btn"
                 type="submit"
-                className="bg-foreground text-background hover:bg-foreground/90 h-12 rounded-lg text-base font-semibold"
+                className={`h-12 rounded-lg text-base font-semibold text-white ${
+                  type === "EXPENSE"
+                    ? "bg-red-500 hover:bg-red-600"
+                    : "bg-emerald-500 hover:bg-emerald-600"
+                }`}
                 disabled={isLoading || !categoryId || !amount}
               >
                 {isLoading ? (
@@ -880,8 +922,10 @@ function AddTransactionModal({
                       size={16}
                       className="animate-spin"
                     />{" "}
-                    <span id="transaction-save-loading-text">บันทึก</span>
+                    <span id="transaction-save-loading-text">กำลังบันทึก</span>
                   </>
+                ) : editData ? (
+                  "บันทึกการแก้ไข"
                 ) : (
                   "บันทึก"
                 )}
@@ -911,6 +955,9 @@ function ExpensesPage() {
     useState(false);
   const [editingCategory, setEditingCategory] =
     useState<ExpenseCategory | null>(null);
+  const [editingTx, setEditingTx] = useState<TransactionWithCategory | null>(
+    null,
+  );
 
   // ─── Queries ───────────────────────────────
 
@@ -956,6 +1003,33 @@ function ExpensesPage() {
         queryKey: ["expenses-summary", currentMonth],
       });
       setShowAddModal(false);
+    },
+  });
+
+  const updateTransactionMutation = useMutation({
+    mutationFn: async ({
+      id,
+      input,
+    }: {
+      id: string;
+      input: Omit<CreateTransactionInput, "userId">;
+    }) => {
+      const res = await fetch(`/api/expenses/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+      });
+      if (!res.ok) throw new Error("แก้ไขไม่สำเร็จ");
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["expenses", currentMonth],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ["expenses-summary", currentMonth],
+      });
+      setShowAddModal(false);
+      setEditingTx(null);
     },
   });
 
@@ -1270,7 +1344,7 @@ function ExpensesPage() {
         {/* ─── Summary Cards ─── */}
         <div
           id="summary-cards-grid"
-          className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3"
+          className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3"
         >
           <SummaryCard
             id="income"
@@ -1293,6 +1367,7 @@ function ExpensesPage() {
           <SummaryCard
             id="balance"
             label="คงเหลือ"
+            className="col-span-2 sm:col-span-1"
             amount={summary?.balance ?? 0}
             icon={
               <Wallet
@@ -1420,7 +1495,7 @@ function ExpensesPage() {
                 key={tab}
                 id={`transaction-tab-content-${tab.toLowerCase()}`}
                 value={tab}
-                className="space-y-2"
+                className="space-y-2 pb-24"
               >
                 {txLoading && (
                   <div
@@ -1460,6 +1535,10 @@ function ExpensesPage() {
                     <TransactionRow
                       key={tx.id}
                       tx={tx}
+                      onEdit={(tx) => {
+                        setEditingTx(tx);
+                        setShowAddModal(true);
+                      }}
                       onDelete={handleDelete}
                     />
                   ))}
@@ -1470,25 +1549,40 @@ function ExpensesPage() {
         </Tabs>
       </div>
 
-      {/* ─── FAB ─── */}
-      <Button
-        id="add-transaction-fab"
-        onClick={() => setShowAddModal(true)}
-        className="fixed right-4 bottom-4 z-40 h-12 w-12 rounded-lg transition-colors sm:right-6 sm:bottom-6 sm:h-14 sm:w-14"
-        size="icon"
-        aria-label="เพิ่มรายการใหม่"
-      >
-        <Plus id="add-transaction-fab-icon" size={20} />
-      </Button>
+      {/* ─── Floating Add Button ─── */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 sm:bottom-8">
+        <Button
+          id="add-transaction-fab"
+          onClick={() => {
+            setEditingTx(null);
+            setShowAddModal(true);
+          }}
+          className="h-12 sm:h-14 rounded-full shadow-xl px-6 bg-primary text-primary-foreground hover:bg-primary/90 transition-all hover:scale-105"
+        >
+          <Plus id="add-transaction-fab-icon" size={20} className="mr-2" />
+          <span className="font-semibold text-base">เพิ่มรายการ</span>
+        </Button>
+      </div>
 
       {/* ─── Add Transaction Modal ─── */}
       <AddTransactionModal
+        key={`${showAddModal ? "open" : "closed"}-${editingTx?.id ?? "new"}`}
         categories={categories}
         open={showAddModal}
-        onOpenChange={setShowAddModal}
-        onSave={(input) => createMutation.mutateAsync(input)}
-        isLoading={createMutation.isPending}
+        onOpenChange={(open) => {
+          setShowAddModal(open);
+          if (!open) setEditingTx(null);
+        }}
+        onSave={(input) =>
+          editingTx
+            ? updateTransactionMutation.mutateAsync({ id: editingTx.id, input })
+            : createMutation.mutateAsync(input)
+        }
+        isLoading={
+          createMutation.isPending || updateTransactionMutation.isPending
+        }
         onAddCategory={handleOpenCategory}
+        editData={editingTx}
       />
 
       {/* ─── Category Manager Modal ─── */}
