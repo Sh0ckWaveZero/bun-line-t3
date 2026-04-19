@@ -16,8 +16,11 @@ import { handleSettingsCommand } from "./handleSettingsCommand";
 import { handleIdGenerator } from "./handleIdGenerator";
 import { handleAiCommand } from "./handleAiCommand";
 import { handleDcaCommand } from "./handleDcaCommand";
+import { handleExpenseCommand } from "./handleExpenseCommand";
 
 const { sendMessage } = await import("@/lib/utils/line-utils");
+
+export { handleExpenseCommand } from "./handleExpenseCommand";
 
 export const handleCommand = async (
   command: string,
@@ -175,6 +178,21 @@ export const handleCommand = async (
   // Auto DCA
   if (["dca", "ดีซีเอ", "auto-dca", "autodca"].includes(command)) {
     await handleDcaCommand(req, conditions);
+    return;
+  }
+  // Expense Tracker — รายรับรายจ่าย (full command)
+  if (["expense", "เงิน", "รายรับรายจ่าย", "รายจ่าย"].includes(command)) {
+    await handleExpenseCommand(req, conditions);
+    return;
+  }
+  // รายจ่าย shortcut: /จ่าย 250 อาหาร
+  if (["จ่าย", "exp", "e"].includes(command)) {
+    await handleExpenseCommand(req, conditions, "EXPENSE");
+    return;
+  }
+  // รายรับ shortcut: /รับ 30000 เงินเดือน
+  if (["รับ", "income", "รายรับ", "i"].includes(command)) {
+    await handleExpenseCommand(req, conditions, "INCOME");
     return;
   }
   // Chart

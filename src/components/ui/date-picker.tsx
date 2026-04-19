@@ -172,7 +172,7 @@ export function PopoverDatePicker({
             aria-haspopup="dialog"
             aria-expanded={open}
             className={cn(
-              "border-input bg-background focus-visible:ring-ring flex h-10 w-full items-center gap-2.5 rounded-md border px-3 text-left text-sm",
+              "border-border bg-background focus-visible:ring-foreground/30 flex h-12 w-full items-center gap-2.5 rounded-lg border px-4 text-left text-base font-medium",
               "focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
               "hover:bg-accent hover:text-accent-foreground transition-colors",
               !value && "text-muted-foreground",
@@ -210,10 +210,6 @@ export function PopoverDatePicker({
           />
         </PopoverContent>
       </Popover>
-
-      <p id={describedBy} className="text-muted-foreground text-xs">
-        แตะเพื่อเปิดปฏิทินเลือกวันที่
-      </p>
     </div>
   );
 }

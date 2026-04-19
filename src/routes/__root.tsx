@@ -1,18 +1,27 @@
+import Header from "@/components/common/Header";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { getLineUserId, getServerAuthSession } from "@/lib/auth";
+import { isAdminLineUser } from "@/lib/auth/admin";
+import { syncLineProfileToDatabase } from "@/lib/auth/line-profile-sync";
 import {
   AuthSessionProvider,
   type AppSession,
 } from "@/lib/auth/session-context";
-import Header from "@/components/common/Header";
+import { db } from "@/lib/database/db";
 import Providers from "@/providers/app-providers";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import "@/styles/dca-theme.css";
 import {
-  HeadContent,
-  Scripts,
-  Link,
   createRootRouteWithContext,
+  HeadContent,
+  Link,
   redirect,
+  Scripts,
 } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { lazy, Suspense } from "react";
+import "react-day-picker/style.css";
+import "../input.css";
 
 const TanStackDevtools = import.meta.env.DEV
   ? lazy(() =>
@@ -29,15 +38,6 @@ const TanStackRouterDevtoolsPanel = import.meta.env.DEV
       })),
     )
   : () => null;
-import { createServerFn } from "@tanstack/react-start";
-import { getRequest } from "@tanstack/react-start/server";
-import { getLineUserId, getServerAuthSession } from "@/lib/auth";
-import { db } from "@/lib/database/db";
-import { isAdminLineUser } from "@/lib/auth/admin";
-import { syncLineProfileToDatabase } from "@/lib/auth/line-profile-sync";
-import "../input.css";
-import "@/styles/dca-theme.css";
-import "react-day-picker/style.css";
 
 interface RouterContext {
   session: AppSession | null;
@@ -161,7 +161,11 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     ],
     meta: [
       { charSet: "utf-8" },
-      { content: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no", name: "viewport" },
+      {
+        content:
+          "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
+        name: "viewport",
+      },
       { title: "Bun LINE T3 App" },
       {
         content:
@@ -222,7 +226,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         {import.meta.env.DEV && (
           <Suspense fallback={null}>
             <TanStackDevtools
-              config={{ position: "bottom-right" }}
+              config={{ position: "bottom-left" }}
               plugins={[
                 {
                   name: "TanStack Router",

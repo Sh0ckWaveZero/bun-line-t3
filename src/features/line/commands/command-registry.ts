@@ -35,6 +35,61 @@ export interface CommandDefinition {
 
 export const LINE_COMMANDS: CommandDefinition[] = [
   // ============================================================================
+  // Expense Tracker Commands
+  // ============================================================================
+  {
+    command: "expense",
+    aliases: ["เงิน", "รายจ่าย", "รายรับรายจ่าย", "จ่าย", "exp", "e"],
+    descriptionTH: "บันทึกรายจ่าย หรือดูสรุปรายรับรายจ่ายประจำเดือน",
+    descriptionEN: "Log expenses or view monthly income/expense summary",
+    keywords: [
+      "expense",
+      "รายจ่าย",
+      "รายรับรายจ่าย",
+      "เงิน",
+      "บันทึกเงิน",
+      "ค่าใช้จ่าย",
+      "สรุปเงิน",
+    ],
+    parameters: [
+      { name: "subcommand", type: "optional", description: "add | list | sum | help" },
+      { name: "amount", type: "number", description: "จำนวนเงิน (บาท)" },
+      { name: "category", type: "optional", description: "ชื่อหมวดหมู่ เช่น อาหาร, เดินทาง" },
+    ],
+    examples: [
+      "/expense add 250 อาหาร",
+      "/expense 1200 เดินทาง",
+      "/expense sum",
+      "/expense list",
+    ],
+    category: "utility",
+  },
+  {
+    command: "รับ",
+    aliases: ["income", "รายรับ", "i"],
+    descriptionTH: "บันทึกรายรับ เช่น เงินเดือน โบนัส รายได้เสริม",
+    descriptionEN: "Log income: salary, bonus, freelance, etc.",
+    keywords: [
+      "รับ",
+      "income",
+      "รายรับ",
+      "เงินเดือน",
+      "โบนัส",
+      "รายได้",
+      "บันทึกรายรับ",
+    ],
+    parameters: [
+      { name: "amount", type: "number", description: "จำนวนเงิน (บาท)" },
+      { name: "category", type: "optional", description: "ชื่อหมวดหมู่ เช่น เงินเดือน, โบนัส" },
+    ],
+    examples: [
+      "/รับ 30000 เงินเดือน",
+      "/รับ 5000 โบนัส",
+      "/income 2000 freelance",
+    ],
+    category: "utility",
+  },
+  // ============================================================================
   // Cryptocurrency Commands
   // ============================================================================
   {
