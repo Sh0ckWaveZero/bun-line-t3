@@ -132,10 +132,11 @@ export function HolidayManageModal({
             <input
               id="holiday-year"
               type="number"
+              inputMode="numeric"
               value={year}
               onChange={(e) => setYear(parseInt(e.target.value))}
               className={cn(
-                "w-full px-3 py-2 border rounded-lg",
+                "w-full px-3 py-2 border rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
                 "bg-background dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100",
                 "focus:outline-none focus:ring-2 focus:ring-red-500"
               )}

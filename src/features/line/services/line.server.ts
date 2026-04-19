@@ -1,9 +1,9 @@
-import { handleLogin } from "../commands/handleLogin";
 import { handleLocation } from "../commands/handleLocation";
 import { handleSticker } from "../commands/handleSticker";
 import { handlePostback } from "../commands/handlePostback";
 import { handleText } from "../commands/handleText";
 import { handleApprovalCheck } from "../commands/handleApprovalCheck";
+import { sendLoadingAnimation } from "@/lib/utils/line-utils";
 
 interface LineApiRequest {
   body?: {
@@ -27,6 +27,21 @@ const handleEvent = async (
 
   if (!Array.isArray(events) || events.length === 0) {
     return res.status(400).json({ error: "No events to process" });
+  }
+
+  // ข้ามข้อความธรรมดาที่ไม่ใช่คำสั่ง (ไม่ขึ้นต้นด้วย /)
+  const hasActionableEvent = events.some((e) => {
+    if (e.type === "postback") return true;
+    if (e.type === "message" && e.message?.type === "sticker") return true;
+    if (e.type === "message" && e.message?.type === "location") return true;
+    if (e.type === "message" && e.message?.type === "text") {
+      return e.message.text?.startsWith("/");
+    }
+    return false;
+  });
+
+  if (!hasActionableEvent) {
+    return res.status(200).json({ message: "ok" });
   }
 
   // 🔒 ตรวจสอบการอนุมัติก่อนทำงาน
@@ -59,9 +74,8 @@ const handleEvent = async (
         switch (event.message.type) {
           case "text":
             if (event.message.text.startsWith("/")) {
+              void sendLoadingAnimation(req, 15);
               await handleText(req, event.message.text);
-            } else {
-              await handleLogin(req, event.message.text);
             }
             break;
           case "sticker":
