@@ -2,7 +2,7 @@
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tag } from "lucide-react";
+import { Tag, ChevronDown } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 interface ExpenseCategory {
@@ -164,12 +164,12 @@ export function CategoryCombobox({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           required={required && !selectedCategory}
-          className="border-border bg-background text-foreground focus-visible:ring-foreground/30 h-12 w-full appearance-none rounded-lg border py-0 pr-11 pl-12 text-base font-medium transition-colors outline-none focus-visible:ring-2 cursor-pointer"
+          className="border-border bg-background text-foreground focus-visible:ring-foreground/30 h-12 w-full appearance-none rounded-lg border py-0 !pr-11 !pl-12 text-base font-medium transition-colors outline-none focus-visible:ring-2 cursor-pointer"
           autoComplete="off"
         />
 
         {/* Chevron icon (right) */}
-        <Tag
+        <ChevronDown
           id="transaction-category-select-icon"
           className={`text-muted-foreground pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 transition-transform ${isOpen ? "rotate-180" : ""}`}
         />
