@@ -17,6 +17,14 @@ import {
   Wrench,
   HelpCircle,
   Shield,
+  Wallet,
+  TrendingUp,
+  BarChart3,
+  CalendarDays,
+  UserRound,
+  IdCard,
+  Activity,
+  CheckCircle2,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
@@ -30,32 +38,22 @@ export default function Header() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close mobile menu when screen size changes to desktop
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        // lg breakpoint
-        setIsMobileMenuOpen(false);
-      }
+      if (window.innerWidth >= 1024) setIsMobileMenuOpen(false);
     };
-
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Close mobile menu when route changes
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       setIsMobileMenuOpen(false);
       setOpenDropdown(null);
     });
-
-    return () => {
-      window.cancelAnimationFrame(frame);
-    };
+    return () => window.cancelAnimationFrame(frame);
   }, [pathname]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -65,25 +63,54 @@ export default function Header() {
         setOpenDropdown(null);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Don't show header on home page
-  if (pathname === "/") {
-    return null;
-  }
+  if (pathname === "/") return null;
+
+  const isFinanceActive =
+    pathname === "/subscriptions" ||
+    pathname === "/dca-history" ||
+    pathname.startsWith("/dca-") ||
+    pathname === "/expenses";
+
+  const isWorkActive =
+    pathname === "/attendance-report" ||
+    pathname === "/leave" ||
+    pathname === "/calendar";
+
+  const isToolsActive =
+    pathname === "/thai-names-generator" ||
+    pathname.startsWith("/thai-id") ||
+    pathname === "/help" ||
+    pathname === "/monitoring";
+
+  const isAdminActive =
+    pathname === "/admin/line-permissions" || pathname === "/line-approval";
+
+  const navLinkClass = (active: boolean) =>
+    `flex items-center space-x-2 rounded-md px-3 py-2 transition-colors hover:bg-primary/10 hover:text-primary ${
+      active
+        ? "bg-primary/10 font-medium text-primary"
+        : "text-muted-foreground"
+    }`;
+
+  const dropdownBtnClass = (active: boolean) =>
+    `flex items-center space-x-2 rounded-md px-3 py-2 transition-colors hover:bg-primary/10 hover:text-primary ${
+      active
+        ? "bg-primary/10 font-medium text-primary"
+        : "text-muted-foreground"
+    }`;
 
   return (
-    <header className="bg-background/80 sticky top-0 z-50 w-full border-b border-border backdrop-blur-sm">
+    <header className="bg-background/80 border-border sticky top-0 z-50 w-full border-b backdrop-blur-sm">
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
+        {/* Logo + Nav */}
         <div className="flex items-center">
           <Link
             to="/"
-            className="mr-8 text-xl font-bold text-foreground drop-shadow-sm transition-colors hover:text-primary"
+            className="text-foreground hover:text-primary mr-6 text-xl font-bold drop-shadow-sm transition-colors"
           >
             Bun <span className="text-[#07b53b]">LINE</span>{" "}
             <span className="text-[hsl(280,100%,70%)] dark:text-purple-400">
@@ -91,123 +118,131 @@ export default function Header() {
             </span>
           </Link>
 
-          {/* Main Navigation */}
+          {/* ── Desktop Navigation ── */}
           <nav
-            className="hidden items-center p-4 text-sm lg:flex"
+            className="hidden items-center text-sm lg:flex"
             ref={dropdownRef}
           >
             <div className="flex items-center space-x-1">
-              {/* ═══════════════════════════════════════════════════════════
-                  กลุ่มหลัก: Dashboard & Features
-                  ═══════════════════════════════════════════════════════════ */}
-
-              {/* Dashboard */}
+              {/* 1. Dashboard */}
               <Link
                 to="/dashboard"
-                className={`flex items-center space-x-2 rounded-md px-3 py-2 drop-shadow-sm transition-colors hover:bg-muted hover:text-foreground ${
-                  pathname === "/dashboard"
-                    ? "bg-muted font-medium text-foreground"
-                    : "text-muted-foreground"
-                }`}
+                className={navLinkClass(pathname === "/dashboard")}
               >
                 <Home className="h-4 w-4" />
                 <span>Dashboard</span>
               </Link>
 
-              {/* Subscriptions */}
-              <Link
-                to="/subscriptions"
-                className={`flex items-center space-x-2 rounded-md px-3 py-2 drop-shadow-sm transition-colors hover:bg-muted hover:text-foreground ${
-                  pathname === "/subscriptions"
-                    ? "bg-muted font-medium text-foreground"
-                    : "text-muted-foreground"
-                }`}
-              >
-                <Package className="h-4 w-4" />
-                <span>Subscriptions</span>
-              </Link>
+              {/* 2. การเงิน — Subscriptions + DCA + รายรับรายจ่าย */}
+              <div className="relative">
+                <button
+                  onClick={() =>
+                    setOpenDropdown(
+                      openDropdown === "finance" ? null : "finance",
+                    )
+                  }
+                  className={dropdownBtnClass(isFinanceActive)}
+                >
+                  <TrendingUp className="h-4 w-4" />
+                  <span>การเงิน</span>
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${openDropdown === "finance" ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {openDropdown === "finance" && (
+                  <div className="border-border bg-background absolute top-full left-0 z-50 mt-2 w-64 rounded-md border py-3 shadow-lg">
+                    <div className="text-muted-foreground px-3 py-1 text-xs font-semibold tracking-wider uppercase">
+                      การลงทุน
+                    </div>
+                    <Link
+                      to="/subscriptions"
+                      className={`hover:bg-primary/10 hover:text-primary flex items-center gap-2 px-4 py-2 text-sm transition-colors ${pathname === "/subscriptions" ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground"}`}
+                      onClick={() => setOpenDropdown(null)}
+                    >
+                      <Package className="h-4 w-4" />
+                      Subscriptions
+                    </Link>
+                    <Link
+                      to="/dca-history"
+                      className={`hover:bg-primary/10 hover:text-primary flex items-center gap-2 px-4 py-2 text-sm transition-colors ${pathname === "/dca-history" || pathname.startsWith("/dca-") ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground"}`}
+                      onClick={() => setOpenDropdown(null)}
+                    >
+                      <Calculator className="h-4 w-4" />
+                      Auto DCA
+                    </Link>
+                    {session && (
+                      <>
+                        <div className="border-border my-1 border-t" />
+                        <div className="text-muted-foreground px-3 py-1 text-xs font-semibold tracking-wider uppercase">
+                          บัญชีส่วนตัว
+                        </div>
+                        <Link
+                          to="/expenses"
+                          className={`hover:bg-primary/10 hover:text-primary flex items-center gap-2 px-4 py-2 text-sm transition-colors ${pathname === "/expenses" ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground"}`}
+                          onClick={() => setOpenDropdown(null)}
+                        >
+                          <Wallet className="h-4 w-4" />
+                          รายรับรายจ่าย
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
 
-              {/* DCA */}
-              <Link
-                to="/dca-history"
-                className={`flex items-center space-x-2 rounded-md px-3 py-2 drop-shadow-sm transition-colors hover:bg-muted hover:text-foreground ${
-                  pathname === "/dca-history" || pathname.startsWith("/dca-")
-                    ? "bg-muted font-medium text-foreground"
-                    : "text-muted-foreground"
-                }`}
-              >
-                <Calculator className="h-4 w-4" />
-                <span>DCA</span>
-              </Link>
-
-              {/* ═══════════════════════════════════════════════════════════
-                  กลุ่มการทำงาน (แสดงเฉพาะ login แล้ว)
-                  ═══════════════════════════════════════════════════════════ */}
-
-              {/* Work & Reports Dropdown */}
+              {/* 3. งาน & รายงาน — login only */}
               {session && (
                 <div className="relative">
                   <button
                     onClick={() =>
                       setOpenDropdown(openDropdown === "work" ? null : "work")
                     }
-                    className={`flex items-center space-x-2 rounded-md px-3 py-2 drop-shadow-sm transition-colors hover:bg-muted hover:text-foreground ${
-                      pathname === "/attendance-report" || pathname === "/leave"
-                        ? "bg-muted font-medium text-foreground"
-                        : "text-muted-foreground"
-                    }`}
+                    className={dropdownBtnClass(isWorkActive)}
                   >
                     <Briefcase className="h-4 w-4" />
-                    <span>งาน & รายงาน</span>
+                    <span>งาน</span>
                     <ChevronDown
                       className={`h-4 w-4 transition-transform ${openDropdown === "work" ? "rotate-180" : ""}`}
                     />
                   </button>
-
                   {openDropdown === "work" && (
-                    <div className="absolute left-0 top-full z-50 mt-2 w-72 rounded-md border border-border bg-background py-3 shadow-lg">
+                    <div className="border-border bg-background absolute top-full left-0 z-50 mt-2 w-56 rounded-md border py-3 shadow-lg">
                       <Link
                         to="/attendance-report"
-                        className="block px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        className={`hover:bg-primary/10 hover:text-primary flex items-center gap-2 px-4 py-2 text-sm transition-colors ${pathname === "/attendance-report" ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground"}`}
                         onClick={() => setOpenDropdown(null)}
                       >
-                        📊 รายงานเข้างาน
+                        <BarChart3 className="h-4 w-4" />
+                        รายงานเข้างาน
                       </Link>
                       <Link
                         to="/leave"
-                        className="block px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        className={`hover:bg-primary/10 hover:text-primary flex items-center gap-2 px-4 py-2 text-sm transition-colors ${pathname === "/leave" ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground"}`}
                         onClick={() => setOpenDropdown(null)}
                       >
-                        🏖️ ลางาน
+                        <Briefcase className="h-4 w-4" />
+                        ลางาน
                       </Link>
                       <Link
                         to="/calendar"
-                        className="block px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        className={`hover:bg-primary/10 hover:text-primary flex items-center gap-2 px-4 py-2 text-sm transition-colors ${pathname === "/calendar" ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground"}`}
                         onClick={() => setOpenDropdown(null)}
                       >
-                        📅 ปฏิทินวันหยุด
+                        <CalendarDays className="h-4 w-4" />
+                        ปฏิทินวันหยุด
                       </Link>
                     </div>
                   )}
                 </div>
               )}
 
-              {/* ═══════════════════════════════════════════════════════════
-                  กลุ่มเครื่องมือ & จัดการระบบ
-                  ═══════════════════════════════════════════════════════════ */}
-
-              {/* Tools Dropdown */}
+              {/* 4. เครื่องมือ — tools + help + monitoring */}
               <div className="relative">
                 <button
                   onClick={() =>
                     setOpenDropdown(openDropdown === "tools" ? null : "tools")
                   }
-                  className={`flex items-center space-x-2 rounded-md px-3 py-2 drop-shadow-sm transition-colors hover:bg-muted hover:text-foreground ${
-                    pathname === "/thai-names-generator" ||
-                    pathname.startsWith("/thai-id")
-                      ? "bg-muted font-medium text-foreground"
-                      : "text-muted-foreground"
-                  }`}
+                  className={dropdownBtnClass(isToolsActive)}
                 >
                   <Wrench className="h-4 w-4" />
                   <span>เครื่องมือ</span>
@@ -215,145 +250,107 @@ export default function Header() {
                     className={`h-4 w-4 transition-transform ${openDropdown === "tools" ? "rotate-180" : ""}`}
                   />
                 </button>
-
                 {openDropdown === "tools" && (
-                  <div className="absolute left-0 top-full z-50 mt-2 w-80 rounded-md border border-border bg-background py-3 shadow-lg">
-                    <div className="px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <div className="border-border bg-background absolute top-full left-0 z-50 mt-2 w-64 rounded-md border py-3 shadow-lg">
+                    <div className="text-muted-foreground px-3 py-1 text-xs font-semibold tracking-wider uppercase">
                       เครื่องมือสุ่ม
                     </div>
                     <Link
                       to="/thai-names-generator"
-                      className="block px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      className={`hover:bg-primary/10 hover:text-primary flex items-center gap-2 px-4 py-2 text-sm transition-colors ${pathname === "/thai-names-generator" ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground"}`}
                       onClick={() => setOpenDropdown(null)}
                     >
-                      👤 สุ่มชื่อไทย
+                      <UserRound className="h-4 w-4" />
+                      สุ่มชื่อไทย
                     </Link>
                     <Link
                       to="/thai-id"
-                      className="block px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      className={`hover:bg-primary/10 hover:text-primary flex items-center gap-2 px-4 py-2 text-sm transition-colors ${pathname.startsWith("/thai-id") ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground"}`}
                       onClick={() => setOpenDropdown(null)}
                     >
-                      🆔 เลขบัตรประชาชน
+                      <IdCard className="h-4 w-4" />
+                      เลขบัตรประชาชน
                     </Link>
+                    <div className="border-border my-1 border-t" />
+                    <div className="text-muted-foreground px-3 py-1 text-xs font-semibold tracking-wider uppercase">
+                      ช่วยเหลือ
+                    </div>
+                    <Link
+                      to="/help"
+                      className={`hover:bg-primary/10 hover:text-primary flex items-center gap-2 px-4 py-2 text-sm transition-colors ${pathname === "/help" ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground"}`}
+                      onClick={() => setOpenDropdown(null)}
+                    >
+                      <HelpCircle className="h-4 w-4" />
+                      คำสั่งทั้งหมด
+                    </Link>
+                    {session && (
+                      <Link
+                        to="/monitoring"
+                        className={`hover:bg-primary/10 hover:text-primary flex items-center gap-2 px-4 py-2 text-sm transition-colors ${pathname === "/monitoring" ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground"}`}
+                        onClick={() => setOpenDropdown(null)}
+                      >
+                        <Activity className="h-4 w-4" />
+                        Monitoring
+                      </Link>
+                    )}
                   </div>
                 )}
               </div>
 
-              {/* ═══════════════════════════════════════════════════════════
-                  กลุ่มจัดการระบบ (แสดงเฉพาะ admin)
-                  ═══════════════════════════════════════════════════════════ */}
-
-              {/* Admin Dropdown - แสดงเฉพาะ admin */}
+              {/* 5. จัดการระบบ — admin only */}
               {session?.isAdmin && (
                 <div className="relative">
                   <button
                     onClick={() =>
                       setOpenDropdown(openDropdown === "admin" ? null : "admin")
                     }
-                    className={`flex items-center space-x-2 rounded-md px-3 py-2 drop-shadow-sm transition-colors hover:bg-muted hover:text-foreground ${
-                      pathname === "/admin/line-permissions" || pathname === "/line-approval"
-                        ? "bg-muted font-medium text-foreground"
-                        : "text-muted-foreground"
-                    }`}
+                    className={dropdownBtnClass(isAdminActive)}
                   >
                     <Shield className="h-4 w-4" />
-                    <span>จัดการระบบ</span>
+                    <span>Admin</span>
                     <ChevronDown
                       className={`h-4 w-4 transition-transform ${openDropdown === "admin" ? "rotate-180" : ""}`}
                     />
                   </button>
-
                   {openDropdown === "admin" && (
-                    <div className="absolute left-0 top-full z-50 mt-2 w-72 rounded-md border border-border bg-background py-3 shadow-lg">
-                      <div className="px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <div className="border-border bg-background absolute top-full left-0 z-50 mt-2 w-72 rounded-md border py-3 shadow-lg">
+                      <div className="text-muted-foreground px-3 py-1 text-xs font-semibold tracking-wider uppercase">
                         LINE User Management
                       </div>
                       <Link
                         to="/line-approval"
-                        className="block px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        className={`hover:bg-destructive/10 hover:text-destructive flex items-center gap-2 px-4 py-2 text-sm transition-colors ${pathname === "/line-approval" ? "bg-destructive/10 text-destructive font-medium" : "text-muted-foreground"}`}
                         onClick={() => setOpenDropdown(null)}
                       >
-                        ✅ อนุมัติ LINE User
+                        <CheckCircle2 className="h-4 w-4" />
+                        อนุมัติ LINE User
                       </Link>
-
-                      <div className="my-1 border-t border-border"></div>
-                      <div className="px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      <div className="border-border my-1 border-t" />
+                      <div className="text-muted-foreground px-3 py-1 text-xs font-semibold tracking-wider uppercase">
                         Feature Permissions
                       </div>
                       <Link
                         to="/admin/line-permissions"
-                        className="block px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        className={`hover:bg-destructive/10 hover:text-destructive flex items-center gap-2 px-4 py-2 text-sm transition-colors ${pathname === "/admin/line-permissions" ? "bg-destructive/10 text-destructive font-medium" : "text-muted-foreground"}`}
                         onClick={() => setOpenDropdown(null)}
                       >
-                        🛡️ จัดการสิทธิ์ LINE Features
+                        <Shield className="h-4 w-4" />
+                        จัดการสิทธิ์ LINE Features
                       </Link>
                     </div>
                   )}
                 </div>
               )}
-
-              {/* ═══════════════════════════════════════════════════════════
-                  กลุ่มทั่วไป & ช่วยเหลือ
-                  ═══════════════════════════════════════════════════════════ */}
-
-              {/* Help & General Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() =>
-                    setOpenDropdown(openDropdown === "help" ? null : "help")
-                  }
-                  className={`flex items-center space-x-2 rounded-md px-3 py-2 drop-shadow-sm transition-colors hover:bg-muted hover:text-foreground ${
-                    pathname === "/help" || pathname === "/monitoring"
-                      ? "bg-muted font-medium text-foreground"
-                      : "text-muted-foreground"
-                  }`}
-                >
-                  <HelpCircle className="h-4 w-4" />
-                  <span>ช่วยเหลือ</span>
-                  <ChevronDown
-                    className={`h-4 w-4 transition-transform ${openDropdown === "help" ? "rotate-180" : ""}`}
-                  />
-                </button>
-
-                {openDropdown === "help" && (
-                  <div className="absolute left-0 top-full z-50 mt-2 w-72 rounded-md border border-border bg-background py-3 shadow-lg">
-                    <div className="px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      เอกสาร & คำแนะนำ
-                    </div>
-                    <Link
-                      to="/help"
-                      className="block px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                      onClick={() => setOpenDropdown(null)}
-                    >
-                      📖 คำสั่งทั้งหมด
-                    </Link>
-                    {session && (
-                      <>
-                        <div className="my-1 border-t border-border"></div>
-                        <div className="px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          System Monitoring
-                        </div>
-                        <Link
-                          to="/monitoring"
-                          className="block px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                          onClick={() => setOpenDropdown(null)}
-                        >
-                          📈 Monitoring Dashboard
-                        </Link>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
             </div>
           </nav>
         </div>
 
-        <div className="flex items-center space-x-4">
+        {/* Right side */}
+        <div className="flex items-center space-x-3">
           <ThemeToggle />
 
           {session && (
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
               <div className="flex items-center space-x-2">
                 <Avatar className="border-border/50 size-8 border-2">
                   <AvatarImage
@@ -364,19 +361,17 @@ export default function Header() {
                     {session.user?.name?.charAt(0)?.toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
-                <span className="hidden text-sm text-muted-foreground drop-shadow-sm sm:inline">
+                <span className="text-muted-foreground hidden text-sm drop-shadow-sm sm:inline">
                   {session.user?.name}
                 </span>
               </div>
               <Link
                 to="/logout"
-                className="hover:bg-muted/50 group flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground drop-shadow-sm transition-all duration-200 hover:text-foreground"
+                className="hover:bg-muted/50 group text-muted-foreground hover:text-foreground flex items-center gap-2 rounded-md px-3 py-2 text-sm drop-shadow-sm transition-all duration-200"
               >
                 <LogOut className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
                 <span className="hidden sm:inline">ออกจากระบบ</span>
               </Link>
-
-              {/* Mobile Menu Button */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="hover:bg-muted/50 rounded-md p-2 transition-colors lg:hidden"
@@ -391,7 +386,6 @@ export default function Header() {
             </div>
           )}
 
-          {/* Mobile Menu Button for non-authenticated users */}
           {!session && (
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -408,198 +402,161 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile Navigation Menu */}
+      {/* ── Mobile Navigation ── */}
       {isMobileMenuOpen && (
-        <div className="bg-background/95 block border-b border-border backdrop-blur-sm lg:hidden">
-          <nav className="container mx-auto px-6 py-6">
-            <div className="space-y-6">
-              {/* Main Navigation */}
-              <div className="space-y-3">
+        <div className="bg-background/95 border-border block border-b backdrop-blur-sm lg:hidden">
+          <nav className="container mx-auto px-6 py-5">
+            <div className="space-y-5">
+              {/* Main */}
+              <div className="space-y-2">
                 <Link
                   to="/dashboard"
-                  className={`flex items-center space-x-3 drop-shadow-sm transition-colors hover:text-foreground ${
-                    pathname === "/dashboard"
-                      ? "font-medium text-foreground"
-                      : "text-muted-foreground"
-                  }`}
+                  className={`hover:text-primary flex items-center space-x-3 transition-colors ${pathname === "/dashboard" ? "text-primary font-medium" : "text-muted-foreground"}`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <Home className="h-5 w-5" />
                   <span>Dashboard</span>
                 </Link>
-                <Link
-                  to="/subscriptions"
-                  className={`flex items-center space-x-3 drop-shadow-sm transition-colors hover:text-foreground ${
-                    pathname === "/subscriptions"
-                      ? "font-medium text-foreground"
-                      : "text-muted-foreground"
-                  }`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <Package className="h-5 w-5" />
-                  <span>Subscriptions</span>
-                </Link>
-                <Link
-                  to="/dca-history"
-                  className={`flex items-center space-x-3 drop-shadow-sm transition-colors hover:text-foreground ${
-                    pathname === "/dca-history" || pathname.startsWith("/dca-")
-                      ? "font-medium text-foreground"
-                      : "text-muted-foreground"
-                  }`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <Calculator className="h-5 w-5" />
-                  <span>DCA</span>
-                </Link>
               </div>
 
-              {/* Work & Reports Section */}
-              {session && (
-                <>
-                  <div className="my-4 border-t border-border"></div>
-                  <div className="space-y-3">
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      งาน & รายงาน
-                    </h3>
-                    <div className="flex flex-col space-y-3 pl-8">
-                      <Link
-                        to="/attendance-report"
-                        className={`drop-shadow-sm transition-colors hover:text-foreground ${
-                          pathname === "/attendance-report"
-                            ? "font-medium text-foreground"
-                            : "text-muted-foreground"
-                        }`}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        รายงานเข้างาน
-                      </Link>
-                      <Link
-                        to="/leave"
-                        className={`drop-shadow-sm transition-colors hover:text-foreground ${
-                          pathname === "/leave"
-                            ? "font-medium text-foreground"
-                            : "text-muted-foreground"
-                        }`}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        ลางาน
-                      </Link>
-                      <Link
-                        to="/calendar"
-                        className={`drop-shadow-sm transition-colors hover:text-foreground ${
-                          pathname === "/calendar"
-                            ? "font-medium text-foreground"
-                            : "text-muted-foreground"
-                        }`}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        ปฏิทินวันหยุด
-                      </Link>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Tools Section */}
-              <div className="my-4 border-t border-border"></div>
-              <div className="space-y-3">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  เครื่องมือ
+              {/* การเงิน */}
+              <div className="border-border border-t pt-4">
+                <h3 className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
+                  การเงิน
                 </h3>
-                <div className="flex flex-col space-y-3 pl-8">
+                <div className="flex flex-col space-y-2 pl-2">
                   <Link
-                    to="/thai-names-generator"
-                    className={`drop-shadow-sm transition-colors hover:text-foreground ${
-                      pathname === "/thai-names-generator"
-                        ? "font-medium text-foreground"
-                        : "text-muted-foreground"
-                    }`}
+                    to="/subscriptions"
+                    className={`hover:text-primary flex items-center space-x-2 transition-colors ${pathname === "/subscriptions" ? "text-primary font-medium" : "text-muted-foreground"}`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    สุ่มชื่อไทย
+                    <Package className="h-4 w-4" />
+                    <span>Subscriptions</span>
                   </Link>
                   <Link
-                    to="/thai-id"
-                    className={`drop-shadow-sm transition-colors hover:text-foreground ${
-                      pathname.startsWith("/thai-id")
-                        ? "font-medium text-foreground"
-                        : "text-muted-foreground"
-                    }`}
+                    to="/dca-history"
+                    className={`hover:text-primary flex items-center space-x-2 transition-colors ${pathname === "/dca-history" || pathname.startsWith("/dca-") ? "text-primary font-medium" : "text-muted-foreground"}`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    เลขบัตรประชาชน
-                  </Link>
-                </div>
-              </div>
-
-              {/* General Section */}
-              <div className="my-4 border-t border-border"></div>
-              <div className="space-y-3">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  ทั่วไป
-                </h3>
-                <div className="flex flex-col space-y-3 pl-8">
-                  <Link
-                    to="/help"
-                    className={`drop-shadow-sm transition-colors hover:text-foreground ${
-                      pathname === "/help"
-                        ? "font-medium text-foreground"
-                        : "text-muted-foreground"
-                    }`}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    คำสั่งทั้งหมด
+                    <Calculator className="h-4 w-4" />
+                    <span>Auto DCA</span>
                   </Link>
                   {session && (
                     <Link
-                      to="/monitoring"
-                      className={`drop-shadow-sm transition-colors hover:text-foreground ${
-                        pathname === "/monitoring"
-                          ? "font-medium text-foreground"
-                          : "text-muted-foreground"
-                      }`}
+                      to="/expenses"
+                      className={`hover:text-primary flex items-center space-x-2 transition-colors ${pathname === "/expenses" ? "text-primary font-medium" : "text-muted-foreground"}`}
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      Monitoring
+                      <Wallet className="h-4 w-4" />
+                      <span>รายรับรายจ่าย</span>
                     </Link>
                   )}
                 </div>
               </div>
 
-              {/* Admin Section - แสดงเฉพาะ admin */}
-              {session?.isAdmin && (
-                <>
-                  <div className="my-4 border-t border-border"></div>
-                  <div className="space-y-3">
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      จัดการระบบ
-                    </h3>
-                    <div className="flex flex-col space-y-3 pl-8">
-                      <Link
-                        to="/line-approval"
-                        className={`drop-shadow-sm transition-colors hover:text-foreground ${
-                          pathname === "/line-approval"
-                            ? "font-medium text-foreground"
-                            : "text-muted-foreground"
-                        }`}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        ✅ อนุมัติ LINE User
-                      </Link>
-                      <Link
-                        to="/admin/line-permissions"
-                        className={`drop-shadow-sm transition-colors hover:text-foreground ${
-                          pathname === "/admin/line-permissions"
-                            ? "font-medium text-foreground"
-                            : "text-muted-foreground"
-                        }`}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        🛡️ จัดการสิทธิ์ LINE Features
-                      </Link>
-                    </div>
+              {/* งาน & รายงาน */}
+              {session && (
+                <div className="border-border border-t pt-4">
+                  <h3 className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
+                    งาน & รายงาน
+                  </h3>
+                  <div className="flex flex-col space-y-2 pl-2">
+                    <Link
+                      to="/attendance-report"
+                      className={`hover:text-primary flex items-center space-x-2 transition-colors ${pathname === "/attendance-report" ? "text-primary font-medium" : "text-muted-foreground"}`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <BarChart3 className="h-4 w-4" />
+                      <span>รายงานเข้างาน</span>
+                    </Link>
+                    <Link
+                      to="/leave"
+                      className={`hover:text-primary flex items-center space-x-2 transition-colors ${pathname === "/leave" ? "text-primary font-medium" : "text-muted-foreground"}`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Briefcase className="h-4 w-4" />
+                      <span>ลางาน</span>
+                    </Link>
+                    <Link
+                      to="/calendar"
+                      className={`hover:text-primary flex items-center space-x-2 transition-colors ${pathname === "/calendar" ? "text-primary font-medium" : "text-muted-foreground"}`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <CalendarDays className="h-4 w-4" />
+                      <span>ปฏิทินวันหยุด</span>
+                    </Link>
                   </div>
-                </>
+                </div>
+              )}
+
+              {/* เครื่องมือ */}
+              <div className="border-border border-t pt-4">
+                <h3 className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
+                  เครื่องมือ
+                </h3>
+                <div className="flex flex-col space-y-2 pl-2">
+                  <Link
+                    to="/thai-names-generator"
+                    className={`hover:text-primary flex items-center space-x-2 transition-colors ${pathname === "/thai-names-generator" ? "text-primary font-medium" : "text-muted-foreground"}`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <UserRound className="h-4 w-4" />
+                    <span>สุ่มชื่อไทย</span>
+                  </Link>
+                  <Link
+                    to="/thai-id"
+                    className={`hover:text-primary flex items-center space-x-2 transition-colors ${pathname.startsWith("/thai-id") ? "text-primary font-medium" : "text-muted-foreground"}`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <IdCard className="h-4 w-4" />
+                    <span>เลขบัตรประชาชน</span>
+                  </Link>
+                  <Link
+                    to="/help"
+                    className={`hover:text-primary flex items-center space-x-2 transition-colors ${pathname === "/help" ? "text-primary font-medium" : "text-muted-foreground"}`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                    <span>คำสั่งทั้งหมด</span>
+                  </Link>
+                  {session && (
+                    <Link
+                      to="/monitoring"
+                      className={`hover:text-primary flex items-center space-x-2 transition-colors ${pathname === "/monitoring" ? "text-primary font-medium" : "text-muted-foreground"}`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Activity className="h-4 w-4" />
+                      <span>Monitoring</span>
+                    </Link>
+                  )}
+                </div>
+              </div>
+
+              {/* Admin */}
+              {session?.isAdmin && (
+                <div className="border-border border-t pt-4">
+                  <h3 className="text-destructive/70 mb-2 text-xs font-semibold tracking-wider uppercase">
+                    จัดการระบบ
+                  </h3>
+                  <div className="flex flex-col space-y-2 pl-2">
+                    <Link
+                      to="/line-approval"
+                      className={`hover:text-destructive flex items-center space-x-2 transition-colors ${pathname === "/line-approval" ? "text-destructive font-medium" : "text-muted-foreground"}`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span>อนุมัติ LINE User</span>
+                    </Link>
+                    <Link
+                      to="/admin/line-permissions"
+                      className={`hover:text-destructive flex items-center space-x-2 transition-colors ${pathname === "/admin/line-permissions" ? "text-destructive font-medium" : "text-muted-foreground"}`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Shield className="h-4 w-4" />
+                      <span>จัดการสิทธิ์ LINE</span>
+                    </Link>
+                  </div>
+                </div>
               )}
             </div>
           </nav>

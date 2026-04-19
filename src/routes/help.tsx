@@ -213,6 +213,47 @@ const COMMAND_CATEGORIES: CommandCategory[] = [
     ],
   },
   {
+    title: "รายรับรายจ่าย",
+    description: "คำสั่งสำหรับบันทึกและดูสรุปรายรับรายจ่ายส่วนตัว",
+    commands: [
+      {
+        name: "จ่าย",
+        aliases: ["exp", "e", "expense", "รายจ่าย"],
+        description: "บันทึกรายจ่าย ระบุหมวดหมู่ได้ (ถ้าไม่ระบุจะใช้หมวด 'อื่นๆ' อัตโนมัติ)",
+        usage: "/จ่าย [จำนวน] [หมวด?]",
+        examples: [
+          "/จ่าย 250 อาหาร",
+          "/exp 1200 เดินทาง",
+          "/e 50",
+          "/expense add 800 ช้อปปิ้ง",
+        ],
+      },
+      {
+        name: "รับ",
+        aliases: ["i", "income", "รายรับ"],
+        description: "บันทึกรายรับ เช่น เงินเดือน โบนัส รายได้เสริม",
+        usage: "/รับ [จำนวน] [หมวด?]",
+        examples: [
+          "/รับ 30000 เงินเดือน",
+          "/i 5000 โบนัส",
+          "/income 2000 freelance",
+        ],
+      },
+      {
+        name: "expense",
+        aliases: ["เงิน"],
+        description: "ดูสรุปรายรับรายจ่ายเดือนปัจจุบัน พร้อม top รายจ่ายตามหมวดหมู่",
+        usage: "/expense [sum|list|help]",
+        examples: [
+          "/expense",
+          "/expense sum",
+          "/expense list",
+          "/expense help",
+        ],
+      },
+    ],
+  },
+  {
     title: "เครื่องมือสำหรับนักพัฒนา",
     description: "คำสั่งสำหรับเครื่องมือช่วยเหลือนักพัฒนาและการทดสอบ",
     commands: [

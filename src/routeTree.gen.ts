@@ -19,6 +19,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as LineApprovalRouteImport } from './routes/line-approval'
 import { Route as LeaveRouteImport } from './routes/leave'
 import { Route as HelpRouteImport } from './routes/help'
+import { Route as ExpensesRouteImport } from './routes/expenses'
 import { Route as DcaHistoryRouteImport } from './routes/dca-history'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CalendarRouteImport } from './routes/calendar'
@@ -34,6 +35,7 @@ import { Route as ApiAttendanceReportRouteImport } from './routes/api/attendance
 import { Route as ApiAttendancePushRouteImport } from './routes/api/attendance-push'
 import { Route as AdminLinePermissionsRouteImport } from './routes/admin/line-permissions'
 import { Route as ApiSubscriptionsIndexRouteImport } from './routes/api/subscriptions/index'
+import { Route as ApiExpensesIndexRouteImport } from './routes/api/expenses/index'
 import { Route as ApiDcaIndexRouteImport } from './routes/api/dca/index'
 import { Route as ApiUserSettingsRouteImport } from './routes/api/user/settings'
 import { Route as ApiThaiIdValidateRouteImport } from './routes/api/thai-id/validate'
@@ -46,6 +48,9 @@ import { Route as ApiMonitoringDashboardRouteImport } from './routes/api/monitor
 import { Route as ApiLinePermissionsRouteImport } from './routes/api/line/permissions'
 import { Route as ApiLineApprovalsRouteImport } from './routes/api/line/approvals'
 import { Route as ApiHealthEnhancedRouteImport } from './routes/api/health/enhanced'
+import { Route as ApiExpensesSummaryRouteImport } from './routes/api/expenses/summary'
+import { Route as ApiExpensesCategoriesRouteImport } from './routes/api/expenses/categories'
+import { Route as ApiExpensesTransactionIdRouteImport } from './routes/api/expenses/$transactionId'
 import { Route as ApiDcaSummaryRouteImport } from './routes/api/dca/summary'
 import { Route as ApiDcaStreamRouteImport } from './routes/api/dca/stream'
 import { Route as ApiDcaImportRouteImport } from './routes/api/dca/import'
@@ -62,6 +67,7 @@ import { Route as ApiAttendanceUpdateRouteImport } from './routes/api/attendance
 import { Route as ApiAdminDebugRouteImport } from './routes/api/admin/debug'
 import { Route as ApiAdminCheckRouteImport } from './routes/api/admin/check'
 import { Route as ApiUserSettingsNotificationsRouteImport } from './routes/api/user/settings/notifications'
+import { Route as ApiExpensesCategoriesIdRouteImport } from './routes/api/expenses/categories/$id'
 
 const ThaiNamesGeneratorRoute = ThaiNamesGeneratorRouteImport.update({
   id: '/thai-names-generator',
@@ -111,6 +117,11 @@ const LeaveRoute = LeaveRouteImport.update({
 const HelpRoute = HelpRouteImport.update({
   id: '/help',
   path: '/help',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExpensesRoute = ExpensesRouteImport.update({
+  id: '/expenses',
+  path: '/expenses',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DcaHistoryRoute = DcaHistoryRouteImport.update({
@@ -188,6 +199,11 @@ const ApiSubscriptionsIndexRoute = ApiSubscriptionsIndexRouteImport.update({
   path: '/api/subscriptions/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiExpensesIndexRoute = ApiExpensesIndexRouteImport.update({
+  id: '/api/expenses/',
+  path: '/api/expenses/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiDcaIndexRoute = ApiDcaIndexRouteImport.update({
   id: '/api/dca/',
   path: '/api/dca/',
@@ -250,6 +266,22 @@ const ApiHealthEnhancedRoute = ApiHealthEnhancedRouteImport.update({
   path: '/enhanced',
   getParentRoute: () => ApiHealthRoute,
 } as any)
+const ApiExpensesSummaryRoute = ApiExpensesSummaryRouteImport.update({
+  id: '/api/expenses/summary',
+  path: '/api/expenses/summary',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiExpensesCategoriesRoute = ApiExpensesCategoriesRouteImport.update({
+  id: '/api/expenses/categories',
+  path: '/api/expenses/categories',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiExpensesTransactionIdRoute =
+  ApiExpensesTransactionIdRouteImport.update({
+    id: '/api/expenses/$transactionId',
+    path: '/api/expenses/$transactionId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiDcaSummaryRoute = ApiDcaSummaryRouteImport.update({
   id: '/api/dca/summary',
   path: '/api/dca/summary',
@@ -333,6 +365,11 @@ const ApiUserSettingsNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => ApiUserSettingsRoute,
   } as any)
+const ApiExpensesCategoriesIdRoute = ApiExpensesCategoriesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiExpensesCategoriesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -340,6 +377,7 @@ export interface FileRoutesByFullPath {
   '/calendar': typeof CalendarRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/dca-history': typeof DcaHistoryRoute
+  '/expenses': typeof ExpensesRoute
   '/help': typeof HelpRoute
   '/leave': typeof LeaveRoute
   '/line-approval': typeof LineApprovalRoute
@@ -374,6 +412,9 @@ export interface FileRoutesByFullPath {
   '/api/dca/import': typeof ApiDcaImportRoute
   '/api/dca/stream': typeof ApiDcaStreamRoute
   '/api/dca/summary': typeof ApiDcaSummaryRoute
+  '/api/expenses/$transactionId': typeof ApiExpensesTransactionIdRoute
+  '/api/expenses/categories': typeof ApiExpensesCategoriesRouteWithChildren
+  '/api/expenses/summary': typeof ApiExpensesSummaryRoute
   '/api/health/enhanced': typeof ApiHealthEnhancedRoute
   '/api/line/approvals': typeof ApiLineApprovalsRoute
   '/api/line/permissions': typeof ApiLinePermissionsRoute
@@ -386,7 +427,9 @@ export interface FileRoutesByFullPath {
   '/api/thai-id/validate': typeof ApiThaiIdValidateRoute
   '/api/user/settings': typeof ApiUserSettingsRouteWithChildren
   '/api/dca/': typeof ApiDcaIndexRoute
+  '/api/expenses/': typeof ApiExpensesIndexRoute
   '/api/subscriptions/': typeof ApiSubscriptionsIndexRoute
+  '/api/expenses/categories/$id': typeof ApiExpensesCategoriesIdRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
 }
 export interface FileRoutesByTo {
@@ -395,6 +438,7 @@ export interface FileRoutesByTo {
   '/calendar': typeof CalendarRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/dca-history': typeof DcaHistoryRoute
+  '/expenses': typeof ExpensesRoute
   '/help': typeof HelpRoute
   '/leave': typeof LeaveRoute
   '/line-approval': typeof LineApprovalRoute
@@ -429,6 +473,9 @@ export interface FileRoutesByTo {
   '/api/dca/import': typeof ApiDcaImportRoute
   '/api/dca/stream': typeof ApiDcaStreamRoute
   '/api/dca/summary': typeof ApiDcaSummaryRoute
+  '/api/expenses/$transactionId': typeof ApiExpensesTransactionIdRoute
+  '/api/expenses/categories': typeof ApiExpensesCategoriesRouteWithChildren
+  '/api/expenses/summary': typeof ApiExpensesSummaryRoute
   '/api/health/enhanced': typeof ApiHealthEnhancedRoute
   '/api/line/approvals': typeof ApiLineApprovalsRoute
   '/api/line/permissions': typeof ApiLinePermissionsRoute
@@ -441,7 +488,9 @@ export interface FileRoutesByTo {
   '/api/thai-id/validate': typeof ApiThaiIdValidateRoute
   '/api/user/settings': typeof ApiUserSettingsRouteWithChildren
   '/api/dca': typeof ApiDcaIndexRoute
+  '/api/expenses': typeof ApiExpensesIndexRoute
   '/api/subscriptions': typeof ApiSubscriptionsIndexRoute
+  '/api/expenses/categories/$id': typeof ApiExpensesCategoriesIdRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
 }
 export interface FileRoutesById {
@@ -451,6 +500,7 @@ export interface FileRoutesById {
   '/calendar': typeof CalendarRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/dca-history': typeof DcaHistoryRoute
+  '/expenses': typeof ExpensesRoute
   '/help': typeof HelpRoute
   '/leave': typeof LeaveRoute
   '/line-approval': typeof LineApprovalRoute
@@ -485,6 +535,9 @@ export interface FileRoutesById {
   '/api/dca/import': typeof ApiDcaImportRoute
   '/api/dca/stream': typeof ApiDcaStreamRoute
   '/api/dca/summary': typeof ApiDcaSummaryRoute
+  '/api/expenses/$transactionId': typeof ApiExpensesTransactionIdRoute
+  '/api/expenses/categories': typeof ApiExpensesCategoriesRouteWithChildren
+  '/api/expenses/summary': typeof ApiExpensesSummaryRoute
   '/api/health/enhanced': typeof ApiHealthEnhancedRoute
   '/api/line/approvals': typeof ApiLineApprovalsRoute
   '/api/line/permissions': typeof ApiLinePermissionsRoute
@@ -497,7 +550,9 @@ export interface FileRoutesById {
   '/api/thai-id/validate': typeof ApiThaiIdValidateRoute
   '/api/user/settings': typeof ApiUserSettingsRouteWithChildren
   '/api/dca/': typeof ApiDcaIndexRoute
+  '/api/expenses/': typeof ApiExpensesIndexRoute
   '/api/subscriptions/': typeof ApiSubscriptionsIndexRoute
+  '/api/expenses/categories/$id': typeof ApiExpensesCategoriesIdRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
 }
 export interface FileRouteTypes {
@@ -508,6 +563,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/dashboard'
     | '/dca-history'
+    | '/expenses'
     | '/help'
     | '/leave'
     | '/line-approval'
@@ -542,6 +598,9 @@ export interface FileRouteTypes {
     | '/api/dca/import'
     | '/api/dca/stream'
     | '/api/dca/summary'
+    | '/api/expenses/$transactionId'
+    | '/api/expenses/categories'
+    | '/api/expenses/summary'
     | '/api/health/enhanced'
     | '/api/line/approvals'
     | '/api/line/permissions'
@@ -554,7 +613,9 @@ export interface FileRouteTypes {
     | '/api/thai-id/validate'
     | '/api/user/settings'
     | '/api/dca/'
+    | '/api/expenses/'
     | '/api/subscriptions/'
+    | '/api/expenses/categories/$id'
     | '/api/user/settings/notifications'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -563,6 +624,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/dashboard'
     | '/dca-history'
+    | '/expenses'
     | '/help'
     | '/leave'
     | '/line-approval'
@@ -597,6 +659,9 @@ export interface FileRouteTypes {
     | '/api/dca/import'
     | '/api/dca/stream'
     | '/api/dca/summary'
+    | '/api/expenses/$transactionId'
+    | '/api/expenses/categories'
+    | '/api/expenses/summary'
     | '/api/health/enhanced'
     | '/api/line/approvals'
     | '/api/line/permissions'
@@ -609,7 +674,9 @@ export interface FileRouteTypes {
     | '/api/thai-id/validate'
     | '/api/user/settings'
     | '/api/dca'
+    | '/api/expenses'
     | '/api/subscriptions'
+    | '/api/expenses/categories/$id'
     | '/api/user/settings/notifications'
   id:
     | '__root__'
@@ -618,6 +685,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/dashboard'
     | '/dca-history'
+    | '/expenses'
     | '/help'
     | '/leave'
     | '/line-approval'
@@ -652,6 +720,9 @@ export interface FileRouteTypes {
     | '/api/dca/import'
     | '/api/dca/stream'
     | '/api/dca/summary'
+    | '/api/expenses/$transactionId'
+    | '/api/expenses/categories'
+    | '/api/expenses/summary'
     | '/api/health/enhanced'
     | '/api/line/approvals'
     | '/api/line/permissions'
@@ -664,7 +735,9 @@ export interface FileRouteTypes {
     | '/api/thai-id/validate'
     | '/api/user/settings'
     | '/api/dca/'
+    | '/api/expenses/'
     | '/api/subscriptions/'
+    | '/api/expenses/categories/$id'
     | '/api/user/settings/notifications'
   fileRoutesById: FileRoutesById
 }
@@ -674,6 +747,7 @@ export interface RootRouteChildren {
   CalendarRoute: typeof CalendarRouteWithChildren
   DashboardRoute: typeof DashboardRoute
   DcaHistoryRoute: typeof DcaHistoryRoute
+  ExpensesRoute: typeof ExpensesRoute
   HelpRoute: typeof HelpRoute
   LeaveRoute: typeof LeaveRoute
   LineApprovalRoute: typeof LineApprovalRoute
@@ -707,6 +781,9 @@ export interface RootRouteChildren {
   ApiDcaImportRoute: typeof ApiDcaImportRoute
   ApiDcaStreamRoute: typeof ApiDcaStreamRoute
   ApiDcaSummaryRoute: typeof ApiDcaSummaryRoute
+  ApiExpensesTransactionIdRoute: typeof ApiExpensesTransactionIdRoute
+  ApiExpensesCategoriesRoute: typeof ApiExpensesCategoriesRouteWithChildren
+  ApiExpensesSummaryRoute: typeof ApiExpensesSummaryRoute
   ApiMonitoringDashboardRoute: typeof ApiMonitoringDashboardRoute
   ApiSubscriptionsSubscriptionIdRoute: typeof ApiSubscriptionsSubscriptionIdRoute
   ApiSubscriptionsMembersRoute: typeof ApiSubscriptionsMembersRoute
@@ -716,6 +793,7 @@ export interface RootRouteChildren {
   ApiThaiIdValidateRoute: typeof ApiThaiIdValidateRoute
   ApiUserSettingsRoute: typeof ApiUserSettingsRouteWithChildren
   ApiDcaIndexRoute: typeof ApiDcaIndexRoute
+  ApiExpensesIndexRoute: typeof ApiExpensesIndexRoute
   ApiSubscriptionsIndexRoute: typeof ApiSubscriptionsIndexRoute
 }
 
@@ -789,6 +867,13 @@ declare module '@tanstack/react-router' {
       path: '/help'
       fullPath: '/help'
       preLoaderRoute: typeof HelpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/expenses': {
+      id: '/expenses'
+      path: '/expenses'
+      fullPath: '/expenses'
+      preLoaderRoute: typeof ExpensesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dca-history': {
@@ -896,6 +981,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSubscriptionsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/expenses/': {
+      id: '/api/expenses/'
+      path: '/api/expenses'
+      fullPath: '/api/expenses/'
+      preLoaderRoute: typeof ApiExpensesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/dca/': {
       id: '/api/dca/'
       path: '/api/dca'
@@ -979,6 +1071,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/health/enhanced'
       preLoaderRoute: typeof ApiHealthEnhancedRouteImport
       parentRoute: typeof ApiHealthRoute
+    }
+    '/api/expenses/summary': {
+      id: '/api/expenses/summary'
+      path: '/api/expenses/summary'
+      fullPath: '/api/expenses/summary'
+      preLoaderRoute: typeof ApiExpensesSummaryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/expenses/categories': {
+      id: '/api/expenses/categories'
+      path: '/api/expenses/categories'
+      fullPath: '/api/expenses/categories'
+      preLoaderRoute: typeof ApiExpensesCategoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/expenses/$transactionId': {
+      id: '/api/expenses/$transactionId'
+      path: '/api/expenses/$transactionId'
+      fullPath: '/api/expenses/$transactionId'
+      preLoaderRoute: typeof ApiExpensesTransactionIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/dca/summary': {
       id: '/api/dca/summary'
@@ -1092,6 +1205,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiUserSettingsNotificationsRouteImport
       parentRoute: typeof ApiUserSettingsRoute
     }
+    '/api/expenses/categories/$id': {
+      id: '/api/expenses/categories/$id'
+      path: '/$id'
+      fullPath: '/api/expenses/categories/$id'
+      preLoaderRoute: typeof ApiExpensesCategoriesIdRouteImport
+      parentRoute: typeof ApiExpensesCategoriesRoute
+    }
   }
 }
 
@@ -1132,6 +1252,19 @@ const ApiLineRouteChildren: ApiLineRouteChildren = {
 const ApiLineRouteWithChildren =
   ApiLineRoute._addFileChildren(ApiLineRouteChildren)
 
+interface ApiExpensesCategoriesRouteChildren {
+  ApiExpensesCategoriesIdRoute: typeof ApiExpensesCategoriesIdRoute
+}
+
+const ApiExpensesCategoriesRouteChildren: ApiExpensesCategoriesRouteChildren = {
+  ApiExpensesCategoriesIdRoute: ApiExpensesCategoriesIdRoute,
+}
+
+const ApiExpensesCategoriesRouteWithChildren =
+  ApiExpensesCategoriesRoute._addFileChildren(
+    ApiExpensesCategoriesRouteChildren,
+  )
+
 interface ApiUserSettingsRouteChildren {
   ApiUserSettingsNotificationsRoute: typeof ApiUserSettingsNotificationsRoute
 }
@@ -1150,6 +1283,7 @@ const rootRouteChildren: RootRouteChildren = {
   CalendarRoute: CalendarRouteWithChildren,
   DashboardRoute: DashboardRoute,
   DcaHistoryRoute: DcaHistoryRoute,
+  ExpensesRoute: ExpensesRoute,
   HelpRoute: HelpRoute,
   LeaveRoute: LeaveRoute,
   LineApprovalRoute: LineApprovalRoute,
@@ -1183,6 +1317,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiDcaImportRoute: ApiDcaImportRoute,
   ApiDcaStreamRoute: ApiDcaStreamRoute,
   ApiDcaSummaryRoute: ApiDcaSummaryRoute,
+  ApiExpensesTransactionIdRoute: ApiExpensesTransactionIdRoute,
+  ApiExpensesCategoriesRoute: ApiExpensesCategoriesRouteWithChildren,
+  ApiExpensesSummaryRoute: ApiExpensesSummaryRoute,
   ApiMonitoringDashboardRoute: ApiMonitoringDashboardRoute,
   ApiSubscriptionsSubscriptionIdRoute: ApiSubscriptionsSubscriptionIdRoute,
   ApiSubscriptionsMembersRoute: ApiSubscriptionsMembersRoute,
@@ -1192,6 +1329,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiThaiIdValidateRoute: ApiThaiIdValidateRoute,
   ApiUserSettingsRoute: ApiUserSettingsRouteWithChildren,
   ApiDcaIndexRoute: ApiDcaIndexRoute,
+  ApiExpensesIndexRoute: ApiExpensesIndexRoute,
   ApiSubscriptionsIndexRoute: ApiSubscriptionsIndexRoute,
 }
 export const routeTree = rootRouteImport

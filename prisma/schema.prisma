@@ -3,7 +3,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../prisma/generated"
 }
 
 datasource db {
@@ -12,22 +11,22 @@ datasource db {
 
 // Better Auth core models
 model Account {
-  id                        String    @id @default(cuid())
-  accountId                 String
-  providerId                String
-  userId                    String
-  accessToken               String?
-  refreshToken              String?
-  idToken                   String?
-  accessTokenExpiresAt      DateTime?
-  refreshTokenExpiresAt     DateTime?
-  scope                     String?
-  password                  String?
+  id                     String    @id @default(cuid())
+  accountId              String
+  providerId             String
+  userId                 String
+  accessToken            String?
+  refreshToken           String?
+  idToken                String?
+  accessTokenExpiresAt   DateTime?
+  refreshTokenExpiresAt  DateTime?
+  scope                  String?
+  password               String?
   // LINE-specific fields for separating Login and Messaging API user IDs
-  lineMessagingApiUserId    String?   @unique @map("line_messaging_api_user_id")
-  createdAt                 DateTime  @default(now())
-  updatedAt                 DateTime  @updatedAt
-  user                      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lineMessagingApiUserId String?   @unique @map("line_messaging_api_user_id")
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([providerId, accountId])
   @@index([userId])
@@ -51,19 +50,21 @@ model Session {
 }
 
 model User {
-  id              String           @id @default(cuid())
-  name            String
-  email           String           @unique
-  emailVerified   Boolean          @default(false)
-  image           String?
-  role            String           @default("user")
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  accounts        Account[]
-  sessions        Session[]
-  workAttendances WorkAttendance[]
-  leaves          Leave[]
-  settings        UserSettings?
+  id                String            @id @default(cuid())
+  name              String
+  email             String            @unique
+  emailVerified     Boolean           @default(false)
+  image             String?
+  role              String            @default("user")
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  accounts          Account[]
+  sessions          Session[]
+  workAttendances   WorkAttendance[]
+  leaves            Leave[]
+  settings          UserSettings?
+  expenseCategories ExpenseCategory[]
+  transactions      Transaction[]
 
   @@map("users")
 }
@@ -211,22 +212,22 @@ enum PaymentStatus {
 }
 
 model Subscription {
-  id           String               @id @default(cuid())
-  name         String               @map("name")
-  service      SubscriptionService  @map("service")
-  planType     SubscriptionPlanType @default(INDIVIDUAL) @map("plan_type")
-  billingCycle BillingCycle         @default(MONTHLY) @map("billing_cycle")
-  totalPrice   Float                @map("total_price")
-  currency     String               @default("THB") @map("currency")
-  billingDay   Int                  @map("billing_day")
-  ownerId      String               @map("owner_id")
-  isActive     Boolean              @default(true) @map("is_active")
-  startDate    DateTime             @map("start_date")
-  endDate      DateTime?            @map("end_date")
-  logoUrl      String?              @map("logo_url")
-  note         String?              @map("note")
-  createdAt    DateTime             @default(now()) @map("created_at")
-  updatedAt    DateTime             @updatedAt @map("updated_at")
+  id           String                @id @default(cuid())
+  name         String                @map("name")
+  service      SubscriptionService   @map("service")
+  planType     SubscriptionPlanType  @default(INDIVIDUAL) @map("plan_type")
+  billingCycle BillingCycle          @default(MONTHLY) @map("billing_cycle")
+  totalPrice   Float                 @map("total_price")
+  currency     String                @default("THB") @map("currency")
+  billingDay   Int                   @map("billing_day")
+  ownerId      String                @map("owner_id")
+  isActive     Boolean               @default(true) @map("is_active")
+  startDate    DateTime              @map("start_date")
+  endDate      DateTime?             @map("end_date")
+  logoUrl      String?               @map("logo_url")
+  note         String?               @map("note")
+  createdAt    DateTime              @default(now()) @map("created_at")
+  updatedAt    DateTime              @updatedAt @map("updated_at")
   members      SubscriptionMember[]
   payments     SubscriptionPayment[]
 
@@ -236,20 +237,20 @@ model Subscription {
 }
 
 model SubscriptionMember {
-  id             String              @id @default(cuid())
-  subscriptionId String              @map("subscription_id")
-  userId         String?             @map("user_id")
-  name           String              @map("name")
-  email          String?             @map("email")
-  shareAmount    Float               @map("share_amount")
-  isActive       Boolean             @default(true) @map("is_active")
-  joinedAt       DateTime            @default(now()) @map("joined_at")
-  leftAt         DateTime?           @map("left_at")
-  note           String?             @map("note")
-  tags           String?             @map("tags")
-  createdAt      DateTime            @default(now()) @map("created_at")
-  updatedAt      DateTime            @updatedAt @map("updated_at")
-  subscription   Subscription        @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  id             String                @id @default(cuid())
+  subscriptionId String                @map("subscription_id")
+  userId         String?               @map("user_id")
+  name           String                @map("name")
+  email          String?               @map("email")
+  shareAmount    Float                 @map("share_amount")
+  isActive       Boolean               @default(true) @map("is_active")
+  joinedAt       DateTime              @default(now()) @map("joined_at")
+  leftAt         DateTime?             @map("left_at")
+  note           String?               @map("note")
+  tags           String?               @map("tags")
+  createdAt      DateTime              @default(now()) @map("created_at")
+  updatedAt      DateTime              @updatedAt @map("updated_at")
+  subscription   Subscription          @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
   payments       SubscriptionPayment[]
 
   @@index([subscriptionId, isActive])
@@ -358,6 +359,54 @@ model DcaOrder {
   @@index([coin, executedAt])
   @@index([round])
   @@map("dca_orders")
+}
+
+// ===========================
+// Expense Tracker (รายรับรายจ่าย)
+// ===========================
+
+enum TransactionType {
+  INCOME // รายรับ
+  EXPENSE // รายจ่าย
+}
+
+model ExpenseCategory {
+  id           String        @id @default(cuid())
+  userId       String        @map("user_id")
+  name         String        @map("name")
+  icon         String?       @map("icon") // emoji หรือ icon name
+  color        String?       @map("color") // hex color
+  isDefault    Boolean       @default(false) @map("is_default")
+  isActive     Boolean       @default(true) @map("is_active")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@unique([userId, name])
+  @@index([userId, isActive])
+  @@map("expense_categories")
+}
+
+model Transaction {
+  id         String          @id @default(cuid())
+  userId     String          @map("user_id")
+  categoryId String          @map("category_id")
+  type       TransactionType @map("type")
+  amount     Float           @map("amount") // จำนวนเงิน (THB)
+  note       String?         @map("note") // หมายเหตุ
+  tags       String?         @map("tags") // comma-separated tags
+  transDate  String          @map("trans_date") // YYYY-MM-DD
+  transMonth String          @map("trans_month") // YYYY-MM (index ด้วย)
+  createdAt  DateTime        @default(now()) @map("created_at")
+  updatedAt  DateTime        @updatedAt @map("updated_at")
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category   ExpenseCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@index([userId, transMonth])
+  @@index([userId, type, transMonth])
+  @@index([categoryId])
+  @@map("transactions")
 }
 
 // ===========================
