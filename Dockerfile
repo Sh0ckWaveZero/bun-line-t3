@@ -109,11 +109,10 @@ COPY package.json bun.lock ./
 RUN --mount=type=cache,target=/root/.bun/install/cache \
     bun install --production --frozen-lockfile
 
-# Copy Prisma dependencies
+# Copy Prisma dependencies (already generated in node_modules)
 COPY --from=build /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=build /app/node_modules/pg ./node_modules/pg
-RUN mkdir -p ./node_modules/.prisma
-COPY --from=build /app/prisma/generated ./node_modules/.prisma/client
+COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
 
 ###################
 # 🚀 RUNTIME STAGE
@@ -153,7 +152,7 @@ COPY --from=build --chown=appuser:appgroup /app/scripts ./scripts
 RUN chmod +x ./scripts/devops/docker-entrypoint.sh ./scripts/monitoring/health-check.sh && \
     test -f dist/server/server.js || (echo "❌ TanStack Start server bundle missing" && exit 1) && \
     test -d dist/client || (echo "❌ TanStack Start client bundle missing" && exit 1) && \
-    (test -f node_modules/.prisma/client/default.js || test -f prisma/generated/default.js) || (echo "❌ Prisma Client missing" && exit 1) && \
+    test -f node_modules/.prisma/client/default.js || (echo "❌ Prisma Client missing" && exit 1) && \
     echo "✅ Runtime dependencies verified"
 
 USER appuser
