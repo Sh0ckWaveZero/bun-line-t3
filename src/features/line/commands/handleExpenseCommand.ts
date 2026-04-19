@@ -27,7 +27,8 @@ import {
   getCurrentMonth,
   toTransDate,
 } from "@/features/expenses/helpers";
-import type { ExpenseCategory } from "@/features/expenses/types";
+import type { ExpenseCategory, MonthlySummary, CategorySummary } from "@/features/expenses/types";
+import { flexMessage } from "@/lib/utils/line-message-utils";
 import { env } from "@/env.mjs";
 
 // ─────────────────────────────────────────────
@@ -37,6 +38,155 @@ const getSendMessage = async () => {
   const mod = await import("@/lib/utils/line-utils");
   return mod.sendMessage;
 };
+
+// ─────────────────────────────────────────────
+// Flex Message builder
+// ─────────────────────────────────────────────
+
+function createExpenseSummaryBubble(
+  summary: MonthlySummary,
+  categories: CategorySummary[],
+  transMonth: string,
+  frontendUrl: string,
+): object {
+  const balance = summary.balance;
+  const isPositive = balance >= 0;
+  const headerColor = isPositive ? "#16A34A" : "#D97706";
+  const balanceColor = isPositive ? "#16A34A" : "#EF4444";
+  const balanceSign = isPositive ? "+" : "-";
+
+  const row = (label: string, value: string, valueColor: string) => ({
+    type: "box",
+    layout: "horizontal",
+    spacing: "sm",
+    contents: [
+      { type: "text", text: label, size: "sm", color: "#6B7280", flex: 2 },
+      {
+        type: "text",
+        text: value,
+        size: "sm",
+        color: valueColor,
+        weight: "bold",
+        align: "end",
+        flex: 3,
+      },
+    ],
+  });
+
+  const bodyContents: object[] = [
+    row(`📈 รายรับ`, `+${fmt(summary.totalIncome)} บาท`, "#16A34A"),
+    row(`📉 รายจ่าย`, `-${fmt(summary.totalExpense)} บาท`, "#EF4444"),
+    { type: "separator", margin: "md" },
+    {
+      type: "box",
+      layout: "horizontal",
+      spacing: "sm",
+      margin: "md",
+      contents: [
+        {
+          type: "text",
+          text: "⚖️ คงเหลือ",
+          size: "md",
+          color: "#111827",
+          weight: "bold",
+          flex: 2,
+        },
+        {
+          type: "text",
+          text: `${balanceSign}${fmt(Math.abs(balance))} บาท`,
+          size: "md",
+          color: balanceColor,
+          weight: "bold",
+          align: "end",
+          flex: 3,
+        },
+      ],
+    },
+    {
+      type: "text",
+      text: `📋 ${summary.transactionCount} รายการ`,
+      size: "xs",
+      color: "#9CA3AF",
+      align: "end",
+      margin: "sm",
+    },
+  ];
+
+  const topExpenses = categories.filter((c) => c.type === "EXPENSE").slice(0, 3);
+  if (topExpenses.length > 0) {
+    bodyContents.push(
+      { type: "separator", margin: "md" },
+      {
+        type: "text",
+        text: "🔍 รายจ่ายสูงสุด",
+        size: "sm",
+        color: "#374151",
+        weight: "bold",
+        margin: "md",
+      },
+      ...topExpenses.map((c) =>
+        row(
+          `${c.icon ?? "📦"} ${c.categoryName}`,
+          `${fmt(c.total)} บาท`,
+          "#374151",
+        ),
+      ),
+    );
+  }
+
+  return {
+    type: "bubble",
+    size: "giga",
+    header: {
+      type: "box",
+      layout: "vertical",
+      paddingAll: "20px",
+      backgroundColor: headerColor,
+      contents: [
+        {
+          type: "text",
+          text: "💰 สรุปรายรับรายจ่าย",
+          weight: "bold",
+          size: "xl",
+          color: "#ffffff",
+          align: "center",
+        },
+        {
+          type: "text",
+          text: `📅 ${formatMonthThai(transMonth)}`,
+          size: "sm",
+          color: "#ffffff",
+          align: "center",
+          margin: "sm",
+        },
+      ],
+    },
+    body: {
+      type: "box",
+      layout: "vertical",
+      spacing: "sm",
+      paddingAll: "20px",
+      contents: bodyContents,
+    },
+    footer: {
+      type: "box",
+      layout: "vertical",
+      paddingAll: "12px",
+      contents: [
+        {
+          type: "button",
+          style: "primary",
+          color: headerColor,
+          action: {
+            type: "uri",
+            label: "ดูรายการทั้งหมด",
+            uri: `${frontendUrl}/expenses`,
+          },
+        },
+      ],
+    },
+  };
+}
 
 // ─────────────────────────────────────────────
 // Helpers
@@ -66,59 +216,134 @@ const fmt = (n: number) => formatAmount(Math.abs(n));
 /** แสดง help */
 async function handleHelp(req: unknown) {
   const sendMessage = await getSendMessage();
-  const helpText = {
-    type: "text",
-    text: [
-      "💰 รายรับรายจ่าย — คำสั่งทั้งหมด",
-      "─────────────────────",
-      "🔹 บันทึกรายจ่าย:",
-      "  /จ่าย [จำนวน] [หมวด?]",
-      "  /จ่าย 250 อาหาร",
-      "  /exp 1200 เดินทาง",
-      "  /e 50",
-      "",
-      "🔹 บันทึกรายรับ:",
-      "  /รับ [จำนวน] [หมวด?]",
-      "  /รับ 30000 เงินเดือน",
-      "  /i 5000 โบนัส",
-      "",
-      "🔹 ดูสรุปเดือนนี้:",
-      "  /expense",
-      "  /expense sum",
-      "",
-      "🔹 ดูรายการล่าสุด:",
-      "  /expense list",
-      "",
-      "─────────────────────",
-      "⚡ คำสั่งย่อ:",
-      "  /จ่าย = /exp = /e  → รายจ่าย",
-      "  /รับ  = /i         → รายรับ",
-      "",
-      "📌 /expense help — แสดงคำสั่งนี้",
-      "─────────────────────",
-      "💡 หมวดหมู่จับคู่อัตโนมัติ",
-      "   ไม่ระบุ → ใช้หมวด 'อื่นๆ'",
-    ].join("\n"),
-  };
-  const buttonTemplate = {
-    type: "template",
-    altText: "ดูคำสั่งทั้งหมดบนเว็บไซต์",
-    template: {
-      type: "buttons",
-      text: "คลิกเพื่อดูคำสั่งทั้งหมดพร้อมตัวอย่างบนเว็บไซต์",
-      actions: [
+
+  const section = (emoji: string, title: string, lines: string[]) => ({
+    type: "box",
+    layout: "vertical",
+    spacing: "xs",
+    contents: [
+      {
+        type: "box",
+        layout: "horizontal",
+        spacing: "sm",
+        contents: [
+          { type: "text", text: emoji, size: "sm", flex: 0 },
+          {
+            type: "text",
+            text: title,
+            size: "sm",
+            weight: "bold",
+            color: "#111827",
+            flex: 1,
+          },
+        ],
+      },
+      ...lines.map((line) => ({
+        type: "text",
+        text: line,
+        size: "xs",
+        color: "#6B7280",
+        margin: "xs",
+        wrap: true,
+      })),
+    ],
+  });
+
+  const bubble = {
+    type: "bubble",
+    size: "giga",
+    header: {
+      type: "box",
+      layout: "vertical",
+      paddingAll: "20px",
+      backgroundColor: "#1D4ED8",
+      contents: [
         {
-          type: "uri",
-          label: "ดูรายการคำสั่งทั้งหมด",
-          uri: `${env.FRONTEND_URL}/help`,
+          type: "text",
+          text: "💰 รายรับรายจ่าย",
+          weight: "bold",
+          size: "xl",
+          color: "#ffffff",
+          align: "center",
+        },
+        {
+          type: "text",
+          text: "คำสั่งทั้งหมด",
+          size: "sm",
+          color: "#BFDBFE",
+          align: "center",
+          margin: "xs",
+        },
+      ],
+    },
+    body: {
+      type: "box",
+      layout: "vertical",
+      spacing: "md",
+      paddingAll: "20px",
+      contents: [
+        section("📉", "บันทึกรายจ่าย", [
+          "/จ่าย [จำนวน] [หมวด]",
+          "ตัวอย่าง: /จ่าย 250 อาหาร",
+          "ย่อได้: /exp 1200  หรือ  /e 50",
+        ]),
+        { type: "separator" },
+        section("📈", "บันทึกรายรับ", [
+          "/รับ [จำนวน] [หมวด]",
+          "ตัวอย่าง: /รับ 30000 เงินเดือน",
+          "ย่อได้: /i 5000 โบนัส",
+        ]),
+        { type: "separator" },
+        section("📊", "ดูสรุปเดือนนี้", ["/expense  หรือ  /expense sum"]),
+        { type: "separator" },
+        section("📋", "ดูรายการล่าสุด", ["/expense list"]),
+        { type: "separator" },
+        {
+          type: "box",
+          layout: "vertical",
+          spacing: "xs",
+          contents: [
+            {
+              type: "text",
+              text: "💡 เคล็ดลับ",
+              size: "xs",
+              weight: "bold",
+              color: "#374151",
+            },
+            {
+              type: "text",
+              text: "ไม่ระบุหมวด → ใช้หมวด 'อื่นๆ' อัตโนมัติ",
+              size: "xs",
+              color: "#6B7280",
+              wrap: true,
+            },
+          ],
+        },
+      ],
+    },
+    footer: {
+      type: "box",
+      layout: "vertical",
+      paddingAll: "12px",
+      contents: [
+        {
+          type: "button",
+          style: "primary",
+          color: "#1D4ED8",
+          action: {
+            type: "uri",
+            label: "ดูคำสั่งทั้งหมดบนเว็บไซต์",
+            uri: `${env.FRONTEND_URL}/help`,
+          },
         },
       ],
     },
   };
-  await sendMessage(req as Parameters<typeof sendMessage>[0], [
-    helpText,
-    buttonTemplate,
-  ]);
+
+  await sendMessage(
+    req as Parameters<typeof sendMessage>[0],
+    flexMessage([bubble]),
+  );
 }
 
 /** แสดงสรุปเดือนปัจจุบัน */
@@ -132,36 +357,17 @@ async function handleSummary(req: unknown, userId: string) {
       getCategorySummary(userId, transMonth),
     ]);
 
-    const balance = summary.balance;
-    const balanceSign = balance >= 0 ? "+" : "-";
-    const balanceEmoji = balance >= 0 ? "✅" : "⚠️";
+    const bubble = createExpenseSummaryBubble(
+      summary,
+      categories,
+      transMonth,
+      env.FRONTEND_URL,
+    );
 
-    // top 3 expense categories
-    const topExpense = categories
-      .filter((c) => c.type === "EXPENSE")
-      .slice(0, 3)
-      .map((c) => `  ${c.icon ?? "📦"} ${c.categoryName}: ${fmt(c.total)} บาท`)
-      .join("\n");
-
-    const lines = [
-      `💰 สรุปรายรับรายจ่าย`,
-      `📅 ${formatMonthThai(transMonth)}`,
-      "─────────────────────",
-      `📈 รายรับ:  +${fmt(summary.totalIncome)} บาท`,
-      `📉 รายจ่าย: -${fmt(summary.totalExpense)} บาท`,
-      `${balanceEmoji} คงเหลือ:  ${balanceSign}${fmt(balance)} บาท`,
-      `📋 ${summary.transactionCount} รายการ`,
-    ];
-
-    if (topExpense) {
-      lines.push("─────────────────────", "🔍 รายจ่ายสูงสุด:", topExpense);
-    }
-
-    lines.push("─────────────────────", "🔗 ดูทั้งหมด: /expenses");
-
-    await sendMessage(req as Parameters<typeof sendMessage>[0], [
-      { type: "text", text: lines.join("\n") },
-    ]);
+    await sendMessage(
+      req as Parameters<typeof sendMessage>[0],
+      flexMessage([bubble]),
+    );
   } catch (err) {
     console.error("[Expense Summary] error:", err);
     await sendMessage(req as Parameters<typeof sendMessage>[0], [
