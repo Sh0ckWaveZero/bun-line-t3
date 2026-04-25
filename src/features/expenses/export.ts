@@ -34,8 +34,6 @@ export async function exportTransactionsToExcel(
   }))
 
   const txSheet = utils.json_to_sheet(rows)
-
-  // column widths
   txSheet["!cols"] = [
     { wch: 14 }, // วันที่
     { wch: 10 }, // ประเภท

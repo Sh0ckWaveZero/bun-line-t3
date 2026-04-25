@@ -92,7 +92,7 @@
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.4",
     "uuid": "^13.0.0",
-    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
+    "xlsx": "0.18.5",
     "zod": "4.1.12",
     "zod-to-json-schema": "^3.25.2"
   },
