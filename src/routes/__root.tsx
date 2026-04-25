@@ -196,6 +196,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body
+        id="root-body"
         suppressHydrationWarning
         className="bg-background text-foreground antialiased"
       >
@@ -210,14 +211,31 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         </AuthSessionProvider>
         <script
           dangerouslySetInnerHTML={{
-            __html: `
+            __html: import.meta.env.DEV
+              ? `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', () => {
-                  navigator.serviceWorker.register('/sw.js').then((reg) => {
-                    console.log('Service Worker registered', reg);
-                  }).catch((err) => {
-                    console.log('Service Worker registration failed', err);
+                  Promise.all([
+                    navigator.serviceWorker.getRegistrations().then((registrations) =>
+                      Promise.all(registrations.map((registration) => registration.unregister())),
+                    ),
+                    'caches' in window
+                      ? caches.keys().then((cacheNames) =>
+                          Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName))),
+                        )
+                      : Promise.resolve(),
+                  ]).then(() => {
+                    if (navigator.serviceWorker.controller) {
+                      window.location.reload();
+                    }
                   });
+                });
+              }
+            `
+              : `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/sw.js');
                 });
               }
             `,
@@ -244,15 +262,16 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 
 function RootNotFound() {
   return (
-    <section className="container mx-auto flex min-h-[60vh] max-w-2xl flex-col items-center justify-center gap-4 px-4 py-16 text-center">
-      <p className="text-muted-foreground text-sm font-medium tracking-[0.2em] uppercase">
+    <section id="not-found-page" className="container mx-auto flex min-h-[60vh] max-w-2xl flex-col items-center justify-center gap-4 px-4 py-16 text-center">
+      <p id="not-found-code" className="text-muted-foreground text-sm font-medium tracking-[0.2em] uppercase" role="text">
         404
       </p>
-      <h1 className="text-3xl font-bold tracking-tight">ไม่พบหน้าที่ต้องการ</h1>
-      <p className="text-muted-foreground">
+      <h1 id="not-found-title" className="text-3xl font-bold tracking-tight">ไม่พบหน้าที่ต้องการ</h1>
+      <p id="not-found-description" className="text-muted-foreground">
         ลิงก์นี้อาจไม่ถูกต้อง หรือหน้าอาจถูกย้ายตำแหน่งไปแล้ว
       </p>
       <Link
+        id="not-found-home-link"
         to="/"
         className="bg-primary text-primary-foreground rounded-md px-4 py-2 text-sm font-medium transition-opacity hover:opacity-90"
       >

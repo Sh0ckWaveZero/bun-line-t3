@@ -54,8 +54,6 @@ const getTrustedOrigins = () => {
   });
 
   const uniqueOrigins = Array.from(new Set(expandedOrigins));
-  console.log(`[Auth] Trusted origins:`, uniqueOrigins);
-
   return uniqueOrigins;
 };
 
@@ -129,11 +127,6 @@ This may cause OAuth callbacks to fail!
 
 Current ALLOWED_DOMAINS: ${domainsList.join(", ")}
 `);
-  } else {
-    console.log(`
-[Auth] ✅ All trusted origins validated against ALLOWED_DOMAINS:
-  Domains: ${domainsList.join(", ")}
-`);
   }
 };
 
@@ -182,10 +175,6 @@ const syncLineApprovalRequest = async (account: {
       lineUserId: lineLoginUserId,
       userId: account.userId,
     });
-
-    console.log(
-      `[LINE Profile Sync] Successfully synced profile for LINE user: ${lineLoginUserId}`,
-    );
   } catch (error) {
     console.error("[LINE Profile Sync] Database sync failed:", error);
     throw error;
@@ -207,7 +196,7 @@ export const auth = betterAuth({
     },
     // 🔒 Trust X-Forwarded-* headers from reverse proxy
     // Required for HTTPS detection behind load balancers/reverse proxies
-    cookiePrefix: env.APP_ENV === "production" ? "__Secure-" : "",
+    cookiePrefix: "better-auth",
   },
   plugins: [tanstackStartCookies()],
   secret: env.AUTH_SECRET,

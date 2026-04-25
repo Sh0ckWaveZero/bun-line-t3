@@ -26,6 +26,7 @@ import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AttendanceReportRouteImport } from './routes/attendance-report'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CalendarMobileRouteImport } from './routes/calendar.mobile'
+import { Route as ApiLogoutRouteImport } from './routes/api/logout'
 import { Route as ApiLineRouteImport } from './routes/api/line'
 import { Route as ApiLeaveRouteImport } from './routes/api/leave'
 import { Route as ApiHolidaysRouteImport } from './routes/api/holidays'
@@ -153,6 +154,11 @@ const CalendarMobileRoute = CalendarMobileRouteImport.update({
   id: '/mobile',
   path: '/mobile',
   getParentRoute: () => CalendarRoute,
+} as any)
+const ApiLogoutRoute = ApiLogoutRouteImport.update({
+  id: '/api/logout',
+  path: '/api/logout',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiLineRoute = ApiLineRouteImport.update({
   id: '/api/line',
@@ -396,6 +402,7 @@ export interface FileRoutesByFullPath {
   '/api/holidays': typeof ApiHolidaysRoute
   '/api/leave': typeof ApiLeaveRoute
   '/api/line': typeof ApiLineRouteWithChildren
+  '/api/logout': typeof ApiLogoutRoute
   '/calendar/mobile': typeof CalendarMobileRoute
   '/api/admin/check': typeof ApiAdminCheckRoute
   '/api/admin/debug': typeof ApiAdminDebugRoute
@@ -457,6 +464,7 @@ export interface FileRoutesByTo {
   '/api/holidays': typeof ApiHolidaysRoute
   '/api/leave': typeof ApiLeaveRoute
   '/api/line': typeof ApiLineRouteWithChildren
+  '/api/logout': typeof ApiLogoutRoute
   '/calendar/mobile': typeof CalendarMobileRoute
   '/api/admin/check': typeof ApiAdminCheckRoute
   '/api/admin/debug': typeof ApiAdminDebugRoute
@@ -519,6 +527,7 @@ export interface FileRoutesById {
   '/api/holidays': typeof ApiHolidaysRoute
   '/api/leave': typeof ApiLeaveRoute
   '/api/line': typeof ApiLineRouteWithChildren
+  '/api/logout': typeof ApiLogoutRoute
   '/calendar/mobile': typeof CalendarMobileRoute
   '/api/admin/check': typeof ApiAdminCheckRoute
   '/api/admin/debug': typeof ApiAdminDebugRoute
@@ -582,6 +591,7 @@ export interface FileRouteTypes {
     | '/api/holidays'
     | '/api/leave'
     | '/api/line'
+    | '/api/logout'
     | '/calendar/mobile'
     | '/api/admin/check'
     | '/api/admin/debug'
@@ -643,6 +653,7 @@ export interface FileRouteTypes {
     | '/api/holidays'
     | '/api/leave'
     | '/api/line'
+    | '/api/logout'
     | '/calendar/mobile'
     | '/api/admin/check'
     | '/api/admin/debug'
@@ -704,6 +715,7 @@ export interface FileRouteTypes {
     | '/api/holidays'
     | '/api/leave'
     | '/api/line'
+    | '/api/logout'
     | '/calendar/mobile'
     | '/api/admin/check'
     | '/api/admin/debug'
@@ -766,6 +778,7 @@ export interface RootRouteChildren {
   ApiHolidaysRoute: typeof ApiHolidaysRoute
   ApiLeaveRoute: typeof ApiLeaveRoute
   ApiLineRoute: typeof ApiLineRouteWithChildren
+  ApiLogoutRoute: typeof ApiLogoutRoute
   ApiAdminCheckRoute: typeof ApiAdminCheckRoute
   ApiAdminDebugRoute: typeof ApiAdminDebugRoute
   ApiAttendanceUpdateRoute: typeof ApiAttendanceUpdateRoute
@@ -917,6 +930,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/calendar/mobile'
       preLoaderRoute: typeof CalendarMobileRouteImport
       parentRoute: typeof CalendarRoute
+    }
+    '/api/logout': {
+      id: '/api/logout'
+      path: '/api/logout'
+      fullPath: '/api/logout'
+      preLoaderRoute: typeof ApiLogoutRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/line': {
       id: '/api/line'
@@ -1302,6 +1322,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHolidaysRoute: ApiHolidaysRoute,
   ApiLeaveRoute: ApiLeaveRoute,
   ApiLineRoute: ApiLineRouteWithChildren,
+  ApiLogoutRoute: ApiLogoutRoute,
   ApiAdminCheckRoute: ApiAdminCheckRoute,
   ApiAdminDebugRoute: ApiAdminDebugRoute,
   ApiAttendanceUpdateRoute: ApiAttendanceUpdateRoute,

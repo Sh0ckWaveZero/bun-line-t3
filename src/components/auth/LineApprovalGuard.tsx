@@ -40,7 +40,7 @@ export function LineApprovalGuard({
   // Show loading state
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div id="approval-loading" className="flex min-h-screen items-center justify-center" role="status" aria-live="polite">
         <p className="text-muted-foreground text-lg">กำลังตรวจสอบ...</p>
       </div>
     );

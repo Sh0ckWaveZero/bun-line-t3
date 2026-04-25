@@ -82,7 +82,7 @@ function CalendarPage() {
           }
         }
       } catch (error) {
-        console.error("Error fetching calendar data:", error);
+        // Error fetching calendar data
       } finally {
         setLoading(false);
       }
