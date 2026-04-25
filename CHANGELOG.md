@@ -20,9 +20,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Expense Tracker Refactor** — แยก `expenses.tsx` (~1800 บรรทัด) ออกเป็น components และ custom hooks แยกไฟล์
   - Components: `AddTransactionModal`, `AddCategoryModal`, `CategoryManagerModal`, `EmojiPickerModal`, `ExpenseDonutChart`, `MonthlyBarChart`, `SummaryCard`, `TransactionRow`
   - Hooks: `useExpenseTransactions`, `useExpenseCategories`, `useMonthlyCharts`, `useMonthNavigation`, `useTransactionModal`, `useCategoryModalFlow`, `useExpensePageUI`
+- **Header Component Refactor** — แยก Header component เป็น modules พร้อม navigation config และ type safety
+- **Logout Flow** — ปรับปรุง logout process พร้อม clear browser state และ proper redirect handling
+- **Service Worker Caching** — เพิ่ม smart exclusion rules สำหรับ auth routes และ build assets
 
 ### Fixed
 - **deps**: เปลี่ยน xlsx จาก SheetJS CDN tgz เป็น npm `xlsx@0.18.5` เพื่อแก้ Docker `--frozen-lockfile` error
+- **manifest**: เพิ่ม `scope: "/"` แก้ปัญหา PWA shortcuts warnings ใน browser
+- **auth**: ลบ debug console.logs ที่เหลืออยู่จาก development
 
 ---
 
