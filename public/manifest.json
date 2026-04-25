@@ -3,6 +3,7 @@
   "short_name": "Calendar",
   "description": "ปฏิทินวันหยุดและวันลางาน",
   "start_url": "/calendar/mobile",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#07b53b",

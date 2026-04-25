@@ -98,7 +98,7 @@ export default function ThaiIdGenerate() {
         setCopiedStates((prev) => ({ ...prev, [key]: false }));
       }, 2000);
     } catch (err) {
-      console.error("Failed to copy: ", err);
+      // Failed to copy to clipboard
     }
   };
 
