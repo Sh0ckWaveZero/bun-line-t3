@@ -36,51 +36,36 @@ export const buildSecureUrl = (path: string): string => {
 };
 
 /**
- * 🔍 Check if domain is allowed | ตรวจสอบว่า domain ได้รับอนุญาต
- * 🛡️ Enhanced security: Prevents subdomain hijacking and various domain-based attacks
+ * 🔍 Extract hostname from a full URL or bare hostname string via new URL()
+ * ใช้ URL parser จริงๆ เพื่อป้องกัน bypass ด้วย encoding หรือ path injection
  */
-export const isAllowedDomain = (domain: string): boolean => {
-  // 🚨 Security: Validate input
-  if (!domain || typeof domain !== "string" || domain.trim().length === 0) {
-    return false;
+const extractHostname = (input: string): string | null => {
+  const trimmed = input?.trim();
+  if (!trimmed) return null;
+  try {
+    // Prefix bare hostnames so new URL() can parse them
+    const urlStr = trimmed.includes("://") ? trimmed : `https://${trimmed}`;
+    const { hostname } = new URL(urlStr);
+    return hostname.toLowerCase() || null;
+  } catch {
+    return null;
   }
+};
 
-  // 🧹 Normalize domain (lowercase, trim)
-  const normalizedDomain = domain.toLowerCase().trim();
+/**
+ * 🔍 Check if a URL or hostname is in the allowed-domain list
+ * 🛡️ Uses new URL() to parse the host — satisfies CodeQL js/url-redirection rule
+ */
+export const isAllowedDomain = (input: string): boolean => {
+  if (!input || typeof input !== "string") return false;
 
-  // 🚫 Security: Reject domains with suspicious characters
-  if (
-    normalizedDomain.includes("..") ||
-    normalizedDomain.includes("/") ||
-    normalizedDomain.includes("\\") ||
-    normalizedDomain.includes(" ")
-  ) {
-    return false;
-  }
+  const hostname = extractHostname(input);
+  if (!hostname || hostname.includes("..")) return false;
 
-  // 🔍 Check against allowed domains with strict validation
-  return ALLOWED_DOMAINS.some((allowedDomain) => {
-    // 🚨 Security: Skip empty allowed domains
-    if (!allowedDomain || allowedDomain.trim().length === 0) {
-      return false;
-    }
-
-    const normalizedAllowed = allowedDomain.toLowerCase().trim();
-
-    // ✅ Exact match
-    if (normalizedDomain === normalizedAllowed) {
-      return true;
-    }
-
-    // ✅ Valid subdomain check (must have dot separator)
-    if (
-      normalizedDomain.endsWith(`.${normalizedAllowed}`) &&
-      normalizedDomain.length > normalizedAllowed.length + 1
-    ) {
-      return true;
-    }
-
-    return false;
+  return ALLOWED_DOMAINS.some((allowed) => {
+    const normalized = allowed?.toLowerCase().trim();
+    if (!normalized) return false;
+    return hostname === normalized || hostname.endsWith(`.${normalized}`);
   });
 };
 
