@@ -72,7 +72,10 @@
       "Bash(gh run:*)",
       "Read(//tmp/**)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(rtk wc *)",
+      "Bash(rtk tree *)",
+      "Bash(rtk grep *)"
     ],
     "deny": [
       "Read(**/.env*)",
