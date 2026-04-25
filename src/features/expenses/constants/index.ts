@@ -8,6 +8,9 @@ import type { TransactionType } from "../types";
 // Labels (ภาษาไทย)
 // ─────────────────────────────────────────────
 
+export const TRANSACTION_TABS = ["all", "EXPENSE", "INCOME"] as const;
+export type TransactionTab = (typeof TRANSACTION_TABS)[number];
+
 export const TRANSACTION_TYPE_LABELS: Record<TransactionType, string> = {
   INCOME: "รายรับ",
   EXPENSE: "รายจ่าย",

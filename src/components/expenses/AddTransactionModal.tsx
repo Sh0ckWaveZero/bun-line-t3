@@ -1,0 +1,252 @@
+import { AlertDialog, AlertDialogContent } from "@/components/ui/AlertDialog"
+import { Button } from "@/components/ui/button"
+import { PopoverDatePicker } from "@/components/ui/date-picker"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { toTransDate } from "@/features/expenses/helpers"
+import type { CreateTransactionInput, ExpenseCategory, TransactionWithCategory } from "@/features/expenses/types"
+import { Loader2, Tag, TrendingDown, TrendingUp, X } from "lucide-react"
+import { useEffect, useState } from "react"
+import { CategoryCombobox } from "./CategoryCombobox"
+
+interface AddTransactionModalProps {
+  categories: ExpenseCategory[]
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onSave: (input: Omit<CreateTransactionInput, "userId">) => Promise<void>
+  isLoading: boolean
+  onAddCategory: () => void
+  editData?: TransactionWithCategory | null
+}
+
+export function AddTransactionModal({
+  categories,
+  open,
+  onOpenChange,
+  onSave,
+  isLoading,
+  onAddCategory,
+  editData,
+}: AddTransactionModalProps) {
+  const [type, setType] = useState<"INCOME" | "EXPENSE">("EXPENSE")
+  const [categoryId, setCategoryId] = useState("")
+  const [amount, setAmount] = useState("")
+  const [note, setNote] = useState("")
+  const [transDate, setTransDate] = useState(() => toTransDate())
+
+  useEffect(() => {
+    if (open) {
+      if (editData) {
+        setType(editData.type)
+        setCategoryId(editData.categoryId)
+        setAmount(editData.amount.toString())
+        setNote(editData.note ?? "")
+        setTransDate(editData.transDate)
+      } else {
+        setType("EXPENSE")
+        setCategoryId("")
+        setAmount("")
+        setNote("")
+        setTransDate(toTransDate())
+      }
+    }
+  }, [open, editData])
+
+  const filtered = categories.filter((c) => c.isActive)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!categoryId || !amount || !transDate) return
+    await onSave({
+      categoryId,
+      type,
+      amount: parseFloat(amount),
+      note: note || undefined,
+      transDate,
+    })
+  }
+
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent
+        id="add-transaction-modal"
+        className="border-border bg-card fixed top-1/2 left-1/2 z-50 flex max-h-[85vh] w-[calc(100vw-2rem)] max-w-xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg border p-0"
+      >
+        <div
+          id="add-transaction-modal-header"
+          className="border-border/50 relative flex shrink-0 items-center justify-center border-b px-6 py-4"
+        >
+          <h3
+            id="add-transaction-modal-title"
+            className="text-foreground text-center text-lg font-bold"
+          >
+            {editData ? "แก้ไขรายการ" : "เพิ่มรายการ"}
+          </h3>
+          <Button
+            id="add-transaction-close-btn"
+            variant="ghost"
+            size="icon"
+            onClick={() => onOpenChange(false)}
+            className="text-muted-foreground hover:bg-muted absolute top-1/2 right-4 h-8 w-8 -translate-y-1/2 rounded-full"
+          >
+            <X id="add-transaction-close-icon" size={18} />
+          </Button>
+        </div>
+
+        <div
+          id="add-transaction-modal-content"
+          className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6 sm:py-6"
+        >
+          <form id="add-transaction-form" onSubmit={handleSubmit} className="space-y-4">
+            <div
+              id="transaction-type-group"
+              className="grid grid-cols-2 gap-2 rounded-xl bg-muted/50 p-1"
+            >
+              {(["EXPENSE", "INCOME"] as const).map((t) => {
+                const isSelected = type === t
+                const activeClass =
+                  t === "EXPENSE"
+                    ? "bg-red-500 text-white shadow-sm"
+                    : "bg-emerald-500 text-white shadow-sm"
+                const inactiveClass =
+                  "text-muted-foreground hover:text-foreground hover:bg-muted"
+                return (
+                  <button
+                    key={t}
+                    id={`transaction-type-${t.toLowerCase()}-btn`}
+                    type="button"
+                    className={`flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-all ${
+                      isSelected ? activeClass : inactiveClass
+                    }`}
+                    onClick={() => setType(t)}
+                  >
+                    {t === "INCOME" ? (
+                      <TrendingUp className="h-4 w-4" />
+                    ) : (
+                      <TrendingDown className="h-4 w-4" />
+                    )}
+                    {t === "INCOME" ? "รายรับ" : "รายจ่าย"}
+                  </button>
+                )
+              })}
+            </div>
+
+            <div id="transaction-category-group" className="space-y-2">
+              <div
+                id="transaction-category-header"
+                className="flex items-center justify-between"
+              >
+                <Label
+                  id="transaction-category-label"
+                  className="text-foreground text-sm font-semibold"
+                >
+                  หมวดหมู่
+                </Label>
+                <Button
+                  id="manage-categories-btn"
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-foreground h-8 gap-2 px-2 text-sm"
+                  onClick={onAddCategory}
+                >
+                  <Tag id="manage-categories-icon" size={16} />
+                  <span id="manage-categories-text">จัดการ</span>
+                </Button>
+              </div>
+              {filtered.length === 0 && (
+                <p
+                  id="no-categories-msg"
+                  className="border-border bg-muted/25 text-muted-foreground rounded-lg border px-4 py-3 text-center text-sm"
+                >
+                  ยังไม่มีหมวดหมู่
+                </p>
+              )}
+              {filtered.length > 0 && (
+                <CategoryCombobox
+                  categories={filtered}
+                  value={categoryId}
+                  onChange={setCategoryId}
+                  required
+                  placeholder="เลือกหมวดหมู่"
+                />
+              )}
+            </div>
+
+            <div id="transaction-amount-group" className="space-y-2">
+              <Input
+                id="transaction-amount-input"
+                type="number"
+                inputMode="decimal"
+                min="0.01"
+                step="0.01"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                required
+                placeholder="จำนวนเงิน (บาท)"
+                className="border-border bg-background placeholder:text-muted-foreground/60 focus-visible:ring-foreground/30 h-12 rounded-lg px-4 text-base font-medium"
+              />
+            </div>
+
+            <PopoverDatePicker
+              id="transaction-date-picker"
+              label=""
+              required
+              value={transDate ? new Date(transDate + "T00:00:00") : undefined}
+              onChange={(date) => setTransDate(date ? toTransDate(date) : "")}
+              maxDate={new Date()}
+            />
+
+            <div id="transaction-note-group" className="space-y-2">
+              <Input
+                id="transaction-note-input"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="หมายเหตุ (ถ้ามี)"
+                className="border-border bg-background placeholder:text-muted-foreground/60 focus-visible:ring-foreground/30 h-12 rounded-lg px-4 text-base font-medium"
+                maxLength={500}
+              />
+            </div>
+
+            <div id="transaction-buttons-group" className="grid grid-cols-2 gap-3 pt-1">
+              <Button
+                id="transaction-cancel-btn"
+                type="button"
+                variant="outline"
+                className="border-border bg-background h-12 rounded-lg text-base font-semibold"
+                onClick={() => onOpenChange(false)}
+              >
+                ยกเลิก
+              </Button>
+              <Button
+                id="transaction-save-btn"
+                type="submit"
+                className={`h-12 rounded-lg text-base font-semibold text-white ${
+                  type === "EXPENSE"
+                    ? "bg-red-500 hover:bg-red-600"
+                    : "bg-emerald-500 hover:bg-emerald-600"
+                }`}
+                disabled={isLoading || !categoryId || !amount}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2
+                      id="transaction-save-loader"
+                      size={16}
+                      className="animate-spin"
+                    />{" "}
+                    <span id="transaction-save-loading-text">กำลังบันทึก</span>
+                  </>
+                ) : editData ? (
+                  "บันทึกการแก้ไข"
+                ) : (
+                  "บันทึก"
+                )}
+              </Button>
+            </div>
+          </form>
+        </div>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
+}
