@@ -20,19 +20,14 @@ RUN echo "🔧 Building on $BUILDPLATFORM for $TARGETPLATFORM"
 WORKDIR /app
 
 RUN apk add --no-cache \
-    bash \
     build-base \
     cairo-dev \
-    ca-certificates \
-    curl \
-    dumb-init \
     giflib-dev \
     jpeg-dev \
-    npm \
-    openssl \
     pango-dev \
     python3 \
-    && rm -rf /var/cache/apk/*
+    && rm -rf /var/cache/apk/* /var/tmp/* \
+    && echo "Build tools installed $(date)"
 
 ###################
 # 🏗️ APP BUILD STAGE
@@ -43,10 +38,14 @@ COPY package.json bun.lock ./
 COPY prisma ./prisma
 
 RUN --mount=type=cache,target=/root/.bun/install/cache \
-    NODE_OPTIONS="--max_old_space_size=1536" bun install --frozen-lockfile --ignore-scripts
+    NODE_OPTIONS="--max_old_space_size=1536" \
+    bun install --frozen-lockfile --ignore-scripts --no-optional && \
+    rm -rf /root/.bun/install/cache/*
 
 RUN --mount=type=cache,target=/root/.cache/prisma \
-    NODE_OPTIONS="--max_old_space_size=1024" bunx prisma generate
+    NODE_OPTIONS="--max_old_space_size=1024" \
+    bunx prisma generate && \
+    rm -rf /root/.cache/prisma/*
 
 COPY . .
 
@@ -99,20 +98,46 @@ RUN echo "🚀 Building TanStack Start..." && \
 ###################
 # 📦 PRODUCTION DEPENDENCIES STAGE
 ###################
-FROM build-base AS prod-deps
+FROM oven/bun:1-alpine AS prod-deps
+
+WORKDIR /app
 
 ENV SKIP_PRISMA_GENERATE=1 \
     NODE_ENV=production
 
+# Install build tools needed for native modules (canvas)
+RUN apk add --no-cache \
+    build-base \
+    cairo-dev \
+    giflib-dev \
+    jpeg-dev \
+    npm \
+    pango-dev \
+    python3 \
+    && rm -rf /var/cache/apk/* /var/tmp/*
+
 COPY package.json bun.lock ./
 
+# Install production dependencies with native modules (canvas)
+# Cachebust: 2025-04-25-v2 to ensure fresh build with node-gyp available
 RUN --mount=type=cache,target=/root/.bun/install/cache \
-    bun install --production --frozen-lockfile
+    bun install --production --frozen-lockfile --no-optional
 
 # Copy Prisma dependencies (already generated in node_modules)
 COPY --from=build /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=build /app/node_modules/pg ./node_modules/pg
 COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
+
+# Cleanup build tools after native modules are built
+RUN apk del build-base python3 && \
+    rm -rf /var/cache/apk/* /var/tmp/* /root/.cache
+
+# Aggressive cleanup in prod-deps stage BEFORE copying to runner
+RUN find ./node_modules \
+    -type d \( -name ".git" -o -name ".github" -o -name "test" -o -name "tests" -o -name "__tests__" -o -name "docs" -o -name "examples" \) -exec rm -rf {} + 2>/dev/null || true && \
+    find ./node_modules \
+    -type f \( -name "*.md" -o -name "*.ts" -o -name "*.tsx" -o -name "*.map" -o -name "*.test.*" -o -name "*.spec.*" -o -name "LICENSE*" -o -name "README*" -o -name "*.d.ts" \) -delete 2>/dev/null || true && \
+    find ./node_modules -type d -empty -delete 2>/dev/null || true
 
 ###################
 # 🚀 RUNTIME STAGE
@@ -121,7 +146,6 @@ FROM oven/bun:1-alpine AS runner
 WORKDIR /app
 
 RUN apk add --no-cache \
-    bash \
     cairo \
     ca-certificates \
     curl \
@@ -129,7 +153,10 @@ RUN apk add --no-cache \
     giflib \
     jpeg \
     pango \
-    && rm -rf /var/cache/apk/* /tmp/*
+    tzdata \
+    && rm -rf /var/cache/apk/* /tmp/* /var/tmp/* /root/.cache \
+    && rm -rf /usr/share/fontconfig /usr/share/fonts /var/cache/fontconfig \
+    && rm -rf /usr/share/locale /usr/share/i18n/* /usr/share/zoneinfo/zoneinfo
 
 ENV NODE_ENV=production \
     BUN_ENV=production \
@@ -141,7 +168,11 @@ RUN addgroup --system --gid 1001 appgroup && \
 
 COPY --from=build --chown=appuser:appgroup /app/dist ./dist
 COPY --from=build --chown=appuser:appgroup /app/public ./public
+
+# Remove source maps from dist to reduce size
+RUN find ./dist -name "*.map" -delete 2>/dev/null || true
 COPY --from=prod-deps --chown=appuser:appgroup /app/node_modules ./node_modules
+
 COPY --from=build --chown=appuser:appgroup /app/prisma ./prisma
 COPY --from=build --chown=appuser:appgroup /app/prisma.config.ts ./prisma.config.ts
 

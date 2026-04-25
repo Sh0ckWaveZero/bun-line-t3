@@ -196,3 +196,32 @@ Makefile
 *.tar.gz
 *.zip
 public/temp-charts/*
+
+# =============================================================================
+# Additional Size Optimizations
+# =============================================================================
+# Remove test files from build context
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+**/__tests__/
+**/__mocks__/
+
+# Remove storybook files
+**/*.stories.*
+**/.storybook/
+
+# Remove development tools configs
+**/.eslintrc*
+**/.prettierrc*
+**/vitest.config.*
+**/cypress.config.*
+
+# Remove CI/CD files
+**/.github/
+**/.gitlab-ci.yml
+**/.travis.yml
+**/vercel.json
+**/.vercelignore
+**/.netlify
