@@ -109,7 +109,7 @@ See [`SECURITY_OPTIMIZATION_COMPLETE.md`](./docs/SECURITY_OPTIMIZATION_COMPLETE.
 
 - **Bun** >= 1.0.0
 - **Node.js** >= 18.0.0
-- **MongoDB** database
+- **PostgreSQL** database
 - **LINE Developer Account**
 
 ### Installation
@@ -155,7 +155,7 @@ Create a `.env` file with the following variables:
 
 ```env
 # Database
-DATABASE_URL="mongodb://user:password@localhost:27017/bun_line_t3"
+DATABASE_URL="postgresql://user:password@localhost:5432/bun_line_t3"
 
 # Better Auth
 AUTH_SECRET="your-secret-key"
@@ -266,7 +266,7 @@ bun run scripts/test-attendance.ts
 ### Database & ORM
 
 - **[Prisma](https://prisma.io)** - Type-safe database toolkit
-- **[MongoDB](https://www.mongodb.com)** - Document database
+- **[PostgreSQL](https://www.postgresql.org)** - Relational database
 
 ### Authentication
 

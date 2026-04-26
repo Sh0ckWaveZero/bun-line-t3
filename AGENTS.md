@@ -10,7 +10,8 @@
 - **Test All**: `bun test`
 - **Test Single**: `bun test <filename>` or `bun test <pattern>`
 - **Test Watch**: `bun test --watch`
-- **DB Push**: `bun run db:push` (MongoDB - **NEVER** use migrations)
+- **DB Push**: `bun run db:push` (Prototyping only - prefer migrations for production)
+- **DB Migrate**: `bun run db:migrate` (Run schema migrations)
 - **DB Generate**: `bun run db:generate` (Generate Prisma Client)
 
 ## Code Style
@@ -170,16 +171,15 @@ export function requireAdmin({ context, location }: GuardArgs) {
 
 **CRITICAL**: All user communication MUST be in Thai (ภาษาไทย). Code/variables can be English.
 
-### MongoDB + Prisma ORM
+### PostgreSQL + Prisma ORM
 
-- **USE Prisma v6.19.2** - MongoDB is NOT supported in Prisma v7 yet
-- **NEVER upgrade to Prisma v7** until MongoDB support is added
-- **NEVER use `prisma migrate`** - MongoDB doesn't support migrations
-- **ALWAYS use `db:push`** for schema changes (prototyping workflow)
-- ID fields: `@id @default(auto()) @map("_id") @db.ObjectId`
-- Relations: use `String` type with `@db.ObjectId` for foreign keys
-- No foreign key constraints - manage relations manually in code
-- Schema is flexible - `db push` syncs without migration files
+- **USE Prisma v7.x** - Latest Prisma version with full PostgreSQL support
+- **USE `prisma migrate`** - PostgreSQL supports migrations for production
+- **ALWAYS use migrations** for production schema changes
+- **Use `db:push`** only for prototyping
+- ID fields: `@id @default(cuid())` or `@id @default(uuid())`
+- Relations: use proper foreign key constraints
+- Schema migrations tracked in `prisma/migrations/`
 
 ### Testing
 
@@ -240,5 +240,5 @@ See `.github/copilot-instructions.md` for comprehensive guidelines on:
 - Tailwind CSS dark mode (class-based strategy)
 - WCAG 2.1 AA contrast requirements (4.5:1 normal text, 3:1 large text)
 - Security-first development with OWASP compliance
-- MongoDB + Prisma patterns (use `db:push`, manual relations, no foreign keys)
+- PostgreSQL + Prisma patterns (use migrations, proper foreign keys)
 - Functional programming with TypeScript

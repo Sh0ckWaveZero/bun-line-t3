@@ -61,7 +61,7 @@ graph LR
 
     subgraph data [Data Layer]
         J[Prisma ORM]
-        K[MongoDB]
+        K[PostgreSQL]
         L[External APIs]
     end
 
@@ -647,12 +647,12 @@ const errorResponse = (
 
 ## 🗄️ Database Design
 
-### 📊 MongoDB Schema Design
+### 📊 PostgreSQL Schema Design
 
 ```typescript
 // ✅ Prisma Schema Structure
 model User {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          String   @id @default(cuid())
   email       String   @unique
   name        String?
   lineUserId  String?  @unique
@@ -663,13 +663,11 @@ model User {
   // Metadata
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  @@map("users")
 }
 
 model Attendance {
-  id              String    @id @default(auto()) @map("_id") @db.ObjectId
-  userId          String    @db.ObjectId
+  id              String    @id @default(cuid())
+  userId          String
   checkInTime     DateTime
   checkOutTime    DateTime?
   workHours       Float?
@@ -678,7 +676,7 @@ model Attendance {
   notes           String?
 
   // Relations
-  user            User      @relation(fields: [userId], references: [id])
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Metadata
   createdAt       DateTime  @default(now())
@@ -686,24 +684,20 @@ model Attendance {
 
   // Indexes
   @@index([userId, checkInTime])
-  @@map("attendances")
+  @@index([status])
 }
 ```
 
 ### 🔍 Indexing Strategy
 
-```javascript
-// MongoDB Indexes สำหรับประสิทธิภาพ
-db.attendances.createIndex({ userId: 1, checkInTime: -1 });
-db.attendances.createIndex({ checkInTime: 1 });
-db.attendances.createIndex({ status: 1 });
+```sql
+-- PostgreSQL Indexes สำหรับประสิทธิภาพ
+CREATE INDEX idx_attendances_user_checkin ON attendances(userId, checkInTime DESC);
+CREATE INDEX idx_attendances_checkin ON attendances(checkInTime);
+CREATE INDEX idx_attendances_status ON attendances(status);
 
-// Compound Index สำหรับการค้นหาที่ซับซ้อน
-db.attendances.createIndex({
-  userId: 1,
-  checkInTime: -1,
-  status: 1,
-});
+-- Compound Index สำหรับการค้นหาที่ซับซ้อน
+CREATE INDEX idx_attendances_user_checkin_status ON attendances(userId, checkInTime DESC, status);
 ```
 
 ## 🧪 Testing Architecture
@@ -819,8 +813,8 @@ graph LR
     end
 
     subgraph databases [Databases]
-        C1[Local MongoDB]
-        C2[MongoDB Atlas]
+        C1[Local PostgreSQL]
+        C2[PostgreSQL Cloud]
         C3[Production Cluster]
     end
 
