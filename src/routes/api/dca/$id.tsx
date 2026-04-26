@@ -4,7 +4,7 @@
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { dcaService } from "@/features/dca";
-import { dcaEventManager } from "@/lib/dca/event-manager";
+import { dcaEventManager } from "@/features/dca/lib/event-manager";
 import { getAuthorizedLineUserId } from "@/lib/auth";
 
 /**

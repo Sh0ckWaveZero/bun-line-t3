@@ -59,10 +59,10 @@ function LoginPage() {
 
   if (status === "loading") {
     return (
-      <main id="login-loading" className="flex min-h-screen items-center justify-center" role="status" aria-live="polite">
+      <main id="login-loading" className="bg-background flex min-h-screen items-center justify-center" role="status" aria-live="polite">
         <div className="text-center">
-          <div className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" aria-hidden="true"></div>
-          <p className="text-lg font-medium text-gray-600 dark:text-gray-300">
+          <div className="border-primary mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-t-transparent" aria-hidden="true"></div>
+          <p className="text-muted-foreground text-lg font-medium">
             กำลังตรวจสอบสถานะการเข้าสู่ระบบ...
           </p>
         </div>
@@ -71,28 +71,27 @@ function LoginPage() {
   }
 
   return (
-    <main id="login-page" className="relative flex h-screen w-full items-center justify-center overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Gradient Background - ensure pointer-events-none */}
+    <main id="login-page" className="bg-background relative flex h-screen w-full items-center justify-center overflow-hidden">
+      {/* Decorative blobs */}
       <div id="login-background" className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
-        <div className="absolute -right-40 -top-40 h-80 w-80 rounded-full bg-gradient-to-br from-purple-400/20 to-pink-600/20 blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-gradient-to-tr from-indigo-400/20 to-purple-600/20 blur-3xl"></div>
+        <div className="absolute -right-40 -top-40 h-80 w-80 rounded-full bg-gradient-to-br from-primary/15 to-primary/5 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-gradient-to-tr from-primary/10 to-primary/20 blur-3xl" />
       </div>
 
-      {/* Content */}
-      <div id="login-container" className="relative z-10 w-full max-w-sm p-4 sm:max-w-md sm:p-6 lg:max-w-lg lg:p-8">
-        <div id="login-card" className="rounded-lg bg-white/95 p-6 shadow-2xl backdrop-blur-xl sm:p-10 lg:p-14">
+      {/* Card */}
+      <div id="login-container" className="relative z-10 w-full max-w-sm p-4 sm:max-w-md sm:p-6">
+        <div id="login-card" className="bg-card border-border rounded-xl border p-8 shadow-xl sm:p-10">
           <div id="login-header" className="mb-8 text-center">
-            <div id="login-logo" className="mb-6 text-8xl sm:text-9xl lg:text-[10rem]" role="img" aria-label="โลโก้แอปพลิเคชัน">🦦</div>
-
-            <h1 id="login-title" className="mb-2 text-2xl font-bold text-gray-700 dark:text-gray-300 sm:text-3xl lg:text-4xl">
+            <div id="login-logo" className="mb-5 text-8xl" role="img" aria-label="โลโก้แอปพลิเคชัน">🦦</div>
+            <h1 id="login-title" className="text-foreground mb-1 text-2xl font-bold sm:text-3xl">
               เข้าสู่ระบบ
             </h1>
-            <p id="login-subtitle" className="text-sm text-gray-700 dark:text-gray-300 sm:text-base">
+            <p id="login-subtitle" className="text-muted-foreground text-sm sm:text-base">
               ยินดีต้อนรับเข้าสู่ระบบ
             </p>
           </div>
 
-          <div id="login-content" className="space-y-6">
+          <div id="login-content" className="space-y-5">
             {authErrorMessage ? (
               <div
                 id="login-error-alert"
@@ -109,7 +108,7 @@ function LoginPage() {
               <LineLoginButton
                 id="line-login-button"
                 callbackUrl={callbackUrl}
-                className="w-full transform py-3 text-base font-semibold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg sm:py-4 sm:text-lg"
+                className="w-full"
               />
             </div>
           </div>

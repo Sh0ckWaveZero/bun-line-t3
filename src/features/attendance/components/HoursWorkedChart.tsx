@@ -1,24 +1,24 @@
 "use client";
 
 import React from "react";
-import { Bar } from "react-chartjs-2";
-import { useDailyAverageHoursData } from "@/hooks/useAttendanceChartData";
+import { Line } from "react-chartjs-2";
+import { useHoursChartData } from "@/features/attendance/hooks/useAttendanceChartData";
 import { useChartTheme } from "@/hooks/useChartTheme";
 import type { AttendanceRecord } from "@/lib/types/attendance";
 
-interface DailyAverageChartProps {
+interface HoursWorkedChartProps {
   records: AttendanceRecord[];
 }
 
 /**
- * Daily Average Hours Chart Component
- * Displays a bar chart showing average hours worked by day of week
+ * Hours Worked Chart Component
+ * Displays a line chart showing hours worked per day with a target line
  */
-export const DailyAverageChart: React.FC<DailyAverageChartProps> = ({
+export const HoursWorkedChart: React.FC<HoursWorkedChartProps> = ({
   records,
 }) => {
   const { getChartOptions } = useChartTheme();
-  const chartData = useDailyAverageHoursData(records);
+  const chartData = useHoursChartData(records);
 
   if (records.length === 0) {
     return (
@@ -28,19 +28,19 @@ export const DailyAverageChart: React.FC<DailyAverageChartProps> = ({
     );
   }
 
+  const maxHours = Math.max(
+    10,
+    ...records.map((r) => r.hoursWorked || 0),
+  );
+
   return (
-    <Bar
+    <Line
       data={chartData}
       options={getChartOptions({
-        plugins: {
-          legend: {
-            display: false,
-          },
-        },
         scales: {
           y: {
-            beginAtZero: true,
-            max: 10,
+            min: 0,
+            max: maxHours,
           },
         },
       })}

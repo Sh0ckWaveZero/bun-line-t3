@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { dcaEventManager } from "@/lib/dca/event-manager";
+import { dcaEventManager } from "@/features/dca/lib/event-manager";
 
 export async function GET(req: Request) {
   const headers = new Headers({

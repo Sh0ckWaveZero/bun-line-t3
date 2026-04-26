@@ -15,6 +15,7 @@ import { signIn } from "@/lib/auth/client";
 import React from "react";
 
 interface LineLoginButtonProps {
+  id?: string;
   callbackUrl?: string;
   className?: string;
   children?: React.ReactNode;
@@ -35,6 +36,7 @@ const getCurrentCallbackUrl = () => {
 };
 
 export const LineLoginButton: React.FC<LineLoginButtonProps> = ({
+  id,
   callbackUrl,
   className = "",
   children,
@@ -53,7 +55,7 @@ export const LineLoginButton: React.FC<LineLoginButtonProps> = ({
 
   return (
     <button
-      id="btn-login-line"
+      id={id ?? "btn-login-line"}
       type="button"
       disabled={disabled}
       onClick={handleClick}

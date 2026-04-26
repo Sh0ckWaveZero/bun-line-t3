@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getServerAuthSession } from "@/lib";
 import { holidayService } from "@/features/attendance/services/holidays.server";
-import { canRequestAttendanceReport } from "@/lib/line/permissions";
+import { canRequestAttendanceReport } from "@/features/line/line/permissions";
 import { db } from "@/lib/database/db";
 
 // GET - Fetch all holidays or filtered by year/month

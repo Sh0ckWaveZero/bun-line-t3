@@ -6,7 +6,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { dcaService } from "@/features/dca";
-import { dcaEventManager } from "@/lib/dca/event-manager";
+import { dcaEventManager } from "@/features/dca/lib/event-manager";
 import { getAuthorizedLineUserId } from "@/lib/auth";
 
 const createDcaSchema = z.object({

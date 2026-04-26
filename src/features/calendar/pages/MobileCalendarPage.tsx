@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+"use client";
+
 import { useState, useEffect } from "react";
 import {
   format,
@@ -50,7 +51,7 @@ interface CalendarEvent {
   isToday: boolean;
 }
 
-function MobileCalendarPage() {
+export function MobileCalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [leaves, setLeaves] = useState<Leave[]>([]);
@@ -657,7 +658,3 @@ function MobileCalendarPage() {
     </div>
   );
 }
-
-export const Route = createFileRoute("/calendar/mobile")({
-  component: MobileCalendarPage,
-});

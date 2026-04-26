@@ -89,19 +89,21 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     id: "finance",
     label: "การเงิน",
     icon: TrendingUp,
-    requiresAuth: false,
+    requiresAuth: true,
     children: [
       {
         id: "subscriptions",
         label: "Subscriptions",
         href: "/subscriptions",
         icon: Package,
+        requiresAuth: true,
       },
       {
         id: "dca",
         label: "Auto DCA",
         href: "/dca-history",
         icon: Calculator,
+        requiresAuth: true,
       },
       {
         id: "expenses",
