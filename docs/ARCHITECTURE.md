@@ -15,6 +15,8 @@
 - [🌐 API Design](#-api-design)
 - [🗄️ Database Design](#️-database-design)
 - [🧪 Testing Architecture](#-testing-architecture)
+- [🎨 Theming Architecture](#-theming-architecture)
+- [🛡️ Hydration Safety](#️-hydration-safety)
 - [🚀 Deployment Architecture](#-deployment-architecture)
 
 ## 🌟 ภาพรวมสถาปัตยกรรม | Architecture Overview
@@ -869,6 +871,212 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
 ```
+
+## 🎨 Theming Architecture
+
+### 🌓 Dark Mode Implementation
+
+The application features comprehensive dark mode support with automatic theme detection and seamless switching.
+
+```mermaid
+graph LR
+    A[User Preference] --> B{Theme Source}
+    B -->|Manual| C[Selected Theme]
+    B -->|System| D[OS Theme]
+    C --> E[Theme Provider]
+    D --> E
+    E --> F[React Context]
+    F --> G[All Components]
+
+    style A fill:#e6f7ff
+    style E fill:#f6ffed
+    style G fill:#fff2e8
+```
+
+### 🎨 Theme System Components
+
+#### 1. Theme Provider Structure
+
+```typescript
+// ✅ Theme configuration
+const themeConfig = {
+  light: {
+    background: 'bg-white',
+    text: 'text-gray-900',
+    border: 'border-gray-200',
+  },
+  dark: {
+    background: 'dark:bg-gray-800',
+    text: 'dark:text-gray-100',
+    border: 'dark:border-gray-700',
+  }
+}
+```
+
+#### 2. Color Scheme Standards
+
+| Element Type | Light Theme | Dark Theme |
+|------------|-------------|------------|
+| **Background** | `bg-white` | `dark:bg-gray-800` |
+| **Text Primary** | `text-gray-900` | `dark:text-gray-100` |
+| **Text Secondary** | `text-gray-600` | `dark:text-gray-400` |
+| **Borders** | `border-gray-200` | `dark:border-gray-700` |
+| **Status Cards** | `bg-blue-50` | `dark:bg-blue-900/20` |
+| **Hover States** | `hover:bg-gray-50` | `dark:hover:bg-gray-700/50` |
+
+#### 3. Chart Theming Integration
+
+```typescript
+// ✅ Dynamic chart colors
+export const useChartTheme = () => {
+  const { theme, systemTheme } = useTheme();
+  const isDark = theme === "dark" || (theme === "system" && systemTheme === "dark");
+
+  const chartColors = {
+    background: isDark ? "rgba(31, 41, 55, 1)" : "rgba(255, 255, 255, 1)",
+    text: isDark ? "rgba(243, 244, 246, 1)" : "rgba(17, 24, 39, 1)",
+    grid: isDark ? "rgba(75, 85, 99, 0.3)" : "rgba(156, 163, 175, 0.3)",
+  };
+
+  return { isDark, chartColors, getChartOptions };
+};
+```
+
+### ✅ Implementation Coverage
+
+- **Summary Cards**: Dynamic backgrounds and borders
+- **Data Tables**: Headers, rows, and hover states
+- **Charts**: Chart.js with automatic theme detection
+- **Modals**: Form elements and overlays
+- **UI Elements**: Loading spinners, error messages, user cards
+
+## 🛡️ Hydration Safety
+
+### 🎯 Hydration Mismatch Prevention
+
+Hydration mismatches occur when server-rendered HTML differs from client-side React expectations. Our architecture includes comprehensive safety patterns.
+
+```mermaid
+graph TD
+    A[Server Render] --> B{Static Content?}
+    B -->|Yes| C[Render Directly]
+    B -->|No| D[Use Fallback]
+    D --> E[Client Mount]
+    E --> F[Update Content]
+    F --> G[Hydration Complete]
+
+    style C fill:#ccffcc
+    style D fill:#ffffcc
+    style G fill:#ccffcc
+```
+
+### 🚨 Common Hydration Issues & Solutions
+
+#### 1. Dynamic Timestamps
+
+```typescript
+// ❌ Wrong - causes hydration mismatch
+function CurrentTime() {
+  return <div>{new Date().toLocaleString()}</div>
+}
+
+// ✅ Correct - use SafeTimestamp
+import { SafeTimestamp } from '@/components/common/SafeHydration'
+
+function CurrentTime() {
+  return <SafeTimestamp format="full" />
+}
+```
+
+#### 2. Browser-Only APIs
+
+```typescript
+// ❌ Wrong - window not available on server
+function UserAgent() {
+  return <div>{window.navigator.userAgent}</div>
+}
+
+// ✅ Correct - use ClientOnlyWrapper
+import { ClientOnlyWrapper } from '@/components/common/SafeHydration'
+
+function UserAgent() {
+  return (
+    <ClientOnlyWrapper fallback={<div>Loading...</div>}>
+      <div>{window.navigator.userAgent}</div>
+    </ClientOnlyWrapper>
+  )
+}
+```
+
+#### 3. Browser Extensions
+
+```typescript
+// ✅ Handle browser extension injections
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="th">
+      <head>...</head>
+      {/*
+        suppressHydrationWarning: Fix hydration mismatch from browser extensions
+        Extensions like Grammarly may inject attributes into body
+      */}
+      <body suppressHydrationWarning={true}>
+        {children}
+      </body>
+    </html>
+  )
+}
+```
+
+### 🛡️ Safety Patterns
+
+#### useEffect Pattern
+
+```typescript
+import { useState, useEffect } from 'react'
+
+function SafeComponent() {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return <div>Loading...</div> // Server fallback
+  }
+
+  return <div>{window.location.href}</div> // Client content
+}
+```
+
+#### Custom Hooks
+
+```typescript
+import {
+  useClientOnlyMounted,
+  useSafeHydration,
+} from '@/hooks/useHydrationSafe'
+
+function SmartComponent() {
+  const mounted = useClientOnlyMounted()
+
+  const content = useSafeHydration(
+    'Server Content',
+    () => 'Client Content'
+  )
+
+  return <div>{content}</div>
+}
+```
+
+### ✅ Best Practices
+
+1. **Use `suppressHydrationWarning` only when necessary**
+2. **Use `useEffect` for browser-specific code**
+3. **Provide fallback content for server rendering**
+4. **Test in development mode to detect warnings**
+5. **Never access `window`/`document` directly in render**
 
 ---
 
