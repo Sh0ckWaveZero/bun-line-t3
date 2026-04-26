@@ -94,7 +94,7 @@ graph LR
 │
 ├── 🗄️ Database & Schema       # ฐานข้อมูลและ Schema
 │   └── prisma/
-│       └── schema.prisma      # MongoDB schema with Prisma
+│       └── schema.prisma      # Prisma schema
 │
 ├── 📚 Documentation          # เอกสารประกอบ
 │   └── docs/
