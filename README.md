@@ -53,19 +53,31 @@ This project follows a **Feature-Based Architecture** pattern for scalability an
 src/
 ├── features/              # Domain-driven feature modules
 │   ├── attendance/        # 🏢 Work attendance management
-│   ├── auth/             # 🔐 Authentication & user management
-│   ├── crypto/           # 💰 Cryptocurrency tracking
+│   │   ├── pages/        # Page components
+│   │   ├── components/   # Attendance components
+│   │   ├── hooks/        # Attendance hooks
+│   │   ├── services/     # Business logic
+│   │   ├── types/        # TypeScript definitions
+│   │   ├── helpers/      # Helper functions
+│   │   └── constants/    # Feature constants
+│   ├── expenses/         # 💰 Expense tracking
+│   ├── dca/              # 💎 DCA crypto tracking
+│   ├── subscriptions/    # 📅 Subscription management
+│   ├── monitoring/       # 📊 System monitoring
 │   ├── line/             # 📱 LINE Bot integration
-│   └── air-quality/      # 🌍 Air quality monitoring
-├── lib/                  # 🔧 Shared utilities & configurations
-│   ├── auth/            # Authentication utilities
+│   ├── auth/             # 🔐 Authentication utilities
+│   └── tools/            # 🛠️ Tools & utilities
+├── lib/                  # 🔧 Shared utilities
+│   ├── auth/            # Authentication & route guards
 │   ├── database/        # Database connection & queries
 │   ├── constants/       # Application constants
+│   ├── utils/           # General utilities
 │   └── validation/      # Input validation schemas
-├── routes/              # 🌐 TanStack Start file-based routes
-│   ├── api/            # Server handlers and API endpoints
-│   └── *.tsx           # Application pages
+├── routes/              # 🌐 TanStack Start file-based routing
+│   ├── *.tsx           # Thin route configs (6-10 lines)
+│   └── api/            # API route handlers
 └── components/          # 🎨 Reusable UI components
+    └── ui/             # Base UI components (shadcn/ui)
 ```
 
 ### 🔄 Key Architecture Principles
@@ -97,7 +109,7 @@ See [`SECURITY_OPTIMIZATION_COMPLETE.md`](./docs/SECURITY_OPTIMIZATION_COMPLETE.
 
 - **Bun** >= 1.0.0
 - **Node.js** >= 18.0.0
-- **MongoDB** database
+- **PostgreSQL** database
 - **LINE Developer Account**
 
 ### Installation
@@ -143,7 +155,7 @@ Create a `.env` file with the following variables:
 
 ```env
 # Database
-DATABASE_URL="mongodb://user:password@localhost:27017/bun_line_t3"
+DATABASE_URL="postgresql://user:password@localhost:5432/bun_line_t3"
 
 # Better Auth
 AUTH_SECRET="your-secret-key"
@@ -211,8 +223,10 @@ Comprehensive documentation is available in the `/docs` directory:
 - **TypeScript Strict Mode** - Full type safety
 - **ESLint + Prettier** - Code formatting and linting
 - **Functional Programming** - Declarative code patterns
-- **React 19** - Latest React features
-- **TanStack Start** - File-based routing with SSR and server handlers
+- **React 19** - Latest React features with Server Components
+- **TanStack Start** - File-based routing with route guards, SSR, and server functions
+- **Feature-Based Architecture** - Domain-driven organization with `features/*/` structure
+- **Thin Routes** - Route files are thin configs (6-10 lines) with page components extracted to `features/*/pages/`
 
 ### Development Commands
 
@@ -243,15 +257,16 @@ bun run scripts/test-attendance.ts
 
 ### Core Framework
 
-- **[TanStack Start](https://tanstack.com/start/latest)** - React framework for SSR, routing, and server handlers
-- **[React 19](https://react.dev)** - Latest React features
+- **[TanStack Start](https://tanstack.com/start/latest)** - Full-stack React framework with file-based routing, SSR, and server functions
+- **[TanStack Router](https://tanstack.com/router/latest)** - Type-safe routing with route guards and code splitting
+- **[React 19](https://react.dev)** - Latest React features with Server Components
 - **[TypeScript](https://typescriptlang.org)** - Type-safe JavaScript
 - **[Bun](https://bun.sh)** - Fast JavaScript runtime and package manager
 
 ### Database & ORM
 
 - **[Prisma](https://prisma.io)** - Type-safe database toolkit
-- **[MongoDB](https://www.mongodb.com)** - Document database
+- **[PostgreSQL](https://www.postgresql.org)** - Relational database
 
 ### Authentication
 

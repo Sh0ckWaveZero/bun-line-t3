@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.0] - 2026-04-26
+
+### Added
+- **Feature-Based Architecture** — แปลงโครงสร้างโปรเจกต์เป็น feature-based architecture สำหรับ scalability และ maintainability
+- **Route Guard Pattern** — เพิ่ม `requireAuth` และ `requireAdmin` helpers สำหรับ protected routes ด้วย `beforeLoad`
+- **Feature Pages** — Extract page components จาก route files ไปยัง `src/features/*/pages/`
+- **Feature Hooks** — จัดระเบียบ custom hooks ไว้ใน `src/features/*/hooks/` แทน `src/hooks/`
+- **Auth Pages** — เพิ่ม `src/features/auth/pages/` สำหรับ `PendingApprovalPage`
+
+### Changed
+- **Route Files (Thinning)** — แปลง route files จาก 800+ บรรทัดให้เหลือ 6-10 บรรทัด (thin configs)
+  - `src/routes/expenses.tsx` → 8 lines
+  - `src/routes/attendance-report.tsx` → 8 lines
+  - `src/routes/dca-history.tsx` → 8 lines
+  - `src/routes/subscriptions.tsx` → 8 lines
+  - `src/routes/dashboard.tsx` → 8 lines
+  - `src/routes/calendar.tsx` → 8 lines
+  - `src/routes/monitoring.tsx` → 8 lines
+  - `src/routes/line-approval.tsx` → 8 lines
+  - `src/routes/pending-approval.tsx` → 3 lines
+  - `src/routes/calendar.mobile.tsx` → 3 lines
+- **Auth Standardization** — ทำให้ protected routes ใช้ `beforeLoad: requireAuth` แบบ declarative ทั้งหมด
+- **Component Organization** — ย้าย components จาก `src/components/[feature]/` ไป `src/features/[feature]/components/`
+  - `src/components/attendance/` → `src/features/attendance/components/`
+  - `src/components/expenses/` → `src/features/expenses/components/`
+  - `src/components/subscriptions/` → `src/features/subscriptions/components/`
+  - `src/components/calendar/` → `src/features/calendar/components/`
+  - `src/components/thai-id/` → `src/features/tools/components/`
+- **Hook Organization** — ย้าย hooks ไปยัง feature directories
+  - `src/hooks/useDca*.ts` → `src/features/dca/hooks/`
+  - `src/hooks/useAttendance*.ts` → `src/features/attendance/hooks/`
+  - `src/hooks/useLineApproval.ts` → `src/lib/auth/hooks/`
+- **Lib Modules** — ย้าย feature-specific lib ไปยัง feature directories
+  - `src/lib/dca/` → `src/features/dca/lib/`
+  - `src/lib/line/` + `src/lib/line-utils/` → `src/features/line/`
+- **Import Paths** — อัปเดต import paths ทั้งหมดให้สอดคล้องกับ feature-based architecture
+- **Documentation** — อัปเดตเอกสารทั้งหมดให้สะท้อนโครงสร้างใหม่
+  - `docs/ARCHITECTURE.md` — อัปเดต directory structure และ tech stack
+  - `docs/DEVELOPER_GUIDE.md` — อัปเดต coding standards และ import patterns
+  - `README.md` — อัปเดต architecture section
+  - `AGENTS.md` — อัปเดต development guide สำหรับ AI agents
+
+### Fixed
+- **React Key Conflict** — แก้ duplicate key warning `closed-new` ใน modal components
+  - เพิ่ม unique prefixes: `transaction-` และ `category-`
+- **Finance Menu Auth** — เพิ่ม `requiresAuth: true` สำหรับ finance menu
+- **DCA History Auth** — เพิ่ม `beforeLoad: requireAuth` สำหรับ `/dca-history`
+- **TypeScript Errors** — แก้ type errors หลังจาก refactor (session type narrowing)
+
+---
+
 ## [1.2.0] - 2026-04-25
 
 ### Added

@@ -2,7 +2,7 @@ import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useAddDcaOrder } from "@/hooks/useAddDcaOrder";
+import { useAddDcaOrder } from "@/features/dca/hooks/useAddDcaOrder";
 
 interface AddDcaFormProps {
   onClose: () => void;

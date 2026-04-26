@@ -75,7 +75,21 @@
       "Bash(git *)",
       "Bash(rtk wc *)",
       "Bash(rtk tree *)",
-      "Bash(rtk grep *)"
+      "Bash(rtk grep *)",
+      "Bash(rtk ls *)",
+      "Skill(sc:analyze)",
+      "Skill(sc:analyze:*)",
+      "Bash(rtk tsc *)",
+      "Bash(cp -r /Users/sh0ckpro/Works/Freelance/Bun/bun-line-t3/src/components/dca/* /Users/sh0ckpro/Works/Freelance/Bun/bun-line-t3/src/features/dca/components/)",
+      "Bash(cp -r /Users/sh0ckpro/Works/Freelance/Bun/bun-line-t3/src/components/attendance/* /Users/sh0ckpro/Works/Freelance/Bun/bun-line-t3/src/features/attendance/components/)",
+      "Bash(cp -r /Users/sh0ckpro/Works/Freelance/Bun/bun-line-t3/src/components/expenses/* /Users/sh0ckpro/Works/Freelance/Bun/bun-line-t3/src/features/expenses/components/)",
+      "Bash(cp -r /Users/sh0ckpro/Works/Freelance/Bun/bun-line-t3/src/components/subscriptions/* /Users/sh0ckpro/Works/Freelance/Bun/bun-line-t3/src/features/subscriptions/components/)",
+      "Bash(cp -r /Users/sh0ckpro/Works/Freelance/Bun/bun-line-t3/src/components/calendar/* /Users/sh0ckpro/Works/Freelance/Bun/bun-line-t3/src/features/calendar/components/)",
+      "Bash(cp -r /Users/sh0ckpro/Works/Freelance/Bun/bun-line-t3/src/lib/dca /Users/sh0ckpro/Works/Freelance/Bun/bun-line-t3/src/features/dca/lib)",
+      "Bash(cp -r /Users/sh0ckpro/Works/Freelance/Bun/bun-line-t3/src/lib/line /Users/sh0ckpro/Works/Freelance/Bun/bun-line-t3/src/features/line/)",
+      "Bash(cp -r /Users/sh0ckpro/Works/Freelance/Bun/bun-line-t3/src/lib/line-utils /Users/sh0ckpro/Works/Freelance/Bun/bun-line-t3/src/features/line/)",
+      "Bash(rtk read *)",
+      "Bash(rtk find *)"
     ],
     "deny": [
       "Read(**/.env*)",

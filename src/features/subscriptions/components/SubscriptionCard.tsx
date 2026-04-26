@@ -130,7 +130,7 @@ export const SubscriptionCard = ({ subscription, onSelect, onEdit }: Subscriptio
               {members.slice(0, 5).map((m) => (
                 <div
                   key={m.id}
-                  className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-indigo-400 to-purple-500 text-xs font-semibold text-white dark:border-gray-800"
+                  className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-linear-to-br from-indigo-400 to-purple-500 text-xs font-semibold text-white dark:border-gray-800"
                   title={m.name}
                   aria-label={m.name}
                 >

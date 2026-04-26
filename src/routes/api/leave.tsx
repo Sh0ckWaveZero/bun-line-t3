@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { getServerAuthSession } from "@/lib";
 import { leaveService } from "@/features/attendance/services/leave.server";
 import { db } from "@/lib/database/db";
-import { canRequestLeave } from "@/lib/line/permissions";
+import { canRequestLeave } from "@/features/line/line/permissions";
 
 export async function POST(req: Request) {
   try {

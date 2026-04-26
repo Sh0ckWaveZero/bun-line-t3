@@ -20,7 +20,7 @@
  */
 import { useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { useLineApproval } from "@/hooks/useLineApproval";
+import { useLineApproval } from "@/lib/auth/hooks/useLineApproval";
 
 export function LineApprovalGuard({
   children,

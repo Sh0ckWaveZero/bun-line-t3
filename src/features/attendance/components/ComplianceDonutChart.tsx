@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Doughnut } from "react-chartjs-2";
-import { useComplianceDonutData } from "@/hooks/useAttendanceChartData";
+import { useComplianceDonutData } from "@/features/attendance/hooks/useAttendanceChartData";
 import { useChartTheme } from "@/hooks/useChartTheme";
 import type { MonthlyAttendanceReport } from "@/lib/types/attendance";
 

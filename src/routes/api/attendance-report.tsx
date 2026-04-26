@@ -4,7 +4,7 @@ import { getServerAuthSession } from "@/lib/auth/auth";
 import { attendanceService } from "@/features/attendance/services/attendance.server";
 import { leaveService } from "@/features/attendance/services/leave.server";
 import { db } from "@/lib/database/db";
-import { canRequestAttendanceReport } from "@/lib/line/permissions";
+import { canRequestAttendanceReport } from "@/features/line/line/permissions";
 
 // Validation schema for query parameters
 const AttendanceReportQuerySchema = z.object({
