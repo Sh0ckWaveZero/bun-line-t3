@@ -62,33 +62,50 @@ node --version # Should be >= 18.0.0
 src/
 ├── features/              # 🎯 Domain-driven feature modules
 │   ├── attendance/
-│   │   ├── services/      # Business logic
-│   │   ├── types/         # TypeScript definitions
-│   │   ├── helpers/       # Utility functions
-│   │   ├── constants/     # Feature-specific constants
-│   │   └── index.ts       # Barrel export
-│   ├── auth/             # Authentication module
-│   ├── crypto/           # Cryptocurrency tracking
-│   ├── line/             # LINE Bot integration
-│   ├── air-quality/      # Environmental monitoring
-│   └── user-settings/    # User preferences
+│   │   ├── pages/        # Page components
+│   │   ├── components/   # Attendance-specific components
+│   │   ├── hooks/        # Attendance-related hooks
+│   │   ├── services/     # Business logic
+│   │   ├── types/        # TypeScript definitions
+│   │   ├── helpers/      # Utility functions
+│   │   └── constants/    # Feature-specific constants
+│   ├── expenses/
+│   │   ├── pages/        # Expense page components
+│   │   ├── components/   # Expense components
+│   │   ├── hooks/        # Expense hooks
+│   │   └── lib/          # Expense utilities
+│   ├── dca/
+│   │   ├── pages/        # DCA page components
+│   │   ├── components/   # DCA components
+│   │   ├── hooks/        # DCA hooks
+│   │   └── lib/          # DCA utilities
+│   ├── subscriptions/
+│   │   ├── pages/        # Subscription pages
+│   │   ├── components/   # Subscription components
+│   │   └── hooks/        # Subscription hooks
+│   ├── monitoring/
+│   │   ├── pages/        # Monitoring pages
+│   │   └── components/   # Monitoring components
+│   ├── line/
+│   │   └── lib/          # LINE utilities
+│   ├── auth/
+│   │   └── lib/          # Auth utilities
+│   └── tools/
+│       └── components/   # Tool components (e.g., Thai ID generator)
 ├── lib/                  # 🔧 Shared utilities
 │   ├── auth/            # Authentication utilities
+│   │   ├── route-guard.ts # Route guard helpers
+│   │   └── hooks/        # Shared auth hooks
 │   ├── database/        # Database connection & helpers
 │   ├── constants/       # Global constants
 │   ├── utils/           # General utilities
 │   ├── validation/      # Zod schemas
 │   └── security/        # Security utilities
-├── app/                 # 🌐 Next.js App Router
-│   ├── api/            # API route handlers
-│   ├── (pages)/        # Page components
-│   ├── layout.tsx      # Root layout
-│   └── providers.tsx   # Context providers
-├── components/          # 🎨 UI Components
-│   ├── ui/             # Base UI components
-│   ├── common/         # Shared components
-│   └── [feature]/      # Feature-specific components
-└── hooks/              # 🎣 Custom React hooks
+├── routes/              # 🌐 TanStack Start file-based routing
+│   ├── *.tsx           # Route configuration files (thin, 6-10 lines)
+│   └── api/            # API route handlers
+└── components/          # 🎨 Shared UI Components
+    └── ui/             # Base UI components (shadcn/ui)
 ```
 
 ### Feature Module Pattern
@@ -113,6 +130,36 @@ export class FeatureService {
   async getData(): Promise<FeatureData> {
     // Implementation
   }
+}
+
+// ✅ Thin Route Pattern (TanStack Start)
+// src/routes/feature-page.tsx
+import { createFileRoute } from "@tanstack/react-router"
+import { requireAuth } from "@/lib/auth/route-guard"
+import { FeaturePage } from "@/features/feature/pages/FeaturePage"
+
+export const Route = createFileRoute("/feature-page")({
+  beforeLoad: requireAuth,
+  component: FeaturePage,
+})
+
+// ✅ Page Component Pattern
+// features/feature/pages/FeaturePage.tsx
+"use client"
+
+import { useFeatureData } from "@/features/feature/hooks/useFeatureData"
+import { FeatureComponent } from "@/features/feature/components/FeatureComponent"
+
+export function FeaturePage() {
+  const { data, loading } = useFeatureData()
+
+  if (loading) return <div>Loading...</div>
+
+  return (
+    <div>
+      <FeatureComponent data={data} />
+    </div>
+  )
 }
 ```
 
@@ -191,7 +238,8 @@ export function AttendanceTable({ data, onUpdate }: AttendanceTableProps) {
 **2. Custom hooks for shared logic:**
 
 ```typescript
-// ✅ Good
+// ✅ Good - Feature-specific hook in features/feature/hooks/
+// features/attendance/hooks/useAttendanceData.ts
 export function useAttendanceData(userId: string) {
   const [data, setData] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -202,6 +250,10 @@ export function useAttendanceData(userId: string) {
 
   return { data, loading, refetch: () => {} };
 }
+
+// ✅ Import from feature directory
+import { useAttendanceData } from "@/features/attendance/hooks/useAttendanceData"
+import { AttendanceTable } from "@/features/attendance/components/AttendanceTable"
 ```
 
 ### API Route Guidelines
@@ -209,38 +261,40 @@ export function useAttendanceData(userId: string) {
 **1. Consistent error handling:**
 
 ```typescript
-// ✅ Good
-export async function POST(request: NextRequest) {
+// ✅ Good - TanStack Start server function
+import { createRouteHandler } from "@tanstack/start/server"
+
+export const POST = createRouteHandler(async (req) => {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return NextResponse.json(
+      return Response.json(
         { error: "Unauthorized - Please login first" },
         { status: 401 },
       );
     }
 
-    const body = await request.json();
+    const body = await req.json();
     const validatedData = schema.parse(body);
 
     // Business logic
 
-    return NextResponse.json({ success: true, data });
+    return Response.json({ success: true, data });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
+      return Response.json(
         { error: "Invalid input", details: error.errors },
         { status: 400 },
       );
     }
 
     console.error("API Error:", error);
-    return NextResponse.json(
+    return Response.json(
       { error: "Internal server error" },
       { status: 500 },
     );
   }
-}
+})
 ```
 
 ---
@@ -281,9 +335,9 @@ export const testMatchers = {
 **Component testing:**
 
 ```typescript
-// tests/src/components/AttendanceTable.test.tsx
+// tests/src/features/attendance/components/AttendanceTable.test.tsx
 import { render, screen } from '@testing-library/react'
-import { AttendanceTable } from '@/components/attendance/AttendanceTable'
+import { AttendanceTable } from '@/features/attendance/components/AttendanceTable'
 
 describe('AttendanceTable', () => {
   const mockData = [
@@ -311,7 +365,7 @@ describe('AttendanceTable', () => {
 ```typescript
 // tests/api/attendance.test.ts
 import { testApiHandler } from "next-test-api-route-handler";
-import handler from "@/app/api/attendance/update/route";
+import handler from "@/routes/api/attendance/update";
 
 describe("/api/attendance/update", () => {
   it("updates attendance record successfully", async () => {
@@ -469,11 +523,11 @@ bun run env:status
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug Next.js",
+      "name": "Debug TanStack Start",
       "type": "node",
       "request": "launch",
-      "program": "${workspaceFolder}/node_modules/.bin/next",
-      "args": ["dev", "--port", "4325"],
+      "program": "${workspaceFolder}/node_modules/.bin/bun",
+      "args": ["run", "dev"],
       "env": {
         "NODE_ENV": "development"
       },
@@ -541,22 +595,52 @@ export async function POST(request: NextRequest) {
 
 ### Authentication Patterns
 
-**Session validation:**
+**Route guard pattern:**
 
 ```typescript
-// ✅ Good
-async function requireAuth(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
-  return session;
+// ✅ Good - Declarative route guard with TanStack Start
+// src/lib/auth/route-guard.ts
+import { redirect } from "@tanstack/react-router"
+
+interface GuardArgs {
+  context: { session: AppSession | null }
+  location: { pathname: string }
 }
 
-export async function POST(request: NextRequest) {
-  const session = await requireAuth(request);
-  // Proceed with authenticated user
+export function requireAuth({ context, location }: GuardArgs) {
+  if (!context.session?.user?.id) {
+    throw redirect({
+      to: "/login",
+      search: { callbackUrl: location.pathname }
+    })
+  }
 }
+
+export function requireAdmin({ context, location }: GuardArgs) {
+  requireAuth({ context, location })
+  if (!context.session!.isAdmin) {
+    throw redirect({ to: "/dashboard" })
+  }
+}
+
+// ✅ Usage in route
+// src/routes/protected.tsx
+import { createFileRoute } from "@tanstack/react-router"
+import { requireAuth } from "@/lib/auth/route-guard"
+import { ProtectedPage } from "@/features/protected/pages/ProtectedPage"
+
+export const Route = createFileRoute("/protected")({
+  beforeLoad: requireAuth,
+  component: ProtectedPage,
+})
+
+// ✅ Admin-only route
+import { requireAdmin } from "@/lib/auth/route-guard"
+
+export const Route = createFileRoute("/admin/settings")({
+  beforeLoad: requireAdmin,
+  component: AdminSettingsPage,
+})
 ```
 
 ### SSRF Protection

@@ -42,14 +42,14 @@ graph TD
 ```mermaid
 graph LR
     subgraph frontend [Frontend Layer]
-        A[React 19 + Next.js 15]
+        A[React 19 + TanStack Start]
         B[TypeScript]
         C[Tailwind CSS]
     end
 
     subgraph api [API Layer]
-        D[Next.js API Routes]
-        E[Server Actions]
+        D[TanStack Start Server Functions]
+        E[Route Handlers]
         F[LINE Webhook]
     end
 
@@ -83,7 +83,6 @@ graph LR
 📂 bun-line-t3/
 ├── 🔧 Configuration Files      # การกำหนดค่าระบบ
 │   ├── bun.config.test.ts     # Bun test configuration
-│   ├── next.config.mjs        # Next.js configuration
 │   ├── tailwind.config.ts     # Tailwind CSS config
 │   ├── tsconfig.json          # TypeScript config
 │   └── eslint.config.mjs      # ESLint rules
@@ -118,11 +117,10 @@ graph LR
 │
 └── 🎯 Core Application      # แอปพลิเคชันหลัก
     └── src/
-        ├── 📱 app/          # Next.js 15 App Router
+        ├── 🌐 routes/       # TanStack Start file-based routing
         ├── 🧩 features/     # Feature-based modules
         ├── 🔧 lib/          # Shared utilities
-        ├── 🎨 components/   # UI components
-        └── 🎣 hooks/        # Custom React hooks
+        └── 🎨 components/   # Shared UI components
 ```
 
 ### 🎯 Feature-Based Organization
@@ -130,31 +128,52 @@ graph LR
 ```
 📂 src/features/
 ├── 🏢 attendance/          # Attendance Management
-│   ├── api/               # API routes
+│   ├── pages/             # Page components
+│   ├── components/        # Feature-specific components
+│   ├── hooks/             # Attendance-related hooks
 │   ├── services/          # Business logic
 │   ├── types/             # TypeScript definitions
-│   ├── utils/             # Helper functions
-│   └── index.ts           # Barrel exports
+│   ├── helpers/           # Helper functions
+│   └── constants/         # Feature constants
+│
+├── 💰 expenses/           # Expense Tracking
+│   ├── pages/             # Page components
+│   ├── components/        # Expense components
+│   ├── hooks/             # Expense hooks
+│   └── lib/               # Expense utilities
+│
+├── 💬 dca/                # DCA Crypto Tracking
+│   ├── pages/             # Page components
+│   ├── components/        # DCA components
+│   ├── hooks/             # DCA hooks
+│   └── lib/               # DCA utilities
+│
+├── 📅 subscriptions/      # Subscription Management
+│   ├── pages/             # Page components
+│   ├── components/        # Subscription components
+│   └── hooks/             # Subscription hooks
+│
+├── 🌐 line/               # LINE Bot Integration
+│   └── lib/               # LINE utilities
 │
 ├── 🔐 auth/               # Authentication
-│   ├── services/          # Auth services
-│   ├── types/             # Auth types
-│   └── utils/             # Auth utilities
+│   └── lib/               # Auth utilities
 │
-├── 💬 line/               # LINE Bot Integration
-│   ├── services/          # LINE API services
-│   ├── types/             # LINE-specific types
-│   └── handlers/          # Message handlers
-│
-├── 💰 crypto/             # Cryptocurrency Tracking
-│   ├── services/          # Market data services
-│   ├── types/             # Crypto types
-│   └── utils/             # Price calculations
-│
-└── 🌍 air-quality/        # Air Quality Monitoring
-    ├── services/          # AQI data services
-    ├── types/             # AQI types
-    └── utils/             # AQI calculations
+└── 🛠️ tools/              # Tools & Utilities
+    └── components/        # Tool components
+
+📂 src/lib/
+├── auth/                  # Authentication utilities
+│   ├── route-guard.ts     # Route guard helpers
+│   └── hooks/             # Shared auth hooks
+├── database/              # Database connection
+├── constants/             # Global constants
+├── utils/                 # General utilities
+└── validation/            # Zod schemas
+
+📂 src/routes/             # TanStack Start Routes
+├── *.tsx                  # File-based route configs
+└── api/                   # API route handlers
 ```
 
 ## 🎯 Feature-Based Architecture
@@ -303,6 +322,17 @@ const CheckInForm = () => {
     </form>
   )
 }
+
+// ✅ TanStack Start Route Pattern
+// src/routes/attendance-report.tsx
+import { createFileRoute } from "@tanstack/react-router"
+import { requireAuth } from "@/lib/auth/route-guard"
+import { AttendanceReportPage } from "@/features/attendance/pages/AttendanceReportPage"
+
+export const Route = createFileRoute("/attendance-report")({
+  beforeLoad: requireAuth,
+  component: AttendanceReportPage,
+})
 ```
 
 ## 🔐 Security Architecture
@@ -408,6 +438,31 @@ export async function POST(request: Request) {
       { error: "Internal server error" },
       { status: 500 },
     );
+  }
+}
+
+// ✅ TanStack Start Route Guard Pattern
+// src/lib/auth/route-guard.ts
+import { redirect } from "@tanstack/react-router"
+
+interface GuardArgs {
+  context: { session: AppSession | null }
+  location: { pathname: string }
+}
+
+export function requireAuth({ context, location }: GuardArgs) {
+  if (!context.session?.user?.id) {
+    throw redirect({
+      to: "/login",
+      search: { callbackUrl: location.pathname }
+    })
+  }
+}
+
+export function requireAdmin({ context, location }: GuardArgs) {
+  requireAuth({ context, location })
+  if (!context.session!.isAdmin) {
+    throw redirect({ to: "/dashboard" })
   }
 }
 ```

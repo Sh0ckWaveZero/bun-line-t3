@@ -476,7 +476,7 @@ export function SubscriptionsPage() {
                   className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 text-sm font-bold text-white">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-linear-to-br from-indigo-400 to-purple-500 text-sm font-bold text-white">
                       {m.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
@@ -652,7 +652,7 @@ export function SubscriptionsPage() {
       </div>
 
       {subscriptions.length > 0 && (
-        <div className="mb-6 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 p-5 text-white shadow-md">
+        <div className="mb-6 rounded-2xl bg-linear-to-r from-indigo-500 to-purple-600 p-5 text-white shadow-md">
           <p className="text-sm font-medium opacity-80">ค่าใช้จ่ายรวม / เดือน</p>
           <p className="mt-1 text-3xl font-bold">
             {totalMonthly.toLocaleString("th-TH")}

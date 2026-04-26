@@ -200,7 +200,7 @@ function UserAvatar({
 
   return (
     <div
-      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-slate-200 to-slate-300 text-sm font-semibold text-slate-700 ring-2 ring-slate-300 dark:from-slate-700 dark:to-slate-800 dark:text-slate-200 dark:ring-slate-600"
+      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-slate-200 to-slate-300 text-sm font-semibold text-slate-700 ring-2 ring-slate-300 dark:from-slate-700 dark:to-slate-800 dark:text-slate-200 dark:ring-slate-600"
       aria-label={displayName ?? "ผู้ใช้ LINE"}
     >
       {initials === "?" ? <User className="h-5 w-5" /> : initials}

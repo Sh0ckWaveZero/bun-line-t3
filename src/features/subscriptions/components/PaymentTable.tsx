@@ -115,7 +115,7 @@ export const PaymentTable = ({
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-2.5">
                       <div
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 text-xs font-semibold text-white"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-indigo-400 to-purple-500 text-xs font-semibold text-white"
                         aria-hidden="true"
                       >
                         {(member?.name ?? "?").charAt(0).toUpperCase()}
