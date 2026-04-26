@@ -2,7 +2,7 @@
 
 > **🎯 คู่มือการติดตั้งโปรเจกต์ Bun LINE T3 Attendance System**
 >
-> **⚡ ใช้เทคโนโลยี**: Bun + TanStack Start + React 19 + TypeScript + MongoDB
+> **⚡ ใช้เทคโนโลยี**: Bun + TanStack Start + React 19 + TypeScript + PostgreSQL
 
 ## 📋 สารบัญ | Table of Contents
 
@@ -25,7 +25,7 @@
 | **[Bun](https://bun.sh)**         | 1.0.0+          | 1.1.34+ | JavaScript runtime และ package manager |
 | **[Node.js](https://nodejs.org)** | 18.0.0+         | 20.11+  | สำหรับ fallback และ compatibility      |
 | **[Git](https://git-scm.com)**    | 2.25+           | latest  | Version control                        |
-| **MongoDB**                       | 6.0+            | 7.0+    | ฐานข้อมูลหลัก                          |
+| **PostgreSQL**                       | 6.0+            | 7.0+    | ฐานข้อมูลหลัก                          |
 
 ### 🔍 ตรวจสอบการติดตั้ง | Verification
 
@@ -39,8 +39,8 @@ node --version
 # ตรวจสอบ Git
 git --version
 
-# ตรวจสอบ MongoDB (หากติดตั้งแบบ local)
-mongod --version
+# ตรวจสอบ PostgreSQL (หากติดตั้งแบบ local)
+psql --version
 ```
 
 ### 📝 การติดตั้ง Bun (หากยังไม่มี)
@@ -121,11 +121,11 @@ bun run dev
 #### 🗄️ Database Configuration
 
 ```env
-# MongoDB Connection String
-DATABASE_URL="mongodb://username:password@localhost:27017/bun_line_t3"
+# PostgreSQL Connection String
+DATABASE_URL="postgresql://username:password@localhost:5432/bun_line_t3"
 
-# สำหรับ MongoDB Atlas
-DATABASE_URL="mongodb+srv://username:password@cluster.mongodb.net/bun_line_t3"
+# สำหรับ PostgreSQL Cloud (Supabase, Neon, Railway)
+DATABASE_URL="postgresql://username:password@host.region.aws.rds.amazonaws.com:5432/bun_line_t3"
 ```
 
 #### 🔐 Authentication
@@ -183,57 +183,42 @@ bun run generate:secrets
 
 ## 🗄️ การตั้งค่าฐานข้อมูล | Database Setup
 
-### 🏠 Local MongoDB
+### 🏠 Local PostgreSQL
 
-#### 1. ติดตั้ง MongoDB
+#### 1. ติดตั้ง PostgreSQL
 
 ```bash
 # macOS (Homebrew)
-brew install mongodb-community
+brew install postgresql@16
+brew services start postgresql@16
 
 # Ubuntu/Debian
-sudo apt-get install mongodb
+sudo apt-get install postgresql postgresql-contrib
+sudo systemctl start postgresql
 
-# Windows - ดาวน์โหลดจาก https://www.mongodb.com/try/download/community
+# Windows - ดาวน์โหลดจาก https://www.postgresql.org/download/windows/
 ```
 
-#### 2. รัน MongoDB Service
+#### 2. สร้างฐานข้อมูลและผู้ใช้
 
 ```bash
-# macOS
-brew services start mongodb-community
-
-# Linux
-sudo systemctl start mongod
-
-# Windows
-net start MongoDB
-```
-
-#### 3. สร้างฐานข้อมูลและผู้ใช้
-
-```bash
-# เข้า MongoDB shell
-mongosh
+# เข้า PostgreSQL shell
+psql -U postgres
 
 # สร้างฐานข้อมูล
-use bun_line_t3
+CREATE DATABASE bun_line_t3;
 
 # สร้างผู้ใช้
-db.createUser({
-  user: "bun_user",
-  pwd: "secure_password",
-  roles: [
-    { role: "readWrite", db: "bun_line_t3" }
-  ]
-})
+\c bun_line_t3
+CREATE USER bun_user WITH PASSWORD 'secure_password';
+GRANT ALL PRIVILEGES ON DATABASE bun_line_t3 TO bun_user;
 ```
 
-### ☁️ MongoDB Atlas (Cloud)
+### ☁️ PostgreSQL Cloud (Supabase/Neon/Railway)
 
 #### 1. สร้างฟรี Cluster
 
-1. ไปที่ [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+1. ไปที่ [PostgreSQL Atlas](https://www.mongodb.com/cloud/atlas)
 2. สร้างบัญชีและ Cluster ใหม่
 3. เลือก FREE tier (M0)
 4. เลือก region ที่ใกล้ที่สุด
@@ -254,7 +239,7 @@ Roles: Atlas admin
 
 ```bash
 # รูปแบบ Connection String
-mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/<dbname>?retryWrites=true&w=majority
+postgresql://<username>:<password>@<host>.<region>.<provider>.net:<port>/<dbname>?sslmode=require<password>@cluster0.xxxxx.mongodb.net/<dbname>?retryWrites=true&w=majority
 ```
 
 ### 🔄 Prisma Setup
@@ -469,15 +454,16 @@ sudo chown -R $(whoami) ~/.bun
 #### 2. Database Connection Issues
 
 ```bash
-# ปัญหา: Unable to connect to MongoDB
+# ปัญหา: Unable to connect to PostgreSQL
 # ตรวจสอบ:
-1. MongoDB service running: systemctl status mongod
+1. PostgreSQL service running: systemctl status postgresql
 2. Connection string ถูกต้อง
 3. Network connectivity
 4. Authentication credentials
 
-# แก้ไข: รีสตาร์ท MongoDB
-sudo systemctl restart mongod
+# แก้ไข: รีสตาร์ท PostgreSQL
+brew services restart postgresql@16  # macOS
+sudo systemctl restart postgresql     # Linux
 ```
 
 #### 3. LINE Bot Issues
@@ -567,7 +553,7 @@ DEBUG=* bun run dev
 หลังจากติดตั้งเสร็จ ตรวจสอบรายการต่อไปนี้:
 
 - [ ] Bun และ Node.js ติดตั้งเสร็จและรันได้
-- [ ] MongoDB service running และเชื่อมต่อได้
+- [ ] PostgreSQL service running และเชื่อมต่อได้
 - [ ] Environment variables กำหนดค่าครบถ้วน
 - [ ] Prisma client generate สำเร็จ
 - [ ] Database schema push สำเร็จ
