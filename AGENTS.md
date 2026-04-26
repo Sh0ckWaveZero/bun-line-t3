@@ -1,32 +1,5 @@
 # Agent Development Guide
 
-## Agent Skills
-
-> **For LLMs**: This project uses [Vercel Agent Skills](https://github.com/vercel-labs/agent-skills). Before creating React/TanStack Start components or UI code, reference the **Vercel React Best Practices** and **Web Design Guidelines** skills for performance optimization and accessibility compliance.
-
-### Installed Skills (Global)
-
-- **vercel-react-best-practices** - React/TanStack Start performance optimization (data fetching, bundle size, re-renders)
-- **web-design-guidelines** - UI audit against 100+ best practices (accessibility, dark mode, i18n)
-- **vercel:deploy** - Deploy to Vercel directly from conversation
-
-Skills activate automatically when you describe relevant tasks naturally (e.g., "review my UI", "optimize this component", "deploy to production")
-
-<!-- intent-skills:start -->
-# Skill mappings - when working in these areas, load the linked skill file into context.
-skills:
-  - task: "React/TanStack Start setup, root route shell, hydration, or React Start imports"
-    load: "node_modules/@tanstack/react-start/skills/react-start/SKILL.md"
-  - task: "TanStack Start project structure, Vite plugin, route tree, or core Start conventions"
-    load: "node_modules/@tanstack/start-client-core/skills/start-core/SKILL.md"
-  - task: "Production deploy, Docker/Bun hosting, SSR mode, static assets, or prerendering"
-    load: "node_modules/@tanstack/start-client-core/skills/start-core/deployment/SKILL.md"
-  - task: "Server functions, server-only logic, useServerFn, validation, or server context utilities"
-    load: "node_modules/@tanstack/start-client-core/skills/start-core/server-functions/SKILL.md"
-  - task: "API routes under src/routes/api, HTTP handlers, request parsing, or route middleware"
-    load: "node_modules/@tanstack/start-client-core/skills/start-core/server-routes/SKILL.md"
-<!-- intent-skills:end -->
-
 ## Commands
 
 - **Dev**: `bun run dev` (TanStack Start via Vite on :4325)
@@ -144,8 +117,8 @@ import { Card } from "@/components/ui/card"
 ### React & TanStack Start
 
 - Prefer TanStack Start server routes and server functions for sensitive logic and data loading
-- Minimize client-only directives carried over from the old Next.js codebase
-- Use TanStack Router patterns (`createFileRoute`, route loaders, server handlers) instead of Next.js App Router APIs
+- Minimize client-side state management - use server-side data fetching when possible
+- Use TanStack Router patterns (`createFileRoute`, route loaders, server handlers)
 - Support dark/light mode in ALL components (use Tailwind `dark:` or CSS variables)
 - Use thin route pattern: routes are 6-10 line configs, page logic in `features/*/pages/`
 - Apply route guards declaratively via `beforeLoad` for protected routes
