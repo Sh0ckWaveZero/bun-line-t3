@@ -5,7 +5,6 @@ export { EditAttendanceModal } from "./EditAttendanceModal";
 export { AttendanceSummaryCards } from "./AttendanceSummaryCards";
 export { AttendanceCharts } from "./AttendanceCharts";
 export { AttendanceTable } from "./AttendanceTable";
-export { UserSettingsCard } from "./UserSettingsCard";
 export {
   UserInfoCard,
   LoadingSpinner,

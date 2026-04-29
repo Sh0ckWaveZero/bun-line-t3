@@ -30,6 +30,7 @@ import {
 import type { ExpenseCategory, MonthlySummary, CategorySummary } from "@/features/expenses/types";
 import { flexMessage } from "@/lib/utils/line-message-utils";
 import { env } from "@/env.mjs";
+import { shouldHideAmountsForLine } from "@/features/settings/services/settings.server";
 
 // ─────────────────────────────────────────────
 // Lazy import sendMessage (pattern เดียวกับ command อื่น)
@@ -48,6 +49,7 @@ function createExpenseSummaryBubble(
   categories: CategorySummary[],
   transMonth: string,
   frontendUrl: string,
+  hide = false,
 ): object {
   const balance = summary.balance;
   const isPositive = balance >= 0;
@@ -74,8 +76,8 @@ function createExpenseSummaryBubble(
   });
 
   const bodyContents: object[] = [
-    row(`📈 รายรับ`, `+${fmt(summary.totalIncome)} บาท`, "#16A34A"),
-    row(`📉 รายจ่าย`, `-${fmt(summary.totalExpense)} บาท`, "#EF4444"),
+    row(`📈 รายรับ`, `+${fmt(summary.totalIncome, hide)} บาท`, "#16A34A"),
+    row(`📉 รายจ่าย`, `-${fmt(summary.totalExpense, hide)} บาท`, "#EF4444"),
     { type: "separator", margin: "md" },
     {
       type: "box",
@@ -93,7 +95,7 @@ function createExpenseSummaryBubble(
         },
         {
           type: "text",
-          text: `${balanceSign}${fmt(Math.abs(balance))} บาท`,
+          text: `${balanceSign}${fmt(Math.abs(balance), hide)} บาท`,
           size: "md",
           color: balanceColor,
           weight: "bold",
@@ -127,7 +129,7 @@ function createExpenseSummaryBubble(
       ...topExpenses.map((c) =>
         row(
           `${c.icon ?? "📦"} ${c.categoryName}`,
-          `${fmt(c.total)} บาท`,
+          `${fmt(c.total, hide)} บาท`,
           "#374151",
         ),
       ),
@@ -200,14 +202,26 @@ function getLineUserId(req: unknown): string | null {
   return r.body?.events?.[0]?.source?.userId ?? null;
 }
 
+/** ตรวจว่าข้อความมาจากกลุ่ม/ห้อง หรือแชท 1:1 */
+function isGroupSource(req: unknown): boolean {
+  const r = req as {
+    body?: { events?: Array<{ source?: { type?: string } }> };
+  };
+  const sourceType = r.body?.events?.[0]?.source?.type;
+  return sourceType === "group" || sourceType === "room";
+}
+
 /** Map LINE Messaging API userId → DB userId (ผ่าน Account table) */
 async function resolveDbUserId(lineUserId: string): Promise<string | null> {
   const account = await findAccountByLineMessagingApiId(lineUserId);
   return account?.userId ?? null;
 }
 
-/** Format ตัวเลขพร้อม sign */
-const fmt = (n: number) => formatAmount(Math.abs(n));
+const MASKED = "••••••";
+
+/** Format ตัวเลข — ซ่อนถ้า hide = true */
+const fmt = (n: number, hide = false) =>
+  hide ? MASKED : formatAmount(Math.abs(n));
 
 // ─────────────────────────────────────────────
 // Sub-handlers
@@ -347,7 +361,7 @@ async function handleHelp(req: unknown) {
 }
 
 /** แสดงสรุปเดือนปัจจุบัน */
-async function handleSummary(req: unknown, userId: string) {
+async function handleSummary(req: unknown, userId: string, hide = false) {
   const sendMessage = await getSendMessage();
   const transMonth = getCurrentMonth();
 
@@ -362,6 +376,7 @@ async function handleSummary(req: unknown, userId: string) {
       categories,
       transMonth,
       env.FRONTEND_URL,
+      hide,
     );
 
     await sendMessage(
@@ -377,7 +392,7 @@ async function handleSummary(req: unknown, userId: string) {
 }
 
 /** แสดงรายการล่าสุด 5 รายการ */
-async function handleList(req: unknown, userId: string) {
+async function handleList(req: unknown, userId: string, hide = false) {
   const sendMessage = await getSendMessage();
 
   try {
@@ -404,7 +419,7 @@ async function handleList(req: unknown, userId: string) {
       const emoji = r.category.icon ?? (isIncome ? "💰" : "💸");
       lines.push(
         `${emoji} ${r.category.name}`,
-        `  ${sign}${fmt(r.amount)} บาท • ${r.transDate}`,
+        `  ${sign}${fmt(r.amount, hide)} บาท • ${r.transDate}`,
         r.note ? `  📝 ${r.note}` : "",
       );
     }
@@ -454,6 +469,7 @@ async function handleAdd(
   userId: string,
   args: string[],
   type: "INCOME" | "EXPENSE",
+  hide = false,
 ) {
   const sendMessage = await getSendMessage();
 
@@ -516,7 +532,7 @@ async function handleAdd(
           "",
           `${emoji} ${type === "INCOME" ? "รายรับ" : "รายจ่าย"}`,
           `${category.icon ?? ""} หมวดหมู่: ${category.name}`,
-          `💵 จำนวน: ${sign}${fmt(tx.amount)} บาท`,
+          `💵 จำนวน: ${sign}${fmt(tx.amount, hide)} บาท`,
           `📅 วันที่: ${tx.transDate}`,
           "",
           "🔗 ดูทั้งหมด: /expense",
@@ -575,13 +591,17 @@ export async function handleExpenseCommand(
     return;
   }
 
+  // ─── ตรวจสอบ privacy setting ───────────────────────────────────────────────
+  const isGroup = isGroupSource(req);
+  const hide = await shouldHideAmountsForLine(userId, isGroup);
+
   // ─── Route sub-command ────────────────────────────────────────────────────
   const subCommand = conditions[0]?.toLowerCase();
   const args = conditions.slice(1);
 
   // /รับ [จำนวน] [หมวด?] — force INCOME
   if (forceType === "INCOME") {
-    await handleAdd(req, userId, conditions, "INCOME");
+    await handleAdd(req, userId, conditions, "INCOME", hide);
     return;
   }
 
@@ -596,36 +616,36 @@ export async function handleExpenseCommand(
     case "บันทึก":
     case "จ่าย":
     case "เพิ่ม":
-      await handleAdd(req, userId, args, "EXPENSE");
+      await handleAdd(req, userId, args, "EXPENSE", hide);
       break;
 
     case "income":
     case "รับ":
     case "รายรับ":
-      await handleAdd(req, userId, args, "INCOME");
+      await handleAdd(req, userId, args, "INCOME", hide);
       break;
 
     case "list":
     case "ล่าสุด":
     case "history":
     case "ประวัติ":
-      await handleList(req, userId);
+      await handleList(req, userId, hide);
       break;
 
     case "sum":
     case "สรุป":
     case "summary":
     case undefined:
-      await handleSummary(req, userId);
+      await handleSummary(req, userId, hide);
       break;
 
     default:
       // ถ้า sub-command เป็นตัวเลข ให้ถือว่าเป็น quick add รายจ่าย
       // เช่น "/expense 250 อาหาร"
       if (subCommand && !isNaN(parseFloat(subCommand))) {
-        await handleAdd(req, userId, conditions, "EXPENSE");
+        await handleAdd(req, userId, conditions, "EXPENSE", hide);
       } else {
-        await handleSummary(req, userId);
+        await handleSummary(req, userId, hide);
       }
   }
 }

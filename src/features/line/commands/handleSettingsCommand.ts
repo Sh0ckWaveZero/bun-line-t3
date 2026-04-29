@@ -225,11 +225,91 @@ export const handleSettingsCommand = async (req: any, conditions: any[]) => {
       return;
     }
 
-    // Show current settings
+    // Toggle privacy — ซ่อนเงิน LINE ส่วนตัว
+    if (
+      ["ซ่อนเงิน", "hide-money", "privacy", "ซ่อน"].includes(action)
+    ) {
+      const currentSetting = user.settings?.hideAmountsLinePersonal ?? false;
+      const newSetting = !currentSetting;
+
+      const isEnglish = ["hide-money", "privacy"].includes(action);
+
+      if (!user.settings) {
+        await prisma.userSettings.create({
+          data: {
+            userId: user.id,
+            hideAmountsLinePersonal: newSetting,
+            enableCheckInReminders: true,
+            enableCheckOutReminders: true,
+            enableHolidayNotifications: false,
+            timezone: "Asia/Bangkok",
+            language: isEnglish ? "en" : "th",
+          },
+        });
+      } else {
+        await prisma.userSettings.update({
+          where: { userId: user.id },
+          data: { hideAmountsLinePersonal: newSetting },
+        });
+      }
+
+      const emoji = newSetting ? "🙈" : "👁️";
+      const successMessage = {
+        type: "text",
+        text: isEnglish
+          ? `${emoji} ${newSetting ? "Enabled" : "Disabled"} hide amounts in personal chat.\n\n${newSetting ? "Amounts will show as •••••• in 1:1 chat." : "Amounts will now be visible in 1:1 chat."}`
+          : `${emoji} ${newSetting ? "เปิด" : "ปิด"}ซ่อนจำนวนเงินในแชทส่วนตัวแล้ว\n\n${newSetting ? "จำนวนเงินจะแสดงเป็น •••••• ในแชท 1:1" : "จำนวนเงินจะแสดงปกติในแชท 1:1"}`,
+      };
+      await sendMessage(req, [successMessage]);
+      return;
+    }
+
+    // Toggle privacy — ซ่อนเงิน LINE กลุ่ม
+    if (
+      ["ซ่อนเงินกลุ่ม", "hide-money-group", "privacy-group"].includes(action)
+    ) {
+      const currentSetting = user.settings?.hideAmountsLineGroup ?? false;
+      const newSetting = !currentSetting;
+
+      const isEnglish = ["hide-money-group", "privacy-group"].includes(action);
+
+      if (!user.settings) {
+        await prisma.userSettings.create({
+          data: {
+            userId: user.id,
+            hideAmountsLineGroup: newSetting,
+            enableCheckInReminders: true,
+            enableCheckOutReminders: true,
+            enableHolidayNotifications: false,
+            timezone: "Asia/Bangkok",
+            language: isEnglish ? "en" : "th",
+          },
+        });
+      } else {
+        await prisma.userSettings.update({
+          where: { userId: user.id },
+          data: { hideAmountsLineGroup: newSetting },
+        });
+      }
+
+      const emoji = newSetting ? "🙈" : "👁️";
+      const successMessage = {
+        type: "text",
+        text: isEnglish
+          ? `${emoji} ${newSetting ? "Enabled" : "Disabled"} hide amounts in group chat.\n\n${newSetting ? "Amounts will show as •••••• in group chat." : "Amounts will now be visible in group chat."}`
+          : `${emoji} ${newSetting ? "เปิด" : "ปิด"}ซ่อนจำนวนเงินในกลุ่มแล้ว\n\n${newSetting ? "จำนวนเงินจะแสดงเป็น •••••• ในกลุ่ม LINE" : "จำนวนเงินจะแสดงปกติในกลุ่ม LINE"}`,
+      };
+      await sendMessage(req, [successMessage]);
+      return;
+    }
+
+    // Show current settings (default — no action specified)
     const currentSettings = user.settings;
     const checkInStatus = currentSettings?.enableCheckInReminders ?? true;
     const checkOutStatus = currentSettings?.enableCheckOutReminders ?? true;
     const holidayStatus = currentSettings?.enableHolidayNotifications ?? false;
+    const hidePersonalStatus = currentSettings?.hideAmountsLinePersonal ?? false;
+    const hideGroupStatus = currentSettings?.hideAmountsLineGroup ?? false;
 
     // Detect language from user's previous language setting or command
     const isEnglish =
@@ -262,6 +342,22 @@ export const handleSettingsCommand = async (req: any, conditions: any[]) => {
       : holidayStatus
         ? "เปิด"
         : "ปิด";
+    const hidePersonalEmoji = hidePersonalStatus ? "🙈" : "👁️";
+    const hidePersonalText = isEnglish
+      ? hidePersonalStatus
+        ? "ON"
+        : "OFF"
+      : hidePersonalStatus
+        ? "เปิด"
+        : "ปิด";
+    const hideGroupEmoji = hideGroupStatus ? "🙈" : "👁️";
+    const hideGroupText = isEnglish
+      ? hideGroupStatus
+        ? "ON"
+        : "OFF"
+      : hideGroupStatus
+        ? "เปิด"
+        : "ปิด";
 
     const settingsMessage = {
       type: "template",
@@ -269,8 +365,8 @@ export const handleSettingsCommand = async (req: any, conditions: any[]) => {
       template: {
         type: "buttons",
         text: isEnglish
-          ? `⚙️ Notification Settings\n\n${checkInEmoji} Check-in (8:00 AM): ${checkInText}\n${checkOutEmoji} Check-out (Before 9 hrs): ${checkOutText}\n${holidayEmoji} Holiday notifications: ${holidayText}\n\nSelect setting to adjust:`
-          : `⚙️ การตั้งค่าการแจ้งเตือน\n\n${checkInEmoji} เข้างาน (8:00 น.): ${checkInText}\n${checkOutEmoji} เลิกงาน (ก่อนครบ 9 ชม.): ${checkOutText}\n${holidayEmoji} แจ้งเตือนวันหยุด: ${holidayText}\n\nเลือกการตั้งค่าที่ต้องการปรับ:`,
+          ? `⚙️ Settings\n\n📢 Notifications\n${checkInEmoji} Check-in: ${checkInText}\n${checkOutEmoji} Check-out: ${checkOutText}\n${holidayEmoji} Holiday: ${holidayText}\n\n🔒 Privacy\n${hidePersonalEmoji} Hide amounts (1:1): ${hidePersonalText}\n${hideGroupEmoji} Hide amounts (Group): ${hideGroupText}`
+          : `⚙️ การตั้งค่า\n\n📢 การแจ้งเตือน\n${checkInEmoji} เข้างาน: ${checkInText}\n${checkOutEmoji} เลิกงาน: ${checkOutText}\n${holidayEmoji} วันหยุด: ${holidayText}\n\n🔒 ความเป็นส่วนตัว\n${hidePersonalEmoji} ซ่อนเงิน (1:1): ${hidePersonalText}\n${hideGroupEmoji} ซ่อนเงิน (กลุ่ม): ${hideGroupText}`,
         actions: [
           {
             type: "message",
@@ -282,16 +378,18 @@ export const handleSettingsCommand = async (req: any, conditions: any[]) => {
           {
             type: "message",
             label: isEnglish
-              ? `${checkOutStatus ? "Disable" : "Enable"} Check-out`
-              : `${checkOutStatus ? "ปิด" : "เปิด"}แจ้งเตือนเลิกงาน`,
-            text: isEnglish ? "/settings finish" : "/ตั้งค่า เลิกงาน",
+              ? `${hidePersonalStatus ? "Show" : "Hide"} Amounts (1:1)`
+              : `${hidePersonalStatus ? "แสดง" : "ซ่อน"}เงิน (แชทส่วนตัว)`,
+            text: isEnglish ? "/settings hide-money" : "/ตั้งค่า ซ่อนเงิน",
           },
           {
             type: "message",
             label: isEnglish
-              ? `${holidayStatus ? "Disable" : "Enable"} Holiday`
-              : `${holidayStatus ? "ปิด" : "เปิด"}แจ้งเตือนวันหยุด`,
-            text: isEnglish ? "/settings holiday" : "/ตั้งค่า วันหยุด",
+              ? `${hideGroupStatus ? "Show" : "Hide"} Amounts (Group)`
+              : `${hideGroupStatus ? "แสดง" : "ซ่อน"}เงิน (กลุ่ม)`,
+            text: isEnglish
+              ? "/settings hide-money-group"
+              : "/ตั้งค่า ซ่อนเงินกลุ่ม",
           },
         ],
       },

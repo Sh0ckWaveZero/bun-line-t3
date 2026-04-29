@@ -19,7 +19,6 @@ import {
   AttendanceCharts,
   AttendanceTable,
   UserInfoCard,
-  UserSettingsCard,
   LoadingSpinner,
   ErrorMessage,
   MonthSelector,
@@ -89,10 +88,6 @@ export function AttendanceReportPage() {
                 <UserInfoCard user={session.user} />
               </div>
             )}
-
-            <div id="user-settings-section" className="mb-6">
-              <UserSettingsCard />
-            </div>
 
             {loading && (
               <div id="loading-section">

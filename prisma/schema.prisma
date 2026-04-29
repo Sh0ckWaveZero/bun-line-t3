@@ -162,6 +162,11 @@ model UserSettings {
   enableCheckInReminders     Boolean  @default(true) @map("enable_checkin_reminders")
   enableCheckOutReminders    Boolean  @default(true) @map("enable_checkout_reminders")
   enableHolidayNotifications Boolean  @default(false) @map("enable_holiday_notifications")
+  // Privacy — ซ่อนจำนวนเงินใน LINE Messaging API
+  hideAmountsLinePersonal    Boolean  @default(false) @map("hide_amounts_line_personal")
+  hideAmountsLineGroup       Boolean  @default(false) @map("hide_amounts_line_group")
+  // Privacy — ซ่อนจำนวนเงินบนหน้าเว็บ
+  hideAmountsWeb             Boolean  @default(false) @map("hide_amounts_web")
   // Timezone and locale
   timezone                   String   @default("Asia/Bangkok") @map("timezone")
   language                   String   @default("th") @map("language")
