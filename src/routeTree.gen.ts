@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ThaiNamesGeneratorRouteImport } from './routes/thai-names-generator'
 import { Route as ThaiIdRouteImport } from './routes/thai-id'
 import { Route as SubscriptionsRouteImport } from './routes/subscriptions'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PendingApprovalRouteImport } from './routes/pending-approval'
 import { Route as MonitoringRouteImport } from './routes/monitoring'
 import { Route as LogoutRouteImport } from './routes/logout'
@@ -83,6 +84,11 @@ const ThaiIdRoute = ThaiIdRouteImport.update({
 const SubscriptionsRoute = SubscriptionsRouteImport.update({
   id: '/subscriptions',
   path: '/subscriptions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PendingApprovalRoute = PendingApprovalRouteImport.update({
@@ -391,6 +397,7 @@ export interface FileRoutesByFullPath {
   '/logout': typeof LogoutRoute
   '/monitoring': typeof MonitoringRoute
   '/pending-approval': typeof PendingApprovalRoute
+  '/settings': typeof SettingsRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/thai-id': typeof ThaiIdRoute
   '/thai-names-generator': typeof ThaiNamesGeneratorRoute
@@ -453,6 +460,7 @@ export interface FileRoutesByTo {
   '/logout': typeof LogoutRoute
   '/monitoring': typeof MonitoringRoute
   '/pending-approval': typeof PendingApprovalRoute
+  '/settings': typeof SettingsRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/thai-id': typeof ThaiIdRoute
   '/thai-names-generator': typeof ThaiNamesGeneratorRoute
@@ -516,6 +524,7 @@ export interface FileRoutesById {
   '/logout': typeof LogoutRoute
   '/monitoring': typeof MonitoringRoute
   '/pending-approval': typeof PendingApprovalRoute
+  '/settings': typeof SettingsRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/thai-id': typeof ThaiIdRoute
   '/thai-names-generator': typeof ThaiNamesGeneratorRoute
@@ -580,6 +589,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/monitoring'
     | '/pending-approval'
+    | '/settings'
     | '/subscriptions'
     | '/thai-id'
     | '/thai-names-generator'
@@ -642,6 +652,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/monitoring'
     | '/pending-approval'
+    | '/settings'
     | '/subscriptions'
     | '/thai-id'
     | '/thai-names-generator'
@@ -704,6 +715,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/monitoring'
     | '/pending-approval'
+    | '/settings'
     | '/subscriptions'
     | '/thai-id'
     | '/thai-names-generator'
@@ -767,6 +779,7 @@ export interface RootRouteChildren {
   LogoutRoute: typeof LogoutRoute
   MonitoringRoute: typeof MonitoringRoute
   PendingApprovalRoute: typeof PendingApprovalRoute
+  SettingsRoute: typeof SettingsRoute
   SubscriptionsRoute: typeof SubscriptionsRoute
   ThaiIdRoute: typeof ThaiIdRoute
   ThaiNamesGeneratorRoute: typeof ThaiNamesGeneratorRoute
@@ -831,6 +844,13 @@ declare module '@tanstack/react-router' {
       path: '/subscriptions'
       fullPath: '/subscriptions'
       preLoaderRoute: typeof SubscriptionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pending-approval': {
@@ -1311,6 +1331,7 @@ const rootRouteChildren: RootRouteChildren = {
   LogoutRoute: LogoutRoute,
   MonitoringRoute: MonitoringRoute,
   PendingApprovalRoute: PendingApprovalRoute,
+  SettingsRoute: SettingsRoute,
   SubscriptionsRoute: SubscriptionsRoute,
   ThaiIdRoute: ThaiIdRoute,
   ThaiNamesGeneratorRoute: ThaiNamesGeneratorRoute,
