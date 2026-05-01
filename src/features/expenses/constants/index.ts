@@ -55,7 +55,7 @@ export const MAX_PAGE_SIZE = 100;
 export const DEFAULT_CURRENCY = "THB";
 
 // ─────────────────────────────────────────────
-// Emoji List
+// Emoji List (deprecated — replaced by @emoji-mart/data)
 // ─────────────────────────────────────────────
 
 export const EMOJI_LIST: readonly string[] = [

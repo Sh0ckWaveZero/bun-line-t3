@@ -1,4 +1,4 @@
-import { AlertDialog, AlertDialogContent } from "@/components/ui/AlertDialog"
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from "@/components/ui/AlertDialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import type { ExpenseCategory } from "@/features/expenses/types"
@@ -48,12 +48,12 @@ export function AddCategoryModal({
             id="add-category-modal-header"
             className="border-border/50 relative flex shrink-0 items-center justify-center border-b px-6 py-4"
           >
-            <h3
-              id="add-category-modal-title"
-              className="text-foreground text-center text-lg font-bold"
-            >
+            <AlertDialogTitle className="text-foreground text-center text-lg font-bold">
               {editMode ? "แก้ไขหมวดหมู่" : "หมวดหมู่"}
-            </h3>
+            </AlertDialogTitle>
+            <AlertDialogDescription className="sr-only">
+              {editMode ? "แก้ไขชื่อและไอคอนหมวดหมู่" : "สร้างหมวดหมู่ใหม่สำหรับรายรับหรือรายจ่าย"}
+            </AlertDialogDescription>
             <Button
               id="add-category-close-btn"
               variant="ghost"

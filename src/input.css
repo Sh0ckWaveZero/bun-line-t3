@@ -1305,3 +1305,18 @@
     font-family: var(--font-noto-sans-thai);
   }
 }
+
+/* emoji-mart overrides */
+.emoji-mart-wrapper em-emoji-picker {
+  --border-radius: 0px;
+  --shadow: none;
+  --color-border: transparent;
+  width: 100% !important;
+  max-height: 380px;
+}
+.dark .emoji-mart-wrapper em-emoji-picker {
+  --rgb-background: 30, 30, 30;
+  --rgb-input: 40, 40, 40;
+  --rgb-color: 240, 240, 240;
+  --rgb-accent: 99, 102, 241;
+}

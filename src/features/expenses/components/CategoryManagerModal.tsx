@@ -1,4 +1,4 @@
-import { AlertDialog, AlertDialogContent } from "@/components/ui/AlertDialog"
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from "@/components/ui/AlertDialog"
 import { Button } from "@/components/ui/button"
 import type { ExpenseCategory } from "@/features/expenses/types"
 import { Edit, Plus, Trash2, X } from "lucide-react"
@@ -30,12 +30,12 @@ export function CategoryManagerModal({
           id="category-manager-header"
           className="border-border/50 relative flex shrink-0 items-center justify-center border-b px-6 py-4"
         >
-          <h3
-            id="category-manager-title"
-            className="text-foreground text-center text-xl font-bold sm:text-2xl"
-          >
+          <AlertDialogTitle className="text-foreground text-center text-xl font-bold sm:text-2xl">
             หมวดหมู่
-          </h3>
+          </AlertDialogTitle>
+          <AlertDialogDescription className="sr-only">
+            จัดการหมวดหมู่รายรับและรายจ่าย
+          </AlertDialogDescription>
           <Button
             id="category-manager-close-btn"
             variant="ghost"

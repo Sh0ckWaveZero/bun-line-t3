@@ -53,6 +53,8 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.103",
+    "@emoji-mart/data": "^1.2.1",
+    "@emoji-mart/react": "^1.1.1",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "@radix-ui/react-alert-dialog": "^1.1.15",
