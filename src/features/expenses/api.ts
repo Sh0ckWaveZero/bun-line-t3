@@ -16,6 +16,23 @@ export async function fetchTransactions(
   return json.data
 }
 
+export interface ExpenseOverview {
+  transactions: TransactionWithCategory[]
+  summary: MonthlySummary
+  categorySummary: CategorySummary[]
+  categories: ExpenseCategory[]
+  hideAmountsWeb: boolean
+}
+
+export async function fetchExpenseOverview(
+  transMonth: string,
+): Promise<ExpenseOverview> {
+  const res = await fetch(`/api/expenses/overview?transMonth=${transMonth}&limit=100`, NO_CACHE)
+  if (!res.ok) throw new Error("ไม่สามารถดึงข้อมูลรายรับรายจ่ายได้")
+  const json = (await res.json()) as { data: ExpenseOverview }
+  return json.data
+}
+
 export async function fetchSummary(
   transMonth: string,
 ): Promise<{ summary: MonthlySummary; categories: CategorySummary[] }> {

@@ -131,11 +131,13 @@ export function AddCategoryModal({
         </AlertDialogContent>
       </AlertDialog>
 
-      <EmojiPickerModal
-        open={showEmojiPicker}
-        onOpenChange={setShowEmojiPicker}
-        onSelect={setIcon}
-      />
+      {showEmojiPicker && (
+        <EmojiPickerModal
+          open={showEmojiPicker}
+          onOpenChange={setShowEmojiPicker}
+          onSelect={setIcon}
+        />
+      )}
     </>
   )
 }

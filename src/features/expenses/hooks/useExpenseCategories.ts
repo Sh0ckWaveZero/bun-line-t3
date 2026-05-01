@@ -6,11 +6,13 @@ interface SaveCategoryCallbacks {
   onError?: (message: string) => void
 }
 
-export function useExpenseCategories(enabled: boolean) {
+export function useExpenseCategories(enabled: boolean, onChanged?: () => void) {
   const queryClient = useQueryClient()
 
-  const invalidate = () =>
+  const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ["expense-categories"] })
+    onChanged?.()
+  }
 
   const { data: categories = [] } = useQuery({
     queryKey: ["expense-categories"],

@@ -1306,25 +1306,16 @@
   }
 }
 
-/* emoji-mart overrides */
-.emoji-mart-wrapper {
-  display: block;
-  width: 100%;
+.emoji-picker-scrollbar {
+  scrollbar-width: thin;
 }
-.emoji-mart-wrapper em-emoji-picker {
-  --border-radius: 0px;
-  --shadow: none;
-  --color-border: transparent;
-  --padding: 0.35em;
-  --rgb-background: 248, 248, 252;
-  --rgb-input: 237, 237, 245;
-  --rgb-color: 30, 28, 45;
-  width: 100% !important;
-  display: block;
+.emoji-picker-scrollbar::-webkit-scrollbar {
+  width: 8px;
 }
-.dark .emoji-mart-wrapper em-emoji-picker {
-  --rgb-background: 50, 47, 65;
-  --rgb-input: 62, 59, 80;
-  --rgb-color: 228, 226, 240;
-  --rgb-accent: 108, 104, 166;
+.emoji-picker-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.35);
+  border-radius: 999px;
+}
+.emoji-picker-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
 }

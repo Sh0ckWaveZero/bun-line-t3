@@ -1,10 +1,5 @@
 "use client";
 
-import { AddCategoryModal } from "@/features/expenses/components/AddCategoryModal";
-import { AddTransactionModal } from "@/features/expenses/components/AddTransactionModal";
-import { CategoryManagerModal } from "@/features/expenses/components/CategoryManagerModal";
-import { ExpenseDonutChart } from "@/features/expenses/components/ExpenseDonutChart";
-import { MonthlyBarChart } from "@/features/expenses/components/MonthlyBarChart";
 import { SummaryCard } from "@/features/expenses/components/SummaryCard";
 import { TransactionRow } from "@/features/expenses/components/TransactionRow";
 import { Button } from "@/components/ui/button";
@@ -20,6 +15,7 @@ import { useTransactionModal } from "@/features/expenses/hooks/useTransactionMod
 import { useExpensePageUI } from "@/features/expenses/hooks/useExpensePageUI";
 import { formatMonthThai, getCurrentMonth } from "@/features/expenses/helpers";
 import { useSession } from "@/lib/auth/client";
+import { lazy, Suspense } from "react";
 import {
   ChevronDown,
   ChevronLeft,
@@ -36,6 +32,31 @@ import {
   Wallet,
 } from "lucide-react";
 
+const ExpenseDonutChart = lazy(async () => {
+  const module = await import("@/features/expenses/components/ExpenseDonutChart");
+  return { default: module.ExpenseDonutChart };
+});
+
+const MonthlyBarChart = lazy(async () => {
+  const module = await import("@/features/expenses/components/MonthlyBarChart");
+  return { default: module.MonthlyBarChart };
+});
+
+const AddTransactionModal = lazy(async () => {
+  const module = await import("@/features/expenses/components/AddTransactionModal");
+  return { default: module.AddTransactionModal };
+});
+
+const CategoryManagerModal = lazy(async () => {
+  const module = await import("@/features/expenses/components/CategoryManagerModal");
+  return { default: module.CategoryManagerModal };
+});
+
+const AddCategoryModal = lazy(async () => {
+  const module = await import("@/features/expenses/components/AddCategoryModal");
+  return { default: module.AddCategoryModal };
+});
+
 export function ExpensesPage() {
   const { data: session } = useSession();
   const isAuthed = !!session?.user;
@@ -49,21 +70,27 @@ export function ExpensesPage() {
     isLoading: txLoading,
     refetch: refetchTx,
     isSaving: txSaving,
+    categories,
+    hideAmountsWeb,
     createTransaction,
     updateTransaction,
     deleteTransaction,
   } = useExpenseTransactions(currentMonth, isAuthed);
 
   const {
-    categories,
     isSaving: catSaving,
     createCategory,
     updateCategory,
     deleteCategory,
-  } = useExpenseCategories(isAuthed);
+  } = useExpenseCategories(false, () => void refetchTx());
 
   const { hideAmounts, showCharts, exporting, toggleHideAmounts, toggleCharts, handleExport } =
-    useExpensePageUI({ transactions, summary, currentMonth });
+    useExpensePageUI({
+      transactions,
+      summary,
+      currentMonth,
+      initialHideAmounts: hideAmountsWeb,
+    });
 
   const { multiMonthSummaries } = useMonthlyCharts(currentMonth, isAuthed && showCharts);
 
@@ -136,8 +163,18 @@ export function ExpensesPage() {
           </button>
           {showCharts && (
             <div className="mt-2 space-y-3">
-              <ExpenseDonutChart data={categorySummary} hideAmounts={hideAmounts} />
-              <MonthlyBarChart data={multiMonthSummaries} hideAmounts={hideAmounts} />
+              <Suspense
+                fallback={
+                  <Card className="border-border/70 bg-card/85 dark:bg-card/70 border">
+                    <CardContent className="text-muted-foreground flex items-center justify-center py-10">
+                      <Loader2 size={20} className="animate-spin" />
+                    </CardContent>
+                  </Card>
+                }
+              >
+                <ExpenseDonutChart data={categorySummary} hideAmounts={hideAmounts} />
+                <MonthlyBarChart data={multiMonthSummaries} hideAmounts={hideAmounts} />
+              </Suspense>
             </div>
           )}
         </div>
@@ -176,20 +213,28 @@ export function ExpensesPage() {
         </Button>
       </div>
 
-      <AddTransactionModal
-        key={`transaction-${txModal.showModal ? "open" : "closed"}-${txModal.editingTx?.id ?? "new"}`}
-        categories={categories} open={txModal.showModal}
-        onOpenChange={(open) => { if (!open) txModal.close(); }}
-        onSave={txModal.handleSave} isLoading={txSaving}
-        onAddCategory={catFlow.openAddFromTransaction} editData={txModal.editingTx}
-      />
-      <CategoryManagerModal open={catFlow.showManagerModal} onOpenChange={catFlow.setShowManagerModal} categories={categories} onEdit={catFlow.openEdit} onDelete={catFlow.handleDelete} onAdd={catFlow.openAddFromManager} />
-      <AddCategoryModal
-        key={`category-${catFlow.showCategoryModal ? "open" : "closed"}-${catFlow.editingCategory?.id ?? "new"}`}
-        open={catFlow.showCategoryModal} onOpenChange={catFlow.handleCategoryModalOpenChange}
-        onSave={catFlow.handleSave} isLoading={catSaving}
-        editMode={!!catFlow.editingCategory} category={catFlow.editingCategory}
-      />
+      <Suspense fallback={null}>
+        {txModal.showModal && (
+          <AddTransactionModal
+            key={`transaction-${txModal.showModal ? "open" : "closed"}-${txModal.editingTx?.id ?? "new"}`}
+            categories={categories} open={txModal.showModal}
+            onOpenChange={(open) => { if (!open) txModal.close(); }}
+            onSave={txModal.handleSave} isLoading={txSaving}
+            onAddCategory={catFlow.openAddFromTransaction} editData={txModal.editingTx}
+          />
+        )}
+        {catFlow.showManagerModal && (
+          <CategoryManagerModal open={catFlow.showManagerModal} onOpenChange={catFlow.setShowManagerModal} categories={categories} onEdit={catFlow.openEdit} onDelete={catFlow.handleDelete} onAdd={catFlow.openAddFromManager} />
+        )}
+        {catFlow.showCategoryModal && (
+          <AddCategoryModal
+            key={`category-${catFlow.showCategoryModal ? "open" : "closed"}-${catFlow.editingCategory?.id ?? "new"}`}
+            open={catFlow.showCategoryModal} onOpenChange={catFlow.handleCategoryModalOpenChange}
+            onSave={catFlow.handleSave} isLoading={catSaving}
+            editMode={!!catFlow.editingCategory} category={catFlow.editingCategory}
+          />
+        )}
+      </Suspense>
     </div>
   );
 }
