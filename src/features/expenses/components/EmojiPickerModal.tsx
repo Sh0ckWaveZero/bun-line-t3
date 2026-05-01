@@ -48,7 +48,7 @@ export function EmojiPickerModal({ open, onOpenChange, onSelect }: EmojiPickerMo
           </Button>
         </div>
 
-        <div className="emoji-mart-wrapper">
+        <div className="emoji-mart-wrapper w-full">
           <Picker
             data={data}
             onEmojiSelect={(emoji: EmojiMartResult) => {
@@ -62,6 +62,7 @@ export function EmojiPickerModal({ open, onOpenChange, onSelect }: EmojiPickerMo
             navPosition="bottom"
             perLine={8}
             set="native"
+            width="100%"
           />
         </div>
       </AlertDialogContent>
