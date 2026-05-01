@@ -8,6 +8,7 @@ export function useExpenseTransactions(currentMonth: string, enabled: boolean) {
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ["expenses", currentMonth] })
     void queryClient.invalidateQueries({ queryKey: ["expenses-summary", currentMonth] })
+    void queryClient.invalidateQueries({ queryKey: ["expenses-multi-month"] })
   }
 
   const {

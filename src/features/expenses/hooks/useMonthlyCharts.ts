@@ -9,7 +9,7 @@ export function useMonthlyCharts(currentMonth: string, enabled: boolean) {
       const months = getPastMonths(6, currentMonth)
       const results = await Promise.all(
         months.map(async (month) => {
-          const res = await fetch(`/api/expenses/summary?transMonth=${month}`)
+          const res = await fetch(`/api/expenses/summary?transMonth=${month}`, { cache: "no-store" })
           if (!res.ok) return null
           const json = (await res.json()) as {
             data: { summary: MonthlySummary; categories: CategorySummary[] }

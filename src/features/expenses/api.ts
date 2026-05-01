@@ -5,10 +5,12 @@ import type {
   TransactionWithCategory,
 } from "./types"
 
+const NO_CACHE: RequestInit = { cache: "no-store" }
+
 export async function fetchTransactions(
   transMonth: string,
 ): Promise<TransactionWithCategory[]> {
-  const res = await fetch(`/api/expenses?transMonth=${transMonth}&limit=100`)
+  const res = await fetch(`/api/expenses?transMonth=${transMonth}&limit=100`, NO_CACHE)
   if (!res.ok) throw new Error("ไม่สามารถดึงรายการได้")
   const json = (await res.json()) as { data: TransactionWithCategory[] }
   return json.data
@@ -17,7 +19,7 @@ export async function fetchTransactions(
 export async function fetchSummary(
   transMonth: string,
 ): Promise<{ summary: MonthlySummary; categories: CategorySummary[] }> {
-  const res = await fetch(`/api/expenses/summary?transMonth=${transMonth}`)
+  const res = await fetch(`/api/expenses/summary?transMonth=${transMonth}`, NO_CACHE)
   if (!res.ok) throw new Error("ไม่สามารถดึงสรุปได้")
   const json = (await res.json()) as {
     data: { summary: MonthlySummary; categories: CategorySummary[] }
@@ -26,7 +28,7 @@ export async function fetchSummary(
 }
 
 export async function fetchCategories(): Promise<ExpenseCategory[]> {
-  const res = await fetch("/api/expenses/categories")
+  const res = await fetch("/api/expenses/categories", NO_CACHE)
   if (!res.ok) throw new Error("ไม่สามารถดึงหมวดหมู่ได้")
   const json = (await res.json()) as { data: ExpenseCategory[] }
   return json.data
