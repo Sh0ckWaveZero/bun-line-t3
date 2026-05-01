@@ -1316,6 +1316,9 @@
   --shadow: none;
   --color-border: transparent;
   --padding: 0.35em;
+  --rgb-background: 248, 248, 252;
+  --rgb-input: 237, 237, 245;
+  --rgb-color: 30, 28, 45;
   width: 100% !important;
   display: block;
 }

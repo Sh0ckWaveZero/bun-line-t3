@@ -2,6 +2,7 @@
 
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from "@/components/ui/AlertDialog"
 import { Button } from "@/components/ui/button"
+import { useTheme } from "@/lib/theme/theme-provider"
 import data from "@emoji-mart/data"
 import Picker from "@emoji-mart/react"
 import { X } from "lucide-react"
@@ -19,6 +20,7 @@ interface EmojiMartResult {
 
 export function EmojiPickerModal({ open, onOpenChange, onSelect }: EmojiPickerModalProps) {
   const closeRef = useRef<HTMLButtonElement>(null)
+  const { resolvedTheme } = useTheme()
 
   useEffect(() => {
     if (open) setTimeout(() => closeRef.current?.focus(), 50)
@@ -56,7 +58,7 @@ export function EmojiPickerModal({ open, onOpenChange, onSelect }: EmojiPickerMo
               onOpenChange(false)
             }}
             locale="en"
-            theme="auto"
+            theme={resolvedTheme}
             previewPosition="none"
             skinTonePosition="none"
             navPosition="bottom"
