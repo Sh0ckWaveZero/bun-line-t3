@@ -1,29 +1,24 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { fetchSummary, fetchTransactions } from "../api"
+import { fetchExpenseOverview } from "../api"
 import type { CreateTransactionInput } from "../types"
 
 export function useExpenseTransactions(currentMonth: string, enabled: boolean) {
   const queryClient = useQueryClient()
 
   const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ["expenses", currentMonth] })
-    void queryClient.invalidateQueries({ queryKey: ["expenses-summary", currentMonth] })
+    void queryClient.invalidateQueries({ queryKey: ["expenses-overview", currentMonth] })
+    void queryClient.invalidateQueries({ queryKey: ["expenses-multi-month"] })
   }
 
   const {
-    data: transactions = [],
+    data: overview,
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ["expenses", currentMonth],
-    queryFn: () => fetchTransactions(currentMonth),
+    queryKey: ["expenses-overview", currentMonth],
+    queryFn: () => fetchExpenseOverview(currentMonth),
     enabled,
-  })
-
-  const { data: summaryData } = useQuery({
-    queryKey: ["expenses-summary", currentMonth],
-    queryFn: () => fetchSummary(currentMonth),
-    enabled,
+    staleTime: 30_000,
   })
 
   const createMutation = useMutation({
@@ -65,9 +60,11 @@ export function useExpenseTransactions(currentMonth: string, enabled: boolean) {
   })
 
   return {
-    transactions,
-    summary: summaryData?.summary,
-    categorySummary: summaryData?.categories ?? [],
+    transactions: overview?.transactions ?? [],
+    summary: overview?.summary,
+    categorySummary: overview?.categorySummary ?? [],
+    categories: overview?.categories ?? [],
+    hideAmountsWeb: overview?.hideAmountsWeb ?? false,
     isLoading,
     refetch,
     isSaving: createMutation.isPending || updateMutation.isPending,

@@ -13,6 +13,15 @@ const AlertDialog = AlertDialogPrimitive.Root
 const AlertDialogTrigger = AlertDialogPrimitive.Trigger
 const AlertDialogPortal = AlertDialogPrimitive.Portal
 
+function composeRefs<T>(...refs: (React.Ref<T> | undefined)[]): React.RefCallback<T> {
+  return (value) => {
+    for (const ref of refs) {
+      if (typeof ref === "function") ref(value)
+      else if (ref != null) (ref as React.MutableRefObject<T | null>).current = value
+    }
+  }
+}
+
 const AlertDialogOverlay = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Overlay>
@@ -28,16 +37,29 @@ AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName
 const AlertDialogContent = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>
->(({ className, ...props }, ref) => (
-  <AlertDialogPortal>
-    <AlertDialogOverlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" />
-    <AlertDialogPrimitive.Content
-      ref={ref}
-      className={className}
-      {...props}
-    />
-  </AlertDialogPortal>
-))
+>(({ className, ...props }, ref) => {
+  const innerRef = React.useRef<React.ElementRef<typeof AlertDialogPrimitive.Content>>(null)
+
+  // useLayoutEffect runs before Radix's useEffect that calls hideOthers()
+  // (aria-hidden on background). By focusing the dialog content here, the
+  // focused element is already inside the portal when aria-hidden fires,
+  // so the browser never sees focus trapped inside an aria-hidden ancestor.
+  React.useLayoutEffect(() => {
+    innerRef.current?.focus()
+  }, [])
+
+  return (
+    <AlertDialogPortal>
+      <AlertDialogOverlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" />
+      <AlertDialogPrimitive.Content
+        ref={composeRefs(ref, innerRef)}
+        tabIndex={-1}
+        className={className}
+        {...props}
+      />
+    </AlertDialogPortal>
+  )
+})
 AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName
 
 const AlertDialogHeader = ({
@@ -131,11 +153,11 @@ export const ConfirmDialog = ({
           <AlertDialogTitle className="text-lg font-semibold text-gray-900 dark:text-white">
             {title}
           </AlertDialogTitle>
-          {description && (
-            <AlertDialogDescription className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {description}
-            </AlertDialogDescription>
-          )}
+          <AlertDialogDescription
+            className={description ? "mt-2 text-sm text-gray-600 dark:text-gray-400" : "sr-only"}
+          >
+            {description}
+          </AlertDialogDescription>
         </AlertDialogHeader>
 
         <AlertDialogFooter className="mt-6 flex justify-end gap-3">
@@ -186,11 +208,11 @@ export const AlertDialogBox = ({
               <AlertDialogTitle className="text-lg font-semibold text-gray-900 dark:text-white">
                 {title}
               </AlertDialogTitle>
-              {description && (
-                <AlertDialogDescription className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                  {description}
-                </AlertDialogDescription>
-              )}
+              <AlertDialogDescription
+                className={description ? "mt-2 text-sm text-gray-600 dark:text-gray-400" : "sr-only"}
+              >
+                {description}
+              </AlertDialogDescription>
             </div>
             <AlertDialogPrimitive.Cancel asChild>
               <button

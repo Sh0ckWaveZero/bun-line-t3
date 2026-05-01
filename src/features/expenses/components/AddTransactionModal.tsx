@@ -1,4 +1,4 @@
-import { AlertDialog, AlertDialogContent } from "@/components/ui/AlertDialog"
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from "@/components/ui/AlertDialog"
 import { Button } from "@/components/ui/button"
 import { PopoverDatePicker } from "@/components/ui/date-picker"
 import { Input } from "@/components/ui/input"
@@ -8,6 +8,19 @@ import type { CreateTransactionInput, ExpenseCategory, TransactionWithCategory }
 import { Loader2, Tag, TrendingDown, TrendingUp, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { CategoryCombobox } from "./CategoryCombobox"
+
+function formatAmount(value: string): string {
+  const stripped = value.replace(/[^0-9.]/g, "")
+  if (!stripped) return ""
+  const dotIndex = stripped.indexOf(".")
+  const hasDot = dotIndex !== -1
+  const intPart = hasDot ? stripped.slice(0, dotIndex) : stripped
+  const decPart = hasDot ? stripped.slice(dotIndex + 1).replace(/\./g, "").slice(0, 2) : undefined
+  const formattedInt = intPart
+    ? intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+    : "0"
+  return decPart !== undefined ? `${formattedInt}.${decPart}` : formattedInt
+}
 
 interface AddTransactionModalProps {
   categories: ExpenseCategory[]
@@ -39,7 +52,7 @@ export function AddTransactionModal({
       if (editData) {
         setType(editData.type)
         setCategoryId(editData.categoryId)
-        setAmount(editData.amount.toString())
+        setAmount(formatAmount(editData.amount.toString()))
         setNote(editData.note ?? "")
         setTransDate(editData.transDate)
       } else {
@@ -56,11 +69,12 @@ export function AddTransactionModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!categoryId || !amount || !transDate) return
+    const numeric = parseFloat(amount.replace(/,/g, ""))
+    if (!categoryId || !amount || !transDate || isNaN(numeric) || numeric <= 0) return
     await onSave({
       categoryId,
       type,
-      amount: parseFloat(amount),
+      amount: numeric,
       note: note || undefined,
       transDate,
     })
@@ -76,12 +90,12 @@ export function AddTransactionModal({
           id="add-transaction-modal-header"
           className="border-border/50 relative flex shrink-0 items-center justify-center border-b px-6 py-4"
         >
-          <h3
-            id="add-transaction-modal-title"
-            className="text-foreground text-center text-lg font-bold"
-          >
+          <AlertDialogTitle className="text-foreground text-center text-lg font-bold">
             {editData ? "แก้ไขรายการ" : "เพิ่มรายการ"}
-          </h3>
+          </AlertDialogTitle>
+          <AlertDialogDescription className="sr-only">
+            {editData ? "แก้ไขรายละเอียดรายรับหรือรายจ่าย" : "เพิ่มรายการรายรับหรือรายจ่ายใหม่"}
+          </AlertDialogDescription>
           <Button
             id="add-transaction-close-btn"
             variant="ghost"
@@ -176,12 +190,10 @@ export function AddTransactionModal({
             <div id="transaction-amount-group" className="space-y-2">
               <Input
                 id="transaction-amount-input"
-                type="number"
+                type="text"
                 inputMode="decimal"
-                min="0.01"
-                step="0.01"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => setAmount(formatAmount(e.target.value))}
                 required
                 placeholder="จำนวนเงิน (บาท)"
                 className="border-border bg-background placeholder:text-muted-foreground/60 focus-visible:ring-foreground/30 h-12 rounded-lg px-4 text-base font-medium"

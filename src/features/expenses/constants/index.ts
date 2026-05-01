@@ -55,7 +55,7 @@ export const MAX_PAGE_SIZE = 100;
 export const DEFAULT_CURRENCY = "THB";
 
 // ─────────────────────────────────────────────
-// Emoji List
+// Emoji List (legacy fallback)
 // ─────────────────────────────────────────────
 
 export const EMOJI_LIST: readonly string[] = [

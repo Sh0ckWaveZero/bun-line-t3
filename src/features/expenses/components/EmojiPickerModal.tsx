@@ -1,9 +1,15 @@
-import { AlertDialog, AlertDialogContent } from "@/components/ui/AlertDialog"
+"use client"
+
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from "@/components/ui/AlertDialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { EMOJI_LIST } from "@/features/expenses/constants"
-import { X } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { Search, X } from "lucide-react"
+import { useMemo, useState } from "react"
 
 interface EmojiPickerModalProps {
   open: boolean
@@ -11,113 +17,169 @@ interface EmojiPickerModalProps {
   onSelect: (emoji: string) => void
 }
 
-export function EmojiPickerModal({
-  open,
-  onOpenChange,
-  onSelect,
-}: EmojiPickerModalProps) {
-  const [search, setSearch] = useState("")
-  const inputRef = useRef<HTMLInputElement>(null)
+interface EmojiOption {
+  emoji: string
+  label: string
+  keywords: string
+}
 
-  useEffect(() => {
-    if (open) setTimeout(() => inputRef.current?.focus(), 100)
-  }, [open])
+const FREQUENT_EMOJIS = ["🍔", "🚗", "🏠", "💡", "🏥", "🎮", "🛍️", "💰"]
 
-  const filtered = search ? EMOJI_LIST.filter((e) => e.includes(search)) : EMOJI_LIST
+const EMOJI_OPTIONS: EmojiOption[] = [
+  { emoji: "🍔", label: "อาหาร", keywords: "food meal burger eat restaurant อาหาร กิน ร้านอาหาร" },
+  { emoji: "🍜", label: "ก๋วยเตี๋ยว", keywords: "noodle ramen food อาหาร ก๋วยเตี๋ยว" },
+  { emoji: "🍱", label: "ข้าวกล่อง", keywords: "bento lunch food อาหาร กลางวัน" },
+  { emoji: "☕", label: "กาแฟ", keywords: "coffee drink cafe กาแฟ เครื่องดื่ม คาเฟ่" },
+  { emoji: "🍺", label: "เครื่องดื่ม", keywords: "beer drink bar เครื่องดื่ม" },
+  { emoji: "🛒", label: "ของใช้", keywords: "grocery shopping market ของใช้ ตลาด ซื้อของ" },
+  { emoji: "🛍️", label: "ช้อปปิ้ง", keywords: "shopping bag buy mall ช้อปปิ้ง ซื้อของ" },
+  { emoji: "👕", label: "เสื้อผ้า", keywords: "shirt clothes fashion เสื้อผ้า แฟชั่น" },
+  { emoji: "👟", label: "รองเท้า", keywords: "shoes sneaker รองเท้า" },
+  { emoji: "💄", label: "ความงาม", keywords: "beauty makeup cosmetic ความงาม เครื่องสำอาง" },
+  { emoji: "🚗", label: "รถยนต์", keywords: "car transport travel รถ เดินทาง" },
+  { emoji: "⛽", label: "น้ำมัน", keywords: "fuel gas petrol น้ำมัน รถ" },
+  { emoji: "🚌", label: "รถเมล์", keywords: "bus transport รถเมล์ เดินทาง" },
+  { emoji: "🚕", label: "แท็กซี่", keywords: "taxi ride transport แท็กซี่ เดินทาง" },
+  { emoji: "✈️", label: "เดินทาง", keywords: "flight plane travel trip เที่ยว เดินทาง" },
+  { emoji: "🏠", label: "บ้าน", keywords: "home house rent บ้าน ที่พัก ค่าเช่า" },
+  { emoji: "🏢", label: "คอนโด", keywords: "condo apartment rent คอนโด หอพัก" },
+  { emoji: "💡", label: "ไฟฟ้า", keywords: "electric utility bill ไฟฟ้า ค่าน้ำ ค่าไฟ" },
+  { emoji: "💧", label: "ค่าน้ำ", keywords: "water utility bill น้ำ ค่าน้ำ" },
+  { emoji: "📶", label: "อินเทอร์เน็ต", keywords: "internet wifi phone อินเทอร์เน็ต โทรศัพท์" },
+  { emoji: "📱", label: "มือถือ", keywords: "phone mobile มือถือ โทรศัพท์" },
+  { emoji: "🏥", label: "สุขภาพ", keywords: "health hospital medical สุขภาพ โรงพยาบาล" },
+  { emoji: "💊", label: "ยา", keywords: "medicine pill pharmacy ยา ร้านยา" },
+  { emoji: "🦷", label: "ฟัน", keywords: "dental tooth dentist ฟัน หมอฟัน" },
+  { emoji: "🏋️", label: "ฟิตเนส", keywords: "fitness gym exercise ฟิตเนส ออกกำลัง" },
+  { emoji: "🎮", label: "เกม", keywords: "game entertainment เกม บันเทิง" },
+  { emoji: "🎬", label: "หนัง", keywords: "movie cinema film หนัง โรงหนัง" },
+  { emoji: "🎵", label: "เพลง", keywords: "music song เพลง subscription" },
+  { emoji: "📚", label: "การศึกษา", keywords: "book education study เรียน หนังสือ การศึกษา" },
+  { emoji: "💼", label: "งาน", keywords: "work job office งาน เงินเดือน" },
+  { emoji: "💰", label: "เงิน", keywords: "money income cash เงิน รายรับ" },
+  { emoji: "💵", label: "เงินสด", keywords: "cash money เงินสด" },
+  { emoji: "🏦", label: "ธนาคาร", keywords: "bank finance ธนาคาร การเงิน" },
+  { emoji: "📈", label: "ลงทุน", keywords: "invest stock profit ลงทุน หุ้น กำไร" },
+  { emoji: "🎁", label: "ของขวัญ", keywords: "gift bonus present ของขวัญ โบนัส" },
+  { emoji: "💳", label: "บัตร", keywords: "card credit payment บัตร เครดิต" },
+  { emoji: "🧾", label: "บิล", keywords: "bill receipt invoice บิล ใบเสร็จ" },
+  { emoji: "💸", label: "รายจ่าย", keywords: "expense spending money รายจ่าย ใช้เงิน" },
+  { emoji: "🐶", label: "สัตว์เลี้ยง", keywords: "pet dog cat สัตว์เลี้ยง" },
+  { emoji: "🌱", label: "ต้นไม้", keywords: "plant garden ต้นไม้ สวน" },
+  { emoji: "🧹", label: "ทำความสะอาด", keywords: "clean home ทำความสะอาด บ้าน" },
+  { emoji: "🔧", label: "ซ่อม", keywords: "repair tool maintenance ซ่อม เครื่องมือ" },
+  { emoji: "🚨", label: "ฉุกเฉิน", keywords: "emergency urgent ฉุกเฉิน" },
+  { emoji: "❤️", label: "ครอบครัว", keywords: "family love ครอบครัว ความรัก" },
+  { emoji: "👶", label: "ลูก", keywords: "baby child kid ลูก เด็ก" },
+  { emoji: "🙏", label: "ทำบุญ", keywords: "donate merit charity ทำบุญ บริจาค" },
+  { emoji: "➕", label: "อื่นๆ", keywords: "other misc อื่นๆ" },
+]
+
+export function EmojiPickerModal({ open, onOpenChange, onSelect }: EmojiPickerModalProps) {
+  const [query, setQuery] = useState("")
+
+  const filteredEmojis = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase()
+    if (!normalizedQuery) return EMOJI_OPTIONS
+
+    return EMOJI_OPTIONS.filter((item) =>
+      `${item.emoji} ${item.label} ${item.keywords}`.toLowerCase().includes(normalizedQuery),
+    )
+  }, [query])
+
+  const handleSelect = (emoji: string) => {
+    onSelect(emoji)
+    onOpenChange(false)
+  }
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent
         id="emoji-picker-modal"
-        className="border-border/70 bg-card fixed top-1/2 left-1/2 z-60 flex max-h-[85vh] w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg border p-0"
+        className="border-border/70 bg-card fixed top-1/2 left-1/2 z-60 flex max-h-[90vh] w-[calc(100vw-1.5rem)] max-w-[25rem] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl border p-0 shadow-2xl"
       >
-        <div
-          id="emoji-picker-header"
-          className="border-border/50 flex shrink-0 flex-row items-center justify-between space-y-0 border-b px-5 py-4"
-        >
-          <h3 id="emoji-picker-title" className="text-foreground text-sm font-semibold">
-            เลือก Emoji
-          </h3>
+        <div className="border-border/60 flex shrink-0 items-center justify-between border-b px-5 py-3.5">
+          <AlertDialogTitle className="text-muted-foreground text-sm font-semibold tracking-[0.2em] uppercase">
+            EMOJI
+          </AlertDialogTitle>
+          <AlertDialogDescription className="sr-only">
+            เลือก Emoji สำหรับหมวดหมู่
+          </AlertDialogDescription>
           <Button
-            id="emoji-picker-close-btn"
             variant="ghost"
             size="sm"
             onClick={() => onOpenChange(false)}
-            className="hover:bg-muted h-8 w-8 rounded-lg"
+            className="text-muted-foreground hover:text-foreground hover:bg-muted h-8 w-8 rounded-lg"
           >
-            <X id="emoji-picker-close-icon" size={18} />
+            <X size={18} />
           </Button>
         </div>
 
-        <div
-          id="emoji-picker-content"
-          className="min-h-0 flex-1 space-y-3 overflow-y-auto p-5"
-        >
-          <div id="emoji-search-wrapper" className="relative">
+        <div className="min-h-0 flex-1 px-4 pb-4 pt-3">
+          <div className="relative mb-3">
+            <Search className="text-muted-foreground pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
             <Input
-              id="emoji-native-input"
-              ref={inputRef}
-              value={search}
-              onChange={(e) => {
-                const val = e.target.value
-                setSearch(val)
-                if (val && val !== search) {
-                  const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" })
-                  const segs = [...segmenter.segment(val)]
-                  if (segs.length > 0) {
-                    const lastEmoji = segs[segs.length - 1]!.segment
-                    if (EMOJI_LIST.includes(lastEmoji)) {
-                      onSelect(lastEmoji)
-                      onOpenChange(false)
-                    }
-                  }
-                }
-              }}
-              placeholder="🔍 พิมพ์ emoji..."
-              className="h-10 border-2 text-center text-xl"
-              maxLength={10}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="ค้นหา"
+              className="bg-muted/45 h-10 rounded-xl pl-9 text-base"
             />
-            <div
-              id="emoji-search-count"
-              className="text-muted-foreground/50 absolute top-1/2 right-3 -translate-y-1/2 text-xs"
-            >
-              {search.length > 0 && `${filtered.length} ตัว`}
-            </div>
           </div>
 
-          <div
-            id="emoji-grid"
-            className="grid max-h-[40vh] grid-cols-8 gap-1.5 overflow-y-auto pb-1"
-          >
-            {filtered.slice(0, 200).map((emoji) => (
-              <button
-                key={emoji}
-                id={`emoji-btn-${emoji.codePointAt(0)}`}
-                type="button"
-                onClick={() => {
-                  onSelect(emoji)
-                  onOpenChange(false)
-                }}
-                className="hover:border-border hover:bg-muted flex h-10 w-10 items-center justify-center rounded-lg border border-transparent text-2xl transition-colors"
-                aria-label={`เลือก ${emoji}`}
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
+          <div className="emoji-picker-scrollbar max-h-[380px] overflow-y-auto pr-1">
+            {!query && (
+              <section className="mb-4">
+                <h3 className="text-foreground mb-2 text-sm font-semibold">ใช้บ่อย</h3>
+                <div className="grid grid-cols-8 gap-1.5">
+                  {FREQUENT_EMOJIS.map((emoji) => (
+                    <EmojiButton key={emoji} emoji={emoji} onClick={handleSelect} />
+                  ))}
+                </div>
+              </section>
+            )}
 
-          {filtered.length === 0 && (
-            <div id="emoji-empty-msg" className="py-8 text-center">
-              <p id="emoji-empty-title" className="text-muted-foreground text-sm">
-                ไม่พบ emoji
-              </p>
-              <p id="emoji-empty-description" className="text-muted-foreground/60 mt-1 text-xs">
-                ลองเปลี่ยนคำค้น
-              </p>
-            </div>
-          )}
+            <section>
+              <h3 className="text-foreground mb-2 text-sm font-semibold">หมวดหมู่</h3>
+              {filteredEmojis.length > 0 ? (
+                <div className="grid grid-cols-8 gap-1.5">
+                  {filteredEmojis.map((item) => (
+                    <EmojiButton
+                      key={`${item.emoji}-${item.label}`}
+                      emoji={item.emoji}
+                      label={item.label}
+                      onClick={handleSelect}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground py-8 text-center text-sm">
+                  ไม่พบ Emoji
+                </p>
+              )}
+            </section>
+          </div>
         </div>
       </AlertDialogContent>
     </AlertDialog>
+  )
+}
+
+interface EmojiButtonProps {
+  emoji: string
+  label?: string
+  onClick: (emoji: string) => void
+}
+
+function EmojiButton({ emoji, label, onClick }: EmojiButtonProps) {
+  return (
+    <button
+      type="button"
+      title={label}
+      aria-label={label ? `เลือก ${label}` : `เลือก ${emoji}`}
+      onClick={() => onClick(emoji)}
+      className="hover:bg-muted focus-visible:ring-ring flex aspect-square items-center justify-center rounded-lg text-2xl transition-colors focus-visible:outline-none focus-visible:ring-2"
+    >
+      {emoji}
+    </button>
   )
 }

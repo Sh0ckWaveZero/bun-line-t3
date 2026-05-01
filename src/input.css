@@ -1305,3 +1305,17 @@
     font-family: var(--font-noto-sans-thai);
   }
 }
+
+.emoji-picker-scrollbar {
+  scrollbar-width: thin;
+}
+.emoji-picker-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+.emoji-picker-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.35);
+  border-radius: 999px;
+}
+.emoji-picker-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
