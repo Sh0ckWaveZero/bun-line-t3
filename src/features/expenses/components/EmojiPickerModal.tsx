@@ -61,9 +61,11 @@ export function EmojiPickerModal({ open, onOpenChange, onSelect }: EmojiPickerMo
             skinTonePosition="none"
             navPosition="bottom"
             perLine={8}
+            emojiButtonSize={46}
+            emojiSize={28}
             set="native"
             width="100%"
-            height={420}
+            height={450}
           />
         </div>
       </AlertDialogContent>
