@@ -1310,14 +1310,13 @@
 .emoji-mart-wrapper {
   display: block;
   width: 100%;
-  overflow: hidden;
 }
 .emoji-mart-wrapper em-emoji-picker {
   --border-radius: 0px;
   --shadow: none;
   --color-border: transparent;
+  --padding: 0.35em;
   width: 100% !important;
-  height: 420px;
   display: block;
 }
 .dark .emoji-mart-wrapper em-emoji-picker {

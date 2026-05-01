@@ -28,11 +28,11 @@ export function EmojiPickerModal({ open, onOpenChange, onSelect }: EmojiPickerMo
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent
         id="emoji-picker-modal"
-        className="border-border/70 bg-card fixed top-1/2 left-1/2 z-60 flex w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg border p-0"
+        className="border-border/70 bg-card fixed top-1/2 left-1/2 z-60 flex w-[calc(100vw-2rem)] max-w-[380px] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl border p-0 shadow-2xl"
       >
-        <div className="border-border/50 flex shrink-0 items-center justify-between border-b px-5 py-4">
-          <AlertDialogTitle className="text-foreground text-sm font-semibold">
-            เลือก Emoji
+        <div className="flex shrink-0 items-center justify-between px-4 py-2.5">
+          <AlertDialogTitle className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
+            Emoji
           </AlertDialogTitle>
           <AlertDialogDescription className="sr-only">
             เลือก Emoji สำหรับหมวดหมู่
@@ -42,9 +42,9 @@ export function EmojiPickerModal({ open, onOpenChange, onSelect }: EmojiPickerMo
             variant="ghost"
             size="sm"
             onClick={() => onOpenChange(false)}
-            className="hover:bg-muted h-8 w-8 rounded-lg"
+            className="text-muted-foreground hover:text-foreground hover:bg-muted h-7 w-7 rounded-lg"
           >
-            <X size={18} />
+            <X size={15} />
           </Button>
         </div>
 
@@ -63,6 +63,7 @@ export function EmojiPickerModal({ open, onOpenChange, onSelect }: EmojiPickerMo
             perLine={8}
             set="native"
             width="100%"
+            height={420}
           />
         </div>
       </AlertDialogContent>
