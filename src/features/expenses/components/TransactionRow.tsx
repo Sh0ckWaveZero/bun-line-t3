@@ -38,23 +38,23 @@ export function TransactionRow({
         >
           <span
             id={`transaction-emoji-${tx.id}`}
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border text-lg sm:h-10 sm:w-10 sm:text-2xl ${rowTone}`}
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg sm:h-10 sm:w-10 sm:text-xl ${rowTone}`}
           >
             {tx.category.icon ?? (isIncome ? "💰" : "💸")}
           </span>
-          <div className="min-w-0 flex-1">
+          <div id={`transaction-text-${tx.id}`} className="min-w-0 flex-1">
             <p
               id={`transaction-category-${tx.id}`}
-              className="text-foreground truncate text-xs font-medium sm:text-sm"
+              className="text-foreground truncate text-sm font-medium"
             >
               {tx.category.name}
             </p>
             <p
               id={`transaction-meta-${tx.id}`}
-              className="text-muted-foreground/60 mt-0.5 text-[10px] sm:text-xs"
+              className="text-muted-foreground/60 mt-0.5 text-xs"
             >
               {formatDateShortThai(tx.transDate)}
-              {tx.note && <span> · {tx.note}</span>}
+              {tx.note && <span id={`transaction-note-${tx.id}`}> · {tx.note}</span>}
             </p>
             {tx.tags && (
               <div
@@ -68,7 +68,8 @@ export function TransactionRow({
                   .map((tag) => (
                     <span
                       key={tag}
-                      className="bg-primary/10 text-primary inline-flex items-center rounded-full px-1.5 py-0 text-[9px] font-medium sm:text-[10px]"
+                      id={`transaction-tag-${tx.id}-${tag}`}
+                      className="bg-primary/10 text-primary inline-flex items-center rounded-full px-1.5 py-0 text-[11px] font-medium"
                     >
                       @{tag}
                     </span>
@@ -83,7 +84,7 @@ export function TransactionRow({
         >
           <span
             id={`transaction-amount-${tx.id}`}
-            className="mr-1 text-xs font-bold tabular-nums sm:mr-2 sm:text-sm"
+            className="mr-1 text-sm font-bold tabular-nums sm:mr-2"
             style={{
               color: isIncome
                 ? TRANSACTION_TYPE_COLORS.INCOME
