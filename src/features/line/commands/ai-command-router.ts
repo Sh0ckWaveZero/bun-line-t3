@@ -281,9 +281,20 @@ export async function executeCommand(
         }
 
         if (subcommand === "edit" || subcommand === "แก้" || subcommand === "แก้ไข") {
-          const field = parameters.field || parameters.amount ? String(parameters.amount) : "";
-          const value = parameters.value || parameters.note || parameters.category || "";
-          conditions = [field, String(value)].filter(Boolean);
+          // If field is not specified but amount is provided → assume "amount"
+          const field = parameters.field || (parameters.amount ? "amount" : "");
+          // Extract value based on what's provided
+          let value = "";
+          if (parameters.value !== undefined) {
+            value = String(parameters.value);
+          } else if (parameters.amount !== undefined && (!parameters.field || parameters.field === "amount")) {
+            value = String(parameters.amount);
+          } else if (parameters.note !== undefined) {
+            value = parameters.note;
+          } else if (parameters.category !== undefined) {
+            value = parameters.category;
+          }
+          conditions = [field, value].filter(Boolean);
           await handleExpenseCommand(req, conditions);
           return {
             success: true,
