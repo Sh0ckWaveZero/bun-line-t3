@@ -16,12 +16,17 @@ export default function Header() {
   const profileImageSrc = session?.user?.image?.trim() || DEFAULT_AVATAR_SRC;
   const routerState = useRouterState();
   const pathname = routerState.location.pathname;
-  const isRouteChanging = routerState.status === "pending";
+  const [isRouteChanging, setIsRouteChanging] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Initialize with closed menus to match server render
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+
+  // Track route changes for loading indicator (client-side only)
+  useEffect(() => {
+    setIsRouteChanging(routerState.status === "pending");
+  }, [routerState.status]);
 
   // Close mobile menu on resize to desktop
   useEffect(() => {
