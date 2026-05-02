@@ -3,10 +3,6 @@
 d:
 	bun run dev
 
-# 🚀 Vercel Deployment  
-deploy:
-	vercel deploy --prod
-
 # 🔧 RASPBERRY PI BUILD COMMANDS
 # Build optimized สำหรับ Raspberry Pi 4 RAM 4GB
 

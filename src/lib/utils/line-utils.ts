@@ -28,6 +28,11 @@ export const sendLoadingAnimation = async (
   loadingSeconds: number = 5,
 ) => {
   try {
+    // ป้องกันการยิง loading ซ้ำใน request เดียวกัน
+    if (req.__lineLoadingAnimationShown) {
+      return;
+    }
+
     const source = req.body?.events?.[0]?.source;
     const userId = source?.userId;
     const sourceType = source?.type;
@@ -58,6 +63,7 @@ export const sendLoadingAnimation = async (
       );
 
       if (loadingResponse.ok) {
+        req.__lineLoadingAnimationShown = true;
         console.info(`[sendLoadingAnimation] แสดง loading ที่ ${sourceType || "user"}: ${userId}`);
         return loadingResponse;
       }
@@ -80,6 +86,7 @@ export const sendLoadingAnimation = async (
       }),
     });
 
+    req.__lineLoadingAnimationShown = true;
     return;
   } catch (error) {
     console.error("[sendLoadingAnimation] ล้มเหลว:", error);

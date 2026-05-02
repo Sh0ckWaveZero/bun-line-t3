@@ -7,6 +7,20 @@ interface SaveBudgetCallbacks {
 
 export function useBudgets(currentMonth: string, enabled: boolean) {
   const queryClient = useQueryClient();
+  const REQUEST_TIMEOUT_MS = 8000;
+
+  const fetchWithTimeout = async (input: string, init: RequestInit = {}) => {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    try {
+      return await fetch(input, {
+        ...init,
+        signal: controller.signal,
+      });
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
+  };
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ["expense-budgets"] });
@@ -16,7 +30,7 @@ export function useBudgets(currentMonth: string, enabled: boolean) {
   const { data: budgetUsage = [], isLoading } = useQuery({
     queryKey: ["expense-budgets", currentMonth],
     queryFn: async () => {
-      const res = await fetch(`/api/expenses/budgets?month=${currentMonth}`);
+      const res = await fetchWithTimeout(`/api/expenses/budgets?month=${currentMonth}`);
       if (!res.ok) {
         throw new Error("Failed to fetch budgets");
       }

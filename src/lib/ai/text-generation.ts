@@ -1,6 +1,7 @@
 import { env } from "@/env.mjs";
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
+import { supportsTemperature } from "@/lib/ai/model-utils";
 
 const openai = createOpenAI({
   apiKey: env.OPENAI_API_KEY || "",
@@ -34,7 +35,7 @@ export async function generatePersonalText(params: {
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
-      temperature: 0.8,
+      ...(supportsTemperature(modelName) ? { temperature: 0.8 } : {}),
     });
 
     return { text: text.trim() };
