@@ -21,6 +21,8 @@ import { handleLeaveCommandWrapper } from "./handleLeaveCommandWrapper";
 import { handleChartCommand, parseChartCommand } from "./handleChartCommand";
 import { handleSettingsCommand } from "./handleSettingsCommand";
 import { handleIdGenerator } from "./handleIdGenerator";
+import { handleExpenseCommand } from "./handleExpenseCommand";
+import { handleCategoryCommand } from "./handleCategoryCommand";
 
 export interface CommandRouteResult {
   /** Whether the command was successfully routed */
@@ -214,6 +216,179 @@ export async function executeCommand(
           command: "help",
           explanation: "แสดงรายการคำสั่งทั้งหมด",
         };
+
+      // Expense tracker commands
+      case "expense": {
+        const subcommand = parameters.subcommand || "";
+        const amount = parameters.amount ? String(parameters.amount) : "";
+        const category = parameters.category || "";
+        const note = parameters.note ? `#${parameters.note}` : "";
+        const tags = parameters.tags
+          ? Array.isArray(parameters.tags)
+            ? parameters.tags.map((t: string) => `@${t}`).join(" ")
+            : `@${parameters.tags}`
+          : "";
+
+        // Build conditions array based on subcommand
+        let conditions: string[] = [];
+
+        if (subcommand === "add" || subcommand === "จ่าย" || subcommand === "บันทึก") {
+          // /จ่าย [amount] [category] [#note] [@tags]
+          conditions = [amount, category, note, tags].filter(Boolean);
+          await handleExpenseCommand(req, conditions, "EXPENSE");
+          return {
+            success: true,
+            command: "expense",
+            parameters,
+            explanation: `บันทึกรายจ่าย ${amount} บาท${category ? ` หมวด ${category}` : ""}${note ? ` ${note}` : ""}`,
+          };
+        }
+
+        if (subcommand === "income" || subcommand === "รับ" || subcommand === "รายรับ") {
+          // /รับ [amount] [category] [#note] [@tags]
+          conditions = [amount, category, note, tags].filter(Boolean);
+          await handleExpenseCommand(req, conditions, "INCOME");
+          return {
+            success: true,
+            command: "expense",
+            parameters,
+            explanation: `บันทึกรายรับ ${amount} บาท${category ? ` หมวด ${category}` : ""}${note ? ` ${note}` : ""}`,
+          };
+        }
+
+        if (subcommand === "list" || subcommand === "ล่าสุด" || subcommand === "history") {
+          const limit = parameters.limit || parameters.count || 5;
+          conditions = [String(limit)];
+          await handleExpenseCommand(req, conditions);
+          return {
+            success: true,
+            command: "expense",
+            parameters,
+            explanation: `แสดงรายการล่าสุด ${limit} รายการ`,
+          };
+        }
+
+        if (subcommand === "del" || subcommand === "delete" || subcommand === "ลบ") {
+          const id = parameters.id || "";
+          conditions = id ? [id] : [];
+          await handleExpenseCommand(req, conditions);
+          return {
+            success: true,
+            command: "expense",
+            parameters,
+            explanation: id ? `ลบรายการ ${id}` : "แสดงเมนูลบรายการ",
+          };
+        }
+
+        if (subcommand === "edit" || subcommand === "แก้" || subcommand === "แก้ไข") {
+          const field = parameters.field || parameters.amount ? String(parameters.amount) : "";
+          const value = parameters.value || parameters.note || parameters.category || "";
+          conditions = [field, String(value)].filter(Boolean);
+          await handleExpenseCommand(req, conditions);
+          return {
+            success: true,
+            command: "expense",
+            parameters,
+            explanation: "แก้ไขรายการล่าสุด",
+          };
+        }
+
+        if (subcommand === "month" || subcommand === "เดือน") {
+          const month = parameters.month || "";
+          conditions = [month];
+          await handleExpenseCommand(req, conditions);
+          return {
+            success: true,
+            command: "expense",
+            parameters,
+            explanation: month ? `แสดงสรุปเดือน ${month}` : "แสดงสรุปเดือนปัจจุบัน",
+          };
+        }
+
+        if (subcommand === "today" || subcommand === "วันนี้") {
+          await handleExpenseCommand(req, []);
+          return {
+            success: true,
+            command: "expense",
+            explanation: "แสดงสรุปวันนี้",
+          };
+        }
+
+        if (subcommand === "week" || subcommand === "สัปดาห์") {
+          await handleExpenseCommand(req, []);
+          return {
+            success: true,
+            command: "expense",
+            explanation: "แสดงสรุปสัปดาห์นี้",
+          };
+        }
+
+        // Default: show summary
+        await handleExpenseCommand(req, []);
+        return {
+          success: true,
+          command: "expense",
+          explanation: "แสดงสรุปรายรับรายจ่ายเดือนปัจจุบัน",
+        };
+      }
+
+      case "category": {
+        const subcommand = parameters.subcommand || parameters.action || "";
+        const name = parameters.name || "";
+        const icon = parameters.icon || "";
+
+        let conditions: string[] = [];
+
+        if (subcommand === "add" || subcommand === "เพิ่ม" || subcommand === "สร้าง" || subcommand === "new") {
+          conditions = [name, icon].filter(Boolean);
+          await handleCategoryCommand(req, conditions);
+          return {
+            success: true,
+            command: "category",
+            parameters,
+            explanation: `สร้างหมวดหมู่ "${name}"`,
+          };
+        }
+
+        if (subcommand === "del" || subcommand === "delete" || subcommand === "ลบ" || subcommand === "rm") {
+          conditions = [name];
+          await handleCategoryCommand(req, conditions);
+          return {
+            success: true,
+            command: "category",
+            parameters,
+            explanation: `ลบหมวดหมู่ "${name}"`,
+          };
+        }
+
+        // Default: list all categories
+        await handleCategoryCommand(req, []);
+        return {
+          success: true,
+          command: "category",
+          explanation: "แสดงหมวดหมู่ทั้งหมด",
+        };
+      }
+
+      // Income shortcut (รับ)
+      case "รับ": {
+        const amount = parameters.amount ? String(parameters.amount) : "";
+        const category = parameters.category || "";
+        const note = parameters.note ? `#${parameters.note}` : "";
+        const tags = parameters.tags
+          ? Array.isArray(parameters.tags)
+            ? parameters.tags.map((t: string) => `@${t}`).join(" ")
+            : `@${parameters.tags}`
+          : "";
+        const conditions = [amount, category, note, tags].filter(Boolean);
+        await handleExpenseCommand(req, conditions, "INCOME");
+        return {
+          success: true,
+          command: "expense",
+          parameters,
+          explanation: `บันทึกรายรับ ${amount} บาท${category ? ` หมวด ${category}` : ""}`,
+        };
+      }
 
       default:
         return {
