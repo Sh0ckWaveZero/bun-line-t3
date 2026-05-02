@@ -8,14 +8,15 @@ import { NAVIGATION_ITEMS } from "./navigation.config";
 import { DesktopNav } from "./DesktopNav";
 import { MobileNav } from "./MobileNav";
 import { UserSection } from "./UserSection";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import type { NavItem } from "./types";
 
 export default function Header() {
   const { data: session } = useSession();
   const profileImageSrc = session?.user?.image?.trim() || DEFAULT_AVATAR_SRC;
-  const pathname = useRouterState({
-    select: (state) => state.location.pathname,
-  });
+  const routerState = useRouterState();
+  const pathname = routerState.location.pathname;
+  const isRouteChanging = routerState.status === "pending";
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Initialize with closed menus to match server render
@@ -90,13 +91,25 @@ export default function Header() {
           </div>
         </div>
 
-        {/* User Section */}
-        <UserSection
-          session={session}
-          profileImageSrc={profileImageSrc}
-          isMobileMenuOpen={isMobileMenuOpen}
-          onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        />
+        {/* Router Loading Indicator + User Section */}
+        <div className="flex items-center gap-3">
+          {isRouteChanging && (
+            <div
+              className="flex items-center gap-2 text-sm text-muted-foreground animate-in fade-in slide-in-from-right-2 duration-200"
+              role="status"
+              aria-live="polite"
+            >
+              <LoadingSpinner size="sm" />
+              <span className="hidden lg:inline">กำลังโหลด...</span>
+            </div>
+          )}
+          <UserSection
+            session={session}
+            profileImageSrc={profileImageSrc}
+            isMobileMenuOpen={isMobileMenuOpen}
+            onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          />
+        </div>
       </div>
 
       {/* Mobile Navigation */}

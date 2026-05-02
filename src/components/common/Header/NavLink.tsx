@@ -17,6 +17,8 @@ export function NavLink({ item, isActive, onClick, className }: NavLinkProps) {
       onClick={onClick}
       aria-current={isActive ? "page" : undefined}
       aria-label={item.ariaLabel}
+      preload="intent"
+      preloadDelay={300}
     >
       {item.icon && <item.icon className="h-4 w-4" aria-hidden="true" />}
       <span>{item.label}</span>
