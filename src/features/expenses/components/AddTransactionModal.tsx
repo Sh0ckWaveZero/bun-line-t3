@@ -45,6 +45,7 @@ export function AddTransactionModal({
   const [categoryId, setCategoryId] = useState("")
   const [amount, setAmount] = useState("")
   const [note, setNote] = useState("")
+  const [tags, setTags] = useState("")
   const [transDate, setTransDate] = useState(() => toTransDate())
 
   useEffect(() => {
@@ -54,12 +55,14 @@ export function AddTransactionModal({
         setCategoryId(editData.categoryId)
         setAmount(formatAmount(editData.amount.toString()))
         setNote(editData.note ?? "")
+        setTags(editData.tags ?? "")
         setTransDate(editData.transDate)
       } else {
         setType("EXPENSE")
         setCategoryId("")
         setAmount("")
         setNote("")
+        setTags("")
         setTransDate(toTransDate())
       }
     }
@@ -76,6 +79,7 @@ export function AddTransactionModal({
       type,
       amount: numeric,
       note: note || undefined,
+      tags: tags || undefined,
       transDate,
     })
   }
@@ -218,6 +222,33 @@ export function AddTransactionModal({
                 className="border-border bg-background placeholder:text-muted-foreground/60 focus-visible:ring-foreground/30 h-12 rounded-lg px-4 text-base font-medium"
                 maxLength={500}
               />
+            </div>
+
+            <div id="transaction-tags-group" className="space-y-2">
+              <Input
+                id="transaction-tags-input"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                placeholder="แท็ก เช่น lunch,office (ถ้ามี)"
+                className="border-border bg-background placeholder:text-muted-foreground/60 focus-visible:ring-foreground/30 h-12 rounded-lg px-4 text-base font-medium"
+                maxLength={200}
+              />
+              {tags && (
+                <div className="flex flex-wrap gap-1">
+                  {tags
+                    .split(",")
+                    .map((t) => t.trim())
+                    .filter(Boolean)
+                    .map((tag) => (
+                      <span
+                        key={tag}
+                        className="bg-primary/10 text-primary inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                      >
+                        @{tag}
+                      </span>
+                    ))}
+                </div>
+              )}
             </div>
 
             <div id="transaction-buttons-group" className="grid grid-cols-2 gap-3 pt-1">
