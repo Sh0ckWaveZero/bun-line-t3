@@ -30,7 +30,8 @@ export interface CommandDefinition {
     | "work"
     | "info"
     | "utility"
-    | "settings";
+    | "settings"
+    | "budget";
 }
 
 export const LINE_COMMANDS: CommandDefinition[] = [
@@ -40,8 +41,8 @@ export const LINE_COMMANDS: CommandDefinition[] = [
   {
     command: "expense",
     aliases: ["เงิน", "รายจ่าย", "รายรับรายจ่าย", "จ่าย", "exp", "e"],
-    descriptionTH: "บันทึกรายจ่าย หรือดูสรุปรายรับรายจ่ายประจำเดือน",
-    descriptionEN: "Log expenses or view monthly income/expense summary",
+    descriptionTH: "จัดการรายรับรายจ่าย: บันทึก, ดูสรุป, แก้ไข, ลบ, filter",
+    descriptionEN: "Full expense management: add, list, edit, delete, filter, summary",
     keywords: [
       "expense",
       "รายจ่าย",
@@ -50,17 +51,38 @@ export const LINE_COMMANDS: CommandDefinition[] = [
       "บันทึกเงิน",
       "ค่าใช้จ่าย",
       "สรุปเงิน",
+      "ลบรายการ",
+      "แก้ไขรายการ",
+      "สัปดาห์",
+      "วันนี้",
     ],
     parameters: [
-      { name: "subcommand", type: "optional", description: "add | list | sum | help" },
+      {
+        name: "subcommand",
+        type: "optional",
+        description:
+          "add | list [N] | sum | del [id] | edit [amount|note|category] | month [MM] | today | week | help | [หมวดหมู่]",
+      },
       { name: "amount", type: "number", description: "จำนวนเงิน (บาท)" },
       { name: "category", type: "optional", description: "ชื่อหมวดหมู่ เช่น อาหาร, เดินทาง" },
+      { name: "note", type: "optional", description: "#ข้อความ (note/comment)" },
+      { name: "tags", type: "optional", description: "@tag1 @tag2 (tags)" },
     ],
     examples: [
       "/expense add 250 อาหาร",
-      "/expense 1200 เดินทาง",
+      "/จ่าย 250 อาหาร #ข้าวมันไก่",
+      "/จ่าย 250 อาหาร @lunch @office",
+      "/expense 1200 เดินทาง #แท็กซี่ไปสนามบิน",
       "/expense sum",
       "/expense list",
+      "/expense list 10",
+      "/expense del",
+      "/expense edit 300",
+      "/expense edit note ข้าวมันไก่",
+      "/expense month 04",
+      "/expense today",
+      "/expense week",
+      "/expense อาหาร",
     ],
     category: "utility",
   },
@@ -81,13 +103,80 @@ export const LINE_COMMANDS: CommandDefinition[] = [
     parameters: [
       { name: "amount", type: "number", description: "จำนวนเงิน (บาท)" },
       { name: "category", type: "optional", description: "ชื่อหมวดหมู่ เช่น เงินเดือน, โบนัส" },
+      { name: "note", type: "optional", description: "#ข้อความ (note/comment)" },
+      { name: "tags", type: "optional", description: "@tag1 @tag2 (tags)" },
     ],
     examples: [
       "/รับ 30000 เงินเดือน",
-      "/รับ 5000 โบนัส",
-      "/income 2000 freelance",
+      "/รับ 5000 โบนัส #Q1",
+      "/income 2000 freelance @side-hustle",
     ],
     category: "utility",
+  },
+  {
+    command: "category",
+    aliases: ["หมวดหมู่", "หมวด", "cat"],
+    descriptionTH: "จัดการหมวดหมู่รายรับรายจ่าย: ดู, สร้าง, ลบ",
+    descriptionEN: "Manage expense categories: list, create, delete",
+    keywords: [
+      "category",
+      "หมวดหมู่",
+      "หมวด",
+      "สร้างหมวด",
+      "ดูหมวด",
+      "ลบหมวด",
+    ],
+    parameters: [
+      {
+        name: "subcommand",
+        type: "optional",
+        description: "list | add [ชื่อ] [emoji] | del [ชื่อ] | help",
+      },
+    ],
+    examples: [
+      "/category list",
+      "/category add คาเฟ่ ☕",
+      "/category add ค่ารถ 🚗",
+      "/category del คาเฟ่",
+      "/หมวดหมู่ ดู",
+    ],
+    category: "utility",
+  },
+  {
+    command: "budget",
+    aliases: ["งบประมาณ", "งบ"],
+    descriptionTH: "จัดการงบประมาณรายเดือน: ตั้งงบ, ติดตามสถานะ, แจ้งเตือน",
+    descriptionEN: "Manage monthly budgets: set, track status, alerts",
+    keywords: [
+      "budget",
+      "งบประมาณ",
+      "งบ",
+      "ตั้งงบ",
+      "สถานะงบ",
+      "แจ้งเตือนงบ",
+      "เกินงบ",
+    ],
+    parameters: [
+      {
+        name: "subcommand",
+        type: "optional",
+        description: "set | list | del | alert | status",
+      },
+      { name: "category", type: "optional", description: "ชื่อหมวดหมู่ หรือ 'total'" },
+      { name: "amount", type: "number", description: "จำนวนเงินงบ (บาท)" },
+      { name: "percentage", type: "optional", description: "เปอร์เซ็นต์แจ้งเตือน (1-100)" },
+    ],
+    examples: [
+      "/budget",
+      "/budget status",
+      "/budget set อาหาร 5000",
+      "/budget set อาหาร 5000 90",
+      "/budget set total 20000",
+      "/budget list",
+      "/budget del อาหาร",
+      "/budget alert อาหาร 85",
+    ],
+    category: "budget",
   },
   // ============================================================================
   // Cryptocurrency Commands
@@ -369,6 +458,7 @@ export function formatCommandsForAI(): string {
     work: "💼 การทำงาน (Work Attendance)",
     info: "ℹ️ ข้อมูล (Information)",
     utility: "🔧 เครื่องมือ (Utilities)",
+    budget: "💰 งบประมาณ (Budget)",
     settings: "⚙️ ตั้งค่า (Settings)",
   };
 

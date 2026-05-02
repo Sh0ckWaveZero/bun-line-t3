@@ -56,6 +56,25 @@ export function TransactionRow({
               {formatDateShortThai(tx.transDate)}
               {tx.note && <span> · {tx.note}</span>}
             </p>
+            {tx.tags && (
+              <div
+                id={`transaction-tags-${tx.id}`}
+                className="mt-0.5 flex flex-wrap gap-1"
+              >
+                {tx.tags
+                  .split(",")
+                  .map((t) => t.trim())
+                  .filter(Boolean)
+                  .map((tag) => (
+                    <span
+                      key={tag}
+                      className="bg-primary/10 text-primary inline-flex items-center rounded-full px-1.5 py-0 text-[9px] font-medium sm:text-[10px]"
+                    >
+                      @{tag}
+                    </span>
+                  ))}
+              </div>
+            )}
           </div>
         </div>
         <div

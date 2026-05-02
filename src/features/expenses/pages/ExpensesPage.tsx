@@ -2,6 +2,7 @@
 
 import { SummaryCard } from "@/features/expenses/components/SummaryCard";
 import { TransactionRow } from "@/features/expenses/components/TransactionRow";
+import { BudgetOverviewCard } from "@/features/expenses/components/BudgetOverviewCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,9 +14,10 @@ import { useMonthNavigation } from "@/features/expenses/hooks/useMonthNavigation
 import { useCategoryModalFlow } from "@/features/expenses/hooks/useCategoryModalFlow";
 import { useTransactionModal } from "@/features/expenses/hooks/useTransactionModal";
 import { useExpensePageUI } from "@/features/expenses/hooks/useExpensePageUI";
+import { useBudgets } from "@/features/expenses/hooks/useBudgets";
 import { formatMonthThai, getCurrentMonth } from "@/features/expenses/helpers";
 import { useSession } from "@/lib/auth/client";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState } from "react";
 import {
   ChevronDown,
   ChevronLeft,
@@ -26,6 +28,7 @@ import {
   Loader2,
   Plus,
   RefreshCw,
+  Settings,
   Tag,
   TrendingDown,
   TrendingUp,
@@ -55,6 +58,11 @@ const CategoryManagerModal = lazy(async () => {
 const AddCategoryModal = lazy(async () => {
   const module = await import("@/features/expenses/components/AddCategoryModal");
   return { default: module.AddCategoryModal };
+});
+
+const BudgetSettingsModal = lazy(async () => {
+  const module = await import("@/features/expenses/components/BudgetSettingsModal");
+  return { default: module.BudgetSettingsModal };
 });
 
 export function ExpensesPage() {
@@ -93,6 +101,9 @@ export function ExpensesPage() {
     });
 
   const { multiMonthSummaries } = useMonthlyCharts(currentMonth, isAuthed && showCharts);
+
+  const { budgets, createBudget, updateBudget, deleteBudget } = useBudgets(currentMonth, isAuthed);
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
 
   const txModal = useTransactionModal({ createTransaction, updateTransaction, deleteTransaction });
   const catFlow = useCategoryModalFlow({
@@ -153,6 +164,14 @@ export function ExpensesPage() {
           <SummaryCard id="balance" label="คงเหลือ" className="col-span-2 sm:col-span-1" amount={summary?.balance ?? 0}
             icon={<Wallet className={`h-4 w-4 sm:h-5 sm:w-5 ${summary && summary.balance >= 0 ? "text-card-blue" : "text-destructive"}`} />}
             iconBg={summary && summary.balance >= 0 ? "bg-card-blue" : "bg-destructive/10"} hideAmounts={hideAmounts}
+          />
+        </div>
+
+        <div className="mb-6">
+          <BudgetOverviewCard
+            budgets={budgets}
+            hideAmounts={hideAmounts}
+            onManageBudgets={() => setShowBudgetModal(true)}
           />
         </div>
 
@@ -234,6 +253,36 @@ export function ExpensesPage() {
             editMode={!!catFlow.editingCategory} category={catFlow.editingCategory}
           />
         )}
+        <BudgetSettingsModal
+          open={showBudgetModal}
+          onOpenChange={setShowBudgetModal}
+          budgets={budgets.map((b) => b.budget)}
+          categories={categories}
+          onCreateBudget={async (data) => {
+            await new Promise((resolve) => {
+              createBudget(data, {
+                onSuccess: () => resolve(undefined),
+                onError: () => resolve(undefined),
+              });
+            });
+          }}
+          onUpdateBudget={async (id, data) => {
+            await new Promise((resolve) => {
+              updateBudget(id, data, {
+                onSuccess: () => resolve(undefined),
+                onError: () => resolve(undefined),
+              });
+            });
+          }}
+          onDeleteBudget={async (id) => {
+            await new Promise((resolve) => {
+              deleteBudget(id, {
+                onSuccess: () => resolve(undefined),
+                onError: () => resolve(undefined),
+              });
+            });
+          }}
+        />
       </Suspense>
     </div>
   );

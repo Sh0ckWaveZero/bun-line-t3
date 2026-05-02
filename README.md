@@ -18,6 +18,35 @@ Modern LINE Bot application built with Bun, TanStack Start, and React 19, featur
 
 ## 🌟 Features
 
+### 💸 Expense Tracking & Budget Management
+
+- **💰 Natural Language Expense Logging** - Log expenses/incomes in Thai
+  - `/จ่าย 250 อาหาร #ข้าวมันไก่ @lunch`
+  - `/รับ 30000 เงินเดือน`
+  - AI-powered: `/ai กินข้าวมันไก่ 65`
+- **📊 Smart Budget System** - Set monthly budgets per category
+  - `/budget set อาหาร 5000` - Set category budget
+  - `/budget set total 20000` - Set total budget
+  - Auto-alert when usage exceeds threshold (default 80%)
+  - Real-time status: 🔴 over, 🟡 near, 🟢 safe
+- **📁 Category Management** - Custom expense categories
+  - `/category list` - View all categories
+  - `/category add คาเฟ่ ☕` - Create new category
+  - Default categories: อาหาร, เดินทาง, คาเฟ่, etc.
+- **📈 Comprehensive Reports** - Daily, weekly, monthly summaries
+  - `/expense today` - Today's summary
+  - `/expense week` - This week's summary
+  - `/expense month 04` - April summary
+  - Filter by category, view transactions
+- **🤖 AI Natural Language Processing** - No need to memorize commands
+  - Understands Thai natural language
+  - Auto-extracts: amount, category, notes, tags
+  - Routes to appropriate commands automatically
+- **🔒 Privacy Controls** - Hide amounts in LINE
+  - Hide in personal chat
+  - Hide in group chats
+  - Toggle via web settings
+
 ### 🏢 Attendance Management
 
 - **Smart Check-in/Check-out** - Automatic 9-hour work calculation
@@ -201,6 +230,8 @@ Comprehensive documentation is available in the `/docs` directory:
 
 ### 🎯 Feature Documentation
 
+- **[💸 Expense Tracking System](./docs/EXPENSE_TRACKING.md)** - ✅ **NEW** - ระบบติดตามรายรับรายจ่าย & งบประมาณ
+- **[💸 Expense Commands Quick Ref](./docs/EXPENSE_QUICK_REF.md)** - ✅ **NEW** - คำสั่ง Expense แบบย่อ
 - **[🏢 Attendance System](./docs/ATTENDANCE_SYSTEM.md)** - Work time tracking features
 - **[💬 LINE Commands (Thai)](./docs/LINE_COMMANDS_THAI.md)** - คำสั่ง LINE Bot (ภาษาไทย)
 - **[💬 LINE Commands (English)](./docs/LINE_COMMANDS.md)** - LINE Bot commands reference

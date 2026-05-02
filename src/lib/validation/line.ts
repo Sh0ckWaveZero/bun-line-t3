@@ -616,6 +616,85 @@ const gold = (data: any): any => {
   return bubbleMessageTpl;
 };
 
+const gas = (data: {
+  providerName?: string;
+  gasPrice?: Array<{ name?: string; value?: string }>;
+}) => {
+  const provider = data.providerName?.trim() || "ราคาน้ำมัน";
+  const prices = Array.isArray(data.gasPrice) ? data.gasPrice : [];
+
+  const rows = prices.length
+    ? prices.map((item) => ({
+        type: "box",
+        layout: "horizontal",
+        margin: "sm",
+        contents: [
+          {
+            type: "text",
+            text: item.name?.trim() || "-",
+            size: "sm",
+            color: "#374151",
+            wrap: true,
+            flex: 3,
+          },
+          {
+            type: "text",
+            text: item.value?.trim() || "-",
+            size: "sm",
+            color: "#059669",
+            align: "end",
+            flex: 2,
+          },
+        ],
+      }))
+    : [
+        {
+          type: "text",
+          text: "ไม่พบข้อมูลราคาน้ำมันจากผู้ให้บริการนี้",
+          size: "sm",
+          color: "#6b7280",
+          wrap: true,
+        },
+      ];
+
+  return {
+    type: "bubble",
+    size: "giga",
+    header: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "text",
+          text: "⛽ ราคาน้ำมันล่าสุด",
+          weight: "bold",
+          size: "lg",
+          color: "#ffffff",
+          align: "center",
+        },
+        {
+          type: "text",
+          text: provider,
+          size: "sm",
+          color: "#dcfce7",
+          align: "center",
+          margin: "sm",
+          wrap: true,
+        },
+      ],
+      backgroundColor: "#0f766e",
+      paddingAll: "20px",
+    },
+    body: {
+      type: "box",
+      layout: "vertical",
+      contents: rows,
+      paddingAll: "20px",
+      spacing: "xs",
+    },
+  };
+};
+
 const signIn = () => {
   const image = utils.randomItems(IMAGE_URLS);
   const bubble = [
@@ -3294,6 +3373,7 @@ export const bubbleTemplate = {
   lottery,
   cryptoCurrency,
   gold,
+  gas,
   signIn,
   notFound,
   workCheckIn,

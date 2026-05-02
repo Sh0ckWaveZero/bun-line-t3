@@ -17,10 +17,14 @@ import { handleIdGenerator } from "./handleIdGenerator";
 import { handleAiCommand } from "./handleAiCommand";
 import { handleDcaCommand } from "./handleDcaCommand";
 import { handleExpenseCommand } from "./handleExpenseCommand";
+import { handleCategoryCommand } from "./handleCategoryCommand";
+import { handleBudgetCommand } from "./handleBudgetCommand";
 
 const { sendMessage } = await import("@/lib/utils/line-utils");
 
 export { handleExpenseCommand } from "./handleExpenseCommand";
+export { handleCategoryCommand } from "./handleCategoryCommand";
+export { handleBudgetCommand } from "./handleBudgetCommand";
 
 export const handleCommand = async (
   command: string,
@@ -190,9 +194,32 @@ export const handleCommand = async (
     await handleExpenseCommand(req, conditions, "EXPENSE");
     return;
   }
-  // รายรับ shortcut: /รับ 30000 เงินเดือน
+  // รายรับ shortcut: /รับ 30000 ���งินเดือน
   if (["รับ", "income", "รายรับ", "i"].includes(command)) {
     await handleExpenseCommand(req, conditions, "INCOME");
+    return;
+  }
+  // Category management: /category list, /category add, etc.
+  if (
+    [
+      "category",
+      "หมวดหมู่",
+      "หมวด",
+      "cat",
+    ].includes(command)
+  ) {
+    await handleCategoryCommand(req, conditions);
+    return;
+  }
+  // Budget management: /budget set/list/del/alert/status
+  if (
+    [
+      "budget",
+      "งบประมาณ",
+      "งบ",
+    ].includes(command)
+  ) {
+    await handleBudgetCommand(req, conditions);
     return;
   }
   // Chart
