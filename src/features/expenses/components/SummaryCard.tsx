@@ -1,4 +1,3 @@
-import { Card, CardContent } from "@/components/ui/card"
 import { formatAmount } from "@/features/expenses/helpers"
 
 interface SummaryCardProps {
@@ -21,38 +20,30 @@ export function SummaryCard({
   hideAmounts,
 }: SummaryCardProps) {
   return (
-    <Card
+    <div
       id={`summary-card-${id}`}
-      className={`border-border/70 bg-card/85 hover:border-theme-hover dark:bg-card/70 relative overflow-hidden border transition-colors ${className ?? ""}`}
+      className={`rounded-xl border border-border/30 bg-card px-5 py-4 shadow-sm dark:bg-card/80 ${className ?? ""}`}
     >
-      <div
-        id={`summary-card-accent-${id}`}
-        className={`absolute inset-x-0 top-0 h-1 ${iconBg}`}
-      />
-      <CardContent id={`summary-card-content-${id}`} className="p-3 sm:p-4">
-        <div id={`summary-card-row-${id}`} className="flex items-center gap-2 sm:gap-3">
-          <div
-            id={`summary-icon-${id}`}
-            className={`border-border/50 rounded-lg border p-2 sm:p-2.5 ${iconBg}`}
-          >
-            {icon}
-          </div>
-          <div id={`summary-text-${id}`} className="min-w-0 flex-1">
-            <p
-              id={`summary-label-${id}`}
-              className="text-muted-foreground text-[10px] font-medium sm:text-xs"
-            >
-              {label}
-            </p>
-            <p
-              id={`summary-amount-${id}`}
-              className="text-foreground text-lg font-bold tabular-nums sm:text-xl"
-            >
-              {hideAmounts ? "••••••" : formatAmount(amount)}
-            </p>
-          </div>
+      <div id={`summary-card-header-${id}`} className="mb-3 flex items-center justify-between">
+        <span
+          id={`summary-label-${id}`}
+          className="text-muted-foreground text-xs font-medium"
+        >
+          {label}
+        </span>
+        <div
+          id={`summary-icon-${id}`}
+          className={`flex h-7 w-7 items-center justify-center rounded-full ${iconBg}`}
+        >
+          {icon}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+      <p
+        id={`summary-amount-${id}`}
+        className="text-foreground text-2xl font-bold tabular-nums tracking-tight"
+      >
+        {hideAmounts ? "••••••" : formatAmount(amount)}
+      </p>
+    </div>
   )
 }
