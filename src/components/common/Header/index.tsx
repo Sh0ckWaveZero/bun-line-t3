@@ -8,19 +8,25 @@ import { NAVIGATION_ITEMS } from "./navigation.config";
 import { DesktopNav } from "./DesktopNav";
 import { MobileNav } from "./MobileNav";
 import { UserSection } from "./UserSection";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import type { NavItem } from "./types";
 
 export default function Header() {
   const { data: session } = useSession();
   const profileImageSrc = session?.user?.image?.trim() || DEFAULT_AVATAR_SRC;
-  const pathname = useRouterState({
-    select: (state) => state.location.pathname,
-  });
+  const routerState = useRouterState();
+  const pathname = routerState.location.pathname;
+  const [isRouteChanging, setIsRouteChanging] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Initialize with closed menus to match server render
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+
+  // Track route changes for loading indicator (client-side only)
+  useEffect(() => {
+    setIsRouteChanging(routerState.status === "pending");
+  }, [routerState.status]);
 
   // Close mobile menu on resize to desktop
   useEffect(() => {
@@ -61,7 +67,23 @@ export default function Header() {
   const isAdmin = session?.isAdmin || false;
 
   return (
-    <header id="main-header" className="bg-background/80 border-border sticky top-0 z-50 w-full border-b backdrop-blur-sm" role="banner">
+    <>
+      {/* Full-page Loading Overlay */}
+      {isRouteChanging && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in duration-200"
+          role="status"
+          aria-live="polite"
+          aria-label="กำลังโหลดหน้า"
+        >
+          <div className="flex flex-col items-center gap-4">
+            <LoadingSpinner size="lg" />
+            <p className="text-foreground text-lg font-medium">กำลังโหลด...</p>
+          </div>
+        </div>
+      )}
+
+      <header id="main-header" className="bg-background/80 border-border sticky top-0 z-50 w-full border-b backdrop-blur-sm" role="banner">
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
         {/* Logo */}
         <div className="flex items-center">
@@ -109,5 +131,6 @@ export default function Header() {
         isAdmin={isAdmin}
       />
     </header>
+    </>
   );
 }

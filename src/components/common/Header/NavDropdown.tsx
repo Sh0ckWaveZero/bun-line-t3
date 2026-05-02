@@ -72,6 +72,8 @@ export function NavDropdown({ item, isOpen, onToggle, pathname, session }: NavDr
                     }`}
                     onClick={() => onToggle(null)}
                     role="menuitem"
+                    preload="intent"
+                    preloadDelay={300}
                   >
                     {child.icon && <child.icon className="h-4 w-4" aria-hidden="true" />}
                     {child.label}
@@ -92,6 +94,8 @@ export function NavDropdown({ item, isOpen, onToggle, pathname, session }: NavDr
                 }`}
                 onClick={() => onToggle(null)}
                 role="menuitem"
+                preload="intent"
+                preloadDelay={300}
               >
                 {child.icon && <child.icon className="h-4 w-4" aria-hidden="true" />}
                 {child.label}
