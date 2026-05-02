@@ -18,11 +18,13 @@ import { handleAiCommand } from "./handleAiCommand";
 import { handleDcaCommand } from "./handleDcaCommand";
 import { handleExpenseCommand } from "./handleExpenseCommand";
 import { handleCategoryCommand } from "./handleCategoryCommand";
+import { handleBudgetCommand } from "./handleBudgetCommand";
 
 const { sendMessage } = await import("@/lib/utils/line-utils");
 
 export { handleExpenseCommand } from "./handleExpenseCommand";
 export { handleCategoryCommand } from "./handleCategoryCommand";
+export { handleBudgetCommand } from "./handleBudgetCommand";
 
 export const handleCommand = async (
   command: string,
@@ -207,6 +209,17 @@ export const handleCommand = async (
     ].includes(command)
   ) {
     await handleCategoryCommand(req, conditions);
+    return;
+  }
+  // Budget management: /budget set/list/del/alert/status
+  if (
+    [
+      "budget",
+      "งบประมาณ",
+      "งบ",
+    ].includes(command)
+  ) {
+    await handleBudgetCommand(req, conditions);
     return;
   }
   // Chart

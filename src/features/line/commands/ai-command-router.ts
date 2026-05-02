@@ -23,6 +23,7 @@ import { handleSettingsCommand } from "./handleSettingsCommand";
 import { handleIdGenerator } from "./handleIdGenerator";
 import { handleExpenseCommand } from "./handleExpenseCommand";
 import { handleCategoryCommand } from "./handleCategoryCommand";
+import { handleBudgetCommand } from "./handleBudgetCommand";
 
 export interface CommandRouteResult {
   /** Whether the command was successfully routed */
@@ -378,6 +379,25 @@ export async function executeCommand(
           success: true,
           command: "category",
           explanation: "แสดงหมวดหมู่ทั้งหมด",
+        };
+      }
+
+      // Budget management
+      case "budget": {
+        const subcommand = parameters.subcommand || "status";
+        const category = parameters.category || "";
+        const amount = parameters.amount ? String(parameters.amount) : "";
+        const percentage = parameters.percentage ? String(parameters.percentage) : "";
+
+        const conditions = [category, amount, percentage].filter(Boolean);
+        await handleBudgetCommand(req, [subcommand, ...conditions]);
+        return {
+          success: true,
+          command: "budget",
+          parameters,
+          explanation: subcommand === "set"
+            ? `ตั้งงบ${category ? ` ${category}` : "รวม"} ${amount} บาท`
+            : "แสดงสถานะงบประมาณ",
         };
       }
 

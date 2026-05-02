@@ -30,7 +30,8 @@ export interface CommandDefinition {
     | "work"
     | "info"
     | "utility"
-    | "settings";
+    | "settings"
+    | "budget";
 }
 
 export const LINE_COMMANDS: CommandDefinition[] = [
@@ -140,6 +141,42 @@ export const LINE_COMMANDS: CommandDefinition[] = [
       "/หมวดหมู่ ดู",
     ],
     category: "utility",
+  },
+  {
+    command: "budget",
+    aliases: ["งบประมาณ", "งบ"],
+    descriptionTH: "จัดการงบประมาณรายเดือน: ตั้งงบ, ติดตามสถานะ, แจ้งเตือน",
+    descriptionEN: "Manage monthly budgets: set, track status, alerts",
+    keywords: [
+      "budget",
+      "งบประมาณ",
+      "งบ",
+      "ตั้งงบ",
+      "สถานะงบ",
+      "แจ้งเตือนงบ",
+      "เกินงบ",
+    ],
+    parameters: [
+      {
+        name: "subcommand",
+        type: "optional",
+        description: "set | list | del | alert | status",
+      },
+      { name: "category", type: "optional", description: "ชื่อหมวดหมู่ หรือ 'total'" },
+      { name: "amount", type: "number", description: "จำนวนเงินงบ (บาท)" },
+      { name: "percentage", type: "optional", description: "เปอร์เซ็นต์แจ้งเตือน (1-100)" },
+    ],
+    examples: [
+      "/budget",
+      "/budget status",
+      "/budget set อาหาร 5000",
+      "/budget set อาหาร 5000 90",
+      "/budget set total 20000",
+      "/budget list",
+      "/budget del อาหาร",
+      "/budget alert อาหาร 85",
+    ],
+    category: "budget",
   },
   // ============================================================================
   // Cryptocurrency Commands
@@ -421,6 +458,7 @@ export function formatCommandsForAI(): string {
     work: "💼 การทำงาน (Work Attendance)",
     info: "ℹ️ ข้อมูล (Information)",
     utility: "🔧 เครื่องมือ (Utilities)",
+    budget: "💰 งบประมาณ (Budget)",
     settings: "⚙️ ตั้งค่า (Settings)",
   };
 

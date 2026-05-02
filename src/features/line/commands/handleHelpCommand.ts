@@ -65,6 +65,14 @@ export const handleHelpCommand = async (req: any) => {
             "/จ่าย [จำนวน] [หมวด]  หรือ  /exp  /e",
             "/รับ [จำนวน] [หมวด]   หรือ  /i",
             "/expense — ดูสรุปเดือนนี้",
+            "/category — จัดการหมวดหมู่",
+          ]),
+          { type: "separator" },
+          section("💵", "งบประมาณ", [
+            "/budget — ดูสถานะงบทั้งหมด",
+            "/budget set อาหาร 5000 — ตั้งงบหมวดหมู่",
+            "/budget set total 20000 — ตั้งงบรวม",
+            "/budget list — รายการงบทั้งหมด",
           ]),
           { type: "separator" },
           section("💼", "ลงเวลางาน", [
