@@ -67,7 +67,23 @@ export default function Header() {
   const isAdmin = session?.isAdmin || false;
 
   return (
-    <header id="main-header" className="bg-background/80 border-border sticky top-0 z-50 w-full border-b backdrop-blur-sm" role="banner">
+    <>
+      {/* Full-page Loading Overlay */}
+      {isRouteChanging && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in duration-200"
+          role="status"
+          aria-live="polite"
+          aria-label="กำลังโหลดหน้า"
+        >
+          <div className="flex flex-col items-center gap-4">
+            <LoadingSpinner size="lg" />
+            <p className="text-foreground text-lg font-medium">กำลังโหลด...</p>
+          </div>
+        </div>
+      )}
+
+      <header id="main-header" className="bg-background/80 border-border sticky top-0 z-50 w-full border-b backdrop-blur-sm" role="banner">
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
         {/* Logo */}
         <div className="flex items-center">
@@ -96,25 +112,13 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Router Loading Indicator + User Section */}
-        <div className="flex items-center gap-3">
-          {isRouteChanging && (
-            <div
-              className="flex items-center gap-2 text-sm text-muted-foreground animate-in fade-in slide-in-from-right-2 duration-200"
-              role="status"
-              aria-live="polite"
-            >
-              <LoadingSpinner size="sm" />
-              <span className="hidden lg:inline">กำลังโหลด...</span>
-            </div>
-          )}
-          <UserSection
-            session={session}
-            profileImageSrc={profileImageSrc}
-            isMobileMenuOpen={isMobileMenuOpen}
-            onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          />
-        </div>
+        {/* User Section */}
+        <UserSection
+          session={session}
+          profileImageSrc={profileImageSrc}
+          isMobileMenuOpen={isMobileMenuOpen}
+          onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        />
       </div>
 
       {/* Mobile Navigation */}
@@ -127,5 +131,6 @@ export default function Header() {
         isAdmin={isAdmin}
       />
     </header>
+    </>
   );
 }
