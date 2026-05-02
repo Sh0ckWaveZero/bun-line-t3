@@ -116,37 +116,46 @@ export function AddTransactionModal({
           className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6 sm:py-6"
         >
           <form id="add-transaction-form" onSubmit={handleSubmit} className="space-y-4">
-            <div
-              id="transaction-type-group"
-              className="grid grid-cols-2 gap-2 rounded-xl bg-muted/50 p-1"
-            >
-              {(["EXPENSE", "INCOME"] as const).map((t) => {
-                const isSelected = type === t
-                const activeClass =
-                  t === "EXPENSE"
-                    ? "bg-red-500 text-white shadow-sm"
-                    : "bg-emerald-500 text-white shadow-sm"
-                const inactiveClass =
-                  "text-muted-foreground hover:text-foreground hover:bg-muted"
-                return (
-                  <button
-                    key={t}
-                    id={`transaction-type-${t.toLowerCase()}-btn`}
-                    type="button"
-                    className={`flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-all ${
-                      isSelected ? activeClass : inactiveClass
-                    }`}
-                    onClick={() => setType(t)}
-                  >
-                    {t === "INCOME" ? (
-                      <TrendingUp className="h-4 w-4" />
-                    ) : (
-                      <TrendingDown className="h-4 w-4" />
-                    )}
-                    {t === "INCOME" ? "รายรับ" : "รายจ่าย"}
-                  </button>
-                )
-              })}
+            <div id="transaction-type-section" className="space-y-2">
+              <Label
+                id="transaction-type-label"
+                className="text-foreground text-sm font-semibold"
+              >
+                ประเภทรายการ
+              </Label>
+              <div
+                id="transaction-type-group"
+                className="grid grid-cols-2 gap-2 rounded-xl bg-muted/50 p-1"
+              >
+                {(["EXPENSE", "INCOME"] as const).map((t) => {
+                  const isSelected = type === t
+                  const activeClass =
+                    t === "EXPENSE"
+                      ? "bg-red-500 text-white shadow-sm"
+                      : "bg-emerald-500 text-white shadow-sm"
+                  const inactiveClass =
+                    "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  return (
+                    <button
+                      key={t}
+                      id={`transaction-type-${t.toLowerCase()}-btn`}
+                      type="button"
+                      aria-label={`เลือกประเภทรายการ${t === "INCOME" ? "รายรับ" : "รายจ่าย"}`}
+                      className={`flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-all ${
+                        isSelected ? activeClass : inactiveClass
+                      }`}
+                      onClick={() => setType(t)}
+                    >
+                      {t === "INCOME" ? (
+                        <TrendingUp className="h-4 w-4" />
+                      ) : (
+                        <TrendingDown className="h-4 w-4" />
+                      )}
+                      {t === "INCOME" ? "รายรับ" : "รายจ่าย"}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
             <div id="transaction-category-group" className="space-y-2">
@@ -192,6 +201,13 @@ export function AddTransactionModal({
             </div>
 
             <div id="transaction-amount-group" className="space-y-2">
+              <Label
+                htmlFor="transaction-amount-input"
+                id="transaction-amount-label"
+                className="text-foreground text-sm font-semibold"
+              >
+                จำนวนเงิน
+              </Label>
               <Input
                 id="transaction-amount-input"
                 type="text"
@@ -206,7 +222,7 @@ export function AddTransactionModal({
 
             <PopoverDatePicker
               id="transaction-date-picker"
-              label=""
+              label="วันที่"
               required
               value={transDate ? new Date(transDate + "T00:00:00") : undefined}
               onChange={(date) => setTransDate(date ? toTransDate(date) : "")}
@@ -214,6 +230,13 @@ export function AddTransactionModal({
             />
 
             <div id="transaction-note-group" className="space-y-2">
+              <Label
+                htmlFor="transaction-note-input"
+                id="transaction-note-label"
+                className="text-foreground text-sm font-semibold"
+              >
+                หมายเหตุ
+              </Label>
               <Input
                 id="transaction-note-input"
                 value={note}
@@ -225,6 +248,13 @@ export function AddTransactionModal({
             </div>
 
             <div id="transaction-tags-group" className="space-y-2">
+              <Label
+                htmlFor="transaction-tags-input"
+                id="transaction-tags-label"
+                className="text-foreground text-sm font-semibold"
+              >
+                แท็ก
+              </Label>
               <Input
                 id="transaction-tags-input"
                 value={tags}
@@ -234,14 +264,15 @@ export function AddTransactionModal({
                 maxLength={200}
               />
               {tags && (
-                <div className="flex flex-wrap gap-1">
+                <div id="transaction-tags-preview" className="flex flex-wrap gap-1">
                   {tags
                     .split(",")
                     .map((t) => t.trim())
                     .filter(Boolean)
-                    .map((tag) => (
+                    .map((tag, index) => (
                       <span
-                        key={tag}
+                        key={`${tag}-${index}`}
+                        id={`transaction-tag-chip-${index}`}
                         className="bg-primary/10 text-primary inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
                       >
                         @{tag}

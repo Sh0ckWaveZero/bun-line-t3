@@ -11,7 +11,6 @@ import {
   getTransactions,
   createTransaction,
 } from "@/features/expenses/services/transaction.server"
-import { seedDefaultCategories } from "@/features/expenses/services/category.server"
 import { DEFAULT_PAGE_SIZE } from "@/features/expenses/constants"
 
 // ─────────────────────────────────────────────
@@ -75,9 +74,6 @@ export async function POST(request: Request) {
 
     const body = await request.json()
     const input = createTransactionSchema.parse(body)
-
-    // Seed default categories ถ้า user ยังไม่เคยมี
-    await seedDefaultCategories(session.user.id)
 
     const transaction = await createTransaction({
       ...input,

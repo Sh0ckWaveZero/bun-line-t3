@@ -15,6 +15,50 @@ const { sendMessage, sendLoadingAnimation } = await import(
   "@/lib/utils/line-utils"
 );
 
+function extractThaiNumberValues(input: string): number[] {
+  const matches = input.match(/\d+(?:,\d{3})*(?:\.\d+)?/g) ?? [];
+  return matches
+    .map((raw) => Number(raw.replace(/,/g, "")))
+    .filter((n) => Number.isFinite(n) && n > 0);
+}
+
+function inferExpenseParametersFromText(
+  naturalLanguage: string,
+  parameters: Record<string, any>,
+): Record<string, any> {
+  const currentSubcommand = String(parameters.subcommand ?? "").toLowerCase();
+  if (currentSubcommand) return parameters;
+
+  const text = naturalLanguage.toLowerCase();
+  const hasSummaryIntent =
+    /สรุป|summary|ดู|รายงาน|ยอดรวม|คงเหลือ|เท่าไหร่|สถานะ/.test(text);
+
+  if (hasSummaryIntent) return parameters;
+
+  const hasExpenseIntent =
+    /กิน|ซื้อ|จ่าย|เสีย|หมดไป|ใช้ไป|ค่า|จ่ายไป|paid|spent|expense/.test(text);
+  const hasIncomeIntent = /รายรับ|ได้เงิน|รับเงิน|เงินเข้า|income/.test(text);
+  const amounts = extractThaiNumberValues(naturalLanguage);
+
+  if (hasIncomeIntent && amounts.length > 0) {
+    return {
+      ...parameters,
+      subcommand: "income",
+      amount: parameters.amount ?? amounts.reduce((sum, n) => sum + n, 0),
+    };
+  }
+
+  if (hasExpenseIntent && amounts.length > 0) {
+    return {
+      ...parameters,
+      subcommand: "add",
+      amount: parameters.amount ?? amounts.reduce((sum, n) => sum + n, 0),
+    };
+  }
+
+  return parameters;
+}
+
 /**
  * Handle natural language command routing
  */
@@ -50,7 +94,7 @@ export async function handleCommandRouting(req: any, naturalLanguage: string) {
     naturalLanguage,
     LINE_COMMANDS,
   );
-  const { command, parameters } = parseAICommandResponse(aiResponse);
+  const { command, parameters: parsedParameters } = parseAICommandResponse(aiResponse);
 
   if (!command) {
     await sendMessage(req, [
@@ -73,6 +117,11 @@ export async function handleCommandRouting(req: any, naturalLanguage: string) {
     ]);
     return;
   }
+
+  const parameters =
+    command === "expense"
+      ? inferExpenseParametersFromText(naturalLanguage, parsedParameters)
+      : parsedParameters;
 
   const result: CommandRouteResult = await executeCommand(
     commandDef,

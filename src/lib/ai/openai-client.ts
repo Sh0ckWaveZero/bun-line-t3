@@ -1,6 +1,7 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import { env } from "@/env.mjs";
+import { supportsTemperature } from "@/lib/ai/model-utils";
 
 const openai = createOpenAI({
   apiKey: env.OPENAI_API_KEY || "",
@@ -43,6 +44,13 @@ ${params.availableCommands}
 - "ดึงราคาทองให้หน่อย" → {"command": "gold", "parameters": {}, "reasoning": "ผู้ใช้ต้องการทราบราคาทอง", "confidence": 1.0}
 - "ราคา Bitcoin" → {"command": "bitkub", "parameters": {"coin": "btc"}, "reasoning": "ผู้ใช้ต้องการราคา BTC จาก Bitkub", "confidence": 0.9}
 - "เช็คชื่อเข้างาน" → {"command": "checkin", "parameters": {}, "reasoning": "ผู้ใช้ต้องการบันทึกเวลาเข้างาน", "confidence": 1.0}
+- "วันนี้กินข้าว 200 ซื้อน้ำ 20" → {"command": "expense", "parameters": {"subcommand": "add", "amount": 220, "category": "อาหาร"}, "reasoning": "ผู้ใช้ต้องการบันทึกรายจ่าย", "confidence": 0.95}
+- "ได้เงินเดือน 30000" → {"command": "expense", "parameters": {"subcommand": "income", "amount": 30000, "category": "เงินเดือน"}, "reasoning": "ผู้ใช้ต้องการบันทึกรายรับ", "confidence": 0.95}
+
+กฎสำคัญสำหรับรายรับรายจ่าย:
+- ถ้าผู้ใช้เล่าการใช้เงิน/ซื้อของ/กินข้าว/จ่ายเงิน ให้เลือก command = "expense" และ parameters.subcommand = "add"
+- ถ้าผู้ใช้เล่าการได้เงิน/เงินเข้า ให้เลือก command = "expense" และ parameters.subcommand = "income"
+- ต้องพยายามสกัด amount เป็นตัวเลขเสมอ (ถ้ามีหลายยอดให้รวมเป็นยอดเดียว)
 
 ตอบกลับเฉพาะ JSON เท่านั้น ไม่ต้องมีคำอธิบายเพิ่มเติม`;
 
@@ -52,7 +60,7 @@ ${params.availableCommands}
       { role: "system", content: systemPrompt },
       { role: "user", content: params.userMessage },
     ],
-    temperature: 0.3,
+    ...(supportsTemperature(modelName) ? { temperature: 0.3 } : {}),
   });
 
   const parsed = JSON.parse(text);
@@ -82,7 +90,7 @@ export async function chat(params: {
       { role: "system", content: systemPrompt },
       { role: "user", content: params.message },
     ],
-    temperature: 0.7,
+    ...(supportsTemperature(modelName) ? { temperature: 0.7 } : {}),
   });
 
   return { text };

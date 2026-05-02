@@ -16,8 +16,7 @@ import { useTransactionModal } from "@/features/expenses/hooks/useTransactionMod
 import { useExpensePageUI } from "@/features/expenses/hooks/useExpensePageUI";
 import { useBudgets } from "@/features/expenses/hooks/useBudgets";
 import { formatMonthThai, getCurrentMonth } from "@/features/expenses/helpers";
-import { useSession } from "@/lib/auth/client";
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import {
   ChevronDown,
   ChevronLeft,
@@ -66,8 +65,25 @@ const BudgetSettingsModal = lazy(async () => {
 });
 
 export function ExpensesPage() {
-  const { data: session } = useSession();
-  const isAuthed = !!session?.user;
+  useEffect(() => {
+    const recoverPointerLock = () => {
+      const hasOpenModal =
+        document.querySelector('[role="dialog"][data-state="open"]') !== null ||
+        document.querySelector('[role="alertdialog"][data-state="open"]') !== null
+
+      if (!hasOpenModal && document.body.style.pointerEvents === "none") {
+        document.body.style.pointerEvents = ""
+      }
+    }
+
+    recoverPointerLock()
+    const intervalId = window.setInterval(recoverPointerLock, 500)
+
+    return () => {
+      window.clearInterval(intervalId)
+      recoverPointerLock()
+    }
+  }, [])
 
   const { currentMonth, prevMonth, nextMonth } = useMonthNavigation();
 
@@ -83,7 +99,7 @@ export function ExpensesPage() {
     createTransaction,
     updateTransaction,
     deleteTransaction,
-  } = useExpenseTransactions(currentMonth, isAuthed);
+  } = useExpenseTransactions(currentMonth, true);
 
   const {
     isSaving: catSaving,
@@ -100,9 +116,9 @@ export function ExpensesPage() {
       initialHideAmounts: hideAmountsWeb,
     });
 
-  const { multiMonthSummaries } = useMonthlyCharts(currentMonth, isAuthed && showCharts);
+  const { multiMonthSummaries } = useMonthlyCharts(currentMonth, showCharts);
 
-  const { budgets, createBudget, updateBudget, deleteBudget } = useBudgets(currentMonth, isAuthed);
+  const { budgets, createBudget, updateBudget, deleteBudget } = useBudgets(currentMonth, true);
   const [showBudgetModal, setShowBudgetModal] = useState(false);
 
   const txModal = useTransactionModal({ createTransaction, updateTransaction, deleteTransaction });
