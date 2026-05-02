@@ -63,8 +63,11 @@ model User {
   workAttendances   WorkAttendance[]
   leaves            Leave[]
   settings          UserSettings?
-  expenseCategories ExpenseCategory[]
-  transactions      Transaction[]
+  expenseCategories     ExpenseCategory[]
+  transactions          Transaction[]
+  budgets               Budget[]
+  recurringTransactions RecurringTransaction[]
+  savingsGoals          SavingsGoal[]
 
   @@map("users")
 }
@@ -385,8 +388,10 @@ model ExpenseCategory {
   isActive     Boolean       @default(true) @map("is_active")
   createdAt    DateTime      @default(now()) @map("created_at")
   updatedAt    DateTime      @updatedAt @map("updated_at")
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions Transaction[]
+  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions          Transaction[]
+  budgets               Budget[]
+  recurringTransactions RecurringTransaction[]
 
   @@unique([userId, name])
   @@index([userId, isActive])
@@ -412,6 +417,85 @@ model Transaction {
   @@index([userId, type, transMonth])
   @@index([categoryId])
   @@map("transactions")
+}
+
+// ===========================
+// Budget (งบประมาณรายเดือนต่อหมวดหมู่)
+// ===========================
+
+model Budget {
+  id         String          @id @default(cuid())
+  userId     String          @map("user_id")
+  categoryId String?         @map("category_id") // null = งบรวมทุกหมวด
+  type       TransactionType @default(EXPENSE) @map("type")
+  amount     Float           @map("amount") // จำนวนเงินงบ (THB/เดือน)
+  alertAt    Int             @default(80) @map("alert_at") // แจ้งเตือนเมื่อใช้ถึง % นี้
+  isActive   Boolean         @default(true) @map("is_active")
+  createdAt  DateTime        @default(now()) @map("created_at")
+  updatedAt  DateTime        @updatedAt @map("updated_at")
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category   ExpenseCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, categoryId]) // 1 budget ต่อ category ต่�� user
+  @@index([userId, isActive])
+  @@map("budgets")
+}
+
+// ===========================
+// Recurring Transaction (รายการประจำ)
+// ===========================
+
+enum RecurringFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+model RecurringTransaction {
+  id          String             @id @default(cuid())
+  userId      String             @map("user_id")
+  categoryId  String             @map("category_id")
+  type        TransactionType    @map("type")
+  amount      Float              @map("amount")
+  note        String?            @map("note")
+  tags        String?            @map("tags")
+  frequency   RecurringFrequency @map("frequency")
+  dayOfMonth  Int?               @map("day_of_month") // วันที่ในเดือน (1-31) สำหรับ MONTHLY
+  dayOfWeek   Int?               @map("day_of_week") // วันในสัปดาห์ (0=อาทิตย์) สำหรับ WEEKLY
+  nextRunDate String             @map("next_run_date") // YYYY-MM-DD ถัดไปที่จะสร้าง transaction
+  lastRunDate String?            @map("last_run_date") // YYYY-MM-DD ครั้งล่าสุดที่สร้าง
+  isActive    Boolean            @default(true) @map("is_active")
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category    ExpenseCategory    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@index([isActive, nextRunDate])
+  @@index([userId, isActive])
+  @@map("recurring_transactions")
+}
+
+// ===========================
+// Savings Goal (เป้าหมายการออม)
+// ===========================
+
+model SavingsGoal {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  name         String   @map("name") // ชื่อเป้าหมาย เช่น "ซื้อ iPhone", "เที่ยวญี่ปุ่น"
+  icon         String?  @map("icon") // emoji
+  targetAmount Float    @map("target_amount") // เป้าหมาย (บาท)
+  savedAmount  Float    @default(0) @map("saved_amount") // ออมแล้ว (บาท)
+  deadline     String?  @map("deadline") // YYYY-MM-DD
+  isCompleted  Boolean  @default(false) @map("is_completed")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isActive])
+  @@map("savings_goals")
 }
 
 // ===========================
