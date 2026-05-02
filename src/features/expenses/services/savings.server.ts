@@ -5,7 +5,7 @@
  * Server-only — ห้าม import ใน client components
  */
 
-import { db } from "@/lib/database";
+import { db } from "@/lib/database/index";
 import type { SavingsGoal } from "@prisma/client";
 
 export type SavingsGoalWithProgress = SavingsGoal & {

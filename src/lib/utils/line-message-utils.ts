@@ -31,6 +31,9 @@ export const replyRaw = async (
       case "gold":
         bubbleItems.push(bubbleTemplate.gold(infoItems[index]));
         break;
+      case "gas":
+        bubbleItems.push(bubbleTemplate.gas(infoItems[0]));
+        break;
       case "lotto": {
         const bubble = bubbleTemplate.lottery(infoItems[0]);
         bubble.forEach((b: any) => bubbleItems.push(b));
