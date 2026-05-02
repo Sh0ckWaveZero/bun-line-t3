@@ -72,6 +72,7 @@ export async function createBudget(input: {
   type: "INCOME" | "EXPENSE";
   amount: number;
   alertAt?: number;
+  tags?: string | null;
 }): Promise<BudgetWithCategory> {
   const row = await db.budget.create({
     data: {
@@ -80,6 +81,7 @@ export async function createBudget(input: {
       type: input.type,
       amount: input.amount,
       alertAt: input.alertAt ?? 80,
+      tags: input.tags,
     },
     include: { category: true },
   });
@@ -94,6 +96,7 @@ export async function updateBudget(
     amount?: number;
     alertAt?: number;
     isActive?: boolean;
+    tags?: string | null;
   },
 ): Promise<BudgetWithCategory> {
   const row = await db.budget.update({
@@ -102,6 +105,7 @@ export async function updateBudget(
       ...(input.amount !== undefined && { amount: input.amount }),
       ...(input.alertAt !== undefined && { alertAt: input.alertAt }),
       ...(input.isActive !== undefined && { isActive: input.isActive }),
+      ...(input.tags !== undefined && { tags: input.tags }),
     },
     include: { category: true },
   });

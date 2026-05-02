@@ -53,6 +53,7 @@ import { Route as ApiHealthEnhancedRouteImport } from './routes/api/health/enhan
 import { Route as ApiExpensesSummaryRouteImport } from './routes/api/expenses/summary'
 import { Route as ApiExpensesOverviewRouteImport } from './routes/api/expenses/overview'
 import { Route as ApiExpensesCategoriesRouteImport } from './routes/api/expenses/categories'
+import { Route as ApiExpensesBudgetsRouteImport } from './routes/api/expenses/budgets'
 import { Route as ApiExpensesTransactionIdRouteImport } from './routes/api/expenses/$transactionId'
 import { Route as ApiDcaSummaryRouteImport } from './routes/api/dca/summary'
 import { Route as ApiDcaStreamRouteImport } from './routes/api/dca/stream'
@@ -71,6 +72,7 @@ import { Route as ApiAdminDebugRouteImport } from './routes/api/admin/debug'
 import { Route as ApiAdminCheckRouteImport } from './routes/api/admin/check'
 import { Route as ApiUserSettingsNotificationsRouteImport } from './routes/api/user/settings/notifications'
 import { Route as ApiExpensesCategoriesIdRouteImport } from './routes/api/expenses/categories/$id'
+import { Route as ApiExpensesBudgetsIdRouteImport } from './routes/api/expenses/budgets/$id'
 
 const ThaiNamesGeneratorRoute = ThaiNamesGeneratorRouteImport.update({
   id: '/thai-names-generator',
@@ -294,6 +296,11 @@ const ApiExpensesCategoriesRoute = ApiExpensesCategoriesRouteImport.update({
   path: '/api/expenses/categories',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiExpensesBudgetsRoute = ApiExpensesBudgetsRouteImport.update({
+  id: '/api/expenses/budgets',
+  path: '/api/expenses/budgets',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiExpensesTransactionIdRoute =
   ApiExpensesTransactionIdRouteImport.update({
     id: '/api/expenses/$transactionId',
@@ -388,6 +395,11 @@ const ApiExpensesCategoriesIdRoute = ApiExpensesCategoriesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApiExpensesCategoriesRoute,
 } as any)
+const ApiExpensesBudgetsIdRoute = ApiExpensesBudgetsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiExpensesBudgetsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -433,6 +445,7 @@ export interface FileRoutesByFullPath {
   '/api/dca/stream': typeof ApiDcaStreamRoute
   '/api/dca/summary': typeof ApiDcaSummaryRoute
   '/api/expenses/$transactionId': typeof ApiExpensesTransactionIdRoute
+  '/api/expenses/budgets': typeof ApiExpensesBudgetsRouteWithChildren
   '/api/expenses/categories': typeof ApiExpensesCategoriesRouteWithChildren
   '/api/expenses/overview': typeof ApiExpensesOverviewRoute
   '/api/expenses/summary': typeof ApiExpensesSummaryRoute
@@ -450,6 +463,7 @@ export interface FileRoutesByFullPath {
   '/api/dca/': typeof ApiDcaIndexRoute
   '/api/expenses/': typeof ApiExpensesIndexRoute
   '/api/subscriptions/': typeof ApiSubscriptionsIndexRoute
+  '/api/expenses/budgets/$id': typeof ApiExpensesBudgetsIdRoute
   '/api/expenses/categories/$id': typeof ApiExpensesCategoriesIdRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
 }
@@ -497,6 +511,7 @@ export interface FileRoutesByTo {
   '/api/dca/stream': typeof ApiDcaStreamRoute
   '/api/dca/summary': typeof ApiDcaSummaryRoute
   '/api/expenses/$transactionId': typeof ApiExpensesTransactionIdRoute
+  '/api/expenses/budgets': typeof ApiExpensesBudgetsRouteWithChildren
   '/api/expenses/categories': typeof ApiExpensesCategoriesRouteWithChildren
   '/api/expenses/overview': typeof ApiExpensesOverviewRoute
   '/api/expenses/summary': typeof ApiExpensesSummaryRoute
@@ -514,6 +529,7 @@ export interface FileRoutesByTo {
   '/api/dca': typeof ApiDcaIndexRoute
   '/api/expenses': typeof ApiExpensesIndexRoute
   '/api/subscriptions': typeof ApiSubscriptionsIndexRoute
+  '/api/expenses/budgets/$id': typeof ApiExpensesBudgetsIdRoute
   '/api/expenses/categories/$id': typeof ApiExpensesCategoriesIdRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
 }
@@ -562,6 +578,7 @@ export interface FileRoutesById {
   '/api/dca/stream': typeof ApiDcaStreamRoute
   '/api/dca/summary': typeof ApiDcaSummaryRoute
   '/api/expenses/$transactionId': typeof ApiExpensesTransactionIdRoute
+  '/api/expenses/budgets': typeof ApiExpensesBudgetsRouteWithChildren
   '/api/expenses/categories': typeof ApiExpensesCategoriesRouteWithChildren
   '/api/expenses/overview': typeof ApiExpensesOverviewRoute
   '/api/expenses/summary': typeof ApiExpensesSummaryRoute
@@ -579,6 +596,7 @@ export interface FileRoutesById {
   '/api/dca/': typeof ApiDcaIndexRoute
   '/api/expenses/': typeof ApiExpensesIndexRoute
   '/api/subscriptions/': typeof ApiSubscriptionsIndexRoute
+  '/api/expenses/budgets/$id': typeof ApiExpensesBudgetsIdRoute
   '/api/expenses/categories/$id': typeof ApiExpensesCategoriesIdRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
 }
@@ -628,6 +646,7 @@ export interface FileRouteTypes {
     | '/api/dca/stream'
     | '/api/dca/summary'
     | '/api/expenses/$transactionId'
+    | '/api/expenses/budgets'
     | '/api/expenses/categories'
     | '/api/expenses/overview'
     | '/api/expenses/summary'
@@ -645,6 +664,7 @@ export interface FileRouteTypes {
     | '/api/dca/'
     | '/api/expenses/'
     | '/api/subscriptions/'
+    | '/api/expenses/budgets/$id'
     | '/api/expenses/categories/$id'
     | '/api/user/settings/notifications'
   fileRoutesByTo: FileRoutesByTo
@@ -692,6 +712,7 @@ export interface FileRouteTypes {
     | '/api/dca/stream'
     | '/api/dca/summary'
     | '/api/expenses/$transactionId'
+    | '/api/expenses/budgets'
     | '/api/expenses/categories'
     | '/api/expenses/overview'
     | '/api/expenses/summary'
@@ -709,6 +730,7 @@ export interface FileRouteTypes {
     | '/api/dca'
     | '/api/expenses'
     | '/api/subscriptions'
+    | '/api/expenses/budgets/$id'
     | '/api/expenses/categories/$id'
     | '/api/user/settings/notifications'
   id:
@@ -756,6 +778,7 @@ export interface FileRouteTypes {
     | '/api/dca/stream'
     | '/api/dca/summary'
     | '/api/expenses/$transactionId'
+    | '/api/expenses/budgets'
     | '/api/expenses/categories'
     | '/api/expenses/overview'
     | '/api/expenses/summary'
@@ -773,6 +796,7 @@ export interface FileRouteTypes {
     | '/api/dca/'
     | '/api/expenses/'
     | '/api/subscriptions/'
+    | '/api/expenses/budgets/$id'
     | '/api/expenses/categories/$id'
     | '/api/user/settings/notifications'
   fileRoutesById: FileRoutesById
@@ -820,6 +844,7 @@ export interface RootRouteChildren {
   ApiDcaStreamRoute: typeof ApiDcaStreamRoute
   ApiDcaSummaryRoute: typeof ApiDcaSummaryRoute
   ApiExpensesTransactionIdRoute: typeof ApiExpensesTransactionIdRoute
+  ApiExpensesBudgetsRoute: typeof ApiExpensesBudgetsRouteWithChildren
   ApiExpensesCategoriesRoute: typeof ApiExpensesCategoriesRouteWithChildren
   ApiExpensesOverviewRoute: typeof ApiExpensesOverviewRoute
   ApiExpensesSummaryRoute: typeof ApiExpensesSummaryRoute
@@ -1146,6 +1171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiExpensesCategoriesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/expenses/budgets': {
+      id: '/api/expenses/budgets'
+      path: '/api/expenses/budgets'
+      fullPath: '/api/expenses/budgets'
+      preLoaderRoute: typeof ApiExpensesBudgetsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/expenses/$transactionId': {
       id: '/api/expenses/$transactionId'
       path: '/api/expenses/$transactionId'
@@ -1272,6 +1304,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiExpensesCategoriesIdRouteImport
       parentRoute: typeof ApiExpensesCategoriesRoute
     }
+    '/api/expenses/budgets/$id': {
+      id: '/api/expenses/budgets/$id'
+      path: '/$id'
+      fullPath: '/api/expenses/budgets/$id'
+      preLoaderRoute: typeof ApiExpensesBudgetsIdRouteImport
+      parentRoute: typeof ApiExpensesBudgetsRoute
+    }
   }
 }
 
@@ -1311,6 +1350,17 @@ const ApiLineRouteChildren: ApiLineRouteChildren = {
 
 const ApiLineRouteWithChildren =
   ApiLineRoute._addFileChildren(ApiLineRouteChildren)
+
+interface ApiExpensesBudgetsRouteChildren {
+  ApiExpensesBudgetsIdRoute: typeof ApiExpensesBudgetsIdRoute
+}
+
+const ApiExpensesBudgetsRouteChildren: ApiExpensesBudgetsRouteChildren = {
+  ApiExpensesBudgetsIdRoute: ApiExpensesBudgetsIdRoute,
+}
+
+const ApiExpensesBudgetsRouteWithChildren =
+  ApiExpensesBudgetsRoute._addFileChildren(ApiExpensesBudgetsRouteChildren)
 
 interface ApiExpensesCategoriesRouteChildren {
   ApiExpensesCategoriesIdRoute: typeof ApiExpensesCategoriesIdRoute
@@ -1380,6 +1430,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiDcaStreamRoute: ApiDcaStreamRoute,
   ApiDcaSummaryRoute: ApiDcaSummaryRoute,
   ApiExpensesTransactionIdRoute: ApiExpensesTransactionIdRoute,
+  ApiExpensesBudgetsRoute: ApiExpensesBudgetsRouteWithChildren,
   ApiExpensesCategoriesRoute: ApiExpensesCategoriesRouteWithChildren,
   ApiExpensesOverviewRoute: ApiExpensesOverviewRoute,
   ApiExpensesSummaryRoute: ApiExpensesSummaryRoute,

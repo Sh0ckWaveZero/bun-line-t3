@@ -58,6 +58,7 @@ export async function createSavingsGoal(input: {
   icon?: string | null;
   targetAmount: number;
   deadline?: string | null;
+  tags?: string | null;
 }): Promise<SavingsGoalWithProgress> {
   const goal = await db.savingsGoal.create({
     data: {
@@ -67,6 +68,7 @@ export async function createSavingsGoal(input: {
       targetAmount: input.targetAmount,
       savedAmount: 0,
       deadline: input.deadline,
+      tags: input.tags,
       isCompleted: false,
       isActive: true,
     },
@@ -85,6 +87,7 @@ export async function updateSavingsGoal(
     targetAmount?: number;
     savedAmount?: number;
     deadline?: string | null;
+    tags?: string | null;
     isCompleted?: boolean;
     isActive?: boolean;
   },
@@ -97,6 +100,7 @@ export async function updateSavingsGoal(
       ...(input.targetAmount !== undefined && { targetAmount: input.targetAmount }),
       ...(input.savedAmount !== undefined && { savedAmount: input.savedAmount }),
       ...(input.deadline !== undefined && { deadline: input.deadline }),
+      ...(input.tags !== undefined && { tags: input.tags }),
       ...(input.isCompleted !== undefined && { isCompleted: input.isCompleted }),
       ...(input.isActive !== undefined && { isActive: input.isActive }),
     },
