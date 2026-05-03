@@ -228,14 +228,9 @@ const getCmcList = async (start: number, limit: number) => {
 
 const bitkub = async (currencyName: string): Promise<any> => {
   try {
-    const response = await fetch(
-      `https://api.bitkub.com/api/market/ticker?sym=THB_${currencyName.toUpperCase()}`,
-    );
+    const response = await fetch(`https://api.bitkub.com/api/market/ticker`);
     const data = await response.json();
-    for (const key of Object.keys(data)) {
-      const value = data[key];
-      return value;
-    }
+    return data?.[`THB_${currencyName.toUpperCase()}`];
   } catch (error) {
     console.error(error);
   }
