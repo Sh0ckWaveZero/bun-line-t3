@@ -142,7 +142,7 @@ function StatsCard({
   color: string;
 }) {
   return (
-    <Card className="border-slate-200 bg-white text-slate-950 shadow-sm dark:border-white/10 dark:bg-[#211f2d] dark:text-slate-100">
+    <Card className="border-border bg-card text-card-foreground shadow-sm">
       <CardContent className="p-5">
         <div className="flex min-w-0 items-center gap-3">
           <div className={`shrink-0 rounded-lg p-2.5 ${color}`}>{icon}</div>
@@ -270,7 +270,7 @@ export function LineApprovalPage() {
   const [activeTab, setActiveTab] = useState<ApprovalTab>("ALL");
   const [listData, setListData] = useState<ListResponse | null>(null);
   const [stats, setStats] = useState<ApprovalStats | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [rejectTarget, setRejectTarget] = useState<ApprovalRequest | null>(null);
@@ -336,6 +336,8 @@ export function LineApprovalPage() {
     if (authStatus === "authenticated") {
       void fetchList();
       void fetchStats();
+    } else if (authStatus !== "loading") {
+      setIsLoading(false);
     }
   }, [fetchList, fetchStats, authStatus]);
 
@@ -502,7 +504,7 @@ export function LineApprovalPage() {
 
       <div
         id="line-approval-page"
-        className="min-h-screen w-full bg-slate-50 pb-16 text-slate-950 dark:bg-[#15131f] dark:text-slate-100"
+        className="min-h-screen w-full bg-background pb-16 text-foreground"
       >
         {toast && (
           <div
@@ -543,7 +545,7 @@ export function LineApprovalPage() {
                 void fetchStats();
               }}
               disabled={isLoading}
-              className="gap-2 border-slate-300 bg-white text-slate-800 hover:bg-slate-100 dark:border-white/10 dark:bg-[#211f2d] dark:text-slate-100 dark:hover:bg-white/10"
+              className="gap-2 border-border bg-card text-foreground hover:bg-muted/50"
             >
               <RefreshCw
                 className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
@@ -611,7 +613,7 @@ export function LineApprovalPage() {
             ))}
           </div>
 
-          <Card className="border-slate-200 bg-white text-slate-950 shadow-sm dark:border-white/10 dark:bg-[#211f2d] dark:text-slate-100">
+          <Card className="border-border bg-card text-card-foreground shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="text-base text-slate-950 dark:text-slate-50">
                 รายการคำขอ — {tabConfig[activeTab].label}
@@ -621,11 +623,11 @@ export function LineApprovalPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
-              {isLoading ? (
+              {isLoading || !listData ? (
                 <div className="flex items-center justify-center py-16">
                   <RefreshCw className="h-6 w-6 animate-spin text-slate-500 dark:text-slate-400" />
                 </div>
-              ) : !listData?.data.length ? (
+              ) : !listData.data.length ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <MessageSquare className="mb-3 h-12 w-12 text-slate-300 dark:text-slate-600" />
                   <p className="font-medium text-slate-600 dark:text-slate-400">
@@ -760,14 +762,14 @@ export function LineApprovalPage() {
                     classNames={{
                       info: "text-slate-600 dark:text-slate-400",
                       button:
-                        "border-slate-300 bg-white text-slate-800 hover:bg-slate-100 dark:border-white/10 dark:bg-[#211f2d] dark:text-slate-100 dark:hover:bg-white/10",
+                        "border-border bg-card text-foreground hover:bg-muted/50",
                       activeButton:
                         "bg-green-600 text-white hover:bg-green-700 dark:bg-green-500 dark:text-slate-950 dark:hover:bg-green-400",
                       mobileCurrent:
                         "bg-slate-200 text-slate-800 dark:bg-white/10 dark:text-slate-100",
                       ellipsis: "text-slate-500 dark:text-slate-400",
                       input:
-                        "border-slate-300 bg-white text-slate-900 placeholder:text-slate-500 dark:border-white/10 dark:bg-[#211f2d] dark:text-slate-100",
+                        "border-border bg-card text-foreground placeholder:text-muted-foreground",
                       cancelButton:
                         "text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/10",
                     }}

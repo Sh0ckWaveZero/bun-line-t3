@@ -180,6 +180,24 @@ const upsertByLineUserId = async (
 };
 
 /**
+ * ดึง LINE accounts ตาม accountId (lineUserId) หลายรายการ
+ * ใช้สำหรับ fallback name/image ในรายการ approval
+ */
+const findLineAccountsByIds = async (
+  lineUserIds: string[],
+): Promise<Array<{ accountId: string; user: { name: string; image: string | null } }>> => {
+  if (lineUserIds.length === 0) return [];
+
+  return db.account.findMany({
+    where: { providerId: "line", accountId: { in: lineUserIds } },
+    select: {
+      accountId: true,
+      user: { select: { name: true, image: true } },
+    },
+  });
+};
+
+/**
  * ดึง LINE accounts ทั้งหมดจาก auth accounts พร้อม user profile
  */
 const findLineAccounts = async (params: LineAccountListParams = {}) => {
@@ -325,6 +343,7 @@ export const approvalRepository = {
   update,
   upsertByLineUserId,
   findLineAccounts,
+  findLineAccountsByIds,
   findDatabaseAdminLineUserIds,
   updateAdminByLineUserId,
   markNotified,
