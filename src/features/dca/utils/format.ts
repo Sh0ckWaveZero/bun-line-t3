@@ -12,6 +12,26 @@ export const formatDate = (date: Date | string) => {
   }).format(d);
 };
 
+export const formatDateOnly = (date: Date | string) => {
+  const d = new Date(date);
+  return new Intl.DateTimeFormat("th-TH", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: "Asia/Bangkok",
+  }).format(d);
+};
+
+export const formatTimeOnly = (date: Date | string) => {
+  const d = new Date(date);
+  return new Intl.DateTimeFormat("th-TH", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Bangkok",
+    hour12: false,
+  }).format(d);
+};
+
 export const formatTHB = (n: number) =>
   n.toLocaleString("th-TH", {
     minimumFractionDigits: 2,
