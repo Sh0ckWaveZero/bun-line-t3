@@ -93,19 +93,23 @@ const checkApprovalStatus = async (
     return APPROVAL_CHECK_RESULT.NEW;
   }
 
-  // อัปเดตโปรไฟล์ล่าสุดถ้ามีการเปลี่ยนแปลง
-  if (
-    existing.displayName !== userProfile.displayName ||
-    existing.pictureUrl !== userProfile.pictureUrl
-  ) {
+  // อัปเดตโปรไฟล์ล่าสุดถ้ามีข้อมูลใหม่และต่างจากเดิม
+  const newDisplayName = userProfile.displayName;
+  const newPictureUrl = userProfile.pictureUrl;
+  const hasProfileData = newDisplayName !== undefined || newPictureUrl !== undefined;
+  const profileChanged =
+    (newDisplayName !== undefined && existing.displayName !== newDisplayName) ||
+    (newPictureUrl !== undefined && existing.pictureUrl !== newPictureUrl);
+
+  if (hasProfileData && profileChanged) {
     await approvalRepository.update(existing.id, {
       status: existing.status,
       approvedBy: existing.approvedBy ?? undefined,
       approvedAt: existing.approvedAt ?? undefined,
       rejectReason: existing.rejectReason ?? undefined,
       expiresAt: existing.expiresAt ?? undefined,
-      displayName: userProfile.displayName,
-      pictureUrl: userProfile.pictureUrl,
+      displayName: newDisplayName,
+      pictureUrl: newPictureUrl,
     });
   }
 
@@ -220,6 +224,7 @@ const rejectLineUser = async (
 
 /**
  * ดึงรายการ requests สำหรับ admin
+ * fallback name/image จาก LINE Login OAuth account ถ้า displayName/pictureUrl ว่าง
  */
 const getApprovalList = async (params?: {
   status?: ApprovalStatus;
@@ -235,16 +240,27 @@ const getApprovalList = async (params?: {
     take: limit,
   });
   const lineUserIds = result.data.map((record) => record.lineUserId);
-  const databaseAdminLineUserIds =
-    await approvalRepository.findDatabaseAdminLineUserIds(lineUserIds);
+  const [databaseAdminLineUserIds, lineAccounts] = await Promise.all([
+    approvalRepository.findDatabaseAdminLineUserIds(lineUserIds),
+    approvalRepository.findLineAccountsByIds(lineUserIds),
+  ]);
+
+  const accountByLineUserId = new Map(
+    lineAccounts.map((a) => [a.accountId, a]),
+  );
 
   return {
-    data: result.data.map((record) => ({
-      ...record,
-      isAdmin:
-        canManageApprovals(record.lineUserId) ||
-        databaseAdminLineUserIds.has(record.lineUserId),
-    })),
+    data: result.data.map((record) => {
+      const account = accountByLineUserId.get(record.lineUserId);
+      return {
+        ...record,
+        displayName: record.displayName ?? account?.user.name ?? null,
+        pictureUrl: record.pictureUrl ?? account?.user.image ?? null,
+        isAdmin:
+          canManageApprovals(record.lineUserId) ||
+          databaseAdminLineUserIds.has(record.lineUserId),
+      };
+    }),
     total: result.total,
   };
 };

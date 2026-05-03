@@ -11,25 +11,44 @@ import { APPROVAL_CHECK_RESULT } from "../types/approval.types";
 
 /**
  * ดึงโปรไฟล์ LINE user จาก Messaging API
+ * รองรับ source type: user (1:1), group, room
  */
 const fetchLineProfile = async (
-  userId: string,
+  source: { type?: string; userId?: string; groupId?: string; roomId?: string },
   accessToken: string,
 ): Promise<{ displayName?: string; pictureUrl?: string; statusMessage?: string }> => {
+  const userId = source.userId;
+  if (!userId) return {};
+
+  let profileUrl: string;
+  if (source.type === "group" && source.groupId) {
+    profileUrl = `https://api.line.me/v2/bot/group/${source.groupId}/member/${userId}`;
+  } else if (source.type === "room" && source.roomId) {
+    profileUrl = `https://api.line.me/v2/bot/room/${source.roomId}/member/${userId}`;
+  } else {
+    profileUrl = `https://api.line.me/v2/bot/profile/${userId}`;
+  }
+
   try {
-    const res = await fetch(
-      `https://api.line.me/v2/bot/profile/${userId}`,
-      {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      },
-    );
-    if (!res.ok) return {};
+    const res = await fetch(profileUrl, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!res.ok) {
+      console.warn(
+        `[handleApprovalCheck] Profile fetch failed: HTTP ${res.status} for userId=${userId} source=${source.type ?? "user"}`,
+      );
+      return {};
+    }
     return (await res.json()) as {
       displayName?: string;
       pictureUrl?: string;
       statusMessage?: string;
     };
-  } catch {
+  } catch (err) {
+    console.warn(
+      `[handleApprovalCheck] Profile fetch error for userId=${userId}:`,
+      err,
+    );
     return {};
   }
 };
@@ -50,10 +69,10 @@ export const handleApprovalCheck = async (
     return false;
   }
 
-  // ดึงโปรไฟล์ LINE user
+  // ดึงโปรไฟล์ LINE user (ใช้ endpoint ตาม source type)
   const { LINE_CHANNEL_ACCESS } = process.env;
   const profile = LINE_CHANNEL_ACCESS
-    ? await fetchLineProfile(userId, LINE_CHANNEL_ACCESS)
+    ? await fetchLineProfile(source, LINE_CHANNEL_ACCESS)
     : {};
 
   const status = await approvalService.checkApprovalStatus({
