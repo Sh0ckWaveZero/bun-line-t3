@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import type { DcaOrder } from "@/features/dca/types";
 import { useDcaLocale } from "@/features/dca/lib/dca-locale-context";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 type ChartMode = "portfolio" | "pnl" | "cost" | "sats" | "entries";
 type Timeframe = "30D" | "90D" | "1Y" | "ALL";
@@ -72,6 +73,7 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
   ];
   const [mode, setMode] = useState<ChartMode>("portfolio");
   const [timeframe, setTimeframe] = useState<Timeframe>("ALL");
+  const [timeframeOpen, setTimeframeOpen] = useState(false);
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const chartAreaRef = useRef<HTMLDivElement>(null);
   const [dims, setDims] = useState({ w: 800, h: 280 });
@@ -235,13 +237,37 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
             </button>
           ))}
         </div>
-        <select
-          className="bg-card border-border text-foreground rounded border px-2 py-1 font-mono text-xs"
-          value={timeframe}
-          onChange={(e) => setTimeframe(e.target.value as Timeframe)}
-        >
-          {TIMEFRAMES.map((t) => <option key={t} value={t}>{t}</option>)}
-        </select>
+        <Popover open={timeframeOpen} onOpenChange={setTimeframeOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className="bg-card border-border text-foreground min-w-[72px] rounded border px-2 py-1 font-mono text-xs"
+            >
+              {timeframe}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-[88px] p-1">
+            <div className="flex flex-col gap-0.5">
+              {TIMEFRAMES.map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => {
+                    setTimeframe(value);
+                    setTimeframeOpen(false);
+                  }}
+                  className={`rounded px-2 py-1.5 text-left font-mono text-xs ${
+                    timeframe === value
+                      ? "bg-foreground text-background"
+                      : "text-foreground hover:bg-muted"
+                  }`}
+                >
+                  {value}
+                </button>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {data.length === 0 ? (

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import type { DcaOrder } from "@/features/dca/types";
 import { useDcaLocale } from "@/features/dca/lib/dca-locale-context";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const fmtInt = (n: number): string => Math.round(n).toLocaleString("en-US");
 const fmtThb = (n: number, d = 2): string =>
@@ -38,7 +39,9 @@ export const DcaRecordsTable = ({ orders, currentPrice }: DcaRecordsTableProps) 
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [pageSizeOpen, setPageSizeOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const PAGE_SIZE_OPTIONS = [10, 30, 50, 100] as const;
 
   const enrichedRows: EnrichedRow[] = useMemo(() => {
     if (!currentPrice || orders.length === 0) return [];
@@ -137,16 +140,37 @@ export const DcaRecordsTable = ({ orders, currentPrice }: DcaRecordsTableProps) 
         </div>
         <div className="text-muted-foreground flex items-center gap-2 font-mono text-xs">
           <span className="hidden sm:inline">{t.table.rowsPerPage}</span>
-          <select
-            className="bg-card border-border text-foreground rounded border px-2 py-1 font-mono text-xs"
-            value={pageSize}
-            onChange={(e) => setPageSize(+e.target.value)}
-          >
-            <option value={10}>10</option>
-            <option value={30}>30</option>
-            <option value={50}>50</option>
-            <option value={100}>100</option>
-          </select>
+          <Popover open={pageSizeOpen} onOpenChange={setPageSizeOpen}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="bg-card border-border text-foreground min-w-[64px] rounded border px-2 py-1 text-right font-mono text-xs"
+              >
+                {pageSize}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-[72px] p-1">
+              <div className="flex flex-col gap-0.5">
+                {PAGE_SIZE_OPTIONS.map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => {
+                      setPageSize(size);
+                      setPageSizeOpen(false);
+                    }}
+                    className={`rounded px-2 py-1.5 text-right font-mono text-xs ${
+                      pageSize === size
+                        ? "bg-foreground text-background"
+                        : "text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
