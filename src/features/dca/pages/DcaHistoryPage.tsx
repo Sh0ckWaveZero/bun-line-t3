@@ -1,20 +1,25 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Bitcoin, Plus, RefreshCw, Upload } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import "@/styles/dca-dashboard.css";
 import { AddDcaForm } from "@/features/dca/components/AddDcaForm";
+import { DcaChartCard } from "@/features/dca/components/DcaChartCard";
 import { DcaExportButtons } from "@/features/dca/components/DcaExportButtons";
-import { DcaHistoryTable } from "@/features/dca/components/DcaHistoryTable";
 import { DcaImportModal } from "@/features/dca/components/DcaImportModal";
-import { DcaInfoBox } from "@/features/dca/components/DcaInfoBox";
-import { DcaSummaryCards } from "@/features/dca/components/DcaSummaryCards";
+import { DcaRecordsTable } from "@/features/dca/components/DcaRecordsTable";
+import { DcaTopbar } from "@/features/dca/components/DcaTopbar";
+import { GoalsSection } from "@/features/dca/components/GoalsSection";
+import { PnlCard } from "@/features/dca/components/PnlCard";
+import { SectionLabel } from "@/features/dca/components/SectionLabel";
+import { StatsGrid } from "@/features/dca/components/StatsGrid";
+import { useDcaAllOrders } from "@/features/dca/hooks/useDcaAllOrders";
 import { useDcaHistoryData } from "@/features/dca/hooks/useDcaHistoryData";
 import { useDcaRealtimeUpdates } from "@/features/dca/hooks/useDcaRealtimeUpdates";
+import { DcaLocaleProvider } from "@/features/dca/lib/dca-locale-context";
 import { PendingApprovalModal } from "@/components/auth/PendingApprovalModal";
 import { useLineApproval } from "@/lib/auth/hooks/useLineApproval";
 
-export function DcaHistoryPage() {
+function DcaHistoryPageContent() {
   const [page, setPage] = useState(1);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
@@ -23,7 +28,16 @@ export function DcaHistoryPage() {
   const { ordersData, summaryData, isLoading, error, refetchAll } =
     useDcaHistoryData(page, limit);
 
-  useDcaRealtimeUpdates({ onUpdate: refetchAll });
+  const allOrdersQuery = useDcaAllOrders();
+  const allOrders = allOrdersQuery.data?.orders ?? [];
+  const refetchAllOrders = allOrdersQuery.refetch;
+
+  useDcaRealtimeUpdates({
+    onUpdate: useCallback(() => {
+      refetchAll();
+      void refetchAllOrders();
+    }, [refetchAll, refetchAllOrders]),
+  });
 
   const { needsApproval } = useLineApproval();
 
@@ -33,84 +47,65 @@ export function DcaHistoryPage() {
     channel.postMessage({ type: "update" });
     channel.close();
     refetchAll();
-  }, [refetchAll]);
+    void refetchAllOrders();
+  }, [refetchAll, refetchAllOrders]);
 
   return (
     <>
       <PendingApprovalModal open={needsApproval} />
 
       <div id="dca-history-page" className="bg-background min-h-screen w-full">
-        <div
-          id="dca-history-container"
-          className="container mx-auto max-w-7xl px-4 py-8"
-        >
-          <div
-            id="dca-history-header"
-            className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
-          >
-            <div id="dca-history-heading-group" className="space-y-1">
-              <h1
-                id="dca-history-title"
-                className="flex items-center gap-2 text-2xl font-bold tracking-tight"
-              >
-                <Bitcoin className="h-7 w-7 text-orange-500" />
-                ประวัติคำสั่งซื้อ Auto DCA
-              </h1>
-              <p id="dca-history-description" className="text-muted-foreground text-sm">
-                บันทึกประวัติการลงทุนแบบ Dollar Cost Averaging สำหรับ Bitcoin
-              </p>
-            </div>
-
-            <div
-              id="dca-history-actions"
-              className="flex flex-wrap items-center gap-2"
-            >
-              <DcaExportButtons disabled={isLoading || !ordersData?.total} />
-              <div className="bg-border h-6 w-px" aria-hidden />
-              <Button
-                id="dca-history-import-button"
-                variant="outline"
-                size="sm"
-                onClick={() => setShowImportModal(true)}
-                className="gap-2"
-              >
-                <Upload className="h-4 w-4" />
-                นำเข้า
-              </Button>
-              <Button
-                id="dca-history-refresh-button"
-                variant="outline"
-                size="sm"
-                onClick={refetchAll}
-                disabled={isLoading}
-                className="gap-2"
-              >
-                <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-                รีเฟรช
-              </Button>
-              <Button
-                id="dca-history-add-button"
-                size="sm"
-                onClick={() => setShowAddForm(true)}
-                className="gap-2 bg-yellow-500 text-black hover:bg-yellow-400"
-              >
-                <Plus className="h-4 w-4" />
-                เพิ่มคำสั่งซื้อ
-              </Button>
-            </div>
-          </div>
-
-          {summaryData && <DcaSummaryCards summary={summaryData} />}
-
-          <DcaHistoryTable
-            ordersData={ordersData}
-            error={error}
+        <div className="container mx-auto max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8">
+          {/* Topbar */}
+          <DcaTopbar
+            onAdd={() => setShowAddForm(true)}
+            onImport={() => setShowImportModal(true)}
+            onRefresh={() => {
+              refetchAll();
+              void refetchAllOrders();
+            }}
             isLoading={isLoading}
-            page={page}
-            onPageChange={setPage}
           />
 
-          <DcaInfoBox />
+          {/* Error banner */}
+          {error && (
+            <div id="dca-error-banner" className="mt-3 rounded-md border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+              {error}
+            </div>
+          )}
+
+          {/* Section 01: Overview */}
+          <SectionLabel num="01" title="Overview" hint="PNL · chart · hover for daily values" />
+          <div id="dca-section-overview" className="grid grid-cols-1 gap-4 md:grid-cols-[380px_1fr]">
+            <PnlCard summary={summaryData} />
+            <DcaChartCard
+              orders={allOrders}
+              currentPrice={summaryData?.currentPrice ?? null}
+            />
+          </div>
+
+          {/* Section 02: Metrics & Goals */}
+          <SectionLabel num="02" title="Metrics & Goals" hint="core numbers · progress" />
+          <div id="dca-section-metrics-goals" className="space-y-4">
+            <StatsGrid summary={summaryData} orders={allOrders} />
+            <GoalsSection orders={allOrders} />
+          </div>
+
+          {/* Section 03: Buy History */}
+          <SectionLabel num="03" title="Buy History" hint="sortable · searchable · paginated" />
+          <div id="dca-section-buy-history">
+            <DcaRecordsTable
+              orders={allOrders}
+              currentPrice={summaryData?.currentPrice ?? null}
+            />
+          </div>
+
+          {/* Export buttons */}
+          {ordersData && ordersData.total > 0 && (
+            <div id="dca-export-section" className="mt-4 flex justify-end">
+              <DcaExportButtons disabled={isLoading} />
+            </div>
+          )}
         </div>
 
         {showAddForm && (
@@ -128,5 +123,13 @@ export function DcaHistoryPage() {
         )}
       </div>
     </>
+  );
+}
+
+export function DcaHistoryPage() {
+  return (
+    <DcaLocaleProvider>
+      <DcaHistoryPageContent />
+    </DcaLocaleProvider>
   );
 }
