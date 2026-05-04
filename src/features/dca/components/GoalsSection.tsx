@@ -44,6 +44,14 @@ function saveGoals(goals: GoalValues) {
 
 const fmtInt = (n: number): string => Math.round(n).toLocaleString("en-US");
 const clampProgress = (value: number): number => Math.max(0, Math.min(100, value));
+const toSafeNumber = (value: unknown): number => {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  return 0;
+};
 
 type EditField = "goalFiat" | "goalSatoshi" | null;
 
@@ -57,17 +65,17 @@ export const GoalsSection = ({ orders }: GoalsSectionProps) => {
     setGoals(loadGoals());
   }, []);
 
-  const spendFiat = orders.reduce((sum, order) => sum + order.amountTHB, 0);
+  const spendFiat = orders.reduce((sum, order) => sum + toSafeNumber(order.amountTHB), 0);
   const totalSatoshi = Math.round(
     orders
       .filter((order) => order.coin.toUpperCase() === "BTC")
-      .reduce((sum, order) => sum + order.coinReceived * 1e8, 0),
+      .reduce((sum, order) => sum + toSafeNumber(order.coinReceived) * 1e8, 0),
   );
 
   const progressFiatRaw =
-    goals.goalFiat > 0 ? (spendFiat / goals.goalFiat) * 100 : 0;
+    goals.goalFiat > 0 ? (toSafeNumber(spendFiat) / goals.goalFiat) * 100 : 0;
   const progressBTCRaw =
-    goals.goalSatoshi > 0 ? (totalSatoshi / goals.goalSatoshi) * 100 : 0;
+    goals.goalSatoshi > 0 ? (toSafeNumber(totalSatoshi) / goals.goalSatoshi) * 100 : 0;
   const progressFiat = clampProgress(progressFiatRaw);
   const progressBTC = clampProgress(progressBTCRaw);
   const btcFromSat = goals.goalSatoshi / 1e8;
@@ -108,7 +116,7 @@ export const GoalsSection = ({ orders }: GoalsSectionProps) => {
   return (
     <div id="dca-goals-section" className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
       {/* Goal: Fiat Invested */}
-      <div className="bg-card border-border rounded-lg border p-4 sm:p-5">
+      <div className="bg-card border-border/80 rounded-lg border p-4 shadow-sm sm:p-5">
         <div className="mb-2.5 flex items-baseline justify-between">
           <h3 className="text-foreground/80 text-xs font-semibold uppercase tracking-wider">
             {t.goals.goalFiatInvested}
@@ -117,14 +125,18 @@ export const GoalsSection = ({ orders }: GoalsSectionProps) => {
             {progressFiat.toFixed(2)}%
           </div>
         </div>
-        <div className="bg-muted h-2.5 overflow-hidden rounded-sm">
+        <div className="bg-muted/70 border-border h-2.5 overflow-hidden rounded-sm border">
           <div
-            className="dca-goal-fill h-full rounded-sm bg-orange-500"
-            style={{ width: `${progressFiat}%` }}
+            className="dca-goal-fill h-full rounded-sm"
+            style={{
+              width: `${progressFiat}%`,
+              minWidth: progressFiat > 0 ? "6px" : "0",
+              backgroundColor: "rgb(249 115 22)",
+            }}
           />
         </div>
-        <div className="text-muted-foreground mt-1.5 flex items-center justify-between font-mono text-[10px]">
-          <span>&#3647;{fmtInt(spendFiat)}</span>
+        <div className="text-muted-foreground mt-1.5 flex items-center justify-between text-[10px]">
+          <span className="font-mono">&#3647;{fmtInt(spendFiat)}</span>
           {editing === "goalFiat" ? (
             <span className="flex items-center gap-1">
               {t.goals.goalFiat}
@@ -151,7 +163,7 @@ export const GoalsSection = ({ orders }: GoalsSectionProps) => {
               className="hover:text-foreground inline-flex cursor-pointer items-center gap-1 border-b border-dashed border-transparent hover:border-current"
               title={t.goals.editGoalTitle}
             >
-              {t.goals.goalFiat}{fmtInt(goals.goalFiat)}
+              {t.goals.goalFiat} <span className="font-mono">{fmtInt(goals.goalFiat)}</span>
               <Pencil className="h-2.5 w-2.5 opacity-50" />
             </button>
           )}
@@ -159,7 +171,7 @@ export const GoalsSection = ({ orders }: GoalsSectionProps) => {
       </div>
 
       {/* Goal: Total Satoshi */}
-      <div className="bg-card border-border rounded-lg border p-4 sm:p-5">
+      <div className="bg-card border-border/80 rounded-lg border p-4 shadow-sm sm:p-5">
         <div className="mb-2.5 flex items-baseline justify-between">
           <h3 className="text-foreground/80 text-xs font-semibold uppercase tracking-wider">
             {t.goals.goalTotalSatoshi}
@@ -168,14 +180,18 @@ export const GoalsSection = ({ orders }: GoalsSectionProps) => {
             {progressBTC.toFixed(2)}%
           </div>
         </div>
-        <div className="bg-muted h-2.5 overflow-hidden rounded-sm">
+        <div className="bg-muted/70 border-border h-2.5 overflow-hidden rounded-sm border">
           <div
-            className="dca-goal-fill bg-foreground h-full rounded-sm"
-            style={{ width: `${progressBTC}%` }}
+            className="dca-goal-fill h-full rounded-sm"
+            style={{
+              width: `${progressBTC}%`,
+              minWidth: progressBTC > 0 ? "6px" : "0",
+              backgroundColor: "rgb(51 65 85)",
+            }}
           />
         </div>
-        <div className="text-muted-foreground mt-1.5 flex items-center justify-between font-mono text-[10px]">
-          <span>{fmtInt(totalSatoshi)} {t.goals.sat}</span>
+        <div className="text-muted-foreground mt-1.5 flex items-center justify-between text-[10px]">
+          <span><span className="font-mono">{fmtInt(totalSatoshi)}</span> {t.goals.sat}</span>
           {editing === "goalSatoshi" ? (
             <span className="flex items-center gap-1">
               {t.goals.goalSatoshi}
@@ -203,7 +219,7 @@ export const GoalsSection = ({ orders }: GoalsSectionProps) => {
               className="hover:text-foreground inline-flex cursor-pointer items-center gap-1 border-b border-dashed border-transparent hover:border-current"
               title={t.goals.editGoalTitle}
             >
-              {t.goals.goalSatoshi}{fmtInt(goals.goalSatoshi)} {t.goals.sat} {t.goals.btc(btcFromSat.toFixed(2))}
+              {t.goals.goalSatoshi} <span className="font-mono">{fmtInt(goals.goalSatoshi)}</span> {t.goals.sat} {t.goals.btc(btcFromSat.toFixed(2))}
               <Pencil className="h-2.5 w-2.5 opacity-50" />
             </button>
           )}

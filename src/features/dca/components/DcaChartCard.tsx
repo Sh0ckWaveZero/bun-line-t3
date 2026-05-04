@@ -78,7 +78,9 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
   const [touchIdx, setTouchIdx] = useState<number | null>(null);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   const chartAreaRef = useRef<HTMLDivElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
   const [dims, setDims] = useState({ w: 800, h: 280 });
+  const [tooltipSize, setTooltipSize] = useState({ w: 0, h: 0 });
 
   useEffect(() => {
     if (!chartAreaRef.current) return;
@@ -102,6 +104,19 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
     media.addEventListener("change", apply);
     return () => media.removeEventListener("change", apply);
   }, []);
+
+  useEffect(() => {
+    if (!tooltipRef.current) return;
+    const updateSize = () => {
+      if (!tooltipRef.current) return;
+      const rect = tooltipRef.current.getBoundingClientRect();
+      setTooltipSize({ w: rect.width, h: rect.height });
+    };
+    updateSize();
+    const ro = new ResizeObserver(() => updateSize());
+    ro.observe(tooltipRef.current);
+    return () => ro.disconnect();
+  }, [touchIdx, hoverIdx, mode, timeframe, orders.length]);
 
   const allPoints: EnrichedPoint[] = useMemo(() => {
     if (!currentPrice || orders.length === 0) return [];
@@ -210,21 +225,29 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
   }, [cw, data.length]);
 
   const onLeave = useCallback(() => setHoverIdx(null), []);
-  const activeIdx = isTouchDevice ? touchIdx : hoverIdx;
+  const activeIdx = touchIdx ?? hoverIdx;
   const hovered = activeIdx !== null ? (data[activeIdx] ?? null) : null;
 
-  const onTouchInspect = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
-    if (!isTouchDevice || data.length === 0) return;
+  const pickIndexByClientX = useCallback((clientX: number, rect: DOMRect): number | null => {
+    if (data.length === 0 || cw <= 0) return null;
+    const mx = clientX - rect.left;
+    if (mx < padL) return null;
+    const rel = (mx - padL) / cw;
+    return Math.max(0, Math.min(data.length - 1, Math.round(rel * (data.length - 1))));
+  }, [cw, data.length, padL]);
+
+  const onPointerInspect = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
+    const isTouchLikePointer =
+      e.pointerType === "touch" || e.pointerType === "pen" || isTouchDevice;
+    if (!isTouchLikePointer) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    if (mx < padL || cw <= 0) {
+    const idx = pickIndexByClientX(e.clientX, rect);
+    if (idx === null) {
       setTouchIdx(null);
       return;
     }
-    const rel = (mx - padL) / cw;
-    const idx = Math.max(0, Math.min(data.length - 1, Math.round(rel * (data.length - 1))));
-    setTouchIdx((prev) => (prev === idx ? null : idx));
-  }, [isTouchDevice, data.length, padL, cw]);
+    setTouchIdx(idx);
+  }, [pickIndexByClientX, isTouchDevice]);
 
   const tooltipRows: { lbl: string; val: string }[] = [];
   if (hovered) {
@@ -241,6 +264,25 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
       tooltipRows.push({ lbl: t.chart.tooltipMarket, val: fmtTHBFull(hovered.price) + " ฿" }, { lbl: t.chart.tooltipAvgCost, val: fmtTHBFull(costBasis) + " ฿" });
     }
   }
+
+  const tooltipPad = 8;
+  const tooltipGap = 10;
+  const availableTooltipWidth = Math.max(140, w - padL - padR - tooltipPad * 2);
+  const tooltipWidth = Math.min(Math.max(tooltipSize.w, 160), availableTooltipWidth);
+  const rawTooltipX = activeIdx !== null ? x(activeIdx) : padL;
+  const minTooltipLeft = padL + tooltipPad;
+  const maxTooltipLeft = w - padR - tooltipWidth - tooltipPad;
+  const safeMaxTooltipLeft = Math.max(minTooltipLeft, maxTooltipLeft);
+  const rightEdgeLimit = w - padR - tooltipPad;
+  const preferredRightLeft = rawTooltipX + tooltipGap;
+  const preferredLeftLeft = rawTooltipX - tooltipWidth - tooltipGap;
+
+  const tooltipLeft = (() => {
+    const rightWouldOverflow = preferredRightLeft + tooltipWidth > rightEdgeLimit;
+    const initialLeft = rightWouldOverflow ? preferredLeftLeft : preferredRightLeft;
+    return Math.max(minTooltipLeft, Math.min(safeMaxTooltipLeft, initialLeft));
+  })();
+  const showTooltipBelow = padT + tooltipSize.h + 16 > h;
 
   return (
     <div id="dca-chart-card" className="bg-card border-border flex h-full w-full flex-col overflow-hidden rounded-lg border">
@@ -266,7 +308,7 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="bg-card border-border text-foreground min-w-[72px] rounded border px-2 py-1 font-mono text-xs"
+              className="bg-card border-border text-foreground min-w-[72px] rounded border px-2 py-1 text-xs"
             >
               {timeframe}
             </button>
@@ -281,7 +323,7 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
                     setTimeframe(value);
                     setTimeframeOpen(false);
                   }}
-                  className={`rounded px-2 py-1.5 text-left font-mono text-xs ${
+                  className={`rounded px-2 py-1.5 text-left text-xs ${
                     timeframe === value
                       ? "bg-foreground text-background"
                       : "text-foreground hover:bg-muted"
@@ -302,7 +344,7 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
       ) : (
         <>
           {/* Legend */}
-          <div className="text-muted-foreground flex gap-4 px-5 pt-2 font-mono text-[11px]">
+          <div className="text-muted-foreground flex gap-4 px-5 pt-2 text-[11px]">
             {series.map((s) => (
               <span key={s.key} className="inline-flex items-center gap-1.5">
                 <span
@@ -330,19 +372,20 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
                 style={{ touchAction: "pan-y" }}
                 onMouseMove={isTouchDevice ? undefined : onMove}
                 onMouseLeave={isTouchDevice ? undefined : onLeave}
-                onPointerDown={isTouchDevice ? onTouchInspect : undefined}
+                onPointerDown={onPointerInspect}
+                onPointerMove={onPointerInspect}
               >
                 {grid.map((g, i) => (
                   <g key={i}>
                     <line x1={padL} x2={w - padR} y1={g.y} y2={g.y} stroke="var(--border)" strokeWidth="1" />
-                    <text x={padL - 8} y={g.y + 3} textAnchor="end" fontSize="10" fontFamily="var(--font-mono)" fill="var(--muted-foreground)">
+                    <text x={padL - 8} y={g.y + 3} textAnchor="end" fontSize="10" fill="var(--muted-foreground)">
                       {mode === "sats" ? fmtSat(g.v) : fmtTHB(g.v)}
                     </text>
                   </g>
                 ))}
                 {zeroY !== null && <line x1={padL} x2={w - padR} y1={zeroY} y2={zeroY} stroke="var(--muted-foreground)" strokeWidth="1" strokeDasharray="2 3" opacity="0.6" />}
                 {xTicks.map((t, i) => (
-                  <text key={i} x={t.x} y={h - 8} textAnchor={i === 0 ? "start" : i === xTicks.length - 1 ? "end" : "middle"} fontSize="10" fontFamily="var(--font-mono)" fill="var(--muted-foreground)">
+                  <text key={i} x={t.x} y={h - 8} textAnchor={i === 0 ? "start" : i === xTicks.length - 1 ? "end" : "middle"} fontSize="10" fill="var(--muted-foreground)">
                     {t.date ? fmtDateShort(new Date(t.date + "T00:00:00")) : ""}
                   </text>
                 ))}
@@ -358,11 +401,14 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
               </svg>
               {hovered && activeIdx !== null && (
                 <div
-                  className="dca-tooltip dca-tooltip-visible font-mono"
+                  ref={tooltipRef}
+                  className="dca-tooltip dca-tooltip-visible"
                   style={{
-                    left: x(activeIdx),
-                    top: 8,
-                    transform: x(activeIdx) > padL + cw * 0.65 ? "translate(-100%, 0)" : "translate(-50%, 0)",
+                    left: tooltipLeft,
+                    top: showTooltipBelow ? padT + 8 : 8,
+                    transform: "translate(0, 0)",
+                    width: tooltipWidth,
+                    maxWidth: tooltipWidth,
                   }}
                 >
                   <div className="border-border mb-1 border-b pb-1">
@@ -370,7 +416,7 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
                   </div>
                   {tooltipRows.map((r, i) => (
                     <div className="flex justify-between gap-4" key={i}>
-                      <span className="opacity-50">{r.lbl}</span>
+                      <span className="opacity-70">{r.lbl}</span>
                       <span>{r.val}</span>
                     </div>
                   ))}

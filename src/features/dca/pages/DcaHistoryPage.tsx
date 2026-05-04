@@ -86,7 +86,7 @@ function DcaHistoryPageContent() {
 
           {/* Section 02: Metrics & Goals */}
           <SectionLabel num="02" title="Metrics & Goals" hint="core numbers · progress" />
-          <div id="dca-section-metrics-goals" className="space-y-4">
+          <div id="dca-section-metrics-goals" className="border-border bg-card/20 space-y-4 rounded-lg border p-3 sm:p-4">
             <StatsGrid summary={summaryData} orders={allOrders} />
             <GoalsSection orders={allOrders} />
           </div>

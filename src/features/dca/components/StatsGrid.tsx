@@ -122,15 +122,18 @@ export const StatsGrid = ({ summary, orders }: StatsGridProps) => {
       style={{ background: "var(--border)" }}
     >
       {cells.map((s, i) => (
-        <div className="bg-card relative flex flex-col gap-1.5 p-3 sm:p-4" key={i}>
-          <div className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider sm:text-[11px]">
+        <div
+          className={`bg-card relative flex flex-col gap-1.5 p-3 sm:p-4 ${s.spark && s.spark.length >= 2 ? "pr-16 sm:pr-20" : ""}`}
+          key={i}
+        >
+          <div className="text-muted-foreground relative z-10 text-[10px] font-medium uppercase tracking-wider sm:text-[11px]">
             {s.lbl}
           </div>
-          <div className={`font-mono text-lg font-medium leading-tight tracking-tight sm:text-[22px] ${s.colorClass}`}>
+          <div className={`relative z-10 font-mono text-lg font-medium leading-tight tracking-tight sm:text-[22px] ${s.colorClass}`}>
             {s.val}
             <span className="text-muted-foreground ml-1 text-[11px] font-normal sm:text-xs">{s.sub}</span>
           </div>
-          <div className="text-muted-foreground font-mono text-[10px] sm:text-[11px]">
+          <div className="text-muted-foreground relative z-10 text-[10px] sm:text-[11px]">
             {s.foot}
           </div>
           {s.spark && s.spark.length >= 2 && <Sparkline values={s.spark} color={s.sparkColor} />}
