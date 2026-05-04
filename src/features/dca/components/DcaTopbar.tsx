@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, RefreshCw, Upload, Languages } from "lucide-react";
+import { Plus, RefreshCw, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDcaLocale } from "@/features/dca/lib/dca-locale-context";
 
@@ -15,6 +15,7 @@ interface DcaTopbarProps {
 export const DcaTopbar = ({ onAdd, onImport, onRefresh, isLoading }: DcaTopbarProps) => {
   const [time, setTime] = useState<string>("");
   const { locale, setLocale, t } = useDcaLocale();
+  const toggleLocale = () => setLocale(locale === "th" ? "en" : "th");
 
   useEffect(() => {
     const tick = () =>
@@ -28,10 +29,6 @@ export const DcaTopbar = ({ onAdd, onImport, onRefresh, isLoading }: DcaTopbarPr
     const id = setInterval(tick, 30_000);
     return () => clearInterval(id);
   }, []);
-
-  const toggleLocale = () => {
-    setLocale(locale === "th" ? "en" : "th");
-  };
 
   return (
     <header id="dca-topbar" className="border-border flex flex-col gap-3 border-b pb-4 sm:flex-row sm:items-center sm:justify-between sm:pb-5">
@@ -68,10 +65,29 @@ export const DcaTopbar = ({ onAdd, onImport, onRefresh, isLoading }: DcaTopbarPr
           <span className="hidden sm:inline">{t.topbar.import}</span>
         </Button>
 
-        <Button variant="outline" size="sm" onClick={toggleLocale} className="gap-1.5 text-xs" title="Switch language">
-          <Languages className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">{locale === "th" ? "EN" : "TH"}</span>
-        </Button>
+        <button
+          type="button"
+          onClick={toggleLocale}
+          title="Switch language"
+          aria-label="Switch language"
+          className="inline-flex h-9 items-center gap-2 rounded-md px-1.5 text-xs"
+        >
+          <span className={locale === "en" ? "text-foreground font-semibold" : "text-muted-foreground"}>
+            EN
+          </span>
+          <span className="bg-muted border-border relative inline-flex h-7 w-14 items-center rounded-full border p-0.5 shadow-inner">
+            <span
+              className={`bg-card border-border grid h-6 w-6 place-items-center rounded-full border text-[12px] shadow transition-transform duration-200 ease-out ${
+                locale === "th" ? "translate-x-7" : "translate-x-0"
+              }`}
+            >
+              {locale === "th" ? "🇹🇭" : "🇬🇧"}
+            </span>
+          </span>
+          <span className={locale === "th" ? "text-foreground font-semibold" : "text-muted-foreground"}>
+            TH
+          </span>
+        </button>
 
         <Button size="sm" onClick={onAdd} className="gap-1.5 bg-orange-500 text-xs text-white hover:bg-orange-600">
           <Plus className="h-3.5 w-3.5" />

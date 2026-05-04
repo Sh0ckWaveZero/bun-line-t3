@@ -75,6 +75,8 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
   const [timeframe, setTimeframe] = useState<Timeframe>("ALL");
   const [timeframeOpen, setTimeframeOpen] = useState(false);
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const [touchIdx, setTouchIdx] = useState<number | null>(null);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
   const chartAreaRef = useRef<HTMLDivElement>(null);
   const [dims, setDims] = useState({ w: 800, h: 280 });
 
@@ -90,6 +92,15 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
     });
     ro.observe(chartAreaRef.current);
     return () => ro.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const media = window.matchMedia("(hover: none), (pointer: coarse)");
+    const apply = () => setIsTouchDevice(media.matches);
+    apply();
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
   }, []);
 
   const allPoints: EnrichedPoint[] = useMemo(() => {
@@ -199,7 +210,21 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
   }, [cw, data.length]);
 
   const onLeave = useCallback(() => setHoverIdx(null), []);
-  const hovered = hoverIdx !== null ? (data[hoverIdx] ?? null) : null;
+  const activeIdx = isTouchDevice ? touchIdx : hoverIdx;
+  const hovered = activeIdx !== null ? (data[activeIdx] ?? null) : null;
+
+  const onTouchInspect = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
+    if (!isTouchDevice || data.length === 0) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    if (mx < padL || cw <= 0) {
+      setTouchIdx(null);
+      return;
+    }
+    const rel = (mx - padL) / cw;
+    const idx = Math.max(0, Math.min(data.length - 1, Math.round(rel * (data.length - 1))));
+    setTouchIdx((prev) => (prev === idx ? null : idx));
+  }, [isTouchDevice, data.length, padL, cw]);
 
   const tooltipRows: { lbl: string; val: string }[] = [];
   if (hovered) {
@@ -220,7 +245,7 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
   return (
     <div id="dca-chart-card" className="bg-card border-border flex h-full w-full flex-col overflow-hidden rounded-lg border">
       {/* Header tabs + timeframe */}
-      <div className="border-border flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2.5 sm:px-5 sm:py-3.5">
+      <div className="border-border relative z-10 flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2.5 sm:px-5 sm:py-3.5">
         <div className="flex flex-wrap gap-0.5">
           {TABS.map((tab) => (
             <button
@@ -294,9 +319,19 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
           </div>
 
           {/* Chart area */}
-          <div className="relative min-h-[220px] flex-1 px-2 pb-2 sm:min-h-[320px] sm:px-3 sm:pb-3">
+          <div className="relative z-0 min-h-[220px] flex-1 overflow-hidden px-2 pb-2 sm:min-h-[320px] sm:px-3 sm:pb-3">
             <div ref={chartAreaRef} className="relative h-full w-full">
-              <svg width={w} height={h} className="block" onMouseMove={onMove} onMouseLeave={onLeave}>
+              <svg
+                width="100%"
+                height="100%"
+                viewBox={`0 0 ${w} ${h}`}
+                preserveAspectRatio="none"
+                className="block"
+                style={{ touchAction: "pan-y" }}
+                onMouseMove={isTouchDevice ? undefined : onMove}
+                onMouseLeave={isTouchDevice ? undefined : onLeave}
+                onPointerDown={isTouchDevice ? onTouchInspect : undefined}
+              >
                 {grid.map((g, i) => (
                   <g key={i}>
                     <line x1={padL} x2={w - padR} y1={g.y} y2={g.y} stroke="var(--border)" strokeWidth="1" />
@@ -314,19 +349,20 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
                 {series.map((s) => s.fill && <path key={s.key + "-a"} d={buildPath(s.values, true)} fill={s.fill} stroke="none" />)}
                 {series.map((s) => <path key={s.key + "-l"} d={buildPath(s.values, false)} fill="none" stroke={s.color} strokeWidth="1.75" strokeDasharray={s.dash ?? "none"} strokeLinejoin="round" strokeLinecap="round" />)}
                 {mode === "entries" && data.map((d, i) => <circle key={i} cx={x(i)} cy={y(d.price)} r="3.5" fill="rgb(249,115,22)" opacity="0.75" />)}
-                {hoverIdx !== null && (
+                {activeIdx !== null && (
                   <g>
-                    <line x1={x(hoverIdx)} x2={x(hoverIdx)} y1={padT} y2={padT + ch} stroke="var(--foreground)" strokeWidth="1" strokeDasharray="2 3" opacity="0.5" />
-                    {series.map((s) => <circle key={s.key} cx={x(hoverIdx)} cy={y(s.values[hoverIdx] ?? 0)} r="4" fill="var(--card)" stroke={s.color} strokeWidth="2" />)}
+                    <line x1={x(activeIdx)} x2={x(activeIdx)} y1={padT} y2={padT + ch} stroke="var(--foreground)" strokeWidth="1" strokeDasharray="2 3" opacity="0.5" />
+                    {series.map((s) => <circle key={s.key} cx={x(activeIdx)} cy={y(s.values[activeIdx] ?? 0)} r="4" fill="var(--card)" stroke={s.color} strokeWidth="2" />)}
                   </g>
                 )}
               </svg>
-              {hovered && hoverIdx !== null && (
+              {hovered && activeIdx !== null && (
                 <div
                   className="dca-tooltip dca-tooltip-visible font-mono"
                   style={{
-                    left: x(hoverIdx), top: 0,
-                    transform: x(hoverIdx) > padL + cw * 0.65 ? "translate(-100%, -100%)" : "translate(-50%, -100%)",
+                    left: x(activeIdx),
+                    top: 8,
+                    transform: x(activeIdx) > padL + cw * 0.65 ? "translate(-100%, 0)" : "translate(-50%, 0)",
                   }}
                 >
                   <div className="border-border mb-1 border-b pb-1">
