@@ -6,8 +6,8 @@ interface SparklineProps {
 export const Sparkline = ({ values, color }: SparklineProps) => {
   if (values.length < 2) return null;
 
-  const w = 64;
-  const h = 20;
+  const w = 56;
+  const h = 18;
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = max - min || 1;
@@ -22,7 +22,7 @@ export const Sparkline = ({ values, color }: SparklineProps) => {
 
   return (
     <svg
-      className="absolute top-3.5 right-3.5 opacity-80"
+      className="pointer-events-none absolute right-2 top-2 z-0 opacity-45 sm:right-3.5 sm:top-3.5"
       width={w}
       height={h}
       viewBox={`0 0 ${w} ${h}`}

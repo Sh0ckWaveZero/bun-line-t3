@@ -88,12 +88,12 @@ export const PnlCard = ({ summary }: PnlCardProps) => {
               >
                 {fmtPct(pnlPercent)}
               </span>
-              <span className="text-muted-foreground font-mono text-[11px]">
+              <span className="text-muted-foreground text-[11px]">
                 {t.pnl.allTimeDays(summary.totalRounds)}
               </span>
             </>
           ) : (
-            <span className="text-muted-foreground font-mono text-[11px]">
+            <span className="text-muted-foreground text-[11px]">
               {t.pnl.loadingPrice}
             </span>
           )}
