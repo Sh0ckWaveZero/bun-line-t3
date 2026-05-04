@@ -59,6 +59,7 @@ import { Route as ApiDcaSummaryRouteImport } from './routes/api/dca/summary'
 import { Route as ApiDcaStreamRouteImport } from './routes/api/dca/stream'
 import { Route as ApiDcaImportRouteImport } from './routes/api/dca/import'
 import { Route as ApiDcaExportRouteImport } from './routes/api/dca/export'
+import { Route as ApiDcaAllRouteImport } from './routes/api/dca/all'
 import { Route as ApiDcaIdRouteImport } from './routes/api/dca/$id'
 import { Route as ApiCronImageCleanupRouteImport } from './routes/api/cron/image-cleanup'
 import { Route as ApiCronEnhancedCheckoutReminderRouteImport } from './routes/api/cron/enhanced-checkout-reminder'
@@ -327,6 +328,11 @@ const ApiDcaExportRoute = ApiDcaExportRouteImport.update({
   path: '/api/dca/export',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDcaAllRoute = ApiDcaAllRouteImport.update({
+  id: '/api/dca/all',
+  path: '/api/dca/all',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiDcaIdRoute = ApiDcaIdRouteImport.update({
   id: '/api/dca/$id',
   path: '/api/dca/$id',
@@ -440,6 +446,7 @@ export interface FileRoutesByFullPath {
   '/api/cron/enhanced-checkout-reminder': typeof ApiCronEnhancedCheckoutReminderRoute
   '/api/cron/image-cleanup': typeof ApiCronImageCleanupRoute
   '/api/dca/$id': typeof ApiDcaIdRoute
+  '/api/dca/all': typeof ApiDcaAllRoute
   '/api/dca/export': typeof ApiDcaExportRoute
   '/api/dca/import': typeof ApiDcaImportRoute
   '/api/dca/stream': typeof ApiDcaStreamRoute
@@ -506,6 +513,7 @@ export interface FileRoutesByTo {
   '/api/cron/enhanced-checkout-reminder': typeof ApiCronEnhancedCheckoutReminderRoute
   '/api/cron/image-cleanup': typeof ApiCronImageCleanupRoute
   '/api/dca/$id': typeof ApiDcaIdRoute
+  '/api/dca/all': typeof ApiDcaAllRoute
   '/api/dca/export': typeof ApiDcaExportRoute
   '/api/dca/import': typeof ApiDcaImportRoute
   '/api/dca/stream': typeof ApiDcaStreamRoute
@@ -573,6 +581,7 @@ export interface FileRoutesById {
   '/api/cron/enhanced-checkout-reminder': typeof ApiCronEnhancedCheckoutReminderRoute
   '/api/cron/image-cleanup': typeof ApiCronImageCleanupRoute
   '/api/dca/$id': typeof ApiDcaIdRoute
+  '/api/dca/all': typeof ApiDcaAllRoute
   '/api/dca/export': typeof ApiDcaExportRoute
   '/api/dca/import': typeof ApiDcaImportRoute
   '/api/dca/stream': typeof ApiDcaStreamRoute
@@ -641,6 +650,7 @@ export interface FileRouteTypes {
     | '/api/cron/enhanced-checkout-reminder'
     | '/api/cron/image-cleanup'
     | '/api/dca/$id'
+    | '/api/dca/all'
     | '/api/dca/export'
     | '/api/dca/import'
     | '/api/dca/stream'
@@ -707,6 +717,7 @@ export interface FileRouteTypes {
     | '/api/cron/enhanced-checkout-reminder'
     | '/api/cron/image-cleanup'
     | '/api/dca/$id'
+    | '/api/dca/all'
     | '/api/dca/export'
     | '/api/dca/import'
     | '/api/dca/stream'
@@ -773,6 +784,7 @@ export interface FileRouteTypes {
     | '/api/cron/enhanced-checkout-reminder'
     | '/api/cron/image-cleanup'
     | '/api/dca/$id'
+    | '/api/dca/all'
     | '/api/dca/export'
     | '/api/dca/import'
     | '/api/dca/stream'
@@ -839,6 +851,7 @@ export interface RootRouteChildren {
   ApiCronEnhancedCheckoutReminderRoute: typeof ApiCronEnhancedCheckoutReminderRoute
   ApiCronImageCleanupRoute: typeof ApiCronImageCleanupRoute
   ApiDcaIdRoute: typeof ApiDcaIdRoute
+  ApiDcaAllRoute: typeof ApiDcaAllRoute
   ApiDcaExportRoute: typeof ApiDcaExportRoute
   ApiDcaImportRoute: typeof ApiDcaImportRoute
   ApiDcaStreamRoute: typeof ApiDcaStreamRoute
@@ -1213,6 +1226,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDcaExportRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/dca/all': {
+      id: '/api/dca/all'
+      path: '/api/dca/all'
+      fullPath: '/api/dca/all'
+      preLoaderRoute: typeof ApiDcaAllRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/dca/$id': {
       id: '/api/dca/$id'
       path: '/api/dca/$id'
@@ -1425,6 +1445,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCronEnhancedCheckoutReminderRoute: ApiCronEnhancedCheckoutReminderRoute,
   ApiCronImageCleanupRoute: ApiCronImageCleanupRoute,
   ApiDcaIdRoute: ApiDcaIdRoute,
+  ApiDcaAllRoute: ApiDcaAllRoute,
   ApiDcaExportRoute: ApiDcaExportRoute,
   ApiDcaImportRoute: ApiDcaImportRoute,
   ApiDcaStreamRoute: ApiDcaStreamRoute,
