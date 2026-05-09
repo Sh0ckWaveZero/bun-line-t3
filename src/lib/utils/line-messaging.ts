@@ -113,19 +113,6 @@ function sanitizeFilename(filename?: string): string {
   return baseName;
 }
 
-/**
- * Validates base URL to prevent SSRF attacks
- * @param baseUrl Base URL to validate
- * @returns Validated base URL or safe fallback
- */
-function validateBaseUrl(baseUrl: string): string {
-  try {
-    new URL(baseUrl);
-    return baseUrl;
-  } catch {
-    return "https://line-login.midseelee.com";
-  }
-}
 
 /**
  * Processes image buffer to create original and preview versions
@@ -214,9 +201,7 @@ async function saveImageFiles(
  * @returns UrlResult object with original and preview URLs
  */
 function generateImageUrls(fileInfo: FileInfo): UrlResult {
-  const rawBaseUrl =
-    env.APP_URL || env.FRONTEND_URL || "https://line-login.midseelee.com";
-  const baseUrl = validateBaseUrl(rawBaseUrl);
+  const baseUrl = env.APP_URL;
 
   const originalUrl = `${baseUrl}/api/temp-charts/${fileInfo.originalFilename}`;
   const previewUrl = `${baseUrl}/api/temp-charts/${fileInfo.previewFilename}`;

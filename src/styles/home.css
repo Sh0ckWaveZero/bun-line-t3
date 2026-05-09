@@ -6,7 +6,7 @@
    Light mode: soft blue-gray bg (#f0f4fb) · warm amber/rose aurora · dark text
    Dark mode: deep void bg (#07071a) · cool teal/purple aurora · light text
 ──────────────────────────────────────────────────────────────────────────── */
-@import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&display=swap");
+/* Syne font loaded via <link> preload in __root.tsx head() */
 
 /* ════════════════════════════════════════════════════════════════════════════
    CSS CUSTOM PROPERTIES
@@ -141,18 +141,15 @@
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
+  will-change: opacity;
 }
 
 /* ── Light Mode: Warm, ethereal glow ────────────────────────────────────── */
 .home-page:not(.dark) .home-aurora {
   background:
-    /* Top-right warm amber */
     radial-gradient(ellipse 80% 60% at 85% 20%, oklch(0.82 0.18 65 / 0.18) 0%, transparent 50%),
-    /* Bottom-left rose coral */
     radial-gradient(ellipse 70% 50% at 15% 85%, oklch(0.72 0.20 25 / 0.15) 0%, transparent 45%),
-    /* Center subtle warmth */
     radial-gradient(ellipse 90% 70% at 50% 50%, oklch(0.85 0.12 70 / 0.08) 0%, transparent 60%),
-    /* Base color */
     var(--hp-bg);
   animation: aurora-pulse-light 20s ease-in-out infinite alternate;
 }
@@ -160,15 +157,10 @@
 /* ── Dark Mode: Cool, cosmic glow ──────────────────────────────────────── */
 .dark .home-page .home-aurora {
   background:
-    /* Top-right teal */
     radial-gradient(ellipse 85% 65% at 80% 15%, oklch(0.68 0.22 188 / 0.22) 0%, transparent 55%),
-    /* Bottom-left purple */
     radial-gradient(ellipse 75% 55% at 20% 90%, oklch(0.55 0.28 298 / 0.20) 0%, transparent 50%),
-    /* Top-left indigo accent */
     radial-gradient(ellipse 60% 40% at 10% 20%, oklch(0.62 0.18 240 / 0.12) 0%, transparent 45%),
-    /* Center deep glow */
     radial-gradient(ellipse 100% 80% at 50% 50%, oklch(0.45 0.18 220 / 0.08) 0%, transparent 65%),
-    /* Base color */
     var(--hp-bg);
   animation: aurora-pulse-dark 24s ease-in-out infinite alternate;
 }
@@ -177,7 +169,7 @@
 .home-aurora-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
+  filter: blur(55px);
   mix-blend-mode: screen;
   opacity: 0.5;
   animation: aurora-blob-float 30s ease-in-out infinite;
@@ -210,15 +202,15 @@
 
 /* ── Animations ───────────────────────────────────────────────────────────── */
 @keyframes aurora-pulse-light {
-  0%   { filter: brightness(1) blur(0px); }
-  50%  { filter: brightness(1.05) blur(1px); }
-  100% { filter: brightness(1.1) blur(2px); }
+  0%   { opacity: 0.92; }
+  50%  { opacity: 0.97; }
+  100% { opacity: 1; }
 }
 
 @keyframes aurora-pulse-dark {
-  0%   { filter: brightness(1) blur(0px); }
-  50%  { filter: brightness(1.08) blur(1px); }
-  100% { filter: brightness(1.15) blur(2px); }
+  0%   { opacity: 0.90; }
+  50%  { opacity: 0.96; }
+  100% { opacity: 1; }
 }
 
 @keyframes aurora-blob-float {
@@ -307,7 +299,7 @@
   position: absolute;
   inset: -20px -36px;
   background: radial-gradient(ellipse, var(--hp-login-halo) 0%, transparent 70%);
-  filter: blur(14px);
+  filter: blur(10px);
   pointer-events: none;
   z-index: -1;
 }
@@ -323,8 +315,8 @@
   background: var(--hp-card-bg);
   border: 1px solid var(--hp-card-border);
   border-radius: 1.25rem;
-  backdrop-filter: blur(28px) saturate(160%);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
   opacity: 0;
   animation: home-reveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards;
 }
