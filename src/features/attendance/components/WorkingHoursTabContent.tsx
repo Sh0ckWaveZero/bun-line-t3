@@ -9,18 +9,13 @@ interface WorkingHoursTabContentProps {
   records: AttendanceRecord[];
 }
 
-/**
- * Working Hours Tab Content Component
- * Contains the hours worked line chart and daily average bar chart
- */
 export const WorkingHoursTabContent: React.FC<WorkingHoursTabContentProps> = ({
   records,
 }) => {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      {/* Hours worked per day chart */}
-      <div className="bg-card-base border-theme-primary rounded-lg border p-4 shadow">
-        <h3 className="mb-4 text-sm font-medium text-gray-600 dark:text-gray-400">
+      <div className="rounded-xl border border-border bg-card p-4">
+        <h3 className="mb-4 text-sm font-medium text-muted-foreground">
           ชั่วโมงทำงานรายวัน
         </h3>
         <div className="h-64">
@@ -28,9 +23,8 @@ export const WorkingHoursTabContent: React.FC<WorkingHoursTabContentProps> = ({
         </div>
       </div>
 
-      {/* Average hours by day of week */}
-      <div className="bg-card-base border-theme-primary rounded-lg border p-4 shadow">
-        <h3 className="mb-4 text-sm font-medium text-gray-600 dark:text-gray-400">
+      <div className="rounded-xl border border-border bg-card p-4">
+        <h3 className="mb-4 text-sm font-medium text-muted-foreground">
           ชั่วโมงทำงานเฉลี่ยตามวัน
         </h3>
         <div className="h-64">
