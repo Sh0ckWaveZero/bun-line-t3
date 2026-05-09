@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.0] - 2026-05-09
+
+### Added
+- **DCA History Redesign** — หน้าประวัติ DCA ออกแบบใหม่พร้อม interactive charts, PnL card, sparkline, stats grid, goals section และรองรับ 2 ภาษา (ไทย/อังกฤษ)
+- **Design System Documentation** — เพิ่ม `PRODUCT.md`, `DESIGN.md`, `DESIGN.json` สำหรับเป็น single source of truth ของสี, typography, spacing, elevation
+- **AGENTS.md** — เพิ่ม AI agent development guide สำหรับ coding standards และ project conventions
+
+### Changed
+- **Dashboard UI** — ปรับปรุงหน้า dashboard หลักด้วย categorized navigation และ enter animations
+- **Monitoring Dashboard** — ปรับปรุงหน้าตรวจสอบระบบให้ใช้ design system tokens (`bg-card`, `text-foreground`, `rounded-xl`), ภาษาไทยทั้งหมด, flat-by-default elevation และ `React.memo` ทุก sub-component เพื่อลด re-render
+- **Help Page** — ปรับปรุง UI ด้วย Tailwind และ Lucide patterns
+- **Thai Names Generator** — เพิ่ม gender filtering, bulk copy และปรับปรุง UI
+- **Thai ID Generator** — แก้ไข logic การสร้างเลขบัตรและ input validation
+- **Attendance Components** — ปรับให้ใช้ standardized Tailwind และ Lucide patterns
+- **Help Route** — เพิ่ม authentication guard (`beforeLoad: requireAuth`)
+
+### Fixed
+- **Thai ID** — แก้ logic การสร้างเลขบัตรประชาชนและ validation ที่ไม่ถูกต้อง
+- **DCA Charts** — ปรับปรุง chart layout, tooltip mobile overflow, language switch UI
+
+---
+
 ## [1.3.0] - 2026-04-26
 
 ### Added
