@@ -104,10 +104,10 @@ export function HolidayImport({ onImport, onClose }: HolidayImportProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 dark:bg-black/70">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-auto p-6 dark:bg-gray-900 dark:border-gray-700">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <Card className="bg-card border-border max-h-[90vh] w-full max-w-2xl overflow-auto p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold dark:text-gray-100">นำเข้าวันหยุด</h2>
+          <h2 className="text-foreground text-2xl font-bold">นำเข้าวันหยุด</h2>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
@@ -115,14 +115,14 @@ export function HolidayImport({ onImport, onClose }: HolidayImportProps) {
 
         <div className="space-y-4">
           {/* File Upload */}
-          <div className="border-2 border-dashed rounded-lg p-6 dark:border-gray-700 dark:bg-gray-800/50">
+          <div className="border-border rounded-lg border-2 border-dashed p-6">
             <label htmlFor="file-upload" className="cursor-pointer">
               <div className="flex flex-col items-center">
-                <Upload className="h-12 w-12 text-muted-foreground mb-2 dark:text-gray-400" />
-                <p className="text-sm text-muted-foreground mb-1 dark:text-gray-400">
+                <Upload className="text-muted-foreground mb-2 h-12 w-12" />
+                <p className="text-muted-foreground mb-1 text-sm">
                   คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวางที่นี่
                 </p>
-                <p className="text-xs text-muted-foreground dark:text-gray-500">
+                <p className="text-muted-foreground text-xs">
                   รองรับไฟล์ .json และ .csv
                 </p>
                 <input
@@ -138,19 +138,19 @@ export function HolidayImport({ onImport, onClose }: HolidayImportProps) {
 
           {/* File Info */}
           {file && (
-            <div className="text-sm dark:text-gray-300">
+            <div className="text-foreground text-sm">
               <p className="font-semibold">ไฟล์ที่เลือก:</p>
-              <p className="text-muted-foreground dark:text-gray-400">{file.name}</p>
+              <p className="text-muted-foreground">{file.name}</p>
             </div>
           )}
 
           {/* Preview */}
           {preview.length > 0 && (
             <div>
-              <h3 className="font-semibold mb-2 dark:text-gray-100">ตัวอย่างข้อมูล (แสดง 10 รายการแรก)</h3>
-              <div className="border rounded-lg overflow-auto max-h-64 dark:border-gray-700">
+              <h3 className="text-foreground mb-2 font-semibold">ตัวอย่างข้อมูล (แสดง 10 รายการแรก)</h3>
+              <div className="border-border max-h-64 overflow-auto rounded-lg border">
                 <table className="w-full text-sm">
-                  <thead className="bg-muted dark:bg-gray-800 dark:text-gray-200">
+                  <thead className="bg-muted text-muted-foreground">
                     <tr>
                       <th className="p-2 text-left">วันที่</th>
                       <th className="p-2 text-left">ชื่อ (ไทย)</th>
@@ -159,9 +159,9 @@ export function HolidayImport({ onImport, onClose }: HolidayImportProps) {
                       <th className="p-2 text-left">ประเภท</th>
                     </tr>
                   </thead>
-                  <tbody className="dark:text-gray-300">
+                  <tbody className="text-foreground">
                     {preview.map((item, i) => (
-                      <tr key={i} className="border-t dark:border-gray-700">
+                      <tr key={i} className="border-border border-t">
                         <td className="p-2">{item.date}</td>
                         <td className="p-2">{item.nameThai}</td>
                         <td className="p-2">{item.nameEnglish}</td>
@@ -177,7 +177,7 @@ export function HolidayImport({ onImport, onClose }: HolidayImportProps) {
 
           {/* Error */}
           {error && (
-            <div className="bg-destructive/10 text-destructive p-3 rounded-lg text-sm dark:bg-red-950/30 dark:text-red-400">
+            <div className="bg-destructive/10 text-destructive rounded-lg p-3 text-sm">
               {error}
             </div>
           )}
@@ -196,7 +196,7 @@ export function HolidayImport({ onImport, onClose }: HolidayImportProps) {
           </div>
 
           {/* Template Download */}
-          <div className="text-sm text-muted-foreground dark:text-gray-400">
+          <div className="text-muted-foreground text-sm">
             <p className="mb-2">ไม่มีไฟล์? ดาวน์โหลด Template ได้ที่:</p>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => {
