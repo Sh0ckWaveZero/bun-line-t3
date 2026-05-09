@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   format,
   addMonths,
@@ -9,18 +9,21 @@ import {
   isSameDay,
   getYear,
   getMonth,
+  isWeekend,
 } from "date-fns";
 import { th } from "date-fns/locale";
 import {
   ChevronLeft,
   ChevronRight,
-  Calendar as CalendarIcon,
   Upload,
   Plus,
   CalendarPlus,
+  X,
+  Star,
+  Clock,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { HolidayImport } from "@/features/calendar/components/holiday-import";
 import { LeaveRequestModal } from "@/features/calendar/components/leave-request-modal";
@@ -43,6 +46,235 @@ interface Leave {
   reason?: string;
 }
 
+const WEEKDAYS = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"] as const;
+
+function DayDetailPanel({
+  date,
+  holiday,
+  leave,
+  onClose,
+  onRequestLeave,
+}: {
+  date: Date;
+  holiday: Holiday | undefined;
+  leave: Leave | undefined;
+  onClose: () => void;
+  onRequestLeave: () => void;
+}) {
+  const dayOfWeek = format(date, "EEEE", { locale: th });
+  const fullDate = format(date, "d MMMM yyyy", { locale: th });
+  const dateStr = format(date, "yyyy-MM-dd");
+  const hasAny = holiday || leave;
+
+  const renderLeaveType = (type: string) => {
+    if (type === "personal") return "ลากิจ";
+    if (type === "sick") return "ลาป่วย";
+    if (type === "vacation") return "ลาพักผ่อน";
+    return type;
+  };
+
+  return (
+    <div
+      id={`day-detail-overlay-${dateStr}`}
+      className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`รายละเอียดวันที่ ${fullDate}`}
+    >
+      <div
+        id={`day-detail-panel-${dateStr}`}
+        className="border-border bg-card w-full max-w-sm overflow-hidden rounded-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div
+          id={`day-detail-header-${dateStr}`}
+          className="flex items-start justify-between gap-3 px-5 pt-5 pb-4"
+        >
+          <div>
+            <p
+              id={`day-detail-day-number-${dateStr}`}
+              className="text-foreground text-3xl leading-none font-black"
+            >
+              {format(date, "d")}
+            </p>
+            <p
+              id={`day-detail-day-name-${dateStr}`}
+              className="text-muted-foreground mt-1 text-sm font-medium"
+            >
+              {dayOfWeek}
+            </p>
+            <p
+              id={`day-detail-full-date-${dateStr}`}
+              className="text-muted-foreground text-xs"
+            >
+              {format(date, "MMMM yyyy", { locale: th })}
+            </p>
+          </div>
+          <Button
+            id={`day-detail-close-${dateStr}`}
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0"
+            onClick={onClose}
+            aria-label="ปิด"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div
+          id={`day-detail-content-${dateStr}`}
+          className="border-border border-t px-5 py-4"
+        >
+          {hasAny ? (
+            <div className="space-y-3">
+              {holiday && (
+                <div
+                  id={`day-detail-holiday-${dateStr}`}
+                  className="space-y-1.5"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="bg-destructive text-destructive-foreground flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px]">
+                      <Star className="h-3 w-3" />
+                    </span>
+                    <span
+                      id={`day-detail-holiday-label-${dateStr}`}
+                      className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase"
+                    >
+                      วันหยุดราชการ
+                    </span>
+                  </div>
+                  <div className="pl-7">
+                    <p
+                      id={`day-detail-holiday-name-th-${dateStr}`}
+                      className="text-foreground text-sm font-bold"
+                    >
+                      {holiday.nameThai}
+                    </p>
+                    <p
+                      id={`day-detail-holiday-name-en-${dateStr}`}
+                      className="text-muted-foreground text-xs"
+                    >
+                      {holiday.nameEnglish}
+                    </p>
+                    {holiday.description && (
+                      <p
+                        id={`day-detail-holiday-desc-${dateStr}`}
+                        className="text-muted-foreground mt-1 text-xs"
+                      >
+                        {holiday.description}
+                      </p>
+                    )}
+                    <span
+                      id={`day-detail-holiday-type-${dateStr}`}
+                      className="text-muted-foreground mt-1 inline-block rounded-md bg-muted/60 px-1.5 py-px text-[10px] font-medium"
+                    >
+                      {holiday.type === "national" && "วันหยุดราชการ"}
+                      {holiday.type === "royal" && "วันหยุดเกี่ยวกับราชวงศ์"}
+                      {holiday.type === "religious" && "วันหยุดศาสนาจาร"}
+                      {holiday.type === "special" && "วันหยุดพิเศษ"}
+                      {!["national", "royal", "religious", "special"].includes(holiday.type) && holiday.type}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {leave && (
+                <div
+                  id={`day-detail-leave-${dateStr}`}
+                  className="space-y-1.5"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="border-primary flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2">
+                      <Clock className="text-primary h-2.5 w-2.5" />
+                    </span>
+                    <span
+                      id={`day-detail-leave-label-${dateStr}`}
+                      className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase"
+                    >
+                      วันลางาน
+                    </span>
+                  </div>
+                  <div className="pl-7">
+                    <p
+                      id={`day-detail-leave-type-${dateStr}`}
+                      className="text-foreground text-sm font-bold"
+                    >
+                      {renderLeaveType(leave.type)}
+                    </p>
+                    {leave.reason && (
+                      <div
+                        id={`day-detail-leave-reason-${dateStr}`}
+                        className="mt-1 flex items-start gap-1.5"
+                      >
+                        <FileText className="text-muted-foreground mt-0.5 h-3 w-3 shrink-0" />
+                        <p className="text-muted-foreground text-xs">
+                          {leave.reason}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p
+              id={`day-detail-empty-${dateStr}`}
+              className="text-muted-foreground text-sm"
+            >
+              ไม่มีกิจกรรมในวันนี้
+            </p>
+          )}
+        </div>
+
+        <div
+          id={`day-detail-actions-${dateStr}`}
+          className="border-border border-t px-5 py-3"
+        >
+          <Button
+            id={`day-detail-request-leave-${dateStr}`}
+            size="sm"
+            className="w-full"
+            onClick={onRequestLeave}
+          >
+            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            แจ้งลาวันนี้
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SkeletonGrid() {
+  return (
+    <div id="calendar-skeleton" className="flex flex-col">
+      <div className="border-border grid grid-cols-7 border-b">
+        {WEEKDAYS.map((d) => (
+          <div
+            key={d}
+            className="text-muted-foreground px-3 py-3 text-center text-xs font-semibold tracking-widest uppercase"
+          >
+            {d}
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-7">
+        {Array.from({ length: 35 }).map((_, i) => (
+          <div
+            key={i}
+            className="border-border flex h-28 flex-col gap-2 border-b p-2 lg:h-32"
+          >
+            <div className="bg-muted h-5 w-5 animate-pulse rounded-md" />
+            <div className="bg-muted h-4 w-3/4 animate-pulse rounded" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [holidays, setHolidays] = useState<Holiday[]>([]);
@@ -52,6 +284,7 @@ export function CalendarPage() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showHolidayModal, setShowHolidayModal] = useState(false);
+  const [showDayDetail, setShowDayDetail] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -77,8 +310,7 @@ export function CalendarPage() {
             setLeaves(leavesData.leaves);
           }
         }
-      } catch (error) {
-        // Error fetching calendar data
+      } catch {
       } finally {
         setLoading(false);
       }
@@ -93,11 +325,10 @@ export function CalendarPage() {
     );
   };
 
-  const getDaysInMonth = () => {
-    const start = startOfMonth(currentDate);
-    const end = endOfMonth(currentDate);
-    return eachDayOfInterval({ start, end });
-  };
+  const days = eachDayOfInterval({
+    start: startOfMonth(currentDate),
+    end: endOfMonth(currentDate),
+  });
 
   const getHolidayForDate = (date: Date) => {
     const dateStr = format(date, "yyyy-MM-dd");
@@ -110,15 +341,14 @@ export function CalendarPage() {
   };
 
   const buddhistYear = getYear(currentDate) + 543;
-  const days = getDaysInMonth();
   const firstDayOfWeek = days[0]?.getDay() ?? 0;
   const calendarRowCount = Math.ceil((firstDayOfWeek + days.length) / 7);
-  const trailingCellCount = calendarRowCount * 7 - firstDayOfWeek - days.length;
+  const trailingCellCount =
+    calendarRowCount * 7 - firstDayOfWeek - days.length;
   const holidayCount = days.filter((date) => getHolidayForDate(date)).length;
   const leaveCount = days.filter((date) => getLeaveForDate(date)).length;
   const workingDayCount = days.length - holidayCount - leaveCount;
 
-  const weekDays = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
   const selectedMonth = getMonth(currentDate);
   const selectedYear = getYear(currentDate);
   const monthOptions = Array.from({ length: 12 }, (_, month) => ({
@@ -146,6 +376,31 @@ export function CalendarPage() {
     });
   };
 
+  const refreshLeaves = async () => {
+    const year = getYear(currentDate);
+    const month = getMonth(currentDate) + 1;
+    const leavesRes = await fetch(
+      `/api/leave?month=${year}-${month.toString().padStart(2, "0")}`,
+    );
+    if (leavesRes.ok) {
+      const leavesData = await leavesRes.json();
+      if (leavesData.success) {
+        setLeaves(leavesData.leaves);
+      }
+    }
+  };
+
+  const refreshHolidays = async () => {
+    const year = getYear(currentDate);
+    const holidaysRes = await fetch(`/api/holidays?year=${year}`);
+    if (holidaysRes.ok) {
+      const holidaysData = await holidaysRes.json();
+      if (holidaysData.success) {
+        setHolidays(holidaysData.holidays);
+      }
+    }
+  };
+
   const handleLeaveRequest = async (data: {
     date: string;
     type: string;
@@ -161,27 +416,18 @@ export function CalendarPage() {
       const result = await response.json();
 
       if (result.success) {
-        const year = getYear(currentDate);
-        const month = getMonth(currentDate) + 1;
-        const leavesRes = await fetch(
-          `/api/leave?month=${year}-${month.toString().padStart(2, "0")}`,
-        );
-        if (leavesRes.ok) {
-          const leavesData = await leavesRes.json();
-          if (leavesData.success) {
-            setLeaves(leavesData.leaves);
-          }
-        }
-        alert("✅ แจ้งลาสำเร็จ!");
+        await refreshLeaves();
+        alert("แจ้งลาสำเร็จ!");
       } else {
-        alert(`❌ ${result.message}`);
+        alert(result.message);
       }
-    } catch (err: any) {
-      alert(`❌ เกิดข้อผิดพลาด: ${err.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "เกิดข้อผิดพลาด";
+      alert(message);
     }
   };
 
-  const handleHolidayAdd = async (data: any) => {
+  const handleHolidayAdd = async (data: Omit<Holiday, "id">) => {
     try {
       const response = await fetch("/api/holidays", {
         method: "POST",
@@ -192,120 +438,121 @@ export function CalendarPage() {
       const result = await response.json();
 
       if (result.success) {
-        const year = getYear(currentDate);
-        const holidaysRes = await fetch(`/api/holidays?year=${year}`);
-        if (holidaysRes.ok) {
-          const holidaysData = await holidaysRes.json();
-          if (holidaysData.success) {
-            setHolidays(holidaysData.holidays);
-          }
-        }
-        alert("✅ เพิ่มวันหยุดสำเร็จ!");
+        await refreshHolidays();
+        alert("เพิ่มวันหยุดสำเร็จ!");
       } else {
-        alert(`❌ ${result.message}`);
+        alert(result.message);
       }
-    } catch (err: any) {
-      alert(`❌ เกิดข้อผิดพลาด: ${err.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "เกิดข้อผิดพลาด";
+      alert(message);
     }
   };
 
-  const handleDayClick = (date: Date) => {
+  const handleDayClick = useCallback((date: Date) => {
     setSelectedDate(date);
-    setShowLeaveModal(true);
+    const dateStr = format(date, "yyyy-MM-dd");
+    const hasHoliday = holidays.some((h) => h.date === dateStr);
+    const hasLeave = leaves.some((l) => l.date === dateStr);
+    if (hasHoliday || hasLeave) {
+      setShowDayDetail(true);
+    } else {
+      setShowLeaveModal(true);
+    }
+  }, [holidays, leaves]);
+
+  const renderLeaveType = (type: string) => {
+    if (type === "personal") return "ลากิจ";
+    if (type === "sick") return "ลาป่วย";
+    if (type === "vacation") return "ลาพักผ่อน";
+    return type;
   };
 
   return (
-    <div
-      id="calendar-page"
-      className="bg-background text-foreground h-[calc(100svh-3.5rem)] overflow-hidden sm:h-auto sm:min-h-screen sm:overflow-visible"
-    >
-      <main
+    <div id="calendar-page" className="min-h-screen bg-background">
+      <div
         id="calendar-main"
-        className="mx-auto flex h-full w-full max-w-7xl flex-col overflow-hidden px-2 py-2 sm:block sm:h-auto sm:min-h-screen sm:overflow-visible sm:px-5 sm:py-5 lg:px-6 lg:py-8"
+        className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-10"
       >
-        <section
-          id="calendar-hero"
-          className="mb-2 grid gap-3 sm:mb-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end"
-        >
+        <header id="calendar-hero" className="mb-6 flex items-end justify-between gap-6">
           <div id="calendar-heading">
             <p
               id="calendar-eyebrow"
-              className="text-primary mb-1 text-[10px] font-semibold tracking-[0.18em] uppercase sm:mb-2 sm:text-xs"
+              className="text-muted-foreground mb-1.5 text-[11px] font-semibold tracking-[0.18em] uppercase"
             >
-              Team Calendar
+              ปฏิทินทีม
             </p>
             <h1
               id="calendar-title"
-              className="text-3xl leading-none font-black tracking-tight sm:text-6xl lg:text-7xl"
+              className="text-foreground text-4xl leading-none font-black tracking-tight sm:text-5xl lg:text-6xl"
             >
               {format(currentDate, "MMMM", { locale: th })}
             </h1>
-            <p
+            <div
               id="calendar-subtitle"
-              className="text-muted-foreground mt-1 text-xs font-medium sm:mt-3 sm:text-base"
+              className="text-muted-foreground mt-2 flex items-center gap-3 text-sm font-medium"
             >
-              {format(currentDate, "yyyy", { locale: th })} · พ.ศ.{" "}
-              {buddhistYear}
-            </p>
-          </div>
-
-          <div
-            id="calendar-summary-cards"
-            className="hidden grid-cols-3 gap-2 sm:grid sm:w-auto sm:min-w-[360px]"
-          >
-            <Card
-              id="calendar-summary-holidays"
-              className="border-border bg-card rounded-lg p-3 shadow-none"
-            >
-              <p className="text-muted-foreground text-xs font-medium">
-                วันหยุด
-              </p>
-              <p className="text-destructive mt-1 text-2xl font-black">
-                {holidayCount}
-              </p>
-            </Card>
-            <Card
-              id="calendar-summary-leaves"
-              className="border-border bg-card rounded-lg p-3 shadow-none"
-            >
-              <p className="text-muted-foreground text-xs font-medium">วันลา</p>
-              <p className="text-primary mt-1 text-2xl font-black">
+              <span id="calendar-year-info">
+                {format(currentDate, "yyyy")} · พ.ศ. {buddhistYear}
+              </span>
+              <span className="text-border">|</span>
+              <span id="calendar-summary-text">
+                วันทำงาน {workingDayCount} · วันหยุด {holidayCount} · วันลา{" "}
                 {leaveCount}
-              </p>
-            </Card>
-            <Card
-              id="calendar-summary-workdays"
-              className="border-border bg-card rounded-lg p-3 shadow-none"
-            >
-              <p className="text-muted-foreground text-xs font-medium">
-                วันทำงาน
-              </p>
-              <p className="text-foreground mt-1 text-2xl font-black">
-                {workingDayCount}
-              </p>
-            </Card>
+              </span>
+            </div>
           </div>
-        </section>
 
-        <section
+          <div id="calendar-header-actions" className="hidden items-center gap-2 sm:flex">
+            <Button
+              id="calendar-import-btn"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowImportModal(true)}
+            >
+              <Upload className="mr-1.5 h-3.5 w-3.5" />
+              นำเข้า
+            </Button>
+            <Button
+              id="calendar-add-holiday-btn"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowHolidayModal(true)}
+            >
+              <CalendarPlus className="mr-1.5 h-3.5 w-3.5" />
+              เพิ่มวันหยุด
+            </Button>
+            <Button
+              id="calendar-request-leave-btn"
+              size="sm"
+              onClick={() => setShowLeaveModal(true)}
+            >
+              <Plus className="mr-1.5 h-3.5 w-3.5" />
+              แจ้งลา
+            </Button>
+          </div>
+        </header>
+
+        <nav
           id="calendar-toolbar"
-          className="border-border bg-card mb-2 grid grid-cols-[auto_minmax(0,1fr)_auto] gap-2 rounded-lg border p-2 shadow-sm sm:mb-4 sm:grid-cols-[auto_minmax(0,1fr)_auto_auto] sm:items-center sm:p-3"
+          className="mb-4 flex items-center gap-2"
+          aria-label="เลือกเดือนและปี"
         >
           <Button
             id="calendar-prev-month"
-            onClick={() => navigateMonth("prev")}
             variant="outline"
-            size="sm"
+            size="icon"
+            className="h-9 w-9 shrink-0"
+            onClick={() => navigateMonth("prev")}
+            aria-label="เดือนก่อนหน้า"
           >
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            ก่อน
+            <ChevronLeft className="h-4 w-4" />
           </Button>
 
           <div
             id="calendar-month-picker"
-            className="bg-muted flex min-w-0 items-center justify-center gap-2 rounded-lg px-2 py-2"
+            className="bg-muted flex flex-1 items-center justify-center gap-3 rounded-md px-3 py-2"
           >
-            <CalendarIcon className="text-muted-foreground hidden h-5 w-5 shrink-0 sm:block" />
             <label htmlFor="calendar-month-select" className="sr-only">
               เลือกเดือน
             </label>
@@ -315,7 +562,7 @@ export function CalendarPage() {
               onChange={(event) =>
                 handleMonthChange(Number(event.target.value))
               }
-              className="text-foreground focus-visible:ring-ring min-w-0 flex-1 cursor-pointer appearance-none bg-transparent text-center text-sm font-bold outline-none focus-visible:ring-2 sm:text-lg"
+              className="text-foreground min-w-0 cursor-pointer appearance-none bg-transparent text-center text-sm font-bold outline-none"
               aria-label="เลือกเดือน"
             >
               {monthOptions.map((month) => (
@@ -324,6 +571,7 @@ export function CalendarPage() {
                 </option>
               ))}
             </select>
+            <span className="text-border">/</span>
             <label htmlFor="calendar-year-select" className="sr-only">
               เลือกปี
             </label>
@@ -331,7 +579,7 @@ export function CalendarPage() {
               id="calendar-year-select"
               value={selectedYear}
               onChange={(event) => handleYearChange(Number(event.target.value))}
-              className="text-foreground focus-visible:ring-ring cursor-pointer appearance-none bg-transparent text-center text-sm font-bold outline-none focus-visible:ring-2 sm:text-lg"
+              className="text-foreground cursor-pointer appearance-none bg-transparent text-center text-sm font-bold outline-none"
               aria-label="เลือกปี"
             >
               {yearOptions.map((year) => (
@@ -344,278 +592,199 @@ export function CalendarPage() {
 
           <Button
             id="calendar-next-month"
-            onClick={() => navigateMonth("next")}
             variant="outline"
-            size="sm"
+            size="icon"
+            className="h-9 w-9 shrink-0"
+            onClick={() => navigateMonth("next")}
+            aria-label="เดือนถัดไป"
           >
-            ถัด
-            <ChevronRight className="ml-2 h-4 w-4" />
+            <ChevronRight className="h-4 w-4" />
           </Button>
+        </nav>
 
-          <div
-            id="calendar-action-buttons"
-            className="col-span-3 flex justify-end sm:col-span-1"
-          >
-            <Button
-              id="calendar-request-leave"
-              onClick={() => setShowLeaveModal(true)}
-              variant="default"
-              size="sm"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 w-full px-3 text-xs sm:h-9 sm:w-auto"
-              aria-label="แจ้งลา"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              แจ้งลา
-            </Button>
-          </div>
-        </section>
+        <div id="calendar-legend" className="mb-3 flex flex-wrap gap-4 text-xs font-medium">
+          <span id="calendar-legend-holiday" className="flex items-center gap-1.5">
+            <span className="bg-destructive/80 h-2 w-2 rounded-full" />
+            <span className="text-muted-foreground">วันหยุดราชการ</span>
+          </span>
+          <span id="calendar-legend-leave" className="flex items-center gap-1.5">
+            <span className="bg-primary h-2 w-2 rounded-full" />
+            <span className="text-muted-foreground">วันลางาน</span>
+          </span>
+        </div>
 
-        <section
-          id="calendar-legend"
-          className="mb-4 hidden flex-wrap gap-2 text-xs sm:flex sm:text-sm"
-        >
-          <div
-            id="calendar-legend-holiday"
-            className="border-border bg-card flex items-center gap-2 rounded-lg border px-3 py-2"
-          >
-            <div className="bg-destructive h-3 w-3 rounded-full"></div>
-            <span>วันหยุดราชการ</span>
-          </div>
-          <div
-            id="calendar-legend-leave"
-            className="border-border bg-card flex items-center gap-2 rounded-lg border px-3 py-2"
-          >
-            <div className="bg-primary h-3 w-3 rounded-full"></div>
-            <span>วันลางาน</span>
-          </div>
-          <div
-            id="calendar-legend-mixed"
-            className="border-border bg-card flex items-center gap-2 rounded-lg border px-3 py-2"
-          >
-            <div className="bg-accent h-3 w-3 rounded-full"></div>
-            <span>วันหยุด + วันลา</span>
-          </div>
-        </section>
-
-        <Card
+        <div
           id="calendar-grid-card"
-          className="border-border bg-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg p-0 shadow-sm sm:block sm:flex-none"
+          className="border-border overflow-hidden rounded-xl border bg-card"
         >
           {loading ? (
-            <div id="calendar-loading" className="py-16 text-center">
-              <div className="border-primary inline-block h-8 w-8 animate-spin rounded-full border-b-2"></div>
-              <p className="text-muted-foreground mt-2 dark:text-gray-400">
-                กำลังโหลดข้อมูล...
-              </p>
+            <div id="calendar-loading" className="p-4">
+              <SkeletonGrid />
             </div>
           ) : (
-            <div
-              id="calendar-grid-wrapper"
-              className="flex min-h-0 flex-1 flex-col"
-            >
+            <div id="calendar-grid-wrapper" className="flex flex-col">
               <div
-                id="calendar-grid-inner"
-                className="flex min-h-0 flex-1 flex-col"
+                id="calendar-weekdays"
+                className="border-border grid shrink-0 grid-cols-7 border-b"
               >
-                <div
-                  id="calendar-weekdays"
-                  className="border-border grid shrink-0 grid-cols-7 border-b"
-                >
-                  {weekDays.map((day) => (
-                    <div
-                      key={day}
-                      id={`calendar-weekday-${day}`}
-                      className="text-muted-foreground px-1 py-2 text-center text-[11px] font-black tracking-[0.08em] uppercase sm:px-3 sm:py-3 sm:text-sm"
+                {WEEKDAYS.map((day) => (
+                  <div
+                    key={day}
+                    id={`calendar-weekday-${day}`}
+                    className={cn(
+                      "text-muted-foreground px-3 py-2.5 text-center text-[11px] font-bold tracking-[0.12em] uppercase",
+                      (day === "อา" || day === "ส") &&
+                        "text-destructive/60",
+                    )}
+                  >
+                    {day}
+                  </div>
+                ))}
+              </div>
+
+              <div
+                id="calendar-days-grid"
+                className="grid grid-cols-7"
+                style={{
+                  gridTemplateRows: `repeat(${calendarRowCount}, minmax(0, 1fr))`,
+                }}
+              >
+                {Array.from({ length: firstDayOfWeek }).map((_, i) => (
+                  <div
+                    key={`empty-${i}`}
+                    id={`calendar-empty-cell-${i}`}
+                    className="border-border/50 bg-muted/20 border-b"
+                  />
+                ))}
+
+                {days.map((date) => {
+                  const holiday = getHolidayForDate(date);
+                  const leave = getLeaveForDate(date);
+                  const isToday = isSameDay(date, new Date());
+                  const isWeekendDay = isWeekend(date);
+                  const hasEvent = holiday || leave;
+                  const dateStr = format(date, "yyyy-MM-dd");
+
+                  return (
+                    <button
+                      key={date.toISOString()}
+                      id={`calendar-day-${dateStr}`}
+                      type="button"
+                      className={cn(
+                        "group relative flex min-h-28 cursor-pointer flex-col border-b p-1.5 text-left transition-colors lg:min-h-32 lg:p-2",
+                        "border-border/50 focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
+                        isToday && "bg-primary/[0.04]",
+                        !isToday && !hasEvent && !isWeekendDay && "hover:bg-muted/30",
+                        !isToday && !hasEvent && isWeekendDay && "bg-muted/15 hover:bg-muted/30",
+                      )}
+                      onClick={() => handleDayClick(date)}
+                      aria-label={`${format(date, "d MMMM yyyy", { locale: th })}${holiday ? ` ${holiday.nameThai}` : ""}${leave ? ` วันลา${renderLeaveType(leave.type)}` : ""}`}
                     >
-                      {day}
-                    </div>
-                  ))}
-                </div>
-
-                <div
-                  id="calendar-days-grid"
-                  className="grid min-h-0 flex-1 grid-cols-7 sm:min-h-0"
-                  style={{
-                    gridTemplateRows: `repeat(${calendarRowCount}, minmax(0, 1fr))`,
-                  }}
-                >
-                  {Array.from({ length: firstDayOfWeek }).map((_, i) => (
-                    <div
-                      key={`empty-${i}`}
-                      id={`calendar-empty-cell-${i}`}
-                      className="border-border bg-muted/35 h-full min-h-0 border-b sm:h-32 lg:h-36"
-                    ></div>
-                  ))}
-
-                  {days.map((date) => {
-                    const holiday = getHolidayForDate(date);
-                    const leave = getLeaveForDate(date);
-                    const isToday = isSameDay(date, new Date());
-
-                    return (
-                      <button
-                        key={date.toISOString()}
-                        id={`calendar-day-${format(date, "yyyy-MM-dd")}`}
-                        type="button"
+                      <span
+                        id={`calendar-day-number-${dateStr}`}
                         className={cn(
-                          "border-border bg-card group h-full min-h-0 cursor-pointer border-b p-1 text-left transition-colors sm:h-32 sm:p-2 lg:h-36",
-                          "focus-visible:ring-ring flex flex-col overflow-hidden focus-visible:ring-2 focus-visible:outline-none",
-                          !isToday && "hover:bg-muted/40",
-                          isToday && "bg-primary/5",
+                          "flex h-6 w-6 items-center justify-center rounded-md text-sm leading-none font-bold",
+                          "lg:h-7 lg:w-7 lg:text-base",
+                          isToday &&
+                            "bg-primary text-primary-foreground font-black",
+                          !isToday && isWeekendDay && !holiday && "text-destructive/70",
+                          !isToday && !isWeekendDay && !holiday && "text-foreground",
+                          !isToday && !!holiday && "text-foreground",
                         )}
-                        onClick={() => handleDayClick(date)}
-                        aria-label={`วันที่ ${format(date, "d MMMM yyyy", { locale: th })}`}
                       >
-                        <div className="mb-1 flex shrink-0 items-center justify-between sm:mb-2">
-                          <span
-                            id={`calendar-day-number-${format(date, "yyyy-MM-dd")}`}
-                            className={cn(
-                              "text-foreground flex h-7 w-7 items-center justify-center rounded-md text-lg leading-none font-black",
-                              "sm:h-8 sm:w-8 sm:text-2xl lg:h-9 lg:w-9 lg:text-3xl",
-                              isToday &&
-                                "border-primary bg-primary/10 text-primary ring-primary/25 border shadow-none ring-4",
-                            )}
+                        {format(date, "d")}
+                      </span>
+
+                      <div className="mt-0.5 min-h-0 flex-1 space-y-0.5 overflow-hidden lg:mt-1 lg:space-y-1">
+                        {holiday && (
+                          <div
+                            id={`calendar-holiday-${dateStr}`}
+                            className="bg-destructive/10 text-destructive flex items-center gap-1 rounded px-1 py-px text-[10px] font-semibold leading-tight lg:px-1.5 lg:py-0.5 lg:text-[11px]"
+                            title={holiday.nameThai}
                           >
-                            {format(date, "d")}
-                          </span>
-                        </div>
+                            <span className="bg-destructive text-destructive-foreground flex h-3 w-3 shrink-0 items-center justify-center rounded-full text-[8px] lg:h-3.5 lg:w-3.5">
+                              ★
+                            </span>
+                            <span className="min-w-0 truncate">
+                              {holiday.nameThai}
+                            </span>
+                          </div>
+                        )}
 
-                        <div className="min-h-0 flex-1 space-y-1 overflow-hidden">
-                          {holiday && (
-                            <div
-                              id={`calendar-holiday-${format(date, "yyyy-MM-dd")}`}
-                              className="bg-destructive/15 text-destructive flex min-w-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold sm:gap-1.5 sm:px-2 sm:py-1 sm:text-xs"
-                              title={`${holiday.nameThai}${holiday.type !== "national" ? ` (${holiday.type})` : ""}`}
-                            >
-                              <span className="bg-destructive text-destructive-foreground flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[9px] sm:h-4 sm:w-4 sm:text-[10px]">
-                                ★
-                              </span>
-                              <span className="min-w-0 truncate">
-                                {holiday.nameThai}
-                                {holiday.type !== "national" &&
-                                  ` (${holiday.type})`}
-                              </span>
-                            </div>
-                          )}
+                        {leave && (
+                          <div
+                            id={`calendar-leave-${dateStr}`}
+                            className="bg-primary/10 text-primary flex items-center gap-1 rounded px-1 py-px text-[10px] font-semibold leading-tight lg:px-1.5 lg:py-0.5 lg:text-[11px]"
+                            title={`วันลา${renderLeaveType(leave.type)}`}
+                          >
+                            <span className="border-primary h-3 w-3 shrink-0 rounded-full border-[1.5px] lg:h-3.5 lg:w-3.5" />
+                            <span className="min-w-0 truncate">
+                              {renderLeaveType(leave.type)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
 
-                          {leave && (
-                            <div
-                              id={`calendar-leave-${format(date, "yyyy-MM-dd")}`}
-                              className="bg-primary/15 text-primary flex min-w-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold sm:gap-1.5 sm:px-2 sm:py-1 sm:text-xs"
-                              title={`วันลา ${leave.type}`}
-                            >
-                              <span className="border-primary h-3.5 w-3.5 shrink-0 rounded-full border-2 sm:h-4 sm:w-4"></span>
-                              <span className="min-w-0 truncate">
-                                วันลา {leave.type === "personal" && "ลากิจ"}
-                                {leave.type === "sick" && "ลาป่วย"}
-                                {leave.type === "vacation" && "ลาพักผ่อน"}
-                                {!["personal", "sick", "vacation"].includes(
-                                  leave.type,
-                                ) && leave.type}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
-
-                  {Array.from({ length: trailingCellCount }).map((_, i) => (
-                    <div
-                      key={`trailing-${i}`}
-                      id={`calendar-trailing-cell-${i}`}
-                      className="border-border bg-muted/35 h-full min-h-0 border-b sm:h-32 lg:h-36"
-                    ></div>
-                  ))}
-                </div>
+                {Array.from({ length: trailingCellCount }).map((_, i) => (
+                  <div
+                    key={`trailing-${i}`}
+                    id={`calendar-trailing-cell-${i}`}
+                    className="border-border/50 bg-muted/20 border-b"
+                  />
+                ))}
               </div>
             </div>
           )}
-        </Card>
+        </div>
 
-        <section
-          id="calendar-statistics"
-          className="mt-5 hidden grid-cols-1 gap-4 sm:grid md:grid-cols-3"
-        >
-          <Card
-            id="calendar-stat-month"
-            className="border-border bg-card rounded-lg p-4 shadow-sm"
+        <div id="calendar-mobile-actions" className="mt-4 flex justify-center gap-2 sm:hidden">
+          <Button
+            id="calendar-mobile-leave-btn"
+            size="sm"
+            className="flex-1"
+            onClick={() => setShowLeaveModal(true)}
           >
-            <h3 className="mb-2 font-semibold dark:text-gray-100">
-              สถิติเดือนนี้
-            </h3>
-            <div className="space-y-2 text-sm dark:text-gray-300">
-              <div className="flex justify-between">
-                <span>วันหยุดราชการ:</span>
-                <span className="font-semibold">{holidayCount} วัน</span>
-              </div>
-              <div className="flex justify-between">
-                <span>วันลางาน:</span>
-                <span className="font-semibold">{leaveCount} วัน</span>
-              </div>
-              <div className="flex justify-between">
-                <span>วันทำงาน (โดยประมาณ):</span>
-                <span className="font-semibold">{workingDayCount} วัน</span>
-              </div>
-            </div>
-          </Card>
+            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            แจ้งลา
+          </Button>
+          <Button
+            id="calendar-mobile-holiday-btn"
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => setShowHolidayModal(true)}
+          >
+            <CalendarPlus className="mr-1.5 h-3.5 w-3.5" />
+            เพิ่มวันหยุด
+          </Button>
+          <Button
+            id="calendar-mobile-import-btn"
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => setShowImportModal(true)}
+          >
+            <Upload className="mr-1.5 h-3.5 w-3.5" />
+            นำเข้า
+          </Button>
+        </div>
+      </div>
 
-          <Card
-            id="calendar-stat-year"
-            className="border-border bg-card rounded-lg p-4 shadow-sm"
-          >
-            <h3 className="mb-2 font-semibold dark:text-gray-100">
-              วันหยุดทั้งหมดในปี {buddhistYear}
-            </h3>
-            <div className="text-sm dark:text-gray-300">
-              <div className="flex justify-between">
-                <span>วันหยุดราชการ:</span>
-                <span className="font-semibold">
-                  {
-                    holidays.filter((h) => h.year === getYear(currentDate))
-                      .length
-                  }{" "}
-                  วัน
-                </span>
-              </div>
-            </div>
-          </Card>
-
-          <Card
-            id="calendar-manage-holidays-card"
-            className="border-border bg-card rounded-lg p-4 shadow-sm"
-          >
-            <h3 className="mb-2 font-semibold dark:text-gray-100">
-              จัดการวันหยุด
-            </h3>
-            <p className="text-muted-foreground mb-3 text-xs dark:text-gray-400">
-              Admin เท่านั้นที่สามารถจัดการวันหยุดได้
-            </p>
-            <div className="space-y-2">
-              <Button
-                id="calendar-import-holidays-secondary"
-                size="sm"
-                variant="outline"
-                className="w-full"
-                onClick={() => setShowImportModal(true)}
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                นำเข้าวันหยุด
-              </Button>
-              <Button
-                id="calendar-add-holiday-secondary"
-                size="sm"
-                variant="default"
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 w-full"
-                onClick={() => setShowHolidayModal(true)}
-              >
-                <CalendarPlus className="mr-2 h-4 w-4" />
-                เพิ่มวันหยุดใหม่
-              </Button>
-            </div>
-          </Card>
-        </section>
-      </main>
+      {showDayDetail && selectedDate && (
+        <DayDetailPanel
+          date={selectedDate}
+          holiday={getHolidayForDate(selectedDate)}
+          leave={getLeaveForDate(selectedDate)}
+          onClose={() => setShowDayDetail(false)}
+          onRequestLeave={() => {
+            setShowDayDetail(false);
+            setShowLeaveModal(true);
+          }}
+        />
+      )}
 
       {showImportModal && (
         <div id="calendar-import-modal-wrapper">
