@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.5.0] - 2026-05-09
+
+### Added
+- **Calendar Day Detail Panel** — คลิกวันที่มีวันหยุด/วันลา แสดง panel รายละเอียด (ชื่อไทย/อังกฤษ, ประเภท, เหตุผล) พร้อมปุ่มแจ้งลาวันนั้น
+- **Calendar Loading Skeleton** — skeleton grid แทน spinner ธรรมดาตอนโหลดข้อมูล
+
+### Changed
+- **Calendar Desktop** — ออกแบบใหม่: ลบ hero-metric cards, รวมสถิติเป็น inline summary, ปรับ grid cell hierarchy, วันหยุด/วันลา badge สวยขึ้น, weekend cells แยกสีอ่อน
+- **Calendar Mobile** — แทนที่ hardcoded `emerald-*`, `sky-*`, `rose-*`, `slate-*` colors ด้วย theme tokens (`primary`, `destructive`, `muted`, `foreground`), ลบ gradient background, ใช้ `bg-background` แทน
+- **Holiday Manage Modal** — ลบ hardcoded `dark:text-gray-*` ทั้งหมด เปลี่ยนเป็น theme tokens
+- **Holiday Import Modal** — ลบ hardcoded `dark:text-gray-*` ทั้งหมด เปลี่ยนเป็น theme tokens
+- **Calendar Components** — เพิ่ม `id` attributes ครบทุก element สำหรับ test targeting
+
+---
+
 ## [1.4.0] - 2026-05-09
 
 ### Added
