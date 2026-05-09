@@ -16,7 +16,7 @@
 
 ## 🛠️ วิธีตั้งค่า (ทีละสภาพ)
 
-### สำหรับ Production (bun-line.midseelee.com)
+### สำหรับ Production
 
 1. **เข้าสู่ [LINE Developers Console](https://developers.line.biz/console)**
 
@@ -28,7 +28,7 @@
    - ไปที่ tab **LINE Login**
    - กด **Enable** หรือ **Add**
    - เลือก:
-     - **Callback URL**: `https://bun-line.midseelee.com/api/auth/callback/line`
+     - **Callback URL**: `https://your-domain.com/api/auth/callback/line`
      - **Email permission**: เปิดตามต้องการ
 
 4. **คัดลอก Credentials**
@@ -54,7 +54,7 @@
 
 ---
 
-### สำหรับ Local (line-login.midseelee.com)
+### สำหรับ Local
 
 ทำเหมือนกัน แต่ใช้ Channel อื่น:
 
@@ -86,7 +86,7 @@
 หลังจากตั้งค่าแล้ว:
 
 1. **ทดสอบ LINE Login**
-   - เข้า `https://bun-line.midseelee.com/login`
+   - เข้า `https://your-domain.com/login`
    - กด "Login with LINE"
    - ตรวจสอบใน Database:
      ```typescript
@@ -104,7 +104,7 @@
 
 3. **ทดสอบ DCA Integration**
    - สร้าง DCA ผ่าน Bot: `/dca add 100 BTC 0.001 2000000`
-   - เปิดเว็บ: `https://bun-line.midseelee.com/dca-history`
+   - เปิดเว็บ: `https://your-domain.com/dca-history`
    - ควรเห็นรายการที่เพิ่งสร้าง
 
 ---

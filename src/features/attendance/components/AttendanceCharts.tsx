@@ -1,12 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Suspense, lazy } from "react";
 import { useChartTheme } from "@/hooks/useChartTheme";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import type { AttendanceChartsProps } from "@/lib/types/attendance";
 
-// Lazy load chart components for better bundle splitting
 const WorkingHoursTabContent = lazy(
   () =>
     import("./WorkingHoursTabContent").then((m) => ({
@@ -23,44 +22,45 @@ const StatisticsTabContent = lazy(
 
 function ChartFallback() {
   return (
-    <div className="flex h-64 items-center justify-center text-gray-400 dark:text-gray-500">
+    <div className="flex h-64 items-center justify-center text-muted-foreground">
       กำลังโหลดกราฟ...
     </div>
   );
 }
 
-/**
- * Attendance Charts Component - REFACTORED
- * Main component that orchestrates chart display with tabs
- *
- * Refactored from a 430-line monolith into smaller, composable components:
- * - WorkingHoursTabContent: Line and bar charts
- * - StatisticsTabContent: Donut charts for attendance and compliance
- * - Individual chart components with dedicated hooks for data preparation
- *
- * This follows the Single Responsibility Principle and improves:
- * - Testability (each component has one purpose)
- * - Reusability (charts can be used independently)
- * - Maintainability (smaller, focused components)
- * - Performance (hooks use useMemo for optimization)
- */
+const ChevronIcon: React.FC<{ open: boolean }> = ({ open }) => (
+  <svg
+    className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ease-[cubic-bezier(0.25,1,0.5,1)] ${open ? "rotate-180" : ""}`}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+  </svg>
+);
+
 export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({
   report,
 }) => {
   const { mounted } = useChartTheme();
+  const [open, setOpen] = useState(true);
 
-  // Don't render charts until mounted to avoid hydration issues
   if (!mounted) {
     return (
-      <div className="mb-8">
-        <h2 className="mb-4 text-xl font-bold text-gray-900 dark:text-gray-100">
-          กราฟวิเคราะห์การทำงาน
-        </h2>
-        <div className="mb-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
-          <div className="bg-card-base border-theme-primary rounded-lg border p-4 shadow">
-            <div className="flex h-64 items-center justify-center text-gray-400 dark:text-gray-500">
-              กำลังโหลด...
-            </div>
+      <div>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="flex w-full items-center justify-between"
+        >
+          <h2 className="text-lg font-semibold text-foreground">
+            กราฟวิเคราะห์การทำงาน
+          </h2>
+          <ChevronIcon open={false} />
+        </button>
+        <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="flex h-64 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground">
+            กำลังโหลด...
           </div>
         </div>
       </div>
@@ -68,39 +68,47 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({
   }
 
   return (
-    <div className="mb-8">
-      <h2 className="mb-4 text-xl font-bold text-gray-900 dark:text-gray-100">
-        กราฟวิเคราะห์การทำงาน
-      </h2>
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between"
+        aria-expanded={open}
+      >
+        <h2 className="text-lg font-semibold text-foreground">
+          กราฟวิเคราะห์การทำงาน
+        </h2>
+        <ChevronIcon open={open} />
+      </button>
 
-      <Tabs defaultValue="working-hours" className="w-full">
-        <TabsList className="mb-6 grid w-full grid-cols-2 rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
-          <TabsTrigger
-            value="working-hours"
-            className="flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-blue-50 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-lg dark:hover:bg-blue-900/20 dark:data-[state=active]:bg-blue-600"
-          >
-            📊 ชั่วโมงการทำงาน
-          </TabsTrigger>
-          <TabsTrigger
-            value="statistics"
-            className="flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-green-50 data-[state=active]:bg-green-500 data-[state=active]:text-white data-[state=active]:shadow-lg dark:hover:bg-green-900/20 dark:data-[state=active]:bg-green-600"
-          >
-            📈 สถิติการเข้างาน
-          </TabsTrigger>
-        </TabsList>
+      <div
+        className={`grid transition-[grid-template-rows] duration-200 ease-[cubic-bezier(0.25,1,0.5,1)] ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+      >
+        <div className="overflow-hidden">
+          <Tabs defaultValue="working-hours" className="mt-4 w-full">
+            <TabsList className="tab-pill mb-6 grid w-full grid-cols-2">
+              <TabsTrigger value="working-hours">
+                ชั่วโมงการทำงาน
+              </TabsTrigger>
+              <TabsTrigger value="statistics">
+                สถิติการเข้างาน
+              </TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="working-hours">
-          <Suspense fallback={<ChartFallback />}>
-            <WorkingHoursTabContent records={report.attendanceRecords} />
-          </Suspense>
-        </TabsContent>
+            <TabsContent value="working-hours">
+              <Suspense fallback={<ChartFallback />}>
+                <WorkingHoursTabContent records={report.attendanceRecords} />
+              </Suspense>
+            </TabsContent>
 
-        <TabsContent value="statistics">
-          <Suspense fallback={<ChartFallback />}>
-            <StatisticsTabContent report={report} />
-          </Suspense>
-        </TabsContent>
-      </Tabs>
+            <TabsContent value="statistics">
+              <Suspense fallback={<ChartFallback />}>
+                <StatisticsTabContent report={report} />
+              </Suspense>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
     </div>
   );
 };

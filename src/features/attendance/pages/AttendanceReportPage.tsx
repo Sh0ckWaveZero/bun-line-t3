@@ -67,78 +67,59 @@ export function AttendanceReportPage() {
     <>
       <PendingApprovalModal open={needsApproval} />
 
-      <div id="attendance-report-page" className="min-h-screen w-full">
-        <div id="attendance-report-container" className="mx-auto max-w-full px-4 py-8">
-          <div id="attendance-report-card" className="rounded-lg border border-border bg-card p-6 shadow-lg">
-            <div id="attendance-report-header" className="mb-6 flex items-center justify-between">
-              <h1 id="attendance-report-title" className="text-3xl font-bold text-foreground">
-                รายงานการเข้างานรายเดือน
-              </h1>
-            </div>
-            <p id="attendance-report-description" className="mb-6 text-muted-foreground">
-              ติดตามและจัดการเวลาการทำงานของคุณ
-            </p>
+      <div className="mx-auto min-h-screen w-full max-w-6xl px-4 py-8">
+        <header className="mb-6">
+          <h1 className="text-xl font-semibold text-foreground">
+            รายงานการเข้างานรายเดือน
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            ติดตามและจัดการเวลาการทำงานของคุณ
+          </p>
+        </header>
 
-            <div id="month-selector-section" className="mb-6">
-              <MonthSelector selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} />
-            </div>
+        <MonthSelector
+          selectedMonth={selectedMonth}
+          onMonthChange={setSelectedMonth}
+        />
 
-            {session?.user && (
-              <div id="user-info-section" className="mb-6">
-                <UserInfoCard user={session.user} />
-              </div>
-            )}
-
-            {loading && (
-              <div id="loading-section">
-                <LoadingSpinner />
-              </div>
-            )}
-
-            {error && (
-              <div id="error-section">
-                <ErrorMessage message={error} />
-              </div>
-            )}
-
-            {report && !loading && (
-              <div id="report-content" className="space-y-6">
-                <div id="summary-cards-section" className="mb-8">
-                  <h2 id="summary-cards-title" className="mb-4 text-xl font-semibold text-foreground">
-                    สรุปรายงาน
-                  </h2>
-                  <AttendanceSummaryCards report={report} />
-                </div>
-
-                <div id="charts-section" className="mb-8">
-                  <h2 id="charts-title" className="mb-4 text-xl font-semibold text-foreground">
-                    กราฟแสดงผล
-                  </h2>
-                  <AttendanceCharts report={report} />
-                </div>
-
-                <div id="table-section" className="mb-4">
-                  <h2 id="table-title" className="mb-4 text-xl font-semibold text-foreground">
-                    รายละเอียดการเข้างาน
-                  </h2>
-                  <AttendanceTable records={report.attendanceRecords} onEditRecord={openEditModal} />
-                </div>
-              </div>
-            )}
+        {session?.user && (
+          <div className="mb-6">
+            <UserInfoCard user={session.user} />
           </div>
+        )}
 
-          <div id="edit-modal-container">
-            <EditAttendanceModal
-              isOpen={editModalOpen}
-              editingRecord={editingRecord}
-              editData={editData}
-              updateLoading={updateLoading}
-              onClose={closeEditModal}
-              onEditDataChange={setEditData}
-              onUpdate={updateAttendance}
-            />
+        {loading && <LoadingSpinner />}
+
+        {error && <ErrorMessage message={error} />}
+
+        {report && !loading && (
+          <div className="space-y-8">
+            <section>
+              <AttendanceSummaryCards report={report} />
+            </section>
+
+            <section>
+              <AttendanceCharts report={report} />
+            </section>
+
+            <section>
+              <AttendanceTable
+                records={report.attendanceRecords}
+                onEditRecord={openEditModal}
+              />
+            </section>
           </div>
-        </div>
+        )}
+
+        <EditAttendanceModal
+          isOpen={editModalOpen}
+          editingRecord={editingRecord}
+          editData={editData}
+          updateLoading={updateLoading}
+          onClose={closeEditModal}
+          onEditDataChange={setEditData}
+          onUpdate={updateAttendance}
+        />
       </div>
     </>
   );

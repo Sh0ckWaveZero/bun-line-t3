@@ -54,12 +54,6 @@
   --ease: var(--power2);
 }
 
-* {
-  box-sizing: border-box;
-  /* ✅ ลบ transform-style: preserve-3d ออกจาก global selector */
-  /* เพื่อป้องกันการรบกวน modal/dialog components */
-}
-
 .rings {
   width: 50vmin;
   max-width: 300px;

@@ -10,11 +10,6 @@ interface AttendanceDonutChartProps {
   report: MonthlyAttendanceReport;
 }
 
-/**
- * Attendance Donut Chart Component
- * Displays attendance rate (days attended vs days absent)
- * Shows special message when perfect attendance
- */
 export const AttendanceDonutChart: React.FC<AttendanceDonutChartProps> = ({
   report,
 }) => {
@@ -27,34 +22,21 @@ export const AttendanceDonutChart: React.FC<AttendanceDonutChartProps> = ({
   if (isPerfect) {
     return (
       <div className="text-center">
-        <div className="mb-4 text-4xl">🏆</div>
-        <h4 className="mb-2 text-lg font-bold text-green-600 dark:text-green-400">
-          ยอดเยี่ยม!
-        </h4>
-        <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-          เข้างานครบทุกวันในเดือนนี้
+        <p className="mb-2 text-sm font-semibold text-foreground">
+          เข้างานครบทุกวัน
         </p>
-        <div className="rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-700 dark:bg-green-900/20">
-          <p className="text-sm text-green-800 dark:text-green-300">
-            <strong>{report.totalDaysWorked}</strong> วัน จาก{" "}
-            <strong>{report.workingDaysInMonth}</strong> วันทำงาน
-          </p>
-          <p className="mt-1 text-xs text-green-600 dark:text-green-400">
-            อัตราการเข้างาน: {report.attendanceRate}%
-          </p>
-        </div>
+        <p className="text-xs text-muted-foreground">
+          {report.totalDaysWorked} วัน จาก {report.workingDaysInMonth} วันทำงาน
+        </p>
+        <p className="mt-1 font-mono text-xs text-muted-foreground">
+          {report.attendanceRate}%
+        </p>
       </div>
     );
   }
 
   return (
-    <div
-      style={{
-        width: "250px",
-        height: "250px",
-        margin: "0 auto",
-      }}
-    >
+    <div className="mx-auto" style={{ width: "250px", height: "250px" }}>
       <Doughnut data={chartData} options={getDoughnutOptions()} />
     </div>
   );

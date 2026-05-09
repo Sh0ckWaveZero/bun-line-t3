@@ -490,6 +490,60 @@
   .animate-tab-in {
     animation: tab-in 200ms ease-out;
   }
+
+  .tab-pill {
+    position: relative;
+    z-index: 0;
+  }
+
+  .tab-pill [data-slot="tabs-trigger"]::after {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    border-radius: var(--radius-md, 6px);
+    background-color: transparent;
+    box-shadow: none;
+    transition: background-color 200ms cubic-bezier(0.25, 1, 0.5, 1),
+                box-shadow 200ms cubic-bezier(0.25, 1, 0.5, 1);
+    z-index: -1;
+  }
+
+  .tab-pill [data-slot="tabs-trigger"][data-state="active"]::after {
+    background-color: var(--color-card, #ffffff);
+    box-shadow: 0 1px 2px rgba(30, 27, 75, 0.06);
+  }
+
+  @keyframes section-enter {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-section-enter {
+    animation: section-enter 350ms cubic-bezier(0.25, 1, 0.5, 1) both;
+  }
+
+  .stagger-1 { animation-delay: 60ms; }
+  .stagger-2 { animation-delay: 120ms; }
+  .stagger-3 { animation-delay: 180ms; }
+  .stagger-4 { animation-delay: 240ms; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-section-enter {
+    animation: none;
+  }
+  .animate-tab-in {
+    animation: none;
+  }
+  .stagger-1, .stagger-2, .stagger-3, .stagger-4 {
+    animation-delay: 0ms;
+  }
 }
 
 @layer components {

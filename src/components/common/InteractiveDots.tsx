@@ -5,12 +5,14 @@
 import { useEffect, useRef } from "react";
 
 // ─── Physics constants ─────────────────────────────────────────────────────
-const SPACING = 32;            // grid spacing (px, logical)
-const DOT_R = 1.5;             // dot radius (px)
-const REPULSION_R = 110;       // mouse influence radius (px)
-const REPULSION_F = 5.5;       // push force multiplier
-const SPRING = 0.072;          // return spring stiffness
-const DAMPING = 0.78;          // velocity damping per frame
+const SPACING = 32;
+const SPACING_MOBILE = 48;
+const DOT_R = 1.5;
+const REPULSION_R = 110;
+const REPULSION_F = 5.5;
+const SPRING = 0.072;
+const DAMPING = 0.78;
+const MOBILE_BREAKPOINT = 768;
 
 interface Dot {
   ox: number; oy: number;      // original (resting) position
@@ -23,8 +25,9 @@ export const InteractiveDots: React.FC = () => {
   const dotsRef    = useRef<Dot[]>([]);
   const mouseRef   = useRef({ x: -9999, y: -9999 });
   const rafRef     = useRef<number>(0);
-  const wRef       = useRef(0); // logical width
-  const hRef       = useRef(0); // logical height
+  const wRef       = useRef(0);
+  const hRef       = useRef(0);
+  const pausedRef  = useRef(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -69,17 +72,17 @@ export const InteractiveDots: React.FC = () => {
       canvas.style.height = `${h}px`;
       ctx.scale(dpr, dpr);
 
-      buildDots(w, h);
+      const spacing = w < MOBILE_BREAKPOINT ? SPACING_MOBILE : SPACING;
+      buildDots(w, h, spacing);
     };
 
     // ── Build dot grid ────────────────────────────────────────────────────
-    const buildDots = (w: number, h: number) => {
+    const buildDots = (w: number, h: number, spacing: number) => {
       const dots: Dot[] = [];
-      // offset grid so dots are centred
-      const cols = Math.ceil(w / SPACING) + 1;
-      const rows = Math.ceil(h / SPACING) + 1;
-      const ox   = ((w % SPACING) / 2);
-      const oy   = ((h % SPACING) / 2);
+      const cols = Math.ceil(w / spacing) + 1;
+      const rows = Math.ceil(h / spacing) + 1;
+      const ox   = ((w % spacing) / 2);
+      const oy   = ((h % spacing) / 2);
 
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
@@ -93,6 +96,11 @@ export const InteractiveDots: React.FC = () => {
 
     // ── Animation loop ────────────────────────────────────────────────────
     const draw = () => {
+      if (pausedRef.current) {
+        rafRef.current = requestAnimationFrame(draw);
+        return;
+      }
+
       const w  = wRef.current;
       const h  = hRef.current;
       const cx = w / 2;
@@ -175,12 +183,16 @@ export const InteractiveDots: React.FC = () => {
     const onTouchEnd   = () => {
       mouseRef.current = { x: -9999, y: -9999 };
     };
+    const onVisibilityChange = () => {
+      pausedRef.current = document.hidden;
+    };
 
     window.addEventListener("mousemove",  onMouseMove);
     window.addEventListener("mouseleave", onMouseLeave);
     window.addEventListener("touchmove",  onTouchMove,  { passive: true });
     window.addEventListener("touchend",   onTouchEnd);
     window.addEventListener("resize",     resize);
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     resize();
     draw();
@@ -192,6 +204,7 @@ export const InteractiveDots: React.FC = () => {
       window.removeEventListener("touchmove",  onTouchMove);
       window.removeEventListener("touchend",   onTouchEnd);
       window.removeEventListener("resize",     resize);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
       cancelAnimationFrame(rafRef.current);
       classObserver.disconnect();
       mq.removeEventListener("change", updateScheme);

@@ -148,7 +148,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@100..900&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@100..900&family=Syne:wght@400;600;700;800&display=swap",
       },
       {
         rel: "manifest",

@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { useSafeHydration } from "@/hooks/useHydrationSafe";
-import "@/styles/help.css";
+import { Search, X } from "lucide-react";
+import { useMemo, useState } from "react";
 
 interface CommandCategory {
   title: string;
@@ -68,8 +70,7 @@ const COMMAND_CATEGORIES: CommandCategory[] = [
       {
         name: "settings",
         aliases: ["ตั้งค่า", "การตั้งค่า"],
-        description:
-          "จัดการการตั้งค่าการแจ้งเตือน (เข้างาน, เลิกงาน, วันหยุด)",
+        description: "จัดการการตั้งค่าการแจ้งเตือน (เข้างาน, เลิกงาน, วันหยุด)",
         usage: "/settings [ตัวเลือก]",
         examples: [
           "/settings",
@@ -80,6 +81,65 @@ const COMMAND_CATEGORIES: CommandCategory[] = [
           "/settings morning",
           "/settings finish",
           "/settings holiday",
+        ],
+      },
+    ],
+  },
+  {
+    title: "รายรับรายจ่าย",
+    description: "คำสั่งสำหรับบันทึกและดูสรุปรายรับรายจ่ายส่วนตัว",
+    commands: [
+      {
+        name: "จ่าย",
+        aliases: ["exp", "e", "expense", "รายจ่าย"],
+        description:
+          "บันทึกรายจ่าย ระบุหมวดหมู่ได้ (ถ้าไม่ระบุจะใช้หมวด 'อื่นๆ' อัตโนมัติ)",
+        usage: "/จ่าย [จำนวน] [หมวด?]",
+        examples: [
+          "/จ่าย 250 อาหาร",
+          "/exp 1200 เดินทาง",
+          "/e 50",
+          "/expense add 800 ช้อปปิ้ง",
+        ],
+      },
+      {
+        name: "รับ",
+        aliases: ["i", "income", "รายรับ"],
+        description: "บันทึกรายรับ เช่น เงินเดือน โบนัส รายได้เสริม",
+        usage: "/รับ [จำนวน] [หมวด?]",
+        examples: [
+          "/รับ 30000 เงินเดือน",
+          "/i 5000 โบนัส",
+          "/income 2000 freelance",
+        ],
+      },
+      {
+        name: "expense",
+        aliases: ["เงิน"],
+        description:
+          "ดูสรุปรายรับรายจ่ายเดือนปัจจุบัน พร้อม top รายจ่ายตามหมวดหมู่",
+        usage: "/expense [sum|list|help]",
+        examples: [
+          "/expense",
+          "/expense sum",
+          "/expense list",
+          "/expense help",
+        ],
+      },
+    ],
+  },
+  {
+    title: "การลาป่วย/ลาพักผ่อน",
+    description: "คำสั่งสำหรับจัดการการลางาน",
+    commands: [
+      {
+        name: "leave",
+        aliases: ["ลา"],
+        description: "ส่งคำขอลาป่วยหรือลาพักผ่อน",
+        usage: "/leave [ประเภท] [วันที่] [เหตุผล]",
+        examples: [
+          "/leave sick 2024-12-20 ป่วยไข้หวัด",
+          "/ลา vacation 2024-12-25 ลาพักผ่อน",
         ],
       },
     ],
@@ -162,22 +222,6 @@ const COMMAND_CATEGORIES: CommandCategory[] = [
     ],
   },
   {
-    title: "การลาป่วย/ลาพักผ่อน",
-    description: "คำสั่งสำหรับจัดการการลางาน",
-    commands: [
-      {
-        name: "leave",
-        aliases: ["ลา"],
-        description: "ส่งคำขอลาป่วยหรือลาพักผ่อน",
-        usage: "/leave [ประเภท] [วันที่] [เหตุผล]",
-        examples: [
-          "/leave sick 2024-12-20 ป่วยไข้หวัด",
-          "/ลา vacation 2024-12-25 ลาพักผ่อน",
-        ],
-      },
-    ],
-  },
-  {
     title: "ข้อมูลอื่นๆ",
     description: "คำสั่งสำหรับดูข้อมูลทั่วไป",
     commands: [
@@ -212,55 +256,13 @@ const COMMAND_CATEGORIES: CommandCategory[] = [
     ],
   },
   {
-    title: "รายรับรายจ่าย",
-    description: "คำสั่งสำหรับบันทึกและดูสรุปรายรับรายจ่ายส่วนตัว",
-    commands: [
-      {
-        name: "จ่าย",
-        aliases: ["exp", "e", "expense", "รายจ่าย"],
-        description: "บันทึกรายจ่าย ระบุหมวดหมู่ได้ (ถ้าไม่ระบุจะใช้หมวด 'อื่นๆ' อัตโนมัติ)",
-        usage: "/จ่าย [จำนวน] [หมวด?]",
-        examples: [
-          "/จ่าย 250 อาหาร",
-          "/exp 1200 เดินทาง",
-          "/e 50",
-          "/expense add 800 ช้อปปิ้ง",
-        ],
-      },
-      {
-        name: "รับ",
-        aliases: ["i", "income", "รายรับ"],
-        description: "บันทึกรายรับ เช่น เงินเดือน โบนัส รายได้เสริม",
-        usage: "/รับ [จำนวน] [หมวด?]",
-        examples: [
-          "/รับ 30000 เงินเดือน",
-          "/i 5000 โบนัส",
-          "/income 2000 freelance",
-        ],
-      },
-      {
-        name: "expense",
-        aliases: ["เงิน"],
-        description: "ดูสรุปรายรับรายจ่ายเดือนปัจจุบัน พร้อม top รายจ่ายตามหมวดหมู่",
-        usage: "/expense [sum|list|help]",
-        examples: [
-          "/expense",
-          "/expense sum",
-          "/expense list",
-          "/expense help",
-        ],
-      },
-    ],
-  },
-  {
     title: "เครื่องมือสำหรับนักพัฒนา",
     description: "คำสั่งสำหรับเครื่องมือช่วยเหลือนักพัฒนาและการทดสอบ",
     commands: [
       {
         name: "สุ่มเลขบัตร",
         aliases: ["สุ่มบัตรประชาชน", "เลขบัตรประชาชน", "บัตรประชาชน"],
-        description:
-          "สุ่มเลขบัตรประชาชนไทยที่ถูกต้องตาม Check Digit Algorithm",
+        description: "สุ่มเลขบัตรประชาชนไทยที่ถูกต้องตาม Check Digit Algorithm",
         usage: "/สุ่มเลขบัตร [จำนวน]",
         examples: [
           "/สุ่มเลขบัตร",
@@ -274,154 +276,217 @@ const COMMAND_CATEGORIES: CommandCategory[] = [
         aliases: ["เช็คบัตร"],
         description: "ตรวจสอบความถูกต้องของเลขบัตรประชาชนไทย",
         usage: "/ตรวจสอบบัตร [เลขบัตรประชาชน]",
-        examples: [
-          "/ตรวจสอบบัตร 1-2345-67890-12-1",
-          "/เช็คบัตร 1234567890121",
-        ],
+        examples: ["/ตรวจสอบบัตร 1-2345-67890-12-1", "/เช็คบัตร 1234567890121"],
       },
     ],
   },
 ];
 
+function matchSearch(text: string, term: string): boolean {
+  return text.toLowerCase().includes(term.toLowerCase());
+}
+
 export function HelpPage() {
-  const [categories] = useState<CommandCategory[]>(COMMAND_CATEGORIES);
-  const loading = false;
   const [searchTerm, setSearchTerm] = useState("");
 
-  const currentYear = useSafeHydration(
-    2025,
-    () => new Date().getFullYear(),
+  const currentYear = useSafeHydration(2025, () => new Date().getFullYear());
+
+  const filteredCategories = useMemo(() => {
+    if (!searchTerm.trim()) return COMMAND_CATEGORIES;
+
+    return COMMAND_CATEGORIES.map((category) => ({
+      ...category,
+      commands: category.commands.filter(
+        (cmd) =>
+          matchSearch(cmd.name, searchTerm) ||
+          cmd.aliases.some((a) => matchSearch(a, searchTerm)) ||
+          matchSearch(cmd.description, searchTerm) ||
+          matchSearch(cmd.usage, searchTerm),
+      ),
+    })).filter((c) => c.commands.length > 0);
+  }, [searchTerm]);
+
+  const hasResults = filteredCategories.length > 0;
+  const totalCommands = filteredCategories.reduce(
+    (sum, c) => sum + c.commands.length,
+    0,
   );
 
-  const filteredCategories = categories
-    .map((category) => {
-      const filteredCommands = category.commands.filter(
-        (cmd) =>
-          cmd.name.includes(searchTerm.toLowerCase()) ||
-          cmd.aliases.some((alias) =>
-            alias.includes(searchTerm.toLowerCase()),
-          ) ||
-          cmd.description.toLowerCase().includes(searchTerm.toLowerCase()),
-      );
-
-      return {
-        ...category,
-        commands: filteredCommands,
-      };
-    })
-    .filter((category) => category.commands.length > 0);
-
   return (
-    <div className="prompt-text min-h-screen font-prompt">
-      <div className="mx-auto max-w-6xl px-4 py-8">
-        <header className="mb-10 text-center">
-          <h1 className="mb-4 font-prompt text-4xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white">
-            คำสั่งทั้งหมดของ LINE Bot
+    <div className="bg-background min-h-screen">
+      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+        <header className="mb-10">
+          <h1 className="text-foreground text-[1.5rem] leading-tight font-semibold tracking-tight">
+            คู่มือคำสั่ง LINE Bot
           </h1>
-          <p className="mb-6 font-prompt text-lg font-normal leading-relaxed text-gray-700 dark:text-gray-300">
-            รวมทุกคำสั่งที่ใช้ได้กับบอท LINE พร้อมคำอธิบายและตัวอย่าง
+          <p className="text-muted-foreground mt-2 text-sm">
+            คำสั่งทั้งหมดที่ใช้ได้ในแชท LINE พิมพ์ตามนี้ได้เลย
           </p>
 
-          <div className="mx-auto max-w-xl">
-            <input
+          <div className="relative mt-6">
+            <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+            <Input
               type="text"
               placeholder="ค้นหาคำสั่ง..."
-              className="w-full rounded-lg border border-gray-300 bg-white p-3 font-prompt font-normal text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
+              className="pr-9 pl-9"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 transition-colors"
+                aria-label="ล้างการค้นหา"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
+
+          {searchTerm && hasResults && (
+            <p className="text-muted-foreground mt-3 text-xs">
+              พบ {totalCommands} คำสั่ง
+            </p>
+          )}
         </header>
 
         <main>
-          {loading ? (
-            <div className="flex h-64 items-center justify-center">
-              <div className="h-16 w-16 animate-spin rounded-full border-b-2 border-t-2 border-indigo-500"></div>
-            </div>
-          ) : (
-            <div className="space-y-16">
-              {filteredCategories.map((category, idx) => (
-                <section
-                  key={idx}
-                  className="overflow-hidden rounded-lg bg-white shadow-md dark:bg-gray-800"
-                >
-                  <div className="bg-indigo-600 p-6">
-                    <h2 className="font-prompt text-2xl font-bold tracking-tight text-white">
-                      {category.title}
-                    </h2>
-                    <p className="mt-1 font-prompt font-normal text-indigo-100 dark:text-indigo-200">
-                      {category.description}
-                    </p>
-                  </div>
-
-                  <div className="table-divider table-divide-light">
-                    {category.commands.map((command, cmdIdx) => (
-                      <div key={cmdIdx} className="p-6">
-                        <div className="mb-3 flex flex-wrap gap-2">
-                          <span className="rounded-full bg-indigo-100 px-3 py-1 font-prompt text-sm font-medium text-indigo-800">
-                            /{command.name}
-                          </span>
-                          {command.aliases.map((alias, aliasIdx) => (
-                            <span
-                              key={aliasIdx}
-                              className="rounded-full bg-gray-100 px-3 py-1 font-prompt text-sm font-normal text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-                            >
-                              /{alias}
-                            </span>
-                          ))}
-                        </div>
-
-                        <p className="mb-4 font-prompt font-normal text-gray-800 dark:text-gray-200">
-                          {command.description}
-                        </p>
-
-                        <div className="mb-4">
-                          <h4 className="mb-2 font-prompt text-sm font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">
-                            การใช้งาน
-                          </h4>
-                          <code className="code-text rounded bg-gray-100 px-2 py-1 font-prompt font-medium text-gray-900 dark:bg-gray-700 dark:text-gray-200">
-                            {command.usage}
-                          </code>
-                        </div>
-
-                        <div>
-                          <h4 className="mb-2 font-prompt text-sm font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">
-                            ตัวอย่าง
-                          </h4>
-                          <div className="flex flex-wrap gap-2">
-                            {command.examples.map((example, exIdx) => (
-                              <code
-                                key={exIdx}
-                                className="code-text rounded bg-gray-100 px-2 py-1 font-prompt font-medium text-gray-900 dark:bg-gray-700 dark:text-gray-200"
-                              >
-                                {example}
-                              </code>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              ))}
-            </div>
-          )}
-
-          {!loading && filteredCategories.length === 0 && (
-            <div className="py-16 text-center">
-              <h3 className="font-prompt text-xl font-medium text-gray-800 dark:text-gray-200">
-                ไม่พบคำสั่งที่ค้นหา
-              </h3>
-              <p className="mt-2 font-prompt font-normal text-gray-600 dark:text-gray-400">
-                ลองค้นหาด้วยคำอื่น หรือตรวจสอบการสะกดอีกครั้ง
+          {!hasResults && searchTerm && (
+            <div className="py-20 text-center">
+              <p className="text-foreground text-sm font-medium">
+                ไม่พบคำสั่ง "{searchTerm}"
+              </p>
+              <p className="text-muted-foreground mt-1 text-sm">
+                ลองค้นหาด้วยคำอื่น หรือตรวจสอบการสะกด
               </p>
             </div>
           )}
+
+          <div className="space-y-12">
+            {filteredCategories.map((category) => (
+              <section key={category.title}>
+                <div className="mb-4">
+                  <h2 className="text-foreground text-[1.125rem] font-semibold">
+                    {category.title}
+                  </h2>
+                  <p className="text-muted-foreground mt-0.5 text-sm">
+                    {category.description}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  {category.commands.map((command) => (
+                    <details
+                      key={command.name}
+                      className="group border-border bg-card hover:bg-muted/40 rounded-lg border transition-colors"
+                    >
+                      <summary className="flex cursor-pointer items-center gap-3 px-4 py-3 text-sm leading-normal [&::-webkit-details-marker]:hidden [&::marker]:hidden">
+                        <code className="bg-primary/10 text-primary shrink-0 rounded-md px-2 py-0.5 font-mono text-[0.8125rem] font-medium">
+                          /{command.name}
+                        </code>
+
+                        <span className="text-foreground min-w-0 flex-1 truncate">
+                          {command.description}
+                        </span>
+
+                        {command.aliases.length > 0 && (
+                          <span className="hidden shrink-0 gap-1 sm:flex">
+                            {command.aliases.slice(0, 2).map((alias) => (
+                              <Badge
+                                key={alias}
+                                variant="outline"
+                                className="text-muted-foreground text-[0.6875rem] font-normal"
+                              >
+                                /{alias}
+                              </Badge>
+                            ))}
+                            {command.aliases.length > 2 && (
+                              <Badge
+                                variant="outline"
+                                className="text-muted-foreground text-[0.6875rem] font-normal"
+                              >
+                                +{command.aliases.length - 2}
+                              </Badge>
+                            )}
+                          </span>
+                        )}
+
+                        <svg
+                          className="text-muted-foreground h-4 w-4 shrink-0 transition-transform group-open:rotate-180"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={2}
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M19.5 8.25l-7.5 7.5-7.5-7.5"
+                          />
+                        </svg>
+                      </summary>
+
+                      <div className="border-border border-t px-4 pt-3 pb-4">
+                        <div className="space-y-3">
+                          <div>
+                            <p className="text-muted-foreground mb-1.5 text-xs font-medium tracking-wider uppercase">
+                              การใช้งาน
+                            </p>
+                            <code className="bg-muted text-foreground rounded-md px-2 py-0.5 font-mono text-[0.8125rem]">
+                              {command.usage}
+                            </code>
+                          </div>
+
+                          <div>
+                            <p className="text-muted-foreground mb-1.5 text-xs font-medium tracking-wider uppercase">
+                              ตัวอย่าง
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {command.examples.map((example) => (
+                                <code
+                                  key={example}
+                                  className="bg-muted text-foreground rounded-md px-2 py-0.5 font-mono text-[0.8125rem]"
+                                >
+                                  {example}
+                                </code>
+                              ))}
+                            </div>
+                          </div>
+
+                          {command.aliases.length > 0 && (
+                            <div className="sm:hidden">
+                              <p className="text-muted-foreground mb-1.5 text-xs font-medium tracking-wider uppercase">
+                                ชื่อเรียกอื่น
+                              </p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {command.aliases.map((alias) => (
+                                  <Badge
+                                    key={alias}
+                                    variant="outline"
+                                    className="text-muted-foreground text-[0.6875rem] font-normal"
+                                  >
+                                    /{alias}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </details>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
         </main>
 
-        <footer className="mt-16 text-center font-prompt text-sm font-normal text-gray-600 dark:text-gray-400">
-          <p>
-            © {currentYear} Bun LINE T3. สามารถใช้คำสั่งทั้งภาษาไทยและอังกฤษได้
+        <footer className="border-border mt-16 border-t pt-6 text-center">
+          <p className="text-muted-foreground text-xs">
+            &copy; {currentYear} Bun LINE T3
+          </p>
+          <p className="text-muted-foreground mt-1 text-xs">
+            ใช้คำสั่งได้ทั้งภาษาไทยและอังกฤษ พิมพ์ในแชท LINE ได้เลย
           </p>
         </footer>
       </div>

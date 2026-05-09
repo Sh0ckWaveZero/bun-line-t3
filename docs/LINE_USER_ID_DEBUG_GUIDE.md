@@ -90,7 +90,7 @@
 
 **Step 3:** เปิด Web
 ```bash
-https://bun-line.midseelee.com/dca-history
+https://your-domain.com/dca-history
 ```
 
 **Step 4:** ดู Log ฝั่ง Web

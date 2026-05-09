@@ -9,18 +9,13 @@ interface StatisticsTabContentProps {
   report: MonthlyAttendanceReport;
 }
 
-/**
- * Statistics Tab Content Component
- * Contains the attendance and compliance donut charts
- */
 export const StatisticsTabContent: React.FC<StatisticsTabContentProps> = ({
   report,
 }) => {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      {/* Attendance donut chart */}
-      <div className="bg-card-base border-theme-primary rounded-lg border p-4 shadow">
-        <h3 className="mb-4 text-sm font-medium text-gray-600 dark:text-gray-400">
+      <div className="rounded-xl border border-border bg-card p-4">
+        <h3 className="mb-4 text-sm font-medium text-muted-foreground">
           สัดส่วนการมาทำงาน
         </h3>
         <div className="flex h-64 flex-col justify-center">
@@ -28,9 +23,8 @@ export const StatisticsTabContent: React.FC<StatisticsTabContentProps> = ({
         </div>
       </div>
 
-      {/* Compliance donut chart */}
-      <div className="bg-card-base border-theme-primary rounded-lg border p-4 shadow">
-        <h3 className="mb-4 text-sm font-medium text-gray-600 dark:text-gray-400">
+      <div className="rounded-xl border border-border bg-card p-4">
+        <h3 className="mb-4 text-sm font-medium text-muted-foreground">
           การทำงานครบตามเวลา (9 ชม.)
         </h3>
         <div className="flex h-64 flex-col justify-center">
