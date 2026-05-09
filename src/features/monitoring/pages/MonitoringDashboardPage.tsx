@@ -1,7 +1,6 @@
 "use client";
 
-import { useSession } from "@/lib/auth/client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, memo, useMemo } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -25,7 +24,7 @@ import {
   Clock,
   Users,
 } from "lucide-react";
-import { LoadingSpinner } from "@/features/attendance/components";
+import { cn } from "@/lib/utils";
 import { useChartTheme } from "@/hooks/useChartTheme";
 import { PendingApprovalModal } from "@/components/auth/PendingApprovalModal";
 import { useLineApproval } from "@/lib/auth/hooks/useLineApproval";
@@ -96,496 +95,540 @@ interface MonitoringData {
   recommendations: string[];
 }
 
-export function MonitoringDashboardPage() {
-  const { data: session } = useSession();
-  const [monitoringData, setMonitoringData] = useState<MonitoringData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
-  const [autoRefresh, setAutoRefresh] = useState(true);
-  const isAdmin = session?.isAdmin ?? false;
-  const { mounted, getChartOptions, getDoughnutOptions } = useChartTheme();
-  const { needsApproval } = useLineApproval();
+const STATUS_MAP = {
+  healthy: {
+    label: "ปกติ",
+    color: "text-emerald-600 dark:text-emerald-400",
+    badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
+  },
+  degraded: {
+    label: "บางส่วน",
+    color: "text-amber-600 dark:text-amber-400",
+    badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
+  },
+  unhealthy: {
+    label: "มีปัญหา",
+    color: "text-red-600 dark:text-red-400",
+    badge: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+  },
+} as const;
 
-  const fetchMonitoringData = async () => {
-    try {
-      const response = await fetch("/api/monitoring/dashboard");
-      if (!response.ok) {
-        throw new Error("Failed to fetch monitoring data");
-      }
-      const data = await response.json();
-      setMonitoringData(data);
-      setLastUpdate(new Date());
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
-    } finally {
-      setLoading(false);
-    }
-  };
+const SERVICE_LABELS: Record<string, string> = {
+  database: "ฐานข้อมูล",
+  authentication: "การยืนยันตัวตน",
+  lineIntegration: "LINE",
+  cronJobs: "Cron Jobs",
+  rateLimit: "Rate Limit",
+};
 
-  useEffect(() => {
-    if (!isAdmin) return;
-    fetchMonitoringData();
+const SERVICE_ICONS: Record<string, React.ElementType> = {
+  database: Database,
+  authentication: Shield,
+};
 
-    if (autoRefresh) {
-      const interval = setInterval(fetchMonitoringData, 30000);
-      return () => clearInterval(interval);
-    }
-  }, [autoRefresh, isAdmin]);
+const ALERT_LEVEL_MAP = {
+  critical: {
+    label: "วิกฤต",
+    classes: "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/30",
+    iconClass: "text-red-500",
+  },
+  error: {
+    label: "ผิดพลาด",
+    classes: "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/30",
+    iconClass: "text-red-500",
+  },
+  warning: {
+    label: "เตือน",
+    classes: "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30",
+    iconClass: "text-amber-500",
+  },
+  info: {
+    label: "แจ้งเตือน",
+    classes: "border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30",
+    iconClass: "text-blue-500",
+  },
+} as const;
 
-  if (!mounted) return <LoadingSpinner message="กำลังโหลด Dashboard..." />;
+const LOG_LEVEL_MAP = {
+  error: {
+    dotClass: "bg-red-500",
+    badgeClass: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
+  },
+  warn: {
+    dotClass: "bg-amber-500",
+    badgeClass: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+  },
+  info: {
+    dotClass: "bg-blue-500",
+    badgeClass: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+  },
+  debug: {
+    dotClass: "bg-muted-foreground/40",
+    badgeClass: "bg-muted text-muted-foreground",
+  },
+} as const;
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "healthy":
-        return "text-green-600 dark:text-green-400";
-      case "degraded":
-        return "text-yellow-600 dark:text-yellow-400";
-      case "unhealthy":
-        return "text-red-600 dark:text-red-400";
-      default:
-        return "text-gray-600 dark:text-gray-400";
-    }
-  };
+function formatUptime(seconds: number): string {
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "healthy":
-        return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300";
-      case "degraded":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300";
-      case "unhealthy":
-        return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300";
-    }
-  };
+  if (days > 0) return `${days}วัน ${hours}ชม.`;
+  if (hours > 0) return `${hours}ชม. ${minutes}นาที`;
+  return `${minutes}นาที`;
+}
 
-  const formatUptime = (seconds: number) => {
-    const days = Math.floor(seconds / 86400);
-    const hours = Math.floor((seconds % 86400) / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
+const OverviewCard = memo(function OverviewCard({
+  label,
+  value,
+  sub,
+  icon: Icon,
+  iconClass,
+  badge,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  icon: React.ElementType;
+  iconClass?: string;
+  badge?: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-xl border bg-card p-5">
+      <div className="flex items-start justify-between">
+        <div className="space-y-1">
+          <p className="text-xs font-medium text-muted-foreground">{label}</p>
+          <p className="font-mono text-xl font-semibold text-foreground">
+            {value}
+          </p>
+          {sub && (
+            <p className="text-xs text-muted-foreground">{sub}</p>
+          )}
+        </div>
+        <Icon className={cn("h-5 w-5 shrink-0", iconClass ?? "text-muted-foreground")} />
+      </div>
+      {badge && <div className="mt-3">{badge}</div>}
+    </div>
+  );
+});
 
-    if (days > 0) return `${days}d ${hours}h ${minutes}m`;
-    if (hours > 0) return `${hours}h ${minutes}m`;
-    return `${minutes}m`;
-  };
-
-  const prepareHealthScoreData = () => {
-    if (!monitoringData) return { labels: [], datasets: [] };
-
-    return {
+const HealthScoreChart = memo(function HealthScoreChart({
+  score,
+  getDoughnutOptions,
+}: {
+  score: number;
+  getDoughnutOptions: (base?: any) => any;
+}) {
+  const data = useMemo(
+    () => ({
       labels: ["Health Score"],
       datasets: [
         {
-          data: [
-            monitoringData.systemHealth.score,
-            100 - monitoringData.systemHealth.score,
-          ],
+          data: [score, 100 - score],
           backgroundColor: [
-            monitoringData.systemHealth.score >= 80
-              ? "rgb(34, 197, 94)"
-              : monitoringData.systemHealth.score >= 60
-                ? "rgb(249, 115, 22)"
+            score >= 80
+              ? "rgb(16, 185, 129)"
+              : score >= 60
+                ? "rgb(245, 158, 11)"
                 : "rgb(239, 68, 68)",
             "rgb(229, 231, 235)",
           ],
           borderWidth: 0,
         },
       ],
-    };
-  };
+    }),
+    [score],
+  );
 
-  const prepareResourceUsageData = () => {
-    if (!monitoringData) return { labels: [], datasets: [] };
+  return (
+    <div className="rounded-xl border bg-card p-5">
+      <h3 className="mb-3 text-sm font-medium text-muted-foreground">
+        คะแนนสุขภาพระบบ
+      </h3>
+      <div className="flex h-48 items-center justify-center">
+        <div className="h-48 w-48">
+          <Doughnut
+            data={data}
+            options={getDoughnutOptions({
+              plugins: { legend: { display: false } },
+            })}
+          />
+        </div>
+      </div>
+      <p className="mt-2 text-center font-mono text-2xl font-bold text-foreground">
+        {score}%
+      </p>
+    </div>
+  );
+});
 
-    return {
-      labels: ["Memory", "Disk"],
+const ResourceChart = memo(function ResourceChart({
+  memory,
+  disk,
+  getChartOptions,
+}: {
+  memory: number;
+  disk: number;
+  getChartOptions: (base?: any) => any;
+}) {
+  const data = useMemo(
+    () => ({
+      labels: ["หน่วยความจำ", "ดิสก์"],
       datasets: [
         {
-          label: "Usage %",
-          data: [
-            monitoringData.metrics.memoryUsage.percentage,
-            monitoringData.metrics.diskUsage.percentage,
-          ],
+          label: "การใช้งาน %",
+          data: [memory, disk],
           backgroundColor: [
-            "rgba(59, 130, 246, 0.7)",
-            "rgba(147, 51, 234, 0.7)",
+            "rgba(14, 165, 233, 0.7)",
+            "rgba(124, 58, 237, 0.7)",
           ],
           borderRadius: 5,
         },
       ],
-    };
-  };
+    }),
+    [memory, disk],
+  );
 
-  if (loading) {
-    return (
-      <div className="min-h-screen">
-        <LoadingSpinner message="กำลังโหลดข้อมูลการตรวจสอบ..." />
+  return (
+    <div className="rounded-xl border bg-card p-5">
+      <h3 className="mb-3 text-sm font-medium text-muted-foreground">
+        การใช้ทรัพยากร
+      </h3>
+      <div className="h-56">
+        <Bar
+          data={data}
+          options={getChartOptions({
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, max: 100 } },
+          })}
+        />
       </div>
+    </div>
+  );
+});
+
+const ServicesGrid = memo(function ServicesGrid({
+  services,
+}: {
+  services: MonitoringData["services"];
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      {Object.entries(services).map(([key, online]) => {
+        const Icon = SERVICE_ICONS[key];
+        return (
+          <div
+            key={key}
+            className="flex items-center gap-2.5 rounded-xl border bg-card px-3.5 py-3"
+          >
+            {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
+            <span
+              className={cn(
+                "h-2 w-2 rounded-full",
+                online ? "bg-emerald-500" : "bg-red-500",
+              )}
+            />
+            <span className="text-xs font-medium text-foreground">
+              {SERVICE_LABELS[key] ?? key}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+});
+
+const AlertsList = memo(function AlertsList({
+  alerts,
+}: {
+  alerts: MonitoringData["alerts"];
+}) {
+  return (
+    <div className="space-y-2">
+      {alerts.map((alert) => {
+        const cfg = ALERT_LEVEL_MAP[alert.level] ?? ALERT_LEVEL_MAP.info;
+        return (
+          <div
+            key={alert.id}
+            className={cn("flex items-start gap-3 rounded-xl border p-3.5", cfg.classes)}
+          >
+            <AlertTriangle className={cn("mt-0.5 h-4 w-4 shrink-0", cfg.iconClass)} />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-foreground">{alert.message}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {new Date(alert.timestamp).toLocaleString("th-TH")}
+              </p>
+            </div>
+            <span
+              className={cn(
+                "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium",
+                cfg.classes.includes("amber")
+                  ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                  : cfg.classes.includes("red")
+                    ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
+                    : "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+              )}
+            >
+              {cfg.label}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+});
+
+const LogTable = memo(function LogTable({
+  logs,
+}: {
+  logs: MonitoringData["recentLogs"];
+}) {
+  return (
+    <div className="max-h-64 overflow-y-auto rounded-xl border">
+      {logs.map((log, i) => {
+        const cfg = LOG_LEVEL_MAP[log.level] ?? LOG_LEVEL_MAP.debug;
+        return (
+          <div
+            key={i}
+            className="flex items-start gap-3 border-b bg-card px-4 py-3 last:border-b-0"
+          >
+            <span
+              className={cn(
+                "mt-1.5 inline-block h-1.5 w-1.5 shrink-0 rounded-full",
+                cfg.dotClass,
+              )}
+            />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm text-foreground">{log.message}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {log.source} · {new Date(log.timestamp).toLocaleString("th-TH")}
+              </p>
+            </div>
+            <span
+              className={cn(
+                "shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px]",
+                cfg.badgeClass,
+              )}
+            >
+              {log.level}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+});
+
+export function MonitoringDashboardPage() {
+  const [monitoringData, setMonitoringData] =
+    useState<MonitoringData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const { mounted, getChartOptions, getDoughnutOptions } = useChartTheme();
+  const { needsApproval } = useLineApproval();
+
+  const fetchMonitoringData = useCallback(async () => {
+    try {
+      const response = await fetch("/api/monitoring/dashboard");
+      if (!response.ok) throw new Error("ไม่สามารถโหลดข้อมูลได้");
+      const data = await response.json();
+      setMonitoringData(data);
+      setLastUpdate(new Date());
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchMonitoringData();
+    if (autoRefresh) {
+      const interval = setInterval(fetchMonitoringData, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [autoRefresh, fetchMonitoringData]);
+
+  if (!mounted || loading) {
+    return (
+      <>
+        <PendingApprovalModal open={needsApproval} />
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted border-t-primary" />
+            <p className="text-sm text-muted-foreground">
+              กำลังโหลดข้อมูลระบบ...
+            </p>
+          </div>
+        </div>
+      </>
     );
   }
+
+  const statusCfg = monitoringData
+    ? STATUS_MAP[monitoringData.systemHealth.status] ?? STATUS_MAP.healthy
+    : STATUS_MAP.healthy;
 
   return (
     <>
       <PendingApprovalModal open={needsApproval} />
 
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <header className="border-b border-gray-200 bg-white shadow dark:border-gray-700 dark:bg-gray-800">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between py-4">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  📊 System Monitoring Dashboard
-                </h1>
-                <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                  Real-time system health and performance monitoring
-                </p>
-              </div>
-              <div className="flex items-center gap-4">
-                {lastUpdate && (
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                    <Clock className="mr-1 inline h-4 w-4" />
-                    Last updated: {lastUpdate.toLocaleTimeString()}
-                  </div>
-                )}
-                <button
-                  onClick={fetchMonitoringData}
-                  className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                  title="Refresh data"
-                >
-                  <RefreshCw className="h-5 w-5" />
-                </button>
-                <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                  <input
-                    type="checkbox"
-                    checked={autoRefresh}
-                    onChange={(e) => setAutoRefresh(e.target.checked)}
-                    className="rounded"
-                  />
-                  Auto-refresh
-                </label>
-              </div>
+      <div className="mx-auto min-h-screen w-full max-w-6xl px-4 py-6 sm:px-6">
+        <header className="mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-lg font-semibold text-foreground">
+                ตรวจสอบระบบ
+              </h1>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                สถานะและประสิทธิภาพของระบบแบบเรียลไทม์
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              {lastUpdate && (
+                <span className="hidden text-xs text-muted-foreground sm:inline">
+                  {lastUpdate.toLocaleTimeString("th-TH")}
+                </span>
+              )}
+              <button
+                onClick={fetchMonitoringData}
+                className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                aria-label="รีเฟรชข้อมูล"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </button>
+              <label className="flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={autoRefresh}
+                  onChange={(e) => setAutoRefresh(e.target.checked)}
+                  className="rounded"
+                />
+                <span>รีเฟรชอัตโนมัติ</span>
+              </label>
             </div>
           </div>
         </header>
 
-        <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          {error && (
-            <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-700 dark:bg-red-900/20">
-              <div className="flex items-center">
-                <AlertTriangle className="mr-2 h-5 w-5 text-red-500" />
-                <span className="text-red-700 dark:text-red-300">
-                  Error: {error}
-                </span>
-              </div>
-            </div>
-          )}
+        {error && (
+          <div className="mb-5 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-950/30">
+            <AlertTriangle className="h-4 w-4 shrink-0 text-red-500" />
+            <span className="text-sm text-red-700 dark:text-red-300">
+              {error}
+            </span>
+          </div>
+        )}
 
-          {monitoringData && (
-            <>
-              <div className="mb-8">
-                <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
-                  System Health Overview
-                </h2>
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow dark:border-gray-700 dark:bg-gray-800">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                          System Status
-                        </p>
-                        <p
-                          className={`text-2xl font-bold ${getStatusColor(monitoringData.systemHealth.status)}`}
-                        >
-                          {monitoringData.systemHealth.status.toUpperCase()}
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Score: {monitoringData.systemHealth.score}/100
-                        </p>
-                      </div>
-                      <Activity
-                        className={`h-8 w-8 ${getStatusColor(monitoringData.systemHealth.status)}`}
-                      />
-                    </div>
-                    <div className="mt-4">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusBadge(monitoringData.systemHealth.status)}`}
-                      >
-                        {monitoringData.systemHealth.status}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow dark:border-gray-700 dark:bg-gray-800">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                          System Uptime
-                        </p>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                          {formatUptime(monitoringData.systemHealth.uptime)}
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Since last restart
-                        </p>
-                      </div>
-                      <Clock className="h-8 w-8 text-blue-500" />
-                    </div>
-                  </div>
-
-                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow dark:border-gray-700 dark:bg-gray-800">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                          Response Time
-                        </p>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                          {monitoringData.metrics.responseTime}ms
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          API response time
-                        </p>
-                      </div>
-                      <Zap className="h-8 w-8 text-yellow-500" />
-                    </div>
-                  </div>
-
-                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow dark:border-gray-700 dark:bg-gray-800">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                          Active Users
-                        </p>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                          {monitoringData.metrics.activeUsers}
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Registered users
-                        </p>
-                      </div>
-                      <Users className="h-8 w-8 text-green-500" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mb-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
-                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow dark:border-gray-700 dark:bg-gray-800">
-                  <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
-                    Health Score
-                  </h3>
-                  <div className="flex h-64 items-center justify-center">
-                    <div style={{ width: "250px", height: "250px" }}>
-                      <Doughnut
-                        data={prepareHealthScoreData()}
-                        options={getDoughnutOptions({
-                          plugins: {
-                            legend: { display: false },
-                          },
-                        })}
-                      />
-                    </div>
-                  </div>
-                  <div className="mt-4 text-center">
-                    <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                      {monitoringData.systemHealth.score}%
-                    </span>
-                  </div>
-                </div>
-
-                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow dark:border-gray-700 dark:bg-gray-800">
-                  <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
-                    Resource Usage
-                  </h3>
-                  <div className="h-64">
-                    <Bar
-                      data={prepareResourceUsageData()}
-                      options={getChartOptions({
-                        plugins: {
-                          legend: { display: false },
-                        },
-                        scales: {
-                          y: {
-                            beginAtZero: true,
-                            max: 100,
-                          },
-                        },
-                      })}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="mb-8">
-                <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-gray-100">
-                  Services Status
-                </h2>
-                <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-                  {Object.entries(monitoringData.services).map(
-                    ([service, status]) => (
-                      <div
-                        key={service}
-                        className="rounded-lg border border-gray-200 bg-white p-4 shadow dark:border-gray-700 dark:bg-gray-800"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium capitalize text-gray-900 dark:text-gray-100">
-                              {service.replace(/([A-Z])/g, " $1").trim()}
-                            </p>
-                            <div className="mt-1 flex items-center">
-                              <div
-                                className={`mr-2 h-2 w-2 rounded-full ${status ? "bg-green-500" : "bg-red-500"}`}
-                              />
-                              <span
-                                className={`text-sm ${status ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
-                              >
-                                {status ? "Online" : "Offline"}
-                              </span>
-                            </div>
-                          </div>
-                          {service === "database" && (
-                            <Database className="h-5 w-5 text-gray-400" />
-                          )}
-                          {service === "authentication" && (
-                            <Shield className="h-5 w-5 text-gray-400" />
-                          )}
-                        </div>
-                      </div>
-                    ),
-                  )}
-                </div>
-              </div>
-
-              {monitoringData.alerts.length > 0 && (
-                <div className="mb-8">
-                  <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-gray-100">
-                    Active Alerts
-                  </h2>
-                  <div className="space-y-3">
-                    {monitoringData.alerts.map((alert) => (
-                      <div
-                        key={alert.id}
-                        className={`rounded-lg border p-4 ${alert.level === "critical"
-                            ? "border-red-200 bg-red-50 dark:border-red-700 dark:bg-red-900/20"
-                            : alert.level === "warning"
-                              ? "border-yellow-200 bg-yellow-50 dark:border-yellow-700 dark:bg-yellow-900/20"
-                              : "border-blue-200 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20"
-                          }`}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start">
-                            <AlertTriangle
-                              className={`mr-3 mt-0.5 h-5 w-5 ${alert.level === "critical"
-                                  ? "text-red-500"
-                                  : alert.level === "warning"
-                                    ? "text-yellow-500"
-                                    : "text-blue-500"
-                                }`}
-                            />
-                            <div>
-                              <p className="font-medium text-gray-900 dark:text-gray-100">
-                                {alert.message}
-                              </p>
-                              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                {new Date(alert.timestamp).toLocaleString()}
-                              </p>
-                            </div>
-                          </div>
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${alert.level === "critical"
-                                ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300"
-                                : alert.level === "warning"
-                                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300"
-                                  : "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300"
-                              }`}
-                          >
-                            {alert.level}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="mb-8">
-                <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-gray-100">
-                  Recent Activity
-                </h2>
-                <div className="rounded-lg border border-gray-200 bg-white shadow dark:border-gray-700 dark:bg-gray-800">
-                  <div className="max-h-64 overflow-y-auto">
-                    {monitoringData.recentLogs.map((log, index) => (
-                      <div
-                        key={index}
-                        className="border-b border-gray-200 p-4 last:border-b-0 dark:border-gray-700"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start">
-                            <span
-                              className={`mr-3 mt-2 inline-block h-2 w-2 rounded-full ${log.level === "error"
-                                  ? "bg-red-500"
-                                  : log.level === "warn"
-                                    ? "bg-yellow-500"
-                                    : log.level === "info"
-                                      ? "bg-blue-500"
-                                      : "bg-gray-500"
-                                }`}
-                            />
-                            <div>
-                              <p className="text-sm text-gray-900 dark:text-gray-100">
-                                {log.message}
-                              </p>
-                              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                {log.source} •{" "}
-                                {new Date(log.timestamp).toLocaleString()}
-                              </p>
-                            </div>
-                          </div>
-                          <span
-                            className={`inline-flex items-center rounded px-2 py-1 text-xs font-medium ${log.level === "error"
-                                ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300"
-                                : log.level === "warn"
-                                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300"
-                                  : log.level === "info"
-                                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300"
-                                    : "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300"
-                              }`}
-                          >
-                            {log.level}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {monitoringData.recommendations.length > 0 && (
-                <div className="mb-8">
-                  <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-gray-100">
-                    Recommendations
-                  </h2>
-                  <div className="rounded-lg border border-blue-200 bg-blue-50 p-6 dark:border-blue-700 dark:bg-blue-900/20">
-                    <ul className="space-y-2">
-                      {monitoringData.recommendations.map(
-                        (recommendation, index) => (
-                          <li key={index} className="flex items-start">
-                            <span className="mr-2 text-blue-500">•</span>
-                            <span className="text-blue-800 dark:text-blue-300">
-                              {recommendation}
-                            </span>
-                          </li>
-                        ),
+        {monitoringData && (
+          <div className="space-y-6">
+            <section>
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                ภาพรวม
+              </h2>
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <OverviewCard
+                  label="สถานะระบบ"
+                  value={statusCfg.label}
+                  sub={`คะแนน ${monitoringData.systemHealth.score}/100`}
+                  icon={Activity}
+                  iconClass={statusCfg.color}
+                  badge={
+                    <span
+                      className={cn(
+                        "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium",
+                        statusCfg.badge,
                       )}
-                    </ul>
-                  </div>
+                    >
+                      {monitoringData.systemHealth.status}
+                    </span>
+                  }
+                />
+                <OverviewCard
+                  label="ระยะเวลาทำงาน"
+                  value={formatUptime(monitoringData.systemHealth.uptime)}
+                  sub="นับจากรีสตาร์ทล่าสุด"
+                  icon={Clock}
+                  iconClass="text-ocean-500"
+                />
+                <OverviewCard
+                  label="เวลาตอบสนอง"
+                  value={`${monitoringData.metrics.responseTime}ms`}
+                  sub="API response time"
+                  icon={Zap}
+                  iconClass="text-amber-500"
+                />
+                <OverviewCard
+                  label="ผู้ใช้งาน"
+                  value={`${monitoringData.metrics.activeUsers}`}
+                  sub="ผู้ใช้ที่ลงทะเบียน"
+                  icon={Users}
+                  iconClass="text-emerald-500"
+                />
+              </div>
+            </section>
+
+            <section>
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <HealthScoreChart
+                  score={monitoringData.systemHealth.score}
+                  getDoughnutOptions={getDoughnutOptions}
+                />
+                <ResourceChart
+                  memory={monitoringData.metrics.memoryUsage.percentage}
+                  disk={monitoringData.metrics.diskUsage.percentage}
+                  getChartOptions={getChartOptions}
+                />
+              </div>
+            </section>
+
+            <section>
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                บริการ
+              </h2>
+              <ServicesGrid services={monitoringData.services} />
+            </section>
+
+            {monitoringData.alerts.length > 0 && (
+              <section>
+                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  แจ้งเตือน ({monitoringData.alerts.length})
+                </h2>
+                <AlertsList alerts={monitoringData.alerts} />
+              </section>
+            )}
+
+            <section>
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                บันทึกล่าสุด
+              </h2>
+              <LogTable logs={monitoringData.recentLogs} />
+            </section>
+
+            {monitoringData.recommendations.length > 0 && (
+              <section>
+                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  ข้อเสนอแนะ
+                </h2>
+                <div className="rounded-xl border border-blue-200 bg-blue-50 p-5 dark:border-blue-800 dark:bg-blue-950/30">
+                  <ul className="space-y-1.5">
+                    {monitoringData.recommendations.map((rec, i) => (
+                      <li
+                        key={i}
+                        className="flex items-start gap-2 text-sm text-blue-800 dark:text-blue-300"
+                      >
+                        <span className="mt-0.5 text-blue-500">·</span>
+                        <span>{rec}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              )}
-            </>
-          )}
-        </main>
+              </section>
+            )}
+          </div>
+        )}
       </div>
     </>
   );
