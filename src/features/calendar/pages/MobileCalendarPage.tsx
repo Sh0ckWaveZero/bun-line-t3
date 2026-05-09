@@ -182,7 +182,7 @@ export function MobileCalendarPage() {
     }
   };
 
-  const handleHolidayAdd = async (data: Holiday) => {
+  const handleHolidayAdd = async (data: Omit<Holiday, "id">) => {
     try {
       const response = await fetch("/api/holidays", {
         method: "POST",
