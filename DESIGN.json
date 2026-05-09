@@ -1,0 +1,317 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-09T00:00:00.000Z",
+  "title": "Design System: Bun LINE T3",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Muted Violet-Indigo",
+        "canonical": "oklch(0.61 0.08 300)",
+        "tonalRamp": [
+          "#1e1636",
+          "#2d224f",
+          "#3f3068",
+          "#534080",
+          "#665099",
+          "#7c5cbf",
+          "#9478d4",
+          "#b09ae6",
+          "#ccbff2",
+          "#e6dffb"
+        ]
+      },
+      "accent": {
+        "role": "secondary",
+        "displayName": "Warm Rose",
+        "canonical": "oklch(0.79 0.08 0)",
+        "tonalRamp": [
+          "#3a1520",
+          "#561f30",
+          "#722a42",
+          "#903856",
+          "#ad486a",
+          "#c9506e",
+          "#da6e88",
+          "#e890a4",
+          "#f2b4c0",
+          "#fad8de"
+        ]
+      },
+      "destructive": {
+        "role": "destructive",
+        "displayName": "Destructive Red-Orange",
+        "canonical": "oklch(0.63 0.16 23)",
+        "tonalRamp": [
+          "#2c0f08",
+          "#451a0e",
+          "#622816",
+          "#803820",
+          "#a04a2c",
+          "#c44830",
+          "#d46548",
+          "#e28568",
+          "#eda88e",
+          "#f6ccb4"
+        ]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Lavender Mist Background",
+        "canonical": "oklch(0.98 0.004 301)",
+        "tonalRamp": [
+          "#2a2636",
+          "#3e3a4e",
+          "#56526a",
+          "#706c86",
+          "#8c88a2",
+          "#a8a4be",
+          "#c4c0d6",
+          "#ddd9eb",
+          "#f0ecf8",
+          "#f5f3fc"
+        ]
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "Deep Indigo Text",
+        "canonical": "oklch(0.37 0.03 287)",
+        "tonalRamp": [
+          "#0e0c1a",
+          "#1a1730",
+          "#272346",
+          "#35305c",
+          "#443e72",
+          "#544c88",
+          "#665a9e",
+          "#7a6eb4",
+          "#9084ca",
+          "#a89ee0"
+        ]
+      },
+      "line-green": {
+        "role": "brand",
+        "displayName": "LINE Green",
+        "canonical": "#07b53b",
+        "tonalRamp": [
+          "#022d0f",
+          "#044a1a",
+          "#066826",
+          "#078833",
+          "#07a83d",
+          "#07b53b",
+          "#2cc458",
+          "#58d27a",
+          "#88e0a0",
+          "#b8eec4"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Home page hero only. Never on authenticated surfaces."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page titles, section headers, dialog titles."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card titles, subsection headers."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "All body text, descriptions, table cells. Max 65-75ch line length."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Form labels, captions, badges, timestamps."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Numerical data in tables, code, crypto values."
+      }
+    },
+    "shadows": [
+      {
+        "name": "rest",
+        "value": "none",
+        "purpose": "Default state. Flat against background."
+      },
+      {
+        "name": "subtle",
+        "value": "0 1px 2px 0 rgba(99,102,241,0.05)",
+        "purpose": "Near-imperceptible on cards at rest."
+      },
+      {
+        "name": "hover",
+        "value": "0 4px 6px -1px rgba(30,27,75,0.08), 0 2px 4px -1px rgba(30,27,75,0.04)",
+        "purpose": "Cards and interactive elements on hover."
+      },
+      {
+        "name": "modal",
+        "value": "0 25px 50px -12px rgba(0,0,0,0.4)",
+        "purpose": "Dialogs and modals. Strong depth separation."
+      },
+      {
+        "name": "toast",
+        "value": "0 10px 15px -3px rgba(30,27,75,0.1), 0 4px 6px -2px rgba(30,27,75,0.05)",
+        "purpose": "Toast notifications above the page."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Default easing for state transitions (hover, focus)."
+      },
+      {
+        "name": "ease-enter",
+        "value": "cubic-bezier(0.25, 1, 0.5, 1)",
+        "purpose": "Section enter animations. Exponential ease-out."
+      },
+      {
+        "name": "duration-fast",
+        "value": "150ms",
+        "purpose": "Quick state changes (button hover, focus ring)."
+      },
+      {
+        "name": "duration-normal",
+        "value": "200ms",
+        "purpose": "Modal enter/exit, tab transitions."
+      },
+      {
+        "name": "duration-slow",
+        "value": "350ms",
+        "purpose": "Section entrance animations with stagger."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary action button. Muted Violet-Indigo with white text.",
+      "html": "<button class=\"ds-btn-primary\">บันทึก</button>",
+      "css": ".ds-btn-primary { background: #7c5cbf; color: #f5f3fc; font-family: 'Noto Sans Thai', sans-serif; font-size: 14px; font-weight: 500; border: none; border-radius: 6px; padding: 8px 16px; height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: background 150ms cubic-bezier(0.4,0,0.2,1), transform 100ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-primary:hover { background: #6b4eaa; } .ds-btn-primary:active { transform: scale(0.98); } .ds-btn-primary:focus-visible { outline: 2px solid #7c5cbf; outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.5; pointer-events: none; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Subtle button for secondary actions. Transparent at rest, tinted on hover.",
+      "html": "<button class=\"ds-btn-ghost\">ยกเลิก</button>",
+      "css": ".ds-btn-ghost { background: transparent; color: #3b3658; font-family: 'Noto Sans Thai', sans-serif; font-size: 14px; font-weight: 500; border: none; border-radius: 6px; padding: 8px 16px; height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: background 150ms cubic-bezier(0.4,0,0.2,1), color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-ghost:hover { background: rgba(124,92,191,0.1); color: #7c5cbf; } .ds-btn-ghost:focus-visible { outline: 2px solid #7c5cbf; outline-offset: 2px; }"
+    },
+    {
+      "name": "Destructive Button",
+      "kind": "button",
+      "refersTo": "button-destructive",
+      "description": "Danger action button. Red-orange for delete/remove operations.",
+      "html": "<button class=\"ds-btn-destructive\">ลบ</button>",
+      "css": ".ds-btn-destructive { background: #c44830; color: #f5f3fc; font-family: 'Noto Sans Thai', sans-serif; font-size: 14px; font-weight: 500; border: none; border-radius: 6px; padding: 8px 16px; height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: background 150ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-destructive:hover { background: #a83c28; } .ds-btn-destructive:focus-visible { outline: 2px solid #c44830; outline-offset: 2px; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Standard text input. Flat border, primary ring on focus.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"กรอกข้อมูล...\" />",
+      "css": ".ds-input { background: #f5f3fc; color: #3b3658; font-family: 'Noto Sans Thai', sans-serif; font-size: 14px; border: 1px solid #c8c2d8; border-radius: 6px; padding: 8px 12px; height: 40px; width: 100%; transition: border-color 150ms cubic-bezier(0.4,0,0.2,1), box-shadow 150ms cubic-bezier(0.4,0,0.2,1); } .ds-input::placeholder { color: #6d6590; } .ds-input:focus { outline: none; border-color: #7c5cbf; box-shadow: 0 0 0 2px rgba(124,92,191,0.2); } .ds-input:disabled { opacity: 0.5; cursor: not-allowed; }"
+    },
+    {
+      "name": "Card Surface",
+      "kind": "card",
+      "refersTo": "card-surface",
+      "description": "Standard card container. Flat at rest, shadow on hover.",
+      "html": "<div class=\"ds-card\">\n  <div class=\"ds-card-header\">\n    <h3 class=\"ds-card-title\">รายงานประจำเดือน</h3>\n    <p class=\"ds-card-desc\">สรุปข้อมูลเดือนนี้</p>\n  </div>\n  <div class=\"ds-card-content\">\n    <p>เนื้อหา</p>\n  </div>\n</div>",
+      "css": ".ds-card { background: #ffffff; color: #3b3658; border: 1px solid #c8c2d8; border-radius: 12px; box-shadow: 0 1px 2px 0 rgba(99,102,241,0.05); overflow: hidden; transition: box-shadow 200ms cubic-bezier(0.4,0,0.2,1); } .ds-card:hover { box-shadow: 0 4px 6px -1px rgba(30,27,75,0.08), 0 2px 4px -1px rgba(30,27,75,0.04); } .ds-card-header { display: flex; flex-direction: column; gap: 6px; padding: 24px; } .ds-card-title { font-family: 'Noto Sans Thai', sans-serif; font-size: 18px; font-weight: 600; line-height: 1.4; margin: 0; } .ds-card-desc { font-size: 14px; color: #6d6590; margin: 0; } .ds-card-content { padding: 0 24px 24px; }"
+    },
+    {
+      "name": "Navigation Header",
+      "kind": "nav",
+      "refersTo": null,
+      "description": "Sticky frosted-glass header with logo, nav links, and theme toggle.",
+      "html": "<nav class=\"ds-nav\">\n  <div class=\"ds-nav-inner\">\n    <a href=\"/\" class=\"ds-nav-logo\">\n      <span class=\"ds-nav-logo-bun\">Bun</span><span class=\"ds-nav-logo-line\">LINE</span><span class=\"ds-nav-logo-t3\">T3</span>\n    </a>\n    <div class=\"ds-nav-links\">\n      <a href=\"/dashboard\" class=\"ds-nav-link ds-nav-link-active\">Dashboard</a>\n      <a href=\"/expenses\" class=\"ds-nav-link\">รายจ่าย</a>\n    </div>\n  </div>\n</nav>",
+      "css": ".ds-nav { position: sticky; top: 0; z-index: 50; height: 56px; background: rgba(245,243,252,0.8); backdrop-filter: blur(8px); border-bottom: 1px solid #c8c2d8; } .ds-nav-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; height: 100%; } .ds-nav-logo { font-size: 20px; font-weight: 700; text-decoration: none; display: flex; align-items: center; } .ds-nav-logo-bun { color: #3b3658; } .ds-nav-logo-line { color: #07b53b; } .ds-nav-logo-t3 { color: #9070d0; } .ds-nav-links { display: flex; align-items: center; gap: 4px; } .ds-nav-link { font-family: 'Noto Sans Thai', sans-serif; font-size: 14px; padding: 6px 12px; border-radius: 6px; color: #6d6590; text-decoration: none; transition: background 150ms cubic-bezier(0.4,0,0.2,1), color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-nav-link:hover { background: rgba(124,92,191,0.1); color: #7c5cbf; } .ds-nav-link-active { background: rgba(124,92,191,0.1); color: #7c5cbf; font-weight: 500; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "chip-badge",
+      "description": "Compact status indicator. Rounded-full with semantic color.",
+      "html": "<span class=\"ds-badge ds-badge-success\">อนุมัติแล้ว</span>",
+      "css": ".ds-badge { font-family: 'Noto Sans Thai', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.025em; border-radius: 9999px; padding: 2px 10px; display: inline-flex; align-items: center; } .ds-badge-success { background: #dcfce7; color: #059669; }"
+    },
+    {
+      "name": "LINE Login Button",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Official LINE Login button following brand guidelines. Green background with layered hover states.",
+      "html": "<button class=\"ds-line-login\">\n  <span class=\"ds-line-login-base\"></span>\n  <span class=\"ds-line-login-hover\"></span>\n  <span class=\"ds-line-login-divider\"></span>\n  <span class=\"ds-line-login-content\">\n    <svg class=\"ds-line-login-icon\" viewBox=\"0 0 48 48\" width=\"24\" height=\"24\" fill=\"none\">\n      <path d=\"M39.2 41.5H8.8C5.0 41.5 2 38.5 2 34.7V13.3C2 9.5 5.0 6.5 8.8 6.5h30.4c3.8 0 6.8 3.0 6.8 6.8v21.4c0 3.8-3.0 6.8-6.8 6.8z\" fill=\"#06C755\"/>\n    </svg>\n    <span class=\"ds-line-login-text\">Log in with LINE</span>\n  </span>\n</button>",
+      "css": ".ds-line-login { position: relative; background: #06C755; border: none; border-radius: 4px; cursor: pointer; overflow: hidden; display: inline-flex; align-items: center; transition: opacity 100ms; } .ds-line-login-base { position: absolute; inset: 0; background: #06C755; } .ds-line-login-hover { position: absolute; inset: 0; background: rgba(0,0,0,0); transition: background 100ms; } .ds-line-login:hover .ds-line-login-hover { background: rgba(0,0,0,0.1); } .ds-line-login:active .ds-line-login-hover { background: rgba(0,0,0,0.3); } .ds-line-login-divider { position: absolute; left: 44px; top: 10px; bottom: 10px; width: 1px; background: rgba(0,0,0,0.08); } .ds-line-login-content { position: relative; display: flex; align-items: center; gap: 12px; padding: 10px 20px 10px 12px; } .ds-line-login-text { font-family: 'Helvetica Neue', sans-serif; font-size: 14px; font-weight: 700; color: #ffffff; letter-spacing: 0.01em; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Orderly Desk",
+    "overview": "A clean, organized workspace where everything has its place. Like a well-kept desk with labeled trays, a pen in its holder, and a calendar within arm's reach. The interface respects your attention by being where you need it, when you need it, and getting out of the way otherwise.\n\nThe system is Thai-first: Noto Sans Thai is the body typeface, all spacing is tested against Thai script's taller x-height and wider glyphs, and every label is in Thai. Dark and light modes are both first-class citizens with independent OKLCH token sets tuned for each environment.\n\nThis system explicitly rejects: generic SaaS dashboards with hero-metric cards and gradient accents, crypto-native dark UIs with neon colors, overly playful internal tools, and anything that takes more than two clicks for a simple task.",
+    "keyCharacteristics": [
+      "Thai-first typography and spacing",
+      "Flat-by-default surfaces; shadows appear on state, not at rest",
+      "Muted Violet-Indigo primary with tinted neutrals",
+      "Tactile, confident interactive elements",
+      "Dual-theme (light and dark) with independent token tuning"
+    ],
+    "rules": [
+      {
+        "name": "The One Accent Rule",
+        "body": "Muted Violet-Indigo is used on interactive elements only: buttons, active states, focus rings. It appears on less than 10% of any given screen. Its rarity makes it meaningful.",
+        "section": "colors"
+      },
+      {
+        "name": "The LINE Green Rule",
+        "body": "LINE Green (#07b53b) is reserved for LINE-branded contexts exclusively. It is never used as a generic success color or UI accent.",
+        "section": "colors"
+      },
+      {
+        "name": "The Thai-First Rule",
+        "body": "All spacing, line heights, and padding are tested against Thai script first. Thai glyphs are taller and wider than Latin equivalents. If a layout works for Thai, it works for English.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "Surfaces are flat at rest. Shadows appear only on state change (hover, focus, modal open). If a card casts a shadow without interaction, remove it.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use Noto Sans Thai as the default body font for all UI text.",
+      "Do use Muted Violet-Indigo sparingly. Less than 10% of any screen surface.",
+      "Do keep surfaces flat at rest. Shadows appear on hover, focus, and modals only.",
+      "Do use the category color system for data views to create quick visual scanning.",
+      "Do use rounded-xl (12px) for cards, rounded-md (6px) for buttons and inputs, rounded-full for badges and avatars.",
+      "Do support both light and dark modes as first-class citizens.",
+      "Do use Thai for all user-facing labels, navigation, and error messages.",
+      "Do respect reduced-motion preferences."
+    ],
+    "donts": [
+      "Don't use hero-metric cards with big numbers, small labels, and gradient accents.",
+      "Don't use LINE Green (#07b53b) as a generic success color outside LINE-branded contexts.",
+      "Don't add shadows to cards or containers at rest.",
+      "Don't use gradient text (background-clip: text with a gradient).",
+      "Don't use side-stripe borders (border-left/right greater than 1px) as colored accents.",
+      "Don't use glassmorphism as a default pattern.",
+      "Don't use neon colors or crypto-native dark UI aesthetics.",
+      "Don't create identical card grids with same icon + heading + text repeated.",
+      "Don't use modals as the first solution for displaying information."
+    ]
+  }
+}
