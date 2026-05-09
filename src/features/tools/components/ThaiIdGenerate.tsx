@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useCallback, useMemo, memo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -27,17 +27,19 @@ interface GeneratedID {
   formatted: string;
 }
 
-interface IDFieldProps {
+const IDField = memo(function IDField({
+  value,
+  isCopied,
+  onCopy,
+}: {
   value: string;
   isCopied: boolean;
   onCopy: () => void;
-}
-
-function IDField({ value, isCopied, onCopy }: IDFieldProps) {
+}) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-accent">
       <div className="flex min-w-0 flex-1 items-center gap-3">
-        <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-md text-primary">
+        <div className="bg-primary/10 flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-primary">
           <CreditCard className="h-4 w-4" />
         </div>
         <div className="min-w-0 flex-1">
@@ -49,7 +51,7 @@ function IDField({ value, isCopied, onCopy }: IDFieldProps) {
         variant="ghost"
         size="sm"
         onClick={onCopy}
-        className="h-8 w-8 p-0"
+        className="h-8 w-8 shrink-0 p-0"
       >
         {isCopied ? (
           <Check className="h-4 w-4 text-green-500" />
@@ -59,69 +61,74 @@ function IDField({ value, isCopied, onCopy }: IDFieldProps) {
       </Button>
     </div>
   );
-}
+});
 
 export default function ThaiIdGenerate() {
-  const [count, setCount] = useState<number>(1);
+  const [count, setCount] = useState(1);
   const [generatedIDs, setGeneratedIDs] = useState<GeneratedID[]>([]);
-  const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({});
-  const [validationInput, setValidationInput] = useState<string>("");
+  const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [validationInput, setValidationInput] = useState("");
   const [validationResult, setValidationResult] = useState<boolean | null>(
     null,
   );
-  const [includeValidation, setIncludeValidation] = useState<boolean>(true);
-  const firstResultRef = useRef<HTMLDivElement>(null);
+  const [includeValidation, setIncludeValidation] = useState(true);
 
-  const handleGenerate = () => {
+  const handleGenerate = useCallback(() => {
     const ids: GeneratedID[] = [];
     for (let i = 0; i < count; i++) {
       const formatted = generateFormattedThaiID();
-      const raw = formatted.replace(/-/g, "");
-      ids.push({ raw, formatted });
+      ids.push({ raw: formatted.replace(/-/g, ""), formatted });
     }
     setGeneratedIDs(ids);
+  }, [count]);
 
-    // Scroll to first result after generating
-    setTimeout(() => {
-      firstResultRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }, 100);
-  };
-
-  const handleCopy = async (text: string, key: string) => {
+  const handleCopy = useCallback(async (text: string, key: string) => {
     try {
       await navigator.clipboard.writeText(text);
       setCopiedStates((prev) => ({ ...prev, [key]: true }));
       setTimeout(() => {
         setCopiedStates((prev) => ({ ...prev, [key]: false }));
       }, 2000);
-    } catch (err) {
-      // Failed to copy to clipboard
-    }
-  };
+    } catch {}
+  }, []);
 
-  const handleValidation = () => {
-    if (validationInput.trim()) {
-      const cleanInput = validationInput.replace(/[-\s]/g, "");
-      const isValid = validateThaiID(cleanInput);
-      setValidationResult(isValid);
+  const handleValidation = useCallback(() => {
+    const cleanInput = validationInput.trim().replace(/[-\s]/g, "");
+    if (cleanInput) {
+      setValidationResult(validateThaiID(cleanInput));
     }
-  };
+  }, [validationInput]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "");
-    if (value.length <= 13) {
-      setValidationInput(value);
-      setValidationResult(null);
-    }
-  };
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value.replace(/\D/g, "");
+      if (value.length <= 13) {
+        setValidationInput(value);
+        setValidationResult(null);
+      }
+    },
+    [],
+  );
+
+  const idRows = useMemo(
+    () =>
+      generatedIDs.map((id, index) => ({
+        ...id,
+        key: id.raw,
+        isCopied: copiedStates[`${index}-formatted`] || false,
+        onCopy: () => handleCopy(id.raw, `${index}-formatted`),
+      })),
+    [generatedIDs, copiedStates, handleCopy],
+  );
+
+  const isValidateDisabled =
+    !validationInput.trim() || validationInput.length !== 13;
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8">
       <div className="space-y-6">
-        {/* Header */}
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">
             โปรแกรมสุ่มเลขบัตรประชาชนไทย
@@ -133,7 +140,6 @@ export default function ThaiIdGenerate() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[350px_1fr]">
-          {/* Settings Panel */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -142,7 +148,6 @@ export default function ThaiIdGenerate() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Options */}
               <div className="space-y-3">
                 <Label className="text-sm font-semibold">ตัวเลือก</Label>
                 <div className="space-y-2">
@@ -166,7 +171,6 @@ export default function ThaiIdGenerate() {
 
               <Separator />
 
-              {/* Count Selection */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-semibold">จำนวนเลขบัตร</Label>
@@ -191,7 +195,6 @@ export default function ThaiIdGenerate() {
                 สุ่มเลขบัตรใหม่
               </Button>
 
-              {/* Validation Section - Conditional */}
               {includeValidation && (
                 <>
                   <Separator />
@@ -208,9 +211,7 @@ export default function ThaiIdGenerate() {
                     />
                     <Button
                       onClick={handleValidation}
-                      disabled={
-                        !validationInput.trim() || validationInput.length !== 13
-                      }
+                      disabled={isValidateDisabled}
                       className="w-full"
                       variant="secondary"
                       size="sm"
@@ -218,7 +219,6 @@ export default function ThaiIdGenerate() {
                       ตรวจสอบ
                     </Button>
 
-                    {/* Validation Result */}
                     {validationResult !== null && (
                       <div
                         className={`rounded-lg border p-3 ${
@@ -260,9 +260,8 @@ export default function ThaiIdGenerate() {
             </CardContent>
           </Card>
 
-          {/* Results Panel */}
           <div className="space-y-4">
-            {generatedIDs.length === 0 ? (
+            {idRows.length === 0 ? (
               <Card>
                 <CardContent className="flex min-h-[400px] items-center justify-center p-8">
                   <div className="text-center text-muted-foreground">
@@ -272,29 +271,20 @@ export default function ThaiIdGenerate() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-4">
-                {generatedIDs.map((id, index) => (
-                  <Card key={index} ref={index === 0 ? firstResultRef : null}>
-                    <CardHeader>
-                      <CardTitle className="text-lg">
-                        เลขบัตรที่ {index + 1}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <IDField
-                        value={id.formatted}
-                        isCopied={copiedStates[`${index}-formatted`] || false}
-                        onCopy={() => handleCopy(id.raw, `${index}-formatted`)}
-                      />
-                    </CardContent>
-                  </Card>
+              <div className="space-y-2">
+                {idRows.map((row) => (
+                  <IDField
+                    key={row.key}
+                    value={row.formatted}
+                    isCopied={row.isCopied}
+                    onCopy={row.onCopy}
+                  />
                 ))}
               </div>
             )}
           </div>
         </div>
 
-        {/* Features Section */}
         <div className="space-y-4 rounded-lg border bg-card p-6">
           <h2 className="text-xl font-semibold">คุณสมบัติ</h2>
           <ul className="space-y-2 text-sm text-muted-foreground">
@@ -317,7 +307,6 @@ export default function ThaiIdGenerate() {
           </ul>
         </div>
 
-        {/* Warning Section */}
         <div className="space-y-2 rounded-lg border border-amber-500/50 bg-amber-500/10 p-6">
           <h3 className="flex items-center gap-2 font-semibold text-amber-700 dark:text-amber-400">
             <Info className="h-5 w-5" />
