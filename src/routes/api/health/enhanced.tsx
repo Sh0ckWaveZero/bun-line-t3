@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { db } from "@/lib/database/db";
 import { RateLimiter } from "@/lib/utils/rate-limiter";
 
 interface SystemMetrics {
@@ -83,21 +82,7 @@ export async function GET(request: Request) {
     const alerts: string[] = [];
     const recommendations: string[] = [];
 
-    // 1. Database Health Check
-    try {
-      await db.$queryRaw`SELECT 1`;
-      healthCheck.checks.database = true;
-      healthCheck.metrics.databaseStatus = "connected";
-    } catch (dbError) {
-      console.error("Database health check failed:", dbError);
-      healthCheck.checks.database = false;
-      healthCheck.metrics.databaseStatus = "disconnected";
-      healthScore -= 30;
-      alerts.push("Database connection failed");
-      recommendations.push("Check DATABASE_URL and PostgreSQL server status");
-    }
-
-    // 2. Memory Usage Check
+    // 1. Memory Usage Check
     if (process.memoryUsage) {
       const memory = process.memoryUsage();
       healthCheck.metrics.memoryUsage = {
