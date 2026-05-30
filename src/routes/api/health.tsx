@@ -39,7 +39,7 @@ export const Route = createFileRoute("/api/health")({
   },
 });
 
-export async function GET() {
+async function GET() {
   const startTime = Date.now();
   const timestamp = new Date().toISOString();
 
