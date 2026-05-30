@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { db } from "@/lib/database/db";
 import { RateLimiter } from "@/lib/utils/rate-limiter";
 
 interface SystemMetrics {
@@ -43,7 +42,9 @@ interface HealthCheckResult {
  * Enhanced System Health Check API
  * Provides comprehensive health monitoring with metrics and recommendations
  */
-export async function GET(request: Request) {
+const REQUIRED_ENV_KEYS = ["AUTH_SECRET", "LINE_CHANNEL_ACCESS", "LINE_CHANNEL_SECRET"] as const;
+
+async function GET(request: Request) {
   const startTime = Date.now();
 
   try {
@@ -83,21 +84,7 @@ export async function GET(request: Request) {
     const alerts: string[] = [];
     const recommendations: string[] = [];
 
-    // 1. Database Health Check
-    try {
-      await db.$queryRaw`SELECT 1`;
-      healthCheck.checks.database = true;
-      healthCheck.metrics.databaseStatus = "connected";
-    } catch (dbError) {
-      console.error("Database health check failed:", dbError);
-      healthCheck.checks.database = false;
-      healthCheck.metrics.databaseStatus = "disconnected";
-      healthScore -= 30;
-      alerts.push("Database connection failed");
-      recommendations.push("Check DATABASE_URL and PostgreSQL server status");
-    }
-
-    // 2. Memory Usage Check
+    // 1. Memory Usage Check
     if (process.memoryUsage) {
       const memory = process.memoryUsage();
       healthCheck.metrics.memoryUsage = {
@@ -121,12 +108,7 @@ export async function GET(request: Request) {
 
     // 3. Authentication Check
     try {
-      const requiredEnvValues = [
-        process.env.AUTH_SECRET,
-        process.env.LINE_CHANNEL_ACCESS,
-        process.env.LINE_CHANNEL_SECRET,
-      ];
-      const missingVars = requiredEnvValues.filter((value) => !value).length;
+      const missingVars = REQUIRED_ENV_KEYS.filter((key) => !process.env[key]).length;
 
       if (missingVars === 0) {
         healthCheck.checks.authentication = true;

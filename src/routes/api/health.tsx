@@ -4,7 +4,6 @@
  * รองรับ Raspberry Pi monitoring
  */
 import { createFileRoute } from "@tanstack/react-router";
-import { db } from "@/lib/database/db";
 
 interface HealthCheckResponse {
   status: "healthy" | "unhealthy" | "degraded";
@@ -40,7 +39,7 @@ export const Route = createFileRoute("/api/health")({
   },
 });
 
-export async function GET() {
+async function GET() {
   const startTime = Date.now();
   const timestamp = new Date().toISOString();
 
@@ -89,31 +88,6 @@ export async function GET() {
       healthStatus = "degraded";
     }
     healthCheck.checks.env = errors.length === 0;
-
-    // 2. Database connectivity check
-    try {
-      await db.$queryRaw`SELECT 1`;
-      healthCheck.database = "connected";
-      healthCheck.checks.database = true;
-    } catch (dbError) {
-      console.error("Database health check failed:", dbError);
-      healthCheck.database = "disconnected";
-      healthCheck.checks.database = false;
-      errors.push("Database connection failed");
-      healthStatus = "unhealthy";
-    }
-
-    // 3. Prisma Client check
-    try {
-      // Simple query to verify Prisma Client is working
-      await db.user.count();
-      healthCheck.checks.prisma = true;
-    } catch (prismaError) {
-      console.error("Prisma Client health check failed:", prismaError);
-      healthCheck.checks.prisma = false;
-      errors.push("Prisma Client error");
-      if (healthStatus !== "unhealthy") healthStatus = "degraded";
-    }
 
     // Set final status
     healthCheck.status = healthStatus;

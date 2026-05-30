@@ -60,3 +60,6 @@ public/temp-charts/*
 /dist
 scripts/delete-old-line-accounts.ts
 .claude/settings.local.json
+.claude/skills/
+.agents/
+.commandcode/
