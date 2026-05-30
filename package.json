@@ -75,6 +75,7 @@
     "@tanstack/react-router": "^1.170.10",
     "@tanstack/react-router-ssr-query": "^1.167.1",
     "@tanstack/react-start": "^1.168.17",
+    "@tanstack/router-core": "1.171.8",
     "ai": "^6.0.193",
     "better-auth": "^1.6.12",
     "canvas": "^3.2.3",
@@ -104,7 +105,7 @@
     "@eslint/js": "10.0.1",
     "@tailwindcss/cli": "^4.3.0",
     "@tailwindcss/vite": "^4.3.0",
-    "@tanstack/devtools-vite": "^0.6.1",
+    "@tanstack/devtools-vite": "^0.7.0",
     "@tanstack/react-devtools": "^0.10.5",
     "@tanstack/react-router-devtools": "^1.167.0",
     "@tanstack/router-plugin": "^1.168.13",
@@ -148,7 +149,7 @@
     "initVersion": "^7.36.1"
   },
   "overrides": {
-    "@tanstack/router-core": "1.169.1",
+    "@tanstack/router-core": "1.171.8",
     "@types/react": "$@types/react",
     "@types/react-dom": "$@types/react-dom",
     "defu": "^6.1.5",
