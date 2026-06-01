@@ -1,18 +1,23 @@
-import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from "@/components/ui/AlertDialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import type { ExpenseCategory } from "@/features/expenses/types"
-import { Loader2, Plus, X } from "lucide-react"
-import { useState } from "react"
-import { EmojiPickerModal } from "./EmojiPickerModal"
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from "@/components/ui/AlertDialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import type { ExpenseCategory } from "@/features/expenses/types";
+import { Loader2, Plus, X } from "lucide-react";
+import { useState } from "react";
+import { EmojiPickerModal } from "./EmojiPickerModal";
 
 interface AddCategoryModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSave: (data: { name: string; icon: string }) => Promise<void>
-  isLoading: boolean
-  editMode?: boolean
-  category?: ExpenseCategory | null
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (data: { name: string; icon: string }) => Promise<void>;
+  isLoading: boolean;
+  editMode?: boolean;
+  category?: ExpenseCategory | null;
 }
 
 export function AddCategoryModal({
@@ -25,17 +30,17 @@ export function AddCategoryModal({
 }: AddCategoryModalProps) {
   const [icon, setIcon] = useState(() =>
     editMode && category ? (category.icon ?? "🤔") : "🤔",
-  )
+  );
   const [name, setName] = useState(() =>
     editMode && category ? category.name : "",
-  )
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  );
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!name.trim()) return
-    await onSave({ name: name.trim(), icon })
-  }
+    e.preventDefault();
+    if (!name.trim()) return;
+    await onSave({ name: name.trim(), icon });
+  };
 
   return (
     <>
@@ -52,7 +57,9 @@ export function AddCategoryModal({
               {editMode ? "แก้ไขหมวดหมู่" : "หมวดหมู่"}
             </AlertDialogTitle>
             <AlertDialogDescription className="sr-only">
-              {editMode ? "แก้ไขชื่อและไอคอนหมวดหมู่" : "สร้างหมวดหมู่ใหม่สำหรับรายรับหรือรายจ่าย"}
+              {editMode
+                ? "แก้ไขชื่อและไอคอนหมวดหมู่"
+                : "สร้างหมวดหมู่ใหม่สำหรับรายรับหรือรายจ่าย"}
             </AlertDialogDescription>
             <Button
               id="add-category-close-btn"
@@ -69,8 +76,15 @@ export function AddCategoryModal({
             id="add-category-modal-content"
             className="min-h-0 flex-1 overflow-y-auto px-6 py-6"
           >
-            <form id="add-category-form" onSubmit={handleSubmit} className="space-y-5">
-              <div id="category-emoji-group" className="flex justify-center pt-1">
+            <form
+              id="add-category-form"
+              onSubmit={handleSubmit}
+              className="space-y-5"
+            >
+              <div
+                id="category-emoji-group"
+                className="flex justify-center pt-1"
+              >
                 <button
                   id="category-emoji-selector"
                   type="button"
@@ -115,7 +129,11 @@ export function AddCategoryModal({
                 >
                   {isLoading ? (
                     <>
-                      <Loader2 id="save-category-loader" size={18} className="animate-spin" />
+                      <Loader2
+                        id="save-category-loader"
+                        size={18}
+                        className="animate-spin"
+                      />
                       <span id="save-category-loading-text">กำลังบันทึก</span>
                     </>
                   ) : (
@@ -139,5 +157,5 @@ export function AddCategoryModal({
         />
       )}
     </>
-  )
+  );
 }

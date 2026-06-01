@@ -22,7 +22,9 @@ class DCAEventManager {
 
 // เก็บ singleton บน globalThis เพื่อให้แชร์ข้าม module boundary ได้
 // (server.ts และ TanStack Start bundle เป็น module คนละตัว แต่ใช้ globalThis ร่วมกัน)
-const g = globalThis as typeof globalThis & { __dcaEventManager?: DCAEventManager };
+const g = globalThis as typeof globalThis & {
+  __dcaEventManager?: DCAEventManager;
+};
 if (!g.__dcaEventManager) {
   g.__dcaEventManager = new DCAEventManager();
 }

@@ -226,9 +226,7 @@ export const handleSettingsCommand = async (req: any, conditions: any[]) => {
     }
 
     // Toggle privacy — ซ่อนเงิน LINE ส่วนตัว
-    if (
-      ["ซ่อนเงิน", "hide-money", "privacy", "ซ่อน"].includes(action)
-    ) {
+    if (["ซ่อนเงิน", "hide-money", "privacy", "ซ่อน"].includes(action)) {
       const currentSetting = user.settings?.hideAmountsLinePersonal ?? false;
       const newSetting = !currentSetting;
 
@@ -308,7 +306,8 @@ export const handleSettingsCommand = async (req: any, conditions: any[]) => {
     const checkInStatus = currentSettings?.enableCheckInReminders ?? true;
     const checkOutStatus = currentSettings?.enableCheckOutReminders ?? true;
     const holidayStatus = currentSettings?.enableHolidayNotifications ?? false;
-    const hidePersonalStatus = currentSettings?.hideAmountsLinePersonal ?? false;
+    const hidePersonalStatus =
+      currentSettings?.hideAmountsLinePersonal ?? false;
     const hideGroupStatus = currentSettings?.hideAmountsLineGroup ?? false;
 
     // Detect language from user's previous language setting or command

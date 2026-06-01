@@ -68,8 +68,7 @@ function matchCategory(
   const exact = filtered.find((c) => c.name.toLowerCase() === q);
   if (exact) return exact;
   const partial = filtered.find(
-    (c) =>
-      c.name.toLowerCase().includes(q) || q.includes(c.name.toLowerCase()),
+    (c) => c.name.toLowerCase().includes(q) || q.includes(c.name.toLowerCase()),
   );
   return partial;
 }
@@ -184,7 +183,12 @@ async function handleStatus(
 }
 
 /** ตั้งงบประมาณ: /budget set [category?] [amount] [alertAt?] */
-async function handleSet(req: unknown, userId: string, args: string[], hide = false) {
+async function handleSet(
+  req: unknown,
+  userId: string,
+  args: string[],
+  hide = false,
+) {
   const sendMessage = await getSendMessage();
 
   if (args.length < 1) {

@@ -5,38 +5,43 @@
  * PATCH /api/line/permissions - อัปเดต permissions (admin only)
  */
 
-import { createFileRoute } from "@tanstack/react-router"
-import { z } from "zod"
-import { getServerAuthSession } from "@/lib/auth/auth"
-import { db } from "@/lib/database/db"
-import { BadRequestError, UnauthorizedError, ForbiddenError, createErrorResponse } from "@/lib/errors/api-error"
+import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
+import { getServerAuthSession } from "@/lib/auth/auth";
+import { db } from "@/lib/database/db";
+import {
+  BadRequestError,
+  UnauthorizedError,
+  ForbiddenError,
+  createErrorResponse,
+} from "@/lib/errors/api-error";
 
 const updatePermissionsSchema = z.object({
   lineUserId: z.string().min(1),
   canRequestAttendanceReport: z.boolean().optional(),
   canRequestLeave: z.boolean().optional(),
   canReceiveReminders: z.boolean().optional(),
-})
+});
 
 export async function GET(request: Request) {
   try {
-    const session = await getServerAuthSession(request)
+    const session = await getServerAuthSession(request);
     if (!session?.user?.id) {
-      throw new UnauthorizedError()
+      throw new UnauthorizedError();
     }
 
-    const { searchParams } = new URL(request.url)
-    const lineUserId = searchParams.get("lineUserId")
+    const { searchParams } = new URL(request.url);
+    const lineUserId = searchParams.get("lineUserId");
 
     // Case 1: เช็ค permissions ของ LINE user คนอื่น (ต้องเป็น admin)
     if (lineUserId) {
       if (!session.isAdmin) {
-        throw new ForbiddenError()
+        throw new ForbiddenError();
       }
 
       const approval = await db.lineApprovalRequest.findUnique({
         where: { lineUserId },
-      })
+      });
 
       if (!approval) {
         return Response.json({
@@ -47,7 +52,7 @@ export async function GET(request: Request) {
             canRequestLeave: false,
             canReceiveReminders: false,
           },
-        })
+        });
       }
 
       return Response.json({
@@ -57,49 +62,50 @@ export async function GET(request: Request) {
           displayName: approval.displayName,
           pictureUrl: approval.pictureUrl,
           status: approval.status,
-          canRequestAttendanceReport: approval.canRequestAttendanceReport ?? false,
+          canRequestAttendanceReport:
+            approval.canRequestAttendanceReport ?? false,
           canRequestLeave: approval.canRequestLeave ?? false,
           canReceiveReminders: approval.canReceiveReminders ?? false,
         },
-      })
+      });
     }
 
     // Case 2: ดึงรายการ approvals ทั้งหมด (admin only)
     if (!session.isAdmin) {
-      throw new ForbiddenError()
+      throw new ForbiddenError();
     }
 
     const approvals = await db.lineApprovalRequest.findMany({
       orderBy: { createdAt: "desc" },
-    })
+    });
 
-    return Response.json({ success: true, data: approvals })
+    return Response.json({ success: true, data: approvals });
   } catch (error) {
-    return createErrorResponse(error)
+    return createErrorResponse(error);
   }
 }
 
 export async function PATCH(request: Request) {
   try {
-    const session = await getServerAuthSession(request)
+    const session = await getServerAuthSession(request);
     if (!session?.user?.id) {
-      throw new UnauthorizedError()
+      throw new UnauthorizedError();
     }
 
     if (!session.isAdmin) {
-      throw new ForbiddenError()
+      throw new ForbiddenError();
     }
 
-    const body = await request.json()
-    const input = updatePermissionsSchema.parse(body)
+    const body = await request.json();
+    const input = updatePermissionsSchema.parse(body);
 
     // ตรวจสอบว่ามี lineUserId นี้อยู่จริง
     const existing = await db.lineApprovalRequest.findUnique({
       where: { lineUserId: input.lineUserId },
-    })
+    });
 
     if (!existing) {
-      throw new BadRequestError("ไม่พบ LINE user นี้ในระบบ")
+      throw new BadRequestError("ไม่พบ LINE user นี้ในระบบ");
     }
 
     // อัปเดต permissions
@@ -116,15 +122,15 @@ export async function PATCH(request: Request) {
           canReceiveReminders: input.canReceiveReminders,
         }),
       },
-    })
+    });
 
     return Response.json({
       success: true,
       data: updated,
       message: "อัปเดตสิทธิ์สำเร็จ",
-    })
+    });
   } catch (error) {
-    return createErrorResponse(error)
+    return createErrorResponse(error);
   }
 }
 
@@ -135,4 +141,4 @@ export const Route = createFileRoute("/api/line/permissions")({
       PATCH: ({ request }) => PATCH(request),
     },
   },
-})
+});

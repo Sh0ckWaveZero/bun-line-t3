@@ -1,25 +1,41 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { formatAmount } from "@/features/expenses/helpers"
-import type { CategorySummary } from "@/features/expenses/types"
-import { ArcElement, Chart as ChartJS, Legend as ChartLegend, Tooltip as ChartTooltip } from "chart.js"
-import { Doughnut } from "react-chartjs-2"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatAmount } from "@/features/expenses/helpers";
+import type { CategorySummary } from "@/features/expenses/types";
+import {
+  ArcElement,
+  Chart as ChartJS,
+  Legend as ChartLegend,
+  Tooltip as ChartTooltip,
+} from "chart.js";
+import { Doughnut } from "react-chartjs-2";
 
-ChartJS.register(ArcElement, ChartTooltip, ChartLegend)
+ChartJS.register(ArcElement, ChartTooltip, ChartLegend);
 
 const DONUT_COLORS = [
-  "#ef4444", "#f97316", "#eab308", "#22c55e", "#14b8a6",
-  "#3b82f6", "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16",
-]
-const CHART_LABEL_COLOR = "#6b7280"
+  "#ef4444",
+  "#f97316",
+  "#eab308",
+  "#22c55e",
+  "#14b8a6",
+  "#3b82f6",
+  "#8b5cf6",
+  "#ec4899",
+  "#06b6d4",
+  "#84cc16",
+];
+const CHART_LABEL_COLOR = "#6b7280";
 
 interface ExpenseDonutChartProps {
-  data: CategorySummary[]
-  hideAmounts?: boolean
+  data: CategorySummary[];
+  hideAmounts?: boolean;
 }
 
-export function ExpenseDonutChart({ data, hideAmounts }: ExpenseDonutChartProps) {
-  const expenses = data.filter((c) => c.type === "EXPENSE").slice(0, 6)
-  if (expenses.length === 0) return null
+export function ExpenseDonutChart({
+  data,
+  hideAmounts,
+}: ExpenseDonutChartProps) {
+  const expenses = data.filter((c) => c.type === "EXPENSE").slice(0, 6);
+  if (expenses.length === 0) return null;
 
   const chartData = {
     labels: expenses.map((c) => `${c.icon ?? "📦"} ${c.categoryName}`),
@@ -31,7 +47,7 @@ export function ExpenseDonutChart({ data, hideAmounts }: ExpenseDonutChartProps)
         hoverOffset: 6,
       },
     ],
-  }
+  };
 
   const options = {
     responsive: true,
@@ -53,13 +69,15 @@ export function ExpenseDonutChart({ data, hideAmounts }: ExpenseDonutChartProps)
         callbacks: {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           label: (ctx: any) => {
-            const item = expenses[ctx.dataIndex as number] as CategorySummary | undefined
-            return ` ${formatAmount(ctx.raw as number)} (${item?.percentage.toFixed(1) ?? 0}%)`
+            const item = expenses[ctx.dataIndex as number] as
+              | CategorySummary
+              | undefined;
+            return ` ${formatAmount(ctx.raw as number)} (${item?.percentage.toFixed(1) ?? 0}%)`;
           },
         },
       },
     },
-  }
+  };
 
   return (
     <Card className="border-border/70 bg-card/85 dark:bg-card/70 border">
@@ -74,5 +92,5 @@ export function ExpenseDonutChart({ data, hideAmounts }: ExpenseDonutChartProps)
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

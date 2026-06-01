@@ -8,7 +8,8 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 const isUniqueConstraintError = (error: unknown) =>
-  error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
+  error instanceof Prisma.PrismaClientKnownRequestError &&
+  error.code === "P2002";
 
 const createClient = () => {
   const adapter = new PrismaPg({
@@ -55,7 +56,9 @@ const createClient = () => {
               throw error;
             }
 
-            const existingSession = await (base as PrismaClient).session.findUnique({
+            const existingSession = await (
+              base as PrismaClient
+            ).session.findUnique({
               where: { token },
             });
 
@@ -84,15 +87,18 @@ const isCacheStale = (client: PrismaClient): boolean => {
   try {
     // ตรวจสอบว่า DATABASE_URL เปลี่ยนหรือเปล่า (เช่น แก้ .env.local แล้ว HMR reload)
     if (globalForPrisma.prismaUrl !== process.env.DATABASE_URL) return true;
-    return !("lineApprovalRequest" in client) || !("subscription" in client) || !("workAttendance" in client);
+    return (
+      !("lineApprovalRequest" in client) ||
+      !("subscription" in client) ||
+      !("workAttendance" in client)
+    );
   } catch {
     return true;
   }
 };
 
 const cached = globalForPrisma.prisma;
-export const db =
-  cached && !isCacheStale(cached) ? cached : createClient();
+export const db = cached && !isCacheStale(cached) ? cached : createClient();
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = db;

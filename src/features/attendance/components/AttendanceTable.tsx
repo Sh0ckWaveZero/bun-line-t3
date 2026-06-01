@@ -12,7 +12,7 @@ import { AttendanceRecord, AttendanceTableProps } from "@/lib/types/attendance";
 import { LeaveStatusBadge } from "@/components/ui/LeaveStatusBadge";
 
 const EmptyTableMessage = () => (
-  <div className="py-8 text-center text-muted-foreground">
+  <div className="text-muted-foreground py-8 text-center">
     ไม่มีข้อมูลการเข้างานในเดือนนี้
   </div>
 );
@@ -65,50 +65,53 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
   return (
     <div>
       <div className="mb-3 flex items-baseline justify-between">
-        <h2 className="text-lg font-semibold text-foreground">
+        <h2 className="text-foreground text-lg font-semibold">
           รายละเอียดการเข้างาน
         </h2>
-        <p className="text-xs text-muted-foreground">
-          {dateFormatters.fullDate(todayFormatted)} · {sortedRecords.length} รายการ
+        <p className="text-muted-foreground text-xs">
+          {dateFormatters.fullDate(todayFormatted)} · {sortedRecords.length}{" "}
+          รายการ
         </p>
       </div>
-      <div className="overflow-x-auto rounded-xl border border-border bg-card">
+      <div className="border-border bg-card overflow-x-auto rounded-xl border">
         <table className="min-w-full">
-          <thead className="border-b border-border bg-muted/50">
+          <thead className="border-border bg-muted/50 border-b">
             <tr>
-              <th className="sticky left-0 z-10 bg-muted/50 px-4 py-3 text-left text-xs font-semibold tracking-wide text-muted-foreground">
+              <th className="bg-muted/50 text-muted-foreground sticky left-0 z-10 px-4 py-3 text-left text-xs font-semibold tracking-wide">
                 วันที่
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold tracking-wide text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wide">
                 เวลาเข้า
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold tracking-wide text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wide">
                 เวลาออก
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold tracking-wide text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wide">
                 ชั่วโมง
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold tracking-wide text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wide">
                 สถานะ
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold tracking-wide text-muted-foreground">
+              <th className="text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wide">
                 จัดการ
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border">
+          <tbody className="divide-border divide-y">
             {sortedRecords.map((record) => {
               const isToday = record.workDate === today;
               return (
                 <tr
                   key={record.id}
-                  className={`transition-colors hover:bg-muted/30 ${
+                  className={`hover:bg-muted/30 transition-colors ${
                     isToday ? "bg-primary/5" : ""
                   }`}
                 >
                   <td
-                    className={`sticky left-0 z-10 whitespace-nowrap bg-card px-4 py-3 text-sm ${
-                      isToday ? "font-semibold text-foreground" : "text-foreground"
+                    className={`bg-card sticky left-0 z-10 px-4 py-3 text-sm whitespace-nowrap ${
+                      isToday
+                        ? "text-foreground font-semibold"
+                        : "text-foreground"
                     }`}
                   >
                     <div className="flex items-center gap-2">
@@ -121,20 +124,20 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                         })}
                       </span>
                       {isToday && (
-                        <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground">
+                        <span className="bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 text-[10px] font-medium">
                           วันนี้
                         </span>
                       )}
                     </div>
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 font-mono text-sm text-foreground">
+                  <td className="text-foreground px-4 py-3 font-mono text-sm whitespace-nowrap">
                     {record.status === AttendanceStatusType.LEAVE
                       ? record.checkInTime
                         ? dateFormatters.time24(record.checkInTime)
                         : "08:00"
                       : dateFormatters.time24(record.checkInTime)}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 font-mono text-sm text-foreground">
+                  <td className="text-foreground px-4 py-3 font-mono text-sm whitespace-nowrap">
                     {record.status === AttendanceStatusType.LEAVE
                       ? record.checkOutTime
                         ? dateFormatters.time24(record.checkOutTime)
@@ -143,14 +146,14 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                         ? dateFormatters.time24(record.checkOutTime)
                         : "-"}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 font-mono text-sm text-foreground">
+                  <td className="text-foreground px-4 py-3 font-mono text-sm whitespace-nowrap">
                     {record.status === AttendanceStatusType.LEAVE
                       ? record.hoursWorked
                         ? formatHoursSafe(record.hoursWorked)
                         : "9.00"
                       : formatHoursSafe(record.hoursWorked)}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3">
+                  <td className="px-4 py-3 whitespace-nowrap">
                     {record.status === AttendanceStatusType.LEAVE &&
                     record.leaveInfo ? (
                       <LeaveStatusBadge
@@ -167,7 +170,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                       </span>
                     )}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3">
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <EditButton record={record} onEdit={onEditRecord} />
                   </td>
                 </tr>
@@ -192,9 +195,9 @@ const EditButton: React.FC<{
     <button
       onClick={() => !isLeaveDay && onEdit(record)}
       disabled={isLeaveDay}
-      className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 ${
+      className={`focus:ring-ring inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium transition-colors focus:ring-2 focus:ring-offset-1 focus:outline-none ${
         isLeaveDay
-          ? "cursor-not-allowed text-muted-foreground opacity-50"
+          ? "text-muted-foreground cursor-not-allowed opacity-50"
           : "text-muted-foreground hover:bg-muted hover:text-foreground"
       }`}
       aria-label={

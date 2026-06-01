@@ -4,10 +4,7 @@ import { env } from "@/env.mjs";
 import { bubbleTemplate } from "@/lib/validation/line";
 import { attendanceService } from "@/features/attendance/services/attendance.server";
 import { db } from "@/lib/database/db";
-import type {
-  LineMessage,
-  LineFlexMessage,
-} from "@/types/line-message";
+import type { LineMessage, LineFlexMessage } from "@/types/line-message";
 
 // Validation schema for request body
 const AttendancePushSchema = z.object({
@@ -185,8 +182,7 @@ export async function POST(req: Request) {
     if (error instanceof Error) {
       console.error("Error in attendance push API:", {
         error: error.message,
-        stack:
-          process.env.NODE_ENV === "development" ? error.stack : undefined,
+        stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
       });
     }
 

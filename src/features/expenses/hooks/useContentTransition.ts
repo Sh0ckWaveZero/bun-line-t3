@@ -8,7 +8,7 @@ interface UseContentTransitionOptions {
 interface UseContentTransitionResult {
   opacity: number;
   transform: number;
-  transitionOut: (direction: 'left' | 'right') => void;
+  transitionOut: (direction: "left" | "right") => void;
   transitionIn: () => void;
 }
 
@@ -33,15 +33,20 @@ interface UseContentTransitionResult {
  * }, duration);
  * ```
  */
-export function useContentTransition(options: UseContentTransitionOptions = {}): UseContentTransitionResult {
+export function useContentTransition(
+  options: UseContentTransitionOptions = {},
+): UseContentTransitionResult {
   const { duration = 300, offset = 20 } = options;
   const [opacity, setOpacity] = useState(1);
   const [transform, setTransform] = useState(0);
 
-  const transitionOut = useCallback((direction: 'left' | 'right') => {
-    setOpacity(0);
-    setTransform(direction === 'left' ? -offset : offset);
-  }, [offset]);
+  const transitionOut = useCallback(
+    (direction: "left" | "right") => {
+      setOpacity(0);
+      setTransform(direction === "left" ? -offset : offset);
+    },
+    [offset],
+  );
 
   const transitionIn = useCallback(() => {
     setOpacity(1);

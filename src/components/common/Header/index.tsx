@@ -71,7 +71,7 @@ export default function Header() {
       {/* Full-page Loading Overlay */}
       {isRouteChanging && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in duration-200"
+          className="bg-background/80 animate-in fade-in fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-sm duration-200"
           role="status"
           aria-live="polite"
           aria-label="กำลังโหลดหน้า"
@@ -83,54 +83,58 @@ export default function Header() {
         </div>
       )}
 
-      <header id="main-header" className="bg-background/80 border-border sticky top-0 z-50 w-full border-b backdrop-blur-sm" role="banner">
-      <div className="container mx-auto flex h-14 items-center justify-between px-4">
-        {/* Logo */}
-        <div className="flex items-center">
-          <Link
-            id="header-logo"
-            to="/"
-            className="text-foreground hover:text-primary mr-6 text-xl font-bold drop-shadow-sm transition-colors"
-            aria-label="Bun LINE T3 - กลับหน้าแรก"
-          >
-            Bun <span className="text-[#07b53b]">LINE</span>{" "}
-            <span className="text-[hsl(280,100%,70%)] dark:text-purple-400">
-              T3
-            </span>
-          </Link>
+      <header
+        id="main-header"
+        className="bg-background/80 border-border sticky top-0 z-50 w-full border-b backdrop-blur-sm"
+        role="banner"
+      >
+        <div className="container mx-auto flex h-14 items-center justify-between px-4">
+          {/* Logo */}
+          <div className="flex items-center">
+            <Link
+              id="header-logo"
+              to="/"
+              className="text-foreground hover:text-primary mr-6 text-xl font-bold drop-shadow-sm transition-colors"
+              aria-label="Bun LINE T3 - กลับหน้าแรก"
+            >
+              Bun <span className="text-[#07b53b]">LINE</span>{" "}
+              <span className="text-[hsl(280,100%,70%)] dark:text-purple-400">
+                T3
+              </span>
+            </Link>
 
-          {/* Desktop Navigation */}
-          <div ref={dropdownRef}>
-            <DesktopNav
-              items={NAVIGATION_ITEMS}
-              pathname={pathname}
-              openDropdown={openDropdown}
-              setOpenDropdown={setOpenDropdown}
-              session={session}
-              isAdmin={isAdmin}
-            />
+            {/* Desktop Navigation */}
+            <div ref={dropdownRef}>
+              <DesktopNav
+                items={NAVIGATION_ITEMS}
+                pathname={pathname}
+                openDropdown={openDropdown}
+                setOpenDropdown={setOpenDropdown}
+                session={session}
+                isAdmin={isAdmin}
+              />
+            </div>
           </div>
+
+          {/* User Section */}
+          <UserSection
+            session={session}
+            profileImageSrc={profileImageSrc}
+            isMobileMenuOpen={isMobileMenuOpen}
+            onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          />
         </div>
 
-        {/* User Section */}
-        <UserSection
+        {/* Mobile Navigation */}
+        <MobileNav
+          items={NAVIGATION_ITEMS}
+          pathname={pathname}
+          isOpen={isMobileMenuOpen}
+          onClose={() => setIsMobileMenuOpen(false)}
           session={session}
-          profileImageSrc={profileImageSrc}
-          isMobileMenuOpen={isMobileMenuOpen}
-          onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          isAdmin={isAdmin}
         />
-      </div>
-
-      {/* Mobile Navigation */}
-      <MobileNav
-        items={NAVIGATION_ITEMS}
-        pathname={pathname}
-        isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
-        session={session}
-        isAdmin={isAdmin}
-      />
-    </header>
+      </header>
     </>
   );
 }

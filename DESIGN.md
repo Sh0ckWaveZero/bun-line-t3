@@ -122,6 +122,7 @@ The system is Thai-first: Noto Sans Thai is the body typeface, all spacing is te
 This system explicitly rejects: generic SaaS dashboards with hero-metric cards and gradient accents, crypto-native dark UIs with neon colors, overly playful internal tools, and anything that takes more than two clicks for a simple task.
 
 **Key Characteristics:**
+
 - Thai-first typography and spacing
 - Flat-by-default surfaces; shadows appear on state, not at rest
 - Muted Violet-Indigo primary with tinted neutrals
@@ -133,16 +134,20 @@ This system explicitly rejects: generic SaaS dashboards with hero-metric cards a
 The palette is Restrained: tinted neutrals carry 90% of any surface, with Muted Violet-Indigo appearing sparingly on primary actions and active states. Colorful card backgrounds (blue, green, purple, orange, red) are used as semantic category markers in data views.
 
 ### Primary
+
 - **Muted Violet-Indigo** (#7c5cbf / oklch(0.61 0.08 300)): Primary actions, active navigation, focus rings, chart accent. Used on buttons, active tabs, and interactive highlights. Its rarity is the point.
 
 ### Accent
+
 - **Warm Rose** (#c9506e / oklch(0.79 0.08 0)): Secondary accent for hover states on ghost/outline buttons, and nav items. Warmer than the primary, creating a complementary push without competing.
 
 ### Semantic
+
 - **Destructive Red-Orange** (#c44830 / oklch(0.63 0.16 23)): Delete actions, error states, danger confirmations.
 - **LINE Green** (#07b53b): Reserved exclusively for LINE-branded elements: the login button, the "LINE" word in the logo, and LINE-related UI. Never used as a general accent.
 
 ### Neutral
+
 - **Lavender Mist Background** (#f5f3fc / oklch(0.98 0.004 301)): Page background. A white so faintly violet it feels warm, not sterile.
 - **Deep Indigo Text** (#3b3658 / oklch(0.37 0.03 287)): Primary text color. Dark enough for AA contrast, tinted violet to harmonize with the primary.
 - **Soft Violet Border** (#c8c2d8 / oklch(0.84 0.02 300)): Borders and dividers. Visible but never harsh.
@@ -150,6 +155,7 @@ The palette is Restrained: tinted neutrals carry 90% of any surface, with Muted 
 - **Gray-Violet Muted Text** (#6d6590 / oklch(0.53 0.04 291)): Secondary text, placeholder text, captions.
 
 ### Category Colors (data views only)
+
 - **Blue** (#dbeafe bg / #2563eb text): Attendance data, ocean-themed metrics
 - **Green** (#dcfce7 bg / #059669 text): Hours worked, emerald metrics
 - **Purple** (#f3e8ff bg / #7c3aed text): Overtime, violet metrics
@@ -157,6 +163,7 @@ The palette is Restrained: tinted neutrals carry 90% of any surface, with Muted 
 - **Red** (#fee2e2 bg / #e11d48 text): Late arrivals, destructive highlights
 
 ### Dark Mode
+
 Dark mode shifts backgrounds to deep indigo-navy (#1e1b33 / oklch(0.22 0.02 293)), cards to slightly lighter slate (#2a2650 / oklch(0.25 0.03 293)), and text to cool lavender (#e0dced / oklch(0.91 0.02 294)). The primary brightens to (#9070d0 / oklch(0.71 0.08 302)) for visibility. Category card colors use reduced-opacity variants.
 
 **The One Accent Rule.** Muted Violet-Indigo is used on interactive elements only: buttons, active states, focus rings. It appears on less than 10% of any given screen. Its rarity makes it meaningful.
@@ -172,6 +179,7 @@ Dark mode shifts backgrounds to deep indigo-navy (#1e1b33 / oklch(0.22 0.02 293)
 **Character:** Noto Sans Thai is clean and legible at all sizes, with proper Thai diacritics and tone marks. Syne provides a geometric, slightly eccentric display voice for the brand surface. The pairing is purposeful: the body font prioritizes readability for Thai script, while the display font adds personality where the brand surface needs it.
 
 ### Hierarchy
+
 - **Display** (Syne 800, clamp(2.5rem, 7vw, 4.5rem), line-height 1): Home page hero only. Never used on authenticated product surfaces.
 - **Headline** (Noto Sans Thai 600, 1.5rem / 24px, line-height 1.3): Page titles, section headers, dialog titles.
 - **Title** (Noto Sans Thai 600, 1.125rem / 18px, line-height 1.4): Card titles, subsection headers, feature headings.
@@ -188,6 +196,7 @@ This system is flat by default. Cards, containers, and surfaces rest flush again
 Shadows appear only as a response to state: hover on interactive cards, focus on inputs and buttons, and modals elevated above the page. At rest, nothing casts a shadow.
 
 ### Shadow Vocabulary
+
 - **Rest state**: No shadow. Flat against background.
 - **Subtle lift** (0 1px 2px rgba(99,102,241,0.05)): Standard shadcn `shadow-sm` on cards at rest (minimal, almost imperceptible).
 - **Hover lift** (0 4px 6px rgba(30,27,75,0.08)): Cards and interactive elements on hover. Faint indigo tint.
@@ -201,6 +210,7 @@ Shadows appear only as a response to state: hover on interactive cards, focus on
 Tactile and confident: controls that feel solid to press, states that respond clearly, and shapes that are consistent without being monotonous.
 
 ### Buttons
+
 - **Shape:** Gently rounded (6px / rounded-md)
 - **Primary:** Muted Violet-Indigo background with white text (8px 16px padding, 40px height). Hover darkens slightly. Focus ring in primary color with 2px offset.
 - **Secondary:** Lavender background with deep text. Lighter and quieter than primary.
@@ -210,6 +220,7 @@ Tactile and confident: controls that feel solid to press, states that respond cl
 - **Disabled:** 50% opacity, no pointer events.
 
 ### Cards
+
 - **Corner Style:** Rounded-xl (12px)
 - **Background:** White in light mode (#ffffff), deep slate in dark mode (oklch(0.25 0.03 293))
 - **Shadow Strategy:** Shadow-sm at rest (near-invisible indigo tint), shadow-hover on interaction
@@ -217,30 +228,35 @@ Tactile and confident: controls that feel solid to press, states that respond cl
 - **Internal Padding:** 24px (p-6), header and content separated by 6px gap
 
 ### Inputs / Fields
+
 - **Style:** 1px border in input token color, transparent background, rounded-md (6px)
 - **Focus:** 2px ring in primary color with 2px offset. Clear visual response.
 - **Height:** 40px (h-10), consistent with buttons
 - **Error:** Destructive border color, error message in destructive text below field
 
 ### Navigation
+
 - **Sticky header** at top, 56px height, frosted glass background (bg-background/80 with backdrop-blur)
 - **Desktop:** Horizontal nav links with dropdowns. Active state: primary-tinted background + primary text. Hover: subtle primary wash.
 - **Mobile:** Hamburger menu, full-width collapsible sections. Frosted background.
 - **Logo:** "Bun" in foreground color, "LINE" in LINE green, "T3" in violet.
 
 ### Tabs
+
 - **Tab bar:** Muted background (lavender), rounded-md, with 4px padding
 - **Active tab:** White background with shadow-sm, foreground text
 - **Inactive tab:** Muted text, transparent background
 - **Transition:** All properties (background, text color, shadow) on state change
 
 ### Toast Notifications
+
 - **Position:** Fixed top-right, z-9999
 - **Shape:** Rounded-lg (8px), 2px colored left border indicating type
 - **Types:** Success (green), Error (red), Info (blue), Warning (yellow)
 - **Duration:** 3500ms auto-dismiss
 
 ### LINE Login Button
+
 - **Strict adherence** to LINE Login Button Design Guidelines
 - **Background:** #06C755 (LINE green), with hover/press overlay states
 - **Shape:** 4px border-radius
@@ -249,6 +265,7 @@ Tactile and confident: controls that feel solid to press, states that respond cl
 ## 6. Do's and Don'ts
 
 ### Do:
+
 - **Do** use Noto Sans Thai as the default body font for all UI text. Test spacing against Thai script before English.
 - **Do** use Muted Violet-Indigo sparingly. Less than 10% of any screen surface.
 - **Do** keep surfaces flat at rest. Shadows appear on hover, focus, and modals only.
@@ -259,6 +276,7 @@ Tactile and confident: controls that feel solid to press, states that respond cl
 - **Do** respect reduced-motion preferences by disabling animations for users who prefer it.
 
 ### Don't:
+
 - **Don't** use hero-metric cards with big numbers, small labels, and gradient accents. Per PRODUCT.md: "generic SaaS dashboards with hero-metric cards and gradient accents" are explicitly rejected.
 - **Don't** use LINE Green (#07b53b) as a generic success color or UI accent outside LINE-branded contexts.
 - **Don't** add shadows to cards or containers at rest. Flat-by-default is the rule.

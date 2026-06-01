@@ -85,9 +85,8 @@ export class D3ChartGenerator {
       exchange.toLowerCase() === "binance" ||
       exchange.toLowerCase() === "bn"
     ) {
-      const { binanceHistoryService } = await import(
-        "@/features/crypto/services/binance-history.server"
-      );
+      const { binanceHistoryService } =
+        await import("@/features/crypto/services/binance-history.server");
       historicalData = await binanceHistoryService.getPopularCryptoHistory(
         symbol,
         hours,

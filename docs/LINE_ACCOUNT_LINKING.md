@@ -62,11 +62,12 @@ model LineApprovalRequest {
 หากพบว่า 1 LINE user มีหลาย accounts:
 
 1. ใช้ helper function `findAndMergeDuplicateLineAccounts()`:
+
    ```typescript
    import { findAndMergeDuplicateLineAccounts } from "@/lib/auth/account-linking";
 
    const primaryAccount = await findAndMergeDuplicateLineAccounts(
-     lineMessagingApiUserId
+     lineMessagingApiUserId,
    );
    ```
 
@@ -106,12 +107,14 @@ if (primaryAccount) {
 ### 1. LINE Profile Sync
 
 LINE profile sync ทำงานใน 2 ขั้นตอน:
+
 - **Before**: ไม่มี (ลบออกแล้ว)
 - **After**: Sync profile และ link `lineMessagingApiUserId`
 
 ### 2. Account Linking
 
 Better Auth มี built-in account linking:
+
 ```typescript
 account: {
   accountLinking: {
@@ -127,6 +130,7 @@ account: {
 ### 3. Constraint Violations
 
 ระบบใช้ unique constraint บน `lineMessagingApiUserId`:
+
 - ห้ามมี 2 accounts ที่มี `lineMessagingApiUserId` เดียวกัน
 - ถ้าเกิด → ต้อง merge accounts ด้วย `findAndMergeDuplicateLineAccounts()`
 
@@ -135,10 +139,12 @@ account: {
 ### Issue: User มีหลาย accounts
 
 **Symptoms**:
+
 - User login แล้วได้ session คนละตัว
 - ข้อมูล attendances, leaves ไม่ตรงกัน
 
 **Solution**:
+
 ```typescript
 // 1. หา LINE Messaging API user ID จาก DcaOrder หรือข้อความ
 const lineMessagingApiUserId = "U1234567890";
@@ -150,15 +156,17 @@ await findAndMergeDuplicateLineAccounts(lineMessagingApiUserId);
 ### Issue: Unique constraint violation
 
 **Symptoms**:
+
 ```
 Unique constraint failed on the fields: (line_messaging_api_user_id)
 ```
 
 **Solution**:
+
 ```typescript
 // 1. หา duplicate accounts
 const accounts = await db.account.findMany({
-  where: { lineMessagingApiUserId: "U1234567890" }
+  where: { lineMessagingApiUserId: "U1234567890" },
 });
 
 // 2. Merge
@@ -172,19 +180,23 @@ await findAndMergeDuplicateLineAccounts("U1234567890");
 1. **Backup database** ก่อน
 2. **Run migration**: `npx prisma migrate deploy`
 3. **Sync existing accounts**:
+
    ```typescript
    // สำหรับ account ที่มีอยู่แล้ว ให้ sync lineMessagingApiUserId
    const accounts = await db.account.findMany({
-     where: { providerId: "line" }
+     where: { providerId: "line" },
    });
 
    for (const account of accounts) {
      await syncLineApprovalRequest(account);
    }
    ```
+
 4. **Merge duplicates**:
    ```typescript
-   const uniqueIds = [...new Set(accounts.map(a => a.lineMessagingApiUserId))];
+   const uniqueIds = [
+     ...new Set(accounts.map((a) => a.lineMessagingApiUserId)),
+   ];
    for (const id of uniqueIds) {
      if (id) await findAndMergeDuplicateLineAccounts(id);
    }

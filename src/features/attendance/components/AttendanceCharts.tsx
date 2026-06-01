@@ -6,23 +6,21 @@ import { useChartTheme } from "@/hooks/useChartTheme";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import type { AttendanceChartsProps } from "@/lib/types/attendance";
 
-const WorkingHoursTabContent = lazy(
-  () =>
-    import("./WorkingHoursTabContent").then((m) => ({
-      default: m.WorkingHoursTabContent,
-    })),
+const WorkingHoursTabContent = lazy(() =>
+  import("./WorkingHoursTabContent").then((m) => ({
+    default: m.WorkingHoursTabContent,
+  })),
 );
 
-const StatisticsTabContent = lazy(
-  () =>
-    import("./StatisticsTabContent").then((m) => ({
-      default: m.StatisticsTabContent,
-    })),
+const StatisticsTabContent = lazy(() =>
+  import("./StatisticsTabContent").then((m) => ({
+    default: m.StatisticsTabContent,
+  })),
 );
 
 function ChartFallback() {
   return (
-    <div className="flex h-64 items-center justify-center text-muted-foreground">
+    <div className="text-muted-foreground flex h-64 items-center justify-center">
       กำลังโหลดกราฟ...
     </div>
   );
@@ -30,12 +28,17 @@ function ChartFallback() {
 
 const ChevronIcon: React.FC<{ open: boolean }> = ({ open }) => (
   <svg
-    className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ease-[cubic-bezier(0.25,1,0.5,1)] ${open ? "rotate-180" : ""}`}
+    className={`text-muted-foreground h-4 w-4 transition-transform duration-200 ease-[cubic-bezier(0.25,1,0.5,1)] ${open ? "rotate-180" : ""}`}
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
   >
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M19 9l-7 7-7-7"
+    />
   </svg>
 );
 
@@ -53,13 +56,13 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({
           onClick={() => setOpen((v) => !v)}
           className="flex w-full items-center justify-between"
         >
-          <h2 className="text-lg font-semibold text-foreground">
+          <h2 className="text-foreground text-lg font-semibold">
             กราฟวิเคราะห์การทำงาน
           </h2>
           <ChevronIcon open={false} />
         </button>
         <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <div className="flex h-64 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground">
+          <div className="border-border bg-card text-muted-foreground flex h-64 items-center justify-center rounded-xl border">
             กำลังโหลด...
           </div>
         </div>
@@ -75,7 +78,7 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({
         className="flex w-full items-center justify-between"
         aria-expanded={open}
       >
-        <h2 className="text-lg font-semibold text-foreground">
+        <h2 className="text-foreground text-lg font-semibold">
           กราฟวิเคราะห์การทำงาน
         </h2>
         <ChevronIcon open={open} />
@@ -87,12 +90,8 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({
         <div className="overflow-hidden">
           <Tabs defaultValue="working-hours" className="mt-4 w-full">
             <TabsList className="tab-pill mb-6 grid w-full grid-cols-2">
-              <TabsTrigger value="working-hours">
-                ชั่วโมงการทำงาน
-              </TabsTrigger>
-              <TabsTrigger value="statistics">
-                สถิติการเข้างาน
-              </TabsTrigger>
+              <TabsTrigger value="working-hours">ชั่วโมงการทำงาน</TabsTrigger>
+              <TabsTrigger value="statistics">สถิติการเข้างาน</TabsTrigger>
             </TabsList>
 
             <TabsContent value="working-hours">

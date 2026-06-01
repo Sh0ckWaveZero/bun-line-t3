@@ -22,13 +22,13 @@ export const AttendanceDonutChart: React.FC<AttendanceDonutChartProps> = ({
   if (isPerfect) {
     return (
       <div className="text-center">
-        <p className="mb-2 text-sm font-semibold text-foreground">
+        <p className="text-foreground mb-2 text-sm font-semibold">
           เข้างานครบทุกวัน
         </p>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-muted-foreground text-xs">
           {report.totalDaysWorked} วัน จาก {report.workingDaysInMonth} วันทำงาน
         </p>
-        <p className="mt-1 font-mono text-xs text-muted-foreground">
+        <p className="text-muted-foreground mt-1 font-mono text-xs">
           {report.attendanceRate}%
         </p>
       </div>

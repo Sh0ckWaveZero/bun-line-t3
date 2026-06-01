@@ -1,0 +1,540 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useToast } from "@/components/common/ToastProvider";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  IS_CO_PAYMENT_ACTIVE,
+  calculateCoPaymentSplit,
+  formatCoPaymentDetails,
+  parseTransactionSubsidy,
+  CO_PAY_USER_SHARE,
+  CO_PAY_STATE_SHARE,
+  CO_PAY_DAILY_MAX_SUBSIDY,
+} from "@/features/expenses/helpers/coPayment";
+import {
+  Coins,
+  Wallet,
+  Sparkles,
+  Plus,
+  RotateCcw,
+  Info,
+  ChevronDown,
+  ChevronUp,
+  TrendingDown,
+} from "lucide-react";
+
+interface ExpenseCategory {
+  id: string;
+  name: string;
+  icon?: string | null;
+  color?: string | null;
+  isActive: boolean;
+}
+
+interface ThaiHelpCalculatorProps {
+  categories: ExpenseCategory[];
+  transactions: any[];
+  isSaving: boolean;
+  onSave: (input: {
+    categoryId: string;
+    type: "EXPENSE";
+    amount: number;
+    note: string;
+    tags: string;
+    transDate: string;
+  }) => Promise<void>;
+  refetch: () => void;
+}
+
+export function ThaiHelpCalculator({
+  categories,
+  transactions,
+  isSaving,
+  onSave,
+  refetch,
+}: ThaiHelpCalculatorProps) {
+  // If the co-payment campaign is inactive, render absolutely nothing
+  if (!IS_CO_PAYMENT_ACTIVE) return null;
+
+  const { showToast } = useToast();
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"split" | "topup" | "stats">(
+    "split",
+  );
+
+  // Tab 1: Split Bill State
+  const [totalBill, setTotalBill] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState("");
+
+  // Tab 2: Top Up State
+  const [desiredSubsidy, setDesiredSubsidy] = useState("");
+
+  // Auto-select category (default to "อาหาร" or first active category)
+  useEffect(() => {
+    if (categories.length > 0 && !selectedCategoryId) {
+      const foodCat = categories.find(
+        (c) =>
+          c.isActive && (c.name.includes("อาหาร") || c.name.includes("กิน")),
+      );
+      if (foodCat) {
+        setSelectedCategoryId(foodCat.id);
+      } else {
+        const firstActive = categories.find((c) => c.isActive);
+        if (firstActive) {
+          setSelectedCategoryId(firstActive.id);
+        }
+      }
+    }
+  }, [categories, selectedCategoryId]);
+
+  // Calculations for Split Bill using the Co-payment Helper
+  const numericBill = parseFloat(totalBill) || 0;
+  const { subsidyAmount: subsidy60, userAmount: userPaid40 } =
+    calculateCoPaymentSplit(numericBill);
+
+  // Calculations for Top Up using campaign limits
+  const numericSubsidy = parseFloat(desiredSubsidy) || 0;
+  const topUpNeeded = numericSubsidy * (CO_PAY_USER_SHARE / CO_PAY_STATE_SHARE);
+  const purchaseValue = numericSubsidy * (1 / CO_PAY_STATE_SHARE);
+
+  // Tab 3: Monthly Stats using the isolated helper
+  const getMonthlyStats = () => {
+    let totalSubsidyUsed = 0;
+    let totalUserSpent = 0;
+    let count = 0;
+
+    const now = new Date();
+    const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+    transactions.forEach((tx) => {
+      const txMonth =
+        tx.transMonth || (tx.transDate ? tx.transDate.substring(0, 7) : "");
+      if (txMonth !== currentMonthStr || tx.type !== "EXPENSE") return;
+
+      // Parse using the new helper which supports abbreviations like ทชท, tct, 6040, klk, etc.
+      const subsidy = parseTransactionSubsidy(tx.amount, tx.note, tx.tags);
+      if (subsidy > 0) {
+        count++;
+        totalUserSpent += tx.amount;
+        totalSubsidyUsed += subsidy;
+      }
+    });
+
+    const remainingSubsidy = Math.max(1000 - totalSubsidyUsed, 0);
+
+    return {
+      totalSubsidyUsed,
+      remainingSubsidy,
+      totalUserSpent,
+      count,
+    };
+  };
+
+  const stats = getMonthlyStats();
+
+  // Handle Save Transaction
+  const handleSaveExpense = async () => {
+    if (numericBill <= 0) {
+      showToast({
+        title: "กรุณาระบุยอดสินค้า",
+        description: "ยอดสินค้าต้องมากกว่า 0 บาท",
+        type: "warning",
+      });
+      return;
+    }
+
+    if (!selectedCategoryId) {
+      showToast({
+        title: "กรุณาเลือกหมวดหมู่",
+        description: "เลือกหมวดหมู่เพื่อจัดเก็บรายจ่าย",
+        type: "warning",
+      });
+      return;
+    }
+
+    try {
+      const todayStr = new Date().toISOString().split("T")[0]!;
+
+      // Standardize co-payment details using the isolated helper
+      const { note, tags } = formatCoPaymentDetails(
+        numericBill,
+        subsidy60,
+        null, // No original note
+        [], // No original tags
+      );
+
+      await onSave({
+        categoryId: selectedCategoryId,
+        type: "EXPENSE",
+        amount: userPaid40, // Only log user's actual share!
+        note,
+        tags: tags.join(","),
+        transDate: todayStr,
+      });
+
+      showToast({
+        title: "บันทึกสำเร็จ!",
+        description: `บันทึกส่วนที่คุณจ่ายเอง ฿${userPaid40.toFixed(2)} เรียบร้อยแล้ว`,
+        type: "success",
+      });
+
+      setTotalBill("");
+      refetch();
+    } catch (error) {
+      console.error(error);
+      showToast({
+        title: "เกิดข้อผิดพลาด",
+        description: "ไม่สามารถบันทึกรายการได้",
+        type: "error",
+      });
+    }
+  };
+
+  return (
+    <div
+      id="thai-help-calculator-container"
+      className="border-border/30 bg-card dark:bg-card/85 mb-6 overflow-hidden rounded-xl border shadow-sm transition-all"
+    >
+      {/* Flag Gradient Header Strip */}
+      <div
+        id="thai-help-header-strip"
+        className="h-1 w-full bg-gradient-to-r from-red-600 via-white to-blue-800"
+      />
+
+      {/* Main Header Action */}
+      <button
+        id="thai-help-toggle-btn"
+        onClick={() => setIsOpen(!isOpen)}
+        className="text-foreground hover:bg-muted/30 flex w-full items-center justify-between px-5 py-4 text-left transition-colors"
+      >
+        <div id="thai-help-title-group" className="flex items-center gap-3">
+          <div
+            id="thai-help-icon-wrapper"
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:bg-blue-400/15 dark:text-blue-400"
+          >
+            <Coins className="h-5 w-5" />
+          </div>
+          <div>
+            <h2
+              id="thai-help-heading"
+              className="flex items-center gap-2 text-base font-bold"
+            >
+              เครื่องคำนวณและบันทึกสิทธิ์ 60/40
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+              </span>
+            </h2>
+            <p
+              id="thai-help-subheading"
+              className="text-muted-foreground text-xs font-normal"
+            >
+              คำนวณโครงการไทยช่วยไทย พลัส และบันทึกยอดจ่ายจริง 40% ทันที
+            </p>
+          </div>
+        </div>
+        <div
+          id="thai-help-chevron"
+          className="text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+        </div>
+      </button>
+
+      {isOpen && (
+        <div
+          id="thai-help-content"
+          className="border-border/10 border-t p-5 transition-all duration-300 ease-out"
+        >
+          {/* Rights Stats Quick Display */}
+          <div
+            id="thai-help-rights-quick-grid"
+            className="bg-muted/30 mb-5 grid grid-cols-3 gap-2 rounded-xl p-2 sm:gap-3"
+          >
+            <div className="bg-card/50 border-border/5 flex flex-col items-center justify-center rounded-lg border py-2.5 text-center">
+              <span className="text-muted-foreground text-[10px] font-medium uppercase">
+                รัฐร่วมจ่าย
+              </span>
+              <span className="text-foreground mt-0.5 text-sm font-bold">
+                {(CO_PAY_STATE_SHARE * 100).toFixed(0)}%
+              </span>
+            </div>
+            <div className="bg-card/50 border-border/5 flex flex-col items-center justify-center rounded-lg border py-2.5 text-center">
+              <span className="text-muted-foreground text-[10px] font-medium uppercase">
+                จำกัด/วัน
+              </span>
+              <span className="text-foreground mt-0.5 text-sm font-bold">
+                ฿{CO_PAY_DAILY_MAX_SUBSIDY}
+              </span>
+            </div>
+            <div className="bg-card/50 border-border/5 flex flex-col items-center justify-center rounded-lg border py-2.5 text-center">
+              <span className="text-muted-foreground text-[10px] font-medium uppercase">
+                ซื้อได้สูงสุด/วัน
+              </span>
+              <span className="mt-0.5 text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                ฿{(CO_PAY_DAILY_MAX_SUBSIDY / CO_PAY_STATE_SHARE).toFixed(2)}
+              </span>
+            </div>
+          </div>
+
+          {/* Interactive Navigation Tabs */}
+          <div
+            id="thai-help-tabs"
+            className="bg-muted/60 relative mb-5 flex rounded-lg p-1"
+          >
+            {(["split", "topup", "stats"] as const).map((tab) => {
+              const isActive = activeTab === tab;
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`relative z-10 flex-1 rounded-md py-1.5 text-center text-xs font-semibold transition-all duration-200 ${
+                    isActive
+                      ? "bg-card text-foreground font-bold shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {tab === "split" && "แยกบิล (60/40)"}
+                  {tab === "topup" && "คำนวณเติมเงิน"}
+                  {tab === "stats" && `สถิติเดือนนี้ (${stats.count})`}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Tab Content 1: Split Bill */}
+          {activeTab === "split" && (
+            <div id="thai-help-tab-split" className="animate-fadeIn space-y-4">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="total-bill-input"
+                  className="text-foreground text-sm font-semibold"
+                >
+                  ยอดราคาสินค้าทั้งหมด (บาท)
+                </Label>
+                <div className="relative">
+                  <span className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 font-semibold">
+                    ฿
+                  </span>
+                  <Input
+                    id="total-bill-input"
+                    type="number"
+                    pattern="[0-9]*"
+                    inputMode="decimal"
+                    placeholder="ระบุยอดซื้อทั้งหมด เช่น 150"
+                    value={totalBill}
+                    onChange={(e) => setTotalBill(e.target.value)}
+                    className="h-11 pl-7 text-base font-bold tabular-nums"
+                  />
+                  {totalBill && (
+                    <button
+                      onClick={() => setTotalBill("")}
+                      className="text-muted-foreground hover:bg-muted hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 rounded-full p-1"
+                    >
+                      <RotateCcw size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Calculations Box */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="border-border/20 bg-muted/20 rounded-xl border p-3">
+                  <span className="text-muted-foreground text-[10px] font-semibold uppercase">
+                    รัฐช่วยจ่าย ({(CO_PAY_STATE_SHARE * 100).toFixed(0)}%)
+                  </span>
+                  <p className="mt-1 text-lg font-extrabold text-blue-600 tabular-nums dark:text-blue-400">
+                    ฿{subsidy60.toFixed(2)}
+                  </p>
+                </div>
+                <div className="border-border/20 rounded-xl border bg-emerald-500/5 p-3">
+                  <span className="text-muted-foreground text-[10px] font-semibold uppercase">
+                    คุณจ่ายจริง ({(CO_PAY_USER_SHARE * 100).toFixed(0)}%)
+                  </span>
+                  <p className="mt-1 text-lg font-extrabold text-emerald-600 tabular-nums dark:text-emerald-400">
+                    ฿{userPaid40.toFixed(2)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Integration with Expense Tracker Section */}
+              {numericBill > 0 && (
+                <div
+                  id="thai-help-save-flow"
+                  className="space-y-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4"
+                >
+                  <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                    <Sparkles size={14} className="animate-pulse" />
+                    <span>พร้อมบันทึกรายการลงใน บัญชีรายจ่าย ของคุณ</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="space-y-1">
+                      <Label
+                        htmlFor="tct-category-select"
+                        className="text-muted-foreground text-[10px] font-semibold uppercase"
+                      >
+                        หมวดหมู่รายจ่าย
+                      </Label>
+                      <select
+                        id="tct-category-select"
+                        value={selectedCategoryId}
+                        onChange={(e) => setSelectedCategoryId(e.target.value)}
+                        className="bg-card border-border/40 text-foreground h-9 w-full rounded-md border px-2 text-xs font-medium focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                      >
+                        {categories
+                          .filter((c) => c.isActive)
+                          .map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.icon ? `${c.icon} ` : ""}
+                              {c.name}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                    <div className="flex items-end">
+                      <Button
+                        onClick={handleSaveExpense}
+                        disabled={isSaving}
+                        className="h-9 w-full gap-1.5 bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600"
+                      >
+                        {isSaving ? "กำลังบันทึก..." : <Plus size={14} />}
+                        บันทึกรายจ่าย ฿{userPaid40.toFixed(2)}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Tab Content 2: Top Up Calculator */}
+          {activeTab === "topup" && (
+            <div id="thai-help-tab-topup" className="animate-fadeIn space-y-4">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="desired-subsidy-input"
+                  className="text-foreground text-sm font-semibold"
+                >
+                  ยอดเงินสนับสนุนของรัฐที่ต้องการใช้วันนี้ (บาท)
+                </Label>
+                <div className="relative">
+                  <span className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 font-semibold">
+                    ฿
+                  </span>
+                  <Input
+                    id="desired-subsidy-input"
+                    type="number"
+                    pattern="[0-9]*"
+                    inputMode="decimal"
+                    placeholder="สิทธิ์รัฐที่อยากใช้ เช่น 150 (ไม่เกิน 200)"
+                    value={desiredSubsidy}
+                    onChange={(e) => setDesiredSubsidy(e.target.value)}
+                    className="h-11 pl-7 text-base font-bold tabular-nums"
+                  />
+                  {desiredSubsidy && (
+                    <button
+                      onClick={() => setDesiredSubsidy("")}
+                      className="text-muted-foreground hover:bg-muted hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 rounded-full p-1"
+                    >
+                      <RotateCcw size={14} />
+                    </button>
+                  )}
+                </div>
+                <p className="text-muted-foreground text-[10px] leading-tight">
+                  ป้อนยอดเงินรัฐที่คุณต้องการสแกนใช้ เพื่อดูว่ากระเป๋าเป๋าตัง
+                  (G-Wallet) ของคุณต้องมีเงินอยู่อีกเท่าไหร่
+                </p>
+              </div>
+
+              {/* Calculations Box */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="border-border/20 rounded-xl border bg-emerald-500/5 p-3">
+                  <span className="text-muted-foreground text-[10px] font-semibold uppercase">
+                    คุณต้องเติมเงิน ({(CO_PAY_USER_SHARE * 100).toFixed(0)}%)
+                  </span>
+                  <p className="mt-1 text-lg font-extrabold text-emerald-600 tabular-nums dark:text-emerald-400">
+                    ฿{topUpNeeded.toFixed(2)}
+                  </p>
+                </div>
+                <div className="border-border/20 bg-muted/20 rounded-xl border p-3">
+                  <span className="text-muted-foreground text-[10px] font-semibold uppercase">
+                    เพื่อซื้อราคาสินค้ารวม
+                  </span>
+                  <p className="text-foreground mt-1 text-lg font-extrabold tabular-nums">
+                    ฿{purchaseValue.toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tab Content 3: Stats */}
+          {activeTab === "stats" && (
+            <div id="thai-help-tab-stats" className="animate-fadeIn space-y-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="border-border/10 bg-card dark:bg-muted/10 rounded-xl border p-3 shadow-sm">
+                  <span className="text-muted-foreground text-[10px] font-semibold uppercase">
+                    รัฐช่วยแล้วเดือนนี้
+                  </span>
+                  <p className="mt-1 text-lg font-extrabold text-blue-600 tabular-nums dark:text-blue-400">
+                    ฿{stats.totalSubsidyUsed.toFixed(2)}
+                  </p>
+                  <span className="text-muted-foreground mt-0.5 block text-[9px]">
+                    จากโควตา ฿1,000.00 / เดือน
+                  </span>
+                </div>
+                <div className="border-border/10 bg-card dark:bg-muted/10 rounded-xl border p-3 shadow-sm">
+                  <span className="text-muted-foreground text-[10px] font-semibold uppercase">
+                    สิทธิ์คงเหลือจากรัฐ
+                  </span>
+                  <p className="mt-1 text-lg font-extrabold text-emerald-600 tabular-nums dark:text-emerald-400">
+                    ฿{stats.remainingSubsidy.toFixed(2)}
+                  </p>
+                  <span className="text-muted-foreground mt-0.5 block text-[9px]">
+                    รีเซ็ตอัตโนมัติสิ้นเดือนนี้
+                  </span>
+                </div>
+                <div className="border-border/10 bg-card dark:bg-muted/10 rounded-xl border p-3 shadow-sm">
+                  <span className="text-muted-foreground text-[10px] font-semibold uppercase">
+                    เงินคุณที่จ่ายสมทบ
+                  </span>
+                  <p className="text-foreground mt-1 text-lg font-extrabold tabular-nums">
+                    ฿{stats.totalUserSpent.toFixed(2)}
+                  </p>
+                  <span className="text-muted-foreground mt-0.5 block text-[9px]">
+                    บันทึกในประวัติแล้ว {stats.count} รายการ
+                  </span>
+                </div>
+              </div>
+
+              {/* Info banner */}
+              <div className="flex items-start gap-2.5 rounded-lg border border-yellow-500/25 bg-yellow-500/5 p-3 text-xs leading-relaxed text-yellow-700 dark:text-yellow-400">
+                <Info size={16} className="mt-0.5 shrink-0" />
+                <p>
+                  ระบบจะค้นหาประวัติการเงินของคุณในเดือนปัจจุบันที่มีเครื่องหมายหรือหมายเหตุตัวย่อ
+                  เช่น <strong>#ไทยช่วยไทย</strong>, <strong>#ทชท</strong>,{" "}
+                  <strong>#tct</strong>, <strong>#6040</strong>,{" "}
+                  <strong>#คนละครึ่ง</strong>, <strong>#klk</strong>{" "}
+                  เพื่อคำนวณสิทธิ์ให้อัตโนมัติ
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Quick Notice */}
+          <div className="mt-4 flex items-center gap-2 rounded-lg border border-red-500/10 bg-red-500/5 px-3 py-2">
+            <TrendingDown className="h-3.5 w-3.5 shrink-0 text-red-500" />
+            <p className="text-[10px] leading-none font-medium text-red-700 dark:text-red-400">
+              เงิน 1,000 บาท/เดือน ของสิทธิ์รัฐช่วยจ่าย
+              หากใช้ไม่หมดจะไม่ทบไปเดือนถัดไป
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     const rawBody = await req.text();
     const body = JSON.parse(rawBody);
     const secret = env.LINE_CHANNEL_SECRET;
-    console.log(secret)
+    console.log(secret);
     const signature = crypto
       .createHmac("SHA256", secret as string)
       .update(rawBody)

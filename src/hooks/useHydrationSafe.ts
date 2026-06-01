@@ -16,7 +16,11 @@ const subscribeToHydration = () => {
  * ป้องกัน hydration mismatch จากการใช้ browser APIs เช่น document, window
  */
 export function useIsomorphicLayoutEffect() {
-  return useSyncExternalStore(subscribeToHydration, () => true, () => false);
+  return useSyncExternalStore(
+    subscribeToHydration,
+    () => true,
+    () => false,
+  );
 }
 
 /**
@@ -63,8 +67,7 @@ export function useSuppressHydrationWarning(condition?: boolean): boolean {
 
   return (
     isBrowser &&
-    (process.env.NODE_ENV === "development" ||
-      process.env.NODE_ENV === "test")
+    (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test")
   );
 }
 

@@ -42,10 +42,7 @@ export async function GET(
     });
   } catch (error) {
     console.error("Error serving temp chart:", error);
-    return Response.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 

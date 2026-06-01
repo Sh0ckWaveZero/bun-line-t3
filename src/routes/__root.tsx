@@ -262,11 +262,20 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 
 function RootNotFound() {
   return (
-    <section id="not-found-page" className="container mx-auto flex min-h-[60vh] max-w-2xl flex-col items-center justify-center gap-4 px-4 py-16 text-center">
-      <p id="not-found-code" className="text-muted-foreground text-sm font-medium tracking-[0.2em] uppercase" role="text">
+    <section
+      id="not-found-page"
+      className="container mx-auto flex min-h-[60vh] max-w-2xl flex-col items-center justify-center gap-4 px-4 py-16 text-center"
+    >
+      <p
+        id="not-found-code"
+        className="text-muted-foreground text-sm font-medium tracking-[0.2em] uppercase"
+        role="text"
+      >
         404
       </p>
-      <h1 id="not-found-title" className="text-3xl font-bold tracking-tight">ไม่พบหน้าที่ต้องการ</h1>
+      <h1 id="not-found-title" className="text-3xl font-bold tracking-tight">
+        ไม่พบหน้าที่ต้องการ
+      </h1>
       <p id="not-found-description" className="text-muted-foreground">
         ลิงก์นี้อาจไม่ถูกต้อง หรือหน้าอาจถูกย้ายตำแหน่งไปแล้ว
       </p>

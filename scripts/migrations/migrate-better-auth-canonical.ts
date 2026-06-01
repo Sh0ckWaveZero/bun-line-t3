@@ -43,7 +43,10 @@ async function migrateBetterAuthCanonical() {
               $set: {
                 accessToken: { $ifNull: ["$accessToken", "$access_token"] },
                 accessTokenExpiresAt: {
-                  $ifNull: ["$accessTokenExpiresAt", "$access_token_expires_at"],
+                  $ifNull: [
+                    "$accessTokenExpiresAt",
+                    "$access_token_expires_at",
+                  ],
                 },
                 accountId: { $ifNull: ["$accountId", "$provider_account_id"] },
                 createdAt: { $ifNull: ["$createdAt", "$created_at", "$$NOW"] },
@@ -115,7 +118,9 @@ async function migrateBetterAuthCanonical() {
                 email: {
                   $ifNull: [
                     "$email",
-                    { $concat: ["user-", { $toString: "$_id" }, "@line.local"] },
+                    {
+                      $concat: ["user-", { $toString: "$_id" }, "@line.local"],
+                    },
                   ],
                 },
                 emailVerified: {
@@ -123,7 +128,12 @@ async function migrateBetterAuthCanonical() {
                     "$emailVerified",
                     {
                       $cond: [
-                        { $ne: [{ $ifNull: ["$email_verified_flag", null] }, null] },
+                        {
+                          $ne: [
+                            { $ifNull: ["$email_verified_flag", null] },
+                            null,
+                          ],
+                        },
                         "$email_verified_flag",
                         { $ne: [{ $ifNull: ["$email_verified", null] }, null] },
                       ],

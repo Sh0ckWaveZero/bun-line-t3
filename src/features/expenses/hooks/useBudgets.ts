@@ -11,7 +11,10 @@ export function useBudgets(currentMonth: string, enabled: boolean) {
 
   const fetchWithTimeout = async (input: string, init: RequestInit = {}) => {
     const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    const timeoutId = window.setTimeout(
+      () => controller.abort(),
+      REQUEST_TIMEOUT_MS,
+    );
     try {
       return await fetch(input, {
         ...init,
@@ -30,7 +33,9 @@ export function useBudgets(currentMonth: string, enabled: boolean) {
   const { data: budgetUsage = [], isLoading } = useQuery({
     queryKey: ["expense-budgets", currentMonth],
     queryFn: async () => {
-      const res = await fetchWithTimeout(`/api/expenses/budgets?month=${currentMonth}`);
+      const res = await fetchWithTimeout(
+        `/api/expenses/budgets?month=${currentMonth}`,
+      );
       if (!res.ok) {
         throw new Error("Failed to fetch budgets");
       }
@@ -54,7 +59,9 @@ export function useBudgets(currentMonth: string, enabled: boolean) {
       });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
-        throw new Error((json as { error?: string }).error ?? "เพิ่มงบประมาณไม่สำเร็จ");
+        throw new Error(
+          (json as { error?: string }).error ?? "เพิ่มงบประมาณไม่สำเร็จ",
+        );
       }
     },
     onSuccess: invalidate,
@@ -75,7 +82,9 @@ export function useBudgets(currentMonth: string, enabled: boolean) {
       });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
-        throw new Error((json as { error?: string }).error ?? "แก้ไขงบประมาณไม่สำเร็จ");
+        throw new Error(
+          (json as { error?: string }).error ?? "แก้ไขงบประมาณไม่สำเร็จ",
+        );
       }
     },
     onSuccess: invalidate,
@@ -88,7 +97,9 @@ export function useBudgets(currentMonth: string, enabled: boolean) {
       });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
-        throw new Error((json as { error?: string }).error ?? "ลบงบประมาณไม่สำเร็จ");
+        throw new Error(
+          (json as { error?: string }).error ?? "ลบงบประมาณไม่สำเร็จ",
+        );
       }
     },
     onSuccess: invalidate,
@@ -128,8 +139,7 @@ export function useBudgets(currentMonth: string, enabled: boolean) {
   const deleteBudget = (id: string, callbacks?: SaveBudgetCallbacks) => {
     deleteMutation.mutate(id, {
       onSuccess: callbacks?.onSuccess,
-      onError: (e) =>
-        callbacks?.onError?.(e.message ?? "ลบงบประมาณไม่สำเร็จ"),
+      onError: (e) => callbacks?.onError?.(e.message ?? "ลบงบประมาณไม่สำเร็จ"),
     });
   };
 

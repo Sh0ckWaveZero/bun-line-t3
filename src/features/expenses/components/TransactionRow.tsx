@@ -1,15 +1,15 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { TRANSACTION_TYPE_COLORS } from "@/features/expenses/constants"
-import { formatAmount, formatDateShortThai } from "@/features/expenses/helpers"
-import type { TransactionWithCategory } from "@/features/expenses/types"
-import { Edit, Trash2 } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { TRANSACTION_TYPE_COLORS } from "@/features/expenses/constants";
+import { formatAmount, formatDateShortThai } from "@/features/expenses/helpers";
+import type { TransactionWithCategory } from "@/features/expenses/types";
+import { Edit, Trash2 } from "lucide-react";
 
 interface TransactionRowProps {
-  tx: TransactionWithCategory
-  onEdit?: (tx: TransactionWithCategory) => void
-  onDelete: (id: string) => void
-  hideAmounts?: boolean
+  tx: TransactionWithCategory;
+  onEdit?: (tx: TransactionWithCategory) => void;
+  onDelete: (id: string) => void;
+  hideAmounts?: boolean;
 }
 
 export function TransactionRow({
@@ -18,10 +18,10 @@ export function TransactionRow({
   onDelete,
   hideAmounts,
 }: TransactionRowProps) {
-  const isIncome = tx.type === "INCOME"
+  const isIncome = tx.type === "INCOME";
   const rowTone = isIncome
     ? "border-card-green bg-card-green/70 dark:bg-card-green/40"
-    : "border-card-red bg-card-red/70 dark:bg-card-red/40"
+    : "border-card-red bg-card-red/70 dark:bg-card-red/40";
 
   return (
     <Card
@@ -54,7 +54,9 @@ export function TransactionRow({
               className="text-muted-foreground/60 mt-0.5 text-xs"
             >
               {formatDateShortThai(tx.transDate)}
-              {tx.note && <span id={`transaction-note-${tx.id}`}> · {tx.note}</span>}
+              {tx.note && (
+                <span id={`transaction-note-${tx.id}`}> · {tx.note}</span>
+              )}
             </p>
             {tx.tags && (
               <div
@@ -120,5 +122,5 @@ export function TransactionRow({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

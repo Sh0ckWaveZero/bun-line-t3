@@ -39,7 +39,7 @@ export function CategoryCombobox({
 
   // Filter categories based on search
   const filtered = categories.filter((c) =>
-    c.name.toLowerCase().includes(search.toLowerCase())
+    c.name.toLowerCase().includes(search.toLowerCase()),
   );
 
   // Close dropdown when clicking outside
@@ -77,7 +77,7 @@ export function CategoryCombobox({
       setIsOpen(false);
       setSearch("");
     },
-    [onChange]
+    [onChange],
   );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,7 +106,7 @@ export function CategoryCombobox({
       if (!items || items.length === 0) return;
 
       const currentIndex = Array.from(items).findIndex(
-        (item) => item === document.activeElement
+        (item) => item === document.activeElement,
       );
 
       const nextIndex =
@@ -142,14 +142,14 @@ export function CategoryCombobox({
         {selectedCategory ? (
           <span
             id="transaction-category-selected-icon"
-            className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 z-10 text-xl"
+            className="pointer-events-none absolute top-1/2 left-4 z-10 -translate-y-1/2 text-xl"
           >
             {selectedCategory.icon ?? "📦"}
           </span>
         ) : (
           <Tag
             id="transaction-category-placeholder-icon"
-            className="text-muted-foreground pointer-events-none absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 z-10"
+            className="text-muted-foreground pointer-events-none absolute top-1/2 left-4 z-10 h-5 w-5 -translate-y-1/2"
           />
         )}
 
@@ -164,7 +164,7 @@ export function CategoryCombobox({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           required={required && !selectedCategory}
-          className="border-border bg-background text-foreground focus-visible:ring-foreground/30 h-12 w-full appearance-none rounded-lg border py-0 !pr-11 !pl-12 text-base font-medium transition-colors outline-none focus-visible:ring-2 cursor-pointer"
+          className="border-border bg-background text-foreground focus-visible:ring-foreground/30 h-12 w-full cursor-pointer appearance-none rounded-lg border py-0 !pr-11 !pl-12 text-base font-medium transition-colors outline-none focus-visible:ring-2"
           autoComplete="off"
         />
 
@@ -213,9 +213,7 @@ export function CategoryCombobox({
                       : "text-foreground"
                   }`}
                 >
-                  <span className="text-lg">
-                    {category.icon ?? "📦"}
-                  </span>
+                  <span className="text-lg">{category.icon ?? "📦"}</span>
                   <span>{category.name}</span>
                 </li>
               );

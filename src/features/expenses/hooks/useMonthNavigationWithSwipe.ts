@@ -34,14 +34,19 @@ export function useMonthNavigationWithSwipe() {
   const monthNavRef = useRef<HTMLDivElement>(null);
 
   // Content animation states
-  const { opacity: contentOpacity, transform: contentTransform, transitionOut, transitionIn } = useContentTransition({
+  const {
+    opacity: contentOpacity,
+    transform: contentTransform,
+    transitionOut,
+    transitionIn,
+  } = useContentTransition({
     duration: 300,
     offset: 20,
   });
 
   // Swipe handlers with content animation
   const handleSwipeLeft = useCallback(() => {
-    transitionOut('left');
+    transitionOut("left");
     setTimeout(() => {
       nextMonth();
       setTimeout(() => {
@@ -51,7 +56,7 @@ export function useMonthNavigationWithSwipe() {
   }, [nextMonth, transitionOut, transitionIn]);
 
   const handleSwipeRight = useCallback(() => {
-    transitionOut('right');
+    transitionOut("right");
     setTimeout(() => {
       prevMonth();
       setTimeout(() => {

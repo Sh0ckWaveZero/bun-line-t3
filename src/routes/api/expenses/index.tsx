@@ -4,14 +4,14 @@
  * POST /api/expenses
  */
 
-import { createFileRoute } from "@tanstack/react-router"
-import { z } from "zod"
-import { getServerAuthSession } from "@/lib/auth/auth"
+import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
+import { getServerAuthSession } from "@/lib/auth/auth";
 import {
   getTransactions,
   createTransaction,
-} from "@/features/expenses/services/transaction.server"
-import { DEFAULT_PAGE_SIZE } from "@/features/expenses/constants"
+} from "@/features/expenses/services/transaction.server";
+import { DEFAULT_PAGE_SIZE } from "@/features/expenses/constants";
 
 // ─────────────────────────────────────────────
 // Schemas
@@ -26,7 +26,7 @@ const createTransactionSchema = z.object({
   transDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "รูปแบบวันที่ไม่ถูกต้อง (YYYY-MM-DD)"),
-})
+});
 
 // ─────────────────────────────────────────────
 // Handlers
@@ -34,20 +34,20 @@ const createTransactionSchema = z.object({
 
 export async function GET(request: Request) {
   try {
-    const session = await getServerAuthSession(request)
+    const session = await getServerAuthSession(request);
     if (!session?.user?.id) {
-      return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 })
+      return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 });
     }
 
-    const url = new URL(request.url)
-    const transMonth = url.searchParams.get("transMonth") ?? undefined
-    const type = url.searchParams.get("type") as "INCOME" | "EXPENSE" | null
-    const categoryId = url.searchParams.get("categoryId") ?? undefined
+    const url = new URL(request.url);
+    const transMonth = url.searchParams.get("transMonth") ?? undefined;
+    const type = url.searchParams.get("type") as "INCOME" | "EXPENSE" | null;
+    const categoryId = url.searchParams.get("categoryId") ?? undefined;
     const limit = Math.min(
       parseInt(url.searchParams.get("limit") ?? String(DEFAULT_PAGE_SIZE), 10),
       100,
-    )
-    const offset = parseInt(url.searchParams.get("offset") ?? "0", 10)
+    );
+    const offset = parseInt(url.searchParams.get("offset") ?? "0", 10);
 
     const transactions = await getTransactions({
       userId: session.user.id,
@@ -56,40 +56,46 @@ export async function GET(request: Request) {
       categoryId,
       limit,
       offset,
-    })
+    });
 
-    return Response.json({ success: true, data: transactions })
+    return Response.json({ success: true, data: transactions });
   } catch (error) {
-    console.error("[GET /api/expenses]", error)
-    return Response.json({ error: "ไม่สามารถดึงข้อมูลได้" }, { status: 500 })
+    console.error("[GET /api/expenses]", error);
+    return Response.json({ error: "ไม่สามารถดึงข้อมูลได้" }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerAuthSession(request)
+    const session = await getServerAuthSession(request);
     if (!session?.user?.id) {
-      return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 })
+      return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 });
     }
 
-    const body = await request.json()
-    const input = createTransactionSchema.parse(body)
+    const body = await request.json();
+    const input = createTransactionSchema.parse(body);
 
     const transaction = await createTransaction({
       ...input,
       userId: session.user.id,
-    })
+    });
 
     return Response.json(
       { success: true, data: transaction, message: "บันทึกรายการสำเร็จ" },
       { status: 201 },
-    )
+    );
   } catch (error) {
-    console.error("[POST /api/expenses]", error)
+    console.error("[POST /api/expenses]", error);
     if (error instanceof z.ZodError) {
-      return Response.json({ error: "ข้อมูลไม่ถูกต้อง", details: error.issues }, { status: 400 })
+      return Response.json(
+        { error: "ข้อมูลไม่ถูกต้อง", details: error.issues },
+        { status: 400 },
+      );
     }
-    return Response.json({ error: "ไม่สามารถบันทึกรายการได้" }, { status: 500 })
+    return Response.json(
+      { error: "ไม่สามารถบันทึกรายการได้" },
+      { status: 500 },
+    );
   }
 }
 
@@ -100,4 +106,4 @@ export const Route = createFileRoute("/api/expenses/")({
       POST: ({ request }) => POST(request),
     },
   },
-})
+});

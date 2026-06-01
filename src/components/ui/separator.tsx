@@ -8,7 +8,7 @@ const Separator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("h-[1px] w-full shrink-0 bg-border", className)}
+    className={cn("bg-border h-[1px] w-full shrink-0", className)}
     role="separator"
     {...props}
   />

@@ -43,7 +43,8 @@ function saveGoals(goals: GoalValues) {
 }
 
 const fmtInt = (n: number): string => Math.round(n).toLocaleString("en-US");
-const clampProgress = (value: number): number => Math.max(0, Math.min(100, value));
+const clampProgress = (value: number): number =>
+  Math.max(0, Math.min(100, value));
 const toSafeNumber = (value: unknown): number => {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string") {
@@ -65,7 +66,10 @@ export const GoalsSection = ({ orders }: GoalsSectionProps) => {
     setGoals(loadGoals());
   }, []);
 
-  const spendFiat = orders.reduce((sum, order) => sum + toSafeNumber(order.amountTHB), 0);
+  const spendFiat = orders.reduce(
+    (sum, order) => sum + toSafeNumber(order.amountTHB),
+    0,
+  );
   const totalSatoshi = Math.round(
     orders
       .filter((order) => order.coin.toUpperCase() === "BTC")
@@ -75,16 +79,21 @@ export const GoalsSection = ({ orders }: GoalsSectionProps) => {
   const progressFiatRaw =
     goals.goalFiat > 0 ? (toSafeNumber(spendFiat) / goals.goalFiat) * 100 : 0;
   const progressBTCRaw =
-    goals.goalSatoshi > 0 ? (toSafeNumber(totalSatoshi) / goals.goalSatoshi) * 100 : 0;
+    goals.goalSatoshi > 0
+      ? (toSafeNumber(totalSatoshi) / goals.goalSatoshi) * 100
+      : 0;
   const progressFiat = clampProgress(progressFiatRaw);
   const progressBTC = clampProgress(progressBTCRaw);
   const btcFromSat = goals.goalSatoshi / 1e8;
 
-  const startEdit = useCallback((field: EditField) => {
-    if (!field) return;
-    setEditing(field);
-    setDraft(String(goals[field]));
-  }, [goals]);
+  const startEdit = useCallback(
+    (field: EditField) => {
+      if (!field) return;
+      setEditing(field);
+      setDraft(String(goals[field]));
+    },
+    [goals],
+  );
 
   const cancelEdit = useCallback(() => {
     setEditing(null);
@@ -110,15 +119,18 @@ export const GoalsSection = ({ orders }: GoalsSectionProps) => {
       if (e.key === "Enter") saveEdit();
       if (e.key === "Escape") cancelEdit();
     },
-    [saveEdit, cancelEdit]
+    [saveEdit, cancelEdit],
   );
 
   return (
-    <div id="dca-goals-section" className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div
+      id="dca-goals-section"
+      className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2"
+    >
       {/* Goal: Fiat Invested */}
       <div className="bg-card border-border/80 rounded-lg border p-4 shadow-sm sm:p-5">
         <div className="mb-2.5 flex items-baseline justify-between">
-          <h3 className="text-foreground/80 text-xs font-semibold uppercase tracking-wider">
+          <h3 className="text-foreground/80 text-xs font-semibold tracking-wider uppercase">
             {t.goals.goalFiatInvested}
           </h3>
           <div className="text-foreground font-mono text-lg font-medium tracking-tight sm:text-xl">
@@ -150,10 +162,20 @@ export const GoalsSection = ({ orders }: GoalsSectionProps) => {
                 autoFocus
                 className="h-5 w-24 border-orange-500 px-1 py-0 font-mono text-[10px]"
               />
-              <Button variant="ghost" size="icon" onClick={saveEdit} className="h-4 w-4 p-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={saveEdit}
+                className="h-4 w-4 p-0"
+              >
                 <Check className="h-3 w-3 text-green-600" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={cancelEdit} className="h-4 w-4 p-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={cancelEdit}
+                className="h-4 w-4 p-0"
+              >
                 <X className="h-3 w-3 text-red-500" />
               </Button>
             </span>
@@ -163,7 +185,8 @@ export const GoalsSection = ({ orders }: GoalsSectionProps) => {
               className="hover:text-foreground inline-flex cursor-pointer items-center gap-1 border-b border-dashed border-transparent hover:border-current"
               title={t.goals.editGoalTitle}
             >
-              {t.goals.goalFiat} <span className="font-mono">{fmtInt(goals.goalFiat)}</span>
+              {t.goals.goalFiat}{" "}
+              <span className="font-mono">{fmtInt(goals.goalFiat)}</span>
               <Pencil className="h-2.5 w-2.5 opacity-50" />
             </button>
           )}
@@ -173,7 +196,7 @@ export const GoalsSection = ({ orders }: GoalsSectionProps) => {
       {/* Goal: Total Satoshi */}
       <div className="bg-card border-border/80 rounded-lg border p-4 shadow-sm sm:p-5">
         <div className="mb-2.5 flex items-baseline justify-between">
-          <h3 className="text-foreground/80 text-xs font-semibold uppercase tracking-wider">
+          <h3 className="text-foreground/80 text-xs font-semibold tracking-wider uppercase">
             {t.goals.goalTotalSatoshi}
           </h3>
           <div className="text-foreground font-mono text-lg font-medium tracking-tight sm:text-xl">
@@ -191,7 +214,10 @@ export const GoalsSection = ({ orders }: GoalsSectionProps) => {
           />
         </div>
         <div className="text-muted-foreground mt-1.5 flex items-center justify-between text-[10px]">
-          <span><span className="font-mono">{fmtInt(totalSatoshi)}</span> {t.goals.sat}</span>
+          <span>
+            <span className="font-mono">{fmtInt(totalSatoshi)}</span>{" "}
+            {t.goals.sat}
+          </span>
           {editing === "goalSatoshi" ? (
             <span className="flex items-center gap-1">
               {t.goals.goalSatoshi}
@@ -206,10 +232,20 @@ export const GoalsSection = ({ orders }: GoalsSectionProps) => {
                 className="h-5 w-28 border-orange-500 px-1 py-0 font-mono text-[10px]"
               />
               {t.goals.sat} {t.goals.btc((Number(draft) / 1e8).toFixed(2))}
-              <Button variant="ghost" size="icon" onClick={saveEdit} className="h-4 w-4 p-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={saveEdit}
+                className="h-4 w-4 p-0"
+              >
                 <Check className="h-3 w-3 text-green-600" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={cancelEdit} className="h-4 w-4 p-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={cancelEdit}
+                className="h-4 w-4 p-0"
+              >
                 <X className="h-3 w-3 text-red-500" />
               </Button>
             </span>
@@ -219,7 +255,9 @@ export const GoalsSection = ({ orders }: GoalsSectionProps) => {
               className="hover:text-foreground inline-flex cursor-pointer items-center gap-1 border-b border-dashed border-transparent hover:border-current"
               title={t.goals.editGoalTitle}
             >
-              {t.goals.goalSatoshi} <span className="font-mono">{fmtInt(goals.goalSatoshi)}</span> {t.goals.sat} {t.goals.btc(btcFromSat.toFixed(2))}
+              {t.goals.goalSatoshi}{" "}
+              <span className="font-mono">{fmtInt(goals.goalSatoshi)}</span>{" "}
+              {t.goals.sat} {t.goals.btc(btcFromSat.toFixed(2))}
               <Pencil className="h-2.5 w-2.5 opacity-50" />
             </button>
           )}

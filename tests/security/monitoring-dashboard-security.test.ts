@@ -1,7 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import {
-  installCustomMatchers,
-} from "../helpers/test-matchers";
+import { installCustomMatchers } from "../helpers/test-matchers";
 
 // Install custom matchers
 installCustomMatchers();

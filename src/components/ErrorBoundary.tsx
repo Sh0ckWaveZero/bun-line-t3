@@ -3,46 +3,46 @@
  * ป้องกันไม่ให้ทั้งหน้าจอ crash เมื่อเกิด error ใน child components
  */
 
-import { Component, ReactNode } from "react"
-import { AlertCircle, RefreshCw, Home } from "lucide-react"
+import { Component, ReactNode } from "react";
+import { AlertCircle, RefreshCw, Home } from "lucide-react";
 
 interface Props {
-  children: ReactNode
-  fallback?: ReactNode
-  onError?: (error: Error, errorInfo: React.ErrorInfo) => void
+  children: ReactNode;
+  fallback?: ReactNode;
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
 }
 
 interface State {
-  hasError: boolean
-  error: Error | null
-  showDetails: boolean
+  hasError: boolean;
+  error: Error | null;
+  showDetails: boolean;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
-    super(props)
-    this.state = { hasError: false, error: null, showDetails: false }
+    super(props);
+    this.state = { hasError: false, error: null, showDetails: false };
   }
 
   static getDerivedStateFromError(error: Error): Omit<State, "showDetails"> {
-    return { hasError: true, error }
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("[ErrorBoundary] Caught error:", error, errorInfo)
+    console.error("[ErrorBoundary] Caught error:", error, errorInfo);
     if (this.props.onError) {
-      this.props.onError(error, errorInfo)
+      this.props.onError(error, errorInfo);
     }
   }
 
   handleReset = () => {
-    this.setState({ hasError: false, error: null, showDetails: false })
-  }
+    this.setState({ hasError: false, error: null, showDetails: false });
+  };
 
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
-        return this.props.fallback
+        return this.props.fallback;
       }
 
       return (
@@ -86,11 +86,15 @@ export class ErrorBoundary extends Component<Props, State> {
               <div className="mt-5 border-t border-gray-100 pt-4 dark:border-gray-800">
                 <button
                   type="button"
-                  onClick={() => this.setState((s) => ({ showDetails: !s.showDetails }))}
+                  onClick={() =>
+                    this.setState((s) => ({ showDetails: !s.showDetails }))
+                  }
                   className="flex w-full items-center justify-between text-xs font-medium text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-400"
                 >
                   <span>รายละเอียด error</span>
-                  <span className="text-[10px]">{this.state.showDetails ? "▲" : "▼"}</span>
+                  <span className="text-[10px]">
+                    {this.state.showDetails ? "▲" : "▼"}
+                  </span>
                 </button>
                 {this.state.showDetails && (
                   <pre className="mt-3 max-h-32 overflow-auto rounded-lg bg-gray-50 p-3 text-[11px] leading-relaxed text-gray-600 dark:bg-gray-800/60 dark:text-gray-400">
@@ -101,10 +105,10 @@ export class ErrorBoundary extends Component<Props, State> {
             )}
           </div>
         </div>
-      )
+      );
     }
 
-    return this.props.children
+    return this.props.children;
   }
 }
 
@@ -113,9 +117,9 @@ export class ErrorBoundary extends Component<Props, State> {
 // ─────────────────────────────────────────────
 
 interface AsyncErrorBoundaryProps {
-  children: ReactNode
-  loadingFallback?: ReactNode
-  errorFallback?: ReactNode
+  children: ReactNode;
+  loadingFallback?: ReactNode;
+  errorFallback?: ReactNode;
 }
 
 /**
@@ -145,5 +149,5 @@ export function AsyncErrorBoundary({
     >
       {children}
     </ErrorBoundary>
-  )
+  );
 }

@@ -16,7 +16,11 @@ import { APPROVAL_CHECK_RESULT } from "../types/approval.types";
 const fetchLineProfile = async (
   source: { type?: string; userId?: string; groupId?: string; roomId?: string },
   accessToken: string,
-): Promise<{ displayName?: string; pictureUrl?: string; statusMessage?: string }> => {
+): Promise<{
+  displayName?: string;
+  pictureUrl?: string;
+  statusMessage?: string;
+}> => {
   const userId = source.userId;
   if (!userId) return {};
 
@@ -53,9 +57,7 @@ const fetchLineProfile = async (
   }
 };
 
-export const handleApprovalCheck = async (
-  req: any,
-): Promise<boolean> => {
+export const handleApprovalCheck = async (req: any): Promise<boolean> => {
   const event = req.body?.events?.[0];
   const source = event?.source;
 

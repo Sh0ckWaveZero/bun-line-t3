@@ -11,7 +11,8 @@ export function LogoutPage() {
         await clearBrowserAuthState();
 
         if ("serviceWorker" in navigator) {
-          const registrations = await navigator.serviceWorker.getRegistrations();
+          const registrations =
+            await navigator.serviceWorker.getRegistrations();
           await Promise.all(registrations.map((reg) => reg.update()));
         }
 
@@ -32,7 +33,12 @@ export function LogoutPage() {
   }, []);
 
   return (
-    <div id="logout-page" className="flex min-h-screen flex-col items-center justify-center" role="status" aria-live="polite">
+    <div
+      id="logout-page"
+      className="flex min-h-screen flex-col items-center justify-center"
+      role="status"
+      aria-live="polite"
+    >
       <span id="logout-message" className="mt-2 text-lg font-medium text-white">
         กำลังออกจากระบบ กรุณารอสักครู่...
       </span>

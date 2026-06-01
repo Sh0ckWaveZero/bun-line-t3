@@ -96,7 +96,8 @@ const checkApprovalStatus = async (
   // อัปเดตโปรไฟล์ล่าสุดถ้ามีข้อมูลใหม่และต่างจากเดิม
   const newDisplayName = userProfile.displayName;
   const newPictureUrl = userProfile.pictureUrl;
-  const hasProfileData = newDisplayName !== undefined || newPictureUrl !== undefined;
+  const hasProfileData =
+    newDisplayName !== undefined || newPictureUrl !== undefined;
   const profileChanged =
     (newDisplayName !== undefined && existing.displayName !== newDisplayName) ||
     (newPictureUrl !== undefined && existing.pictureUrl !== newPictureUrl);
@@ -114,7 +115,10 @@ const checkApprovalStatus = async (
   }
 
   // ตรวจสอบว่า APPROVED แต่หมดอายุแล้วหรือยัง
-  if (existing.status === APPROVAL_CHECK_RESULT.APPROVED && existing.expiresAt) {
+  if (
+    existing.status === APPROVAL_CHECK_RESULT.APPROVED &&
+    existing.expiresAt
+  ) {
     if (existing.expiresAt < new Date()) {
       // หมดอายุ → เปลี่ยนกลับเป็น PENDING
       await approvalRepository.update(existing.id, {
@@ -310,8 +314,7 @@ const getAccountApprovalList = async (params?: {
       userName: account.user.name,
       userEmail: account.user.email,
       isAdmin:
-        canManageApprovals(account.accountId) ||
-        account.user.role === "admin",
+        canManageApprovals(account.accountId) || account.user.role === "admin",
     };
   });
 

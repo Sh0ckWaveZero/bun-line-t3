@@ -28,12 +28,15 @@ export async function GET(req: Request) {
     });
 
     if (lineAccount) {
-      const hasPermission = await canRequestAttendanceReport(lineAccount.accountId);
+      const hasPermission = await canRequestAttendanceReport(
+        lineAccount.accountId,
+      );
       if (!hasPermission) {
         return Response.json(
           {
             success: false,
-            message: "คุณยังไม่ได้รับอนุมัติให้ดูข้อมูลวันหยุด กรุณาติดต่อผู้ดูแลระบบ",
+            message:
+              "คุณยังไม่ได้รับอนุมัติให้ดูข้อมูลวันหยุด กรุณาติดต่อผู้ดูแลระบบ",
           },
           { status: 403 },
         );
@@ -64,7 +67,14 @@ export async function GET(req: Request) {
           },
         });
       } else if (exportFormat === "csv") {
-        const headers = ["date", "nameEnglish", "nameThai", "year", "type", "description"];
+        const headers = [
+          "date",
+          "nameEnglish",
+          "nameThai",
+          "year",
+          "type",
+          "description",
+        ];
         const csvContent = [
           headers.join(","),
           ...holidays.map((h) =>
@@ -139,12 +149,15 @@ export async function POST(req: Request) {
     });
 
     if (lineAccount) {
-      const hasPermission = await canRequestAttendanceReport(lineAccount.accountId);
+      const hasPermission = await canRequestAttendanceReport(
+        lineAccount.accountId,
+      );
       if (!hasPermission) {
         return Response.json(
           {
             success: false,
-            message: "คุณยังไม่ได้รับอนุมัติให้จัดการข้อมูลวันหยุด กรุณาติดต่อผู้ดูแลระบบ",
+            message:
+              "คุณยังไม่ได้รับอนุมัติให้จัดการข้อมูลวันหยุด กรุณาติดต่อผู้ดูแลระบบ",
           },
           { status: 403 },
         );
@@ -190,7 +203,8 @@ export async function POST(req: Request) {
       return Response.json(
         {
           success: false,
-          message: "กรุณาระบุข้อมูลให้ครบถ้วน (date, nameEnglish, nameThai, year)",
+          message:
+            "กรุณาระบุข้อมูลให้ครบถ้วน (date, nameEnglish, nameThai, year)",
         },
         { status: 422 },
       );
@@ -199,7 +213,10 @@ export async function POST(req: Request) {
     // Validate date format (YYYY-MM-DD)
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return Response.json(
-        { success: false, message: "รูปแบบวันที่ไม่ถูกต้อง (ต้องเป็น YYYY-MM-DD)" },
+        {
+          success: false,
+          message: "รูปแบบวันที่ไม่ถูกต้อง (ต้องเป็น YYYY-MM-DD)",
+        },
         { status: 422 },
       );
     }
@@ -269,12 +286,15 @@ export async function PUT(req: Request) {
     });
 
     if (lineAccount) {
-      const hasPermission = await canRequestAttendanceReport(lineAccount.accountId);
+      const hasPermission = await canRequestAttendanceReport(
+        lineAccount.accountId,
+      );
       if (!hasPermission) {
         return Response.json(
           {
             success: false,
-            message: "คุณยังไม่ได้รับอนุมัติให้จัดการข้อมูลวันหยุด กรุณาติดต่อผู้ดูแลระบบ",
+            message:
+              "คุณยังไม่ได้รับอนุมัติให้จัดการข้อมูลวันหยุด กรุณาติดต่อผู้ดูแลระบบ",
           },
           { status: 403 },
         );
@@ -291,8 +311,16 @@ export async function PUT(req: Request) {
       );
     }
 
-    const { id, date, nameEnglish, nameThai, year, type, description, isActive } =
-      body;
+    const {
+      id,
+      date,
+      nameEnglish,
+      nameThai,
+      year,
+      type,
+      description,
+      isActive,
+    } = body;
 
     if (!id) {
       return Response.json(
@@ -361,12 +389,15 @@ export async function DELETE(req: Request) {
     });
 
     if (lineAccount) {
-      const hasPermission = await canRequestAttendanceReport(lineAccount.accountId);
+      const hasPermission = await canRequestAttendanceReport(
+        lineAccount.accountId,
+      );
       if (!hasPermission) {
         return Response.json(
           {
             success: false,
-            message: "คุณยังไม่ได้รับอนุมัติให้จัดการข้อมูลวันหยุด กรุณาติดต่อผู้ดูแลระบบ",
+            message:
+              "คุณยังไม่ได้รับอนุมัติให้จัดการข้อมูลวันหยุด กรุณาติดต่อผู้ดูแลระบบ",
           },
           { status: 403 },
         );

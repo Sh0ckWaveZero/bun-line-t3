@@ -179,7 +179,8 @@ export const dcaLocales: Record<DcaLocale, DcaLocaleStrings> = {
       profitLoss: "% กำไร / ขาดทุน",
       worstSingleBuy: "ซื้อที่แย่ที่สุด",
       bestSingleBuy: "ซื้อที่ดีที่สุด",
-      footDaysPerDay: (days: number, perDay: number) => `${days} วัน · ${perDay} ฿/วัน`,
+      footDaysPerDay: (days: number, perDay: number) =>
+        `${days} วัน · ${perDay} ฿/วัน`,
       footBtc: (btc: string) => `${btc} BTC`,
       footBitkubSpot: "Bitkub · spot",
       footPortfolioValue: "พอร์ตของคุณเป็น THB",
@@ -285,7 +286,8 @@ export const dcaLocales: Record<DcaLocale, DcaLocaleStrings> = {
       profitLoss: "% Profit / Loss",
       worstSingleBuy: "Worst Single Buy",
       bestSingleBuy: "Best Single Buy",
-      footDaysPerDay: (days: number, perDay: number) => `${days} days · ${perDay} ฿/day`,
+      footDaysPerDay: (days: number, perDay: number) =>
+        `${days} days · ${perDay} ฿/day`,
       footBtc: (btc: string) => `${btc} BTC`,
       footBitkubSpot: "Bitkub · spot",
       footPortfolioValue: "Your portfolio in THB",

@@ -1,15 +1,20 @@
-import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from "@/components/ui/AlertDialog"
-import { Button } from "@/components/ui/button"
-import type { ExpenseCategory } from "@/features/expenses/types"
-import { Edit, Plus, Trash2, X } from "lucide-react"
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from "@/components/ui/AlertDialog";
+import { Button } from "@/components/ui/button";
+import type { ExpenseCategory } from "@/features/expenses/types";
+import { Edit, Plus, Trash2, X } from "lucide-react";
 
 interface CategoryManagerModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  categories: ExpenseCategory[]
-  onEdit: (category: ExpenseCategory) => void
-  onDelete: (id: string) => void
-  onAdd: () => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  categories: ExpenseCategory[];
+  onEdit: (category: ExpenseCategory) => void;
+  onDelete: (id: string) => void;
+  onAdd: () => void;
 }
 
 export function CategoryManagerModal({
@@ -76,7 +81,10 @@ export function CategoryManagerModal({
                     >
                       {category.icon ?? "📦"}
                     </span>
-                    <div id={`category-manager-item-text-${category.id}`} className="min-w-0">
+                    <div
+                      id={`category-manager-item-text-${category.id}`}
+                      className="min-w-0"
+                    >
                       <p
                         id={`category-manager-item-name-${category.id}`}
                         className="text-foreground truncate text-base font-semibold"
@@ -120,14 +128,17 @@ export function CategoryManagerModal({
           )}
         </div>
 
-        <div id="category-manager-footer" className="bg-card shrink-0 px-6 pt-2 pb-6">
+        <div
+          id="category-manager-footer"
+          className="bg-card shrink-0 px-6 pt-2 pb-6"
+        >
           <Button
             id="category-manager-add-btn"
             type="button"
             className="bg-foreground text-background hover:bg-foreground/90 h-12 w-full gap-3 rounded-lg text-base font-semibold"
             onClick={() => {
-              onAdd()
-              onOpenChange(false)
+              onAdd();
+              onOpenChange(false);
             }}
           >
             <Plus id="category-manager-add-icon" size={16} />
@@ -136,5 +147,5 @@ export function CategoryManagerModal({
         </div>
       </AlertDialogContent>
     </AlertDialog>
-  )
+  );
 }

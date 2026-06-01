@@ -113,7 +113,6 @@ function sanitizeFilename(filename?: string): string {
   return baseName;
 }
 
-
 /**
  * Processes image buffer to create original and preview versions
  * @param imageBuffer Original image buffer

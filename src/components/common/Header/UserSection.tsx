@@ -29,7 +29,11 @@ export function UserSection({
   }, []);
 
   return (
-    <div id="header-right" className="flex items-center space-x-3" suppressHydrationWarning>
+    <div
+      id="header-right"
+      className="flex items-center space-x-3"
+      suppressHydrationWarning
+    >
       <div id="theme-toggle-wrapper">
         <ThemeToggle />
       </div>
@@ -41,7 +45,7 @@ export function UserSection({
             <button
               id="user-avatar-button"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center space-x-2 rounded-md px-1 py-1 transition-colors hover:bg-muted/50"
+              className="hover:bg-muted/50 flex items-center space-x-2 rounded-md px-1 py-1 transition-colors"
               aria-label="เมนูผู้ใช้"
               aria-expanded={isDropdownOpen}
               aria-haspopup="true"
@@ -67,17 +71,17 @@ export function UserSection({
             {isDropdownOpen && (
               <div
                 id="user-dropdown-menu"
-                className="absolute right-0 top-full z-50 mt-1 w-48 rounded-lg border border-border bg-card py-1 shadow-lg"
+                className="border-border bg-card absolute top-full right-0 z-50 mt-1 w-48 rounded-lg border py-1 shadow-lg"
                 role="menu"
                 aria-label="เมนูผู้ใช้"
               >
                 {/* User info */}
-                <div className="border-b border-border px-3 py-2">
-                  <p className="text-sm font-medium text-foreground truncate">
+                <div className="border-border border-b px-3 py-2">
+                  <p className="text-foreground truncate text-sm font-medium">
                     {session.user?.name}
                   </p>
                   {session.user?.email && (
-                    <p className="text-xs text-muted-foreground truncate">
+                    <p className="text-muted-foreground truncate text-xs">
                       {session.user.email}
                     </p>
                   )}
@@ -88,7 +92,7 @@ export function UserSection({
                   id="settings-link"
                   to="/settings"
                   onClick={() => setIsDropdownOpen(false)}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted/50"
+                  className="text-foreground hover:bg-muted/50 flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors"
                   role="menuitem"
                 >
                   <Settings className="h-4 w-4" aria-hidden="true" />
@@ -100,7 +104,7 @@ export function UserSection({
                   id="logout-button"
                   to="/logout"
                   onClick={() => setIsDropdownOpen(false)}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
+                  className="text-destructive hover:bg-destructive/10 flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors"
                   role="menuitem"
                 >
                   <LogOut className="h-4 w-4" aria-hidden="true" />

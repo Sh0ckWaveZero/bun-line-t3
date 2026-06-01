@@ -2,15 +2,19 @@
  * Service สำหรับจัดการ Subscription (CRUD)
  */
 
-import { db } from "@/lib/database"
+import { db } from "@/lib/database";
 import type {
   CreateSubscriptionInput,
   UpdateSubscriptionInput,
   SubscriptionWithMembers,
   SubscriptionDetail,
   MonthlySummary,
-} from "../types"
-import { getDueDate, getMissingBillingMonths, toBillingMonth } from "../helpers"
+} from "../types";
+import {
+  getDueDate,
+  getMissingBillingMonths,
+  toBillingMonth,
+} from "../helpers";
 
 // ─────────────────────────────────────────────
 // Queries
@@ -26,8 +30,8 @@ export async function getSubscriptionsByOwner(
       members: { where: { isActive: true }, orderBy: { joinedAt: "asc" } },
     },
     orderBy: { createdAt: "desc" },
-  })
-  return rows as SubscriptionWithMembers[]
+  });
+  return rows as SubscriptionWithMembers[];
 }
 
 /** ดึง subscription รายละเอียดพร้อม members และ payments ของเดือนที่กำหนด */
@@ -35,7 +39,7 @@ export async function getSubscriptionDetail(
   subscriptionId: string,
   billingMonth?: string,
 ): Promise<SubscriptionDetail | null> {
-  const month = billingMonth ?? toBillingMonth(new Date())
+  const month = billingMonth ?? toBillingMonth(new Date());
 
   const row = await db.subscription.findUnique({
     where: { id: subscriptionId },
@@ -51,23 +55,27 @@ export async function getSubscriptionDetail(
         },
       },
     },
-  })
-  return row as SubscriptionDetail | null
+  });
+  return row as SubscriptionDetail | null;
 }
 
 /** ดึง subscription ทั้งหมด (admin) */
-export async function getAllSubscriptions(): Promise<SubscriptionWithMembers[]> {
+export async function getAllSubscriptions(): Promise<
+  SubscriptionWithMembers[]
+> {
   const rows = await db.subscription.findMany({
     include: {
       members: { where: { isActive: true } },
     },
     orderBy: { createdAt: "desc" },
-  })
-  return rows as SubscriptionWithMembers[]
+  });
+  return rows as SubscriptionWithMembers[];
 }
 
 /** ดึง subscriptions ที่ user เป็นเจ้าของ หรือเป็นสมาชิก */
-export async function getSubscriptionsForUser(userId: string): Promise<SubscriptionWithMembers[]> {
+export async function getSubscriptionsForUser(
+  userId: string,
+): Promise<SubscriptionWithMembers[]> {
   const rows = await db.subscription.findMany({
     where: {
       isActive: true,
@@ -80,8 +88,8 @@ export async function getSubscriptionsForUser(userId: string): Promise<Subscript
       members: { where: { isActive: true }, orderBy: { joinedAt: "asc" } },
     },
     orderBy: { createdAt: "desc" },
-  })
-  return rows as SubscriptionWithMembers[]
+  });
+  return rows as SubscriptionWithMembers[];
 }
 
 /** สรุปการจ่ายเงินรายเดือนของ subscription */
@@ -91,15 +99,15 @@ export async function getSubscriptionMonthlySummary(
 ): Promise<MonthlySummary> {
   const payments = await db.subscriptionPayment.findMany({
     where: { subscriptionId, billingMonth },
-  })
+  });
 
-  const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0)
+  const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0);
   const paidAmount = payments
     .filter((p) => p.status === "PAID")
-    .reduce((sum, p) => sum + p.amount, 0)
+    .reduce((sum, p) => sum + p.amount, 0);
   const pendingAmount = payments
     .filter((p) => p.status === "PENDING")
-    .reduce((sum, p) => sum + p.amount, 0)
+    .reduce((sum, p) => sum + p.amount, 0);
 
   return {
     billingMonth,
@@ -109,7 +117,7 @@ export async function getSubscriptionMonthlySummary(
     paidCount: payments.filter((p) => p.status === "PAID").length,
     pendingCount: payments.filter((p) => p.status === "PENDING").length,
     skippedCount: payments.filter((p) => p.status === "SKIPPED").length,
-  }
+  };
 }
 
 // ─────────────────────────────────────────────
@@ -133,18 +141,23 @@ export async function createSubscription(input: CreateSubscriptionInput) {
       logoUrl: input.logoUrl ?? null,
       note: input.note ?? null,
     },
-  })
+  });
 }
 
 /** อัปเดต subscription */
-export async function updateSubscription(id: string, input: UpdateSubscriptionInput) {
+export async function updateSubscription(
+  id: string,
+  input: UpdateSubscriptionInput,
+) {
   return db.subscription.update({
     where: { id },
     data: {
       ...(input.name !== undefined && { name: input.name }),
       ...(input.service !== undefined && { service: input.service }),
       ...(input.planType !== undefined && { planType: input.planType }),
-      ...(input.billingCycle !== undefined && { billingCycle: input.billingCycle }),
+      ...(input.billingCycle !== undefined && {
+        billingCycle: input.billingCycle,
+      }),
       ...(input.totalPrice !== undefined && { totalPrice: input.totalPrice }),
       ...(input.currency !== undefined && { currency: input.currency }),
       ...(input.billingDay !== undefined && { billingDay: input.billingDay }),
@@ -153,7 +166,7 @@ export async function updateSubscription(id: string, input: UpdateSubscriptionIn
       ...(input.logoUrl !== undefined && { logoUrl: input.logoUrl }),
       ...(input.note !== undefined && { note: input.note }),
     },
-  })
+  });
 }
 
 /** ลบ subscription (soft delete) */
@@ -161,35 +174,37 @@ export async function deactivateSubscription(id: string) {
   return db.subscription.update({
     where: { id },
     data: { isActive: false, endDate: new Date() },
-  })
+  });
 }
 
 /**
  * Auto-generate payments สำหรับทุก active members ที่ยังไม่มี payment ในเดือนที่ผ่านมา
  * เรียกใช้เมื่อสร้าง subscription ใหม่ หรือเพิ่ม member ใหม่
  */
-export async function generateMissingPayments(subscriptionId: string): Promise<number> {
+export async function generateMissingPayments(
+  subscriptionId: string,
+): Promise<number> {
   const subscription = await db.subscription.findUnique({
     where: { id: subscriptionId },
     include: { members: { where: { isActive: true } } },
-  })
-  if (!subscription) return 0
+  });
+  if (!subscription) return 0;
 
-  let created = 0
+  let created = 0;
 
   for (const member of subscription.members) {
     const existingPayments = await db.subscriptionPayment.findMany({
       where: { memberId: member.id },
       select: { billingMonth: true },
-    })
-    const existingMonths = existingPayments.map((p) => p.billingMonth)
+    });
+    const existingMonths = existingPayments.map((p) => p.billingMonth);
     const missingMonths = getMissingBillingMonths(
       subscription.startDate,
       existingMonths,
-    )
+    );
 
     for (const billingMonth of missingMonths) {
-      const dueDate = getDueDate(subscription.billingDay, billingMonth)
+      const dueDate = getDueDate(subscription.billingDay, billingMonth);
       await db.subscriptionPayment.upsert({
         where: { memberId_billingMonth: { memberId: member.id, billingMonth } },
         create: {
@@ -201,10 +216,10 @@ export async function generateMissingPayments(subscriptionId: string): Promise<n
           status: "PENDING",
         },
         update: {},
-      })
-      created++
+      });
+      created++;
     }
   }
 
-  return created
+  return created;
 }

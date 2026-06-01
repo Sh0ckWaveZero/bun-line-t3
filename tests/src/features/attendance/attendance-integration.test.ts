@@ -9,9 +9,8 @@ describe("🔗 Attendance Service Integration Tests", () => {
   // ทดสอบการ import attendance service
   test("should import attendance service successfully", async () => {
     try {
-      const { attendanceService } = await import(
-        "@/features/attendance/services/attendance"
-      );
+      const { attendanceService } =
+        await import("@/features/attendance/services/attendance");
       expect(attendanceService).toBeDefined();
       expect(typeof attendanceService.getCurrentUTCTime).toBe("function");
       expect(typeof attendanceService.convertUTCToBangkok).toBe("function");
@@ -28,9 +27,8 @@ describe("🔗 Attendance Service Integration Tests", () => {
 
   test("should handle real database timestamp format", async () => {
     try {
-      const { attendanceService } = await import(
-        "@/features/attendance/services/attendance"
-      );
+      const { attendanceService } =
+        await import("@/features/attendance/services/attendance");
 
       // ทดสอบกับ timestamp จริงจากฐานข้อมูล
       const dbTimestamp = "2025-06-09T01:54:46.208Z";
@@ -54,9 +52,8 @@ describe("🔗 Attendance Service Integration Tests", () => {
 
   test("should validate working hours with real service", async () => {
     try {
-      const { attendanceService } = await import(
-        "@/features/attendance/services/attendance"
-      );
+      const { attendanceService } =
+        await import("@/features/attendance/services/attendance");
 
       // ทดสอบเวลาต่างๆ
       const testTimes = [
@@ -81,9 +78,8 @@ describe("🔗 Attendance Service Integration Tests", () => {
 
   test("should validate working days with real service", async () => {
     try {
-      const { attendanceService } = await import(
-        "@/features/attendance/services/attendance"
-      );
+      const { attendanceService } =
+        await import("@/features/attendance/services/attendance");
 
       // ทดสอบวันต่างๆ
       const testDays = [
@@ -111,9 +107,8 @@ describe("🔗 Attendance Service Integration Tests", () => {
 
   test("should handle edge cases in real environment", async () => {
     try {
-      const { attendanceService } = await import(
-        "@/features/attendance/services/attendance"
-      );
+      const { attendanceService } =
+        await import("@/features/attendance/services/attendance");
 
       // ทดสอบ edge cases
       const edgeCases = [
@@ -144,9 +139,8 @@ describe("🔗 Attendance Service Integration Tests", () => {
 describe("🎯 Real-world Scenario Tests", () => {
   test("should simulate actual user check-in flow", async () => {
     try {
-      const { attendanceService } = await import(
-        "@/features/attendance/services/attendance"
-      );
+      const { attendanceService } =
+        await import("@/features/attendance/services/attendance");
 
       // จำลองการลงชื่อเข้างานของผู้ใช้จริง
       console.log("🧪 Simulating real user check-in...");
@@ -194,9 +188,8 @@ describe("🎯 Real-world Scenario Tests", () => {
 
   test("should handle concurrent check-ins correctly", async () => {
     try {
-      const { attendanceService } = await import(
-        "@/features/attendance/services/attendance"
-      );
+      const { attendanceService } =
+        await import("@/features/attendance/services/attendance");
 
       // จำลองการลงชื่อเข้างานพร้อมกันหลายครั้ง
       const checkInPromises = Array.from({ length: 10 }, async (_, index) => {

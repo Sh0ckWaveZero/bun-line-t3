@@ -233,7 +233,11 @@ export async function executeCommand(
         // Build conditions array based on subcommand
         let conditions: string[] = [];
 
-        if (subcommand === "add" || subcommand === "จ่าย" || subcommand === "บันทึก") {
+        if (
+          subcommand === "add" ||
+          subcommand === "จ่าย" ||
+          subcommand === "บันทึก"
+        ) {
           // /จ่าย [amount] [category] [#note] [@tags]
           conditions = [amount, category, note, tags].filter(Boolean);
           await handleExpenseCommand(req, conditions, "EXPENSE");
@@ -245,7 +249,11 @@ export async function executeCommand(
           };
         }
 
-        if (subcommand === "income" || subcommand === "รับ" || subcommand === "รายรับ") {
+        if (
+          subcommand === "income" ||
+          subcommand === "รับ" ||
+          subcommand === "รายรับ"
+        ) {
           // /รับ [amount] [category] [#note] [@tags]
           conditions = [amount, category, note, tags].filter(Boolean);
           await handleExpenseCommand(req, conditions, "INCOME");
@@ -257,7 +265,11 @@ export async function executeCommand(
           };
         }
 
-        if (subcommand === "list" || subcommand === "ล่าสุด" || subcommand === "history") {
+        if (
+          subcommand === "list" ||
+          subcommand === "ล่าสุด" ||
+          subcommand === "history"
+        ) {
           const limit = parameters.limit || parameters.count || 5;
           conditions = [String(limit)];
           await handleExpenseCommand(req, conditions);
@@ -269,7 +281,11 @@ export async function executeCommand(
           };
         }
 
-        if (subcommand === "del" || subcommand === "delete" || subcommand === "ลบ") {
+        if (
+          subcommand === "del" ||
+          subcommand === "delete" ||
+          subcommand === "ลบ"
+        ) {
           const id = parameters.id || "";
           conditions = id ? [id] : [];
           await handleExpenseCommand(req, conditions);
@@ -281,14 +297,21 @@ export async function executeCommand(
           };
         }
 
-        if (subcommand === "edit" || subcommand === "แก้" || subcommand === "แก้ไข") {
+        if (
+          subcommand === "edit" ||
+          subcommand === "แก้" ||
+          subcommand === "แก้ไข"
+        ) {
           // If field is not specified but amount is provided → assume "amount"
           const field = parameters.field || (parameters.amount ? "amount" : "");
           // Extract value based on what's provided
           let value = "";
           if (parameters.value !== undefined) {
             value = String(parameters.value);
-          } else if (parameters.amount !== undefined && (!parameters.field || parameters.field === "amount")) {
+          } else if (
+            parameters.amount !== undefined &&
+            (!parameters.field || parameters.field === "amount")
+          ) {
             value = String(parameters.amount);
           } else if (parameters.note !== undefined) {
             value = parameters.note;
@@ -313,7 +336,9 @@ export async function executeCommand(
             success: true,
             command: "expense",
             parameters,
-            explanation: month ? `แสดงสรุปเดือน ${month}` : "แสดงสรุปเดือนปัจจุบัน",
+            explanation: month
+              ? `แสดงสรุปเดือน ${month}`
+              : "แสดงสรุปเดือนปัจจุบัน",
           };
         }
 
@@ -351,7 +376,12 @@ export async function executeCommand(
 
         let conditions: string[] = [];
 
-        if (subcommand === "add" || subcommand === "เพิ่ม" || subcommand === "สร้าง" || subcommand === "new") {
+        if (
+          subcommand === "add" ||
+          subcommand === "เพิ่ม" ||
+          subcommand === "สร้าง" ||
+          subcommand === "new"
+        ) {
           conditions = [name, icon].filter(Boolean);
           await handleCategoryCommand(req, conditions);
           return {
@@ -362,7 +392,12 @@ export async function executeCommand(
           };
         }
 
-        if (subcommand === "del" || subcommand === "delete" || subcommand === "ลบ" || subcommand === "rm") {
+        if (
+          subcommand === "del" ||
+          subcommand === "delete" ||
+          subcommand === "ลบ" ||
+          subcommand === "rm"
+        ) {
           conditions = [name];
           await handleCategoryCommand(req, conditions);
           return {
@@ -387,7 +422,9 @@ export async function executeCommand(
         const subcommand = parameters.subcommand || "status";
         const category = parameters.category || "";
         const amount = parameters.amount ? String(parameters.amount) : "";
-        const percentage = parameters.percentage ? String(parameters.percentage) : "";
+        const percentage = parameters.percentage
+          ? String(parameters.percentage)
+          : "";
 
         const conditions = [category, amount, percentage].filter(Boolean);
         await handleBudgetCommand(req, [subcommand, ...conditions]);
@@ -395,9 +432,10 @@ export async function executeCommand(
           success: true,
           command: "budget",
           parameters,
-          explanation: subcommand === "set"
-            ? `ตั้งงบ${category ? ` ${category}` : "รวม"} ${amount} บาท`
-            : "แสดงสถานะงบประมาณ",
+          explanation:
+            subcommand === "set"
+              ? `ตั้งงบ${category ? ` ${category}` : "รวม"} ${amount} บาท`
+              : "แสดงสถานะงบประมาณ",
         };
       }
 

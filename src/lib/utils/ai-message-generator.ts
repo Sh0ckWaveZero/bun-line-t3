@@ -73,9 +73,7 @@ export async function generateCheckInMessage(
     const { text } = await generateText({
       model: openai(AI_MODEL),
       prompt: `สร้างข้อความเตือนเช็คอินภาษาไทย อบอุ่น เป็นมิตร สำหรับ${context?.userName || "เพื่อน"} ช่วง${context?.timeOfDay || "เช้า"} อากาศ${context?.weather || "สดใส"} ใส่อีโมจิ 1-2 อีโมจิ ไม่เกิน 80 ตัวอักษร ส่งแค่ข้อความเดียว`,
-      ...(supportsTemperature(AI_MODEL)
-        ? { temperature: AI_TEMPERATURE }
-        : {}),
+      ...(supportsTemperature(AI_MODEL) ? { temperature: AI_TEMPERATURE } : {}),
     });
 
     const generatedText = text?.trim() || "";
@@ -97,9 +95,7 @@ export async function generateConsolationMessage(): Promise<string> {
     const { text } = await generateText({
       model: openai(AI_MODEL),
       prompt: `สร้างข้อความปลอบโยนภาษาไทยที่อบอุ่น ให้กำลังใจ ใส่อีโมจิ 1-2 อีโมจิ ไม่เกิน 60 ตัวอักษร ส่งแค่ข้อความเดียว`,
-      ...(supportsTemperature(AI_MODEL)
-        ? { temperature: AI_TEMPERATURE }
-        : {}),
+      ...(supportsTemperature(AI_MODEL) ? { temperature: AI_TEMPERATURE } : {}),
     });
 
     const generatedText = text?.trim() || "";

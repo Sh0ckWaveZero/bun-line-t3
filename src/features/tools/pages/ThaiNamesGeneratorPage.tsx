@@ -27,10 +27,18 @@ interface GeneratedName {
   nickname: string;
 }
 
-const GENDER_OPTIONS: { value: GenderOption; label: string; icon: React.ReactNode }[] = [
+const GENDER_OPTIONS: {
+  value: GenderOption;
+  label: string;
+  icon: React.ReactNode;
+}[] = [
   { value: "any", label: "ทุกเพศ", icon: <Users className="h-3.5 w-3.5" /> },
   { value: "male", label: "ชาย", icon: <User className="h-3.5 w-3.5" /> },
-  { value: "female", label: "หญิง", icon: <UserRound className="h-3.5 w-3.5" /> },
+  {
+    value: "female",
+    label: "หญิง",
+    icon: <UserRound className="h-3.5 w-3.5" />,
+  },
 ];
 
 export function ThaiNamesGeneratorPage() {
@@ -65,11 +73,7 @@ export function ThaiNamesGeneratorPage() {
     const names: GeneratedName[] = [];
     for (let i = 0; i < count; i++) {
       const g: "male" | "female" =
-        gender === "any"
-          ? Math.random() < 0.5
-            ? "male"
-            : "female"
-          : gender;
+        gender === "any" ? (Math.random() < 0.5 ? "male" : "female") : gender;
       const result = generateThaiName({
         includeFirstName: true,
         includeSurname: true,
@@ -84,7 +88,10 @@ export function ThaiNamesGeneratorPage() {
     }
     setGeneratedNames(names);
     setTimeout(() => {
-      resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      resultsRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
     }, 50);
   }, [count, gender]);
 
@@ -92,12 +99,9 @@ export function ThaiNamesGeneratorPage() {
     <div className="container mx-auto max-w-5xl px-4 py-8">
       <div className="space-y-8">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            สุ่มชื่อไทย
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            สุ่มชื่อจริง นามสกุล และชื่อเล่น
-            สำหรับทดสอบระบบหรือข้อมูลตัวอย่าง
+          <h1 className="text-2xl font-semibold tracking-tight">สุ่มชื่อไทย</h1>
+          <p className="text-muted-foreground mt-1 text-sm">
+            สุ่มชื่อจริง นามสกุล และชื่อเล่น สำหรับทดสอบระบบหรือข้อมูลตัวอย่าง
           </p>
         </div>
 
@@ -108,7 +112,10 @@ export function ThaiNamesGeneratorPage() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <Label className="text-sm font-medium">จำนวน</Label>
-                    <Badge variant="secondary" className="font-mono tabular-nums">
+                    <Badge
+                      variant="secondary"
+                      className="font-mono tabular-nums"
+                    >
                       {count}
                     </Badge>
                   </div>
@@ -119,7 +126,7 @@ export function ThaiNamesGeneratorPage() {
                     max={20}
                     step={1}
                   />
-                  <div className="flex justify-between text-xs text-muted-foreground">
+                  <div className="text-muted-foreground flex justify-between text-xs">
                     <span>1</span>
                     <span>20</span>
                   </div>
@@ -127,7 +134,7 @@ export function ThaiNamesGeneratorPage() {
 
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">เพศ</Label>
-                  <div className="grid grid-cols-3 gap-1.5 rounded-md bg-muted p-1">
+                  <div className="bg-muted grid grid-cols-3 gap-1.5 rounded-md p-1">
                     {GENDER_OPTIONS.map((opt) => (
                       <button
                         key={opt.value}
@@ -152,13 +159,13 @@ export function ThaiNamesGeneratorPage() {
               </CardContent>
             </Card>
 
-            <div className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">
+            <div className="bg-card text-muted-foreground rounded-lg border p-4 text-sm">
               ฐานข้อมูล 22,000+ รายการจาก{" "}
               <a
                 href="https://github.com/korkeatw/thai-names-corpus"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-medium text-foreground underline decoration-muted-foreground/40 underline-offset-2 hover:decoration-foreground"
+                className="text-foreground decoration-muted-foreground/40 hover:decoration-foreground font-medium underline underline-offset-2"
               >
                 Thai Names Corpus
               </a>{" "}
@@ -169,15 +176,17 @@ export function ThaiNamesGeneratorPage() {
           <div className="space-y-4" ref={resultsRef}>
             {generatedNames.length === 0 ? (
               <div className="flex min-h-[320px] items-center justify-center rounded-lg border border-dashed">
-                <div className="text-center text-muted-foreground">
+                <div className="text-muted-foreground text-center">
                   <Shuffle className="mx-auto mb-3 h-10 w-10 opacity-30" />
-                  <p className="text-sm">กดปุ่ม &quot;สุ่มชื่อใหม่&quot; เพื่อเริ่มต้น</p>
+                  <p className="text-sm">
+                    กดปุ่ม &quot;สุ่มชื่อใหม่&quot; เพื่อเริ่มต้น
+                  </p>
                 </div>
               </div>
             ) : (
               <>
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     สุ่มได้ {generatedNames.length} ชื่อ
                   </p>
                   <Button
@@ -207,48 +216,56 @@ export function ThaiNamesGeneratorPage() {
                     return (
                       <div
                         key={i}
-                        className="group rounded-lg border bg-card p-3 transition-colors hover:bg-accent/50"
+                        className="group bg-card hover:bg-accent/50 rounded-lg border p-3 transition-colors"
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-baseline gap-2 min-w-0">
-                            <span className="text-xs tabular-nums text-muted-foreground w-5 shrink-0">
+                          <div className="flex min-w-0 items-baseline gap-2">
+                            <span className="text-muted-foreground w-5 shrink-0 text-xs tabular-nums">
                               {i + 1}.
                             </span>
-                            <span className="font-medium truncate">
+                            <span className="truncate font-medium">
                               {fullName}
                             </span>
                           </div>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleCopy(fullName, nameKey("full"))}
-                            className="h-7 w-7 shrink-0 p-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+                            onClick={() =>
+                              handleCopy(fullName, nameKey("full"))
+                            }
+                            className="h-7 w-7 shrink-0 p-0 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
                           >
                             {copiedKey === nameKey("full") ? (
-                              <Check className="h-3.5 w-3.5 text-primary" />
+                              <Check className="text-primary h-3.5 w-3.5" />
                             ) : (
                               <Copy className="h-3.5 w-3.5" />
                             )}
                           </Button>
                         </div>
-                        <div className="mt-1.5 flex items-center gap-3 pl-7 text-xs text-muted-foreground">
+                        <div className="text-muted-foreground mt-1.5 flex items-center gap-3 pl-7 text-xs">
                           <NameChip
                             icon={<User className="h-3 w-3" />}
                             value={name.firstName}
                             isCopied={copiedKey === nameKey("first")}
-                            onCopy={() => handleCopy(name.firstName, nameKey("first"))}
+                            onCopy={() =>
+                              handleCopy(name.firstName, nameKey("first"))
+                            }
                           />
                           <NameChip
                             icon={<Building2 className="h-3 w-3" />}
                             value={name.surname}
                             isCopied={copiedKey === nameKey("surname")}
-                            onCopy={() => handleCopy(name.surname, nameKey("surname"))}
+                            onCopy={() =>
+                              handleCopy(name.surname, nameKey("surname"))
+                            }
                           />
                           <NameChip
                             icon={<Star className="h-3 w-3" />}
                             value={name.nickname}
                             isCopied={copiedKey === nameKey("nick")}
-                            onCopy={() => handleCopy(name.nickname, nameKey("nick"))}
+                            onCopy={() =>
+                              handleCopy(name.nickname, nameKey("nick"))
+                            }
                           />
                         </div>
                       </div>
@@ -275,11 +292,11 @@ function NameChip({ icon, value, isCopied, onCopy }: NameChipProps) {
   return (
     <button
       onClick={onCopy}
-      className="inline-flex items-center gap-1 rounded border bg-background/60 px-1.5 py-0.5 transition-colors hover:bg-accent"
+      className="bg-background/60 hover:bg-accent inline-flex items-center gap-1 rounded border px-1.5 py-0.5 transition-colors"
       title={`คัดลอก${value}`}
     >
       {isCopied ? (
-        <Check className="h-3 w-3 text-primary" />
+        <Check className="text-primary h-3 w-3" />
       ) : (
         <span className="text-muted-foreground">{icon}</span>
       )}

@@ -31,7 +31,9 @@ export interface FormattedValidationError {
  * @param zodError - Zod validation error
  * @returns Formatted error details
  */
-export function formatZodErrors(zodError: z.ZodError): FormattedValidationError {
+export function formatZodErrors(
+  zodError: z.ZodError,
+): FormattedValidationError {
   const details: FormattedValidationIssue[] = zodError.issues.map((issue) => {
     // Build nested field path (e.g., "user.email" for nested objects)
     const fieldPath = issue.path.length > 0 ? issue.path.join(".") : "root";
@@ -102,7 +104,8 @@ export function isZodError(error: unknown): error is z.ZodError {
 export function getFirstZodErrorMessage(error: z.ZodError): string {
   if (error.issues.length === 0) return "Validation error";
   const firstIssue = error.issues[0]!;
-  const field = firstIssue.path.length > 0 ? `${firstIssue.path.join(".")}: ` : "";
+  const field =
+    firstIssue.path.length > 0 ? `${firstIssue.path.join(".")}: ` : "";
   return `${field}${firstIssue.message}`;
 }
 
@@ -116,7 +119,11 @@ export class ValidationErrorBuilder {
   /**
    * Add a validation issue
    */
-  addIssue(field: string, message: string, code: string = "invalid_input"): this {
+  addIssue(
+    field: string,
+    message: string,
+    code: string = "invalid_input",
+  ): this {
     this.issues.push({ field, message, code });
     return this;
   }
@@ -172,13 +179,20 @@ export const ValidationErrors = {
    * Build validation error for missing field
    */
   missingField: (fieldName: string) => {
-    return new ValidationErrorBuilder().addIssue(fieldName, `${fieldName} is required`);
+    return new ValidationErrorBuilder().addIssue(
+      fieldName,
+      `${fieldName} is required`,
+    );
   },
 
   /**
    * Build validation error for invalid type
    */
-  invalidType: (fieldName: string, expectedType: string, receivedType: string) => {
+  invalidType: (
+    fieldName: string,
+    expectedType: string,
+    receivedType: string,
+  ) => {
     return new ValidationErrorBuilder().addIssue(
       fieldName,
       `Expected ${expectedType}, got ${receivedType}`,

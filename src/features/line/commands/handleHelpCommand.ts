@@ -75,14 +75,9 @@ export const handleHelpCommand = async (req: any) => {
             "/budget list — รายการงบทั้งหมด",
           ]),
           { type: "separator" },
-          section("💼", "ลงเวลางาน", [
-            "/checkin  /checkout  /status",
-          ]),
+          section("💼", "ลงเวลางาน", ["/checkin  /checkout  /status"]),
           { type: "separator" },
-          section("📊", "คริปโต", [
-            "/bk /bn /cmc [symbol]",
-            "/chart [symbol]",
-          ]),
+          section("📊", "คริปโต", ["/bk /bn /cmc [symbol]", "/chart [symbol]"]),
           { type: "separator" },
           section("📌", "Auto DCA", ["/dca"]),
         ],

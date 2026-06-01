@@ -1,15 +1,17 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { fetchExpenseOverview } from "../api"
-import type { CreateTransactionInput } from "../types"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchExpenseOverview } from "../api";
+import type { CreateTransactionInput } from "../types";
 
 export function useExpenseTransactions(currentMonth: string, enabled: boolean) {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ["expenses-overview", currentMonth] })
-    void queryClient.invalidateQueries({ queryKey: ["expenses-multi-month"] })
-    void queryClient.invalidateQueries({ queryKey: ["expense-budgets"] })
-  }
+    void queryClient.invalidateQueries({
+      queryKey: ["expenses-overview", currentMonth],
+    });
+    void queryClient.invalidateQueries({ queryKey: ["expenses-multi-month"] });
+    void queryClient.invalidateQueries({ queryKey: ["expense-budgets"] });
+  };
 
   const {
     data: overview,
@@ -20,7 +22,7 @@ export function useExpenseTransactions(currentMonth: string, enabled: boolean) {
     queryFn: () => fetchExpenseOverview(currentMonth),
     enabled,
     staleTime: 30_000,
-  })
+  });
 
   const createMutation = useMutation({
     mutationFn: async (input: Omit<CreateTransactionInput, "userId">) => {
@@ -28,37 +30,37 @@ export function useExpenseTransactions(currentMonth: string, enabled: boolean) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(input),
-      })
-      if (!res.ok) throw new Error("บันทึกไม่สำเร็จ")
+      });
+      if (!res.ok) throw new Error("บันทึกไม่สำเร็จ");
     },
     onSuccess: invalidate,
-  })
+  });
 
   const updateMutation = useMutation({
     mutationFn: async ({
       id,
       input,
     }: {
-      id: string
-      input: Omit<CreateTransactionInput, "userId">
+      id: string;
+      input: Omit<CreateTransactionInput, "userId">;
     }) => {
       const res = await fetch(`/api/expenses/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(input),
-      })
-      if (!res.ok) throw new Error("แก้ไขไม่สำเร็จ")
+      });
+      if (!res.ok) throw new Error("แก้ไขไม่สำเร็จ");
     },
     onSuccess: invalidate,
-  })
+  });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/expenses/${id}`, { method: "DELETE" })
-      if (!res.ok) throw new Error("ลบไม่สำเร็จ")
+      const res = await fetch(`/api/expenses/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("ลบไม่สำเร็จ");
     },
     onSuccess: invalidate,
-  })
+  });
 
   return {
     transactions: overview?.transactions ?? [],
@@ -72,5 +74,5 @@ export function useExpenseTransactions(currentMonth: string, enabled: boolean) {
     createTransaction: createMutation.mutateAsync,
     updateTransaction: updateMutation.mutateAsync,
     deleteTransaction: deleteMutation.mutate,
-  }
+  };
 }

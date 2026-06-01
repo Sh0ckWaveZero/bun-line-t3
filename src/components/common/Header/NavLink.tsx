@@ -3,9 +3,7 @@ import type { NavLinkProps } from "./types";
 
 const navLinkClass = (active: boolean) =>
   `flex items-center space-x-2 rounded-md px-3 py-2 transition-colors hover:bg-primary/10 hover:text-primary ${
-    active
-      ? "bg-primary/10 font-medium text-primary"
-      : "text-muted-foreground"
+    active ? "bg-primary/10 font-medium text-primary" : "text-muted-foreground"
   }`;
 
 export function NavLink({ item, isActive, onClick, className }: NavLinkProps) {

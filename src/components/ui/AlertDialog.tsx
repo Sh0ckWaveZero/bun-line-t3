@@ -1,52 +1,52 @@
-"use client"
+"use client";
 
 /**
  * AlertDialog — Modal ยืนยันการทำงานที่สำคัญ (เช่น ลบข้อมูล)
  * ใช้แทน window.confirm() / window.alert() เพื่อ UX ที่ดีกว่า
  */
 
-import * as React from "react"
-import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
-import { X } from "lucide-react"
+import * as React from "react";
+import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
+import { X } from "lucide-react";
 
-const AlertDialog = AlertDialogPrimitive.Root
-const AlertDialogTrigger = AlertDialogPrimitive.Trigger
-const AlertDialogPortal = AlertDialogPrimitive.Portal
+const AlertDialog = AlertDialogPrimitive.Root;
+const AlertDialogTrigger = AlertDialogPrimitive.Trigger;
+const AlertDialogPortal = AlertDialogPrimitive.Portal;
 
-function composeRefs<T>(...refs: (React.Ref<T> | undefined)[]): React.RefCallback<T> {
+function composeRefs<T>(
+  ...refs: (React.Ref<T> | undefined)[]
+): React.RefCallback<T> {
   return (value) => {
     for (const ref of refs) {
-      if (typeof ref === "function") ref(value)
-      else if (ref != null) (ref as React.MutableRefObject<T | null>).current = value
+      if (typeof ref === "function") ref(value);
+      else if (ref != null)
+        (ref as React.MutableRefObject<T | null>).current = value;
     }
-  }
+  };
 }
 
 const AlertDialogOverlay = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
-  <AlertDialogPrimitive.Overlay
-    className={className}
-    {...props}
-    ref={ref}
-  />
-))
-AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName
+  <AlertDialogPrimitive.Overlay className={className} {...props} ref={ref} />
+));
+AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName;
 
 const AlertDialogContent = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>
 >(({ className, ...props }, ref) => {
-  const innerRef = React.useRef<React.ElementRef<typeof AlertDialogPrimitive.Content>>(null)
+  const innerRef =
+    React.useRef<React.ElementRef<typeof AlertDialogPrimitive.Content>>(null);
 
   // useLayoutEffect runs before Radix's useEffect that calls hideOthers()
   // (aria-hidden on background). By focusing the dialog content here, the
   // focused element is already inside the portal when aria-hidden fires,
   // so the browser never sees focus trapped inside an aria-hidden ancestor.
   React.useLayoutEffect(() => {
-    innerRef.current?.focus()
-  }, [])
+    innerRef.current?.focus();
+  }, []);
 
   return (
     <AlertDialogPortal>
@@ -58,71 +58,76 @@ const AlertDialogContent = React.forwardRef<
         {...props}
       />
     </AlertDialogPortal>
-  )
-})
-AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName
+  );
+});
+AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName;
 
 const AlertDialogHeader = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={className} {...props} />
-)
-AlertDialogHeader.displayName = "AlertDialogHeader"
+);
+AlertDialogHeader.displayName = "AlertDialogHeader";
 
 const AlertDialogFooter = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={className} {...props} />
-)
-AlertDialogFooter.displayName = "AlertDialogFooter"
+);
+AlertDialogFooter.displayName = "AlertDialogFooter";
 
 const AlertDialogTitle = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Title>
 >(({ className, ...props }, ref) => (
   <AlertDialogPrimitive.Title ref={ref} className={className} {...props} />
-))
-AlertDialogTitle.displayName = AlertDialogPrimitive.Title.displayName
+));
+AlertDialogTitle.displayName = AlertDialogPrimitive.Title.displayName;
 
 const AlertDialogDescription = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Description>
 >(({ className, ...props }, ref) => (
-  <AlertDialogPrimitive.Description ref={ref} className={className} {...props} />
-))
-AlertDialogDescription.displayName = AlertDialogPrimitive.Description.displayName
+  <AlertDialogPrimitive.Description
+    ref={ref}
+    className={className}
+    {...props}
+  />
+));
+AlertDialogDescription.displayName =
+  AlertDialogPrimitive.Description.displayName;
 
 const AlertDialogAction = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Action>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Action>
 >(({ className, ...props }, ref) => (
   <AlertDialogPrimitive.Action ref={ref} className={className} {...props} />
-))
-AlertDialogAction.displayName = AlertDialogPrimitive.Action.displayName
+));
+AlertDialogAction.displayName = AlertDialogPrimitive.Action.displayName;
 
 const AlertDialogCancel = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Cancel>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Cancel>
 >(({ className, ...props }, ref) => (
   <AlertDialogPrimitive.Cancel ref={ref} className={className} {...props} />
-))
-AlertDialogCancel.displayName = AlertDialogPrimitive.Cancel.displayName
+));
+AlertDialogCancel.displayName = AlertDialogPrimitive.Cancel.displayName;
 
 // ─────────────────────────────────────────────
 // Preset Components
 // ─────────────────────────────────────────────
 
 interface ConfirmDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  title: string
-  description?: string
-  confirmLabel?: string
-  cancelLabel?: string
-  onConfirm: () => void
-  variant?: "danger" | "default" | "warning"
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description?: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  onConfirm: () => void;
+  variant?: "danger" | "default" | "warning";
 }
 
 export const ConfirmDialog = ({
@@ -136,25 +141,31 @@ export const ConfirmDialog = ({
   variant = "default",
 }: ConfirmDialogProps) => {
   const handleConfirm = () => {
-    onConfirm()
-    onOpenChange(false)
-  }
+    onConfirm();
+    onOpenChange(false);
+  };
 
   const variantStyles = {
     danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
-    default: "bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500",
-    warning: "bg-yellow-600 text-white hover:bg-yellow-700 focus:ring-yellow-500",
-  }
+    default:
+      "bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500",
+    warning:
+      "bg-yellow-600 text-white hover:bg-yellow-700 focus:ring-yellow-500",
+  };
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl dark:border-gray-700 dark:bg-gray-900">
+      <AlertDialogContent className="fixed top-1/2 left-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl dark:border-gray-700 dark:bg-gray-900">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-lg font-semibold text-gray-900 dark:text-white">
             {title}
           </AlertDialogTitle>
           <AlertDialogDescription
-            className={description ? "mt-2 text-sm text-gray-600 dark:text-gray-400" : "sr-only"}
+            className={
+              description
+                ? "mt-2 text-sm text-gray-600 dark:text-gray-400"
+                : "sr-only"
+            }
           >
             {description}
           </AlertDialogDescription>
@@ -173,7 +184,7 @@ export const ConfirmDialog = ({
             <button
               type="button"
               onClick={handleConfirm}
-              className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${variantStyles[variant]}`}
+              className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none ${variantStyles[variant]}`}
             >
               {confirmLabel}
             </button>
@@ -181,15 +192,15 @@ export const ConfirmDialog = ({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
-}
+  );
+};
 
 interface AlertDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  title: string
-  description?: string
-  children?: React.ReactNode
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description?: string;
+  children?: React.ReactNode;
 }
 
 export const AlertDialogBox = ({
@@ -201,7 +212,7 @@ export const AlertDialogBox = ({
 }: AlertDialogProps) => {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl dark:border-gray-700 dark:bg-gray-900">
+      <AlertDialogContent className="fixed top-1/2 left-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl dark:border-gray-700 dark:bg-gray-900">
         <AlertDialogHeader>
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -209,7 +220,11 @@ export const AlertDialogBox = ({
                 {title}
               </AlertDialogTitle>
               <AlertDialogDescription
-                className={description ? "mt-2 text-sm text-gray-600 dark:text-gray-400" : "sr-only"}
+                className={
+                  description
+                    ? "mt-2 text-sm text-gray-600 dark:text-gray-400"
+                    : "sr-only"
+                }
               >
                 {description}
               </AlertDialogDescription>
@@ -228,8 +243,8 @@ export const AlertDialogBox = ({
         {children && <div className="mt-4">{children}</div>}
       </AlertDialogContent>
     </AlertDialog>
-  )
-}
+  );
+};
 
 export {
   AlertDialog,
@@ -243,4 +258,4 @@ export {
   AlertDialogDescription,
   AlertDialogAction,
   AlertDialogCancel,
-}
+};

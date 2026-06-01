@@ -9,6 +9,7 @@
 ## 🔍 จุดที่มี Logging
 
 ### 1. **LINE Webhook** (`/api/line`)
+
 เวลา Bot รับข้อความ/เหตุการณ์
 
 ```bash
@@ -20,6 +21,7 @@
 ```
 
 ### 2. **Bot Commands** (`handleDcaCommand.ts`)
+
 เวลา Bot ประมวลผลคำสั่ง
 
 ```bash
@@ -32,6 +34,7 @@
 ```
 
 ### 3. **Web Query** (`getLineUserIds`)
+
 เวลา Web query ข้อมูล
 
 ```bash
@@ -56,6 +59,7 @@
 ```
 
 ### 4. **Authorization Check** (`getAuthorizedLineUserId`)
+
 เวลาตรวจสอบสิทธิ์
 
 ```bash
@@ -73,11 +77,13 @@
 ### กรณีที่ 1: Bot สร้าง DCA แต่ Web ไม่เจอ
 
 **Step 1:** ส่งคำสั่งผ่าน Bot
+
 ```bash
 /dca add 100 BTC 0.001 2000000
 ```
 
 **Step 2:** ดู Log ฝั่ง Bot
+
 ```bash
 # ควรเห็น:
 🤖 [DCA Add] Bot User ID from webhook: Ufbce6312...
@@ -89,11 +95,13 @@
 ```
 
 **Step 3:** เปิด Web
+
 ```bash
 https://your-domain.com/dca-history
 ```
 
 **Step 4:** ดู Log ฝั่ง Web
+
 ```bash
 # ควรเห็น:
 🔍 [getLineUserIds] Session user: ...
@@ -103,6 +111,7 @@ https://your-domain.com/dca-history
 ```
 
 **ถ้าไม่เจอ:**
+
 - ตรวจสอบว่า `loginUserId` ตรงกันในทั้ง 2 log
 - ถ้าไม่ตรง → อาจเป็นปัญหา approval mapping
 
@@ -130,21 +139,18 @@ https://your-domain.com/dca-history
 
 ```javascript
 // MongoDB Console
-db.lineApprovalRequest.find({ status: "APPROVED" })
-  .map(doc => ({
-    botId: doc.lineUserId,
-    loginId: doc.loginLineUserId,
-    name: doc.displayName,
-  }))
-
-// ผลลัพธ์:
-[
+db.lineApprovalRequest.find({ status: "APPROVED" }).map((doc) => ({
+  botId: doc.lineUserId,
+  loginId: doc.loginLineUserId,
+  name: doc.displayName,
+}))[
+  // ผลลัพธ์:
   {
     botId: "Ufbce63127fe031cd09521720ec5ac8cd",
     loginId: "U2b569682d48c37664b6d0b92c2179a7f",
-    name: "John Doe"
+    name: "John Doe",
   }
-]
+];
 ```
 
 ---
@@ -155,8 +161,8 @@ Logging เปิดอยู่แล้วโดย default แต่ถ้า
 
 ```typescript
 // .env.local
-LOG_LEVEL=debug          // verbose logging
-LOG_LINE_USER_IDS=true   // log LINE User IDs
+LOG_LEVEL = debug; // verbose logging
+LOG_LINE_USER_IDS = true; // log LINE User IDs
 ```
 
 ---
@@ -216,6 +222,7 @@ LOG_LINE_USER_IDS=true   // log LINE User IDs
 **หมายความ:** ยังไม่มีการ approve
 
 **วิธีแก้:**
+
 1. User ต้อง approve ก่อน: `/login`
 2. หรือตั้งค่า LINE Login ให้ใช้ Channel เดียวกับ Bot
 
@@ -226,6 +233,7 @@ LOG_LINE_USER_IDS=true   // log LINE User IDs
 **หมายความ:** ไม่มีการผูก Bot ID กับ Login ID
 
 **วิธีแก้:**
+
 1. ตรวจสอบ `lineApprovalRequest` collection
 2. ตรวจสอบว่า `loginLineUserId` ถูกตั้งค่าหรือยัง
 3. Re-approve ผ่าน `/login` อีกครั้ง
@@ -237,6 +245,7 @@ LOG_LINE_USER_IDS=true   // log LINE User IDs
 **หมายความ:** Mapping ผิดพลาด
 
 **วิธีแก้:**
+
 1. Clear browser cache
 2. Logout และ login ใหม่
 3. ตรวจสอบ `accounts` collection ว่ามีการ update หรือยัง
@@ -257,6 +266,7 @@ LOG_LINE_USER_IDS=true   // log LINE User IDs
 ## 💡 Tips
 
 1. **Search Log ง่ายๆ:**
+
    ```bash
    # Search ด้วย Bot User ID
    grep "Ufbce6312" logs/server.log
@@ -269,6 +279,7 @@ LOG_LINE_USER_IDS=true   // log LINE User IDs
    ```
 
 2. **Filter Log ตาม Event:**
+
    ```bash
    # Webhook events only
    grep "\[LINE Webhook\]" logs/server.log

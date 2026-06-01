@@ -38,7 +38,12 @@ describe("AI Expense Router - Parameter Extraction", () => {
       const tags = "@lunch @office";
 
       const conditions = [amount, category, note, tags].filter(Boolean);
-      expect(conditions).toEqual(["250", "อาหาร", "#ข้าวมันไก่", "@lunch @office"]);
+      expect(conditions).toEqual([
+        "250",
+        "อาหาร",
+        "#ข้าวมันไก่",
+        "@lunch @office",
+      ]);
     });
 
     it("should filter out empty values from conditions", () => {

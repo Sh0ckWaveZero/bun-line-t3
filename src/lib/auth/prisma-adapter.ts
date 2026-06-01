@@ -88,7 +88,9 @@ export function createCustomPrismaAdapter(
             if (
               error?.code === "P2002" ||
               error?.message?.includes("Unique constraint") ||
-              error?.message?.includes("accounts_provider_provider_account_id_key")
+              error?.message?.includes(
+                "accounts_provider_provider_account_id_key",
+              )
             ) {
               console.log(
                 `[Custom Adapter] Account exists, updating LINE account: ${data.data.accountId}`,
@@ -105,7 +107,9 @@ export function createCustomPrismaAdapter(
               });
 
               const incomingUserId =
-                "userId" in data.data ? (data.data.userId as string) : undefined;
+                "userId" in data.data
+                  ? (data.data.userId as string)
+                  : undefined;
 
               // ถ้า better-auth เพิ่งสร้าง User ใหม่ (incomingUserId) แต่ Account
               // เดิมผูกกับ User เก่า → ลบ orphan User ใหม่ทิ้ง เพื่อไม่ให้ session
@@ -151,10 +155,15 @@ export function createCustomPrismaAdapter(
                 data: {
                   // ไม่เขียนทับ userId — คง ownership ของ Account เดิมไว้
                   accessToken:
-                    "accessToken" in data.data ? data.data.accessToken : undefined,
+                    "accessToken" in data.data
+                      ? data.data.accessToken
+                      : undefined,
                   refreshToken:
-                    "refreshToken" in data.data ? data.data.refreshToken : undefined,
-                  idToken: "idToken" in data.data ? data.data.idToken : undefined,
+                    "refreshToken" in data.data
+                      ? data.data.refreshToken
+                      : undefined,
+                  idToken:
+                    "idToken" in data.data ? data.data.idToken : undefined,
                   accessTokenExpiresAt:
                     "accessTokenExpiresAt" in data.data
                       ? data.data.accessTokenExpiresAt
@@ -177,7 +186,9 @@ export function createCustomPrismaAdapter(
                 await syncLineApprovalRequest({
                   accountId: updated.accountId,
                   accessToken:
-                    "accessToken" in data.data ? data.data.accessToken : undefined,
+                    "accessToken" in data.data
+                      ? data.data.accessToken
+                      : undefined,
                   providerId: updated.providerId,
                   userId: updated.userId,
                 });

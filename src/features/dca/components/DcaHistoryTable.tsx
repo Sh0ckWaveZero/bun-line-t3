@@ -5,7 +5,12 @@ import { Bitcoin, ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { DcaOrder, DcaOrderListResult } from "@/features/dca/types";
-import { formatCoin, formatDateOnly, formatTimeOnly, formatTHB } from "@/features/dca/utils/format";
+import {
+  formatCoin,
+  formatDateOnly,
+  formatTimeOnly,
+  formatTHB,
+} from "@/features/dca/utils/format";
 import { Pagination } from "./Pagination";
 
 interface DcaHistoryTableProps {
@@ -16,7 +21,13 @@ interface DcaHistoryTableProps {
   onPageChange: (page: number) => void;
 }
 
-const StatusBadge = ({ idPrefix, status }: { idPrefix: string; status: string }) => {
+const StatusBadge = ({
+  idPrefix,
+  status,
+}: {
+  idPrefix: string;
+  status: string;
+}) => {
   if (status === "SUCCESS") {
     return (
       <Badge
@@ -40,7 +51,10 @@ const StatusBadge = ({ idPrefix, status }: { idPrefix: string; status: string })
   }
 
   return (
-    <span id={`${idPrefix}-status-empty`} className="text-muted-foreground text-sm">
+    <span
+      id={`${idPrefix}-status-empty`}
+      className="text-muted-foreground text-sm"
+    >
       -
     </span>
   );
@@ -79,13 +93,19 @@ const CoinIcon = ({ coin, idPrefix }: { coin: string; idPrefix: string }) => {
   );
 };
 
-const OrderDetailRow = ({ order, colSpan }: { order: DcaOrder; colSpan: number }) => (
+const OrderDetailRow = ({
+  order,
+  colSpan,
+}: {
+  order: DcaOrder;
+  colSpan: number;
+}) => (
   <tr id={`dca-order-detail-${order.id}`} className="bg-muted/5">
-    <td colSpan={colSpan} className="px-4 pb-3 pt-1">
-      <div className="border-l-2 border-primary/20 pl-3 flex flex-wrap gap-x-8 gap-y-1 text-xs">
+    <td colSpan={colSpan} className="px-4 pt-1 pb-3">
+      <div className="border-primary/20 flex flex-wrap gap-x-8 gap-y-1 border-l-2 pl-3 text-xs">
         <div className="flex items-center gap-1.5">
           <span className="text-muted-foreground">Order ID</span>
-          <span className="font-mono text-foreground/70">{order.orderId}</span>
+          <span className="text-foreground/70 font-mono">{order.orderId}</span>
         </div>
         {order.note && (
           <div className="flex items-center gap-1.5">
@@ -161,7 +181,8 @@ export const DcaHistoryTable = ({
               ยังไม่มีประวัติคำสั่งซื้อ
             </p>
             <p id="dca-table-empty-description" className="mt-1 text-xs">
-              กด &ldquo;เพิ่มคำสั่งซื้อ&rdquo; หรือส่ง message จาก Bitkub ผ่าน LINE
+              กด &ldquo;เพิ่มคำสั่งซื้อ&rdquo; หรือส่ง message จาก Bitkub ผ่าน
+              LINE
             </p>
           </div>
         )}
@@ -170,20 +191,35 @@ export const DcaHistoryTable = ({
           <div id="dca-table-scroll" className="overflow-x-auto">
             <table id="dca-orders-table" className="w-full text-sm">
               <thead id="dca-orders-table-head">
-                <tr id="dca-orders-table-head-row" className="border-border bg-muted/30 border-b">
-                  <th className="w-px py-3 pl-3 pr-1" />
-                  <th id="dca-orders-header-executed-at" className="text-muted-foreground w-px px-4 py-3 text-left font-medium whitespace-nowrap">
+                <tr
+                  id="dca-orders-table-head-row"
+                  className="border-border bg-muted/30 border-b"
+                >
+                  <th className="w-px py-3 pr-1 pl-3" />
+                  <th
+                    id="dca-orders-header-executed-at"
+                    className="text-muted-foreground w-px px-4 py-3 text-left font-medium whitespace-nowrap"
+                  >
                     วันที่ทำการ
                   </th>
-                  <th id="dca-orders-header-transaction" className="text-muted-foreground px-4 py-3 text-left font-medium whitespace-nowrap">
+                  <th
+                    id="dca-orders-header-transaction"
+                    className="text-muted-foreground px-4 py-3 text-left font-medium whitespace-nowrap"
+                  >
                     รายละเอียดการซื้อ
                   </th>
-                  <th id="dca-orders-header-status" className="text-muted-foreground px-4 py-3 text-center font-medium whitespace-nowrap">
+                  <th
+                    id="dca-orders-header-status"
+                    className="text-muted-foreground px-4 py-3 text-center font-medium whitespace-nowrap"
+                  >
                     สถานะ
                   </th>
                 </tr>
               </thead>
-              <tbody id="dca-orders-table-body" className="divide-border divide-y">
+              <tbody
+                id="dca-orders-table-body"
+                className="divide-border divide-y"
+              >
                 {ordersData.orders.map((order) => {
                   const isExpanded = expandedRows.has(order.id);
                   return (
@@ -193,7 +229,7 @@ export const DcaHistoryTable = ({
                         className="hover:bg-muted/20 cursor-pointer transition-colors"
                         onClick={() => toggleRow(order.id)}
                       >
-                        <td className="w-px py-3 pl-3 pr-1">
+                        <td className="w-px py-3 pr-1 pl-3">
                           {isExpanded ? (
                             <ChevronDown className="text-muted-foreground h-4 w-4" />
                           ) : (
@@ -206,9 +242,14 @@ export const DcaHistoryTable = ({
                         >
                           <div className="flex items-center gap-2 text-sm">
                             <span>{formatDateOnly(order.executedAt)}</span>
-                            <span className="text-muted-foreground">{formatTimeOnly(order.executedAt)}</span>
+                            <span className="text-muted-foreground">
+                              {formatTimeOnly(order.executedAt)}
+                            </span>
                           </div>
-                          <div id={`dca-order-${order.id}-round`} className="mt-1">
+                          <div
+                            id={`dca-order-${order.id}-round`}
+                            className="mt-1"
+                          >
                             <Badge
                               id={`dca-order-${order.id}-round-badge`}
                               className="border-border bg-muted text-muted-foreground hover:bg-muted px-1.5 py-0 text-xs font-normal"
@@ -225,19 +266,34 @@ export const DcaHistoryTable = ({
                             id={`dca-order-${order.id}-transaction-primary`}
                             className="flex items-center gap-2"
                           >
-                            <CoinIcon coin={order.coin} idPrefix={`dca-order-${order.id}`} />
-                            <span id={`dca-order-${order.id}-amount-value`} className="font-medium">
+                            <CoinIcon
+                              coin={order.coin}
+                              idPrefix={`dca-order-${order.id}`}
+                            />
+                            <span
+                              id={`dca-order-${order.id}-amount-value`}
+                              className="font-medium"
+                            >
                               {formatTHB(order.amountTHB)} บาท
                             </span>
                             <span className="text-muted-foreground">→</span>
-                            <span id={`dca-order-${order.id}-coin-received-value`} className="font-mono font-medium">
+                            <span
+                              id={`dca-order-${order.id}-coin-received-value`}
+                              className="font-mono font-medium"
+                            >
                               {formatCoin(order.coinReceived)}{" "}
-                              <span id={`dca-order-${order.id}-coin-received-unit`} className="text-muted-foreground text-xs">
+                              <span
+                                id={`dca-order-${order.id}-coin-received-unit`}
+                                className="text-muted-foreground text-xs"
+                              >
                                 {order.coin}
                               </span>
                             </span>
                           </div>
-                          <div id={`dca-order-${order.id}-price`} className="text-muted-foreground mt-0.5 pl-8 text-xs">
+                          <div
+                            id={`dca-order-${order.id}-price`}
+                            className="text-muted-foreground mt-0.5 pl-8 text-xs"
+                          >
                             @ {formatTHB(order.pricePerCoin)} บาท/เหรียญ
                           </div>
                         </td>
@@ -263,7 +319,10 @@ export const DcaHistoryTable = ({
         )}
 
         {ordersData && (
-          <div id="dca-table-pagination" className="border-border border-t px-4">
+          <div
+            id="dca-table-pagination"
+            className="border-border border-t px-4"
+          >
             <Pagination
               currentPage={page}
               totalPages={ordersData.totalPages}

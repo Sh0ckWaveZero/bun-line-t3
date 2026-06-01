@@ -445,26 +445,26 @@ export async function POST(request: Request) {
 
 // ✅ TanStack Start Route Guard Pattern
 // src/lib/auth/route-guard.ts
-import { redirect } from "@tanstack/react-router"
+import { redirect } from "@tanstack/react-router";
 
 interface GuardArgs {
-  context: { session: AppSession | null }
-  location: { pathname: string }
+  context: { session: AppSession | null };
+  location: { pathname: string };
 }
 
 export function requireAuth({ context, location }: GuardArgs) {
   if (!context.session?.user?.id) {
     throw redirect({
       to: "/login",
-      search: { callbackUrl: location.pathname }
-    })
+      search: { callbackUrl: location.pathname },
+    });
   }
 }
 
 export function requireAdmin({ context, location }: GuardArgs) {
-  requireAuth({ context, location })
+  requireAuth({ context, location });
   if (!context.session!.isAdmin) {
-    throw redirect({ to: "/dashboard" })
+    throw redirect({ to: "/dashboard" });
   }
 }
 ```
@@ -901,28 +901,28 @@ graph LR
 // ✅ Theme configuration
 const themeConfig = {
   light: {
-    background: 'bg-white',
-    text: 'text-gray-900',
-    border: 'border-gray-200',
+    background: "bg-white",
+    text: "text-gray-900",
+    border: "border-gray-200",
   },
   dark: {
-    background: 'dark:bg-gray-800',
-    text: 'dark:text-gray-100',
-    border: 'dark:border-gray-700',
-  }
-}
+    background: "dark:bg-gray-800",
+    text: "dark:text-gray-100",
+    border: "dark:border-gray-700",
+  },
+};
 ```
 
 #### 2. Color Scheme Standards
 
-| Element Type | Light Theme | Dark Theme |
-|------------|-------------|------------|
-| **Background** | `bg-white` | `dark:bg-gray-800` |
-| **Text Primary** | `text-gray-900` | `dark:text-gray-100` |
-| **Text Secondary** | `text-gray-600` | `dark:text-gray-400` |
-| **Borders** | `border-gray-200` | `dark:border-gray-700` |
-| **Status Cards** | `bg-blue-50` | `dark:bg-blue-900/20` |
-| **Hover States** | `hover:bg-gray-50` | `dark:hover:bg-gray-700/50` |
+| Element Type       | Light Theme        | Dark Theme                  |
+| ------------------ | ------------------ | --------------------------- |
+| **Background**     | `bg-white`         | `dark:bg-gray-800`          |
+| **Text Primary**   | `text-gray-900`    | `dark:text-gray-100`        |
+| **Text Secondary** | `text-gray-600`    | `dark:text-gray-400`        |
+| **Borders**        | `border-gray-200`  | `dark:border-gray-700`      |
+| **Status Cards**   | `bg-blue-50`       | `dark:bg-blue-900/20`       |
+| **Hover States**   | `hover:bg-gray-50` | `dark:hover:bg-gray-700/50` |
 
 #### 3. Chart Theming Integration
 
@@ -930,7 +930,8 @@ const themeConfig = {
 // ✅ Dynamic chart colors
 export const useChartTheme = () => {
   const { theme, systemTheme } = useTheme();
-  const isDark = theme === "dark" || (theme === "system" && systemTheme === "dark");
+  const isDark =
+    theme === "dark" || (theme === "system" && systemTheme === "dark");
 
   const chartColors = {
     background: isDark ? "rgba(31, 41, 55, 1)" : "rgba(255, 255, 255, 1)",

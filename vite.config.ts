@@ -79,11 +79,7 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       rollupOptions: {
-        external: [
-          /^@prisma\/client/,
-          /^@prisma\/adapter-pg/,
-          /^pg/,
-        ],
+        external: [/^@prisma\/client/, /^@prisma\/adapter-pg/, /^pg/],
       },
     },
     optimizeDeps: {

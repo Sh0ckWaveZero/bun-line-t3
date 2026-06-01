@@ -10,18 +10,24 @@ export const SectionLabel = ({ num, title, hint }: SectionLabelProps) => {
   const { t } = useDcaLocale();
 
   // If title/hint are provided, use them; otherwise use locale defaults based on num
-  const displayTitle = title ?? (
-    num === "01" ? t.section.overviewTitle :
-    num === "02" ? t.section.metricsTitle :
-    num === "03" ? t.section.historyTitle :
-    title
-  );
-  const displayHint = hint ?? (
-    num === "01" ? t.section.overviewHint :
-    num === "02" ? t.section.metricsHint :
-    num === "03" ? t.section.historyHint :
-    hint
-  );
+  const displayTitle =
+    title ??
+    (num === "01"
+      ? t.section.overviewTitle
+      : num === "02"
+        ? t.section.metricsTitle
+        : num === "03"
+          ? t.section.historyTitle
+          : title);
+  const displayHint =
+    hint ??
+    (num === "01"
+      ? t.section.overviewHint
+      : num === "02"
+        ? t.section.metricsHint
+        : num === "03"
+          ? t.section.historyHint
+          : hint);
 
   return (
     <div className="mt-6 mb-3 flex items-baseline gap-2 first:mt-0 sm:mt-8">

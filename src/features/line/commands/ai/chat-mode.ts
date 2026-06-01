@@ -5,9 +5,8 @@ import {
 } from "@/lib/ai/content-safety";
 import { chat } from "@/lib/ai/openai-client";
 
-const { sendMessage, sendLoadingAnimation } = await import(
-  "@/lib/utils/line-utils"
-);
+const { sendMessage, sendLoadingAnimation } =
+  await import("@/lib/utils/line-utils");
 
 /**
  * Handle chat mode (maintains conversation context)

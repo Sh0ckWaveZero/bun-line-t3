@@ -1,49 +1,60 @@
-import { useCallback, useState } from "react"
-import type { CreateTransactionInput, TransactionWithCategory } from "../types"
+import { useCallback, useState } from "react";
+import type { CreateTransactionInput, TransactionWithCategory } from "../types";
 
 interface Deps {
-  createTransaction: (input: Omit<CreateTransactionInput, "userId">) => Promise<void>
-  updateTransaction: (args: { id: string; input: Omit<CreateTransactionInput, "userId"> }) => Promise<void>
-  deleteTransaction: (id: string) => void
+  createTransaction: (
+    input: Omit<CreateTransactionInput, "userId">,
+  ) => Promise<void>;
+  updateTransaction: (args: {
+    id: string;
+    input: Omit<CreateTransactionInput, "userId">;
+  }) => Promise<void>;
+  deleteTransaction: (id: string) => void;
 }
 
-export function useTransactionModal({ createTransaction, updateTransaction, deleteTransaction }: Deps) {
-  const [showModal, setShowModal] = useState(false)
-  const [editingTx, setEditingTx] = useState<TransactionWithCategory | null>(null)
+export function useTransactionModal({
+  createTransaction,
+  updateTransaction,
+  deleteTransaction,
+}: Deps) {
+  const [showModal, setShowModal] = useState(false);
+  const [editingTx, setEditingTx] = useState<TransactionWithCategory | null>(
+    null,
+  );
 
   const openAdd = useCallback(() => {
-    setEditingTx(null)
-    setShowModal(true)
-  }, [])
+    setEditingTx(null);
+    setShowModal(true);
+  }, []);
 
   const openEdit = useCallback((tx: TransactionWithCategory) => {
-    setEditingTx(tx)
-    setShowModal(true)
-  }, [])
+    setEditingTx(tx);
+    setShowModal(true);
+  }, []);
 
   const close = useCallback(() => {
-    setShowModal(false)
-    setEditingTx(null)
-  }, [])
+    setShowModal(false);
+    setEditingTx(null);
+  }, []);
 
   const handleSave = useCallback(
     async (input: Omit<CreateTransactionInput, "userId">) => {
       if (editingTx) {
-        await updateTransaction({ id: editingTx.id, input })
+        await updateTransaction({ id: editingTx.id, input });
       } else {
-        await createTransaction(input)
+        await createTransaction(input);
       }
-      close()
+      close();
     },
     [editingTx, createTransaction, updateTransaction, close],
-  )
+  );
 
   const handleDelete = useCallback(
     (id: string) => {
-      if (confirm("ยืนยันการลบรายการนี้?")) deleteTransaction(id)
+      if (confirm("ยืนยันการลบรายการนี้?")) deleteTransaction(id);
     },
     [deleteTransaction],
-  )
+  );
 
   return {
     showModal,
@@ -53,5 +64,5 @@ export function useTransactionModal({ createTransaction, updateTransaction, dele
     close,
     handleSave,
     handleDelete,
-  }
+  };
 }

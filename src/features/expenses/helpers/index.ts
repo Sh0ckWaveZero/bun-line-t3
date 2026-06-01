@@ -39,13 +39,24 @@ export function formatDateShortThai(transDate: string): string {
   const day = parseInt(dayStr ?? "1", 10);
 
   const monthShort = [
-    "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
-    "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค.",
+    "ม.ค.",
+    "ก.พ.",
+    "มี.ค.",
+    "เม.ย.",
+    "พ.ค.",
+    "มิ.ย.",
+    "ก.ค.",
+    "ส.ค.",
+    "ก.ย.",
+    "ต.ค.",
+    "พ.ย.",
+    "ธ.ค.",
   ];
 
   const currentYear = new Date().getFullYear();
   const buddhistYear = year + 543;
-  const yearSuffix = year !== currentYear ? ` ${String(buddhistYear).slice(-2)}` : "";
+  const yearSuffix =
+    year !== currentYear ? ` ${String(buddhistYear).slice(-2)}` : "";
 
   return `${day} ${monthShort[month - 1] ?? ""}${yearSuffix}`;
 }

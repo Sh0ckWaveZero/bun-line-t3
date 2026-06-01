@@ -43,7 +43,9 @@ async function seedAdminRoles(): Promise<AdminSeedResult> {
     const adminIdsStr = env.ADMIN_LINE_USER_IDS || "";
     if (!adminIdsStr.trim()) {
       console.warn("⚠️  ADMIN_LINE_USER_IDS not set or empty");
-      console.warn("💡 Set ADMIN_LINE_USER_IDS in .env or pass as environment variable");
+      console.warn(
+        "💡 Set ADMIN_LINE_USER_IDS in .env or pass as environment variable",
+      );
       console.warn("   Example: ADMIN_LINE_USER_IDS=U123,U456,U789");
       return result;
     }
@@ -85,7 +87,9 @@ async function seedAdminRoles(): Promise<AdminSeedResult> {
 
     if (result.accountsFound === 0) {
       console.warn("⚠️  No LINE accounts found!");
-      console.warn("💡 Make sure these users have logged in via LINE Login first");
+      console.warn(
+        "💡 Make sure these users have logged in via LINE Login first",
+      );
       return result;
     }
 
@@ -133,7 +137,9 @@ async function seedAdminRoles(): Promise<AdminSeedResult> {
 
     // Update users to admin role
     if (usersToUpdate.length > 0) {
-      console.log(`\n🔧 Updating ${usersToUpdate.length} users to admin role...`);
+      console.log(
+        `\n🔧 Updating ${usersToUpdate.length} users to admin role...`,
+      );
 
       for (const user of usersToUpdate) {
         try {
@@ -168,9 +174,7 @@ async function seedAdminRoles(): Promise<AdminSeedResult> {
     );
 
     if (result.accountsNotFound.length > 0) {
-      console.log(
-        "\n❌ Accounts not found (these users need to login first):",
-      );
+      console.log("\n❌ Accounts not found (these users need to login first):");
       result.accountsNotFound.forEach((id) => console.log(`   - ${id}`));
     }
 
@@ -202,9 +206,7 @@ async function verifySeeding(): Promise<void> {
 
     console.log("\n📊 Current role distribution:");
     roleDistribution.forEach((stat) => {
-      console.log(
-        `   ${stat.role.toUpperCase()} → ${stat._count._all} users`,
-      );
+      console.log(`   ${stat.role.toUpperCase()} → ${stat._count._all} users`);
     });
 
     // Show all admin users

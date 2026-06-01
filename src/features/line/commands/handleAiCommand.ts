@@ -67,4 +67,3 @@ export async function handleAiCommand(req: any, conditions: string[]) {
     ]);
   }
 }
-

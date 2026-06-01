@@ -14,7 +14,11 @@ const createLoginErrorRedirect = (error: string) => {
   return Response.redirect(loginUrl, 302);
 };
 
-const logAuthFailure = (message: string, requestUrl: URL, response?: Response) => {
+const logAuthFailure = (
+  message: string,
+  requestUrl: URL,
+  response?: Response,
+) => {
   console.error("[Auth Handler] " + message, {
     authError: requestUrl.searchParams.get("error"),
     hasCode: requestUrl.searchParams.has("code"),
@@ -40,8 +44,15 @@ const handleAuthRequest = async (request: Request) => {
 
     const response = await auth.handler(request);
 
-    if (response.status >= 500 && shouldHandleAuthErrorRedirect(requestUrl.pathname)) {
-      logAuthFailure("Auth provider returned an internal error", requestUrl, response);
+    if (
+      response.status >= 500 &&
+      shouldHandleAuthErrorRedirect(requestUrl.pathname)
+    ) {
+      logAuthFailure(
+        "Auth provider returned an internal error",
+        requestUrl,
+        response,
+      );
       return createLoginErrorRedirect("line_oauth");
     }
 
@@ -69,7 +80,8 @@ const handleAuthRequest = async (request: Request) => {
     console.error("[Auth Handler] Error processing auth request:", error);
 
     // Return a more specific error for debugging
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     const loginUrl = new URL("/login", new URL(env.APP_URL).origin);
     loginUrl.searchParams.set("authError", "line_oauth");
     loginUrl.searchParams.set("error", errorMessage);

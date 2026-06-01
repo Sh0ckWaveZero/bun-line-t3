@@ -126,7 +126,7 @@ function MonthPicker({
               isMonthSelected(i)
                 ? "border-primary bg-primary text-primary-foreground"
                 : "border-input bg-background hover:bg-accent hover:text-accent-foreground",
-              "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+              "focus:ring-ring focus:ring-2 focus:ring-offset-2 focus:outline-none",
             )}
           >
             {getMonthName(i)}

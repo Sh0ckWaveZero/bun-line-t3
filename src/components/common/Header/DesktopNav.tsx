@@ -3,7 +3,13 @@ import { NavLink } from "./NavLink";
 import { NavDropdown } from "./NavDropdown";
 import type { DesktopNavProps } from "./types";
 
-export function DesktopNav({ items, pathname, openDropdown, setOpenDropdown, session }: DesktopNavProps) {
+export function DesktopNav({
+  items,
+  pathname,
+  openDropdown,
+  setOpenDropdown,
+  session,
+}: DesktopNavProps) {
   // Filter items based on auth/admin requirements
   const visibleItems = items.filter((item) => {
     if (item.requiresAuth && !session) return false;
@@ -39,13 +45,7 @@ export function DesktopNav({ items, pathname, openDropdown, setOpenDropdown, ses
             );
           }
 
-          return (
-            <NavLink
-              key={item.id}
-              item={item}
-              isActive={isActive}
-            />
-          );
+          return <NavLink key={item.id} item={item} isActive={isActive} />;
         })}
       </div>
     </nav>

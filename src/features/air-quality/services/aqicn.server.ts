@@ -1,7 +1,10 @@
 import { AqiData } from "../aqi_data";
 import type { AqicnResponse } from "../types/aqicn";
 
-const fetchAqicn = (latitude: number, longitude: number): Promise<AqicnResponse> => {
+const fetchAqicn = (
+  latitude: number,
+  longitude: number,
+): Promise<AqicnResponse> => {
   const token = process.env.AQICN_TOKEN;
   return fetch(
     `https://api.waqi.info/feed/geo:${latitude};${longitude}/?token=${token}`,

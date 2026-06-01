@@ -27,7 +27,10 @@ const updateBudgetSchema = z.object({
 // Handlers
 // ─────────────────────────────────────────────
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(
+  request: Request,
+  { params }: { params: { id: string } },
+) {
   try {
     const session = await getServerAuthSession(request);
     if (!session?.user?.id) {
@@ -65,7 +68,10 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } },
+) {
   try {
     const session = await getServerAuthSession(request);
     if (!session?.user?.id) {
@@ -86,10 +92,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     });
   } catch (error) {
     console.error("[DELETE /api/expenses/budgets/:id]", error);
-    return Response.json(
-      { error: "ไม่สามารถลบงบประมาณได้" },
-      { status: 500 },
-    );
+    return Response.json({ error: "ไม่สามารถลบงบประมาณได้" }, { status: 500 });
   }
 }
 
@@ -97,7 +100,8 @@ export const Route = createFileRoute("/api/expenses/budgets/$id")({
   server: {
     handlers: {
       PATCH: ({ request, params }) => PATCH(request, params as { id: string }),
-      DELETE: ({ request, params }) => DELETE(request, params as { id: string }),
+      DELETE: ({ request, params }) =>
+        DELETE(request, params as { id: string }),
     },
   },
 });

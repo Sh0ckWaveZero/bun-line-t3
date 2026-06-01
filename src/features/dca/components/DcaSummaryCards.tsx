@@ -74,7 +74,10 @@ export const DcaSummaryCards = ({ summary }: DcaSummaryCardsProps) => (
             <TrendingUp className="h-5 w-5 text-green-500" />
           </div>
           <div>
-            <p id="dca-summary-total-spent-label" className="text-muted-foreground text-xs">
+            <p
+              id="dca-summary-total-spent-label"
+              className="text-muted-foreground text-xs"
+            >
               ลงทุนรวมทั้งหมด
             </p>
             <p id="dca-summary-total-spent-value" className="text-lg font-bold">
@@ -95,7 +98,10 @@ export const DcaSummaryCards = ({ summary }: DcaSummaryCardsProps) => (
             <Bitcoin className="h-5 w-5 text-orange-500" />
           </div>
           <div>
-            <p id="dca-summary-total-btc-label" className="text-muted-foreground text-xs">
+            <p
+              id="dca-summary-total-btc-label"
+              className="text-muted-foreground text-xs"
+            >
               BTC สะสม
             </p>
             <p id="dca-summary-total-btc-value" className="text-lg font-bold">
@@ -116,10 +122,16 @@ export const DcaSummaryCards = ({ summary }: DcaSummaryCardsProps) => (
             <Coins className="h-5 w-5 text-blue-500" />
           </div>
           <div>
-            <p id="dca-summary-total-rounds-label" className="text-muted-foreground text-xs">
+            <p
+              id="dca-summary-total-rounds-label"
+              className="text-muted-foreground text-xs"
+            >
               จำนวนรอบทั้งหมด
             </p>
-            <p id="dca-summary-total-rounds-value" className="text-lg font-bold">
+            <p
+              id="dca-summary-total-rounds-value"
+              className="text-lg font-bold"
+            >
               {summary.totalRounds}{" "}
               <span className="text-muted-foreground text-sm font-normal">
                 รอบ
@@ -163,7 +175,10 @@ export const DcaSummaryCards = ({ summary }: DcaSummaryCardsProps) => (
               />
             </div>
             <div>
-              <p id="dca-summary-pnl-label" className="text-muted-foreground text-xs">
+              <p
+                id="dca-summary-pnl-label"
+                className="text-muted-foreground text-xs"
+              >
                 กำไร/ขาดทุน (PnL)
               </p>
               <PnLBadge

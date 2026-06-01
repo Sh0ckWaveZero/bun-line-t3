@@ -69,14 +69,24 @@ function DcaHistoryPageContent() {
 
           {/* Error banner */}
           {error && (
-            <div id="dca-error-banner" className="mt-3 rounded-md border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+            <div
+              id="dca-error-banner"
+              className="mt-3 rounded-md border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
+            >
               {error}
             </div>
           )}
 
           {/* Section 01: Overview */}
-          <SectionLabel num="01" title="Overview" hint="PNL · chart · hover for daily values" />
-          <div id="dca-section-overview" className="grid grid-cols-1 gap-4 md:grid-cols-[380px_1fr]">
+          <SectionLabel
+            num="01"
+            title="Overview"
+            hint="PNL · chart · hover for daily values"
+          />
+          <div
+            id="dca-section-overview"
+            className="grid grid-cols-1 gap-4 md:grid-cols-[380px_1fr]"
+          >
             <PnlCard summary={summaryData} />
             <DcaChartCard
               orders={allOrders}
@@ -85,14 +95,25 @@ function DcaHistoryPageContent() {
           </div>
 
           {/* Section 02: Metrics & Goals */}
-          <SectionLabel num="02" title="Metrics & Goals" hint="core numbers · progress" />
-          <div id="dca-section-metrics-goals" className="border-border bg-card/20 space-y-4 rounded-lg border p-3 sm:p-4">
+          <SectionLabel
+            num="02"
+            title="Metrics & Goals"
+            hint="core numbers · progress"
+          />
+          <div
+            id="dca-section-metrics-goals"
+            className="border-border bg-card/20 space-y-4 rounded-lg border p-3 sm:p-4"
+          >
             <StatsGrid summary={summaryData} orders={allOrders} />
             <GoalsSection orders={allOrders} />
           </div>
 
           {/* Section 03: Buy History */}
-          <SectionLabel num="03" title="Buy History" hint="sortable · searchable · paginated" />
+          <SectionLabel
+            num="03"
+            title="Buy History"
+            hint="sortable · searchable · paginated"
+          />
           <div id="dca-section-buy-history">
             <DcaRecordsTable
               orders={allOrders}

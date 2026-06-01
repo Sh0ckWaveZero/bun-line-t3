@@ -10,10 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.5.0] - 2026-05-09
 
 ### Added
+
 - **Calendar Day Detail Panel** — คลิกวันที่มีวันหยุด/วันลา แสดง panel รายละเอียด (ชื่อไทย/อังกฤษ, ประเภท, เหตุผล) พร้อมปุ่มแจ้งลาวันนั้น
 - **Calendar Loading Skeleton** — skeleton grid แทน spinner ธรรมดาตอนโหลดข้อมูล
 
 ### Changed
+
 - **Calendar Desktop** — ออกแบบใหม่: ลบ hero-metric cards, รวมสถิติเป็น inline summary, ปรับ grid cell hierarchy, วันหยุด/วันลา badge สวยขึ้น, weekend cells แยกสีอ่อน
 - **Calendar Mobile** — แทนที่ hardcoded `emerald-*`, `sky-*`, `rose-*`, `slate-*` colors ด้วย theme tokens (`primary`, `destructive`, `muted`, `foreground`), ลบ gradient background, ใช้ `bg-background` แทน
 - **Holiday Manage Modal** — ลบ hardcoded `dark:text-gray-*` ทั้งหมด เปลี่ยนเป็น theme tokens
@@ -25,11 +27,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.4.0] - 2026-05-09
 
 ### Added
+
 - **DCA History Redesign** — หน้าประวัติ DCA ออกแบบใหม่พร้อม interactive charts, PnL card, sparkline, stats grid, goals section และรองรับ 2 ภาษา (ไทย/อังกฤษ)
 - **Design System Documentation** — เพิ่ม `PRODUCT.md`, `DESIGN.md`, `DESIGN.json` สำหรับเป็น single source of truth ของสี, typography, spacing, elevation
 - **AGENTS.md** — เพิ่ม AI agent development guide สำหรับ coding standards และ project conventions
 
 ### Changed
+
 - **Dashboard UI** — ปรับปรุงหน้า dashboard หลักด้วย categorized navigation และ enter animations
 - **Monitoring Dashboard** — ปรับปรุงหน้าตรวจสอบระบบให้ใช้ design system tokens (`bg-card`, `text-foreground`, `rounded-xl`), ภาษาไทยทั้งหมด, flat-by-default elevation และ `React.memo` ทุก sub-component เพื่อลด re-render
 - **Help Page** — ปรับปรุง UI ด้วย Tailwind และ Lucide patterns
@@ -39,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Help Route** — เพิ่ม authentication guard (`beforeLoad: requireAuth`)
 
 ### Fixed
+
 - **Thai ID** — แก้ logic การสร้างเลขบัตรประชาชนและ validation ที่ไม่ถูกต้อง
 - **DCA Charts** — ปรับปรุง chart layout, tooltip mobile overflow, language switch UI
 
@@ -47,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.3.0] - 2026-04-26
 
 ### Added
+
 - **Feature-Based Architecture** — แปลงโครงสร้างโปรเจกต์เป็น feature-based architecture สำหรับ scalability และ maintainability
 - **Route Guard Pattern** — เพิ่ม `requireAuth` และ `requireAdmin` helpers สำหรับ protected routes ด้วย `beforeLoad`
 - **Feature Pages** — Extract page components จาก route files ไปยัง `src/features/*/pages/`
@@ -54,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Auth Pages** — เพิ่ม `src/features/auth/pages/` สำหรับ `PendingApprovalPage`
 
 ### Changed
+
 - **Route Files (Thinning)** — แปลง route files จาก 800+ บรรทัดให้เหลือ 6-10 บรรทัด (thin configs)
   - `src/routes/expenses.tsx` → 8 lines
   - `src/routes/attendance-report.tsx` → 8 lines
@@ -87,6 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `AGENTS.md` — อัปเดต development guide สำหรับ AI agents
 
 ### Fixed
+
 - **React Key Conflict** — แก้ duplicate key warning `closed-new` ใน modal components
   - เพิ่ม unique prefixes: `transaction-` และ `category-`
 - **Finance Menu Auth** — เพิ่ม `requiresAuth: true` สำหรับ finance menu
@@ -98,6 +106,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.0] - 2026-04-25
 
 ### Added
+
 - **Expense Tracker** — บันทึกรายรับรายจ่ายรายเดือน พร้อม categories และ LINE bot integration
 - **Expense Charts** — Donut chart แสดงสัดส่วนรายจ่ายต่อหมวดหมู่ และ Bar chart เปรียบเทียบ 6 เดือนย้อนหลัง (lazy load)
 - **Expense Export** — Export รายการเป็น Excel (.xlsx) 2 sheet (รายการ + สรุป) พร้อมวันที่ในรูปแบบพุทธศักราช
@@ -105,6 +114,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **PWA Icons** — icon-192x192.png และ icon-512x512.png สำหรับ Web App Manifest
 
 ### Changed
+
 - **Expense Tracker Refactor** — แยก `expenses.tsx` (~1800 บรรทัด) ออกเป็น components และ custom hooks แยกไฟล์
   - Components: `AddTransactionModal`, `AddCategoryModal`, `CategoryManagerModal`, `EmojiPickerModal`, `ExpenseDonutChart`, `MonthlyBarChart`, `SummaryCard`, `TransactionRow`
   - Hooks: `useExpenseTransactions`, `useExpenseCategories`, `useMonthlyCharts`, `useMonthNavigation`, `useTransactionModal`, `useCategoryModalFlow`, `useExpensePageUI`
@@ -113,6 +123,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Service Worker Caching** — เพิ่ม smart exclusion rules สำหรับ auth routes และ build assets
 
 ### Fixed
+
 - **deps**: เปลี่ยน xlsx จาก SheetJS CDN tgz เป็น npm `xlsx@0.18.5` เพื่อแก้ Docker `--frozen-lockfile` error
 - **manifest**: เพิ่ม `scope: "/"` แก้ปัญหา PWA shortcuts warnings ใน browser
 - **auth**: ลบ debug console.logs ที่เหลืออยู่จาก development
@@ -122,6 +133,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2026-04-18
 
 ### Added
+
 - **Calendar Holidays Management** — ระบบจัดการวันหยุดและวันลาแบบครบวงจร
 - **Mobile Calendar (PWA)** — ปฏิทินเพิ่มประสิทธิภาพสำหรับมือถือ รองรับ Add to Home Screen
 - **Dark Mode** — รองรับ dark mode ทั่วทั้งหน้า calendar
@@ -130,10 +142,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Air Quality (AQICN)** — ย้ายจาก Open-Meteo ไปใช้ AQICN สำหรับข้อมูล AQI แบบ real-time
 
 ### Changed
+
 - **Auth (Prisma 7)** — อัปเกรด better-auth ให้ใช้ Prisma 7 PostgreSQL adapter
 - **Docker** — ลด image size โดยย้าย dev-only packages ไป devDependencies
 
 ### Fixed
+
 - **auth**: แก้ LINE account unique constraint ด้วย custom adapter
 - **auth**: ป้องกัน duplicate session token บน LINE OAuth callback
 - **auth**: เพิ่ม Cloudflare Tunnel support สำหรับ LINE OAuth
@@ -143,6 +157,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **line**: แก้ webhook signature, account checks และ remove invalid 401 responses
 
 ### Removed
+
 - ฟีเจอร์ที่ไม่ใช้: Spotify, health-activity, debug endpoint
 
 ---
@@ -150,6 +165,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2026-04-14
 
 ### Added
+
 - LINE Login OAuth ด้วย better-auth
 - DCA (Dollar Cost Averaging) tracking ผ่าน LINE bot
 - Attendance check-in/check-out ผ่าน LINE bot

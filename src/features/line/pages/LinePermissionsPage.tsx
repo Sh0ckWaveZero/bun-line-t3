@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useSession } from "@/lib/auth/client"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useState } from "react";
+import { useSession } from "@/lib/auth/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Shield,
   Users,
@@ -14,82 +14,95 @@ import {
   UserCheck,
   CalendarCheck,
   Bell,
-} from "lucide-react"
+} from "lucide-react";
 
 interface LineApproval {
-  id: string
-  lineUserId: string
-  displayName: string | null
-  pictureUrl: string | null
-  status: "PENDING" | "APPROVED" | "REJECTED"
-  canRequestAttendanceReport: boolean
-  canRequestLeave: boolean
-  canReceiveReminders: boolean
-  createdAt: string
-  approvedAt: string | null
+  id: string;
+  lineUserId: string;
+  displayName: string | null;
+  pictureUrl: string | null;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  canRequestAttendanceReport: boolean;
+  canRequestLeave: boolean;
+  canReceiveReminders: boolean;
+  createdAt: string;
+  approvedAt: string | null;
 }
 
-type FilterStatus = "all" | "pending" | "approved" | "rejected"
+type FilterStatus = "all" | "pending" | "approved" | "rejected";
 
 async function fetchPermissions(): Promise<LineApproval[]> {
-  const res = await fetch("/api/line/permissions")
+  const res = await fetch("/api/line/permissions");
   if (!res.ok) {
-    throw new Error("ไม่สามารถดึงข้อมูลสิทธิ์ได้")
+    throw new Error("ไม่สามารถดึงข้อมูลสิทธิ์ได้");
   }
-  const data = await res.json()
-  return data.data
+  const data = await res.json();
+  return data.data;
 }
 
 export function LinePermissionsPage() {
-  const { data: session } = useSession()
-  const queryClient = useQueryClient()
+  const { data: session } = useSession();
+  const queryClient = useQueryClient();
 
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>("all")
-  const [searchQuery, setSearchQuery] = useState("")
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: approvals = [], isLoading } = useQuery({
     queryKey: ["line-permissions"],
     queryFn: fetchPermissions,
     enabled: !!session?.isAdmin,
-  })
+  });
 
   const updatePermissionMutation = useMutation({
-    mutationFn: async ({ lineUserId, permissions }: { lineUserId: string; permissions: Partial<LineApproval> }) => {
+    mutationFn: async ({
+      lineUserId,
+      permissions,
+    }: {
+      lineUserId: string;
+      permissions: Partial<LineApproval>;
+    }) => {
       const res = await fetch("/api/line/permissions", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lineUserId, ...permissions }),
-      })
+      });
       if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.error || "ไม่สามารถอัปเดตสิทธิ์ได้")
+        const err = await res.json();
+        throw new Error(err.error || "ไม่สามารถอัปเดตสิทธิ์ได้");
       }
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["line-permissions"] })
+      void queryClient.invalidateQueries({ queryKey: ["line-permissions"] });
     },
-  })
+  });
 
-  const handleTogglePermission = (lineUserId: string, permission: keyof LineApproval, value: boolean) => {
+  const handleTogglePermission = (
+    lineUserId: string,
+    permission: keyof LineApproval,
+    value: boolean,
+  ) => {
     updatePermissionMutation.mutate({
       lineUserId,
       permissions: { [permission]: value },
-    })
-  }
+    });
+  };
 
   const filteredApprovals = approvals.filter((approval) => {
-    if (filterStatus !== "all" && approval.status !== filterStatus.toUpperCase()) {
-      return false
+    if (
+      filterStatus !== "all" &&
+      approval.status !== filterStatus.toUpperCase()
+    ) {
+      return false;
     }
     if (searchQuery) {
-      const query = searchQuery.toLowerCase()
+      const query = searchQuery.toLowerCase();
       return (
         approval.displayName?.toLowerCase().includes(query) ||
         approval.lineUserId.toLowerCase().includes(query)
-      )
+      );
     }
-    return true
-  })
+    return true;
+  });
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
@@ -111,7 +124,9 @@ export function LinePermissionsPage() {
 
       <div className="mb-6 flex flex-wrap items-center gap-4 rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">สถานะ:</span>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            สถานะ:
+          </span>
           <div className="flex gap-2">
             {[
               { value: "all", label: "ทั้งหมด" },
@@ -136,19 +151,23 @@ export function LinePermissionsPage() {
         </div>
 
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             placeholder="ค้นหาชื่อ หรือ LINE User ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+            className="w-full rounded-lg border border-gray-300 bg-white py-2 pr-4 pl-10 text-sm text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
           />
         </div>
 
         <button
           type="button"
-          onClick={() => void queryClient.invalidateQueries({ queryKey: ["line-permissions"] })}
+          onClick={() =>
+            void queryClient.invalidateQueries({
+              queryKey: ["line-permissions"],
+            })
+          }
           className="cursor-pointer rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
         >
           <RefreshCw className="h-4 w-4" />
@@ -170,25 +189,25 @@ export function LinePermissionsPage() {
             <table className="w-full">
               <thead className="border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-700 dark:text-gray-300">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase dark:text-gray-300">
                     User
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-700 dark:text-gray-300">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase dark:text-gray-300">
                     สถานะ
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-semibold uppercase text-gray-700 dark:text-gray-300">
+                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase dark:text-gray-300">
                     <div className="flex items-center justify-center gap-2">
                       <CalendarCheck className="h-4 w-4" />
                       รายงานเข้างาน
                     </div>
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-semibold uppercase text-gray-700 dark:text-gray-300">
+                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase dark:text-gray-300">
                     <div className="flex items-center justify-center gap-2">
                       <UserCheck className="h-4 w-4" />
                       ขอลา
                     </div>
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-semibold uppercase text-gray-700 dark:text-gray-300">
+                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase dark:text-gray-300">
                     <div className="flex items-center justify-center gap-2">
                       <Bell className="h-4 w-4" />
                       แจ้งเตือน
@@ -198,7 +217,10 @@ export function LinePermissionsPage() {
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredApprovals.map((approval) => (
-                  <tr key={approval.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <tr
+                    key={approval.id}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                  >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         {approval.pictureUrl && (
@@ -243,19 +265,29 @@ export function LinePermissionsPage() {
                         type="checkbox"
                         checked={approval.canRequestAttendanceReport}
                         onChange={(e) =>
-                          handleTogglePermission(approval.lineUserId, "canRequestAttendanceReport", e.target.checked)
+                          handleTogglePermission(
+                            approval.lineUserId,
+                            "canRequestAttendanceReport",
+                            e.target.checked,
+                          )
                         }
                         disabled={approval.status !== "APPROVED"}
-                        className="cursor-pointer h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="h-5 w-5 cursor-pointer rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
                       />
                     </td>
                     <td className="px-6 py-4 text-center">
                       <input
                         type="checkbox"
                         checked={approval.canRequestLeave}
-                        onChange={(e) => handleTogglePermission(approval.lineUserId, "canRequestLeave", e.target.checked)}
+                        onChange={(e) =>
+                          handleTogglePermission(
+                            approval.lineUserId,
+                            "canRequestLeave",
+                            e.target.checked,
+                          )
+                        }
                         disabled={approval.status !== "APPROVED"}
-                        className="cursor-pointer h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="h-5 w-5 cursor-pointer rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
                       />
                     </td>
                     <td className="px-6 py-4 text-center">
@@ -263,10 +295,14 @@ export function LinePermissionsPage() {
                         type="checkbox"
                         checked={approval.canReceiveReminders}
                         onChange={(e) =>
-                          handleTogglePermission(approval.lineUserId, "canReceiveReminders", e.target.checked)
+                          handleTogglePermission(
+                            approval.lineUserId,
+                            "canReceiveReminders",
+                            e.target.checked,
+                          )
                         }
                         disabled={approval.status !== "APPROVED"}
-                        className="cursor-pointer h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="h-5 w-5 cursor-pointer rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
                       />
                     </td>
                   </tr>
@@ -277,5 +313,5 @@ export function LinePermissionsPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

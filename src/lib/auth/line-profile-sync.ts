@@ -32,7 +32,9 @@ const fetchLineLoginProfile = async (
     });
 
     if (!response.ok) {
-      console.warn(`[LINE Profile Sync] /v2/profile failed: HTTP ${response.status}`);
+      console.warn(
+        `[LINE Profile Sync] /v2/profile failed: HTTP ${response.status}`,
+      );
       return null;
     }
 

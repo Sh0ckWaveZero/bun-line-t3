@@ -26,7 +26,10 @@ export const DcaInfoBox = () => (
       </li>
       <li id="dca-info-line-manual-item">
         🔢 <strong>LINE Bot — กรอกค่าทีละตัว:</strong>{" "}
-        <code id="dca-info-line-manual-example" className="bg-muted rounded px-1">
+        <code
+          id="dca-info-line-manual-example"
+          className="bg-muted rounded px-1"
+        >
           /dca add 107.99 BTC 0.00004634 2330307.8 2026-04-11
         </code>
       </li>

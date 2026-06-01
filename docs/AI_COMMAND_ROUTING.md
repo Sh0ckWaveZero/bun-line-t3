@@ -21,13 +21,11 @@ Response
 ### Components
 
 1. **Command Registry** (`command-registry.ts`)
-
    - Centralized catalog of all 20+ LINE commands
    - Includes keywords, parameters, examples for each command
    - Formatted context for AI understanding
 
 2. **OpenAI Client** (`src/lib/ai/openai-client.ts`)
-
    - `routeCommand()`: Analyzes natural language and returns JSON
    - Direct OpenAI API calls (no MCP overhead)
    - Uses configurable AI model (default: gpt-5-nano from MCP_AI_MODEL env variable)
@@ -35,7 +33,6 @@ Response
    - `chat()`: General AI conversation functionality
 
 3. **AI Command Router** (`ai-command-router.ts`)
-
    - `executeCommand()`: Routes to appropriate handler
    - Handles all command categories (crypto, work, info, etc.)
    - Returns success/error status with explanations
@@ -247,6 +244,7 @@ MCP_AI_MODEL=gpt-5-nano
 ### No Additional Setup Required
 
 The AI command routing uses **direct OpenAI API calls** without any additional server setup:
+
 - ✅ No MCP server needed
 - ✅ No external services required
 - ✅ Works with existing OPENAI_API_KEY
@@ -367,6 +365,7 @@ Bot: ขอโทษครับ เกิดข้อผิดพลาดใ�
 ```
 
 Common causes:
+
 - Invalid or expired OPENAI_API_KEY
 - OpenAI API rate limits exceeded
 - Network connectivity issues
@@ -491,6 +490,7 @@ return Response.json({ message: "ok" }, { status: 200 });
 ```
 
 This pattern allows:
+
 - ✅ Instant webhook response to LINE (<100ms)
 - ✅ AI processing in background (1-4 seconds)
 - ✅ No timeout errors

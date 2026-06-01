@@ -28,7 +28,10 @@ export const AddDcaForm = ({ onClose, onSuccess }: AddDcaFormProps) => {
           id="dca-add-header"
           className="flex flex-row items-center justify-between space-y-0 pb-4"
         >
-          <CardTitle id="dca-add-title" className="flex items-center gap-2 text-lg">
+          <CardTitle
+            id="dca-add-title"
+            className="flex items-center gap-2 text-lg"
+          >
             <Plus className="h-5 w-5 text-yellow-500" />
             เพิ่มคำสั่งซื้อ Auto DCA
           </CardTitle>

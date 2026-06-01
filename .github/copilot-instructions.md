@@ -122,6 +122,7 @@ The `dark:` variant can be combined with other Tailwind variants like `hover:`, 
     Click Me
   </button>
   ```
+
   - In light mode: `bg-blue-500` applies, and `bg-blue-600` on hover.
   - In dark mode: `dark:bg-blue-700` applies, and `dark:hover:bg-blue-800` on hover.
 

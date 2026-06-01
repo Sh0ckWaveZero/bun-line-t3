@@ -37,13 +37,13 @@ const IDField = memo(function IDField({
   onCopy: () => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-accent">
+    <div className="bg-card hover:bg-accent flex items-center justify-between gap-3 rounded-lg border p-3 transition-colors">
       <div className="flex min-w-0 flex-1 items-center gap-3">
-        <div className="bg-primary/10 flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-primary">
+        <div className="bg-primary/10 text-primary flex h-8 w-8 shrink-0 items-center justify-center rounded-md">
           <CreditCard className="h-4 w-4" />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-xs text-muted-foreground">เลขบัตรประชาชน</div>
+          <div className="text-muted-foreground text-xs">เลขบัตรประชาชน</div>
           <div className="truncate font-mono font-medium">{value}</div>
         </div>
       </div>
@@ -66,9 +66,7 @@ const IDField = memo(function IDField({
 export default function ThaiIdGenerate() {
   const [count, setCount] = useState(1);
   const [generatedIDs, setGeneratedIDs] = useState<GeneratedID[]>([]);
-  const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>(
-    {},
-  );
+  const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({});
   const [validationInput, setValidationInput] = useState("");
   const [validationResult, setValidationResult] = useState<boolean | null>(
     null,
@@ -184,7 +182,7 @@ export default function ThaiIdGenerate() {
                   onChange={(e) => setCount(parseInt(e.target.value))}
                   className="w-full"
                 />
-                <div className="flex justify-between text-xs text-muted-foreground">
+                <div className="text-muted-foreground flex justify-between text-xs">
                   <span>1</span>
                   <span>20</span>
                 </div>
@@ -207,7 +205,7 @@ export default function ThaiIdGenerate() {
                       value={validationInput}
                       onChange={handleInputChange}
                       placeholder="กรอกเลขบัตร 13 หลัก"
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring w-full rounded-md border px-3 py-2 font-mono text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                     />
                     <Button
                       onClick={handleValidation}
@@ -264,7 +262,7 @@ export default function ThaiIdGenerate() {
             {idRows.length === 0 ? (
               <Card>
                 <CardContent className="flex min-h-[400px] items-center justify-center p-8">
-                  <div className="text-center text-muted-foreground">
+                  <div className="text-muted-foreground text-center">
                     <Shuffle className="mx-auto mb-4 h-12 w-12 opacity-50" />
                     <p>กดปุ่ม &quot;สุ่มเลขบัตรใหม่&quot; เพื่อเริ่มต้น</p>
                   </div>
@@ -285,9 +283,9 @@ export default function ThaiIdGenerate() {
           </div>
         </div>
 
-        <div className="space-y-4 rounded-lg border bg-card p-6">
+        <div className="bg-card space-y-4 rounded-lg border p-6">
           <h2 className="text-xl font-semibold">คุณสมบัติ</h2>
-          <ul className="space-y-2 text-sm text-muted-foreground">
+          <ul className="text-muted-foreground space-y-2 text-sm">
             <li className="flex items-start gap-2">
               <span className="text-primary">•</span>
               <span>สุ่มเลขบัตรประชาชนที่ถูกต้องตาม Check Digit Algorithm</span>

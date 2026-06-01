@@ -25,7 +25,10 @@ function getAllowedDomains(): string[] {
   }
 
   // ⚠️ CRITICAL: In production, ALLOWED_DOMAINS is REQUIRED
-  if (process.env.NODE_ENV === "production" || process.env.APP_ENV === "production") {
+  if (
+    process.env.NODE_ENV === "production" ||
+    process.env.APP_ENV === "production"
+  ) {
     console.error(`
 ╔══════════════════════════════════════════════════════════════════════╗
 ║  🔴 SECURITY WARNING: ALLOWED_DOMAINS not configured!               ║
@@ -47,8 +50,13 @@ Production environment requires ALLOWED_DOMAINS to be set!
   }
 
   // fallback เดิม - development only
-  if (process.env.NODE_ENV !== "production" && process.env.APP_ENV !== "production") {
-    console.warn("[URL Validator] ALLOWED_DOMAINS not set, using localhost fallback (development only)");
+  if (
+    process.env.NODE_ENV !== "production" &&
+    process.env.APP_ENV !== "production"
+  ) {
+    console.warn(
+      "[URL Validator] ALLOWED_DOMAINS not set, using localhost fallback (development only)",
+    );
   }
 
   return ["localhost", "127.0.0.1"];

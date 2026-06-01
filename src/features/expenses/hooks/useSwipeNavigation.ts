@@ -34,7 +34,7 @@ interface SwipeNavigationResult {
  */
 export function useSwipeNavigation(
   ref: RefObject<HTMLElement>,
-  options: SwipeNavigationOptions = {}
+  options: SwipeNavigationOptions = {},
 ): SwipeNavigationResult {
   const {
     minSwipeDistance = 50,
@@ -123,18 +123,26 @@ export function useSwipeNavigation(
       setSwipeTransform(0);
     };
 
-    el.addEventListener('touchstart', onTouchStart);
-    el.addEventListener('touchmove', onTouchMove);
-    el.addEventListener('touchend', onTouchEnd);
-    el.addEventListener('touchcancel', onTouchCancel);
+    el.addEventListener("touchstart", onTouchStart);
+    el.addEventListener("touchmove", onTouchMove);
+    el.addEventListener("touchend", onTouchEnd);
+    el.addEventListener("touchcancel", onTouchCancel);
 
     return () => {
-      el.removeEventListener('touchstart', onTouchStart);
-      el.removeEventListener('touchmove', onTouchMove);
-      el.removeEventListener('touchend', onTouchEnd);
-      el.removeEventListener('touchcancel', onTouchCancel);
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
+      el.removeEventListener("touchcancel", onTouchCancel);
     };
-  }, [ref, enabled, minSwipeDistance, onSwipeLeft, onSwipeRight, canSwipeLeft, onSwipeLeftBlocked]);
+  }, [
+    ref,
+    enabled,
+    minSwipeDistance,
+    onSwipeLeft,
+    onSwipeRight,
+    canSwipeLeft,
+    onSwipeLeftBlocked,
+  ]);
 
   return {
     swipeTransform,

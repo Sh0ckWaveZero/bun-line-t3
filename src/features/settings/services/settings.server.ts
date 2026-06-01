@@ -3,20 +3,22 @@
  * ใช้ร่วมกันระหว่าง Web UI และ LINE Bot
  */
 
-import { db } from "@/lib/database/db"
-import type { UserSettingsData, UpdateSettingsPayload } from "../types"
-import { DEFAULT_USER_SETTINGS } from "../constants"
+import { db } from "@/lib/database/db";
+import type { UserSettingsData, UpdateSettingsPayload } from "../types";
+import { DEFAULT_USER_SETTINGS } from "../constants";
 
 /**
  * ดึงการตั้งค่าของผู้ใช้ — สร้างค่า default อัตโนมัติถ้ายังไม่มี
  */
-export async function getUserSettings(userId: string): Promise<UserSettingsData> {
+export async function getUserSettings(
+  userId: string,
+): Promise<UserSettingsData> {
   const settings = await db.userSettings.findUnique({
     where: { userId },
-  })
+  });
 
   if (!settings) {
-    return { ...DEFAULT_USER_SETTINGS }
+    return { ...DEFAULT_USER_SETTINGS };
   }
 
   return {
@@ -28,7 +30,7 @@ export async function getUserSettings(userId: string): Promise<UserSettingsData>
     hideAmountsWeb: settings.hideAmountsWeb,
     timezone: settings.timezone,
     language: settings.language,
-  }
+  };
 }
 
 /**
@@ -46,7 +48,7 @@ export async function updateUserSettings(
       ...payload,
     },
     update: payload,
-  })
+  });
 
   return {
     enableCheckInReminders: updated.enableCheckInReminders,
@@ -57,7 +59,7 @@ export async function updateUserSettings(
     hideAmountsWeb: updated.hideAmountsWeb,
     timezone: updated.timezone,
     language: updated.language,
-  }
+  };
 }
 
 /**
@@ -75,9 +77,11 @@ export async function shouldHideAmountsForLine(
       hideAmountsLinePersonal: true,
       hideAmountsLineGroup: true,
     },
-  })
+  });
 
-  if (!settings) return false
+  if (!settings) return false;
 
-  return isGroup ? settings.hideAmountsLineGroup : settings.hideAmountsLinePersonal
+  return isGroup
+    ? settings.hideAmountsLineGroup
+    : settings.hideAmountsLinePersonal;
 }

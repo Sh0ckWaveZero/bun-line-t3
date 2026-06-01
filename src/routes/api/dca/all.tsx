@@ -39,4 +39,3 @@ export const Route = createFileRoute("/api/dca/all")({
     },
   },
 });
-

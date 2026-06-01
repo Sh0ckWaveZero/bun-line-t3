@@ -20,7 +20,7 @@ import {
 } from "@/lib/types/attendance";
 
 export const UserInfoCard: React.FC<UserInfoCardProps> = ({ user }) => (
-  <div className="rounded-xl border border-border bg-card p-4">
+  <div className="border-border bg-card rounded-xl border p-4">
     <div className="flex items-center gap-3">
       {user.image && (
         <img
@@ -28,12 +28,12 @@ export const UserInfoCard: React.FC<UserInfoCardProps> = ({ user }) => (
           alt="Profile"
           width={36}
           height={36}
-          className="h-9 w-9 rounded-full border border-border"
+          className="border-border h-9 w-9 rounded-full border"
         />
       )}
       <div>
-        <p className="text-sm font-medium text-foreground">{user.name}</p>
-        <p className="text-xs text-muted-foreground">ID: {user.id}</p>
+        <p className="text-foreground text-sm font-medium">{user.name}</p>
+        <p className="text-muted-foreground text-xs">ID: {user.id}</p>
       </div>
     </div>
   </div>
@@ -43,16 +43,16 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   message = "กำลังโหลดข้อมูล...",
 }) => (
   <div className="py-8 text-center">
-    <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-muted border-t-foreground" />
-    <p className="mt-3 text-sm text-muted-foreground">{message}</p>
+    <div className="border-muted border-t-foreground mx-auto h-6 w-6 animate-spin rounded-full border-2" />
+    <p className="text-muted-foreground mt-3 text-sm">{message}</p>
   </div>
 );
 
 export const AuthLoadingScreen: React.FC = () => (
-  <div className="flex min-h-screen items-center justify-center bg-background">
+  <div className="bg-background flex min-h-screen items-center justify-center">
     <div className="text-center">
-      <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-foreground" />
-      <p className="mt-4 text-sm text-muted-foreground">
+      <div className="border-muted border-t-foreground mx-auto h-8 w-8 animate-spin rounded-full border-2" />
+      <p className="text-muted-foreground mt-4 text-sm">
         กำลังตรวจสอบการเข้าสู่ระบบ...
       </p>
     </div>
@@ -68,13 +68,13 @@ export const LoginPrompt: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="mx-4 max-w-md rounded-xl border border-border bg-card p-8">
+    <div className="bg-background flex min-h-screen items-center justify-center">
+      <div className="border-border bg-card mx-4 max-w-md rounded-xl border p-8">
         <div className="text-center">
-          <h1 className="mb-3 text-xl font-semibold text-foreground">
+          <h1 className="text-foreground mb-3 text-xl font-semibold">
             รายงานการเข้างาน
           </h1>
-          <p className="mb-6 text-sm text-muted-foreground">
+          <p className="text-muted-foreground mb-6 text-sm">
             กรุณาเข้าสู่ระบบเพื่อดูรายงานการเข้างาน
           </p>
           <LineLoginButton callbackUrl={callbackUrl} />
@@ -85,7 +85,7 @@ export const LoginPrompt: React.FC = () => {
 };
 
 export const ErrorMessage: React.FC<ErrorMessageProps> = ({ message }) => (
-  <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+  <div className="border-destructive/30 bg-destructive/5 text-destructive rounded-lg border px-4 py-3 text-sm">
     {message}
   </div>
 );
@@ -157,22 +157,22 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({
 
   return (
     <div className="mb-6 flex items-center gap-3">
-      <span className="text-sm font-medium text-muted-foreground">เดือน</span>
+      <span className="text-muted-foreground text-sm font-medium">เดือน</span>
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             className={cn(
-              "h-10 w-[220px] justify-start rounded-lg text-left text-sm font-medium text-foreground transition-colors hover:bg-muted",
+              "text-foreground hover:bg-muted h-10 w-[220px] justify-start rounded-lg text-left text-sm font-medium transition-colors",
               !selectedDate && "text-muted-foreground",
             )}
           >
-            <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+            <CalendarIcon className="text-muted-foreground mr-2 h-4 w-4" />
             {selectedDate ? formatBuddhistDate(selectedDate) : "เลือกเดือน"}
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-auto rounded-xl border border-border bg-card p-0"
+          className="border-border bg-card w-auto rounded-xl border p-0"
           align="start"
         >
           <MonthPicker

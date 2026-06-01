@@ -115,12 +115,17 @@ export function ThemeProvider({
     applyTheme(attribute, resolvedTheme);
   }, [attribute, resolvedTheme]);
 
-  const setTheme = useCallback((nextTheme: ThemeMode) => {
-    const normalizedTheme = themes.includes(nextTheme) ? nextTheme : defaultTheme;
+  const setTheme = useCallback(
+    (nextTheme: ThemeMode) => {
+      const normalizedTheme = themes.includes(nextTheme)
+        ? nextTheme
+        : defaultTheme;
 
-    setThemeState(normalizedTheme);
-    window.localStorage.setItem(storageKey, normalizedTheme);
-  }, [defaultTheme, storageKey, themes]);
+      setThemeState(normalizedTheme);
+      window.localStorage.setItem(storageKey, normalizedTheme);
+    },
+    [defaultTheme, storageKey, themes],
+  );
 
   const value = useMemo<ThemeContextValue>(
     () => ({

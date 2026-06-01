@@ -23,7 +23,9 @@ const handleEvent = async (
 ): Promise<any> => {
   const events = (req.body as any)?.events;
 
-  console.log(`📬 [lineService.handleEvent] Received ${events?.length || 0} events`);
+  console.log(
+    `📬 [lineService.handleEvent] Received ${events?.length || 0} events`,
+  );
 
   if (!Array.isArray(events) || events.length === 0) {
     return res.status(400).json({ error: "No events to process" });
@@ -57,17 +59,22 @@ const handleEvent = async (
 
   if (!isApproved) {
     // user ยังไม่ได้รับการอนุมัติ — ได้ส่งข้อความแจ้งไปแล้ว หยุดประมวลผล
-    console.log(`⏸️ [lineService.handleEvent] User not approved - returning pending approval`);
+    console.log(
+      `⏸️ [lineService.handleEvent] User not approved - returning pending approval`,
+    );
     return res.status(200).json({ message: "pending approval" });
   }
 
   for (let index = 0; index < events.length; index++) {
     const event = events[index];
-    console.log(`🔄 [lineService.handleEvent] Processing event ${index + 1}/${events.length}:`, {
-      type: event.type,
-      messageType: event.message?.type,
-      text: event.message?.text?.substring(0, 50),
-    });
+    console.log(
+      `🔄 [lineService.handleEvent] Processing event ${index + 1}/${events.length}:`,
+      {
+        type: event.type,
+        messageType: event.message?.type,
+        text: event.message?.text?.substring(0, 50),
+      },
+    );
 
     switch (event.type) {
       case "message":

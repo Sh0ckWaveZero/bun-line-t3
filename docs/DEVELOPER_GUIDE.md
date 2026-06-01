@@ -252,8 +252,8 @@ export function useAttendanceData(userId: string) {
 }
 
 // ✅ Import from feature directory
-import { useAttendanceData } from "@/features/attendance/hooks/useAttendanceData"
-import { AttendanceTable } from "@/features/attendance/components/AttendanceTable"
+import { useAttendanceData } from "@/features/attendance/hooks/useAttendanceData";
+import { AttendanceTable } from "@/features/attendance/components/AttendanceTable";
 ```
 
 ### API Route Guidelines
@@ -262,7 +262,7 @@ import { AttendanceTable } from "@/features/attendance/components/AttendanceTabl
 
 ```typescript
 // ✅ Good - TanStack Start server function
-import { createRouteHandler } from "@tanstack/start/server"
+import { createRouteHandler } from "@tanstack/start/server";
 
 export const POST = createRouteHandler(async (req) => {
   try {
@@ -289,12 +289,9 @@ export const POST = createRouteHandler(async (req) => {
     }
 
     console.error("API Error:", error);
-    return Response.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return Response.json({ error: "Internal server error" }, { status: 500 });
   }
-})
+});
 ```
 
 ---
@@ -600,47 +597,47 @@ export async function POST(request: NextRequest) {
 ```typescript
 // ✅ Good - Declarative route guard with TanStack Start
 // src/lib/auth/route-guard.ts
-import { redirect } from "@tanstack/react-router"
+import { redirect } from "@tanstack/react-router";
 
 interface GuardArgs {
-  context: { session: AppSession | null }
-  location: { pathname: string }
+  context: { session: AppSession | null };
+  location: { pathname: string };
 }
 
 export function requireAuth({ context, location }: GuardArgs) {
   if (!context.session?.user?.id) {
     throw redirect({
       to: "/login",
-      search: { callbackUrl: location.pathname }
-    })
+      search: { callbackUrl: location.pathname },
+    });
   }
 }
 
 export function requireAdmin({ context, location }: GuardArgs) {
-  requireAuth({ context, location })
+  requireAuth({ context, location });
   if (!context.session!.isAdmin) {
-    throw redirect({ to: "/dashboard" })
+    throw redirect({ to: "/dashboard" });
   }
 }
 
 // ✅ Usage in route
 // src/routes/protected.tsx
-import { createFileRoute } from "@tanstack/react-router"
-import { requireAuth } from "@/lib/auth/route-guard"
-import { ProtectedPage } from "@/features/protected/pages/ProtectedPage"
+import { createFileRoute } from "@tanstack/react-router";
+import { requireAuth } from "@/lib/auth/route-guard";
+import { ProtectedPage } from "@/features/protected/pages/ProtectedPage";
 
 export const Route = createFileRoute("/protected")({
   beforeLoad: requireAuth,
   component: ProtectedPage,
-})
+});
 
 // ✅ Admin-only route
-import { requireAdmin } from "@/lib/auth/route-guard"
+import { requireAdmin } from "@/lib/auth/route-guard";
 
 export const Route = createFileRoute("/admin/settings")({
   beforeLoad: requireAdmin,
   component: AdminSettingsPage,
-})
+});
 ```
 
 ### SSRF Protection

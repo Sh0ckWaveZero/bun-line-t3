@@ -2,14 +2,20 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import type { MobileNavProps } from "./types";
 
-export function MobileNav({ items, pathname, isOpen, onClose, session }: MobileNavProps) {
+export function MobileNav({
+  items,
+  pathname,
+  isOpen,
+  onClose,
+  session,
+}: MobileNavProps) {
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
 
   const toggleSection = (sectionId: string) => {
     setExpandedSections((prev) =>
       prev.includes(sectionId)
         ? prev.filter((id) => id !== sectionId)
-        : [...prev, sectionId]
+        : [...prev, sectionId],
     );
   };
 
@@ -23,7 +29,7 @@ export function MobileNav({ items, pathname, isOpen, onClose, session }: MobileN
   return (
     <div
       id="mobile-nav"
-      className={`bg-background/95 border-border block border-b backdrop-blur-sm lg:hidden ${isOpen ? '' : 'hidden'}`}
+      className={`bg-background/95 border-border block border-b backdrop-blur-sm lg:hidden ${isOpen ? "" : "hidden"}`}
       role="navigation"
       aria-label="เมนูมือถือ"
     >
@@ -39,12 +45,16 @@ export function MobileNav({ items, pathname, isOpen, onClose, session }: MobileN
                     id={`mobile-nav-${item.id}`}
                     to={item.href || "#"}
                     className={`hover:text-primary flex items-center space-x-3 transition-colors ${
-                      isActive ? "text-primary font-medium" : "text-muted-foreground"
+                      isActive
+                        ? "text-primary font-medium"
+                        : "text-muted-foreground"
                     }`}
                     onClick={onClose}
                     aria-current={isActive ? "page" : undefined}
                   >
-                    {item.icon && <item.icon className="h-5 w-5" aria-hidden="true" />}
+                    {item.icon && (
+                      <item.icon className="h-5 w-5" aria-hidden="true" />
+                    )}
                     <span>{item.label}</span>
                   </Link>
                 </div>
@@ -62,7 +72,11 @@ export function MobileNav({ items, pathname, isOpen, onClose, session }: MobileN
             const isExpanded = expandedSections.includes(item.id);
 
             return (
-              <div key={item.id} id={`mobile-nav-${item.id}-section`} className="border-border border-t pt-4">
+              <div
+                key={item.id}
+                id={`mobile-nav-${item.id}-section`}
+                className="border-border border-t pt-4"
+              >
                 <h3 className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
                   {item.label}
                 </h3>
@@ -70,7 +84,8 @@ export function MobileNav({ items, pathname, isOpen, onClose, session }: MobileN
                   {visibleChildren.map((child) => {
                     const isChildActive =
                       child.href === "/dca-history"
-                        ? pathname === "/dca-history" || pathname.startsWith("/dca-")
+                        ? pathname === "/dca-history" ||
+                          pathname.startsWith("/dca-")
                         : child.href?.startsWith("/thai-id")
                           ? pathname.startsWith("/thai-id")
                           : pathname === child.href;
@@ -81,12 +96,16 @@ export function MobileNav({ items, pathname, isOpen, onClose, session }: MobileN
                         id={`mobile-nav-${child.id}`}
                         to={child.href || "#"}
                         className={`hover:text-primary flex items-center space-x-2 transition-colors ${
-                          isChildActive ? "text-primary font-medium" : "text-muted-foreground"
+                          isChildActive
+                            ? "text-primary font-medium"
+                            : "text-muted-foreground"
                         }`}
                         onClick={onClose}
                         aria-current={isChildActive ? "page" : undefined}
                       >
-                        {child.icon && <child.icon className="h-4 w-4" aria-hidden="true" />}
+                        {child.icon && (
+                          <child.icon className="h-4 w-4" aria-hidden="true" />
+                        )}
                         <span>{child.label}</span>
                       </Link>
                     );

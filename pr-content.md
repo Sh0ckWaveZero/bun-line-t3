@@ -13,6 +13,7 @@
 - **Navigation Updates**: Added calendar links to desktop and mobile header navigation
 
 ### Key Technical Details
+
 - Uses `react-day-picker/buddhist` for Thai Buddhist calendar integration
 - Service worker caches calendar pages and API responses for offline access
 - PWA manifest includes shortcuts for quick access to calendar and dashboard

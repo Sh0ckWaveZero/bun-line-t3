@@ -35,9 +35,7 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
       );
 
       const mobile =
-        isMobileDevice ||
-        isSmallScreen ||
-        (isTouchDevice && mobileKeywords);
+        isMobileDevice || isSmallScreen || (isTouchDevice && mobileKeywords);
       setIsMobile(mobile);
     };
 
@@ -76,19 +74,24 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
 
   const modalContent = (
     <div>
-      <div className="border-b border-border px-6 py-4">
+      <div className="border-border border-b px-6 py-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-foreground">
+          <h3 className="text-foreground text-lg font-semibold">
             แก้ไขเวลาเข้า-ออกงาน
           </h3>
           <button
             type="button"
             onClick={onClose}
             disabled={updateLoading}
-            className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+            className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-full p-1 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
             aria-label="ปิดหน้าต่าง"
           >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -98,11 +101,11 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
             </svg>
           </button>
         </div>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-2 text-sm">
           วันที่: {dateFormatters.fullDate(editingRecord.workDate)}
         </p>
-        <div className="mt-3 rounded-lg bg-muted/50 px-3 py-2">
-          <p className="text-xs text-muted-foreground">
+        <div className="bg-muted/50 mt-3 rounded-lg px-3 py-2">
+          <p className="text-muted-foreground text-xs">
             เวลาที่แสดงเป็นเวลาประเทศไทย (UTC+7)
           </p>
         </div>
@@ -113,7 +116,7 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
           <div>
             <label
               htmlFor="edit-checkin"
-              className="mb-1.5 block text-sm font-medium text-foreground"
+              className="text-foreground mb-1.5 block text-sm font-medium"
             >
               เวลาเข้างาน <span className="text-destructive">*</span>
             </label>
@@ -122,7 +125,7 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
               type="time"
               value={editData.checkInTime}
               onChange={(e) => handleCheckInChange(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground transition-colors focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+              className="border-input bg-background text-foreground focus:border-ring focus:ring-ring/20 w-full rounded-md border px-3 py-2 text-sm transition-colors focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               required
               disabled={updateLoading}
             />
@@ -131,7 +134,7 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
           <div>
             <label
               htmlFor="edit-checkout"
-              className="mb-1.5 block text-sm font-medium text-foreground"
+              className="text-foreground mb-1.5 block text-sm font-medium"
             >
               เวลาออกงาน
             </label>
@@ -140,21 +143,21 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
               type="time"
               value={editData.checkOutTime}
               onChange={(e) => handleCheckOutChange(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground transition-colors focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+              className="border-input bg-background text-foreground focus:border-ring focus:ring-ring/20 w-full rounded-md border px-3 py-2 text-sm transition-colors focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               disabled={updateLoading}
             />
-            <p className="mt-1.5 text-xs text-muted-foreground">
+            <p className="text-muted-foreground mt-1.5 text-xs">
               หากไม่ได้ออกงานให้เว้นว่างไว้
             </p>
           </div>
         </div>
 
-        <div className="flex flex-col-reverse justify-end gap-3 border-t border-border bg-muted/30 px-6 py-4 sm:flex-row rounded-b-xl">
+        <div className="border-border bg-muted/30 flex flex-col-reverse justify-end gap-3 rounded-b-xl border-t px-6 py-4 sm:flex-row">
           <button
             type="button"
             onClick={onClose}
             disabled={updateLoading}
-            className="w-full rounded-md border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted focus:ring-2 focus:ring-ring focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+            className="border-border bg-card text-foreground hover:bg-muted focus:ring-ring w-full rounded-md border px-4 py-2 text-sm font-medium transition-colors focus:ring-2 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             style={{ minHeight: "40px" }}
           >
             ยกเลิก
@@ -162,13 +165,13 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
           <button
             type="submit"
             disabled={updateLoading || !editData.checkInTime}
-            className="flex w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:ring-2 focus:ring-ring focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-ring flex w-full items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors focus:ring-2 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             style={{ minHeight: "40px" }}
           >
             {updateLoading ? (
               <>
                 <div
-                  className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground"
+                  className="border-primary-foreground/30 border-t-primary-foreground mr-2 h-4 w-4 animate-spin rounded-full border-2"
                   aria-hidden="true"
                 />
                 <span>กำลังอัพเดท...</span>

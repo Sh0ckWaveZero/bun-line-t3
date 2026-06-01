@@ -148,7 +148,9 @@ async function migrateAccounts(db: Db, pg: PrismaClient) {
   if (total === 0) return;
 
   const validUserIds = new Set(
-    (await (pg as any).user.findMany({ select: { id: true } })).map((u: any) => u.id as string),
+    (await (pg as any).user.findMany({ select: { id: true } })).map(
+      (u: any) => u.id as string,
+    ),
   );
   let totalOrphaned = 0;
 
@@ -180,7 +182,10 @@ async function migrateAccounts(db: Db, pg: PrismaClient) {
     totalMigrated += data.length;
     logBatch(data.length, orphaned);
   }
-  if (totalOrphaned > 0) log(`  ⚠️  Skipped ${totalOrphaned} orphaned records (userId not in users)`);
+  if (totalOrphaned > 0)
+    log(
+      `  ⚠️  Skipped ${totalOrphaned} orphaned records (userId not in users)`,
+    );
   console.log();
 }
 
@@ -190,7 +195,9 @@ async function migrateSessions(db: Db, pg: PrismaClient) {
   if (total === 0) return;
 
   const validUserIds = new Set(
-    (await (pg as any).user.findMany({ select: { id: true } })).map((u: any) => u.id as string),
+    (await (pg as any).user.findMany({ select: { id: true } })).map(
+      (u: any) => u.id as string,
+    ),
   );
   const now = new Date();
   let expiredSkipped = 0;
@@ -230,7 +237,10 @@ async function migrateSessions(db: Db, pg: PrismaClient) {
     logBatch(data.length, expiredSkipped + orphaned);
   }
   console.log(`  ℹ️  ${expiredSkipped} expired sessions skipped`);
-  if (totalOrphaned > 0) log(`  ⚠️  Skipped ${totalOrphaned} orphaned records (userId not in users)`);
+  if (totalOrphaned > 0)
+    log(
+      `  ⚠️  Skipped ${totalOrphaned} orphaned records (userId not in users)`,
+    );
 }
 
 async function migrateVerifications(db: Db, pg: PrismaClient) {
@@ -311,7 +321,10 @@ async function migratePublicHolidays(db: Db, pg: PrismaClient) {
     }));
 
     if (!DRY_RUN) {
-      await (pg as any).publicHoliday.createMany({ data, skipDuplicates: true });
+      await (pg as any).publicHoliday.createMany({
+        data,
+        skipDuplicates: true,
+      });
     }
     totalMigrated += data.length;
     logBatch(data.length, 0);
@@ -325,7 +338,9 @@ async function migrateLeaves(db: Db, pg: PrismaClient) {
   if (total === 0) return;
 
   const validUserIds = new Set(
-    (await (pg as any).user.findMany({ select: { id: true } })).map((u: any) => u.id as string),
+    (await (pg as any).user.findMany({ select: { id: true } })).map(
+      (u: any) => u.id as string,
+    ),
   );
   let totalOrphaned = 0;
 
@@ -352,7 +367,10 @@ async function migrateLeaves(db: Db, pg: PrismaClient) {
     totalMigrated += data.length;
     logBatch(data.length, orphaned);
   }
-  if (totalOrphaned > 0) log(`  ⚠️  Skipped ${totalOrphaned} orphaned records (userId not in users)`);
+  if (totalOrphaned > 0)
+    log(
+      `  ⚠️  Skipped ${totalOrphaned} orphaned records (userId not in users)`,
+    );
   console.log();
 }
 
@@ -362,7 +380,9 @@ async function migrateUserSettings(db: Db, pg: PrismaClient) {
   if (total === 0) return;
 
   const validUserIds = new Set(
-    (await (pg as any).user.findMany({ select: { id: true } })).map((u: any) => u.id as string),
+    (await (pg as any).user.findMany({ select: { id: true } })).map(
+      (u: any) => u.id as string,
+    ),
   );
   let totalOrphaned = 0;
 
@@ -395,7 +415,10 @@ async function migrateUserSettings(db: Db, pg: PrismaClient) {
     totalMigrated += data.length;
     logBatch(data.length, orphaned);
   }
-  if (totalOrphaned > 0) log(`  ⚠️  Skipped ${totalOrphaned} orphaned records (userId not in users)`);
+  if (totalOrphaned > 0)
+    log(
+      `  ⚠️  Skipped ${totalOrphaned} orphaned records (userId not in users)`,
+    );
   console.log();
 }
 
@@ -405,7 +428,9 @@ async function migrateWorkAttendances(db: Db, pg: PrismaClient) {
   if (total === 0) return;
 
   const validUserIds = new Set(
-    (await (pg as any).user.findMany({ select: { id: true } })).map((u: any) => u.id as string),
+    (await (pg as any).user.findMany({ select: { id: true } })).map(
+      (u: any) => u.id as string,
+    ),
   );
   let totalOrphaned = 0;
 
@@ -433,12 +458,18 @@ async function migrateWorkAttendances(db: Db, pg: PrismaClient) {
 
     if (data.length === 0) continue;
     if (!DRY_RUN) {
-      await (pg as any).workAttendance.createMany({ data, skipDuplicates: true });
+      await (pg as any).workAttendance.createMany({
+        data,
+        skipDuplicates: true,
+      });
     }
     totalMigrated += data.length;
     logBatch(data.length, orphaned);
   }
-  if (totalOrphaned > 0) log(`  ⚠️  Skipped ${totalOrphaned} orphaned records (userId not in users)`);
+  if (totalOrphaned > 0)
+    log(
+      `  ⚠️  Skipped ${totalOrphaned} orphaned records (userId not in users)`,
+    );
   console.log();
 }
 
@@ -557,7 +588,9 @@ async function migrateHealthActivities(db: Db, pg: PrismaClient) {
   if (total === 0) return;
 
   const validUserIds = new Set(
-    (await (pg as any).user.findMany({ select: { id: true } })).map((u: any) => u.id as string),
+    (await (pg as any).user.findMany({ select: { id: true } })).map(
+      (u: any) => u.id as string,
+    ),
   );
   let totalOrphaned = 0;
 
@@ -583,12 +616,18 @@ async function migrateHealthActivities(db: Db, pg: PrismaClient) {
 
     if (data.length === 0) continue;
     if (!DRY_RUN) {
-      await (pg as any).healthActivity.createMany({ data, skipDuplicates: true });
+      await (pg as any).healthActivity.createMany({
+        data,
+        skipDuplicates: true,
+      });
     }
     totalMigrated += data.length;
     logBatch(data.length, orphaned);
   }
-  if (totalOrphaned > 0) log(`  ⚠️  Skipped ${totalOrphaned} orphaned records (userId not in users)`);
+  if (totalOrphaned > 0)
+    log(
+      `  ⚠️  Skipped ${totalOrphaned} orphaned records (userId not in users)`,
+    );
   console.log();
 }
 
@@ -598,7 +637,9 @@ async function migrateHealthMetrics(db: Db, pg: PrismaClient) {
   if (total === 0) return;
 
   const validUserIds = new Set(
-    (await (pg as any).user.findMany({ select: { id: true } })).map((u: any) => u.id as string),
+    (await (pg as any).user.findMany({ select: { id: true } })).map(
+      (u: any) => u.id as string,
+    ),
   );
   let totalOrphaned = 0;
 
@@ -612,8 +653,7 @@ async function migrateHealthMetrics(db: Db, pg: PrismaClient) {
       bmi: doc.bmi ?? null,
       bodyFat: doc.body_fat ?? doc.bodyFat ?? null,
       bloodPressure: doc.blood_pressure ?? doc.bloodPressure ?? null,
-      restingHeartRate:
-        doc.resting_heart_rate ?? doc.restingHeartRate ?? null,
+      restingHeartRate: doc.resting_heart_rate ?? doc.restingHeartRate ?? null,
       sleepHours: doc.sleep_hours ?? doc.sleepHours ?? null,
       waterIntake: doc.water_intake ?? doc.waterIntake ?? null,
       createdAt: toDateRequired(doc.created_at ?? doc.createdAt),
@@ -626,12 +666,18 @@ async function migrateHealthMetrics(db: Db, pg: PrismaClient) {
 
     if (data.length === 0) continue;
     if (!DRY_RUN) {
-      await (pg as any).healthMetrics.createMany({ data, skipDuplicates: true });
+      await (pg as any).healthMetrics.createMany({
+        data,
+        skipDuplicates: true,
+      });
     }
     totalMigrated += data.length;
     logBatch(data.length, orphaned);
   }
-  if (totalOrphaned > 0) log(`  ⚠️  Skipped ${totalOrphaned} orphaned records (userId not in users)`);
+  if (totalOrphaned > 0)
+    log(
+      `  ⚠️  Skipped ${totalOrphaned} orphaned records (userId not in users)`,
+    );
   console.log();
 }
 
@@ -679,8 +725,7 @@ async function migrateLineApprovalRequests(db: Db, pg: PrismaClient) {
     const data = batch.map((doc) => ({
       id: toStr(doc._id),
       lineUserId: doc.line_user_id ?? doc.lineUserId ?? toStr(doc._id),
-      loginLineUserId:
-        doc.login_line_user_id ?? doc.loginLineUserId ?? null,
+      loginLineUserId: doc.login_line_user_id ?? doc.loginLineUserId ?? null,
       displayName: doc.display_name ?? doc.displayName ?? null,
       pictureUrl: doc.picture_url ?? doc.pictureUrl ?? null,
       statusMessage: doc.status_message ?? doc.statusMessage ?? null,
@@ -759,7 +804,9 @@ async function main() {
   const mongoDbName = MONGODB_URL!.split("/").pop()?.split("?")[0] || "linebot";
   console.log(`MongoDB : ${MONGODB_URL!.replace(/:[^:@]+@/, ":****@")}`);
   console.log(`Database: ${mongoDbName}`);
-  console.log(`Postgres: ${process.env.DATABASE_URL!.replace(/:[^:@]+@/, ":****@")}`);
+  console.log(
+    `Postgres: ${process.env.DATABASE_URL!.replace(/:[^:@]+@/, ":****@")}`,
+  );
 
   // Connect MongoDB
   const mongoClient = new MongoClient(MONGODB_URL!);
@@ -807,14 +854,14 @@ async function main() {
   console.log("📊  Migration Summary");
   console.log("═".repeat(60));
   console.log(`  ✅ Migrated : ${totalMigrated.toLocaleString()} documents`);
-  console.log(`  ⏭️  Skipped  : ${totalSkipped.toLocaleString()} (expired/duplicate)`);
+  console.log(
+    `  ⏭️  Skipped  : ${totalSkipped.toLocaleString()} (expired/duplicate)`,
+  );
   console.log(`  ❌ Errors   : ${totalErrors}`);
   console.log(`  ⏱️  Time     : ${elapsed}s`);
   if (DRY_RUN) {
     console.log("\n  ℹ️  DRY RUN — no data was written to PostgreSQL");
-    console.log(
-      "     Remove DRY_RUN=1 to run the actual migration",
-    );
+    console.log("     Remove DRY_RUN=1 to run the actual migration");
   }
   console.log("═".repeat(60));
 
