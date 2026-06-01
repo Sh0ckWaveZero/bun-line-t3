@@ -38,7 +38,9 @@ async function main() {
       continue;
     }
 
-    console.log(`  ✅ Found account: ${account.id} (userId: ${account.userId})`);
+    console.log(
+      `  ✅ Found account: ${account.id} (userId: ${account.userId})`,
+    );
 
     // 2. ตรวจสอบ sessions ที่เกี่ยวข้อง
     const sessions = await db.session.findMany({

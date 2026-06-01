@@ -106,9 +106,7 @@ interface MonitoringDashboardData {
  * Provides comprehensive monitoring data for the dashboard UI
  */
 // 🔐 Security: Protected API handler with authentication and rate limiting
-async function secureMonitoringHandler(
-  request: Request,
-): Promise<Response> {
+async function secureMonitoringHandler(request: Request): Promise<Response> {
   const startTime = Date.now();
 
   try {
@@ -173,15 +171,12 @@ async function secureMonitoringHandler(
     const timestamp = new Date().toISOString();
 
     // Get enhanced health check data
-    const healthResponse = await fetch(
-      `${env.APP_URL}/api/health/enhanced`,
-      {
-        headers: {
-          "User-Agent": "Monitoring-Dashboard/1.0",
-          "X-Internal-Request": "true",
-        },
+    const healthResponse = await fetch(`${env.APP_URL}/api/health/enhanced`, {
+      headers: {
+        "User-Agent": "Monitoring-Dashboard/1.0",
+        "X-Internal-Request": "true",
       },
-    ).catch(() => null);
+    }).catch(() => null);
 
     let healthData: any = {
       status: "unknown",

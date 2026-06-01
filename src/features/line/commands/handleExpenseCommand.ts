@@ -22,6 +22,11 @@
 
 import { findAccountByLineMessagingApiId } from "@/lib/auth/account-linking";
 import {
+  shouldApplyCoPayment,
+  calculateCoPaymentSplit,
+  formatCoPaymentDetails,
+} from "@/features/expenses/helpers/coPayment";
+import {
   getTransactions,
   getMonthlySummary,
   createTransaction,
@@ -134,7 +139,9 @@ function createExpenseSummaryBubble(
     },
   ];
 
-  const topExpenses = categories.filter((c) => c.type === "EXPENSE").slice(0, 3);
+  const topExpenses = categories
+    .filter((c) => c.type === "EXPENSE")
+    .slice(0, 3);
   if (topExpenses.length > 0) {
     bodyContents.push(
       { type: "separator", margin: "md" },
@@ -539,7 +546,12 @@ async function handleHelp(req: unknown) {
 }
 
 /** แสดงสรุปเดือน (ปัจจุบัน หรือ เดือนที่ระบุ) */
-async function handleSummary(req: unknown, userId: string, hide = false, transMonth?: string) {
+async function handleSummary(
+  req: unknown,
+  userId: string,
+  hide = false,
+  transMonth?: string,
+) {
   const sendMessage = await getSendMessage();
   const month = transMonth ?? getCurrentMonth();
 
@@ -570,7 +582,12 @@ async function handleSummary(req: unknown, userId: string, hide = false, transMo
 }
 
 /** แสดงรายการล่าสุด N รายการ (default 5, max 20) */
-async function handleList(req: unknown, userId: string, hide = false, count = 5) {
+async function handleList(
+  req: unknown,
+  userId: string,
+  hide = false,
+  count = 5,
+) {
   const sendMessage = await getSendMessage();
   const limit = Math.min(Math.max(count, 1), 20);
 
@@ -601,7 +618,13 @@ async function handleList(req: unknown, userId: string, hide = false, count = 5)
         `  ${sign}${fmt(r.amount, hide)} บาท • ${r.transDate}`,
       );
       if (r.note) lines.push(`  📝 ${r.note}`);
-      if (r.tags) lines.push(`  🏷️ ${r.tags.split(",").map((t) => `@${t.trim()}`).join(" ")}`);
+      if (r.tags)
+        lines.push(
+          `  🏷️ ${r.tags
+            .split(",")
+            .map((t) => `@${t.trim()}`)
+            .join(" ")}`,
+        );
     }
 
     await sendMessage(req as Parameters<typeof sendMessage>[0], [
@@ -616,7 +639,12 @@ async function handleList(req: unknown, userId: string, hide = false, count = 5)
 }
 
 /** ลบรายการ -- ถ้าไม่ระบุ id → แสดง Quick Reply ให้เลือก */
-async function handleDelete(req: unknown, userId: string, args: string[], hide = false) {
+async function handleDelete(
+  req: unknown,
+  userId: string,
+  args: string[],
+  hide = false,
+) {
   const sendMessage = await getSendMessage();
 
   const targetId = args[0];
@@ -678,7 +706,11 @@ async function handleDelete(req: unknown, userId: string, args: string[], hide =
       const isIncome = r.type === "INCOME";
       const sign = isIncome ? "+" : "-";
       const emoji = r.category.icon ?? (isIncome ? "💰" : "💸");
-      const label = `${emoji} ${sign}${formatAmount(r.amount)} ${r.category.name}`.slice(0, 20);
+      const label =
+        `${emoji} ${sign}${formatAmount(r.amount)} ${r.category.name}`.slice(
+          0,
+          20,
+        );
 
       return {
         type: "action",
@@ -708,7 +740,12 @@ async function handleDelete(req: unknown, userId: string, args: string[], hide =
 }
 
 /** แก้ไขรายการล่าสุด */
-async function handleEdit(req: unknown, userId: string, args: string[], hide = false) {
+async function handleEdit(
+  req: unknown,
+  userId: string,
+  args: string[],
+  hide = false,
+) {
   const sendMessage = await getSendMessage();
 
   try {
@@ -774,7 +811,10 @@ async function handleEdit(req: unknown, userId: string, args: string[], hide = f
             `📅 ${latest.transDate}`,
             latest.note ? `📝 ${latest.note}` : "",
             latest.tags
-              ? `🏷️ ${latest.tags.split(",").map((t) => `@${t.trim()}`).join(" ")}`
+              ? `🏷️ ${latest.tags
+                  .split(",")
+                  .map((t) => `@${t.trim()}`)
+                  .join(" ")}`
               : "",
             "",
             "เลือกสิ่งที่ต้องการแก้ไข:",
@@ -800,7 +840,9 @@ async function handleEdit(req: unknown, userId: string, args: string[], hide = f
         return;
       }
 
-      const updated = await updateTransaction(latest.id, userId, { amount: newAmount });
+      const updated = await updateTransaction(latest.id, userId, {
+        amount: newAmount,
+      });
       const isIncome = updated.type === "INCOME";
       const sign = isIncome ? "+" : "-";
 
@@ -839,7 +881,9 @@ async function handleEdit(req: unknown, userId: string, args: string[], hide = f
         return;
       }
 
-      const updated = await updateTransaction(latest.id, userId, { amount: newAmount });
+      const updated = await updateTransaction(latest.id, userId, {
+        amount: newAmount,
+      });
       const isIncome = updated.type === "INCOME";
       const sign = isIncome ? "+" : "-";
 
@@ -861,7 +905,9 @@ async function handleEdit(req: unknown, userId: string, args: string[], hide = f
     // /expense edit note [value]
     if (field === "note") {
       const newNote = value || null;
-      const updated = await updateTransaction(latest.id, userId, { note: newNote });
+      const updated = await updateTransaction(latest.id, userId, {
+        note: newNote,
+      });
       const isIncome = updated.type === "INCOME";
       const sign = isIncome ? "+" : "-";
 
@@ -950,7 +996,12 @@ async function handleEdit(req: unknown, userId: string, args: string[], hide = f
 }
 
 /** ดูสรุปเดือนอื่น: /expense month 04 หรือ /expense month 2025-04 */
-async function handleMonth(req: unknown, userId: string, args: string[], hide = false) {
+async function handleMonth(
+  req: unknown,
+  userId: string,
+  args: string[],
+  hide = false,
+) {
   const sendMessage = await getSendMessage();
   const monthArg = args[0];
 
@@ -990,7 +1041,10 @@ async function handleMonth(req: unknown, userId: string, args: string[], hide = 
     transMonth = `${year}-${String(m).padStart(2, "0")}`;
   } else {
     await sendMessage(req as Parameters<typeof sendMessage>[0], [
-      { type: "text", text: `❌ รูปแบบเดือนไม่ถูกต้อง: "${monthArg}"\n\n✅ ใช้: 04 หรือ 2025-04` },
+      {
+        type: "text",
+        text: `❌ รูปแบบเดือนไม่ถูกต้อง: "${monthArg}"\n\n✅ ใช้: 04 หรือ 2025-04`,
+      },
     ]);
     return;
   }
@@ -1004,7 +1058,12 @@ async function handleToday(req: unknown, userId: string, hide = false) {
   const today = todayDate();
 
   try {
-    const rows = await getTransactions({ userId, startDate: today, endDate: today, limit: 50 });
+    const rows = await getTransactions({
+      userId,
+      startDate: today,
+      endDate: today,
+      limit: 50,
+    });
 
     if (rows.length === 0) {
       await sendMessage(req as Parameters<typeof sendMessage>[0], [
@@ -1101,7 +1160,9 @@ async function handleWeek(req: unknown, userId: string, hide = false) {
     ];
 
     // แสดงแยกตามวัน
-    const sortedDates = Array.from(byDate.keys()).sort((a, b) => b.localeCompare(a));
+    const sortedDates = Array.from(byDate.keys()).sort((a, b) =>
+      b.localeCompare(a),
+    );
     for (const date of sortedDates) {
       const dayRows = byDate.get(date)!;
       const dayTotal = dayRows.reduce((acc, r) => {
@@ -1117,7 +1178,9 @@ async function handleWeek(req: unknown, userId: string, hide = false) {
         const isIncome = r.type === "INCOME";
         const sign = isIncome ? "+" : "-";
         const emoji = r.category.icon ?? (isIncome ? "💰" : "💸");
-        lines.push(`  ${emoji} ${r.category.name}  ${sign}${fmt(r.amount, hide)}`);
+        lines.push(
+          `  ${emoji} ${r.category.name}  ${sign}${fmt(r.amount, hide)}`,
+        );
       }
     }
 
@@ -1127,7 +1190,10 @@ async function handleWeek(req: unknown, userId: string, hide = false) {
   } catch (err) {
     console.error("[Expense Week] error:", err);
     await sendMessage(req as Parameters<typeof sendMessage>[0], [
-      { type: "text", text: "❌ ไม่สามารถโหลดรายการสัปดาห์นี้ได้ กรุณาลองใหม่" },
+      {
+        type: "text",
+        text: "❌ ไม่สามารถโหลดรายการสัปดาห์นี้ได้ กรุณาลองใหม่",
+      },
     ]);
   }
 }
@@ -1183,7 +1249,9 @@ async function handleFilterByCategory(
     for (const r of rows) {
       const isIncome = r.type === "INCOME";
       const sign = isIncome ? "+" : "-";
-      lines.push(`${sign}${fmt(r.amount, hide)} • ${formatDateShortThai(r.transDate)}`);
+      lines.push(
+        `${sign}${fmt(r.amount, hide)} • ${formatDateShortThai(r.transDate)}`,
+      );
       if (r.note) lines.push(`  📝 ${r.note}`);
     }
 
@@ -1301,36 +1369,72 @@ async function handleAdd(
       return;
     }
 
+    let finalAmount = amount;
+    let finalNote = parsed.note;
+    let finalTags = parsed.tags || [];
+    let isThaiHelpCoPay = false;
+    let subsidyAmount = 0;
+
+    if (shouldApplyCoPayment(type, parsed.note, parsed.tags)) {
+      isThaiHelpCoPay = true;
+      const split = calculateCoPaymentSplit(amount);
+      subsidyAmount = split.subsidyAmount;
+      finalAmount = split.userAmount;
+
+      const formatted = formatCoPaymentDetails(
+        amount,
+        subsidyAmount,
+        parsed.note,
+        parsed.tags || [],
+      );
+      finalNote = formatted.note;
+      finalTags = formatted.tags;
+    }
+
     const tx = await createTransaction({
       userId,
       categoryId: category.id,
       type,
-      amount,
-      note: parsed.note,
-      tags: parsed.tags?.join(","),
+      amount: finalAmount,
+      note: finalNote,
+      tags: finalTags.length > 0 ? finalTags.join(",") : undefined,
       transDate: toTransDate(),
     });
 
-    const isIncome = type === "INCOME";
-    const sign = isIncome ? "+" : "-";
-    const emoji = isIncome ? "📈" : "📉";
+    const responseLines: string[] = [];
 
-    const responseLines = [
-      `✅ บันทึก${isIncome ? "รายรับ" : "รายจ่าย"}สำเร็จ`,
-      "",
-      `${emoji} ${type === "INCOME" ? "รายรับ" : "รายจ่าย"}`,
-      `${category.icon ?? ""} หมวดหมู่: ${category.name}`,
-      `💵 จำนวน: ${sign}${fmt(tx.amount, hide)} บาท`,
-      `📅 วันที่: ${tx.transDate}`,
-    ];
-
-    if (parsed.note) {
-      responseLines.push(`📝 Note: ${parsed.note}`);
-    }
-    if (parsed.tags && parsed.tags.length > 0) {
+    if (isThaiHelpCoPay) {
       responseLines.push(
-        `🏷️ Tags: ${parsed.tags.map((t) => `@${t}`).join(" ")}`,
+        `✅ บันทึกรายจ่าย (ไทยช่วยไทย 60/40) สำเร็จ`,
+        "",
+        `🍲 หมวดหมู่: ${category.icon ?? ""} ${category.name}`,
+        `🛍️ ยอดสินค้าเต็ม: ${hide ? MASKED : amount.toLocaleString("th-TH", { minimumFractionDigits: 2 })} บาท`,
+        `🏛️ รัฐร่วมจ่าย (60%): -${hide ? MASKED : subsidyAmount.toLocaleString("th-TH", { minimumFractionDigits: 2 })} บาท`,
+        `💵 คุณจ่ายเองจริง (40%): -${fmt(tx.amount, hide)} บาท (บันทึกเข้าระบบ)`,
+        `📅 วันที่: ${tx.transDate}`,
       );
+    } else {
+      const isIncome = type === "INCOME";
+      const sign = isIncome ? "+" : "-";
+      const emoji = isIncome ? "📈" : "📉";
+
+      responseLines.push(
+        `✅ บันทึก${isIncome ? "รายรับ" : "รายจ่าย"}สำเร็จ`,
+        "",
+        `${emoji} ${type === "INCOME" ? "รายรับ" : "รายจ่าย"}`,
+        `${category.icon ?? ""} หมวดหมู่: ${category.name}`,
+        `💵 จำนวน: ${sign}${fmt(tx.amount, hide)} บาท`,
+        `📅 วันที่: ${tx.transDate}`,
+      );
+
+      if (parsed.note) {
+        responseLines.push(`📝 Note: ${parsed.note}`);
+      }
+      if (parsed.tags && parsed.tags.length > 0) {
+        responseLines.push(
+          `🏷️ Tags: ${parsed.tags.map((t) => `@${t}`).join(" ")}`,
+        );
+      }
     }
 
     responseLines.push("", "🔗 ดูทั้งหมด: /expense");

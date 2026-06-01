@@ -1,6 +1,6 @@
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import type { SettingsToggleProps } from "../types"
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import type { SettingsToggleProps } from "../types";
 
 export function SettingsToggle({
   id,
@@ -15,12 +15,12 @@ export function SettingsToggle({
       <div className="flex-1">
         <Label
           htmlFor={id}
-          className="text-sm font-medium text-foreground cursor-pointer"
+          className="text-foreground cursor-pointer text-sm font-medium"
         >
           {label}
         </Label>
         {description && (
-          <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+          <p className="text-muted-foreground mt-0.5 text-xs">{description}</p>
         )}
       </div>
       <Switch
@@ -31,5 +31,5 @@ export function SettingsToggle({
         aria-label={label}
       />
     </div>
-  )
+  );
 }

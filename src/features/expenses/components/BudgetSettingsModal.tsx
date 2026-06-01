@@ -30,7 +30,10 @@ interface BudgetSettingsModalProps {
     amount: number;
     alertAt: number;
   }) => Promise<void>;
-  onUpdateBudget: (id: string, data: { amount?: number; alertAt?: number }) => Promise<void>;
+  onUpdateBudget: (
+    id: string,
+    data: { amount?: number; alertAt?: number },
+  ) => Promise<void>;
   onDeleteBudget: (id: string) => Promise<void>;
   isLoading?: boolean;
 }
@@ -98,19 +101,17 @@ export function BudgetSettingsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>ตั้งค่างบประมาณ</DialogTitle>
-          <DialogDescription>
-            จัดการงบประมาณรายเดือนของคุณ
-          </DialogDescription>
+          <DialogDescription>จัดการงบประมาณรายเดือนของคุณ</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* Add/Edit Form */}
           {showAddForm ? (
             <Card>
-              <CardContent className="pt-6 space-y-4">
+              <CardContent className="space-y-4 pt-6">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold">
                     {editingId ? "แก้ไขงบประมาณ" : "เพิ่มงบประมาณ"}
@@ -126,7 +127,7 @@ export function BudgetSettingsModal({
                   <select
                     value={categoryId || ""}
                     onChange={(e) => setCategoryId(e.target.value || null)}
-                    className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                    className="bg-background w-full rounded-md border px-3 py-2 text-sm"
                   >
                     <option value="">งบรวมทุกหมวด</option>
                     {categories.map((cat) => (
@@ -154,7 +155,9 @@ export function BudgetSettingsModal({
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label>แจ้งเตือนเมื่อใช้ถึง</Label>
-                    <span className="text-sm text-muted-foreground">{alertAt[0]}%</span>
+                    <span className="text-muted-foreground text-sm">
+                      {alertAt[0]}%
+                    </span>
                   </div>
                   <Slider
                     value={alertAt}
@@ -164,7 +167,7 @@ export function BudgetSettingsModal({
                     step={5}
                     className="w-full"
                   />
-                  <div className="flex justify-between text-xs text-muted-foreground">
+                  <div className="text-muted-foreground flex justify-between text-xs">
                     <span>50%</span>
                     <span>100%</span>
                   </div>
@@ -172,10 +175,18 @@ export function BudgetSettingsModal({
 
                 {/* Actions */}
                 <div className="flex gap-2">
-                  <Button onClick={handleSubmit} disabled={isLoading} className="flex-1">
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={isLoading}
+                    className="flex-1"
+                  >
                     {editingId ? "อัปเดต" : "สร้าง"}
                   </Button>
-                  <Button variant="outline" onClick={resetForm} disabled={isLoading}>
+                  <Button
+                    variant="outline"
+                    onClick={resetForm}
+                    disabled={isLoading}
+                  >
                     ยกเลิก
                   </Button>
                 </div>
@@ -183,7 +194,7 @@ export function BudgetSettingsModal({
             </Card>
           ) : (
             <Button onClick={() => setShowAddForm(true)} className="w-full">
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="mr-2 h-4 w-4" />
               เพิ่มงบประมาณ
             </Button>
           )}
@@ -191,16 +202,18 @@ export function BudgetSettingsModal({
           {/* Budget List */}
           <div className="space-y-2">
             {budgets.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-muted-foreground py-8 text-center">
                 <p className="text-sm">ยังไม่มีงบประมาณ</p>
-                <p className="text-xs mt-1">คลิก "เพิ่มงบประมาณ" เพื่อเริ่มต้น</p>
+                <p className="mt-1 text-xs">
+                  คลิก "เพิ่มงบประมาณ" เพื่อเริ่มต้น
+                </p>
               </div>
             ) : (
               budgets.map((budget) => (
                 <Card key={budget.id}>
                   <CardContent className="flex items-center justify-between p-4">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="mb-1 flex items-center gap-2">
                         <span className="text-lg">
                           {budget.category?.icon || "💰"}
                         </span>
@@ -208,13 +221,15 @@ export function BudgetSettingsModal({
                           {budget.category?.name || "งบรวม"}
                         </span>
                         {!budget.isActive && (
-                          <span className="text-xs text-muted-foreground">(ปิดใช้งาน)</span>
+                          <span className="text-muted-foreground text-xs">
+                            (ปิดใช้งาน)
+                          </span>
                         )}
                       </div>
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-muted-foreground text-sm">
                         {formatAmount(budget.amount)} บาท/เดือน
                       </div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-muted-foreground text-xs">
                         แจ้งเตือนที่ {budget.alertAt}%
                       </div>
                     </div>
@@ -233,7 +248,7 @@ export function BudgetSettingsModal({
                         onClick={() => handleDelete(budget.id)}
                         disabled={isLoading}
                       >
-                        <Trash2 className="h-4 w-4 text-destructive" />
+                        <Trash2 className="text-destructive h-4 w-4" />
                       </Button>
                     </div>
                   </CardContent>

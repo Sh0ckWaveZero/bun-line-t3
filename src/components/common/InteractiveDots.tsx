@@ -15,19 +15,22 @@ const DAMPING = 0.78;
 const MOBILE_BREAKPOINT = 768;
 
 interface Dot {
-  ox: number; oy: number;      // original (resting) position
-  x: number;  y: number;       // current position
-  vx: number; vy: number;      // velocity
+  ox: number;
+  oy: number; // original (resting) position
+  x: number;
+  y: number; // current position
+  vx: number;
+  vy: number; // velocity
 }
 
 export const InteractiveDots: React.FC = () => {
-  const canvasRef  = useRef<HTMLCanvasElement>(null);
-  const dotsRef    = useRef<Dot[]>([]);
-  const mouseRef   = useRef({ x: -9999, y: -9999 });
-  const rafRef     = useRef<number>(0);
-  const wRef       = useRef(0);
-  const hRef       = useRef(0);
-  const pausedRef  = useRef(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const dotsRef = useRef<Dot[]>([]);
+  const mouseRef = useRef({ x: -9999, y: -9999 });
+  const rafRef = useRef<number>(0);
+  const wRef = useRef(0);
+  const hRef = useRef(0);
+  const pausedRef = useRef(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -66,9 +69,9 @@ export const InteractiveDots: React.FC = () => {
       wRef.current = w;
       hRef.current = h;
 
-      canvas.width  = Math.round(w * dpr);
+      canvas.width = Math.round(w * dpr);
       canvas.height = Math.round(h * dpr);
-      canvas.style.width  = `${w}px`;
+      canvas.style.width = `${w}px`;
       canvas.style.height = `${h}px`;
       ctx.scale(dpr, dpr);
 
@@ -81,8 +84,8 @@ export const InteractiveDots: React.FC = () => {
       const dots: Dot[] = [];
       const cols = Math.ceil(w / spacing) + 1;
       const rows = Math.ceil(h / spacing) + 1;
-      const ox   = ((w % spacing) / 2);
-      const oy   = ((h % spacing) / 2);
+      const ox = (w % spacing) / 2;
+      const oy = (h % spacing) / 2;
 
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
@@ -101,8 +104,8 @@ export const InteractiveDots: React.FC = () => {
         return;
       }
 
-      const w  = wRef.current;
-      const h  = hRef.current;
+      const w = wRef.current;
+      const h = hRef.current;
       const cx = w / 2;
       const cy = h / 2;
       // radial fade: full opacity at center, 0 at ~60% of half-diagonal
@@ -115,8 +118,8 @@ export const InteractiveDots: React.FC = () => {
 
       for (const dot of dotsRef.current) {
         // ── Mouse repulsion ─────────────────────────────────────────────
-        const dx   = dot.x - mx;
-        const dy   = dot.y - my;
+        const dx = dot.x - mx;
+        const dy = dot.y - my;
         const dist = Math.hypot(dx, dy);
 
         if (dist < REPULSION_R && dist > 0) {
@@ -130,34 +133,34 @@ export const InteractiveDots: React.FC = () => {
         dot.vy += (dot.oy - dot.y) * SPRING;
         dot.vx *= DAMPING;
         dot.vy *= DAMPING;
-        dot.x  += dot.vx;
-        dot.y  += dot.vy;
+        dot.x += dot.vx;
+        dot.y += dot.vy;
 
         // ── Radial fade from canvas center ──────────────────────────────
         const distFromCenter = Math.hypot(dot.x - cx, dot.y - cy);
-        const centerFade     = Math.max(0, 1 - distFromCenter / fadeR);
+        const centerFade = Math.max(0, 1 - distFromCenter / fadeR);
         if (centerFade <= 0) continue;
 
         // ── Color: mode-aware lerp on displacement ──────────────────────
         const disp = Math.hypot(dot.x - dot.ox, dot.y - dot.oy);
-        const t    = Math.min(disp / 18, 1); // 0 = rest · 1 = max displaced
+        const t = Math.min(disp / 18, 1); // 0 = rest · 1 = max displaced
 
         let r: number, g: number, b: number, baseOpacity: number;
         if (isDarkRef2.current) {
           // Dark  : white → cold teal (120, 240, 220)
           r = Math.round(255 - t * 135);
-          g = Math.round(255 - t *  15);
-          b = Math.round(255 - t *  35);
+          g = Math.round(255 - t * 15);
+          b = Math.round(255 - t * 35);
           baseOpacity = 0.04 + t * 0.22;
         } else {
           // Light : warm slate (100, 110, 140) → amber/rose (240, 160, 140)
           // Softer colors that work well on #f0f4fb background
           r = Math.round(100 + t * 140);
-          g = Math.round(110 + t *  50);
-          b = Math.round(140 + t *   0);
-          baseOpacity = 0.20 + t * 0.35;   // More visible on light bg
+          g = Math.round(110 + t * 50);
+          b = Math.round(140 + t * 0);
+          baseOpacity = 0.2 + t * 0.35; // More visible on light bg
         }
-        const opacity     = baseOpacity * centerFade;
+        const opacity = baseOpacity * centerFade;
 
         // ── Draw ────────────────────────────────────────────────────────
         ctx.beginPath();
@@ -170,28 +173,28 @@ export const InteractiveDots: React.FC = () => {
     };
 
     // ── Event listeners ───────────────────────────────────────────────────
-    const onMouseMove  = (e: MouseEvent) => {
+    const onMouseMove = (e: MouseEvent) => {
       mouseRef.current = { x: e.clientX, y: e.clientY };
     };
     const onMouseLeave = () => {
       mouseRef.current = { x: -9999, y: -9999 };
     };
-    const onTouchMove  = (e: TouchEvent) => {
+    const onTouchMove = (e: TouchEvent) => {
       const t = e.touches[0];
       if (t) mouseRef.current = { x: t.clientX, y: t.clientY };
     };
-    const onTouchEnd   = () => {
+    const onTouchEnd = () => {
       mouseRef.current = { x: -9999, y: -9999 };
     };
     const onVisibilityChange = () => {
       pausedRef.current = document.hidden;
     };
 
-    window.addEventListener("mousemove",  onMouseMove);
+    window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseleave", onMouseLeave);
-    window.addEventListener("touchmove",  onTouchMove,  { passive: true });
-    window.addEventListener("touchend",   onTouchEnd);
-    window.addEventListener("resize",     resize);
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
+    window.addEventListener("touchend", onTouchEnd);
+    window.addEventListener("resize", resize);
     document.addEventListener("visibilitychange", onVisibilityChange);
 
     resize();
@@ -199,11 +202,11 @@ export const InteractiveDots: React.FC = () => {
 
     // ── Cleanup ───────────────────────────────────────────────────────────
     return () => {
-      window.removeEventListener("mousemove",  onMouseMove);
+      window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseleave", onMouseLeave);
-      window.removeEventListener("touchmove",  onTouchMove);
-      window.removeEventListener("touchend",   onTouchEnd);
-      window.removeEventListener("resize",     resize);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("resize", resize);
       document.removeEventListener("visibilitychange", onVisibilityChange);
       cancelAnimationFrame(rafRef.current);
       classObserver.disconnect();

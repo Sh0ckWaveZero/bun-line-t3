@@ -22,7 +22,7 @@ export const Sparkline = ({ values, color }: SparklineProps) => {
 
   return (
     <svg
-      className="pointer-events-none absolute right-2 top-2 z-0 opacity-45 sm:right-3.5 sm:top-3.5"
+      className="pointer-events-none absolute top-2 right-2 z-0 opacity-45 sm:top-3.5 sm:right-3.5"
       width={w}
       height={h}
       viewBox={`0 0 ${w} ${h}`}

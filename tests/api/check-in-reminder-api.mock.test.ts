@@ -41,7 +41,10 @@ const mockAttendanceService = {
     return new Date(utcDate.getTime() + 7 * 60 * 60 * 1000);
   },
   isWorkingDay: async () => true,
-  getActiveLineUserIdsForCheckinReminder: async () => ["test-user-1", "test-user-2"],
+  getActiveLineUserIdsForCheckinReminder: async () => [
+    "test-user-1",
+    "test-user-2",
+  ],
 };
 
 mock.module("@/features/attendance/services/attendance", () => ({

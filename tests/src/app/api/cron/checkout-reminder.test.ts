@@ -3,16 +3,14 @@ import { describe, it, expect } from "bun:test";
 describe("Checkout Reminder API Dependencies", () => {
   it("should import required functions correctly", async () => {
     // Test that imports work without errors
-    const { calculateUserReminderTime } = await import(
-      "@/features/attendance/helpers/utils"
-    );
+    const { calculateUserReminderTime } =
+      await import("@/features/attendance/helpers/utils");
     expect(typeof calculateUserReminderTime).toBe("function");
   });
 
   it("should test calculateUserReminderTime function", async () => {
-    const { calculateUserReminderTime } = await import(
-      "@/features/attendance/helpers/utils"
-    );
+    const { calculateUserReminderTime } =
+      await import("@/features/attendance/helpers/utils");
     const checkInTime = new Date("2025-06-17T02:00:00.000Z"); // 9:00 AM Bangkok
     const reminderTime = calculateUserReminderTime(checkInTime, 30);
 

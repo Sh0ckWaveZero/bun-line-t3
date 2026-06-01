@@ -76,10 +76,7 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error("Error fetching user settings:", error);
-    return Response.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -126,8 +123,7 @@ export async function PUT(request: Request) {
             validatedData.enableHolidayNotifications ?? false,
           hideAmountsLinePersonal:
             validatedData.hideAmountsLinePersonal ?? false,
-          hideAmountsLineGroup:
-            validatedData.hideAmountsLineGroup ?? false,
+          hideAmountsLineGroup: validatedData.hideAmountsLineGroup ?? false,
           hideAmountsWeb: validatedData.hideAmountsWeb ?? false,
           timezone: validatedData.timezone ?? "Asia/Bangkok",
           language: validatedData.language ?? "th",
@@ -163,9 +159,6 @@ export async function PUT(request: Request) {
     }
 
     console.error("Error updating user settings:", error);
-    return Response.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }

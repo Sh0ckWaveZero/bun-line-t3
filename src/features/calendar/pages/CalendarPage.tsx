@@ -168,23 +168,22 @@ function DayDetailPanel({
                     )}
                     <span
                       id={`day-detail-holiday-type-${dateStr}`}
-                      className="text-muted-foreground mt-1 inline-block rounded-md bg-muted/60 px-1.5 py-px text-[10px] font-medium"
+                      className="text-muted-foreground bg-muted/60 mt-1 inline-block rounded-md px-1.5 py-px text-[10px] font-medium"
                     >
                       {holiday.type === "national" && "วันหยุดราชการ"}
                       {holiday.type === "royal" && "วันหยุดเกี่ยวกับราชวงศ์"}
                       {holiday.type === "religious" && "วันหยุดศาสนาจาร"}
                       {holiday.type === "special" && "วันหยุดพิเศษ"}
-                      {!["national", "royal", "religious", "special"].includes(holiday.type) && holiday.type}
+                      {!["national", "royal", "religious", "special"].includes(
+                        holiday.type,
+                      ) && holiday.type}
                     </span>
                   </div>
                 </div>
               )}
 
               {leave && (
-                <div
-                  id={`day-detail-leave-${dateStr}`}
-                  className="space-y-1.5"
-                >
+                <div id={`day-detail-leave-${dateStr}`} className="space-y-1.5">
                   <div className="flex items-center gap-2">
                     <span className="border-primary flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2">
                       <Clock className="text-primary h-2.5 w-2.5" />
@@ -343,8 +342,7 @@ export function CalendarPage() {
   const buddhistYear = getYear(currentDate) + 543;
   const firstDayOfWeek = days[0]?.getDay() ?? 0;
   const calendarRowCount = Math.ceil((firstDayOfWeek + days.length) / 7);
-  const trailingCellCount =
-    calendarRowCount * 7 - firstDayOfWeek - days.length;
+  const trailingCellCount = calendarRowCount * 7 - firstDayOfWeek - days.length;
   const holidayCount = days.filter((date) => getHolidayForDate(date)).length;
   const leaveCount = days.filter((date) => getLeaveForDate(date)).length;
   const workingDayCount = days.length - holidayCount - leaveCount;
@@ -449,17 +447,20 @@ export function CalendarPage() {
     }
   };
 
-  const handleDayClick = useCallback((date: Date) => {
-    setSelectedDate(date);
-    const dateStr = format(date, "yyyy-MM-dd");
-    const hasHoliday = holidays.some((h) => h.date === dateStr);
-    const hasLeave = leaves.some((l) => l.date === dateStr);
-    if (hasHoliday || hasLeave) {
-      setShowDayDetail(true);
-    } else {
-      setShowLeaveModal(true);
-    }
-  }, [holidays, leaves]);
+  const handleDayClick = useCallback(
+    (date: Date) => {
+      setSelectedDate(date);
+      const dateStr = format(date, "yyyy-MM-dd");
+      const hasHoliday = holidays.some((h) => h.date === dateStr);
+      const hasLeave = leaves.some((l) => l.date === dateStr);
+      if (hasHoliday || hasLeave) {
+        setShowDayDetail(true);
+      } else {
+        setShowLeaveModal(true);
+      }
+    },
+    [holidays, leaves],
+  );
 
   const renderLeaveType = (type: string) => {
     if (type === "personal") return "ลากิจ";
@@ -469,12 +470,15 @@ export function CalendarPage() {
   };
 
   return (
-    <div id="calendar-page" className="min-h-screen bg-background">
+    <div id="calendar-page" className="bg-background min-h-screen">
       <div
         id="calendar-main"
         className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-10"
       >
-        <header id="calendar-hero" className="mb-6 flex items-end justify-between gap-6">
+        <header
+          id="calendar-hero"
+          className="mb-6 flex items-end justify-between gap-6"
+        >
           <div id="calendar-heading">
             <p
               id="calendar-eyebrow"
@@ -503,7 +507,10 @@ export function CalendarPage() {
             </div>
           </div>
 
-          <div id="calendar-header-actions" className="hidden items-center gap-2 sm:flex">
+          <div
+            id="calendar-header-actions"
+            className="hidden items-center gap-2 sm:flex"
+          >
             <Button
               id="calendar-import-btn"
               variant="outline"
@@ -602,12 +609,21 @@ export function CalendarPage() {
           </Button>
         </nav>
 
-        <div id="calendar-legend" className="mb-3 flex flex-wrap gap-4 text-xs font-medium">
-          <span id="calendar-legend-holiday" className="flex items-center gap-1.5">
+        <div
+          id="calendar-legend"
+          className="mb-3 flex flex-wrap gap-4 text-xs font-medium"
+        >
+          <span
+            id="calendar-legend-holiday"
+            className="flex items-center gap-1.5"
+          >
             <span className="bg-destructive/80 h-2 w-2 rounded-full" />
             <span className="text-muted-foreground">วันหยุดราชการ</span>
           </span>
-          <span id="calendar-legend-leave" className="flex items-center gap-1.5">
+          <span
+            id="calendar-legend-leave"
+            className="flex items-center gap-1.5"
+          >
             <span className="bg-primary h-2 w-2 rounded-full" />
             <span className="text-muted-foreground">วันลางาน</span>
           </span>
@@ -615,7 +631,7 @@ export function CalendarPage() {
 
         <div
           id="calendar-grid-card"
-          className="border-border overflow-hidden rounded-xl border bg-card"
+          className="border-border bg-card overflow-hidden rounded-xl border"
         >
           {loading ? (
             <div id="calendar-loading" className="p-4">
@@ -633,8 +649,7 @@ export function CalendarPage() {
                     id={`calendar-weekday-${day}`}
                     className={cn(
                       "text-muted-foreground px-3 py-2.5 text-center text-[11px] font-bold tracking-[0.12em] uppercase",
-                      (day === "อา" || day === "ส") &&
-                        "text-destructive/60",
+                      (day === "อา" || day === "ส") && "text-destructive/60",
                     )}
                   >
                     {day}
@@ -674,8 +689,14 @@ export function CalendarPage() {
                         "group relative flex min-h-28 cursor-pointer flex-col border-b p-1.5 text-left transition-colors lg:min-h-32 lg:p-2",
                         "border-border/50 focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
                         isToday && "bg-primary/[0.04]",
-                        !isToday && !hasEvent && !isWeekendDay && "hover:bg-muted/30",
-                        !isToday && !hasEvent && isWeekendDay && "bg-muted/15 hover:bg-muted/30",
+                        !isToday &&
+                          !hasEvent &&
+                          !isWeekendDay &&
+                          "hover:bg-muted/30",
+                        !isToday &&
+                          !hasEvent &&
+                          isWeekendDay &&
+                          "bg-muted/15 hover:bg-muted/30",
                       )}
                       onClick={() => handleDayClick(date)}
                       aria-label={`${format(date, "d MMMM yyyy", { locale: th })}${holiday ? ` ${holiday.nameThai}` : ""}${leave ? ` วันลา${renderLeaveType(leave.type)}` : ""}`}
@@ -687,8 +708,14 @@ export function CalendarPage() {
                           "lg:h-7 lg:w-7 lg:text-base",
                           isToday &&
                             "bg-primary text-primary-foreground font-black",
-                          !isToday && isWeekendDay && !holiday && "text-destructive/70",
-                          !isToday && !isWeekendDay && !holiday && "text-foreground",
+                          !isToday &&
+                            isWeekendDay &&
+                            !holiday &&
+                            "text-destructive/70",
+                          !isToday &&
+                            !isWeekendDay &&
+                            !holiday &&
+                            "text-foreground",
                           !isToday && !!holiday && "text-foreground",
                         )}
                       >
@@ -699,7 +726,7 @@ export function CalendarPage() {
                         {holiday && (
                           <div
                             id={`calendar-holiday-${dateStr}`}
-                            className="bg-destructive/10 text-destructive flex items-center gap-1 rounded px-1 py-px text-[10px] font-semibold leading-tight lg:px-1.5 lg:py-0.5 lg:text-[11px]"
+                            className="bg-destructive/10 text-destructive flex items-center gap-1 rounded px-1 py-px text-[10px] leading-tight font-semibold lg:px-1.5 lg:py-0.5 lg:text-[11px]"
                             title={holiday.nameThai}
                           >
                             <span className="bg-destructive text-destructive-foreground flex h-3 w-3 shrink-0 items-center justify-center rounded-full text-[8px] lg:h-3.5 lg:w-3.5">
@@ -714,7 +741,7 @@ export function CalendarPage() {
                         {leave && (
                           <div
                             id={`calendar-leave-${dateStr}`}
-                            className="bg-primary/10 text-primary flex items-center gap-1 rounded px-1 py-px text-[10px] font-semibold leading-tight lg:px-1.5 lg:py-0.5 lg:text-[11px]"
+                            className="bg-primary/10 text-primary flex items-center gap-1 rounded px-1 py-px text-[10px] leading-tight font-semibold lg:px-1.5 lg:py-0.5 lg:text-[11px]"
                             title={`วันลา${renderLeaveType(leave.type)}`}
                           >
                             <span className="border-primary h-3 w-3 shrink-0 rounded-full border-[1.5px] lg:h-3.5 lg:w-3.5" />
@@ -740,7 +767,10 @@ export function CalendarPage() {
           )}
         </div>
 
-        <div id="calendar-mobile-actions" className="mt-4 flex justify-center gap-2 sm:hidden">
+        <div
+          id="calendar-mobile-actions"
+          className="mt-4 flex justify-center gap-2 sm:hidden"
+        >
           <Button
             id="calendar-mobile-leave-btn"
             size="sm"

@@ -29,5 +29,7 @@ export const APPROVAL_CHECK_RESULT = {
 export const isValidApprovalCheckResult = (
   value: string,
 ): value is ApprovalCheckResult => {
-  return Object.values(APPROVAL_CHECK_RESULT).includes(value as ApprovalCheckResult);
+  return Object.values(APPROVAL_CHECK_RESULT).includes(
+    value as ApprovalCheckResult,
+  );
 };

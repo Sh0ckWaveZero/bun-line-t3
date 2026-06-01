@@ -114,8 +114,7 @@ export function MobileCalendarPage() {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       }
-    } catch {
-    }
+    } catch {}
   };
 
   const buddhistYear = getYear(currentDate) + 543;
@@ -246,7 +245,7 @@ export function MobileCalendarPage() {
     <div id="mobile-calendar-page" className="bg-background min-h-screen pb-28">
       <header
         id="mobile-calendar-header"
-        className="border-border sticky top-0 z-10 border-b bg-background/90 px-4 py-3 backdrop-blur-md"
+        className="border-border bg-background/90 sticky top-0 z-10 border-b px-4 py-3 backdrop-blur-md"
       >
         <nav
           id="mobile-calendar-nav"
@@ -303,12 +302,12 @@ export function MobileCalendarPage() {
       >
         <section
           id="mobile-calendar-overview"
-          className="border-border overflow-hidden rounded-xl border bg-card"
+          className="border-border bg-card overflow-hidden rounded-xl border"
           aria-label="ภาพรวมเดือน"
         >
           <div
             id="mobile-calendar-overview-header"
-            className="border-border border-b bg-muted/50 px-4 py-3"
+            className="border-border bg-muted/50 border-b px-4 py-3"
           >
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -333,14 +332,19 @@ export function MobileCalendarPage() {
               </div>
               <div
                 id="mobile-calendar-year-badge"
-                className="border-border rounded-md border bg-background px-2.5 py-2 text-center"
+                className="border-border bg-background rounded-md border px-2.5 py-2 text-center"
               >
                 <CalendarIcon
                   className="text-muted-foreground mx-auto h-4 w-4"
                   aria-hidden="true"
                 />
-                <p className="text-muted-foreground mt-0.5 text-[10px] font-semibold">พ.ศ.</p>
-                <p id="mobile-calendar-buddhist-year-badge" className="text-foreground text-base leading-none font-black">
+                <p className="text-muted-foreground mt-0.5 text-[10px] font-semibold">
+                  พ.ศ.
+                </p>
+                <p
+                  id="mobile-calendar-buddhist-year-badge"
+                  className="text-foreground text-base leading-none font-black"
+                >
                   {buddhistYear}
                 </p>
               </div>
@@ -349,7 +353,7 @@ export function MobileCalendarPage() {
 
           <div
             id="mobile-calendar-stats"
-            className="grid grid-cols-3 divide-x divide-border"
+            className="divide-border grid grid-cols-3 divide-x"
           >
             <div id="mobile-calendar-stat-today" className="px-3 py-2.5">
               <p className="text-muted-foreground text-[10px] font-medium">
@@ -400,12 +404,14 @@ export function MobileCalendarPage() {
               aria-pressed={filter === option.value}
             >
               {option.label}
-              <span className={cn(
-                "ml-1.5 rounded px-1 py-px text-[10px]",
-                filter === option.value
-                  ? "bg-primary-foreground/20 text-primary-foreground"
-                  : "bg-muted text-muted-foreground",
-              )}>
+              <span
+                className={cn(
+                  "ml-1.5 rounded px-1 py-px text-[10px]",
+                  filter === option.value
+                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    : "bg-muted text-muted-foreground",
+                )}
+              >
                 {option.count}
               </span>
             </button>
@@ -415,7 +421,7 @@ export function MobileCalendarPage() {
         {loading ? (
           <div
             id="mobile-calendar-loading"
-            className="border-border rounded-xl border bg-card py-12 text-center"
+            className="border-border bg-card rounded-xl border py-12 text-center"
             role="status"
             aria-live="polite"
             aria-busy="true"
@@ -432,7 +438,7 @@ export function MobileCalendarPage() {
         ) : filteredEvents.length === 0 ? (
           <div
             id="mobile-calendar-empty"
-            className="border-border border-dashed rounded-xl border bg-card p-8 text-center"
+            className="border-border bg-card rounded-xl border border-dashed p-8 text-center"
             role="status"
             aria-live="polite"
           >
@@ -442,14 +448,20 @@ export function MobileCalendarPage() {
                 aria-hidden="true"
               />
             </div>
-            <p id="mobile-calendar-empty-title" className="text-foreground text-sm font-bold">
+            <p
+              id="mobile-calendar-empty-title"
+              className="text-foreground text-sm font-bold"
+            >
               {filter === "all"
                 ? "ไม่มีวันหยุดหรือวันลาในเดือนนี้"
                 : filter === "holidays"
                   ? "ไม่มีวันหยุดในเดือนนี้"
                   : "ไม่มีวันลาในเดือนนี้"}
             </p>
-            <p id="mobile-calendar-empty-hint" className="text-muted-foreground mt-1.5 text-xs">
+            <p
+              id="mobile-calendar-empty-hint"
+              className="text-muted-foreground mt-1.5 text-xs"
+            >
               ลองเปลี่ยนตัวกรองหรือเพิ่มรายการใหม่
             </p>
           </div>
@@ -473,11 +485,12 @@ export function MobileCalendarPage() {
                   key={date.toISOString()}
                   id={`mobile-event-${dateStr}`}
                   className={cn(
-                    "border-border overflow-hidden rounded-xl border bg-card transition-transform duration-150 active:scale-[0.99]",
+                    "border-border bg-card overflow-hidden rounded-xl border transition-transform duration-150 active:scale-[0.99]",
                     holiday && !leave && "border-destructive/30",
                     leave && !holiday && "border-primary/30",
                     isMixed && "border-accent/30",
-                    isToday && "ring-primary ring-2 ring-offset-1 ring-offset-background",
+                    isToday &&
+                      "ring-primary ring-offset-background ring-2 ring-offset-1",
                   )}
                   role="listitem"
                   aria-label={`${dayOfWeek}ที่ ${format(date, "d")} ${format(date, "MMMM", { locale: th })}`}

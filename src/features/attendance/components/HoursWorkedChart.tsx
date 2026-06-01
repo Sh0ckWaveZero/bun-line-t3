@@ -28,10 +28,7 @@ export const HoursWorkedChart: React.FC<HoursWorkedChartProps> = ({
     );
   }
 
-  const maxHours = Math.max(
-    10,
-    ...records.map((r) => r.hoursWorked || 0),
-  );
+  const maxHours = Math.max(10, ...records.map((r) => r.hoursWorked || 0));
 
   return (
     <Line

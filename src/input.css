@@ -267,10 +267,10 @@
   --card-bg-red-hover: #fecaca; /* Red-200 */
 
   /* Card text colors */
-  --card-text-blue: #2563eb;     /* blue-600 */
-  --card-text-green: #059669;    /* emerald-600 */
-  --card-text-purple: #7c3aed;   /* violet-600 */
-  --card-text-red: #e11d48;      /* rose-600 */
+  --card-text-blue: #2563eb; /* blue-600 */
+  --card-text-green: #059669; /* emerald-600 */
+  --card-text-purple: #7c3aed; /* violet-600 */
+  --card-text-red: #e11d48; /* rose-600 */
 
   --table-divider: #e5e7eb; /* Table row separators */
   --table-header-bg: #f9fafb; /* Table header background */
@@ -353,10 +353,10 @@
   --card-bg-red: rgba(153, 27, 27, 0.25); /* Red with opacity */
 
   /* Border colors for dark mode */
-  --card-border-blue: rgba(147, 197, 253, 0.40);   /* blue-300/40 */
-  --card-border-green: rgba(134, 239, 172, 0.40);  /* green-300/40 */
-  --card-border-purple: rgba(192, 132, 252, 0.40); /* purple-300/40 */
-  --card-border-red: rgba(252, 165, 165, 0.40);    /* red-300/40 */
+  --card-border-blue: rgba(147, 197, 253, 0.4); /* blue-300/40 */
+  --card-border-green: rgba(134, 239, 172, 0.4); /* green-300/40 */
+  --card-border-purple: rgba(192, 132, 252, 0.4); /* purple-300/40 */
+  --card-border-red: rgba(252, 165, 165, 0.4); /* red-300/40 */
 
   /* Hover/active backgrounds for dark mode */
   --card-bg-blue-hover: rgba(30, 58, 138, 0.45);
@@ -365,10 +365,10 @@
   --card-bg-red-hover: rgba(153, 27, 27, 0.45);
 
   /* Card text colors for dark mode */
-  --card-text-blue: #93c5fd;   /* blue-300 */
-  --card-text-green: #6ee7b7;  /* emerald-300 */
+  --card-text-blue: #93c5fd; /* blue-300 */
+  --card-text-green: #6ee7b7; /* emerald-300 */
   --card-text-purple: #c4b5fd; /* violet-300 */
-  --card-text-red: #fda4af;    /* rose-300 */
+  --card-text-red: #fda4af; /* rose-300 */
 
   --table-divider: #374151; /* Table row separators */
   --table-header-bg: #111827; /* Table header background */
@@ -503,8 +503,9 @@
     border-radius: var(--radius-md, 6px);
     background-color: transparent;
     box-shadow: none;
-    transition: background-color 200ms cubic-bezier(0.25, 1, 0.5, 1),
-                box-shadow 200ms cubic-bezier(0.25, 1, 0.5, 1);
+    transition:
+      background-color 200ms cubic-bezier(0.25, 1, 0.5, 1),
+      box-shadow 200ms cubic-bezier(0.25, 1, 0.5, 1);
     z-index: -1;
   }
 
@@ -528,10 +529,18 @@
     animation: section-enter 350ms cubic-bezier(0.25, 1, 0.5, 1) both;
   }
 
-  .stagger-1 { animation-delay: 60ms; }
-  .stagger-2 { animation-delay: 120ms; }
-  .stagger-3 { animation-delay: 180ms; }
-  .stagger-4 { animation-delay: 240ms; }
+  .stagger-1 {
+    animation-delay: 60ms;
+  }
+  .stagger-2 {
+    animation-delay: 120ms;
+  }
+  .stagger-3 {
+    animation-delay: 180ms;
+  }
+  .stagger-4 {
+    animation-delay: 240ms;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -541,7 +550,10 @@
   .animate-tab-in {
     animation: none;
   }
-  .stagger-1, .stagger-2, .stagger-3, .stagger-4 {
+  .stagger-1,
+  .stagger-2,
+  .stagger-3,
+  .stagger-4 {
     animation-delay: 0ms;
   }
 }
@@ -581,13 +593,18 @@
 
   /* Month navigation swipe hints */
   .group[data-swipe-hint]::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 50%;
     width: 40px;
     height: 40px;
     margin-top: -20px;
-    background: linear-gradient(90deg, transparent, rgba(var(--primary), 0.1), transparent);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(var(--primary), 0.1),
+      transparent
+    );
     opacity: 0;
     transition: opacity 0.3s ease;
     pointer-events: none;

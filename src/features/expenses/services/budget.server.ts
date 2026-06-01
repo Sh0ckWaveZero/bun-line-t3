@@ -179,7 +179,5 @@ export async function getAlertableBudgets(
   transMonth: string,
 ): Promise<BudgetUsage[]> {
   const usages = await getBudgetUsage(userId, transMonth);
-  return usages.filter(
-    (u) => u.isNearLimit || u.isOverBudget,
-  );
+  return usages.filter((u) => u.isNearLimit || u.isOverBudget);
 }

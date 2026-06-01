@@ -42,7 +42,11 @@ interface HealthCheckResult {
  * Enhanced System Health Check API
  * Provides comprehensive health monitoring with metrics and recommendations
  */
-const REQUIRED_ENV_KEYS = ["AUTH_SECRET", "LINE_CHANNEL_ACCESS", "LINE_CHANNEL_SECRET"] as const;
+const REQUIRED_ENV_KEYS = [
+  "AUTH_SECRET",
+  "LINE_CHANNEL_ACCESS",
+  "LINE_CHANNEL_SECRET",
+] as const;
 
 async function GET(request: Request) {
   const startTime = Date.now();
@@ -108,7 +112,9 @@ async function GET(request: Request) {
 
     // 3. Authentication Check
     try {
-      const missingVars = REQUIRED_ENV_KEYS.filter((key) => !process.env[key]).length;
+      const missingVars = REQUIRED_ENV_KEYS.filter(
+        (key) => !process.env[key],
+      ).length;
 
       if (missingVars === 0) {
         healthCheck.checks.authentication = true;

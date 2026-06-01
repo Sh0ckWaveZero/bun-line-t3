@@ -14,8 +14,9 @@ type DCAEventManagerLike = {
 };
 
 function getDcaEventManager(): DCAEventManagerLike | undefined {
-  return (globalThis as Record<string, unknown>)
-    .__dcaEventManager as DCAEventManagerLike | undefined;
+  return (globalThis as Record<string, unknown>).__dcaEventManager as
+    | DCAEventManagerLike
+    | undefined;
 }
 
 function handleDcaSseStream(request: Request): Response {
@@ -252,7 +253,9 @@ const server = Bun.serve({
       }
     }
 
-    const forwardedHost = request.headers.get("x-forwarded-host") || request.headers.get("x-forwarded-host");
+    const forwardedHost =
+      request.headers.get("x-forwarded-host") ||
+      request.headers.get("x-forwarded-host");
     const forwardedFor = request.headers.get("x-forwarded-for");
 
     if (forwardedProto || forwardedHost) {
@@ -279,7 +282,9 @@ const server = Bun.serve({
 
       // Log for debugging
       if (process.env.APP_ENV === "production") {
-        console.log(`[Proxy] Forwarded request: ${protocol}//${host}${forwardedUrl.pathname}`);
+        console.log(
+          `[Proxy] Forwarded request: ${protocol}//${host}${forwardedUrl.pathname}`,
+        );
       }
     }
 

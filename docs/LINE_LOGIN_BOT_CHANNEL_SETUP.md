@@ -5,6 +5,7 @@
 แก้ปัญหา **LINE User ID ไม่ตรงกัน** ระหว่าง LINE Messaging API (Bot) และ LINE Login
 
 **ปัญหา:**
+
 - Bot User ID: `Ufbce6312...` (จาก Webhook)
 - Login User ID: `U2b569682...` (จาก OAuth)
 - ❌ คนละตัว → ข้อมูล DCA ไม่ตรงกัน
@@ -38,6 +39,7 @@
    - **LINE Login Client Secret**: ใช้อันเดียวกับ Bot
 
 5. **อัปเดต Environment Variables**
+
    ```bash
    # .env.production
    LINE_CHANNEL_ID=2001234567              # Bot + Login (เดียวกัน)
@@ -91,8 +93,8 @@
    - ตรวจสอบใน Database:
      ```typescript
      // ดูใน MongoDB compass
-     db.accounts.find({ providerId: "line" })
-       // accountId ควรเป็น LINE User ID เดียวกับ Bot
+     db.accounts.find({ providerId: "line" });
+     // accountId ควรเป็น LINE User ID เดียวกับ Bot
      ```
 
 2. **ทดสอบ Bot + Login Matching**
@@ -124,12 +126,12 @@ console.log("All IDs:", allIds);
 
 ```javascript
 // MongoDB Compass
-db.accounts.find({ providerId: "line" })
-  // accountId ควรเป็น U2b569682...
+db.accounts.find({ providerId: "line" });
+// accountId ควรเป็น U2b569682...
 
-db.lineApprovalRequest.find({ status: "APPROVED" })
-  // lineUserId: Ufbce6312... (Bot)
-  // loginLineUserId: U2b569682... (Login) ← ควรตรงกัน
+db.lineApprovalRequest.find({ status: "APPROVED" });
+// lineUserId: Ufbce6312... (Bot)
+// loginLineUserId: U2b569682... (Login) ← ควรตรงกัน
 ```
 
 ### 3. เช็ค Webhook vs OAuth
@@ -169,12 +171,14 @@ Production  → Channel C (Live)
 ```
 
 แต่ละ Channel ควรมีทั้ง:
+
 - ✅ LINE Messaging API (Bot)
 - ✅ LINE Login
 
 ### ถ้าต้องใช้คนละ Channel (ไม่แนะนำ)
 
 ถ้าจำเป็นต้องใช้คนละ channel:
+
 - ต้องแก้โค้ดให้รองรับการ map ID (เช่น ผ่าน `loginLineUserId`)
 - ต้องมีการ approve เสมอ
 - ซับซ้อนกว่า

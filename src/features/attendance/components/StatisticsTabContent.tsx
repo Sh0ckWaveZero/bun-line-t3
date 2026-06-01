@@ -14,8 +14,8 @@ export const StatisticsTabContent: React.FC<StatisticsTabContentProps> = ({
 }) => {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      <div className="rounded-xl border border-border bg-card p-4">
-        <h3 className="mb-4 text-sm font-medium text-muted-foreground">
+      <div className="border-border bg-card rounded-xl border p-4">
+        <h3 className="text-muted-foreground mb-4 text-sm font-medium">
           สัดส่วนการมาทำงาน
         </h3>
         <div className="flex h-64 flex-col justify-center">
@@ -23,8 +23,8 @@ export const StatisticsTabContent: React.FC<StatisticsTabContentProps> = ({
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-4">
-        <h3 className="mb-4 text-sm font-medium text-muted-foreground">
+      <div className="border-border bg-card rounded-xl border p-4">
+        <h3 className="text-muted-foreground mb-4 text-sm font-medium">
           การทำงานครบตามเวลา (9 ชม.)
         </h3>
         <div className="flex h-64 flex-col justify-center">

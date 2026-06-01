@@ -182,10 +182,7 @@ export async function PUT(request: Request) {
       );
     }
 
-    return Response.json(
-      { error: "Unknown error occurred" },
-      { status: 500 },
-    );
+    return Response.json({ error: "Unknown error occurred" }, { status: 500 });
   }
 }
 

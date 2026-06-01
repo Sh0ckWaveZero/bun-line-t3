@@ -185,7 +185,9 @@ const upsertByLineUserId = async (
  */
 const findLineAccountsByIds = async (
   lineUserIds: string[],
-): Promise<Array<{ accountId: string; user: { name: string; image: string | null } }>> => {
+): Promise<
+  Array<{ accountId: string; user: { name: string; image: string | null } }>
+> => {
   if (lineUserIds.length === 0) return [];
 
   return db.account.findMany({

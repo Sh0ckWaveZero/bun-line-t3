@@ -44,8 +44,8 @@ interface LeaveFormProps {
 // ─── Leave type config ────────────────────────────────────────────────────────
 
 const LEAVE_TYPES = [
-  { value: "personal", label: "ลากิจ",    icon: User },
-  { value: "sick",     label: "ลาป่วย",   icon: Stethoscope },
+  { value: "personal", label: "ลากิจ", icon: User },
+  { value: "sick", label: "ลาป่วย", icon: Stethoscope },
   { value: "vacation", label: "ลาพักร้อน", icon: Palmtree },
   { value: "birthday", label: "เดือนเกิด", icon: Cake },
 ] as const;
@@ -460,7 +460,7 @@ export const LeaveForm = ({ onSubmit }: LeaveFormProps) => {
                         aria-checked={isActive}
                         onClick={() => setType(lt.value)}
                         className={cn(
-                          "flex items-center gap-3 rounded-xl border-2 bg-muted/30 p-3 text-left",
+                          "bg-muted/30 flex items-center gap-3 rounded-xl border-2 p-3 text-left",
                           "transition-all duration-150",
                           "focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
                           isActive

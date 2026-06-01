@@ -1,6 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { formatAmount } from "@/features/expenses/helpers"
-import type { MonthlySummary } from "@/features/expenses/types"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatAmount } from "@/features/expenses/helpers";
+import type { MonthlySummary } from "@/features/expenses/types";
 import {
   BarElement,
   CategoryScale,
@@ -8,38 +8,54 @@ import {
   Legend as ChartLegend,
   LinearScale,
   Tooltip as ChartTooltip,
-} from "chart.js"
-import { Bar } from "react-chartjs-2"
+} from "chart.js";
+import { Bar } from "react-chartjs-2";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, ChartTooltip, ChartLegend)
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ChartTooltip,
+  ChartLegend,
+);
 
 const MONTH_SHORT_TH = [
-  "ม.ค", "ก.พ", "มี.ค", "เม.ย", "พ.ค", "มิ.ย",
-  "ก.ค", "ส.ค", "ก.ย", "ต.ค", "พ.ย", "ธ.ค",
-]
-const CHART_LABEL_COLOR = "#6b7280"
-const CHART_GRID_COLOR = "rgba(107,114,128,0.15)"
+  "ม.ค",
+  "ก.พ",
+  "มี.ค",
+  "เม.ย",
+  "พ.ค",
+  "มิ.ย",
+  "ก.ค",
+  "ส.ค",
+  "ก.ย",
+  "ต.ค",
+  "พ.ย",
+  "ธ.ค",
+];
+const CHART_LABEL_COLOR = "#6b7280";
+const CHART_GRID_COLOR = "rgba(107,114,128,0.15)";
 
 function shortMonthLabel(transMonth: string): string {
-  const month = parseInt(transMonth.split("-")[1] ?? "1", 10)
-  return MONTH_SHORT_TH[month - 1] ?? ""
+  const month = parseInt(transMonth.split("-")[1] ?? "1", 10);
+  return MONTH_SHORT_TH[month - 1] ?? "";
 }
 
 function shortAmount(v: number): string {
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`
-  if (v >= 1_000) return `${(v / 1_000).toFixed(0)}K`
-  return v.toFixed(0)
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+  if (v >= 1_000) return `${(v / 1_000).toFixed(0)}K`;
+  return v.toFixed(0);
 }
 
 interface MonthlyBarChartProps {
-  data: MonthlySummary[]
-  hideAmounts?: boolean
+  data: MonthlySummary[];
+  hideAmounts?: boolean;
 }
 
 export function MonthlyBarChart({ data, hideAmounts }: MonthlyBarChartProps) {
-  if (data.length === 0) return null
+  if (data.length === 0) return null;
 
-  const reversed = [...data].reverse()
+  const reversed = [...data].reverse();
 
   const chartData = {
     labels: reversed.map((d) => shortMonthLabel(d.transMonth)),
@@ -63,7 +79,7 @@ export function MonthlyBarChart({ data, hideAmounts }: MonthlyBarChartProps) {
         borderSkipped: false,
       },
     ],
-  }
+  };
 
   const options = {
     responsive: true,
@@ -106,7 +122,7 @@ export function MonthlyBarChart({ data, hideAmounts }: MonthlyBarChartProps) {
         border: { display: false },
       },
     },
-  }
+  };
 
   return (
     <Card className="border-border/70 bg-card/85 dark:bg-card/70 border">
@@ -121,5 +137,5 @@ export function MonthlyBarChart({ data, hideAmounts }: MonthlyBarChartProps) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -213,10 +213,12 @@ export function validateNavigationConfig(config: unknown): {
 
   if (!result.success) {
     // Format errors for better debugging
-    const formattedErrors = result.error.issues.map((err) => {
-      const path = err.path.join(".");
-      return `  - ${path}: ${err.message}`;
-    }).join("\n");
+    const formattedErrors = result.error.issues
+      .map((err) => {
+        const path = err.path.join(".");
+        return `  - ${path}: ${err.message}`;
+      })
+      .join("\n");
 
     console.error("❌ Navigation validation failed:\n" + formattedErrors);
     return { success: false, errors: result.error };
@@ -338,7 +340,9 @@ export const isNavItemActive = (item: NavItem, pathname: string): boolean => {
       );
     }
     if (item.id === "admin") {
-      return pathname === "/admin/line-permissions" || pathname === "/line-approval";
+      return (
+        pathname === "/admin/line-permissions" || pathname === "/line-approval"
+      );
     }
     return pathname === item.href;
   }

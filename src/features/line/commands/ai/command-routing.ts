@@ -11,9 +11,8 @@ import {
   type CommandRouteResult,
 } from "../ai-command-router";
 
-const { sendMessage, sendLoadingAnimation } = await import(
-  "@/lib/utils/line-utils"
-);
+const { sendMessage, sendLoadingAnimation } =
+  await import("@/lib/utils/line-utils");
 
 function extractThaiNumberValues(input: string): number[] {
   const matches = input.match(/\d+(?:,\d{3})*(?:\.\d+)?/g) ?? [];
@@ -94,7 +93,8 @@ export async function handleCommandRouting(req: any, naturalLanguage: string) {
     naturalLanguage,
     LINE_COMMANDS,
   );
-  const { command, parameters: parsedParameters } = parseAICommandResponse(aiResponse);
+  const { command, parameters: parsedParameters } =
+    parseAICommandResponse(aiResponse);
 
   if (!command) {
     await sendMessage(req, [

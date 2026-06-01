@@ -49,13 +49,13 @@ const SummaryItem: React.FC<{
   value: string;
   sublabel?: string;
 }> = ({ label, value, sublabel }) => (
-  <div className="rounded-xl border border-border bg-card px-4 py-3">
-    <p className="text-xs font-medium text-muted-foreground">{label}</p>
-    <p className="mt-1 font-mono text-xl font-semibold tracking-tight text-foreground">
+  <div className="border-border bg-card rounded-xl border px-4 py-3">
+    <p className="text-muted-foreground text-xs font-medium">{label}</p>
+    <p className="text-foreground mt-1 font-mono text-xl font-semibold tracking-tight">
       {value}
     </p>
     {sublabel && (
-      <p className="mt-0.5 text-xs text-muted-foreground">{sublabel}</p>
+      <p className="text-muted-foreground mt-0.5 text-xs">{sublabel}</p>
     )}
   </div>
 );

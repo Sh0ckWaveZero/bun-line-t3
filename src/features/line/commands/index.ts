@@ -200,25 +200,12 @@ export const handleCommand = async (
     return;
   }
   // Category management: /category list, /category add, etc.
-  if (
-    [
-      "category",
-      "หมวดหมู่",
-      "หมวด",
-      "cat",
-    ].includes(command)
-  ) {
+  if (["category", "หมวดหมู่", "หมวด", "cat"].includes(command)) {
     await handleCategoryCommand(req, conditions);
     return;
   }
   // Budget management: /budget set/list/del/alert/status
-  if (
-    [
-      "budget",
-      "งบประมาณ",
-      "งบ",
-    ].includes(command)
-  ) {
+  if (["budget", "งบประมาณ", "งบ"].includes(command)) {
     await handleBudgetCommand(req, conditions);
     return;
   }

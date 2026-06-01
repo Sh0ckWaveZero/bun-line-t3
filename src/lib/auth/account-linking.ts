@@ -129,10 +129,7 @@ export const findAccountByLineMessagingApiId = async (
   return await db.account.findFirst({
     where: {
       providerId: "line",
-      OR: [
-        { lineMessagingApiUserId },
-        { accountId: lineMessagingApiUserId },
-      ],
+      OR: [{ lineMessagingApiUserId }, { accountId: lineMessagingApiUserId }],
     },
     select: {
       id: true,

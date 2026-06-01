@@ -3,7 +3,7 @@
  * Server-only — ห้าม import ใน client components
  */
 
-import { db } from "@/lib/database"
+import { db } from "@/lib/database";
 import type {
   CreateTransactionInput,
   UpdateTransactionInput,
@@ -11,8 +11,8 @@ import type {
   MonthlySummary,
   CategorySummary,
   TransactionFilter,
-} from "../types"
-import { toTransMonth } from "../helpers"
+} from "../types";
+import { toTransMonth } from "../helpers";
 
 // ─────────────────────────────────────────────
 // Queries
@@ -31,7 +31,7 @@ export async function getTransactions(
     endDate,
     limit = 50,
     offset = 0,
-  } = filter
+  } = filter;
 
   const rows = await db.transaction.findMany({
     where: {
@@ -46,9 +46,9 @@ export async function getTransactions(
     orderBy: [{ transDate: "desc" }, { createdAt: "desc" }],
     take: limit,
     skip: offset,
-  })
+  });
 
-  return rows as TransactionWithCategory[]
+  return rows as TransactionWithCategory[];
 }
 
 /** ดึง transaction เดียวตาม id + ตรวจสิทธิ์ */
@@ -59,8 +59,8 @@ export async function getTransactionById(
   const row = await db.transaction.findFirst({
     where: { id, userId },
     include: { category: true },
-  })
-  return row as TransactionWithCategory | null
+  });
+  return row as TransactionWithCategory | null;
 }
 
 // ─────────────────────────────────────────────
@@ -71,7 +71,7 @@ export async function getTransactionById(
 export async function createTransaction(
   input: CreateTransactionInput,
 ): Promise<TransactionWithCategory> {
-  const transMonth = toTransMonth(input.transDate)
+  const transMonth = toTransMonth(input.transDate);
 
   const row = await db.transaction.create({
     data: {
@@ -85,9 +85,9 @@ export async function createTransaction(
       transMonth,
     },
     include: { category: true },
-  })
+  });
 
-  return row as TransactionWithCategory
+  return row as TransactionWithCategory;
 }
 
 /** อัปเดต transaction */
@@ -96,7 +96,9 @@ export async function updateTransaction(
   userId: string,
   input: UpdateTransactionInput,
 ): Promise<TransactionWithCategory> {
-  const transMonth = input.transDate ? toTransMonth(input.transDate) : undefined
+  const transMonth = input.transDate
+    ? toTransMonth(input.transDate)
+    : undefined;
 
   const row = await db.transaction.update({
     where: { id, userId },
@@ -109,14 +111,17 @@ export async function updateTransaction(
       ...(transMonth !== undefined && { transMonth }),
     },
     include: { category: true },
-  })
+  });
 
-  return row as TransactionWithCategory
+  return row as TransactionWithCategory;
 }
 
 /** ลบ transaction (hard delete) */
-export async function deleteTransaction(id: string, userId: string): Promise<void> {
-  await db.transaction.delete({ where: { id, userId } })
+export async function deleteTransaction(
+  id: string,
+  userId: string,
+): Promise<void> {
+  await db.transaction.delete({ where: { id, userId } });
 }
 
 // ─────────────────────────────────────────────
@@ -138,10 +143,10 @@ export async function getMonthlySummary(
       _sum: { amount: true },
     }),
     db.transaction.count({ where: { userId, transMonth } }),
-  ])
+  ]);
 
-  const totalIncome = incomeAgg._sum.amount ?? 0
-  const totalExpense = expenseAgg._sum.amount ?? 0
+  const totalIncome = incomeAgg._sum.amount ?? 0;
+  const totalExpense = expenseAgg._sum.amount ?? 0;
 
   return {
     transMonth,
@@ -149,7 +154,7 @@ export async function getMonthlySummary(
     totalExpense,
     balance: totalIncome - totalExpense,
     transactionCount: count,
-  }
+  };
 }
 
 /** สรุปตามหมวดหมู่ของเดือนที่กำหนด */
@@ -163,31 +168,32 @@ export async function getCategorySummary(
     where: { userId, transMonth },
     include: { category: true },
     orderBy: { transDate: "desc" },
-  })
+  });
 
-  if (rows.length === 0) return []
+  if (rows.length === 0) return [];
 
   // คำนวณ grand totals ก่อน
-  type TxRow = (typeof rows)[number]
+  type TxRow = (typeof rows)[number];
   const incomeTotal = rows
     .filter((r: TxRow) => r.type === "INCOME")
-    .reduce((acc: number, r: TxRow) => acc + r.amount, 0)
+    .reduce((acc: number, r: TxRow) => acc + r.amount, 0);
   const expenseTotal = rows
     .filter((r: TxRow) => r.type === "EXPENSE")
-    .reduce((acc: number, r: TxRow) => acc + r.amount, 0)
+    .reduce((acc: number, r: TxRow) => acc + r.amount, 0);
 
   // Group in-memory
-  const map = new Map<string, CategorySummary>()
+  const map = new Map<string, CategorySummary>();
 
   for (const r of rows) {
-    const key = `${r.categoryId}::${r.type}`
-    const existing = map.get(key)
-    const grandTotal = r.type === "INCOME" ? incomeTotal : expenseTotal
+    const key = `${r.categoryId}::${r.type}`;
+    const existing = map.get(key);
+    const grandTotal = r.type === "INCOME" ? incomeTotal : expenseTotal;
 
     if (existing) {
-      existing.total += r.amount
-      existing.count += 1
-      existing.percentage = grandTotal > 0 ? (existing.total / grandTotal) * 100 : 0
+      existing.total += r.amount;
+      existing.count += 1;
+      existing.percentage =
+        grandTotal > 0 ? (existing.total / grandTotal) * 100 : 0;
     } else {
       map.set(key, {
         categoryId: r.categoryId,
@@ -198,11 +204,11 @@ export async function getCategorySummary(
         total: r.amount,
         count: 1,
         percentage: grandTotal > 0 ? (r.amount / grandTotal) * 100 : 0,
-      })
+      });
     }
   }
 
-  return Array.from(map.values()).sort((a, b) => b.total - a.total)
+  return Array.from(map.values()).sort((a, b) => b.total - a.total);
 }
 
 /** สรุปย้อนหลัง N เดือน (ใช้ใน chart) */
@@ -210,5 +216,5 @@ export async function getMultiMonthSummary(
   userId: string,
   months: string[],
 ): Promise<MonthlySummary[]> {
-  return Promise.all(months.map((m) => getMonthlySummary(userId, m)))
+  return Promise.all(months.map((m) => getMonthlySummary(userId, m)));
 }

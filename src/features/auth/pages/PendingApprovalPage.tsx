@@ -23,7 +23,12 @@ export function PendingApprovalPage() {
 
   if (status === "loading") {
     return (
-      <div id="pending-approval-loading" className="flex min-h-screen items-center justify-center" role="status" aria-live="polite">
+      <div
+        id="pending-approval-loading"
+        className="flex min-h-screen items-center justify-center"
+        role="status"
+        aria-live="polite"
+      >
         <p className="text-muted-foreground">กำลังโหลด...</p>
       </div>
     );
@@ -34,31 +39,55 @@ export function PendingApprovalPage() {
   }
 
   return (
-    <main id="pending-approval-page" className="bg-background flex min-h-screen items-center justify-center p-4">
-      <div id="pending-approval-card" className="border-border bg-card max-w-md w-full rounded-xl border p-8 text-center shadow-lg">
+    <main
+      id="pending-approval-page"
+      className="bg-background flex min-h-screen items-center justify-center p-4"
+    >
+      <div
+        id="pending-approval-card"
+        className="border-border bg-card w-full max-w-md rounded-xl border p-8 text-center shadow-lg"
+      >
         {/* Icon */}
-        <div id="pending-approval-icon" className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-900/30" aria-hidden="true">
+        <div
+          id="pending-approval-icon"
+          className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-900/30"
+          aria-hidden="true"
+        >
           <Clock className="h-10 w-10" />
         </div>
 
         {/* Heading */}
-        <h1 id="pending-approval-title" className="text-foreground mb-3 text-2xl font-bold">
+        <h1
+          id="pending-approval-title"
+          className="text-foreground mb-3 text-2xl font-bold"
+        >
           รอการอนุมัติ
         </h1>
 
         {/* Message */}
-        <p id="pending-approval-description" className="text-muted-foreground mb-6 text-sm leading-relaxed">
+        <p
+          id="pending-approval-description"
+          className="text-muted-foreground mb-6 text-sm leading-relaxed"
+        >
           บัญชี LINE ของคุณยังไม่ได้รับการอนุมัติให้ใช้งาน
           <br />
           กรุณารอสัญญา่ admin เพื่อขออนุมัติใช้งาน
         </p>
 
         {/* Info */}
-        <div id="pending-approval-info" className="border-border bg-muted/50 mb-8 rounded-lg border p-4 text-left" role="region" aria-label="ข้อมูลเพิ่มเติม">
+        <div
+          id="pending-approval-info"
+          className="border-border bg-muted/50 mb-8 rounded-lg border p-4 text-left"
+          role="region"
+          aria-label="ข้อมูลเพิ่มเติม"
+        >
           <div className="mb-3 flex items-start gap-3">
-            <MessageSquare className="text-primary h-5 w-5 shrink-0" aria-hidden="true" />
+            <MessageSquare
+              className="text-primary h-5 w-5 shrink-0"
+              aria-hidden="true"
+            />
             <div>
-              <p className="text-foreground font-medium text-sm">
+              <p className="text-foreground text-sm font-medium">
                 อะไรบ้างที่ต้องการอนุมัติ?
               </p>
               <p className="text-muted-foreground mt-1 text-xs">
@@ -67,9 +96,12 @@ export function PendingApprovalPage() {
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <ShieldCheck className="text-primary h-5 w-5 shrink-0" aria-hidden="true" />
+            <ShieldCheck
+              className="text-primary h-5 w-5 shrink-0"
+              aria-hidden="true"
+            />
             <div>
-              <p className="text-foreground font-medium text-sm">
+              <p className="text-foreground text-sm font-medium">
                 ผู้อนุมัติบางคน?
               </p>
               <p className="text-muted-foreground mt-1 text-xs">
@@ -100,7 +132,10 @@ export function PendingApprovalPage() {
         </div>
 
         {/* Help text */}
-        <p id="pending-approval-help" className="text-muted-foreground mt-6 text-xs">
+        <p
+          id="pending-approval-help"
+          className="text-muted-foreground mt-6 text-xs"
+        >
           หากมีข้อสงสัย หรือต้องการติดต่อ admin โปรดติดต่อทีมงาน
         </p>
       </div>

@@ -35,7 +35,9 @@ const getCurrentLogLevel = (): number => {
   }
 
   // Default behavior
-  const isProduction = process.env.NODE_ENV === "production" || process.env.APP_ENV === "production";
+  const isProduction =
+    process.env.NODE_ENV === "production" ||
+    process.env.APP_ENV === "production";
   return isProduction ? logLevels.info : logLevels.debug;
 };
 
@@ -125,7 +127,10 @@ export const logger = {
     userId: string | null | undefined,
     context?: Record<string, any>,
   ): void => {
-    const entry: LogEntry & { action: string; userId: string | null | undefined } = {
+    const entry: LogEntry & {
+      action: string;
+      userId: string | null | undefined;
+    } = {
       level: "info",
       message: `AUDIT: ${action}`,
       action,
@@ -159,7 +164,7 @@ export const logger = {
    * Performance logging helper
    * Logs execution time and success/failure
    */
-  measureAsync: async <T,>(
+  measureAsync: async <T>(
     operationName: string,
     fn: () => Promise<T>,
     context?: Record<string, any>,
@@ -188,7 +193,8 @@ export const logger = {
       return result;
     } catch (error) {
       const duration = Date.now() - startTime;
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
 
       const errorEntry: LogEntry = {
         level: "error",
@@ -205,7 +211,7 @@ export const logger = {
   /**
    * Performance logging helper (sync version)
    */
-  measureSync: <T,>(
+  measureSync: <T>(
     operationName: string,
     fn: () => T,
     context?: Record<string, any>,
@@ -234,7 +240,8 @@ export const logger = {
       return result;
     } catch (error) {
       const duration = Date.now() - startTime;
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
 
       const errorEntry: LogEntry = {
         level: "error",

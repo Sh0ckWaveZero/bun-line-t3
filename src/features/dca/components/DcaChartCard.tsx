@@ -3,7 +3,11 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import type { DcaOrder } from "@/features/dca/types";
 import { useDcaLocale } from "@/features/dca/lib/dca-locale-context";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 type ChartMode = "portfolio" | "pnl" | "cost" | "sats" | "entries";
 type Timeframe = "30D" | "90D" | "1Y" | "ALL";
@@ -44,14 +48,21 @@ const fmtTHB = (n: number | null | undefined, decimals = 0): string => {
 
 const fmtTHBFull = (n: number | null | undefined): string => {
   if (n === null || n === undefined || isNaN(n)) return "—";
-  return n.toLocaleString("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+  return n.toLocaleString("en-US", {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
+  });
 };
 
 const fmtDateShort = (d: Date): string =>
   d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
 
 const fmtDate = (d: Date): string =>
-  d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" });
+  d.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "2-digit",
+  });
 
 const fmtSat = (n: number): string => {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(2) + "M";
@@ -65,11 +76,19 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
   const { t } = useDcaLocale();
 
   const TABS: { key: ChartMode; label: string; shortLabel: string }[] = [
-    { key: "portfolio", label: t.chart.modePortfolio, shortLabel: t.chart.shortPortfolio },
+    {
+      key: "portfolio",
+      label: t.chart.modePortfolio,
+      shortLabel: t.chart.shortPortfolio,
+    },
     { key: "pnl", label: t.chart.modePnl, shortLabel: t.chart.shortPnl },
     { key: "cost", label: t.chart.modeCost, shortLabel: t.chart.shortCost },
     { key: "sats", label: t.chart.modeSats, shortLabel: t.chart.shortSats },
-    { key: "entries", label: t.chart.modeEntries, shortLabel: t.chart.shortEntries },
+    {
+      key: "entries",
+      label: t.chart.modeEntries,
+      shortLabel: t.chart.shortEntries,
+    },
   ];
   const [mode, setMode] = useState<ChartMode>("portfolio");
   const [timeframe, setTimeframe] = useState<Timeframe>("ALL");
@@ -121,7 +140,8 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
   const allPoints: EnrichedPoint[] = useMemo(() => {
     if (!currentPrice || orders.length === 0) return [];
     const sorted = [...orders].sort(
-      (a, b) => new Date(a.executedAt).getTime() - new Date(b.executedAt).getTime()
+      (a, b) =>
+        new Date(a.executedAt).getTime() - new Date(b.executedAt).getTime(),
     );
     let cumSat = 0;
     let cumFiat = 0;
@@ -134,15 +154,29 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
       const pctUnrealized = cumFiat > 0 ? (unrealized / cumFiat) * 100 : 0;
       return {
         date: new Date(order.executedAt).toISOString().split("T")[0]!,
-        fiat: order.amountTHB, satoshi, price: order.pricePerCoin,
-        cumSat, cumFiat, portfolioValue, invested: cumFiat, unrealized, pctUnrealized,
+        fiat: order.amountTHB,
+        satoshi,
+        price: order.pricePerCoin,
+        cumSat,
+        cumFiat,
+        portfolioValue,
+        invested: cumFiat,
+        unrealized,
+        pctUnrealized,
       };
     });
   }, [orders, currentPrice]);
 
   const data = useMemo(() => {
-    const n: Record<Timeframe, number> = { "30D": 30, "90D": 90, "1Y": 365, "ALL": Infinity };
-    return n[timeframe] === Infinity ? allPoints : allPoints.slice(-n[timeframe]);
+    const n: Record<Timeframe, number> = {
+      "30D": 30,
+      "90D": 90,
+      "1Y": 365,
+      ALL: Infinity,
+    };
+    return n[timeframe] === Infinity
+      ? allPoints
+      : allPoints.slice(-n[timeframe]);
   }, [allPoints, timeframe]);
 
   const { w, h } = dims;
@@ -154,22 +188,82 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
   const ch = Math.max(0, h - padT - padB);
 
   const series: SeriesItem[] = useMemo(() => {
-    if (mode === "portfolio") return [
-      { key: "portfolio", label: t.chart.seriesPortfolioValue, color: "rgb(249,115,22)", fill: "rgba(249,115,22,0.12)", dash: undefined, zero: false, values: data.map((d) => d.portfolioValue) },
-      { key: "invested", label: t.chart.seriesInvested, color: "var(--foreground)", dash: "4 4", fill: undefined, zero: false, values: data.map((d) => d.invested) },
-    ];
-    if (mode === "pnl") return [
-      { key: "unrealized", label: t.chart.seriesUnrealizedPnl, color: "rgb(249,115,22)", fill: "rgba(249,115,22,0.12)", dash: undefined, zero: true, values: data.map((d) => d.unrealized) },
-    ];
-    if (mode === "sats") return [
-      { key: "sats", label: t.chart.seriesCumulativeSatoshi, color: "rgb(249,115,22)", fill: "rgba(249,115,22,0.12)", dash: undefined, zero: false, values: data.map((d) => d.cumSat) },
-    ];
-    if (mode === "entries") return [
-      { key: "price", label: t.chart.seriesBtcPrice, color: "var(--muted-foreground)", fill: undefined, dash: undefined, zero: false, values: data.map((d) => d.price) },
-    ];
+    if (mode === "portfolio")
+      return [
+        {
+          key: "portfolio",
+          label: t.chart.seriesPortfolioValue,
+          color: "rgb(249,115,22)",
+          fill: "rgba(249,115,22,0.12)",
+          dash: undefined,
+          zero: false,
+          values: data.map((d) => d.portfolioValue),
+        },
+        {
+          key: "invested",
+          label: t.chart.seriesInvested,
+          color: "var(--foreground)",
+          dash: "4 4",
+          fill: undefined,
+          zero: false,
+          values: data.map((d) => d.invested),
+        },
+      ];
+    if (mode === "pnl")
+      return [
+        {
+          key: "unrealized",
+          label: t.chart.seriesUnrealizedPnl,
+          color: "rgb(249,115,22)",
+          fill: "rgba(249,115,22,0.12)",
+          dash: undefined,
+          zero: true,
+          values: data.map((d) => d.unrealized),
+        },
+      ];
+    if (mode === "sats")
+      return [
+        {
+          key: "sats",
+          label: t.chart.seriesCumulativeSatoshi,
+          color: "rgb(249,115,22)",
+          fill: "rgba(249,115,22,0.12)",
+          dash: undefined,
+          zero: false,
+          values: data.map((d) => d.cumSat),
+        },
+      ];
+    if (mode === "entries")
+      return [
+        {
+          key: "price",
+          label: t.chart.seriesBtcPrice,
+          color: "var(--muted-foreground)",
+          fill: undefined,
+          dash: undefined,
+          zero: false,
+          values: data.map((d) => d.price),
+        },
+      ];
     return [
-      { key: "market", label: t.chart.seriesMarketPrice, color: "rgb(249,115,22)", fill: undefined, dash: undefined, zero: false, values: data.map((d) => d.price) },
-      { key: "cost", label: t.chart.seriesAvgCostBasis, color: "var(--foreground)", dash: "4 4", fill: undefined, zero: false, values: data.map((d) => d.cumFiat / (d.cumSat / 1e8)) },
+      {
+        key: "market",
+        label: t.chart.seriesMarketPrice,
+        color: "rgb(249,115,22)",
+        fill: undefined,
+        dash: undefined,
+        zero: false,
+        values: data.map((d) => d.price),
+      },
+      {
+        key: "cost",
+        label: t.chart.seriesAvgCostBasis,
+        color: "var(--foreground)",
+        dash: "4 4",
+        fill: undefined,
+        zero: false,
+        values: data.map((d) => d.cumFiat / (d.cumSat / 1e8)),
+      },
     ];
   }, [data, mode, t]);
 
@@ -190,7 +284,8 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
     yMax += yRange * 0.04;
   }
 
-  const x = (i: number) => padL + (data.length <= 1 ? 0 : (i / (data.length - 1)) * cw);
+  const x = (i: number) =>
+    padL + (data.length <= 1 ? 0 : (i / (data.length - 1)) * cw);
   const y = (v: number) => padT + ch - ((v - yMin) / (yMax - yMin)) * ch;
 
   const grid = Array.from({ length: 5 }, (_, i) => {
@@ -216,59 +311,128 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
     return { idx, x: x(idx), date: data[idx]?.date };
   });
 
-  const onMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    if (mx < padL) { setHoverIdx(null); return; }
-    const rel = (mx - padL) / cw;
-    setHoverIdx(Math.max(0, Math.min(data.length - 1, Math.round(rel * (data.length - 1)))));
-  }, [cw, data.length]);
+  const onMove = useCallback(
+    (e: React.MouseEvent<SVGSVGElement>) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      if (mx < padL) {
+        setHoverIdx(null);
+        return;
+      }
+      const rel = (mx - padL) / cw;
+      setHoverIdx(
+        Math.max(
+          0,
+          Math.min(data.length - 1, Math.round(rel * (data.length - 1))),
+        ),
+      );
+    },
+    [cw, data.length],
+  );
 
   const onLeave = useCallback(() => setHoverIdx(null), []);
   const activeIdx = touchIdx ?? hoverIdx;
   const hovered = activeIdx !== null ? (data[activeIdx] ?? null) : null;
 
-  const pickIndexByClientX = useCallback((clientX: number, rect: DOMRect): number | null => {
-    if (data.length === 0 || cw <= 0) return null;
-    const mx = clientX - rect.left;
-    if (mx < padL) return null;
-    const rel = (mx - padL) / cw;
-    return Math.max(0, Math.min(data.length - 1, Math.round(rel * (data.length - 1))));
-  }, [cw, data.length, padL]);
+  const pickIndexByClientX = useCallback(
+    (clientX: number, rect: DOMRect): number | null => {
+      if (data.length === 0 || cw <= 0) return null;
+      const mx = clientX - rect.left;
+      if (mx < padL) return null;
+      const rel = (mx - padL) / cw;
+      return Math.max(
+        0,
+        Math.min(data.length - 1, Math.round(rel * (data.length - 1))),
+      );
+    },
+    [cw, data.length, padL],
+  );
 
-  const onPointerInspect = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
-    const isTouchLikePointer =
-      e.pointerType === "touch" || e.pointerType === "pen" || isTouchDevice;
-    if (!isTouchLikePointer) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const idx = pickIndexByClientX(e.clientX, rect);
-    if (idx === null) {
-      setTouchIdx(null);
-      return;
-    }
-    setTouchIdx(idx);
-  }, [pickIndexByClientX, isTouchDevice]);
+  const onPointerInspect = useCallback(
+    (e: React.PointerEvent<SVGSVGElement>) => {
+      const isTouchLikePointer =
+        e.pointerType === "touch" || e.pointerType === "pen" || isTouchDevice;
+      if (!isTouchLikePointer) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const idx = pickIndexByClientX(e.clientX, rect);
+      if (idx === null) {
+        setTouchIdx(null);
+        return;
+      }
+      setTouchIdx(idx);
+    },
+    [pickIndexByClientX, isTouchDevice],
+  );
 
   const tooltipRows: { lbl: string; val: string }[] = [];
   if (hovered) {
     if (mode === "portfolio") {
-      tooltipRows.push({ lbl: t.chart.tooltipPortfolio, val: fmtTHBFull(hovered.portfolioValue) + " ฿" }, { lbl: t.chart.tooltipInvested, val: fmtTHBFull(hovered.invested) + " ฿" }, { lbl: t.chart.tooltipUnrealized, val: (hovered.unrealized >= 0 ? "+" : "") + fmtTHBFull(hovered.unrealized) + " ฿" });
+      tooltipRows.push(
+        {
+          lbl: t.chart.tooltipPortfolio,
+          val: fmtTHBFull(hovered.portfolioValue) + " ฿",
+        },
+        {
+          lbl: t.chart.tooltipInvested,
+          val: fmtTHBFull(hovered.invested) + " ฿",
+        },
+        {
+          lbl: t.chart.tooltipUnrealized,
+          val:
+            (hovered.unrealized >= 0 ? "+" : "") +
+            fmtTHBFull(hovered.unrealized) +
+            " ฿",
+        },
+      );
     } else if (mode === "pnl") {
-      tooltipRows.push({ lbl: t.chart.tooltipUnrealized, val: (hovered.unrealized >= 0 ? "+" : "") + fmtTHBFull(hovered.unrealized) + " ฿" }, { lbl: t.chart.tooltipPercent, val: hovered.pctUnrealized.toFixed(2) + "%" });
+      tooltipRows.push(
+        {
+          lbl: t.chart.tooltipUnrealized,
+          val:
+            (hovered.unrealized >= 0 ? "+" : "") +
+            fmtTHBFull(hovered.unrealized) +
+            " ฿",
+        },
+        {
+          lbl: t.chart.tooltipPercent,
+          val: hovered.pctUnrealized.toFixed(2) + "%",
+        },
+      );
     } else if (mode === "sats") {
-      tooltipRows.push({ lbl: t.chart.tooltipCumulative, val: hovered.cumSat.toLocaleString("en-US") + " sat" }, { lbl: t.chart.tooltipTodaysBuy, val: hovered.satoshi.toLocaleString("en-US") + " sat" });
+      tooltipRows.push(
+        {
+          lbl: t.chart.tooltipCumulative,
+          val: hovered.cumSat.toLocaleString("en-US") + " sat",
+        },
+        {
+          lbl: t.chart.tooltipTodaysBuy,
+          val: hovered.satoshi.toLocaleString("en-US") + " sat",
+        },
+      );
     } else if (mode === "entries") {
-      tooltipRows.push({ lbl: t.chart.tooltipBtcPrice, val: fmtTHBFull(hovered.price) + " ฿" }, { lbl: t.chart.tooltipBought, val: hovered.satoshi.toLocaleString("en-US") + " sat" });
+      tooltipRows.push(
+        { lbl: t.chart.tooltipBtcPrice, val: fmtTHBFull(hovered.price) + " ฿" },
+        {
+          lbl: t.chart.tooltipBought,
+          val: hovered.satoshi.toLocaleString("en-US") + " sat",
+        },
+      );
     } else {
       const costBasis = hovered.cumFiat / (hovered.cumSat / 1e8);
-      tooltipRows.push({ lbl: t.chart.tooltipMarket, val: fmtTHBFull(hovered.price) + " ฿" }, { lbl: t.chart.tooltipAvgCost, val: fmtTHBFull(costBasis) + " ฿" });
+      tooltipRows.push(
+        { lbl: t.chart.tooltipMarket, val: fmtTHBFull(hovered.price) + " ฿" },
+        { lbl: t.chart.tooltipAvgCost, val: fmtTHBFull(costBasis) + " ฿" },
+      );
     }
   }
 
   const tooltipPad = 8;
   const tooltipGap = 10;
   const availableTooltipWidth = Math.max(140, w - padL - padR - tooltipPad * 2);
-  const tooltipWidth = Math.min(Math.max(tooltipSize.w, 160), availableTooltipWidth);
+  const tooltipWidth = Math.min(
+    Math.max(tooltipSize.w, 160),
+    availableTooltipWidth,
+  );
   const rawTooltipX = activeIdx !== null ? x(activeIdx) : padL;
   const minTooltipLeft = padL + tooltipPad;
   const maxTooltipLeft = w - padR - tooltipWidth - tooltipPad;
@@ -278,14 +442,20 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
   const preferredLeftLeft = rawTooltipX - tooltipWidth - tooltipGap;
 
   const tooltipLeft = (() => {
-    const rightWouldOverflow = preferredRightLeft + tooltipWidth > rightEdgeLimit;
-    const initialLeft = rightWouldOverflow ? preferredLeftLeft : preferredRightLeft;
+    const rightWouldOverflow =
+      preferredRightLeft + tooltipWidth > rightEdgeLimit;
+    const initialLeft = rightWouldOverflow
+      ? preferredLeftLeft
+      : preferredRightLeft;
     return Math.max(minTooltipLeft, Math.min(safeMaxTooltipLeft, initialLeft));
   })();
   const showTooltipBelow = padT + tooltipSize.h + 16 > h;
 
   return (
-    <div id="dca-chart-card" className="bg-card border-border flex h-full w-full flex-col overflow-hidden rounded-lg border">
+    <div
+      id="dca-chart-card"
+      className="bg-card border-border flex h-full w-full flex-col overflow-hidden rounded-lg border"
+    >
       {/* Header tabs + timeframe */}
       <div className="border-border relative z-10 flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2.5 sm:px-5 sm:py-3.5">
         <div className="flex flex-wrap gap-0.5">
@@ -377,25 +547,112 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
               >
                 {grid.map((g, i) => (
                   <g key={i}>
-                    <line x1={padL} x2={w - padR} y1={g.y} y2={g.y} stroke="var(--border)" strokeWidth="1" />
-                    <text x={padL - 8} y={g.y + 3} textAnchor="end" fontSize="10" fill="var(--muted-foreground)">
+                    <line
+                      x1={padL}
+                      x2={w - padR}
+                      y1={g.y}
+                      y2={g.y}
+                      stroke="var(--border)"
+                      strokeWidth="1"
+                    />
+                    <text
+                      x={padL - 8}
+                      y={g.y + 3}
+                      textAnchor="end"
+                      fontSize="10"
+                      fill="var(--muted-foreground)"
+                    >
                       {mode === "sats" ? fmtSat(g.v) : fmtTHB(g.v)}
                     </text>
                   </g>
                 ))}
-                {zeroY !== null && <line x1={padL} x2={w - padR} y1={zeroY} y2={zeroY} stroke="var(--muted-foreground)" strokeWidth="1" strokeDasharray="2 3" opacity="0.6" />}
+                {zeroY !== null && (
+                  <line
+                    x1={padL}
+                    x2={w - padR}
+                    y1={zeroY}
+                    y2={zeroY}
+                    stroke="var(--muted-foreground)"
+                    strokeWidth="1"
+                    strokeDasharray="2 3"
+                    opacity="0.6"
+                  />
+                )}
                 {xTicks.map((t, i) => (
-                  <text key={i} x={t.x} y={h - 8} textAnchor={i === 0 ? "start" : i === xTicks.length - 1 ? "end" : "middle"} fontSize="10" fill="var(--muted-foreground)">
+                  <text
+                    key={i}
+                    x={t.x}
+                    y={h - 8}
+                    textAnchor={
+                      i === 0
+                        ? "start"
+                        : i === xTicks.length - 1
+                          ? "end"
+                          : "middle"
+                    }
+                    fontSize="10"
+                    fill="var(--muted-foreground)"
+                  >
                     {t.date ? fmtDateShort(new Date(t.date + "T00:00:00")) : ""}
                   </text>
                 ))}
-                {series.map((s) => s.fill && <path key={s.key + "-a"} d={buildPath(s.values, true)} fill={s.fill} stroke="none" />)}
-                {series.map((s) => <path key={s.key + "-l"} d={buildPath(s.values, false)} fill="none" stroke={s.color} strokeWidth="1.75" strokeDasharray={s.dash ?? "none"} strokeLinejoin="round" strokeLinecap="round" />)}
-                {mode === "entries" && data.map((d, i) => <circle key={i} cx={x(i)} cy={y(d.price)} r="3.5" fill="rgb(249,115,22)" opacity="0.75" />)}
+                {series.map(
+                  (s) =>
+                    s.fill && (
+                      <path
+                        key={s.key + "-a"}
+                        d={buildPath(s.values, true)}
+                        fill={s.fill}
+                        stroke="none"
+                      />
+                    ),
+                )}
+                {series.map((s) => (
+                  <path
+                    key={s.key + "-l"}
+                    d={buildPath(s.values, false)}
+                    fill="none"
+                    stroke={s.color}
+                    strokeWidth="1.75"
+                    strokeDasharray={s.dash ?? "none"}
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                  />
+                ))}
+                {mode === "entries" &&
+                  data.map((d, i) => (
+                    <circle
+                      key={i}
+                      cx={x(i)}
+                      cy={y(d.price)}
+                      r="3.5"
+                      fill="rgb(249,115,22)"
+                      opacity="0.75"
+                    />
+                  ))}
                 {activeIdx !== null && (
                   <g>
-                    <line x1={x(activeIdx)} x2={x(activeIdx)} y1={padT} y2={padT + ch} stroke="var(--foreground)" strokeWidth="1" strokeDasharray="2 3" opacity="0.5" />
-                    {series.map((s) => <circle key={s.key} cx={x(activeIdx)} cy={y(s.values[activeIdx] ?? 0)} r="4" fill="var(--card)" stroke={s.color} strokeWidth="2" />)}
+                    <line
+                      x1={x(activeIdx)}
+                      x2={x(activeIdx)}
+                      y1={padT}
+                      y2={padT + ch}
+                      stroke="var(--foreground)"
+                      strokeWidth="1"
+                      strokeDasharray="2 3"
+                      opacity="0.5"
+                    />
+                    {series.map((s) => (
+                      <circle
+                        key={s.key}
+                        cx={x(activeIdx)}
+                        cy={y(s.values[activeIdx] ?? 0)}
+                        r="4"
+                        fill="var(--card)"
+                        stroke={s.color}
+                        strokeWidth="2"
+                      />
+                    ))}
                   </g>
                 )}
               </svg>

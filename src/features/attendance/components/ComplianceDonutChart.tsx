@@ -23,13 +23,13 @@ export const ComplianceDonutChart: React.FC<ComplianceDonutChartProps> = ({
   if (isFullCompliance) {
     return (
       <div className="text-center">
-        <p className="mb-2 text-sm font-semibold text-foreground">
+        <p className="text-foreground mb-2 text-sm font-semibold">
           ทำงานครบ 9 ชั่วโมงทุกวัน
         </p>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-muted-foreground text-xs">
           {report.completeDays} วัน จาก {report.totalDaysWorked} วันที่ทำงาน
         </p>
-        <p className="mt-1 font-mono text-xs text-muted-foreground">
+        <p className="text-muted-foreground mt-1 font-mono text-xs">
           อัตรา: {report.complianceRate}%
         </p>
       </div>

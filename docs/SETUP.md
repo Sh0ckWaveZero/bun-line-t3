@@ -25,7 +25,7 @@
 | **[Bun](https://bun.sh)**         | 1.0.0+          | 1.1.34+ | JavaScript runtime และ package manager |
 | **[Node.js](https://nodejs.org)** | 18.0.0+         | 20.11+  | สำหรับ fallback และ compatibility      |
 | **[Git](https://git-scm.com)**    | 2.25+           | latest  | Version control                        |
-| **PostgreSQL**                       | 6.0+            | 7.0+    | ฐานข้อมูลหลัก                          |
+| **PostgreSQL**                    | 6.0+            | 7.0+    | ฐานข้อมูลหลัก                          |
 
 ### 🔍 ตรวจสอบการติดตั้ง | Verification
 

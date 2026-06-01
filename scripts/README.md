@@ -135,4 +135,3 @@ bun run env:status              # Show current environment
 2. Add an npm script to `package.json` if needed
 3. Document the script in this README
 4. Use descriptive filenames with kebab-case
-

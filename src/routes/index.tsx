@@ -69,10 +69,7 @@ function Home() {
   }, [navigate, session, status]);
 
   return (
-    <main
-      id="page-home"
-      className="home-page relative overflow-hidden"
-    >
+    <main id="page-home" className="home-page relative overflow-hidden">
       {/* ── Background layers (z-0) ── */}
       <div aria-hidden="true" className="home-aurora">
         <div className="home-aurora-blob" />
@@ -91,7 +88,6 @@ function Home() {
 
       {/* ── Content column (z-10) ── */}
       <div className="home-content relative z-10">
-
         {/* Title — sits just above the rings */}
         <h1 id="title-main" className="home-title">
           <span className="home-title-bun">Bun </span>
@@ -117,49 +113,51 @@ function Home() {
             <LineLoginButton />
           </div>
         ) : (
-            /* ── Authenticated ── */
-            <div id="user-info-card" className="home-card">
-              {/* Avatar */}
-              <div id="profile-image-wrapper" className="home-avatar-wrapper">
-                <img
-                  id="profile-image"
-                  src={profileImageSrc}
-                  className="home-avatar"
-                  width={80}
-                  height={80}
-                  alt={session?.user?.name ?? "profile"}
-                />
-              </div>
-
-              {/* User info */}
-              <div id="user-details" className="home-user-info">
-                <p id="user-greeting" className="home-greeting">ยินดีต้อนรับ</p>
-                <p id="user-name" className="home-username">
-                  {session?.user?.name}
-                </p>
-              </div>
-
-              {/* Buttons */}
-              <div className="home-actions">
-                <Link
-                  id="btn-dashboard"
-                  to="/dashboard"
-                  className="home-btn-dashboard"
-                >
-                  <IconDashboard />
-                  <span>Dashboard</span>
-                </Link>
-                <button
-                  id="btn-logout"
-                  className="home-btn-signout"
-                  onClick={() => void signOut()}
-                >
-                  <IconSignOut />
-                  <span>ออกจากระบบ</span>
-                </button>
-              </div>
+          /* ── Authenticated ── */
+          <div id="user-info-card" className="home-card">
+            {/* Avatar */}
+            <div id="profile-image-wrapper" className="home-avatar-wrapper">
+              <img
+                id="profile-image"
+                src={profileImageSrc}
+                className="home-avatar"
+                width={80}
+                height={80}
+                alt={session?.user?.name ?? "profile"}
+              />
             </div>
-          )}
+
+            {/* User info */}
+            <div id="user-details" className="home-user-info">
+              <p id="user-greeting" className="home-greeting">
+                ยินดีต้อนรับ
+              </p>
+              <p id="user-name" className="home-username">
+                {session?.user?.name}
+              </p>
+            </div>
+
+            {/* Buttons */}
+            <div className="home-actions">
+              <Link
+                id="btn-dashboard"
+                to="/dashboard"
+                className="home-btn-dashboard"
+              >
+                <IconDashboard />
+                <span>Dashboard</span>
+              </Link>
+              <button
+                id="btn-logout"
+                className="home-btn-signout"
+                onClick={() => void signOut()}
+              >
+                <IconSignOut />
+                <span>ออกจากระบบ</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Footer — pinned to bottom edge ── */}

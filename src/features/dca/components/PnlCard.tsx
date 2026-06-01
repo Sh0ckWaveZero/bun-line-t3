@@ -6,28 +6,33 @@ interface PnlCardProps {
 }
 
 const fmtThb = (n: number, d = 2): string =>
-  n.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+  n.toLocaleString("en-US", {
+    minimumFractionDigits: d,
+    maximumFractionDigits: d,
+  });
 
 const fmtInt = (n: number): string => Math.round(n).toLocaleString("en-US");
 
-const fmtPct = (n: number): string =>
-  (n >= 0 ? "+" : "") + n.toFixed(2) + "%";
+const fmtPct = (n: number): string => (n >= 0 ? "+" : "") + n.toFixed(2) + "%";
 
 export const PnlCard = ({ summary }: PnlCardProps) => {
   const { t } = useDcaLocale();
 
   if (!summary) {
     return (
-      <div id="dca-pnl-card" className="bg-card border-border flex flex-col gap-4 rounded-lg border p-5">
-        <div className="text-muted-foreground flex items-center justify-between text-[11px] font-medium uppercase tracking-wider">
+      <div
+        id="dca-pnl-card"
+        className="bg-card border-border flex flex-col gap-4 rounded-lg border p-5"
+      >
+        <div className="text-muted-foreground flex items-center justify-between text-[11px] font-medium tracking-wider uppercase">
           <span>{t.pnl.unrealizedPnl}</span>
-          <span className="flex items-center gap-1.5 font-mono text-[10px] normal-case tracking-normal text-green-600 dark:text-green-400">
+          <span className="flex items-center gap-1.5 font-mono text-[10px] tracking-normal text-green-600 normal-case dark:text-green-400">
             <span className="dca-live-dot bg-muted" />
             {t.pnl.live}
           </span>
         </div>
         <div>
-          <div className="text-muted-foreground font-mono text-[32px] font-medium leading-none tracking-tighter sm:text-[40px]">
+          <div className="text-muted-foreground font-mono text-[32px] leading-none font-medium tracking-tighter sm:text-[40px]">
             &mdash;
           </div>
           <div className="text-muted-foreground mt-1 font-mono text-[11px]">
@@ -36,12 +41,20 @@ export const PnlCard = ({ summary }: PnlCardProps) => {
         </div>
         <div className="border-border grid grid-cols-2 border-t pt-3.5">
           <div className="pr-3">
-            <div className="text-muted-foreground mb-1 text-[11px] font-medium uppercase tracking-wider">{t.pnl.marketValue}</div>
-            <div className="text-muted-foreground font-mono text-base font-medium">&mdash;</div>
+            <div className="text-muted-foreground mb-1 text-[11px] font-medium tracking-wider uppercase">
+              {t.pnl.marketValue}
+            </div>
+            <div className="text-muted-foreground font-mono text-base font-medium">
+              &mdash;
+            </div>
           </div>
           <div className="border-border border-l pl-4">
-            <div className="text-muted-foreground mb-1 text-[11px] font-medium uppercase tracking-wider">{t.pnl.invested}</div>
-            <div className="text-muted-foreground font-mono text-base font-medium">&mdash;</div>
+            <div className="text-muted-foreground mb-1 text-[11px] font-medium tracking-wider uppercase">
+              {t.pnl.invested}
+            </div>
+            <div className="text-muted-foreground font-mono text-base font-medium">
+              &mdash;
+            </div>
           </div>
         </div>
       </div>
@@ -57,14 +70,19 @@ export const PnlCard = ({ summary }: PnlCardProps) => {
   const hasPrice = summary.currentPrice !== null;
 
   return (
-    <div id="dca-pnl-card" className="bg-card border-border flex flex-col gap-4 rounded-lg border p-5">
+    <div
+      id="dca-pnl-card"
+      className="bg-card border-border flex flex-col gap-4 rounded-lg border p-5"
+    >
       {/* Header */}
-      <div className="text-muted-foreground flex items-center justify-between text-[11px] font-medium uppercase tracking-wider">
+      <div className="text-muted-foreground flex items-center justify-between text-[11px] font-medium tracking-wider uppercase">
         <span>{t.pnl.unrealizedPnl}</span>
-        <span className="flex items-center gap-1.5 font-mono text-[10px] normal-case tracking-normal text-green-600 dark:text-green-400">
+        <span className="flex items-center gap-1.5 font-mono text-[10px] tracking-normal text-green-600 normal-case dark:text-green-400">
           <span
             className="dca-live-dot"
-            style={{ background: hasPrice ? undefined : "var(--muted-foreground)" }}
+            style={{
+              background: hasPrice ? undefined : "var(--muted-foreground)",
+            }}
           />
           {t.pnl.live}
         </span>
@@ -72,8 +90,10 @@ export const PnlCard = ({ summary }: PnlCardProps) => {
 
       {/* Value */}
       <div>
-        <div className="text-foreground font-mono text-[32px] font-medium leading-none tracking-tighter sm:text-[40px]">
-          <span className="text-muted-foreground mr-1.5 text-lg font-normal">&#3647;</span>
+        <div className="text-foreground font-mono text-[32px] leading-none font-medium tracking-tighter sm:text-[40px]">
+          <span className="text-muted-foreground mr-1.5 text-lg font-normal">
+            &#3647;
+          </span>
           {hasPrice ? fmtThb(pnlValue) : "—"}
         </div>
         <div className="mt-1.5 inline-flex items-center gap-2">
@@ -103,7 +123,7 @@ export const PnlCard = ({ summary }: PnlCardProps) => {
       {/* Split: Market Value / Invested */}
       <div className="border-border grid grid-cols-2 border-t pt-3.5">
         <div className="pr-3">
-          <div className="text-muted-foreground mb-1 text-[11px] font-medium uppercase tracking-wider">
+          <div className="text-muted-foreground mb-1 text-[11px] font-medium tracking-wider uppercase">
             {t.pnl.marketValue}
           </div>
           <div className="text-foreground font-mono text-base font-medium tracking-tight">
@@ -111,7 +131,7 @@ export const PnlCard = ({ summary }: PnlCardProps) => {
           </div>
         </div>
         <div className="border-border border-l pl-4">
-          <div className="text-muted-foreground mb-1 text-[11px] font-medium uppercase tracking-wider">
+          <div className="text-muted-foreground mb-1 text-[11px] font-medium tracking-wider uppercase">
             {t.pnl.invested}
           </div>
           <div className="text-foreground font-mono text-base font-medium tracking-tight">

@@ -1,21 +1,21 @@
-import { useCallback, useState } from "react"
-import type { ExpenseCategory } from "../types"
+import { useCallback, useState } from "react";
+import type { ExpenseCategory } from "../types";
 
 interface Deps {
   createCategory: (
     data: { name: string; icon: string },
     callbacks?: { onSuccess?: () => void; onError?: (msg: string) => void },
-  ) => Promise<void>
+  ) => Promise<void>;
   updateCategory: (
     id: string,
     data: { name: string; icon: string },
     callbacks?: { onSuccess?: () => void; onError?: (msg: string) => void },
-  ) => Promise<void>
+  ) => Promise<void>;
   deleteCategory: (
     id: string,
     callbacks?: { onError?: (msg: string) => void },
-  ) => void
-  onReturnToAddTransaction: () => void
+  ) => void;
+  onReturnToAddTransaction: () => void;
 }
 
 export function useCategoryModalFlow({
@@ -24,80 +24,92 @@ export function useCategoryModalFlow({
   deleteCategory,
   onReturnToAddTransaction,
 }: Deps) {
-  const [showCategoryModal, setShowCategoryModal] = useState(false)
-  const [showManagerModal, setShowManagerModal] = useState(false)
-  const [editingCategory, setEditingCategory] = useState<ExpenseCategory | null>(null)
-  const [returnTarget, setReturnTarget] = useState<"addTransaction" | "manager" | null>(null)
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showManagerModal, setShowManagerModal] = useState(false);
+  const [editingCategory, setEditingCategory] =
+    useState<ExpenseCategory | null>(null);
+  const [returnTarget, setReturnTarget] = useState<
+    "addTransaction" | "manager" | null
+  >(null);
 
   // เปิด add category จาก transaction modal
   const openAddFromTransaction = useCallback(() => {
-    setEditingCategory(null)
-    setReturnTarget("addTransaction")
-    setShowManagerModal(false)
-    setShowCategoryModal(true)
-  }, [])
+    setEditingCategory(null);
+    setReturnTarget("addTransaction");
+    setShowManagerModal(false);
+    setShowCategoryModal(true);
+  }, []);
 
   // เปิด add category จาก manager modal
   const openAddFromManager = useCallback(() => {
-    setEditingCategory(null)
-    setReturnTarget("manager")
-    setShowManagerModal(false)
-    setShowCategoryModal(true)
-  }, [])
+    setEditingCategory(null);
+    setReturnTarget("manager");
+    setShowManagerModal(false);
+    setShowCategoryModal(true);
+  }, []);
 
   const openEdit = useCallback((category: ExpenseCategory) => {
-    setEditingCategory(category)
-    setReturnTarget("manager")
-    setShowManagerModal(false)
-    setShowCategoryModal(true)
-  }, [])
+    setEditingCategory(category);
+    setReturnTarget("manager");
+    setShowManagerModal(false);
+    setShowCategoryModal(true);
+  }, []);
 
   const handleDelete = useCallback(
     (id: string) => {
       if (confirm("ยืนยันการลบหมวดหมู่นี้?"))
-        deleteCategory(id, { onError: (msg) => alert(msg) })
+        deleteCategory(id, { onError: (msg) => alert(msg) });
     },
     [deleteCategory],
-  )
+  );
 
   const handleSave = useCallback(
     async (data: { name: string; icon: string }) => {
       const onSuccess = () => {
-        setShowCategoryModal(false)
-        setEditingCategory(null)
+        setShowCategoryModal(false);
+        setEditingCategory(null);
         if (returnTarget === "addTransaction") {
-          setReturnTarget(null)
-          onReturnToAddTransaction()
+          setReturnTarget(null);
+          onReturnToAddTransaction();
         } else if (returnTarget === "manager") {
-          setReturnTarget(null)
-          setShowManagerModal(true)
+          setReturnTarget(null);
+          setShowManagerModal(true);
         }
-      }
+      };
 
       if (editingCategory) {
-        await updateCategory(editingCategory.id, data, { onSuccess, onError: alert })
+        await updateCategory(editingCategory.id, data, {
+          onSuccess,
+          onError: alert,
+        });
       } else {
-        await createCategory(data, { onSuccess, onError: alert })
+        await createCategory(data, { onSuccess, onError: alert });
       }
     },
-    [editingCategory, returnTarget, createCategory, updateCategory, onReturnToAddTransaction],
-  )
+    [
+      editingCategory,
+      returnTarget,
+      createCategory,
+      updateCategory,
+      onReturnToAddTransaction,
+    ],
+  );
 
   const handleCategoryModalOpenChange = useCallback(
     (open: boolean) => {
-      setShowCategoryModal(open)
+      setShowCategoryModal(open);
       if (!open) {
         if (returnTarget === "addTransaction") {
-          setReturnTarget(null)
-          onReturnToAddTransaction()
+          setReturnTarget(null);
+          onReturnToAddTransaction();
         } else if (returnTarget === "manager") {
-          setReturnTarget(null)
-          setShowManagerModal(true)
+          setReturnTarget(null);
+          setShowManagerModal(true);
         }
       }
     },
     [returnTarget, onReturnToAddTransaction],
-  )
+  );
 
   return {
     showCategoryModal,
@@ -110,5 +122,5 @@ export function useCategoryModalFlow({
     handleDelete,
     handleSave,
     handleCategoryModalOpenChange,
-  }
+  };
 }

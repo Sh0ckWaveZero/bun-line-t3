@@ -1,45 +1,45 @@
-"use client"
+"use client";
 
 /**
  * AddSubscriptionModal — modal สำหรับเพิ่ม / แก้ไข subscription
  * รองรับทั้ง create (new) และ edit (existing)
  */
 
-import { useState } from "react"
+import { useState } from "react";
 import {
   SUBSCRIPTION_SERVICE_LABELS,
   PLAN_TYPE_LABELS,
   BILLING_CYCLE_LABELS,
   DEFAULT_PRICES,
-} from "@/features/subscriptions/constants"
+} from "@/features/subscriptions/constants";
 import type {
   SubscriptionService,
   SubscriptionPlanType,
   BillingCycle,
   SubscriptionWithMembers,
-} from "@/features/subscriptions/types"
-import { ServiceIcon } from "./ServiceIcon"
-import { ServiceIconPickerModal, ServiceIconButton } from "./ServiceIconPicker"
-import { X, Loader2, Trash2, Pencil } from "lucide-react"
+} from "@/features/subscriptions/types";
+import { ServiceIcon } from "./ServiceIcon";
+import { ServiceIconPickerModal, ServiceIconButton } from "./ServiceIconPicker";
+import { X, Loader2, Trash2, Pencil } from "lucide-react";
 
 interface AddSubscriptionModalProps {
-  open: boolean
-  onClose: () => void
-  onSubmit: (data: SubscriptionFormData) => Promise<void>
+  open: boolean;
+  onClose: () => void;
+  onSubmit: (data: SubscriptionFormData) => Promise<void>;
   /** ถ้ามี initialData = edit mode */
-  initialData?: Partial<SubscriptionWithMembers>
-  onDelete?: (id: string) => Promise<void>
+  initialData?: Partial<SubscriptionWithMembers>;
+  onDelete?: (id: string) => Promise<void>;
 }
 
 export interface SubscriptionFormData {
-  name: string
-  service: SubscriptionService
-  planType: SubscriptionPlanType
-  billingCycle: BillingCycle
-  totalPrice: number
-  billingDay: number
-  startDate: string
-  note?: string
+  name: string;
+  service: SubscriptionService;
+  planType: SubscriptionPlanType;
+  billingCycle: BillingCycle;
+  totalPrice: number;
+  billingDay: number;
+  startDate: string;
+  note?: string;
 }
 
 export const AddSubscriptionModal = ({
@@ -49,11 +49,11 @@ export const AddSubscriptionModal = ({
   initialData,
   onDelete,
 }: AddSubscriptionModalProps) => {
-  const isEdit = !!initialData?.id
-  const [isLoading, setIsLoading] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [showIconPicker, setShowIconPicker] = useState(false)
+  const isEdit = !!initialData?.id;
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showIconPicker, setShowIconPicker] = useState(false);
 
   const [form, setForm] = useState<SubscriptionFormData>({
     name: initialData?.name ?? "",
@@ -62,59 +62,66 @@ export const AddSubscriptionModal = ({
     billingCycle: (initialData?.billingCycle as BillingCycle) ?? "MONTHLY",
     totalPrice:
       initialData?.totalPrice ??
-      DEFAULT_PRICES[(initialData?.service as SubscriptionService) ?? "NETFLIX"].family,
+      DEFAULT_PRICES[(initialData?.service as SubscriptionService) ?? "NETFLIX"]
+        .family,
     billingDay: initialData?.billingDay ?? 1,
     startDate: initialData?.startDate
       ? new Date(initialData.startDate).toISOString().split("T")[0]!
       : new Date().toISOString().split("T")[0]!,
     note: initialData?.note ?? "",
-  })
+  });
 
   const handleServiceChange = (service: SubscriptionService) => {
     setForm((prev) => ({
       ...prev,
       service,
       name: prev.name || SUBSCRIPTION_SERVICE_LABELS[service],
-      totalPrice: DEFAULT_PRICES[service][prev.planType === "FAMILY" ? "family" : "individual"],
-    }))
-  }
+      totalPrice:
+        DEFAULT_PRICES[service][
+          prev.planType === "FAMILY" ? "family" : "individual"
+        ],
+    }));
+  };
 
   const handlePlanTypeChange = (planType: SubscriptionPlanType) => {
     setForm((prev) => ({
       ...prev,
       planType,
-      totalPrice: DEFAULT_PRICES[prev.service][planType === "FAMILY" ? "family" : "individual"],
-    }))
-  }
+      totalPrice:
+        DEFAULT_PRICES[prev.service][
+          planType === "FAMILY" ? "family" : "individual"
+        ],
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
     try {
-      await onSubmit(form)
-      onClose()
+      await onSubmit(form);
+      onClose();
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleDelete = async () => {
-    if (!initialData?.id || !onDelete) return
-    setIsDeleting(true)
+    if (!initialData?.id || !onDelete) return;
+    setIsDeleting(true);
     try {
-      await onDelete(initialData.id)
-      onClose()
+      await onDelete(initialData.id);
+      onClose();
     } finally {
-      setIsDeleting(false)
+      setIsDeleting(false);
     }
-  }
+  };
 
-  if (!open) return null
+  if (!open) return null;
 
   return (
     <>
       <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center">
-        <div className="w-full max-w-lg rounded-t-3xl bg-white shadow-2xl dark:bg-gray-900 sm:rounded-2xl">
+        <div className="w-full max-w-lg rounded-t-3xl bg-white shadow-2xl sm:rounded-2xl dark:bg-gray-900">
           {/* header */}
           <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
             <div className="flex items-center gap-3">
@@ -133,7 +140,10 @@ export const AddSubscriptionModal = ({
           </div>
 
           {/* form */}
-          <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto p-6 max-h-[80vh]">
+          <form
+            onSubmit={handleSubmit}
+            className="max-h-[80vh] space-y-4 overflow-y-auto p-6"
+          >
             {/* icon / service picker trigger */}
             <div>
               <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -153,10 +163,12 @@ export const AddSubscriptionModal = ({
               <input
                 type="text"
                 value={form.name}
-                onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, name: e.target.value }))
+                }
                 required
                 placeholder={`เช่น ${SUBSCRIPTION_SERVICE_LABELS[form.service]} Family`}
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
               />
             </div>
 
@@ -167,20 +179,22 @@ export const AddSubscriptionModal = ({
                   ประเภทแพ็กเกจ
                 </label>
                 <div className="flex gap-2">
-                  {(["INDIVIDUAL", "FAMILY"] as SubscriptionPlanType[]).map((pt) => (
-                    <button
-                      key={pt}
-                      type="button"
-                      onClick={() => handlePlanTypeChange(pt)}
-                      className={`flex-1 rounded-xl border py-2 text-xs font-medium transition-all ${
-                        form.planType === pt
-                          ? "border-indigo-500 bg-indigo-50 text-indigo-700 dark:border-indigo-400 dark:bg-indigo-900/30 dark:text-indigo-300"
-                          : "border-gray-200 bg-white text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
-                      }`}
-                    >
-                      {PLAN_TYPE_LABELS[pt]}
-                    </button>
-                  ))}
+                  {(["INDIVIDUAL", "FAMILY"] as SubscriptionPlanType[]).map(
+                    (pt) => (
+                      <button
+                        key={pt}
+                        type="button"
+                        onClick={() => handlePlanTypeChange(pt)}
+                        className={`flex-1 rounded-xl border py-2 text-xs font-medium transition-all ${
+                          form.planType === pt
+                            ? "border-indigo-500 bg-indigo-50 text-indigo-700 dark:border-indigo-400 dark:bg-indigo-900/30 dark:text-indigo-300"
+                            : "border-gray-200 bg-white text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+                        }`}
+                      >
+                        {PLAN_TYPE_LABELS[pt]}
+                      </button>
+                    ),
+                  )}
                 </div>
               </div>
 
@@ -193,7 +207,9 @@ export const AddSubscriptionModal = ({
                     <button
                       key={bc}
                       type="button"
-                      onClick={() => setForm((p) => ({ ...p, billingCycle: bc }))}
+                      onClick={() =>
+                        setForm((p) => ({ ...p, billingCycle: bc }))
+                      }
                       className={`flex-1 rounded-xl border py-2 text-xs font-medium transition-all ${
                         form.billingCycle === bc
                           ? "border-indigo-500 bg-indigo-50 text-indigo-700 dark:border-indigo-400 dark:bg-indigo-900/30 dark:text-indigo-300"
@@ -220,10 +236,13 @@ export const AddSubscriptionModal = ({
                   step="0.01"
                   value={form.totalPrice}
                   onChange={(e) =>
-                    setForm((p) => ({ ...p, totalPrice: parseFloat(e.target.value) || 0 }))
+                    setForm((p) => ({
+                      ...p,
+                      totalPrice: parseFloat(e.target.value) || 0,
+                    }))
                   }
                   required
-                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full [appearance:textfield] rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
               </div>
 
@@ -238,10 +257,13 @@ export const AddSubscriptionModal = ({
                   max="31"
                   value={form.billingDay}
                   onChange={(e) =>
-                    setForm((p) => ({ ...p, billingDay: parseInt(e.target.value) || 1 }))
+                    setForm((p) => ({
+                      ...p,
+                      billingDay: parseInt(e.target.value) || 1,
+                    }))
                   }
                   required
-                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full [appearance:textfield] rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
               </div>
             </div>
@@ -254,9 +276,11 @@ export const AddSubscriptionModal = ({
               <input
                 type="date"
                 value={form.startDate}
-                onChange={(e) => setForm((p) => ({ ...p, startDate: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, startDate: e.target.value }))
+                }
                 required
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
               />
             </div>
 
@@ -268,9 +292,11 @@ export const AddSubscriptionModal = ({
               <textarea
                 rows={2}
                 value={form.note}
-                onChange={(e) => setForm((p) => ({ ...p, note: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, note: e.target.value }))
+                }
                 placeholder="บันทึกเพิ่มเติม..."
-                className="w-full resize-none rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
+                className="w-full resize-none rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
               />
             </div>
 
@@ -310,7 +336,7 @@ export const AddSubscriptionModal = ({
                 <button
                   type="button"
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-red-200 px-3 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                  className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-red-200 px-3 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -318,14 +344,14 @@ export const AddSubscriptionModal = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="cursor-pointer flex-1 rounded-xl border border-gray-300 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                className="flex-1 cursor-pointer rounded-xl border border-gray-300 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
               >
                 ยกเลิก
               </button>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="cursor-pointer flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-60 dark:bg-indigo-500 dark:hover:bg-indigo-600"
+                className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-60 dark:bg-indigo-500 dark:hover:bg-indigo-600"
               >
                 {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                 {isEdit ? (
@@ -333,8 +359,10 @@ export const AddSubscriptionModal = ({
                     <Pencil className="h-4 w-4" />
                     {isLoading ? "กำลังบันทึก..." : "บันทึก"}
                   </>
+                ) : isLoading ? (
+                  "กำลังสร้าง..."
                 ) : (
-                  isLoading ? "กำลังสร้าง..." : "สร้าง Subscription"
+                  "สร้าง Subscription"
                 )}
               </button>
             </div>
@@ -350,5 +378,5 @@ export const AddSubscriptionModal = ({
         onChange={handleServiceChange}
       />
     </>
-  )
-}
+  );
+};

@@ -99,12 +99,14 @@ const STATUS_MAP = {
   healthy: {
     label: "ปกติ",
     color: "text-emerald-600 dark:text-emerald-400",
-    badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
+    badge:
+      "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
   },
   degraded: {
     label: "บางส่วน",
     color: "text-amber-600 dark:text-amber-400",
-    badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
+    badge:
+      "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
   },
   unhealthy: {
     label: "มีปัญหา",
@@ -139,12 +141,14 @@ const ALERT_LEVEL_MAP = {
   },
   warning: {
     label: "เตือน",
-    classes: "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30",
+    classes:
+      "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30",
     iconClass: "text-amber-500",
   },
   info: {
     label: "แจ้งเตือน",
-    classes: "border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30",
+    classes:
+      "border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30",
     iconClass: "text-blue-500",
   },
 } as const;
@@ -156,11 +160,13 @@ const LOG_LEVEL_MAP = {
   },
   warn: {
     dotClass: "bg-amber-500",
-    badgeClass: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+    badgeClass:
+      "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
   },
   info: {
     dotClass: "bg-blue-500",
-    badgeClass: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+    badgeClass:
+      "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
   },
   debug: {
     dotClass: "bg-muted-foreground/40",
@@ -194,18 +200,21 @@ const OverviewCard = memo(function OverviewCard({
   badge?: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border bg-card p-5">
+    <div className="bg-card rounded-xl border p-5">
       <div className="flex items-start justify-between">
         <div className="space-y-1">
-          <p className="text-xs font-medium text-muted-foreground">{label}</p>
-          <p className="font-mono text-xl font-semibold text-foreground">
+          <p className="text-muted-foreground text-xs font-medium">{label}</p>
+          <p className="text-foreground font-mono text-xl font-semibold">
             {value}
           </p>
-          {sub && (
-            <p className="text-xs text-muted-foreground">{sub}</p>
-          )}
+          {sub && <p className="text-muted-foreground text-xs">{sub}</p>}
         </div>
-        <Icon className={cn("h-5 w-5 shrink-0", iconClass ?? "text-muted-foreground")} />
+        <Icon
+          className={cn(
+            "h-5 w-5 shrink-0",
+            iconClass ?? "text-muted-foreground",
+          )}
+        />
       </div>
       {badge && <div className="mt-3">{badge}</div>}
     </div>
@@ -241,8 +250,8 @@ const HealthScoreChart = memo(function HealthScoreChart({
   );
 
   return (
-    <div className="rounded-xl border bg-card p-5">
-      <h3 className="mb-3 text-sm font-medium text-muted-foreground">
+    <div className="bg-card rounded-xl border p-5">
+      <h3 className="text-muted-foreground mb-3 text-sm font-medium">
         คะแนนสุขภาพระบบ
       </h3>
       <div className="flex h-48 items-center justify-center">
@@ -255,7 +264,7 @@ const HealthScoreChart = memo(function HealthScoreChart({
           />
         </div>
       </div>
-      <p className="mt-2 text-center font-mono text-2xl font-bold text-foreground">
+      <p className="text-foreground mt-2 text-center font-mono text-2xl font-bold">
         {score}%
       </p>
     </div>
@@ -290,8 +299,8 @@ const ResourceChart = memo(function ResourceChart({
   );
 
   return (
-    <div className="rounded-xl border bg-card p-5">
-      <h3 className="mb-3 text-sm font-medium text-muted-foreground">
+    <div className="bg-card rounded-xl border p-5">
+      <h3 className="text-muted-foreground mb-3 text-sm font-medium">
         การใช้ทรัพยากร
       </h3>
       <div className="h-56">
@@ -319,16 +328,16 @@ const ServicesGrid = memo(function ServicesGrid({
         return (
           <div
             key={key}
-            className="flex items-center gap-2.5 rounded-xl border bg-card px-3.5 py-3"
+            className="bg-card flex items-center gap-2.5 rounded-xl border px-3.5 py-3"
           >
-            {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
+            {Icon && <Icon className="text-muted-foreground h-4 w-4" />}
             <span
               className={cn(
                 "h-2 w-2 rounded-full",
                 online ? "bg-emerald-500" : "bg-red-500",
               )}
             />
-            <span className="text-xs font-medium text-foreground">
+            <span className="text-foreground text-xs font-medium">
               {SERVICE_LABELS[key] ?? key}
             </span>
           </div>
@@ -350,12 +359,19 @@ const AlertsList = memo(function AlertsList({
         return (
           <div
             key={alert.id}
-            className={cn("flex items-start gap-3 rounded-xl border p-3.5", cfg.classes)}
+            className={cn(
+              "flex items-start gap-3 rounded-xl border p-3.5",
+              cfg.classes,
+            )}
           >
-            <AlertTriangle className={cn("mt-0.5 h-4 w-4 shrink-0", cfg.iconClass)} />
+            <AlertTriangle
+              className={cn("mt-0.5 h-4 w-4 shrink-0", cfg.iconClass)}
+            />
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-foreground">{alert.message}</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
+              <p className="text-foreground text-sm font-medium">
+                {alert.message}
+              </p>
+              <p className="text-muted-foreground mt-0.5 text-xs">
                 {new Date(alert.timestamp).toLocaleString("th-TH")}
               </p>
             </div>
@@ -390,7 +406,7 @@ const LogTable = memo(function LogTable({
         return (
           <div
             key={i}
-            className="flex items-start gap-3 border-b bg-card px-4 py-3 last:border-b-0"
+            className="bg-card flex items-start gap-3 border-b px-4 py-3 last:border-b-0"
           >
             <span
               className={cn(
@@ -399,8 +415,8 @@ const LogTable = memo(function LogTable({
               )}
             />
             <div className="min-w-0 flex-1">
-              <p className="text-sm text-foreground">{log.message}</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
+              <p className="text-foreground text-sm">{log.message}</p>
+              <p className="text-muted-foreground mt-0.5 text-xs">
                 {log.source} · {new Date(log.timestamp).toLocaleString("th-TH")}
               </p>
             </div>
@@ -420,8 +436,9 @@ const LogTable = memo(function LogTable({
 });
 
 export function MonitoringDashboardPage() {
-  const [monitoringData, setMonitoringData] =
-    useState<MonitoringData | null>(null);
+  const [monitoringData, setMonitoringData] = useState<MonitoringData | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -458,8 +475,8 @@ export function MonitoringDashboardPage() {
         <PendingApprovalModal open={needsApproval} />
         <div className="flex min-h-[60vh] items-center justify-center">
           <div className="flex flex-col items-center gap-3">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted border-t-primary" />
-            <p className="text-sm text-muted-foreground">
+            <div className="border-muted border-t-primary h-6 w-6 animate-spin rounded-full border-2" />
+            <p className="text-muted-foreground text-sm">
               กำลังโหลดข้อมูลระบบ...
             </p>
           </div>
@@ -469,7 +486,7 @@ export function MonitoringDashboardPage() {
   }
 
   const statusCfg = monitoringData
-    ? STATUS_MAP[monitoringData.systemHealth.status] ?? STATUS_MAP.healthy
+    ? (STATUS_MAP[monitoringData.systemHealth.status] ?? STATUS_MAP.healthy)
     : STATUS_MAP.healthy;
 
   return (
@@ -480,27 +497,27 @@ export function MonitoringDashboardPage() {
         <header className="mb-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-lg font-semibold text-foreground">
+              <h1 className="text-foreground text-lg font-semibold">
                 ตรวจสอบระบบ
               </h1>
-              <p className="mt-0.5 text-sm text-muted-foreground">
+              <p className="text-muted-foreground mt-0.5 text-sm">
                 สถานะและประสิทธิภาพของระบบแบบเรียลไทม์
               </p>
             </div>
             <div className="flex items-center gap-3">
               {lastUpdate && (
-                <span className="hidden text-xs text-muted-foreground sm:inline">
+                <span className="text-muted-foreground hidden text-xs sm:inline">
                   {lastUpdate.toLocaleTimeString("th-TH")}
                 </span>
               )}
               <button
                 onClick={fetchMonitoringData}
-                className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-md p-1.5 transition-colors"
                 aria-label="รีเฟรชข้อมูล"
               >
                 <RefreshCw className="h-4 w-4" />
               </button>
-              <label className="flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
+              <label className="text-muted-foreground flex cursor-pointer items-center gap-1.5 text-xs">
                 <input
                   type="checkbox"
                   checked={autoRefresh}
@@ -525,7 +542,7 @@ export function MonitoringDashboardPage() {
         {monitoringData && (
           <div className="space-y-6">
             <section>
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              <h2 className="text-muted-foreground mb-3 text-sm font-semibold tracking-wide uppercase">
                 ภาพรวม
               </h2>
               <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -585,7 +602,7 @@ export function MonitoringDashboardPage() {
             </section>
 
             <section>
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              <h2 className="text-muted-foreground mb-3 text-sm font-semibold tracking-wide uppercase">
                 บริการ
               </h2>
               <ServicesGrid services={monitoringData.services} />
@@ -593,7 +610,7 @@ export function MonitoringDashboardPage() {
 
             {monitoringData.alerts.length > 0 && (
               <section>
-                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                <h2 className="text-muted-foreground mb-3 text-sm font-semibold tracking-wide uppercase">
                   แจ้งเตือน ({monitoringData.alerts.length})
                 </h2>
                 <AlertsList alerts={monitoringData.alerts} />
@@ -601,7 +618,7 @@ export function MonitoringDashboardPage() {
             )}
 
             <section>
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              <h2 className="text-muted-foreground mb-3 text-sm font-semibold tracking-wide uppercase">
                 บันทึกล่าสุด
               </h2>
               <LogTable logs={monitoringData.recentLogs} />
@@ -609,7 +626,7 @@ export function MonitoringDashboardPage() {
 
             {monitoringData.recommendations.length > 0 && (
               <section>
-                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                <h2 className="text-muted-foreground mb-3 text-sm font-semibold tracking-wide uppercase">
                   ข้อเสนอแนะ
                 </h2>
                 <div className="rounded-xl border border-blue-200 bg-blue-50 p-5 dark:border-blue-800 dark:bg-blue-950/30">

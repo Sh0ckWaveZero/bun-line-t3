@@ -17,19 +17,19 @@ import {
   siIcloud,
   siLine,
   siGoogletv,
-} from "simple-icons"
+} from "simple-icons";
 
-import type { SubscriptionService } from "@/features/subscriptions/types"
+import type { SubscriptionService } from "@/features/subscriptions/types";
 
 export interface BrandIconData {
   /** SVG path string (24x24 viewBox) */
-  path: string
+  path: string;
   /** Brand hex color (without #) */
-  hex: string
+  hex: string;
   /** แสดงสีพื้นหลังใน dark mode */
-  darkBg?: string
+  darkBg?: string;
   /** ชื่อแสดง */
-  title: string
+  title: string;
 }
 
 /**
@@ -112,4 +112,4 @@ export const BRAND_ICONS: Record<SubscriptionService, BrandIconData> = {
     hex: "6B7280",
     title: "อื่นๆ",
   },
-}
+};

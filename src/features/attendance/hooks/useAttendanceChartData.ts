@@ -1,7 +1,10 @@
 import { useMemo } from "react";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
-import type { AttendanceRecord, MonthlyAttendanceReport } from "@/lib/types/attendance";
+import type {
+  AttendanceRecord,
+  MonthlyAttendanceReport,
+} from "@/lib/types/attendance";
 
 /**
  * Safe date formatting for chart labels with error handling
@@ -50,7 +53,9 @@ export const useHoursChartData = (records: AttendanceRecord[]) => {
     });
 
     return {
-      labels: sortedRecords.map((record) => formatShortDateSafe(record.workDate)),
+      labels: sortedRecords.map((record) =>
+        formatShortDateSafe(record.workDate),
+      ),
       datasets: [
         {
           label: "ชั่วโมงทำงาน",

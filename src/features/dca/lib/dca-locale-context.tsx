@@ -1,6 +1,14 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback, useMemo, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  type ReactNode,
+} from "react";
 import type { DcaLocale, DcaLocaleStrings } from "./locale";
 import { dcaLocales } from "./locale";
 
@@ -10,7 +18,9 @@ interface DcaLocaleContextValue {
   t: DcaLocaleStrings;
 }
 
-const DcaLocaleContext = createContext<DcaLocaleContextValue | undefined>(undefined);
+const DcaLocaleContext = createContext<DcaLocaleContextValue | undefined>(
+  undefined,
+);
 
 const STORAGE_KEY = "dca-locale";
 const DEFAULT_LOCALE: DcaLocale = "th";
@@ -44,20 +54,23 @@ export function DcaLocaleProvider({
     setLocaleState(stored);
   }, []);
 
-  const setLocale = useCallback((newLocale: DcaLocale) => {
-    setLocaleState(newLocale);
-    try {
-      localStorage.setItem(storageKey, newLocale);
-    } catch (e) {
-      console.warn("Failed to save locale to localStorage:", e);
-    }
-  }, [storageKey]);
+  const setLocale = useCallback(
+    (newLocale: DcaLocale) => {
+      setLocaleState(newLocale);
+      try {
+        localStorage.setItem(storageKey, newLocale);
+      } catch (e) {
+        console.warn("Failed to save locale to localStorage:", e);
+      }
+    },
+    [storageKey],
+  );
 
   const t = useMemo(() => dcaLocales[locale], [locale]);
 
   const value = useMemo(
     () => ({ locale, setLocale, t }),
-    [locale, setLocale, t]
+    [locale, setLocale, t],
   );
 
   return (

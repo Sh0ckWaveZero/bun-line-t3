@@ -3,12 +3,10 @@ import { describe, it, expect } from "bun:test";
 describe("Checkout Reminder APIs Comparison", () => {
   it("should have consistent logic between standard and enhanced APIs", async () => {
     // Import both APIs (ใช้ relative path เพื่อแก้ปัญหา alias path)
-    const standardAPI = await import(
-      "../../src/app/api/checkout-reminder/route"
-    );
-    const enhancedAPI = await import(
-      "../../src/app/api/cron/enhanced-checkout-reminder/route"
-    );
+    const standardAPI =
+      await import("../../src/app/api/checkout-reminder/route");
+    const enhancedAPI =
+      await import("../../src/app/api/cron/enhanced-checkout-reminder/route");
 
     // Both should export GET functions
     expect(typeof standardAPI.GET).toBe("function");

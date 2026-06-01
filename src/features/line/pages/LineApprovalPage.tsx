@@ -273,7 +273,9 @@ export function LineApprovalPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [rejectTarget, setRejectTarget] = useState<ApprovalRequest | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<ApprovalRequest | null>(
+    null,
+  );
   const [toast, setToast] = useState<{
     type: "success" | "error";
     msg: string;
@@ -504,7 +506,7 @@ export function LineApprovalPage() {
 
       <div
         id="line-approval-page"
-        className="min-h-screen w-full bg-background pb-16 text-foreground"
+        className="bg-background text-foreground min-h-screen w-full pb-16"
       >
         {toast && (
           <div
@@ -545,7 +547,7 @@ export function LineApprovalPage() {
                 void fetchStats();
               }}
               disabled={isLoading}
-              className="gap-2 border-border bg-card text-foreground hover:bg-muted/50"
+              className="border-border bg-card text-foreground hover:bg-muted/50 gap-2"
             >
               <RefreshCw
                 className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
@@ -558,25 +560,33 @@ export function LineApprovalPage() {
             <StatsCard
               label="รอการอนุมัติ"
               value={stats?.pending ?? 0}
-              icon={<Clock className="h-5 w-5 text-amber-700 dark:text-amber-400" />}
+              icon={
+                <Clock className="h-5 w-5 text-amber-700 dark:text-amber-400" />
+              }
               color="bg-amber-100 ring-1 ring-amber-200 dark:bg-amber-900/30 dark:ring-amber-700/50"
             />
             <StatsCard
               label="อนุมัติแล้ว"
               value={stats?.approved ?? 0}
-              icon={<CheckCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />}
+              icon={
+                <CheckCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              }
               color="bg-emerald-100 ring-1 ring-emerald-200 dark:bg-emerald-900/30 dark:ring-emerald-700/50"
             />
             <StatsCard
               label="ปฏิเสธแล้ว"
               value={stats?.rejected ?? 0}
-              icon={<XCircle className="h-5 w-5 text-red-700 dark:text-red-400" />}
+              icon={
+                <XCircle className="h-5 w-5 text-red-700 dark:text-red-400" />
+              }
               color="bg-red-100 ring-1 ring-red-200 dark:bg-red-900/30 dark:ring-red-700/50"
             />
             <StatsCard
               label="ทั้งหมด"
               value={stats?.accountsTotal ?? stats?.total ?? 0}
-              icon={<Users className="h-5 w-5 text-blue-700 dark:text-blue-400" />}
+              icon={
+                <Users className="h-5 w-5 text-blue-700 dark:text-blue-400" />
+              }
               color="bg-blue-100 ring-1 ring-blue-200 dark:bg-blue-900/30 dark:ring-blue-700/50"
             />
           </div>
@@ -586,31 +596,33 @@ export function LineApprovalPage() {
             role="tablist"
             aria-label="สถานะคำขอ LINE Approval"
           >
-            {(["ALL", "PENDING", "APPROVED", "REJECTED"] as const).map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                role="tab"
-                aria-selected={activeTab === tab}
-                onClick={() => {
-                  setActiveTab(tab);
-                  setPage(1);
-                }}
-                className={`-mb-px inline-flex h-12 shrink-0 cursor-pointer items-center gap-2 border-b-2 px-4 text-sm font-medium transition-colors ${
-                  activeTab === tab
-                    ? "border-green-600 text-slate-950 dark:border-green-400 dark:text-slate-50"
-                    : "border-transparent text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-slate-100"
-                }`}
-              >
-                <span className="inline-flex items-center gap-1.5">
-                  {tabConfig[tab].icon}
-                  {tabConfig[tab].label}
-                </span>
-                <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-slate-200 px-1.5 text-[11px] leading-none font-bold text-slate-700 tabular-nums dark:bg-white/10 dark:text-slate-300">
-                  {getTabCount(tab)}
-                </span>
-              </button>
-            ))}
+            {(["ALL", "PENDING", "APPROVED", "REJECTED"] as const).map(
+              (tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === tab}
+                  onClick={() => {
+                    setActiveTab(tab);
+                    setPage(1);
+                  }}
+                  className={`-mb-px inline-flex h-12 shrink-0 cursor-pointer items-center gap-2 border-b-2 px-4 text-sm font-medium transition-colors ${
+                    activeTab === tab
+                      ? "border-green-600 text-slate-950 dark:border-green-400 dark:text-slate-50"
+                      : "border-transparent text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-slate-100"
+                  }`}
+                >
+                  <span className="inline-flex items-center gap-1.5">
+                    {tabConfig[tab].icon}
+                    {tabConfig[tab].label}
+                  </span>
+                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-slate-200 px-1.5 text-[11px] leading-none font-bold text-slate-700 tabular-nums dark:bg-white/10 dark:text-slate-300">
+                    {getTabCount(tab)}
+                  </span>
+                </button>
+              ),
+            )}
           </div>
 
           <Card className="border-border bg-card text-card-foreground shadow-sm">

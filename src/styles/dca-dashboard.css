@@ -5,11 +5,18 @@
 
 /* ── PNL live dot pulse ── */
 @keyframes dca-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.35; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
 }
 .dca-live-dot {
-  width: 6px; height: 6px; border-radius: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
   animation: dca-pulse 1.8s infinite;
 }
 
@@ -39,7 +46,9 @@
   transition: none;
   backdrop-filter: none;
 }
-.dca-tooltip-visible { opacity: 1 !important; }
+.dca-tooltip-visible {
+  opacity: 1 !important;
+}
 
 @media (max-width: 640px) {
   .dca-tooltip {

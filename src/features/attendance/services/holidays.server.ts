@@ -138,17 +138,24 @@ export const createHoliday = async (data: PublicHolidayData) => {
 /**
  * Update an existing holiday
  */
-export const updateHoliday = async (id: string, data: Partial<PublicHolidayData>) => {
+export const updateHoliday = async (
+  id: string,
+  data: Partial<PublicHolidayData>,
+) => {
   try {
     const holiday = await db.publicHoliday.update({
       where: { id },
       data: {
         ...(data.date !== undefined && { date: data.date }),
-        ...(data.nameEnglish !== undefined && { nameEnglish: data.nameEnglish }),
+        ...(data.nameEnglish !== undefined && {
+          nameEnglish: data.nameEnglish,
+        }),
         ...(data.nameThai !== undefined && { nameThai: data.nameThai }),
         ...(data.year !== undefined && { year: data.year }),
         ...(data.type !== undefined && { type: data.type }),
-        ...(data.description !== undefined && { description: data.description }),
+        ...(data.description !== undefined && {
+          description: data.description,
+        }),
         ...(data.isActive !== undefined && { isActive: data.isActive }),
       },
     });

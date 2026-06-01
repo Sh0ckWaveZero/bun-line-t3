@@ -25,13 +25,7 @@ export interface CommandDefinition {
   /** Example usage */
   examples: string[];
   /** Category for grouping */
-  category:
-    | "crypto"
-    | "work"
-    | "info"
-    | "utility"
-    | "settings"
-    | "budget";
+  category: "crypto" | "work" | "info" | "utility" | "settings" | "budget";
 }
 
 export const LINE_COMMANDS: CommandDefinition[] = [
@@ -42,7 +36,8 @@ export const LINE_COMMANDS: CommandDefinition[] = [
     command: "expense",
     aliases: ["เงิน", "รายจ่าย", "รายรับรายจ่าย", "จ่าย", "exp", "e"],
     descriptionTH: "จัดการรายรับรายจ่าย: บันทึก, ดูสรุป, แก้ไข, ลบ, filter",
-    descriptionEN: "Full expense management: add, list, edit, delete, filter, summary",
+    descriptionEN:
+      "Full expense management: add, list, edit, delete, filter, summary",
     keywords: [
       "expense",
       "รายจ่าย",
@@ -64,8 +59,16 @@ export const LINE_COMMANDS: CommandDefinition[] = [
           "add | list [N] | sum | del [id] | edit [amount|note|category] | month [MM] | today | week | help | [หมวดหมู่]",
       },
       { name: "amount", type: "number", description: "จำนวนเงิน (บาท)" },
-      { name: "category", type: "optional", description: "ชื่อหมวดหมู่ เช่น อาหาร, เดินทาง" },
-      { name: "note", type: "optional", description: "#ข้อความ (note/comment)" },
+      {
+        name: "category",
+        type: "optional",
+        description: "ชื่อหมวดหมู่ เช่น อาหาร, เดินทาง",
+      },
+      {
+        name: "note",
+        type: "optional",
+        description: "#ข้อความ (note/comment)",
+      },
       { name: "tags", type: "optional", description: "@tag1 @tag2 (tags)" },
     ],
     examples: [
@@ -102,8 +105,16 @@ export const LINE_COMMANDS: CommandDefinition[] = [
     ],
     parameters: [
       { name: "amount", type: "number", description: "จำนวนเงิน (บาท)" },
-      { name: "category", type: "optional", description: "ชื่อหมวดหมู่ เช่น เงินเดือน, โบนัส" },
-      { name: "note", type: "optional", description: "#ข้อความ (note/comment)" },
+      {
+        name: "category",
+        type: "optional",
+        description: "ชื่อหมวดหมู่ เช่น เงินเดือน, โบนัส",
+      },
+      {
+        name: "note",
+        type: "optional",
+        description: "#ข้อความ (note/comment)",
+      },
       { name: "tags", type: "optional", description: "@tag1 @tag2 (tags)" },
     ],
     examples: [
@@ -118,14 +129,7 @@ export const LINE_COMMANDS: CommandDefinition[] = [
     aliases: ["หมวดหมู่", "หมวด", "cat"],
     descriptionTH: "จัดการหมวดหมู่รายรับรายจ่าย: ดู, สร้าง, ลบ",
     descriptionEN: "Manage expense categories: list, create, delete",
-    keywords: [
-      "category",
-      "หมวดหมู่",
-      "หมวด",
-      "สร้างหมวด",
-      "ดูหมวด",
-      "ลบหมวด",
-    ],
+    keywords: ["category", "หมวดหมู่", "หมวด", "สร้างหมวด", "ดูหมวด", "ลบหมวด"],
     parameters: [
       {
         name: "subcommand",
@@ -162,9 +166,17 @@ export const LINE_COMMANDS: CommandDefinition[] = [
         type: "optional",
         description: "set | list | del | alert | status",
       },
-      { name: "category", type: "optional", description: "ชื่อหมวดหมู่ หรือ 'total'" },
+      {
+        name: "category",
+        type: "optional",
+        description: "ชื่อหมวดหมู่ หรือ 'total'",
+      },
       { name: "amount", type: "number", description: "จำนวนเงินงบ (บาท)" },
-      { name: "percentage", type: "optional", description: "เปอร์เซ็นต์แจ้งเตือน (1-100)" },
+      {
+        name: "percentage",
+        type: "optional",
+        description: "เปอร์เซ็นต์แจ้งเตือน (1-100)",
+      },
     ],
     examples: [
       "/budget",

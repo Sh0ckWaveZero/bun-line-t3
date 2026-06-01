@@ -63,7 +63,12 @@ self.addEventListener("fetch", (event) => {
 
   // Don't cache non-GET requests, auth routes, HTML navigations, or JS/CSS
   // assets. Stale client bundles can hydrate against fresh SSR HTML.
-  if (request.method !== "GET" || isExcluded || isNavigation || isExcludedAsset) {
+  if (
+    request.method !== "GET" ||
+    isExcluded ||
+    isNavigation ||
+    isExcludedAsset
+  ) {
     event.respondWith(fetch(request));
     return;
   }

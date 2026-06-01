@@ -124,9 +124,7 @@ export class RateLimiter {
     }
   }
 
-  static async checkCronRateLimit(
-    request: Request,
-  ): Promise<Response | null> {
+  static async checkCronRateLimit(request: Request): Promise<Response | null> {
     return this.checkRequestRateLimit(request, MAX_REQUESTS_PER_WINDOW);
   }
 

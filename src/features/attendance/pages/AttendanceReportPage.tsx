@@ -69,10 +69,10 @@ export function AttendanceReportPage() {
 
       <div className="mx-auto min-h-screen w-full max-w-6xl px-4 py-8">
         <header className="mb-6">
-          <h1 className="text-xl font-semibold text-foreground">
+          <h1 className="text-foreground text-xl font-semibold">
             รายงานการเข้างานรายเดือน
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="text-muted-foreground mt-1 text-sm">
             ติดตามและจัดการเวลาการทำงานของคุณ
           </p>
         </header>

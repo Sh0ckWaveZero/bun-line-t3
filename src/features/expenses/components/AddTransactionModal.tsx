@@ -1,35 +1,49 @@
-import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from "@/components/ui/AlertDialog"
-import { Button } from "@/components/ui/button"
-import { PopoverDatePicker } from "@/components/ui/date-picker"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { toTransDate } from "@/features/expenses/helpers"
-import type { CreateTransactionInput, ExpenseCategory, TransactionWithCategory } from "@/features/expenses/types"
-import { Loader2, Tag, TrendingDown, TrendingUp, X } from "lucide-react"
-import { useEffect, useState } from "react"
-import { CategoryCombobox } from "./CategoryCombobox"
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from "@/components/ui/AlertDialog";
+import { Button } from "@/components/ui/button";
+import { PopoverDatePicker } from "@/components/ui/date-picker";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toTransDate } from "@/features/expenses/helpers";
+import type {
+  CreateTransactionInput,
+  ExpenseCategory,
+  TransactionWithCategory,
+} from "@/features/expenses/types";
+import { Loader2, Tag, TrendingDown, TrendingUp, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CategoryCombobox } from "./CategoryCombobox";
 
 function formatAmount(value: string): string {
-  const stripped = value.replace(/[^0-9.]/g, "")
-  if (!stripped) return ""
-  const dotIndex = stripped.indexOf(".")
-  const hasDot = dotIndex !== -1
-  const intPart = hasDot ? stripped.slice(0, dotIndex) : stripped
-  const decPart = hasDot ? stripped.slice(dotIndex + 1).replace(/\./g, "").slice(0, 2) : undefined
+  const stripped = value.replace(/[^0-9.]/g, "");
+  if (!stripped) return "";
+  const dotIndex = stripped.indexOf(".");
+  const hasDot = dotIndex !== -1;
+  const intPart = hasDot ? stripped.slice(0, dotIndex) : stripped;
+  const decPart = hasDot
+    ? stripped
+        .slice(dotIndex + 1)
+        .replace(/\./g, "")
+        .slice(0, 2)
+    : undefined;
   const formattedInt = intPart
     ? intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-    : "0"
-  return decPart !== undefined ? `${formattedInt}.${decPart}` : formattedInt
+    : "0";
+  return decPart !== undefined ? `${formattedInt}.${decPart}` : formattedInt;
 }
 
 interface AddTransactionModalProps {
-  categories: ExpenseCategory[]
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSave: (input: Omit<CreateTransactionInput, "userId">) => Promise<void>
-  isLoading: boolean
-  onAddCategory: () => void
-  editData?: TransactionWithCategory | null
+  categories: ExpenseCategory[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (input: Omit<CreateTransactionInput, "userId">) => Promise<void>;
+  isLoading: boolean;
+  onAddCategory: () => void;
+  editData?: TransactionWithCategory | null;
 }
 
 export function AddTransactionModal({
@@ -41,39 +55,40 @@ export function AddTransactionModal({
   onAddCategory,
   editData,
 }: AddTransactionModalProps) {
-  const [type, setType] = useState<"INCOME" | "EXPENSE">("EXPENSE")
-  const [categoryId, setCategoryId] = useState("")
-  const [amount, setAmount] = useState("")
-  const [note, setNote] = useState("")
-  const [tags, setTags] = useState("")
-  const [transDate, setTransDate] = useState(() => toTransDate())
+  const [type, setType] = useState<"INCOME" | "EXPENSE">("EXPENSE");
+  const [categoryId, setCategoryId] = useState("");
+  const [amount, setAmount] = useState("");
+  const [note, setNote] = useState("");
+  const [tags, setTags] = useState("");
+  const [transDate, setTransDate] = useState(() => toTransDate());
 
   useEffect(() => {
     if (open) {
       if (editData) {
-        setType(editData.type)
-        setCategoryId(editData.categoryId)
-        setAmount(formatAmount(editData.amount.toString()))
-        setNote(editData.note ?? "")
-        setTags(editData.tags ?? "")
-        setTransDate(editData.transDate)
+        setType(editData.type);
+        setCategoryId(editData.categoryId);
+        setAmount(formatAmount(editData.amount.toString()));
+        setNote(editData.note ?? "");
+        setTags(editData.tags ?? "");
+        setTransDate(editData.transDate);
       } else {
-        setType("EXPENSE")
-        setCategoryId("")
-        setAmount("")
-        setNote("")
-        setTags("")
-        setTransDate(toTransDate())
+        setType("EXPENSE");
+        setCategoryId("");
+        setAmount("");
+        setNote("");
+        setTags("");
+        setTransDate(toTransDate());
       }
     }
-  }, [open, editData])
+  }, [open, editData]);
 
-  const filtered = categories.filter((c) => c.isActive)
+  const filtered = categories.filter((c) => c.isActive);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const numeric = parseFloat(amount.replace(/,/g, ""))
-    if (!categoryId || !amount || !transDate || isNaN(numeric) || numeric <= 0) return
+    e.preventDefault();
+    const numeric = parseFloat(amount.replace(/,/g, ""));
+    if (!categoryId || !amount || !transDate || isNaN(numeric) || numeric <= 0)
+      return;
     await onSave({
       categoryId,
       type,
@@ -81,8 +96,8 @@ export function AddTransactionModal({
       note: note || undefined,
       tags: tags || undefined,
       transDate,
-    })
-  }
+    });
+  };
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -98,7 +113,9 @@ export function AddTransactionModal({
             {editData ? "แก้ไขรายการ" : "เพิ่มรายการ"}
           </AlertDialogTitle>
           <AlertDialogDescription className="sr-only">
-            {editData ? "แก้ไขรายละเอียดรายรับหรือรายจ่าย" : "เพิ่มรายการรายรับหรือรายจ่ายใหม่"}
+            {editData
+              ? "แก้ไขรายละเอียดรายรับหรือรายจ่าย"
+              : "เพิ่มรายการรายรับหรือรายจ่ายใหม่"}
           </AlertDialogDescription>
           <Button
             id="add-transaction-close-btn"
@@ -115,7 +132,11 @@ export function AddTransactionModal({
           id="add-transaction-modal-content"
           className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6 sm:py-6"
         >
-          <form id="add-transaction-form" onSubmit={handleSubmit} className="space-y-4">
+          <form
+            id="add-transaction-form"
+            onSubmit={handleSubmit}
+            className="space-y-4"
+          >
             <div id="transaction-type-section" className="space-y-2">
               <Label
                 id="transaction-type-label"
@@ -125,16 +146,16 @@ export function AddTransactionModal({
               </Label>
               <div
                 id="transaction-type-group"
-                className="grid grid-cols-2 gap-2 rounded-xl bg-muted/50 p-1"
+                className="bg-muted/50 grid grid-cols-2 gap-2 rounded-xl p-1"
               >
                 {(["EXPENSE", "INCOME"] as const).map((t) => {
-                  const isSelected = type === t
+                  const isSelected = type === t;
                   const activeClass =
                     t === "EXPENSE"
                       ? "bg-red-500 text-white shadow-sm"
-                      : "bg-emerald-500 text-white shadow-sm"
+                      : "bg-emerald-500 text-white shadow-sm";
                   const inactiveClass =
-                    "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    "text-muted-foreground hover:text-foreground hover:bg-muted";
                   return (
                     <button
                       key={t}
@@ -153,7 +174,7 @@ export function AddTransactionModal({
                       )}
                       {t === "INCOME" ? "รายรับ" : "รายจ่าย"}
                     </button>
-                  )
+                  );
                 })}
               </div>
             </div>
@@ -264,7 +285,10 @@ export function AddTransactionModal({
                 maxLength={200}
               />
               {tags && (
-                <div id="transaction-tags-preview" className="flex flex-wrap gap-1">
+                <div
+                  id="transaction-tags-preview"
+                  className="flex flex-wrap gap-1"
+                >
                   {tags
                     .split(",")
                     .map((t) => t.trim())
@@ -282,7 +306,10 @@ export function AddTransactionModal({
               )}
             </div>
 
-            <div id="transaction-buttons-group" className="grid grid-cols-2 gap-3 pt-1">
+            <div
+              id="transaction-buttons-group"
+              className="grid grid-cols-2 gap-3 pt-1"
+            >
               <Button
                 id="transaction-cancel-btn"
                 type="button"
@@ -322,5 +349,5 @@ export function AddTransactionModal({
         </div>
       </AlertDialogContent>
     </AlertDialog>
-  )
+  );
 }

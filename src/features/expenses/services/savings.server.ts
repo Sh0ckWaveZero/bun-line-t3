@@ -97,11 +97,17 @@ export async function updateSavingsGoal(
     data: {
       ...(input.name !== undefined && { name: input.name }),
       ...(input.icon !== undefined && { icon: input.icon }),
-      ...(input.targetAmount !== undefined && { targetAmount: input.targetAmount }),
-      ...(input.savedAmount !== undefined && { savedAmount: input.savedAmount }),
+      ...(input.targetAmount !== undefined && {
+        targetAmount: input.targetAmount,
+      }),
+      ...(input.savedAmount !== undefined && {
+        savedAmount: input.savedAmount,
+      }),
       ...(input.deadline !== undefined && { deadline: input.deadline }),
       ...(input.tags !== undefined && { tags: input.tags }),
-      ...(input.isCompleted !== undefined && { isCompleted: input.isCompleted }),
+      ...(input.isCompleted !== undefined && {
+        isCompleted: input.isCompleted,
+      }),
       ...(input.isActive !== undefined && { isActive: input.isActive }),
     },
   });

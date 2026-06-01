@@ -64,7 +64,9 @@ export const sendLoadingAnimation = async (
 
       if (loadingResponse.ok) {
         req.__lineLoadingAnimationShown = true;
-        console.info(`[sendLoadingAnimation] แสดง loading ที่ ${sourceType || "user"}: ${userId}`);
+        console.info(
+          `[sendLoadingAnimation] แสดง loading ที่ ${sourceType || "user"}: ${userId}`,
+        );
         return loadingResponse;
       }
     } catch {
@@ -131,7 +133,9 @@ export const sendMessage = async (
         },
       );
 
-      console.info(`[sendMessage] ส่ง reply ไปยัง ${sourceType || "user"}: ${userId || "unknown"}`);
+      console.info(
+        `[sendMessage] ส่ง reply ไปยัง ${sourceType || "user"}: ${userId || "unknown"}`,
+      );
       return response;
     }
 
@@ -169,7 +173,9 @@ export const sendPushMessage = async (req: any, payload: any) => {
     throw new Error("Cannot send push message: missing userId");
   }
 
-  console.info(`[sendPushMessage] ส่ง push ไปยัง ${sourceType || "user"}: ${userId}`);
+  console.info(
+    `[sendPushMessage] ส่ง push ไปยัง ${sourceType || "user"}: ${userId}`,
+  );
 
   return sendRequest(`${env.LINE_MESSAGING_API}/push`, "POST", lineHeader, {
     to: userId,
