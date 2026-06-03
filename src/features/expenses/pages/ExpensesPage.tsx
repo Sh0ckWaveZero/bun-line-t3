@@ -368,6 +368,7 @@ export function ExpensesPage() {
               categories={categories}
               transactions={transactions}
               isSaving={txSaving}
+              isLoading={txLoading}
               onSave={createTransaction}
               refetch={refetchTx}
             />
