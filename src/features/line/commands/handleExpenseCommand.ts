@@ -73,7 +73,6 @@ function createExpenseSummaryBubble(
   summary: MonthlySummary,
   categories: CategorySummary[],
   transMonth: string,
-  frontendUrl: string,
   hide = false,
 ): object {
   const balance = summary.balance;
@@ -207,9 +206,9 @@ function createExpenseSummaryBubble(
           style: "primary",
           color: headerColor,
           action: {
-            type: "uri",
-            label: "ดูรายการทั้งหมด",
-            uri: `${frontendUrl}/expenses`,
+            type: "message",
+            label: "📋 ดูรายการทั้งหมด",
+            text: "/expense list",
           },
         },
       ],
@@ -529,9 +528,9 @@ async function handleHelp(req: unknown) {
             style: "primary",
             color: "#1D4ED8",
             action: {
-              type: "uri",
-              label: "ดูคำสั่งทั้งหมดบนเว็บไซต์",
-              uri: `${env.FRONTEND_URL}/help`,
+              type: "message",
+              label: "💰 ดูคำสั่งทั้งหมด",
+              text: "/expense help",
             },
           },
         ],
@@ -561,13 +560,7 @@ async function handleSummary(
       getCategorySummary(userId, month),
     ]);
 
-    const bubble = createExpenseSummaryBubble(
-      summary,
-      categories,
-      month,
-      env.FRONTEND_URL,
-      hide,
-    );
+    const bubble = createExpenseSummaryBubble(summary, categories, month, hide);
 
     await sendMessage(
       req as Parameters<typeof sendMessage>[0],
@@ -1401,47 +1394,115 @@ async function handleAdd(
       transDate: toTransDate(),
     });
 
-    const responseLines: string[] = [];
+    const row = (label: string, value: string, valueColor = "#374151") => ({
+      type: "box",
+      layout: "horizontal",
+      spacing: "sm",
+      contents: [
+        { type: "text", text: label, size: "sm", color: "#6B7280", flex: 3, wrap: true },
+        { type: "text", text: value, size: "sm", color: valueColor, weight: "bold", align: "end", flex: 4, wrap: true },
+      ],
+    });
+
+    let bodyContents: object[];
+    let headerTitle: string;
+    const headerColor = "#16A34A";
 
     if (isThaiHelpCoPay) {
-      responseLines.push(
-        `✅ บันทึกรายจ่าย (ไทยช่วยไทย 60/40) สำเร็จ`,
-        "",
-        `🍲 หมวดหมู่: ${category.icon ?? ""} ${category.name}`,
-        `🛍️ ยอดสินค้าเต็ม: ${hide ? MASKED : amount.toLocaleString("th-TH", { minimumFractionDigits: 2 })} บาท`,
-        `🏛️ รัฐร่วมจ่าย (60%): -${hide ? MASKED : subsidyAmount.toLocaleString("th-TH", { minimumFractionDigits: 2 })} บาท`,
-        `💵 คุณจ่ายเองจริง (40%): -${fmt(tx.amount, hide)} บาท (บันทึกเข้าระบบ)`,
-        `📅 วันที่: ${tx.transDate}`,
-      );
+      headerTitle = "✅ บันทึกรายจ่าย (ไทยช่วยไทย 60/40) สำเร็จ";
+      bodyContents = [
+        row(`🍲 หมวดหมู่`, `${category.icon ?? ""} ${category.name}`),
+        row(
+          `🛍️ ยอดสินค้าเต็ม`,
+          `${hide ? MASKED : amount.toLocaleString("th-TH", { minimumFractionDigits: 2 })} บาท`,
+        ),
+        row(
+          `🏛️ รัฐร่วมจ่าย (60%)`,
+          `-${hide ? MASKED : subsidyAmount.toLocaleString("th-TH", { minimumFractionDigits: 2 })} บาท`,
+          "#EF4444",
+        ),
+        row(`💵 คุณจ่ายเองจริง (40%)`, `-${fmt(tx.amount, hide)} บาท`, "#EF4444"),
+        { type: "separator", margin: "md" },
+        row(`📅 วันที่`, tx.transDate),
+      ];
     } else {
       const isIncome = type === "INCOME";
       const sign = isIncome ? "+" : "-";
-      const emoji = isIncome ? "📈" : "📉";
-
-      responseLines.push(
-        `✅ บันทึก${isIncome ? "รายรับ" : "รายจ่าย"}สำเร็จ`,
-        "",
-        `${emoji} ${type === "INCOME" ? "รายรับ" : "รายจ่าย"}`,
-        `${category.icon ?? ""} หมวดหมู่: ${category.name}`,
-        `💵 จำนวน: ${sign}${fmt(tx.amount, hide)} บาท`,
-        `📅 วันที่: ${tx.transDate}`,
-      );
-
+      const amountColor = isIncome ? "#16A34A" : "#EF4444";
+      headerTitle = `✅ บันทึก${isIncome ? "รายรับ" : "รายจ่าย"}สำเร็จ`;
+      bodyContents = [
+        row(`${category.icon ?? (isIncome ? "💰" : "💸")} หมวดหมู่`, category.name),
+        row(`💵 จำนวน`, `${sign}${fmt(tx.amount, hide)} บาท`, amountColor),
+        { type: "separator", margin: "md" },
+        row(`📅 วันที่`, tx.transDate),
+      ];
       if (parsed.note) {
-        responseLines.push(`📝 Note: ${parsed.note}`);
+        bodyContents.push(row(`📝 Note`, parsed.note));
       }
       if (parsed.tags && parsed.tags.length > 0) {
-        responseLines.push(
-          `🏷️ Tags: ${parsed.tags.map((t) => `@${t}`).join(" ")}`,
-        );
+        bodyContents.push(row(`🏷️ Tags`, parsed.tags.map((t) => `@${t}`).join(" ")));
       }
     }
 
-    responseLines.push("", "🔗 ดูทั้งหมด: /expense");
+    const bubble = {
+      type: "bubble",
+      size: "giga",
+      header: {
+        type: "box",
+        layout: "vertical",
+        paddingAll: "20px",
+        backgroundColor: headerColor,
+        contents: [
+          {
+            type: "text",
+            text: headerTitle,
+            weight: "bold",
+            size: "md",
+            color: "#ffffff",
+            align: "center",
+            wrap: true,
+          },
+        ],
+      },
+      body: {
+        type: "box",
+        layout: "vertical",
+        spacing: "sm",
+        paddingAll: "20px",
+        contents: bodyContents,
+      },
+      footer: {
+        type: "box",
+        layout: "horizontal",
+        paddingAll: "12px",
+        spacing: "sm",
+        contents: [
+          {
+            type: "button",
+            style: "primary",
+            color: headerColor,
+            flex: 1,
+            action: {
+              type: "message",
+              label: "📊 ดูสรุปเดือนนี้",
+              text: "/expense",
+            },
+          },
+          {
+            type: "button",
+            style: "secondary",
+            flex: 1,
+            action: {
+              type: "message",
+              label: "📋 ดูรายการ",
+              text: "/expense list",
+            },
+          },
+        ],
+      },
+    };
 
-    await sendMessage(req as Parameters<typeof sendMessage>[0], [
-      { type: "text", text: responseLines.join("\n") },
-    ]);
+    await sendMessage(req as Parameters<typeof sendMessage>[0], flexMessage([bubble]));
   } catch (err) {
     console.error("[Expense Add] error:", err);
     await sendMessage(req as Parameters<typeof sendMessage>[0], [
