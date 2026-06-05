@@ -4,6 +4,7 @@ import { useSearch } from "@tanstack/react-router";
 import React from "react";
 import { useSession } from "@/lib/auth/client";
 import { LineLoginButton } from "@/components/ui/LineLoginButton";
+import { ParticleWaveCanvas } from "@/components/ui/ParticleWaveCanvas";
 
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
   invalid_code:
@@ -16,20 +17,13 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
 };
 
 const getSafeCallbackUrl = (value: unknown) => {
-  if (typeof value !== "string") {
-    return "/";
-  }
-
-  if (!value.startsWith("/") || value.startsWith("//")) {
-    return "/";
-  }
-
+  if (typeof value !== "string") return "/";
+  if (!value.startsWith("/") || value.startsWith("//")) return "/";
   try {
     const url = new URL(value, "http://localhost");
     url.searchParams.delete("authError");
     url.searchParams.delete("error");
     const nextUrl = `${url.pathname}${url.search}${url.hash}`;
-
     return nextUrl === "/login" ? "/" : nextUrl;
   } catch {
     return "/";
@@ -62,16 +56,24 @@ export function LoginPage() {
     return (
       <main
         id="login-loading"
-        className="bg-background flex min-h-screen items-center justify-center"
+        className="relative flex min-h-screen items-center justify-center overflow-hidden"
         role="status"
         aria-live="polite"
       >
-        <div className="text-center">
+        <ParticleWaveCanvas />
+        <div className="relative z-10 text-center">
           <div
-            className="border-primary mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"
+            className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"
+            style={{
+              borderColor: "rgba(65, 220, 195, 0.5)",
+              borderTopColor: "transparent",
+            }}
             aria-hidden="true"
-          ></div>
-          <p className="text-muted-foreground text-lg font-medium">
+          />
+          <p
+            className="text-lg font-medium"
+            style={{ color: "oklch(0.72 0.08 185)" }}
+          >
             กำลังตรวจสอบสถานะการเข้าสู่ระบบ...
           </p>
         </div>
@@ -82,26 +84,23 @@ export function LoginPage() {
   return (
     <main
       id="login-page"
-      className="bg-background relative flex h-screen w-full items-center justify-center overflow-hidden"
+      className="relative flex h-screen w-full items-center justify-center overflow-hidden"
     >
-      {/* Decorative blobs */}
-      <div
-        id="login-background"
-        className="pointer-events-none absolute inset-0 -z-10"
-        aria-hidden="true"
-      >
-        <div className="from-primary/15 to-primary/5 absolute -top-40 -right-40 h-80 w-80 rounded-full bg-linear-to-br blur-3xl" />
-        <div className="from-primary/10 to-primary/20 absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-linear-to-tr blur-3xl" />
-      </div>
+      <ParticleWaveCanvas />
 
-      {/* Card */}
       <div
         id="login-container"
         className="relative z-10 w-full max-w-sm p-4 sm:max-w-md sm:p-6"
       >
         <div
           id="login-card"
-          className="bg-card border-border rounded-xl border p-8 shadow-xl sm:p-10"
+          className="rounded-2xl border p-8 shadow-2xl backdrop-blur-2xl sm:p-10"
+          style={{
+            backgroundColor: "rgba(7, 40, 70, 0.35)",
+            borderColor: "rgba(65, 220, 195, 0.15)",
+            boxShadow:
+              "0 20px 60px rgba(7, 25, 64, 0.5), 0 0 60px rgba(65, 220, 195, 0.06), inset 0 1px 0 rgba(148, 232, 214, 0.1)",
+          }}
         >
           <div id="login-header" className="mb-8 text-center">
             <div
@@ -114,13 +113,15 @@ export function LoginPage() {
             </div>
             <h1
               id="login-title"
-              className="text-foreground mb-1 text-2xl font-bold sm:text-3xl"
+              className="mb-1 text-2xl font-bold sm:text-3xl"
+              style={{ color: "#ccfaee" }}
             >
               เข้าสู่ระบบ
             </h1>
             <p
               id="login-subtitle"
-              className="text-muted-foreground text-sm sm:text-base"
+              className="text-sm sm:text-base"
+              style={{ color: "rgba(148, 232, 214, 0.78)" }}
             >
               ยินดีต้อนรับเข้าสู่ระบบ
             </p>
@@ -133,7 +134,12 @@ export function LoginPage() {
                 role="alert"
                 aria-live="assertive"
                 aria-atomic="true"
-                className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200"
+                className="rounded-md border px-4 py-3 text-sm font-medium"
+                style={{
+                  backgroundColor: "rgba(180, 40, 40, 0.25)",
+                  borderColor: "rgba(220, 80, 80, 0.45)",
+                  color: "#fca5a5",
+                }}
               >
                 {authErrorMessage}
               </div>
