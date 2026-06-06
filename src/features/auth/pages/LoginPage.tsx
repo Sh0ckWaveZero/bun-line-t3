@@ -56,24 +56,21 @@ export function LoginPage() {
     return (
       <main
         id="login-loading"
-        className="relative flex min-h-screen items-center justify-center overflow-hidden"
+        className="fixed inset-0 z-55 flex items-center justify-center overflow-hidden"
         role="status"
         aria-live="polite"
       >
         <ParticleWaveCanvas />
         <div className="relative z-10 text-center">
           <div
-            className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"
+            className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4"
             style={{
-              borderColor: "rgba(65, 220, 195, 0.5)",
-              borderTopColor: "transparent",
+              borderColor: "rgba(144, 112, 208, 0.3)",
+              borderTopColor: "rgba(144, 112, 208, 0.9)",
             }}
             aria-hidden="true"
           />
-          <p
-            className="text-lg font-medium"
-            style={{ color: "oklch(0.72 0.08 185)" }}
-          >
+          <p className="text-lg font-medium" style={{ color: "#e0dced" }}>
             กำลังตรวจสอบสถานะการเข้าสู่ระบบ...
           </p>
         </div>
@@ -84,7 +81,7 @@ export function LoginPage() {
   return (
     <main
       id="login-page"
-      className="relative flex h-screen w-full items-center justify-center overflow-hidden"
+      className="fixed inset-0 z-55 flex items-center justify-center overflow-hidden"
     >
       <ParticleWaveCanvas />
 
@@ -94,12 +91,11 @@ export function LoginPage() {
       >
         <div
           id="login-card"
-          className="rounded-2xl border p-8 shadow-2xl backdrop-blur-2xl sm:p-10"
+          className="rounded-2xl border p-8 sm:p-10"
           style={{
-            backgroundColor: "rgba(7, 40, 70, 0.35)",
-            borderColor: "rgba(65, 220, 195, 0.15)",
-            boxShadow:
-              "0 20px 60px rgba(7, 25, 64, 0.5), 0 0 60px rgba(65, 220, 195, 0.06), inset 0 1px 0 rgba(148, 232, 214, 0.1)",
+            backgroundColor: "#2a2650",
+            borderColor: "rgba(140, 110, 200, 0.2)",
+            boxShadow: "0 20px 60px rgba(17, 15, 34, 0.7)",
           }}
         >
           <div id="login-header" className="mb-8 text-center">
@@ -114,16 +110,12 @@ export function LoginPage() {
             <h1
               id="login-title"
               className="mb-1 text-2xl font-bold sm:text-3xl"
-              style={{ color: "#ccfaee" }}
+              style={{ color: "#e0dced" }}
             >
               เข้าสู่ระบบ
             </h1>
-            <p
-              id="login-subtitle"
-              className="text-sm sm:text-base"
-              style={{ color: "rgba(148, 232, 214, 0.78)" }}
-            >
-              ยินดีต้อนรับเข้าสู่ระบบ
+            <p id="login-subtitle" className="text-sm sm:text-base" style={{ color: "#9d98b8" }}>
+              สำหรับบุคลที่ได้รับอนุมัติเท่านั้น
             </p>
           </div>
 
@@ -136,8 +128,8 @@ export function LoginPage() {
                 aria-atomic="true"
                 className="rounded-md border px-4 py-3 text-sm font-medium"
                 style={{
-                  backgroundColor: "rgba(180, 40, 40, 0.25)",
-                  borderColor: "rgba(220, 80, 80, 0.45)",
+                  backgroundColor: "rgba(196, 72, 48, 0.2)",
+                  borderColor: "rgba(196, 72, 48, 0.4)",
                   color: "#fca5a5",
                 }}
               >
