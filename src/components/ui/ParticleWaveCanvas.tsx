@@ -31,7 +31,6 @@ export function ParticleWaveCanvas() {
     const ro = new ResizeObserver(setSize);
     ro.observe(canvas);
 
-    // Wave mesh: grid of dots + connecting lines that ripple like fabric
     const COLS = 22;
     const ROWS = 14;
 
@@ -41,7 +40,7 @@ export function ParticleWaveCanvas() {
       return {
         c,
         r,
-        nx: (c / (COLS - 1)) * 1.2 - 0.1, // normalized x, slight overflow for density
+        nx: (c / (COLS - 1)) * 1.2 - 0.1,
         ny: 0.18 + (r / (ROWS - 1)) * 0.82,
         dotR: 0.7 + Math.random() * 1.3,
         phA: Math.random() * Math.PI * 2,
@@ -50,34 +49,21 @@ export function ParticleWaveCanvas() {
       };
     });
 
-    // Bokeh: floating radial glow circles
-    const bokeh = Array.from({ length: 32 }, () => ({
-      nx: Math.random(),
-      ny: Math.random(),
-      r: 4 + Math.random() * 24,
-      alpha: 0.07 + Math.random() * 0.38,
-      vy: (0.12 + Math.random() * 0.25) * 0.0008,
-      vx: (Math.random() - 0.5) * 0.0002,
-      pulse: Math.random() * Math.PI * 2,
-      pspd: 0.3 + Math.random() * 1.4,
-    }));
-
     function tick() {
       const w = canvas!.offsetWidth;
       const h = canvas!.offsetHeight;
 
-      // Background: deep blue top-right → teal bottom-left (matches reference image)
-      const bgGrad = ctx!.createLinearGradient(w * 0.9, 0, 0, h * 1.05);
-      bgGrad.addColorStop(0, "#071940");
-      bgGrad.addColorStop(0.28, "#0b2d6e");
-      bgGrad.addColorStop(0.58, "#09566b");
-      bgGrad.addColorStop(1, "#077a68");
+      // Brand dark indigo-violet (DESIGN.md dark palette)
+      const bgGrad = ctx!.createLinearGradient(w * 0.85, 0, 0, h * 1.05);
+      bgGrad.addColorStop(0, "#110f22");
+      bgGrad.addColorStop(0.35, "#1e1b33");
+      bgGrad.addColorStop(0.7, "#241d3b");
+      bgGrad.addColorStop(1, "#1e1b33");
       ctx!.fillStyle = bgGrad;
       ctx!.fillRect(0, 0, w, h);
 
       if (!prefersReducedMotion) t += 0.005;
 
-      // Compute world positions with multi-octave wave deformation
       const pos: [number, number][] = mesh.map((p) => {
         const bx = p.nx * w;
         const by = p.ny * h;
@@ -88,7 +74,6 @@ export function ParticleWaveCanvas() {
         return [bx + dx, by + dy];
       });
 
-      // Mesh lines: fade with distance, skip if too far apart
       ctx!.lineWidth = 0.55;
       for (let ci = 0; ci < COLS; ci++) {
         for (let ri = 0; ri < ROWS; ri++) {
@@ -100,7 +85,7 @@ export function ParticleWaveCanvas() {
             const d = Math.hypot(x2 - x1, y2 - y1);
             const a = Math.max(0, 0.095 - d / 3800);
             if (a > 0) {
-              ctx!.strokeStyle = `rgba(148, 232, 214, ${a})`;
+              ctx!.strokeStyle = `rgba(140, 110, 200, ${a})`;
               ctx!.beginPath();
               ctx!.moveTo(x1, y1);
               ctx!.lineTo(x2, y2);
@@ -113,7 +98,7 @@ export function ParticleWaveCanvas() {
             const d = Math.hypot(x2 - x1, y2 - y1);
             const a = Math.max(0, 0.075 - d / 3800);
             if (a > 0) {
-              ctx!.strokeStyle = `rgba(148, 232, 214, ${a})`;
+              ctx!.strokeStyle = `rgba(140, 110, 200, ${a})`;
               ctx!.beginPath();
               ctx!.moveTo(x1, y1);
               ctx!.lineTo(x2, y2);
@@ -123,40 +108,11 @@ export function ParticleWaveCanvas() {
         }
       }
 
-      // Dots
-      ctx!.fillStyle = "rgba(204, 250, 238, 0.68)";
+      ctx!.fillStyle = "rgba(180, 155, 225, 0.65)";
       mesh.forEach((p, i) => {
         const [x, y] = pos[i]!;
         ctx!.beginPath();
         ctx!.arc(x, y, p.dotR, 0, Math.PI * 2);
-        ctx!.fill();
-      });
-
-      // Bokeh glow circles
-      bokeh.forEach((b) => {
-        if (!prefersReducedMotion) {
-          b.ny -= b.vy;
-          b.nx += b.vx;
-          b.pulse += b.pspd * 0.012;
-          if (b.ny < -(b.r / h)) {
-            b.ny = 1 + b.r / h;
-            b.nx = Math.random();
-          }
-          if (b.nx < -(b.r / w)) b.nx = 1 + b.r / w;
-          if (b.nx > 1 + b.r / w) b.nx = -(b.r / w);
-        }
-        const bx = b.nx * w;
-        const by = b.ny * h;
-        const br = b.r * (1 + Math.sin(b.pulse) * 0.1);
-        const a = b.alpha * (0.88 + Math.sin(b.pulse * 1.4) * 0.12);
-
-        const g = ctx!.createRadialGradient(bx, by, 0, bx, by, br);
-        g.addColorStop(0, `rgba(65, 220, 195, ${a})`);
-        g.addColorStop(0.4, `rgba(45, 195, 172, ${a * 0.3})`);
-        g.addColorStop(1, "rgba(45, 195, 172, 0)");
-        ctx!.beginPath();
-        ctx!.arc(bx, by, br, 0, Math.PI * 2);
-        ctx!.fillStyle = g;
         ctx!.fill();
       });
 
