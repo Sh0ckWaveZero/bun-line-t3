@@ -9,6 +9,12 @@ import { PopoverDatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toTransDate } from "@/features/expenses/helpers";
+import {
+  shouldApplyCoPayment,
+  calculateCoPaymentSplit,
+  formatCoPaymentDetails,
+  parseTransactionSubsidy,
+} from "@/features/expenses/helpers/coPayment";
 import type {
   CreateTransactionInput,
   ExpenseCategory,
@@ -62,15 +68,41 @@ export function AddTransactionModal({
   const [tags, setTags] = useState("");
   const [transDate, setTransDate] = useState(() => toTransDate());
 
+  const isCoPayTx =
+    !!editData &&
+    shouldApplyCoPayment(
+      editData.type,
+      editData.note,
+      editData.tags?.split(","),
+    );
+
   useEffect(() => {
     if (open) {
       if (editData) {
         setType(editData.type);
         setCategoryId(editData.categoryId);
-        setAmount(formatAmount(editData.amount.toString()));
-        setNote(editData.note ?? "");
-        setTags(editData.tags ?? "");
         setTransDate(editData.transDate);
+
+        if (isCoPayTx) {
+          const subsidy = parseTransactionSubsidy(
+            editData.amount,
+            editData.note,
+            editData.tags,
+          );
+          setAmount(formatAmount((editData.amount + subsidy).toString()));
+          const customNoteMatch = (editData.note ?? "").match(/ - (.+)$/);
+          setNote(customNoteMatch?.[1] ?? "");
+          const customTags = (editData.tags ?? "")
+            .split(",")
+            .map((t) => t.trim())
+            .filter((t) => t && t !== "ไทยช่วยไทย" && t !== "60-40")
+            .join(",");
+          setTags(customTags);
+        } else {
+          setAmount(formatAmount(editData.amount.toString()));
+          setNote(editData.note ?? "");
+          setTags(editData.tags ?? "");
+        }
       } else {
         setType("EXPENSE");
         setCategoryId("");
@@ -89,14 +121,37 @@ export function AddTransactionModal({
     const numeric = parseFloat(amount.replace(/,/g, ""));
     if (!categoryId || !amount || !transDate || isNaN(numeric) || numeric <= 0)
       return;
-    await onSave({
-      categoryId,
-      type,
-      amount: numeric,
-      note: note || undefined,
-      tags: tags || undefined,
-      transDate,
-    });
+
+    if (isCoPayTx) {
+      const split = calculateCoPaymentSplit(numeric);
+      const originalTags = tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter((t) => t && t !== "ไทยช่วยไทย" && t !== "60-40");
+      const formatted = formatCoPaymentDetails(
+        numeric,
+        split.subsidyAmount,
+        note || undefined,
+        originalTags,
+      );
+      await onSave({
+        categoryId,
+        type,
+        amount: split.userAmount,
+        note: formatted.note,
+        tags: formatted.tags.join(","),
+        transDate,
+      });
+    } else {
+      await onSave({
+        categoryId,
+        type,
+        amount: numeric,
+        note: note || undefined,
+        tags: tags || undefined,
+        transDate,
+      });
+    }
   };
 
   return (
@@ -227,7 +282,7 @@ export function AddTransactionModal({
                 id="transaction-amount-label"
                 className="text-foreground text-sm font-semibold"
               >
-                จำนวนเงิน
+                {isCoPayTx ? "ยอดเต็ม (ไทยช่วยไทย 60/40)" : "จำนวนเงิน"}
               </Label>
               <Input
                 id="transaction-amount-input"
@@ -236,9 +291,16 @@ export function AddTransactionModal({
                 value={amount}
                 onChange={(e) => setAmount(formatAmount(e.target.value))}
                 required
-                placeholder="จำนวนเงิน (บาท)"
+                placeholder={
+                  isCoPayTx ? "ยอดรวมก่อนหักส่วนลด (บาท)" : "จำนวนเงิน (บาท)"
+                }
                 className="border-border bg-background placeholder:text-muted-foreground/60 focus-visible:ring-foreground/30 h-12 rounded-lg px-4 text-base font-medium"
               />
+              {isCoPayTx && (
+                <p className="text-muted-foreground text-xs">
+                  ระบุยอดเต็ม — ระบบจะคำนวณส่วนลด 60% ให้อัตโนมัติ
+                </p>
+              )}
             </div>
 
             <PopoverDatePicker

@@ -833,23 +833,53 @@ async function handleEdit(
         return;
       }
 
-      const updated = await updateTransaction(latest.id, userId, {
-        amount: newAmount,
-      });
+      const isCoPayTx = shouldApplyCoPayment(
+        latest.type,
+        latest.note,
+        latest.tags?.split(","),
+      );
+      let updateData: {
+        amount: number;
+        note?: string | null;
+        tags?: string | null;
+      };
+      if (isCoPayTx) {
+        const split = calculateCoPaymentSplit(newAmount);
+        const customNoteMatch = (latest.note ?? "").match(/ - (.+)$/);
+        const customNote = customNoteMatch?.[1];
+        const originalTags = (latest.tags ?? "")
+          .split(",")
+          .map((t) => t.trim())
+          .filter((t) => t && t !== "ไทยช่วยไทย" && t !== "60-40");
+        const formatted = formatCoPaymentDetails(
+          newAmount,
+          split.subsidyAmount,
+          customNote,
+          originalTags,
+        );
+        updateData = {
+          amount: split.userAmount,
+          note: formatted.note,
+          tags: formatted.tags.join(","),
+        };
+      } else {
+        updateData = { amount: newAmount };
+      }
+
+      const updated = await updateTransaction(latest.id, userId, updateData);
       const isIncome = updated.type === "INCOME";
       const sign = isIncome ? "+" : "-";
-
+      const lines = [
+        "✅ แก้ไขจำนวนเงินสำเร็จ",
+        "",
+        `${updated.category.icon ?? "📦"} ${updated.category.name}`,
+        isCoPayTx
+          ? `🛍️ ยอดเต็ม ${fmt(newAmount, hide)} บาท → ชำระ ${fmt(updated.amount, hide)} บาท`
+          : `💵 ${sign}${fmt(updated.amount, hide)} บาท`,
+        `📅 ${updated.transDate}`,
+      ];
       await sendMessage(req as Parameters<typeof sendMessage>[0], [
-        {
-          type: "text",
-          text: [
-            "✅ แก้ไขจำนวนเงินสำเร็จ",
-            "",
-            `${updated.category.icon ?? "📦"} ${updated.category.name}`,
-            `💵 ${sign}${fmt(updated.amount, hide)} บาท`,
-            `📅 ${updated.transDate}`,
-          ].join("\n"),
-        },
+        { type: "text", text: lines.join("\n") },
       ]);
       return;
     }
@@ -874,23 +904,53 @@ async function handleEdit(
         return;
       }
 
-      const updated = await updateTransaction(latest.id, userId, {
-        amount: newAmount,
-      });
+      const isCoPayTx = shouldApplyCoPayment(
+        latest.type,
+        latest.note,
+        latest.tags?.split(","),
+      );
+      let updateData: {
+        amount: number;
+        note?: string | null;
+        tags?: string | null;
+      };
+      if (isCoPayTx) {
+        const split = calculateCoPaymentSplit(newAmount);
+        const customNoteMatch = (latest.note ?? "").match(/ - (.+)$/);
+        const customNote = customNoteMatch?.[1];
+        const originalTags = (latest.tags ?? "")
+          .split(",")
+          .map((t) => t.trim())
+          .filter((t) => t && t !== "ไทยช่วยไทย" && t !== "60-40");
+        const formatted = formatCoPaymentDetails(
+          newAmount,
+          split.subsidyAmount,
+          customNote,
+          originalTags,
+        );
+        updateData = {
+          amount: split.userAmount,
+          note: formatted.note,
+          tags: formatted.tags.join(","),
+        };
+      } else {
+        updateData = { amount: newAmount };
+      }
+
+      const updated = await updateTransaction(latest.id, userId, updateData);
       const isIncome = updated.type === "INCOME";
       const sign = isIncome ? "+" : "-";
-
+      const lines = [
+        "✅ แก้ไขจำนวนเงินสำเร็จ",
+        "",
+        `${updated.category.icon ?? "📦"} ${updated.category.name}`,
+        isCoPayTx
+          ? `🛍️ ยอดเต็ม ${fmt(newAmount, hide)} บาท → ชำระ ${fmt(updated.amount, hide)} บาท`
+          : `💵 ${sign}${fmt(updated.amount, hide)} บาท`,
+        `📅 ${updated.transDate}`,
+      ];
       await sendMessage(req as Parameters<typeof sendMessage>[0], [
-        {
-          type: "text",
-          text: [
-            "✅ แก้ไขจำนวนเงินสำเร็จ",
-            "",
-            `${updated.category.icon ?? "📦"} ${updated.category.name}`,
-            `💵 ${sign}${fmt(updated.amount, hide)} บาท`,
-            `📅 ${updated.transDate}`,
-          ].join("\n"),
-        },
+        { type: "text", text: lines.join("\n") },
       ]);
       return;
     }
