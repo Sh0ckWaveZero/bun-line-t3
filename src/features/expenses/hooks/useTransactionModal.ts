@@ -1,5 +1,4 @@
 import { useCallback, useState } from "react";
-import { useToast } from "@/components/common/ToastProvider";
 import type { CreateTransactionInput, TransactionWithCategory } from "../types";
 
 interface Deps {
@@ -18,7 +17,6 @@ export function useTransactionModal({
   updateTransaction,
   deleteTransaction,
 }: Deps) {
-  const { showToast } = useToast();
   const [showModal, setShowModal] = useState(false);
   const [editingTx, setEditingTx] = useState<TransactionWithCategory | null>(
     null,
@@ -44,17 +42,15 @@ export function useTransactionModal({
       try {
         if (editingTx) {
           await updateTransaction({ id: editingTx.id, input });
-          showToast({ title: "✅ แก้ไขรายการสำเร็จ", type: "success" });
         } else {
           await createTransaction(input);
-          showToast({ title: "✅ บันทึกรายการสำเร็จ", type: "success" });
         }
         close();
-      } catch {
-        showToast({ title: "❌ เกิดข้อผิดพลาด กรุณาลองใหม่", type: "error" });
+      } catch (err) {
+        console.error("[Transaction] save failed:", err);
       }
     },
-    [editingTx, createTransaction, updateTransaction, close, showToast],
+    [editingTx, createTransaction, updateTransaction, close],
   );
 
   const handleDelete = useCallback(

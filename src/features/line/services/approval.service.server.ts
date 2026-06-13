@@ -3,10 +3,16 @@
  * Business logic สำหรับ LINE Messaging API Approval Flow
  */
 import { approvalRepository } from "./approval.repository.server";
-import { canManageApprovals, isAdminLineUser } from "@/lib/auth/admin";
+import {
+  canManageApprovals,
+  canManageApprovalsAsync,
+  getEnvAdminLineUserIds,
+  isAdminLineUser,
+} from "@/lib/auth/admin";
 import { sendPushMessage } from "@/lib/utils/line-push";
 import { approvalBubbleTemplate } from "@/lib/validation/line-approval";
 import { flexMessage } from "@/lib/utils/line-message-utils";
+import { env } from "@/env.mjs";
 import type { ApprovalStatus, LineApprovalRequest } from "@prisma/client";
 import type { ApprovalCheckResult } from "../types/approval.types";
 import { APPROVAL_CHECK_RESULT } from "../types/approval.types";
@@ -57,8 +63,9 @@ export interface AccountApprovalItem {
 const checkApprovalStatus = async (
   userProfile: LineUserProfile,
 ): Promise<ApprovalCheckResult> => {
-  // 🔐 Admin whitelist check — ผู้อยู่ใน ADMIN_LINE_USER_IDS ได้รับอนุมัติอัตโนมัติ
-  if (isAdminLineUser(userProfile.userId)) {
+  // 🔐 Admin check — แอดมิน (env whitelist หรือ DB role) ได้รับอนุมัติอัตโนมัติ
+  // ทำให้แอดมินทุกประเภทสามารถใช้งานคำสั่งและกดปุ่มอนุมัติใน LINE ได้
+  if (await canManageApprovalsAsync(userProfile.userId)) {
     const existing = await approvalRepository.findByLineUserId(
       userProfile.userId,
     );
@@ -227,6 +234,96 @@ const rejectLineUser = async (
 };
 
 /**
+ * ดึง LINE user IDs ของแอดมินทั้งหมด (รวม env whitelist และ DB role)
+ * ใช้สำหรับส่งแจ้งเตือนไปยังแอดมินทุกคน
+ */
+const getAdminLineUserIds = async (): Promise<string[]> => {
+  const envAdmins = getEnvAdminLineUserIds();
+  const dbAdmins = await approvalRepository.findAllAdminLineUserIds();
+  return Array.from(new Set([...envAdmins, ...dbAdmins]));
+};
+
+/**
+ * แจ้งเตือนแอดมินทุกคนเมื่อมีคำขอใหม่รออนุมัติ
+ * ส่ง flex message พร้อมข้อมูลผู้ขอครบถ้วนและปุ่มอนุมัติใน LINE
+ * (fire-and-forget — ไม่บล็อกการตอบกลับผู้ขอ)
+ */
+const notifyAdminsOfNewRequest = async (
+  requester: LineUserProfile,
+): Promise<void> => {
+  try {
+    const adminIds = await getAdminLineUserIds();
+    if (adminIds.length === 0) {
+      console.warn(
+        "[ApprovalService] ไม่พบแอดมินในระบบ — ข้ามการแจ้งเตือนคำขอใหม่",
+      );
+      return;
+    }
+
+    // กรองตัวผู้ขอออก (ถ้าบังเอิญเป็นแอดมิน — ปกติแอดมิน auto-approve จึงไม่ถึงจุดนี้)
+    const recipients = adminIds.filter((id) => id !== requester.userId);
+    if (recipients.length === 0) return;
+
+    const stats = await approvalRepository.getStats();
+    const webUrl = `${env.APP_URL}/line-approval`;
+    const bubble = approvalBubbleTemplate.adminPendingRequest({
+      displayName: requester.displayName,
+      pictureUrl: requester.pictureUrl,
+      lineUserId: requester.userId,
+      statusMessage: requester.statusMessage,
+      pendingCount: stats.pending,
+      webUrl,
+    });
+
+    const results = await Promise.allSettled(
+      recipients.map((adminId) =>
+        sendPushMessage(adminId, flexMessage(bubble)),
+      ),
+    );
+    const failed = results.filter((r) => r.status === "rejected").length;
+    if (failed > 0) {
+      console.error(
+        `[ApprovalService] ส่งแจ้งเตือนแอดมินล้มเหลว ${failed}/${recipients.length} รายการ`,
+      );
+    }
+  } catch (err) {
+    console.error("[ApprovalService] notifyAdminsOfNewRequest error:", err);
+  }
+};
+
+/**
+ * Admin: อนุมัติ LINE user ผ่านปุ่มใน LINE (อ้างอิงด้วย lineUserId)
+ * ใช้กับ postback action=admin_approve จากข้อความแจ้งเตือนแอดมิน
+ */
+const approveByLineUser = async (
+  targetLineUserId: string,
+  adminLineUserId: string,
+): Promise<{ ok: boolean; message: string; displayName?: string | null }> => {
+  const existing = await approvalRepository.findByLineUserId(targetLineUserId);
+  if (!existing) {
+    return { ok: false, message: "ไม่พบคำขอของผู้ใช้ LINE นี้ในระบบ" };
+  }
+  if (existing.status === APPROVAL_CHECK_RESULT.APPROVED) {
+    return {
+      ok: false,
+      message: `ผู้ใช้นี้ได้รับการอนุมัติไปแล้ว${
+        existing.displayName ? ` (${existing.displayName})` : ""
+      }`,
+      displayName: existing.displayName,
+    };
+  }
+
+  const record = await approveUser(existing.id, adminLineUserId);
+  return {
+    ok: true,
+    message: `อนุมัติ ${
+      record.displayName ?? "ผู้ใช้งาน"
+    } เรียบร้อยแล้ว — ระบบส่งการแจ้งเตือนให้ผู้ใช้ทราบทันที`,
+    displayName: record.displayName,
+  };
+};
+
+/**
  * ดึงรายการ requests สำหรับ admin
  * fallback name/image จาก LINE Login OAuth account ถ้า displayName/pictureUrl ว่าง
  */
@@ -387,6 +484,9 @@ export const approvalService = {
   approveUser,
   rejectUser,
   rejectLineUser,
+  approveByLineUser,
+  notifyAdminsOfNewRequest,
+  getAdminLineUserIds,
   unlockRejectedUser,
   getApprovalList,
   getAccountApprovalList,
