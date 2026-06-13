@@ -92,6 +92,17 @@ export const handleApprovalCheck = async (req: any): Promise<boolean> => {
     case APPROVAL_CHECK_RESULT.NEW:
       // 🆕 สร้าง request ใหม่ — แจ้งให้รอ
       await approvalService.sendPendingNewMessage(userId);
+      // 🔔 แจ้งเตือนแอดมินเกี่ยวกับคำขอใหม่ (fire-and-forget — ไม่บล็อก response ของผู้ขอ)
+      void approvalService
+        .notifyAdminsOfNewRequest({
+          userId,
+          displayName: profile.displayName,
+          pictureUrl: profile.pictureUrl,
+          statusMessage: profile.statusMessage,
+        })
+        .catch((err) =>
+          console.error("[handleApprovalCheck] notifyAdmins error:", err),
+        );
       return false;
 
     case APPROVAL_CHECK_RESULT.PENDING:

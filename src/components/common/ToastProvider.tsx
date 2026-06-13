@@ -22,13 +22,15 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [open, setOpen] = React.useState(false);
   const [toast, setToast] = React.useState<ToastData | null>(null);
-  const timerRef = React.useRef<NodeJS.Timeout | undefined>(undefined);
+  // เปลี่ยน key ทุกครั้งเพื่อ force remount Root → Radix เริ่ม duration timer ใหม่เสมอ
+  // รูปแบบเดิม (setOpen(false) → reopen หลัง 10ms) ไปแกะ controlled open ทำให้
+  // duration timer ไม่ทำงาน → toast ค้าง ไม่ auto-dismiss
+  const [toastKey, setToastKey] = React.useState(0);
 
   const showToast = React.useCallback((data: ToastData) => {
     setToast(data);
-    setOpen(false);
-    clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => setOpen(true), 10);
+    setToastKey((k) => k + 1);
+    setOpen(true);
   }, []);
 
   return (
@@ -36,6 +38,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
       <ToastPrimitive.Provider swipeDirection="right">
         {children}
         <ToastPrimitive.Root
+          key={toastKey}
           open={open}
           onOpenChange={setOpen}
           duration={toast?.duration ?? 3500}

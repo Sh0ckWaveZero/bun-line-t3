@@ -24,6 +24,13 @@ const GRADIENT_REJECTED = {
   endColor: "#dc2626",
 };
 
+const GRADIENT_ADMIN = {
+  type: "linearGradient",
+  angle: "135deg",
+  startColor: "#6366f1",
+  endColor: "#4338ca",
+};
+
 /**
  * ส่งให้ user ครั้งแรก — รอการอนุมัติ (NEW)
  */
@@ -512,9 +519,233 @@ const rejected = (rejectReason?: string | null) => {
   ];
 };
 
+interface AdminPendingRequestParams {
+  displayName?: string | null;
+  pictureUrl?: string | null;
+  lineUserId: string;
+  statusMessage?: string | null;
+  pendingCount: number;
+  webUrl: string;
+}
+
+/**
+ * ส่งให้แอดมิน — มีคำขอใหม่รออนุมัติ พร้อมข้อมูลผู้ขอและปุ่มอนุมัติใน LINE
+ * (ปฏิเสธให้ทำบนเว็บ เพื่อระบุเหตุผลได้ครบถ้วน)
+ */
+const adminPendingRequest = (params: AdminPendingRequestParams) => {
+  const {
+    displayName,
+    pictureUrl,
+    lineUserId,
+    statusMessage,
+    pendingCount,
+    webUrl,
+  } = params;
+
+  const name = displayName?.trim() || "ผู้ใช้งานใหม่";
+  const timeText = new Date().toLocaleString("th-TH", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+
+  const infoRow = (label: string, value: string, valueColor = "#374151") => ({
+    type: "box",
+    layout: "horizontal",
+    contents: [
+      { type: "text", text: label, size: "sm", color: "#6b7280", flex: 3 },
+      {
+        type: "text",
+        text: value,
+        size: "sm",
+        color: valueColor,
+        weight: "bold",
+        flex: 5,
+        wrap: true,
+      },
+    ],
+  });
+
+  return [
+    {
+      type: "bubble",
+      size: "mega",
+      header: {
+        type: "box",
+        layout: "vertical",
+        paddingAll: "20px",
+        background: GRADIENT_ADMIN,
+        contents: [
+          {
+            type: "box",
+            layout: "horizontal",
+            contents: [
+              {
+                type: "text",
+                text: "🔔",
+                size: "xxl",
+                flex: 0,
+              },
+              {
+                type: "box",
+                layout: "vertical",
+                flex: 1,
+                paddingStart: "12px",
+                contents: [
+                  {
+                    type: "text",
+                    text: "มีคำขอใหม่รออนุมัติ",
+                    color: "#ffffff",
+                    weight: "bold",
+                    size: "lg",
+                  },
+                  {
+                    type: "text",
+                    text: "ต้องการการตรวจสอบจากแอดมิน",
+                    color: "#e0e7ff",
+                    size: "sm",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      ...(pictureUrl
+        ? {
+            hero: {
+              type: "image",
+              url: pictureUrl,
+              size: "full",
+              aspectRatio: "20:13",
+              aspectMode: "cover",
+              backgroundColor: "#f3f4f6",
+            },
+          }
+        : {}),
+      body: {
+        type: "box",
+        layout: "vertical",
+        paddingAll: "20px",
+        spacing: "md",
+        contents: [
+          {
+            type: "text",
+            text: name,
+            weight: "bold",
+            size: "xl",
+            color: "#111827",
+          },
+          ...(statusMessage?.trim()
+            ? [
+                {
+                  type: "text",
+                  text: statusMessage,
+                  wrap: true,
+                  size: "xs",
+                  color: "#6b7280",
+                  margin: "sm",
+                },
+              ]
+            : []),
+          {
+            type: "separator",
+            margin: "lg",
+          },
+          {
+            type: "box",
+            layout: "vertical",
+            margin: "lg",
+            spacing: "sm",
+            contents: [
+              infoRow("สถานะ", "🟡 รอการอนุมัติ", "#d97706"),
+              infoRow("คำขอค้างทั้งหมด", `${pendingCount} รายการ`),
+              infoRow("เวลาที่ขอ", timeText),
+              infoRow("LINE User ID", lineUserId, "#9ca3af"),
+            ],
+          },
+        ],
+      },
+      footer: {
+        type: "box",
+        layout: "vertical",
+        spacing: "sm",
+        contents: [
+          {
+            type: "button",
+            style: "primary",
+            color: "#059669",
+            height: "md",
+            action: {
+              type: "postback",
+              label: "✅ อนุมัติ",
+              data: `action=admin_approve&uid=${lineUserId}`,
+              displayText: `อนุมัติ ${name}`,
+            },
+          },
+          {
+            type: "button",
+            style: "link",
+            height: "md",
+            action: {
+              type: "uri",
+              label: "ดูรายละเอียด / ปฏิเสธบนเว็บ",
+              uri: webUrl,
+            },
+          },
+        ],
+      },
+    },
+  ];
+};
+
+/**
+ * ส่งให้แอดมิน — ผลการกดปุ่มอนุมัติใน LINE
+ */
+const adminApproveResult = (params: { ok: boolean; message: string }) => {
+  const { ok, message } = params;
+
+  return [
+    {
+      type: "bubble",
+      size: "kilo",
+      header: {
+        type: "box",
+        layout: "vertical",
+        paddingAll: "16px",
+        background: ok ? GRADIENT_APPROVED : GRADIENT_REJECTED,
+        contents: [
+          {
+            type: "text",
+            text: ok ? "✅ อนุมัติสำเร็จ" : "⚠️ ดำเนินการไม่สำเร็จ",
+            color: "#ffffff",
+            weight: "bold",
+            size: "md",
+          },
+        ],
+      },
+      body: {
+        type: "box",
+        layout: "vertical",
+        paddingAll: "16px",
+        contents: [
+          {
+            type: "text",
+            text: message,
+            wrap: true,
+            size: "sm",
+            color: ok ? "#374151" : "#dc2626",
+          },
+        ],
+      },
+    },
+  ];
+};
+
 export const approvalBubbleTemplate = {
   pendingNew,
   pendingWaiting,
   approved,
   rejected,
+  adminPendingRequest,
+  adminApproveResult,
 };

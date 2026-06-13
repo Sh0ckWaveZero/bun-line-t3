@@ -256,6 +256,18 @@ const findDatabaseAdminLineUserIds = async (
 };
 
 /**
+ * ดึง LINE user IDs ของ admin ทั้งหมดจากฐานข้อมูล (user.role = "admin")
+ * ใช้สำหรับส่งแจ้งเตือนไปยังแอดมินทุกคน
+ */
+const findAllAdminLineUserIds = async (): Promise<string[]> => {
+  const accounts = await db.account.findMany({
+    where: { providerId: "line", user: { role: "admin" } },
+    select: { accountId: true },
+  });
+  return accounts.map((account) => account.accountId);
+};
+
+/**
  * ตั้งหรือยกเลิกสิทธิ์ admin ให้ user จาก LINE user ID
  */
 const updateAdminByLineUserId = async (
@@ -347,6 +359,7 @@ export const approvalRepository = {
   findLineAccounts,
   findLineAccountsByIds,
   findDatabaseAdminLineUserIds,
+  findAllAdminLineUserIds,
   updateAdminByLineUserId,
   markNotified,
   getStats,

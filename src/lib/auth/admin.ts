@@ -6,25 +6,25 @@ import { env } from "@/env.mjs";
 import { db } from "@/lib/database/db";
 
 /**
+ * ดึงรายการ admin LINE user IDs จาก env whitelist (ADMIN_LINE_USER_IDS)
+ * @returns array ของ LINE userId ที่เป็น admin ตาม env
+ */
+export const getEnvAdminLineUserIds = (): string[] => {
+  const adminIds = env.ADMIN_LINE_USER_IDS;
+  if (!adminIds || adminIds.trim() === "") return [];
+  return adminIds
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+};
+
+/**
  * ตรวจสอบว่า LINE userId อยู่ใน whitelist admin หรือไม่
  * @param lineUserId LINE userId (accountId)
  * @returns true ถ้าเป็น admin
  */
 export const isAdminLineUser = (lineUserId: string): boolean => {
-  const adminIds = env.ADMIN_LINE_USER_IDS;
-
-  // ถ้าไม่ได้ตั้งค่า → ไม่มี admin ใดๆ (ปลอดภัย default)
-  if (!adminIds || adminIds.trim() === "") {
-    return false;
-  }
-
-  // Parse comma-separated list
-  const whitelist = adminIds
-    .split(",")
-    .map((id) => id.trim())
-    .filter(Boolean);
-
-  return whitelist.includes(lineUserId);
+  return getEnvAdminLineUserIds().includes(lineUserId);
 };
 
 /**

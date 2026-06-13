@@ -200,11 +200,21 @@ function createExpenseSummaryBubble(
       type: "box",
       layout: "vertical",
       paddingAll: "12px",
+      spacing: "sm",
       contents: [
         {
           type: "button",
           style: "primary",
           color: headerColor,
+          action: {
+            type: "uri",
+            label: "🌐 เปิดดูในเว็บ",
+            uri: `${env.FRONTEND_URL}/expenses`,
+          },
+        },
+        {
+          type: "button",
+          style: "secondary",
           action: {
             type: "message",
             label: "📋 ดูรายการทั้งหมด",
@@ -621,7 +631,30 @@ async function handleList(
     }
 
     await sendMessage(req as Parameters<typeof sendMessage>[0], [
-      { type: "text", text: lines.filter(Boolean).join("\n").trim() },
+      {
+        type: "text",
+        text: lines.filter(Boolean).join("\n").trim(),
+        quickReply: {
+          items: [
+            {
+              type: "action",
+              action: {
+                type: "uri",
+                label: "🌐 เปิดดูในเว็บ",
+                uri: `${env.FRONTEND_URL}/expenses`,
+              },
+            },
+            {
+              type: "action",
+              action: {
+                type: "message",
+                label: "📊 สรุปเดือนนี้",
+                text: "/expense",
+              },
+            },
+          ],
+        },
+      },
     ]);
   } catch (err) {
     console.error("[Expense List] error:", err);
@@ -1533,7 +1566,7 @@ async function handleAdd(
       },
       footer: {
         type: "box",
-        layout: "horizontal",
+        layout: "vertical",
         paddingAll: "12px",
         spacing: "sm",
         contents: [
@@ -1541,22 +1574,38 @@ async function handleAdd(
             type: "button",
             style: "primary",
             color: headerColor,
-            flex: 1,
             action: {
-              type: "message",
-              label: "📊 ดูสรุปเดือนนี้",
-              text: "/expense",
+              type: "uri",
+              label: "🌐 เปิดดูในเว็บ",
+              uri: `${env.FRONTEND_URL}/expenses`,
             },
           },
           {
-            type: "button",
-            style: "secondary",
-            flex: 1,
-            action: {
-              type: "message",
-              label: "📋 ดูรายการ",
-              text: "/expense list",
-            },
+            type: "box",
+            layout: "horizontal",
+            spacing: "sm",
+            contents: [
+              {
+                type: "button",
+                style: "secondary",
+                flex: 1,
+                action: {
+                  type: "message",
+                  label: "📊 สรุปเดือนนี้",
+                  text: "/expense",
+                },
+              },
+              {
+                type: "button",
+                style: "secondary",
+                flex: 1,
+                action: {
+                  type: "message",
+                  label: "📋 ดูรายการ",
+                  text: "/expense list",
+                },
+              },
+            ],
           },
         ],
       },
