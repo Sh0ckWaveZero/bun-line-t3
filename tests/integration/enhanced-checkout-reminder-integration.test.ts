@@ -1,5 +1,34 @@
-import { describe, expect, test, beforeEach } from "bun:test";
-import { GET, POST } from "@/routes/api/cron/enhanced-checkout-reminder";
+import { describe, expect, test, beforeEach, mock } from "bun:test";
+
+// ── Mock server-only deps ก่อน import route ──
+// env: Proxy อ่าน process.env แบบ live เพื่อให้ CRON_SECRET ที่ตั้งใน test ส่งผล
+// (t3-env freeze ค่าตอน import -> validate พัง + auth เทียบไม่ติด)
+mock.module("@/env.mjs", () => ({
+  env: new Proxy(
+    {},
+    {
+      get: (_t, prop: string) => process.env[prop],
+    },
+  ),
+}));
+
+// db: กัน PrismaClient.$connect() ที่ db.ts รันตอน module load + กัน query จริง
+mock.module("@/lib/database/db", () => ({ db: {} }));
+mock.module("@/lib/database", () => ({ db: {} }));
+
+// attendanceService: mock method ที่ route ใช้ (คืน [] -> no users -> ไม่ query DB)
+mock.module("@/features/attendance/services/attendance.server", () => ({
+  attendanceService: {
+    getUsersWithPendingCheckoutAndSettingsEnabled: () => Promise.resolve([]),
+  },
+}));
+
+process.env.SKIP_ENV_VALIDATION = "1";
+process.env.APP_ENV = "test";
+
+const { GET, POST } = await import(
+  "@/routes/api/cron/enhanced-checkout-reminder"
+);
 
 const CRON_SECRET =
   "9475cea14c54b7d6d7ee6e43b907dcaec7c0dd445cef72ada756310cf9d3c494";

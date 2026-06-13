@@ -1,12 +1,34 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect, mock } from "bun:test";
+
+// ── Mock server-only deps ที่ route imports (กัน DB connect + env validation) ──
+// NOTE: bun mock.module เป็น process-global -> leak ข้ามไฟล์ ต้อง mock ให้ตรงกับ
+// enhanced-checkout-reminder-integration.test.ts เพื่อกัน conflict เวลารันรวม
+mock.module("@/env.mjs", () => ({
+  env: new Proxy(
+    {},
+    {
+      get: (_t, prop: string) => process.env[prop] ?? "",
+    },
+  ),
+}));
+// NOTE: ไม่ mock attendance/holidays/leave service ที่นี่
+// เพราะ bun mock.module เป็น process-global -> leak ข้ามไฟล์ไปทำลาย
+// check-in-reminder-api.mock.test.ts และ attendance-integration.test.ts
+// ที่ต้องการ service จริง/mock ของตัวเอง ไฟล์นี้ import route เพียงเพื่อ
+// เช็คว่า GET export มีอยู่ (typeof === "function") ไม่ได้เรียก handler
+// จึงไม่จำเป็นต้อง mock service layer
+
+process.env.SKIP_ENV_VALIDATION = "1";
+process.env.APP_ENV = "test";
 
 describe("Checkout Reminder APIs Comparison", () => {
   it("should have consistent logic between standard and enhanced APIs", async () => {
-    // Import both APIs (ใช้ relative path เพื่อแก้ปัญหา alias path)
-    const standardAPI =
-      await import("../../src/app/api/checkout-reminder/route");
-    const enhancedAPI =
-      await import("../../src/app/api/cron/enhanced-checkout-reminder/route");
+    // Import both APIs — TanStack Start file-based routes
+    // (เดิมอ้าง App Router path src/app/api/... ที่ล้าแล้ว หลังย้ายไป src/routes/api/...)
+    const standardAPI = await import("@/routes/api/checkout-reminder");
+    const enhancedAPI = await import(
+      "@/routes/api/cron/enhanced-checkout-reminder"
+    );
 
     // Both should export GET functions
     expect(typeof standardAPI.GET).toBe("function");
@@ -15,7 +37,7 @@ describe("Checkout Reminder APIs Comparison", () => {
 
   it("should use same reminder timing logic", async () => {
     const { shouldReceiveReminderNow, calculateUserReminderTime } =
-      await import("../../src/features/attendance/helpers");
+      await import("@/features/attendance/helpers");
 
     // Test reminder timing calculation
     const checkInTime = new Date("2025-06-17T02:00:00.000Z"); // 9:00 AM Bangkok
