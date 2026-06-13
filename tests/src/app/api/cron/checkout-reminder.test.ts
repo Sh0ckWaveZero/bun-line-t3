@@ -1,4 +1,27 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect, mock } from "bun:test";
+
+// ── Mock server-only deps ที่ route imports (กัน DB connect + env validation) ──
+mock.module("@/env.mjs", () => ({
+  env: new Proxy(
+    {},
+    {
+      get: (_t, prop: string) => process.env[prop] ?? "",
+    },
+  ),
+}));
+mock.module("@/lib/database/db", () => ({ db: {} }));
+mock.module("@/features/attendance/services/attendance.server", () => ({
+  attendanceService: {},
+}));
+mock.module("@/features/attendance/services/holidays.server", () => ({
+  holidayService: {},
+}));
+mock.module("@/features/attendance/services/leave.server", () => ({
+  leaveService: {},
+}));
+
+process.env.SKIP_ENV_VALIDATION = "1";
+process.env.APP_ENV = "test";
 
 describe("Checkout Reminder API Dependencies", () => {
   it("should import required functions correctly", async () => {

@@ -180,8 +180,8 @@ describe("🎯 Real-world Scenario Tests", () => {
       expect(typeof fullDisplay).toBe("string");
       expect(displayTime).toMatch(/^\d{2}:\d{2}$/);
       expect(fullDisplay).toMatch(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2}$/);
-    } catch {
-      console.warn("⚠️ Cannot simulate real scenario:", error);
+    } catch (err) {
+      console.warn("⚠️ Cannot simulate real scenario:", err);
       expect(true).toBe(true);
     }
   });

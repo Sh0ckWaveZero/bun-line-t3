@@ -47,7 +47,12 @@ const mockAttendanceService = {
   ],
 };
 
+// Route imports the .server path — mock both bare + .server specifiers
+// (bun mock.module เป็น global และ leak ข้ามไฟล์ ต้องครอบทั้งคู่เพื่อกัน conflict)
 mock.module("@/features/attendance/services/attendance", () => ({
+  attendanceService: mockAttendanceService,
+}));
+mock.module("@/features/attendance/services/attendance.server", () => ({
   attendanceService: mockAttendanceService,
 }));
 

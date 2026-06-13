@@ -15,6 +15,25 @@ import {
   datetimeOptional,
 } from "@/lib/validation/datetime";
 
+/**
+ * สร้าง datetime-local string สำหรับ "วันนี้" ในเวลาไทย (เพื่อให้ผ่าน
+ * isWithinAcceptableRange ที่อ้างอิงจาก now) คืนค่า YYYY-MM-DDTHH:MM
+ * ปลอดภัยเพราะใช้วันที่ปัจจุบันเสมอ -> ไม่เก่าเกิน maxPastDays
+ */
+const todayThaiDateTimeLocal = (
+  hours = 8,
+  minutes = 30,
+): string => {
+  const now = new Date();
+  const thai = new Date(
+    now.toLocaleString("en-US", { timeZone: "Asia/Bangkok" }),
+  );
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${thai.getFullYear()}-${pad(thai.getMonth() + 1)}-${pad(
+    thai.getDate(),
+  )}T${pad(hours)}:${pad(minutes)}`;
+};
+
 describe("🔐 Datetime Validation Security Tests", () => {
   describe("datetimeTransformer", () => {
     test("✅ should accept datetime-local format", () => {
@@ -195,10 +214,13 @@ describe("🔐 Datetime Validation Security Tests", () => {
 
   describe("🔄 Integration Tests", () => {
     test("✅ should handle real-world attendance update payload", () => {
+      // ใช้วันที่ปัจจุบัน (เวลาไทย) เพื่อให้ผ่าน isWithinAcceptableRange
+      const checkIn = todayThaiDateTimeLocal(8, 30);
+      const checkOut = todayThaiDateTimeLocal(17, 30);
       const attendancePayload = {
         attendanceId: "att_123456789",
-        checkInTime: "2025-06-11T08:30",
-        checkOutTime: "2025-06-11T17:30",
+        checkInTime: checkIn,
+        checkOutTime: checkOut,
       };
 
       const schema = z.object({
@@ -210,8 +232,8 @@ describe("🔐 Datetime Validation Security Tests", () => {
       const result = schema.parse(attendancePayload);
 
       expect(result.attendanceId).toBe("att_123456789");
-      expect(result.checkInTime).toBe("2025-06-11T08:30:00.000Z");
-      expect(result.checkOutTime).toBe("2025-06-11T17:30:00.000Z");
+      expect(result.checkInTime).toBe(`${checkIn}:00.000Z`);
+      expect(result.checkOutTime).toBe(`${checkOut}:00.000Z`);
 
       // Test parsing to Date objects
       const checkInDate = parseDateTime(result.checkInTime);
@@ -220,8 +242,8 @@ describe("🔐 Datetime Validation Security Tests", () => {
       expect(result.checkOutTime).not.toBeNull(); // ตรวจสอบว่าไม่เป็น null
       const checkOutDate = parseDateTime(result.checkOutTime!); // Non-null assertion หลังจากตรวจสอบแล้ว
 
-      expect(checkInDate.toISOString()).toBe("2025-06-11T08:30:00.000Z");
-      expect(checkOutDate.toISOString()).toBe("2025-06-11T17:30:00.000Z");
+      expect(checkInDate.toISOString()).toBe(`${checkIn}:00.000Z`);
+      expect(checkOutDate.toISOString()).toBe(`${checkOut}:00.000Z`);
 
       // Test security validations
       expect(DateTimeSecurity.isWithinAcceptableRange(checkInDate)).toBe(true);
@@ -229,9 +251,11 @@ describe("🔐 Datetime Validation Security Tests", () => {
     });
 
     test("✅ should handle attendance payload with null checkOutTime safely", () => {
+      // ใช้วันที่ปัจจุบัน (เวลาไทย) เพื่อให้ผ่าน isWithinAcceptableRange
+      const checkIn = todayThaiDateTimeLocal(8, 30);
       const attendancePayload = {
         attendanceId: "att_987654321",
-        checkInTime: "2025-06-11T08:30",
+        checkInTime: checkIn,
         checkOutTime: null,
       };
 
@@ -244,12 +268,12 @@ describe("🔐 Datetime Validation Security Tests", () => {
       const result = schema.parse(attendancePayload);
 
       expect(result.attendanceId).toBe("att_987654321");
-      expect(result.checkInTime).toBe("2025-06-11T08:30:00.000Z");
+      expect(result.checkInTime).toBe(`${checkIn}:00.000Z`);
       expect(result.checkOutTime).toBe(null);
 
       // Test parsing to Date objects
       const checkInDate = parseDateTime(result.checkInTime);
-      expect(checkInDate.toISOString()).toBe("2025-06-11T08:30:00.000Z");
+      expect(checkInDate.toISOString()).toBe(`${checkIn}:00.000Z`);
 
       // 🔐 Safe handling of null checkOutTime
       const checkOutDate = result.checkOutTime
