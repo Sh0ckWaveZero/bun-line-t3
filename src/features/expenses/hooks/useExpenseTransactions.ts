@@ -5,13 +5,14 @@ import type { CreateTransactionInput } from "../types";
 export function useExpenseTransactions(currentMonth: string, enabled: boolean) {
   const queryClient = useQueryClient();
 
-  const invalidate = () => {
-    void queryClient.invalidateQueries({
-      queryKey: ["expenses-overview", currentMonth],
-    });
-    void queryClient.invalidateQueries({ queryKey: ["expenses-multi-month"] });
-    void queryClient.invalidateQueries({ queryKey: ["expense-budgets"] });
-  };
+  const invalidate = () =>
+    Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: ["expenses-overview", currentMonth],
+      }),
+      queryClient.invalidateQueries({ queryKey: ["expenses-multi-month"] }),
+      queryClient.invalidateQueries({ queryKey: ["expense-budgets"] }),
+    ]);
 
   const {
     data: overview,
