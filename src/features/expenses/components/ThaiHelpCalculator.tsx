@@ -15,15 +15,16 @@ import {
   parseTransactionSubsidy,
 } from "@/features/expenses/helpers/coPayment";
 import {
+  AlertCircle,
+  Check,
   ChevronDown,
   ChevronUp,
   Coins,
+  Copy,
   Info,
   Plus,
   RotateCcw,
-  Sparkles,
   TrendingDown,
-  Wallet,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -74,6 +75,10 @@ export function ThaiHelpCalculator({
 
   // Tab 2: Top Up State
   const [desiredSubsidy, setDesiredSubsidy] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  // Save error state for inline retry
+  const [saveError, setSaveError] = useState(false);
 
   // Auto-select category (default to "อาหาร" or first active category)
   useEffect(() => {
@@ -93,17 +98,7 @@ export function ThaiHelpCalculator({
     }
   }, [categories, selectedCategoryId]);
 
-  // Calculations for Split Bill using the Co-payment Helper
-  const numericBill = parseFloat(totalBill) || 0;
-  const { subsidyAmount: subsidy60, userAmount: userPaid40 } =
-    calculateCoPaymentSplit(numericBill);
-
-  // Calculations for Top Up using campaign limits
-  const numericSubsidy = parseFloat(desiredSubsidy) || 0;
-  const topUpNeeded = numericSubsidy * (CO_PAY_USER_SHARE / CO_PAY_STATE_SHARE);
-  const purchaseValue = numericSubsidy * (1 / CO_PAY_STATE_SHARE);
-
-  // Daily Stats: remaining subsidy for today (client-side only to avoid SSR hydration mismatch)
+  // Daily Stats (client-side only to avoid SSR hydration mismatch)
   const [dailyStats, setDailyStats] = useState({
     todaySubsidyUsed: 0,
     todayUserSpent: 0,
@@ -134,7 +129,7 @@ export function ThaiHelpCalculator({
     });
   }, [transactions]);
 
-  // Tab 3: Monthly Stats using the isolated helper (client-side only to avoid SSR hydration mismatch)
+  // Monthly Stats (client-side only to avoid SSR hydration mismatch)
   const [stats, setStats] = useState({
     totalSubsidyUsed: 0,
     remainingSubsidy: 1000,
@@ -155,7 +150,6 @@ export function ThaiHelpCalculator({
         tx.transMonth || (tx.transDate ? tx.transDate.substring(0, 7) : "");
       if (txMonth !== currentMonthStr || tx.type !== "EXPENSE") return;
 
-      // Parse using the new helper which supports abbreviations like ทชท, tct, 6040, klk, etc.
       const subsidy = parseTransactionSubsidy(tx.amount, tx.note, tx.tags);
       if (subsidy > 0) {
         count++;
@@ -173,6 +167,23 @@ export function ThaiHelpCalculator({
       count,
     });
   }, [transactions]);
+
+  // Calculations for Split Bill — cap subsidy at monthly quota to prevent phantom amounts
+  const numericBill = parseFloat(totalBill) || 0;
+  const { subsidyAmount: rawSubsidy60 } = calculateCoPaymentSplit(numericBill);
+  const subsidy60 = Math.min(rawSubsidy60, stats.remainingSubsidy);
+  const userPaid40 = Math.max(numericBill - subsidy60, 0);
+  const monthlyQuotaExceeded = numericBill > 0 && rawSubsidy60 > stats.remainingSubsidy;
+
+  // Calculations for Top Up
+  const numericSubsidy = parseFloat(desiredSubsidy) || 0;
+  const topUpNeeded = numericSubsidy * (CO_PAY_USER_SHARE / CO_PAY_STATE_SHARE);
+  const purchaseValue = numericSubsidy * (1 / CO_PAY_STATE_SHARE);
+
+  // Remaining combined purchasing power (state + user) for this month
+  const monthlyRemainingCombined =
+    stats.remainingSubsidy +
+    stats.remainingSubsidy * (CO_PAY_USER_SHARE / CO_PAY_STATE_SHARE);
 
   // Handle Save Transaction
   const handleSaveExpense = async () => {
@@ -220,15 +231,12 @@ export function ThaiHelpCalculator({
         type: "success",
       });
 
+      setSaveError(false);
       setTotalBill("");
       refetch();
     } catch (error) {
       console.error(error);
-      showToast({
-        title: "เกิดข้อผิดพลาด",
-        description: "ไม่สามารถบันทึกรายการได้",
-        type: "error",
-      });
+      setSaveError(true);
     }
   };
 
@@ -241,64 +249,92 @@ export function ThaiHelpCalculator({
 
       {!isLoading && (
         <>
-          {/* Thai flag vertical strip — left edge */}
-          <div
-            id="thai-help-header-strip"
-            className="absolute top-0 bottom-0 left-0 w-1.5"
-            style={{
-              background:
-                "linear-gradient(to bottom, #B5121B 0% 16.67%, #ffffff 16.67% 33.33%, #1B2573 33.33% 66.67%, #ffffff 66.67% 83.33%, #B5121B 83.33% 100%)",
-            }}
-          />
-
           {/* Main Header Action */}
           <button
             id="thai-help-toggle-btn"
             onClick={() => setIsOpen(!isOpen)}
-            className="font-noto-sans-thai text-foreground hover:bg-muted/30 flex w-full items-center justify-between px-5 py-4 text-left transition-colors"
+            className="font-noto-sans-thai text-foreground hover:bg-muted/30 flex w-full flex-col px-4 py-3 text-left transition-colors sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4"
           >
-            <div id="thai-help-title-group" className="flex items-center gap-3">
-              <div
-                id="thai-help-icon-wrapper"
-                className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:bg-blue-400/15 dark:text-blue-400"
-              >
-                <Coins className="h-5 w-5" />
+            {/* Row 1: icon + title + chevron */}
+            <div className="flex items-center justify-between gap-3">
+              <div id="thai-help-title-group" className="flex items-center gap-2.5 sm:gap-3">
+                <div
+                  id="thai-help-icon-wrapper"
+                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-violet-500/10 text-violet-600 dark:bg-violet-400/15 dark:text-violet-400 sm:h-10 sm:w-10"
+                >
+                  <Coins className="h-4 w-4 sm:h-5 sm:w-5" />
+                </div>
+                <div>
+                  <h2
+                    id="thai-help-heading"
+                    className="font-noto-sans-thai flex items-center gap-1.5 whitespace-nowrap text-sm font-bold sm:text-base"
+                  >
+                    เครื่องคำนวณสิทธิ์ 60/40
+                    <span className="relative flex h-2 w-2 flex-shrink-0">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                    </span>
+                  </h2>
+                  <p
+                    id="thai-help-subheading"
+                    className="text-muted-foreground hidden text-xs font-normal sm:block"
+                  >
+                    คำนวณโครงการไทยช่วยไทย พลัส และบันทึกยอดจ่ายจริง 40% ทันที
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2
-                  id="thai-help-heading"
-                  className="font-noto-sans-thai flex items-center gap-2 text-base font-bold"
-                >
-                  เครื่องคำนวณและบันทึกสิทธิ์ 60/40
-                  <span className="relative flex h-2 w-2">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
-                  </span>
-                </h2>
-                <p
-                  id="thai-help-subheading"
-                  className="text-muted-foreground text-xs font-normal"
-                >
-                  คำนวณโครงการไทยช่วยไทย พลัส และบันทึกยอดจ่ายจริง 40% ทันที
-                </p>
+              {/* Chevron: right on mobile row 1, kept in sm+ right cluster */}
+              <div
+                id="thai-help-chevron-mobile"
+                className="text-muted-foreground sm:hidden"
+              >
+                {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
               </div>
             </div>
-            <div className="flex items-center gap-2">
+
+            {/* Row 2 (mobile only): badges aligned under title text */}
+            <div className="mt-2 flex items-center gap-1.5 pl-[2.375rem] sm:hidden">
               <div
-                id="thai-help-daily-remaining"
-                className={`hidden items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold sm:flex ${dailyStats.todayRemaining === 0
+                id="thai-help-monthly-remaining-mobile"
+                className="flex items-center gap-1 whitespace-nowrap rounded-full bg-violet-500/10 px-2.5 py-1 text-xs font-semibold tabular-nums text-violet-700 dark:bg-violet-400/15 dark:text-violet-400"
+              >
+                <span>ใช้ได้/เดือน ฿{monthlyRemainingCombined.toLocaleString("th-TH", { maximumFractionDigits: 0 })}</span>
+              </div>
+              <div
+                id="thai-help-daily-remaining-mobile"
+                className={`flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums ${dailyStats.todayRemaining === 0
                     ? "bg-red-500/10 text-red-600 dark:bg-red-400/15 dark:text-red-400"
                     : dailyStats.todayRemaining < 100
                       ? "bg-amber-500/10 text-amber-700 dark:bg-amber-400/15 dark:text-amber-400"
                       : "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-400"
                   }`}
               >
-                <Wallet size={11} />
-                <span>คงเหลือวันนี้ ฿{dailyStats.todayRemaining.toFixed(0)}</span>
+                <span>ใช้ได้/วัน ฿{dailyStats.todayRemaining.toLocaleString("th-TH", { maximumFractionDigits: 0 })}</span>
+              </div>
+            </div>
+
+            {/* sm+: badges + chevron on right */}
+            <div className="hidden flex-shrink-0 items-center gap-2 sm:flex">
+              <div
+                id="thai-help-monthly-remaining"
+                className="flex items-center gap-1 whitespace-nowrap rounded-full bg-violet-500/10 px-2.5 py-1 text-xs font-semibold tabular-nums text-violet-700 dark:bg-violet-400/15 dark:text-violet-400"
+              >
+                <span>ใช้ได้/เดือน ฿{monthlyRemainingCombined.toLocaleString("th-TH", { maximumFractionDigits: 0 })}</span>
+              </div>
+              <div
+                id="thai-help-daily-remaining"
+                className={`flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums ${dailyStats.todayRemaining === 0
+                    ? "bg-red-500/10 text-red-600 dark:bg-red-400/15 dark:text-red-400"
+                    : dailyStats.todayRemaining < 100
+                      ? "bg-amber-500/10 text-amber-700 dark:bg-amber-400/15 dark:text-amber-400"
+                      : "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-400"
+                  }`}
+              >
+                <span>ใช้ได้/วัน ฿{dailyStats.todayRemaining.toLocaleString("th-TH", { maximumFractionDigits: 0 })}</span>
               </div>
               <div
                 id="thai-help-chevron"
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground transition-colors"
               >
                 {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
               </div>
@@ -310,52 +346,6 @@ export function ThaiHelpCalculator({
               id="thai-help-content"
               className="border-border/10 border-t p-5 transition-all duration-300 ease-out"
             >
-              {/* Rights Stats Quick Display */}
-              <div
-                id="thai-help-rights-quick-grid"
-                className="bg-muted/30 mb-5 grid grid-cols-3 gap-2 rounded-xl p-2 sm:gap-3"
-              >
-                <div className="bg-card/50 border-border/5 flex flex-col items-center justify-center rounded-lg border py-2.5 text-center">
-                  <span className="text-muted-foreground text-xs font-medium tracking-wide">
-                    รัฐร่วมจ่าย
-                  </span>
-                  <span className="text-foreground mt-0.5 text-sm font-bold">
-                    {(CO_PAY_STATE_SHARE * 100).toFixed(0)}%
-                  </span>
-                </div>
-                <div className="bg-card/50 border-border/5 flex flex-col items-center justify-center rounded-lg border py-2.5 text-center">
-                  <span className="text-muted-foreground text-xs font-medium tracking-wide">
-                    ใช้ไปวันนี้
-                  </span>
-                  <span className="text-foreground mt-0.5 text-sm font-bold tabular-nums">
-                    ฿{dailyStats.todaySubsidyUsed.toFixed(0)}
-                  </span>
-                  <span className="text-muted-foreground mt-0.5 text-xs">
-                    จาก ฿{CO_PAY_DAILY_MAX_SUBSIDY}
-                  </span>
-                </div>
-                <div className="bg-card/50 border-border/5 flex flex-col items-center justify-center rounded-lg border py-2.5 text-center">
-                  <span className="text-muted-foreground text-xs font-medium tracking-wide">
-                    คงเหลือวันนี้
-                  </span>
-                  <span
-                    className={`mt-0.5 text-sm font-bold tabular-nums ${dailyStats.todayRemaining === 0
-                        ? "text-red-600 dark:text-red-400"
-                        : dailyStats.todayRemaining < 100
-                          ? "text-amber-600 dark:text-amber-400"
-                          : "text-emerald-600 dark:text-emerald-400"
-                      }`}
-                  >
-                    ฿{dailyStats.todayRemaining.toFixed(0)}
-                  </span>
-                  <span className="text-muted-foreground mt-0.5 text-xs">
-                    {dailyStats.todayRemaining === 0
-                      ? "หมดสิทธิ์วันนี้"
-                      : `ซื้อได้ ฿${(dailyStats.todayRemaining / CO_PAY_STATE_SHARE).toFixed(2)}`}
-                  </span>
-                </div>
-              </div>
-
               {/* Daily Budget Progress Bar */}
               <div className="mb-5 space-y-1.5">
                 <div className="flex items-center justify-between text-xs font-medium">
@@ -418,16 +408,25 @@ export function ThaiHelpCalculator({
                         }`}
                     >
                       {tab === "split" && "แยกบิล (60/40)"}
-                      {tab === "topup" && "คำนวณเติมเงิน"}
+                      {tab === "topup" && "ต้องเติมเท่าไหร่"}
                       {tab === "stats" && `สถิติเดือนนี้ (${stats.count})`}
                     </button>
                   );
                 })}
               </div>
 
-              {/* Tab Content 1: Split Bill */}
-              {activeTab === "split" && (
-                <div id="thai-help-tab-split" className="animate-fadeIn space-y-4">
+              {/* Tab panels — always mounted, CSS crossfade on switch */}
+              <div className="relative">
+                {/* Split Bill */}
+                <div
+                  id="thai-help-tab-split"
+                  className={`space-y-4 transition-all duration-200 ease-out ${
+                    activeTab === "split"
+                      ? "relative opacity-100 translate-y-0"
+                      : "pointer-events-none absolute inset-0 opacity-0 translate-y-1"
+                  }`}
+                  aria-hidden={activeTab !== "split"}
+                >
                   <div className="space-y-2">
                     <Label
                       htmlFor="total-bill-input"
@@ -460,7 +459,6 @@ export function ThaiHelpCalculator({
                     </div>
                   </div>
 
-                  {/* Calculations Box */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="border-border/20 bg-muted/20 rounded-xl border p-3">
                       <span className="text-muted-foreground text-xs font-semibold tracking-wide">
@@ -480,17 +478,20 @@ export function ThaiHelpCalculator({
                     </div>
                   </div>
 
-                  {/* Integration with Expense Tracker Section */}
+                  {monthlyQuotaExceeded && numericBill > 0 && (
+                    <div className="flex items-start gap-2 rounded-lg border border-amber-500/25 bg-amber-500/5 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
+                      <AlertCircle size={13} className="mt-0.5 shrink-0" />
+                      <span>
+                        สิทธิ์เดือนนี้เหลือ <strong className="tabular-nums">฿{stats.remainingSubsidy.toFixed(0)}</strong> รัฐช่วยได้แค่ <strong className="tabular-nums">฿{subsidy60.toFixed(2)}</strong> ส่วนที่เหลือคุณจ่ายเอง
+                      </span>
+                    </div>
+                  )}
+
                   {numericBill > 0 && (
                     <div
                       id="thai-help-save-flow"
-                      className="space-y-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4"
+                      className="space-y-3 rounded-xl border border-violet-500/15 bg-violet-500/5 p-4"
                     >
-                      <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-                        <Sparkles size={14} className="animate-pulse" />
-                        <span>พร้อมบันทึกรายการลงใน บัญชีรายจ่าย ของคุณ</span>
-                      </div>
-
                       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div className="space-y-1">
                           <Label
@@ -503,7 +504,7 @@ export function ThaiHelpCalculator({
                             id="tct-category-select"
                             value={selectedCategoryId}
                             onChange={(e) => setSelectedCategoryId(e.target.value)}
-                            className="font-noto-sans-thai bg-card border-border/40 text-foreground h-9 w-full rounded-md border px-2 text-xs font-medium focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                            className="font-noto-sans-thai bg-card border-border/40 text-foreground h-9 w-full rounded-md border px-2 text-xs font-medium focus:ring-1 focus:ring-violet-500 focus:outline-none"
                           >
                             {categories
                               .filter((c) => c.isActive)
@@ -519,21 +520,43 @@ export function ThaiHelpCalculator({
                           <Button
                             onClick={handleSaveExpense}
                             disabled={isSaving}
-                            className="h-9 w-full gap-1.5 bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600"
+                            className="h-9 w-full gap-1.5 bg-violet-600 text-xs font-bold text-white hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-600"
                           >
                             {isSaving ? "กำลังบันทึก..." : <Plus size={14} />}
                             บันทึกรายจ่าย ฿{userPaid40.toFixed(2)}
                           </Button>
                         </div>
                       </div>
+
+                      {saveError && (
+                        <div className="flex items-center justify-between gap-2 rounded-md border border-red-500/20 bg-red-500/5 px-3 py-2">
+                          <div className="flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400">
+                            <AlertCircle size={13} className="shrink-0" />
+                            <span>บันทึกไม่สำเร็จ</span>
+                          </div>
+                          <button
+                            onClick={handleSaveExpense}
+                            disabled={isSaving}
+                            className="text-xs font-semibold text-red-600 underline underline-offset-2 hover:text-red-700 dark:text-red-400"
+                          >
+                            ลองใหม่
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
-              )}
 
-              {/* Tab Content 2: Top Up Calculator */}
-              {activeTab === "topup" && (
-                <div id="thai-help-tab-topup" className="animate-fadeIn space-y-4">
+                {/* Top Up */}
+                <div
+                  id="thai-help-tab-topup"
+                  className={`space-y-4 transition-all duration-200 ease-out ${
+                    activeTab === "topup"
+                      ? "relative opacity-100 translate-y-0"
+                      : "pointer-events-none absolute inset-0 opacity-0 translate-y-1"
+                  }`}
+                  aria-hidden={activeTab !== "topup"}
+                >
                   <div className="space-y-2">
                     <Label
                       htmlFor="desired-subsidy-input"
@@ -570,19 +593,33 @@ export function ThaiHelpCalculator({
                     </p>
                   </div>
 
-                  {/* Calculations Box */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="border-border/20 rounded-xl border bg-emerald-500/5 p-3">
                       <span className="text-muted-foreground text-xs font-semibold tracking-wide">
-                        คุณต้องเติมเงิน ({(CO_PAY_USER_SHARE * 100).toFixed(0)}%)
+                        เติมใน เป๋าตัง ({(CO_PAY_USER_SHARE * 100).toFixed(0)}%)
                       </span>
-                      <p className="mt-1 text-lg font-extrabold text-emerald-600 tabular-nums dark:text-emerald-400">
-                        ฿{topUpNeeded.toFixed(2)}
-                      </p>
+                      <div className="mt-1 flex items-center gap-2">
+                        <p className="text-lg font-extrabold text-emerald-600 tabular-nums dark:text-emerald-400">
+                          ฿{topUpNeeded.toFixed(2)}
+                        </p>
+                        {numericSubsidy > 0 && (
+                          <button
+                            onClick={() => {
+                              void navigator.clipboard.writeText(topUpNeeded.toFixed(2));
+                              setCopied(true);
+                              setTimeout(() => setCopied(false), 2000);
+                            }}
+                            className="text-muted-foreground hover:text-foreground rounded p-0.5 transition-colors"
+                            title="คัดลอก"
+                          >
+                            {copied ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <div className="border-border/20 bg-muted/20 rounded-xl border p-3">
                       <span className="text-muted-foreground text-xs font-semibold tracking-wide">
-                        เพื่อซื้อราคาสินค้ารวม
+                        ซื้อสินค้าได้รวม
                       </span>
                       <p className="text-foreground mt-1 text-lg font-extrabold tabular-nums">
                         ฿{purchaseValue.toFixed(2)}
@@ -590,11 +627,17 @@ export function ThaiHelpCalculator({
                     </div>
                   </div>
                 </div>
-              )}
 
-              {/* Tab Content 3: Stats */}
-              {activeTab === "stats" && (
-                <div id="thai-help-tab-stats" className="animate-fadeIn space-y-4">
+                {/* Stats */}
+                <div
+                  id="thai-help-tab-stats"
+                  className={`space-y-4 transition-all duration-200 ease-out ${
+                    activeTab === "stats"
+                      ? "relative opacity-100 translate-y-0"
+                      : "pointer-events-none absolute inset-0 opacity-0 translate-y-1"
+                  }`}
+                  aria-hidden={activeTab !== "stats"}
+                >
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     <div className="border-border/10 bg-card dark:bg-muted/10 rounded-xl border p-3 shadow-sm">
                       <span className="text-muted-foreground text-xs font-semibold tracking-wide">
@@ -643,7 +686,7 @@ export function ThaiHelpCalculator({
                     </p>
                   </div>
                 </div>
-              )}
+              </div>
 
               {/* Quick Notice */}
               <div className="mt-4 flex items-center gap-2 rounded-lg border border-red-500/10 bg-red-500/5 px-3 py-2">
