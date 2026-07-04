@@ -7,7 +7,7 @@
 
 import { db } from "@/lib/database/index";
 import type { Budget, ExpenseCategory } from "@prisma/client";
-import { toNum } from "./decimal";
+import { toNum, assertAmountBound } from "./decimal";
 
 /**
  * Budget row ที่ส่งออกจาก service layer
@@ -124,6 +124,7 @@ export async function createBudget(input: {
   alertAt?: number;
   tags?: string | null;
 }): Promise<BudgetWithCategory> {
+  assertAmountBound(input.amount);
   const row = await db.budget.create({
     data: {
       userId: input.userId,
@@ -149,6 +150,7 @@ export async function updateBudget(
     tags?: string | null;
   },
 ): Promise<BudgetWithCategory> {
+  if (input.amount !== undefined) assertAmountBound(input.amount);
   const row = await db.budget.update({
     where: { id, userId },
     data: {

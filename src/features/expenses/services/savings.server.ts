@@ -7,7 +7,7 @@
 
 import { db } from "@/lib/database/index";
 import type { SavingsGoal } from "@prisma/client";
-import { toNum } from "./decimal";
+import { toNum, assertAmountBound } from "./decimal";
 
 /**
  * SavingsGoal ที่ส่งออกจาก service layer
@@ -98,6 +98,7 @@ export async function createSavingsGoal(input: {
   deadline?: string | null;
   tags?: string | null;
 }): Promise<SavingsGoalWithProgress> {
+  assertAmountBound(input.targetAmount, "targetAmount");
   const goal = await db.savingsGoal.create({
     data: {
       userId: input.userId,
@@ -130,6 +131,9 @@ export async function updateSavingsGoal(
     isActive?: boolean;
   },
 ): Promise<SavingsGoalWithProgress> {
+  if (input.targetAmount !== undefined) {
+    assertAmountBound(input.targetAmount, "targetAmount");
+  }
   const goal = await db.savingsGoal.update({
     where: { id, userId },
     data: {

@@ -13,7 +13,7 @@ import type {
 } from "@prisma/client";
 import { toTransDate, toTransMonth } from "../helpers";
 import type { TransactionWithCategory } from "../types";
-import { toNum } from "./decimal";
+import { toNum, assertAmountBound } from "./decimal";
 
 /** map Prisma Transaction row (Decimal amount) → TransactionWithCategory (number) */
 function mapTx<T extends { amount: unknown }>(row: T): T {
@@ -153,6 +153,7 @@ export async function createRecurringTransaction(input: {
   dayOfMonth?: number | null;
   dayOfWeek?: number | null;
 }): Promise<RecurringWithCategory> {
+  assertAmountBound(input.amount);
   const nextRunDate = calculateNextRunDate(
     input.frequency,
     input.dayOfMonth,
@@ -192,6 +193,7 @@ export async function updateRecurringTransaction(
     isActive?: boolean;
   },
 ): Promise<RecurringWithCategory> {
+  if (input.amount !== undefined) assertAmountBound(input.amount);
   // ถ้าเปลี่ยน frequency หรือ day → คำนวณ nextRunDate ใหม่
   let nextRunDate: string | undefined;
   if (

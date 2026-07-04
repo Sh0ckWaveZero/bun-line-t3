@@ -13,7 +13,7 @@ import type {
   TransactionFilter,
 } from "../types";
 import { toTransMonth } from "../helpers";
-import { toNum } from "./decimal";
+import { toNum, assertAmountBound } from "./decimal";
 
 // ─────────────────────────────────────────────
 // Queries
@@ -77,6 +77,7 @@ export async function getTransactionById(
 export async function createTransaction(
   input: CreateTransactionInput,
 ): Promise<TransactionWithCategory> {
+  assertAmountBound(input.amount);
   const transMonth = toTransMonth(input.transDate);
 
   const row = await db.transaction.create({
@@ -102,6 +103,7 @@ export async function updateTransaction(
   userId: string,
   input: UpdateTransactionInput,
 ): Promise<TransactionWithCategory> {
+  if (input.amount !== undefined) assertAmountBound(input.amount);
   const transMonth = input.transDate
     ? toTransMonth(input.transDate)
     : undefined;
