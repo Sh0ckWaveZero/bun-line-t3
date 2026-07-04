@@ -23,15 +23,28 @@ fi
 
 echo "✅ Runtime environment verified"
 
-if [ "${RUN_DB_PUSH:-false}" = "true" ]; then
-    echo "🗄️ Running prisma db push..."
-    if bunx prisma db push --skip-generate 2>/dev/null; then
-        echo "✅ Prisma schema synced"
+# ─────────────────────────────────────────────
+# Database Migrations
+# ─────────────────────────────────────────────
+# Run pending migrations on every container start.
+# `migrate deploy` is idempotent — it only applies migrations not yet in the
+# `_prisma_migrations` table, so it's safe to run on every boot.
+#
+# Use `migrate deploy` (not `db push`) in production because:
+#   - Tracks applied migrations in history (db push does not)
+#   - Cannot cause data loss by design (migrations are authored, not generated)
+#   - Required by AGENTS.md: "ALWAYS use migrations for production schema changes"
+#
+# Opt out via RUN_MIGRATIONS=false (e.g. for read-only replicas or CI smoke tests).
+if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
+    echo "🗄️ Running prisma migrate deploy..."
+    if bunx prisma migrate deploy 2>&1; then
+        echo "✅ Database migrations applied"
     else
-        echo "⚠️ Prisma schema sync failed or database not available"
+        echo "⚠️ Database migration failed — starting app anyway (DB may be unavailable)"
     fi
 else
-    echo "⏭️ Prisma db push skipped (set RUN_DB_PUSH=true to enable)"
+    echo "⏭️ Prisma migrate deploy skipped (set RUN_MIGRATIONS=false to disable)"
 fi
 
 echo "🚀 Starting TanStack Start application..."
