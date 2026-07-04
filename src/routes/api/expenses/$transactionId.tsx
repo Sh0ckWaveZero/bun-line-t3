@@ -13,6 +13,8 @@ import {
   updateTransaction,
   deleteTransaction,
 } from "@/features/expenses/services/transaction.server";
+import { isCategoryOwnedByUser } from "@/features/expenses/services/category.server";
+import { MAX_TRANSACTION_AMOUNT } from "@/features/expenses/constants";
 
 // ─────────────────────────────────────────────
 // Schema
@@ -20,7 +22,11 @@ import {
 
 const updateTransactionSchema = z.object({
   categoryId: z.string().min(1).optional(),
-  amount: z.number().positive("จำนวนเงินต้องมากกว่า 0").optional(),
+  amount: z
+    .number()
+    .positive("จำนวนเงินต้องมากกว่า 0")
+    .max(MAX_TRANSACTION_AMOUNT, "จำนวนเงินมากเกินไป")
+    .optional(),
   note: z.string().max(500).nullable().optional(),
   tags: z.string().max(200).nullable().optional(),
   transDate: z
@@ -47,7 +53,10 @@ export async function GET(request: Request, id: string) {
 
     return Response.json({ success: true, data: transaction });
   } catch (error) {
-    console.error("[GET /api/expenses/:id]", error);
+    console.error(
+      "[GET /api/expenses/:id]",
+      (error as Error)?.message ?? error,
+    );
     return Response.json({ error: "ไม่สามารถดึงข้อมูลได้" }, { status: 500 });
   }
 }
@@ -62,6 +71,20 @@ export async function PATCH(request: Request, id: string) {
     const body = await request.json();
     const input = updateTransactionSchema.parse(body);
 
+    // ป้องกัน IDOR: ถ้าจะเปลี่ยน categoryId ต้องตรวจสอบว่าเป็นของ user นี้จริงๆ
+    if (input.categoryId !== undefined) {
+      const isOwner = await isCategoryOwnedByUser(
+        input.categoryId,
+        session.user.id,
+      );
+      if (!isOwner) {
+        return Response.json(
+          { error: "หมวดหมู่ไม่ถูกต้อง" },
+          { status: 400 },
+        );
+      }
+    }
+
     const transaction = await updateTransaction(id, session.user.id, input);
 
     return Response.json({
@@ -70,13 +93,16 @@ export async function PATCH(request: Request, id: string) {
       message: "แก้ไขรายการสำเร็จ",
     });
   } catch (error) {
-    console.error("[PATCH /api/expenses/:id]", error);
     if (error instanceof z.ZodError) {
       return Response.json(
         { error: "ข้อมูลไม่ถูกต้อง", details: error.issues },
         { status: 400 },
       );
     }
+    console.error(
+      "[PATCH /api/expenses/:id]",
+      (error as Error)?.message ?? error,
+    );
     return Response.json({ error: "ไม่สามารถแก้ไขรายการได้" }, { status: 500 });
   }
 }
@@ -92,7 +118,10 @@ export async function DELETE(request: Request, id: string) {
 
     return Response.json({ success: true, message: "ลบรายการสำเร็จ" });
   } catch (error) {
-    console.error("[DELETE /api/expenses/:id]", error);
+    console.error(
+      "[DELETE /api/expenses/:id]",
+      (error as Error)?.message ?? error,
+    );
     return Response.json({ error: "ไม่สามารถลบรายการได้" }, { status: 500 });
   }
 }

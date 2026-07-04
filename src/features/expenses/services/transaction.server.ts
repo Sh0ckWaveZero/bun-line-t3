@@ -13,10 +13,16 @@ import type {
   TransactionFilter,
 } from "../types";
 import { toTransMonth } from "../helpers";
+import { toNum } from "./decimal";
 
 // ─────────────────────────────────────────────
 // Queries
 // ─────────────────────────────────────────────
+
+/** แปลง Prisma row (Decimal amount) → number amount สำหรับ consumer */
+function mapTx<T extends { amount: unknown }>(row: T): T {
+  return { ...row, amount: toNum(row.amount as never) };
+}
 
 /** ดึง transactions ตาม filter พร้อม category */
 export async function getTransactions(
@@ -48,7 +54,7 @@ export async function getTransactions(
     skip: offset,
   });
 
-  return rows as TransactionWithCategory[];
+  return rows.map(mapTx) as TransactionWithCategory[];
 }
 
 /** ดึง transaction เดียวตาม id + ตรวจสิทธิ์ */
@@ -60,7 +66,7 @@ export async function getTransactionById(
     where: { id, userId },
     include: { category: true },
   });
-  return row as TransactionWithCategory | null;
+  return row ? (mapTx(row) as TransactionWithCategory) : null;
 }
 
 // ─────────────────────────────────────────────
@@ -87,7 +93,7 @@ export async function createTransaction(
     include: { category: true },
   });
 
-  return row as TransactionWithCategory;
+  return mapTx(row) as TransactionWithCategory;
 }
 
 /** อัปเดต transaction */
@@ -113,7 +119,7 @@ export async function updateTransaction(
     include: { category: true },
   });
 
-  return row as TransactionWithCategory;
+  return mapTx(row) as TransactionWithCategory;
 }
 
 /** ลบ transaction (hard delete) */
@@ -145,8 +151,8 @@ export async function getMonthlySummary(
     db.transaction.count({ where: { userId, transMonth } }),
   ]);
 
-  const totalIncome = incomeAgg._sum.amount ?? 0;
-  const totalExpense = expenseAgg._sum.amount ?? 0;
+  const totalIncome = toNum(incomeAgg._sum.amount);
+  const totalExpense = toNum(expenseAgg._sum.amount);
 
   return {
     transMonth,
@@ -172,19 +178,51 @@ export async function getCategorySummary(
 
   if (rows.length === 0) return [];
 
+  // แปลง Decimal amount → number ก่อน aggregate in-memory
+  type TxRow = {
+    categoryId: string;
+    type: string;
+    amount: number;
+    category: {
+      name: string;
+      icon: string | null;
+      color: string | null;
+    };
+  };
+  const txRows: TxRow[] = rows.map(
+    (r: {
+      categoryId: string;
+      type: string;
+      amount: unknown;
+      category: {
+        name: string;
+        icon: string | null;
+        color: string | null;
+      };
+    }) => ({
+      categoryId: r.categoryId,
+      type: r.type,
+      amount: toNum(r.amount as never),
+      category: {
+        name: r.category.name,
+        icon: r.category.icon ?? null,
+        color: r.category.color ?? null,
+      },
+    }),
+  );
+
   // คำนวณ grand totals ก่อน
-  type TxRow = (typeof rows)[number];
-  const incomeTotal = rows
-    .filter((r: TxRow) => r.type === "INCOME")
-    .reduce((acc: number, r: TxRow) => acc + r.amount, 0);
-  const expenseTotal = rows
-    .filter((r: TxRow) => r.type === "EXPENSE")
-    .reduce((acc: number, r: TxRow) => acc + r.amount, 0);
+  const incomeTotal = txRows
+    .filter((r) => r.type === "INCOME")
+    .reduce((acc, r) => acc + r.amount, 0);
+  const expenseTotal = txRows
+    .filter((r) => r.type === "EXPENSE")
+    .reduce((acc, r) => acc + r.amount, 0);
 
   // Group in-memory
   const map = new Map<string, CategorySummary>();
 
-  for (const r of rows) {
+  for (const r of txRows) {
     const key = `${r.categoryId}::${r.type}`;
     const existing = map.get(key);
     const grandTotal = r.type === "INCOME" ? incomeTotal : expenseTotal;

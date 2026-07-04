@@ -52,7 +52,10 @@ export async function GET(request: Request) {
 
     return Response.json({ success: true, data: { summary, categories } });
   } catch (error) {
-    console.error("[GET /api/expenses/summary]", error);
+    console.error(
+      "[GET /api/expenses/summary]",
+      (error as Error)?.message ?? error,
+    );
     return Response.json({ error: "ไม่สามารถดึงสรุปได้" }, { status: 500 });
   }
 }
