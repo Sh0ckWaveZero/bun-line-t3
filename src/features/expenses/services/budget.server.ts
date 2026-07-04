@@ -7,10 +7,60 @@
 
 import { db } from "@/lib/database/index";
 import type { Budget, ExpenseCategory } from "@prisma/client";
+import { toNum } from "./decimal";
 
-export type BudgetWithCategory = Budget & {
+/**
+ * Budget row ที่ส่งออกจาก service layer
+ * แทนที่จะใช้ Prisma `Budget` (ที่ amount เป็น Decimal) ตรงๆ
+ * เรา map ให้ amount เป็น number เพื่อให้ consumer ใช้งานง่าย
+ */
+export interface BudgetModel {
+  id: string;
+  userId: string;
+  categoryId: string | null;
+  type: "INCOME" | "EXPENSE";
+  amount: number;
+  alertAt: number;
+  tags: string | null;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type BudgetWithCategory = BudgetModel & {
   category: ExpenseCategory | null;
 };
+
+/** แปลง Prisma Budget row → BudgetWithCategory (Decimal → number) */
+function mapBudget<
+  T extends {
+    id: string;
+    userId: string;
+    categoryId: string | null;
+    type: unknown;
+    amount: unknown;
+    alertAt: number;
+    tags: string | null;
+    isActive: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    category: ExpenseCategory | null;
+  },
+>(row: T): BudgetWithCategory {
+  return {
+    id: row.id,
+    userId: row.userId,
+    categoryId: row.categoryId,
+    type: row.type as "INCOME" | "EXPENSE",
+    amount: toNum(row.amount as never),
+    alertAt: row.alertAt,
+    tags: row.tags,
+    isActive: row.isActive,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    category: row.category,
+  };
+}
 
 export type BudgetUsage = {
   budget: BudgetWithCategory;
@@ -34,7 +84,7 @@ export async function getBudgetsByUser(
     include: { category: true },
     orderBy: { createdAt: "asc" },
   });
-  return rows as BudgetWithCategory[];
+  return rows.map(mapBudget);
 }
 
 /** ดึง budget เดียวตาม id + ตรวจสิทธิ์ */
@@ -46,7 +96,7 @@ export async function getBudgetById(
     where: { id, userId },
     include: { category: true },
   });
-  return row as BudgetWithCategory | null;
+  return row ? mapBudget(row) : null;
 }
 
 /** ดึง budget ตาม categoryId */
@@ -58,7 +108,7 @@ export async function getBudgetByCategory(
     where: { userId, categoryId },
     include: { category: true },
   });
-  return row as BudgetWithCategory | null;
+  return row ? mapBudget(row) : null;
 }
 
 // ─────────────────────────────────────────────
@@ -85,7 +135,7 @@ export async function createBudget(input: {
     },
     include: { category: true },
   });
-  return row as BudgetWithCategory;
+  return mapBudget(row);
 }
 
 /** อัปเดต budget */
@@ -109,7 +159,7 @@ export async function updateBudget(
     },
     include: { category: true },
   });
-  return row as BudgetWithCategory;
+  return mapBudget(row);
 }
 
 /** ลบ budget (soft delete) */
@@ -152,7 +202,11 @@ export async function getBudgetUsage(
       },
     });
 
-    const spent = transactions.reduce((sum, tx) => sum + tx.amount, 0);
+    const spent = transactions.reduce(
+      (sum: number, tx: { amount: unknown }) =>
+        sum + toNum(tx.amount as never),
+      0,
+    );
     const remaining = budget.amount - spent;
     const percentage = budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
     const isOverBudget = spent > budget.amount;

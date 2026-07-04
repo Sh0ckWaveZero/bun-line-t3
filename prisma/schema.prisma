@@ -403,7 +403,7 @@ model Transaction {
   userId     String          @map("user_id")
   categoryId String          @map("category_id")
   type       TransactionType @map("type")
-  amount     Float           @map("amount") // จำนวนเงิน (THB)
+  amount     Decimal         @db.Decimal(14, 2) @map("amount") // จำนวนเงิน (THB)
   note       String?         @map("note") // หมายเหตุ
   tags       String?         @map("tags") // comma-separated tags
   transDate  String          @map("trans_date") // YYYY-MM-DD
@@ -428,7 +428,7 @@ model Budget {
   userId     String          @map("user_id")
   categoryId String?         @map("category_id") // null = งบรวมทุกหมวด
   type       TransactionType @default(EXPENSE) @map("type")
-  amount     Float           @map("amount") // จำนวนเงินงบ (THB/เดือน)
+  amount     Decimal         @db.Decimal(14, 2) @map("amount") // จำนวนเงินงบ (THB/เดือน)
   alertAt    Int             @default(80) @map("alert_at") // แจ้งเตือนเมื่อใช้ถึง % นี้
   tags       String?         @map("tags") // comma-separated tags
   isActive   Boolean         @default(true) @map("is_active")
@@ -458,7 +458,7 @@ model RecurringTransaction {
   userId      String             @map("user_id")
   categoryId  String             @map("category_id")
   type        TransactionType    @map("type")
-  amount      Float              @map("amount")
+  amount      Decimal            @db.Decimal(14, 2) @map("amount")
   note        String?            @map("note")
   tags        String?            @map("tags")
   frequency   RecurringFrequency @map("frequency")
@@ -486,8 +486,8 @@ model SavingsGoal {
   userId       String   @map("user_id")
   name         String   @map("name") // ชื่อเป้าหมาย เช่น "ซื้อ iPhone", "เที่ยวญี่ปุ่น"
   icon         String?  @map("icon") // emoji
-  targetAmount Float    @map("target_amount") // เป้าหมาย (บาท)
-  savedAmount  Float    @default(0) @map("saved_amount") // ออมแล้ว (บาท)
+  targetAmount Decimal @db.Decimal(14, 2) @map("target_amount") // เป้าหมาย (บาท)
+  savedAmount  Decimal @default(0) @db.Decimal(14, 2) @map("saved_amount") // ออมแล้ว (บาท)
   deadline     String?  @map("deadline") // YYYY-MM-DD
   tags         String?  @map("tags") // comma-separated tags
   isCompleted  Boolean  @default(false) @map("is_completed")
