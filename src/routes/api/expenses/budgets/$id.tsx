@@ -12,13 +12,18 @@ import {
   deactivateBudget,
   getBudgetById,
 } from "@/features/expenses/services/budget.server";
+import { MAX_TRANSACTION_AMOUNT } from "@/features/expenses/constants";
 
 // ─────────────────────────────────────────────
 // Schema
 // ─────────────────────────────────────────────
 
 const updateBudgetSchema = z.object({
-  amount: z.number().positive().optional(),
+  amount: z
+    .number()
+    .positive()
+    .max(MAX_TRANSACTION_AMOUNT, "จำนวนเงินมากเกินไป")
+    .optional(),
   alertAt: z.number().min(50).max(100).optional(),
   isActive: z.boolean().optional(),
 });
@@ -54,13 +59,16 @@ export async function PATCH(
       message: "อัปเดตงบประมาณสำเร็จ",
     });
   } catch (error) {
-    console.error("[PATCH /api/expenses/budgets/:id]", error);
     if (error instanceof z.ZodError) {
       return Response.json(
         { error: "ข้อมูลไม่ถูกต้อง", details: error.issues },
         { status: 400 },
       );
     }
+    console.error(
+      "[PATCH /api/expenses/budgets/:id]",
+      (error as Error)?.message ?? error,
+    );
     return Response.json(
       { error: "ไม่สามารถอัปเดตงบประมาณได้" },
       { status: 500 },
@@ -91,7 +99,10 @@ export async function DELETE(
       message: "ลบงบประมาณสำเร็จ",
     });
   } catch (error) {
-    console.error("[DELETE /api/expenses/budgets/:id]", error);
+    console.error(
+      "[DELETE /api/expenses/budgets/:id]",
+      (error as Error)?.message ?? error,
+    );
     return Response.json({ error: "ไม่สามารถลบงบประมาณได้" }, { status: 500 });
   }
 }

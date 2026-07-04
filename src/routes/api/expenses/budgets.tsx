@@ -16,6 +16,8 @@ import {
   updateBudget,
   deactivateBudget,
 } from "@/features/expenses/services/budget.server";
+import { isCategoryOwnedByUser } from "@/features/expenses/services/category.server";
+import { MAX_TRANSACTION_AMOUNT } from "@/features/expenses/constants";
 
 // ─────────────────────────────────────────────
 // Schema
@@ -23,7 +25,10 @@ import {
 
 const createBudgetSchema = z.object({
   categoryId: z.string().nullable().optional(),
-  amount: z.number().positive("จำนวนเงินต้องมากกว่า 0"),
+  amount: z
+    .number()
+    .positive("จำนวนเงินต้องมากกว่า 0")
+    .max(MAX_TRANSACTION_AMOUNT, "จำนวนเงินมากเกินไป"),
   alertAt: z.number().min(50).max(100).optional(),
 });
 
@@ -52,7 +57,10 @@ export async function GET(request: Request) {
 
     return Response.json({ success: true, data: budgets });
   } catch (error) {
-    console.error("[GET /api/expenses/budgets]", error);
+    console.error(
+      "[GET /api/expenses/budgets]",
+      (error as Error)?.message ?? error,
+    );
     return Response.json({ error: "ไม่สามารถดึงงบประมาณได้" }, { status: 500 });
   }
 }
@@ -67,6 +75,20 @@ export async function POST(request: Request) {
     const body = await request.json();
     const input = createBudgetSchema.parse(body);
 
+    // ป้องกัน IDOR: ถ้ามี categoryId (ไม่ null) ต้องเป็นของ user นี้จริงๆ
+    if (input.categoryId) {
+      const isOwner = await isCategoryOwnedByUser(
+        input.categoryId,
+        session.user.id,
+      );
+      if (!isOwner) {
+        return Response.json(
+          { error: "หมวดหมู่ไม่ถูกต้อง" },
+          { status: 400 },
+        );
+      }
+    }
+
     const budget = await createBudget({
       userId: session.user.id,
       categoryId: input.categoryId,
@@ -80,13 +102,28 @@ export async function POST(request: Request) {
       { status: 201 },
     );
   } catch (error) {
-    console.error("[POST /api/expenses/budgets]", error);
     if (error instanceof z.ZodError) {
       return Response.json(
         { error: "ข้อมูลไม่ถูกต้อง", details: error.issues },
         { status: 400 },
       );
     }
+    // Handle Prisma unique constraint (budget ของ category นี้มีอยู่แล้ว)
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "P2002"
+    ) {
+      return Response.json(
+        { error: "งบประมาณของหมวดหมู่นี้มีอยู่แล้ว" },
+        { status: 409 },
+      );
+    }
+    console.error(
+      "[POST /api/expenses/budgets]",
+      (error as Error)?.message ?? error,
+    );
     return Response.json(
       { error: "ไม่สามารถสร้างงบประมาณได้" },
       { status: 500 },

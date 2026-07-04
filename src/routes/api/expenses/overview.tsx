@@ -10,8 +10,22 @@ import { getServerAuthSession } from "@/lib/auth/auth";
 import { db } from "@/lib/database";
 import { getCategoriesByUser } from "@/features/expenses/services/category.server";
 import { getTransactions } from "@/features/expenses/services/transaction.server";
-import { DEFAULT_PAGE_SIZE } from "@/features/expenses/constants";
+import { toNum } from "@/features/expenses/services/decimal";
+import {
+  DEFAULT_PAGE_SIZE,
+  MAX_PAGE_SIZE,
+} from "@/features/expenses/constants";
 import { getCurrentMonth } from "@/features/expenses/helpers";
+
+/**
+ * Parse limit query param อย่างปลอดภัย (ป้องกัน NaN/ค่าติดลบ)
+ */
+function safeLimit(value: string | null): number {
+  if (value === null) return DEFAULT_PAGE_SIZE;
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed < 1) return DEFAULT_PAGE_SIZE;
+  return Math.min(parsed, MAX_PAGE_SIZE);
+}
 
 export async function GET(request: Request) {
   try {
@@ -30,10 +44,7 @@ export async function GET(request: Request) {
     }
 
     const userId = session.user.id;
-    const limit = Math.min(
-      parseInt(url.searchParams.get("limit") ?? String(DEFAULT_PAGE_SIZE), 10),
-      100,
-    );
+    const limit = safeLimit(url.searchParams.get("limit"));
 
     const [transactions, totalRows, categoryRows, categories, settings] =
       await Promise.all([
@@ -57,10 +68,12 @@ export async function GET(request: Request) {
         }),
       ]);
 
-    const totalIncome =
-      totalRows.find((row) => row.type === "INCOME")?._sum.amount ?? 0;
-    const totalExpense =
-      totalRows.find((row) => row.type === "EXPENSE")?._sum.amount ?? 0;
+    const totalIncome = toNum(
+      totalRows.find((row) => row.type === "INCOME")?._sum.amount,
+    );
+    const totalExpense = toNum(
+      totalRows.find((row) => row.type === "EXPENSE")?._sum.amount,
+    );
     const transactionCount = totalRows.reduce(
       (sum, row) => sum + (row._count._all ?? 0),
       0,
@@ -70,7 +83,7 @@ export async function GET(request: Request) {
     );
     const categorySummary = categoryRows
       .map((row) => {
-        const total = row._sum.amount ?? 0;
+        const total = toNum(row._sum.amount);
         const grandTotal = row.type === "INCOME" ? totalIncome : totalExpense;
         const category = categoryById.get(row.categoryId);
 
@@ -104,7 +117,10 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
-    console.error("[GET /api/expenses/overview]", error);
+    console.error(
+      "[GET /api/expenses/overview]",
+      (error as Error)?.message ?? error,
+    );
     return Response.json({ error: "ไม่สามารถดึงข้อมูลได้" }, { status: 500 });
   }
 }

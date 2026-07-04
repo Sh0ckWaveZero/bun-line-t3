@@ -35,6 +35,22 @@ export async function getCategoryById(
   }) as Promise<ExpenseCategory | null>;
 }
 
+/**
+ * ตรวจสอบว่า category เป็นของ user นี้จริงๆ และยัง active
+ * ป้องกัน IDOR — ผู้ใช้ส่ง categoryId ของคนอื่นมาใน payload
+ *
+ * @returns `true` ถ้า ownership ผ่าน, `false` ถ้าไม่ใช่เจ้าของ/ไม่มี category
+ */
+export async function isCategoryOwnedByUser(
+  categoryId: string,
+  userId: string,
+): Promise<boolean> {
+  const count = await db.expenseCategory.count({
+    where: { id: categoryId, userId, isActive: true },
+  });
+  return count > 0;
+}
+
 // ─────────────────────────────────────────────
 // Mutations
 // ─────────────────────────────────────────────

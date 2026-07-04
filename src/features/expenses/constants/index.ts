@@ -48,6 +48,13 @@ export const DEFAULT_CATEGORIES = [
 export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 100;
 
+/**
+ * ขอบเขตจำนวนเงิน (THB) ต่อรายการ
+ * ป้องกันค่าประหลาด เช่น 1e308 ที่ทำให้ aggregate/summary รั่วหรือ overflow
+ * 100 ล้านบาท/รายการ ถือว่ากว้างพอสำหรับการใช้งานส่วนบุคคล
+ */
+export const MAX_TRANSACTION_AMOUNT = 100_000_000;
+
 // ─────────────────────────────────────────────
 // Currency
 // ─────────────────────────────────────────────

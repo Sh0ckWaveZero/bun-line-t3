@@ -44,7 +44,10 @@ export async function GET(request: Request) {
     const categories = await getCategoriesByUser(session.user.id);
     return Response.json({ success: true, data: categories });
   } catch (error) {
-    console.error("[GET /api/expenses/categories]", error);
+    console.error(
+      "[GET /api/expenses/categories]",
+      (error as Error)?.message ?? error,
+    );
     return Response.json({ error: "ไม่สามารถดึงหมวดหมู่ได้" }, { status: 500 });
   }
 }
@@ -69,7 +72,6 @@ export async function POST(request: Request) {
       { status: 201 },
     );
   } catch (error) {
-    console.error("[POST /api/expenses/categories]", error);
     if (error instanceof z.ZodError) {
       return Response.json(
         { error: "ข้อมูลไม่ถูกต้อง", details: error.issues },
@@ -88,6 +90,10 @@ export async function POST(request: Request) {
         { status: 409 },
       );
     }
+    console.error(
+      "[POST /api/expenses/categories]",
+      (error as Error)?.message ?? error,
+    );
     return Response.json(
       { error: "ไม่สามารถสร้างหมวดหมู่ได้" },
       { status: 500 },

@@ -45,7 +45,10 @@ async function getCategory(request: Request, categoryId: string) {
 
     return Response.json({ success: true, data: category });
   } catch (error) {
-    console.error("[GET /api/expenses/categories/:id]", error);
+    console.error(
+      "[GET /api/expenses/categories/:id]",
+      (error as Error)?.message ?? error,
+    );
     return Response.json({ error: "ไม่สามารถดึงหมวดหมู่ได้" }, { status: 500 });
   }
 }
@@ -68,7 +71,6 @@ async function updateCategoryHandler(request: Request, categoryId: string) {
       message: "แก้ไขหมวดหมู่สำเร็จ",
     });
   } catch (error) {
-    console.error("[PATCH /api/expenses/categories/:id]", error);
     if (error instanceof z.ZodError) {
       return Response.json(
         { error: "ข้อมูลไม่ถูกต้อง", details: error.issues },
@@ -87,6 +89,10 @@ async function updateCategoryHandler(request: Request, categoryId: string) {
         { status: 409 },
       );
     }
+    console.error(
+      "[PATCH /api/expenses/categories/:id]",
+      (error as Error)?.message ?? error,
+    );
     return Response.json(
       { error: "ไม่สามารถแก้ไขหมวดหมู่ได้" },
       { status: 500 },
@@ -108,12 +114,10 @@ async function deleteCategoryHandler(request: Request, categoryId: string) {
       message: "ลบหมวดหมู่สำเร็จ",
     });
   } catch (error) {
-    console.error("[DELETE /api/expenses/categories/:id]", error);
     // Handle foreign key constraint (มี transaction ใช้อยู่)
     if (
       error &&
       typeof error === "object" &&
-      "code" in error &&
       "code" in error &&
       error.code === "P2003"
     ) {
@@ -122,6 +126,10 @@ async function deleteCategoryHandler(request: Request, categoryId: string) {
         { status: 400 },
       );
     }
+    console.error(
+      "[DELETE /api/expenses/categories/:id]",
+      (error as Error)?.message ?? error,
+    );
     return Response.json({ error: "ไม่สามารถลบหมวดหมู่ได้" }, { status: 500 });
   }
 }
