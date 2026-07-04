@@ -7,13 +7,51 @@
 
 import { db } from "@/lib/database/index";
 import type { SavingsGoal } from "@prisma/client";
+import { toNum } from "./decimal";
 
-export type SavingsGoalWithProgress = SavingsGoal & {
+/**
+ * SavingsGoal ที่ส่งออกจาก service layer
+ * targetAmount/savedAmount เป็น number (แปลงจาก Decimal แล้ว)
+ */
+export interface SavingsGoalModel {
+  id: string;
+  userId: string;
+  name: string;
+  icon: string | null;
+  targetAmount: number;
+  savedAmount: number;
+  deadline: string | null;
+  tags: string | null;
+  isCompleted: boolean;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type SavingsGoalWithProgress = SavingsGoalModel & {
   progressPercentage: number;
   remainingAmount: number;
   daysUntilDeadline: number | null;
   isCompleted: boolean;
 };
+
+/** แปลง Prisma SavingsGoal row → SavingsGoalModel (Decimal → number) */
+function mapGoal(goal: SavingsGoal): SavingsGoalModel {
+  return {
+    id: goal.id,
+    userId: goal.userId,
+    name: goal.name,
+    icon: goal.icon,
+    targetAmount: toNum(goal.targetAmount),
+    savedAmount: toNum(goal.savedAmount),
+    deadline: goal.deadline,
+    tags: goal.tags,
+    isCompleted: goal.isCompleted,
+    isActive: goal.isActive,
+    createdAt: goal.createdAt,
+    updatedAt: goal.updatedAt,
+  };
+}
 
 // ─────────────────────────────────────────────
 // Queries
@@ -32,7 +70,7 @@ export async function getSavingsGoals(
     orderBy: { createdAt: "asc" },
   });
 
-  return goals.map(calculateProgress);
+  return goals.map(mapGoal).map(calculateProgress);
 }
 
 /** ดึง savings goal เดียวตาม id + ตรวจสิทธิ์ */
@@ -44,7 +82,7 @@ export async function getSavingsGoalById(
     where: { id, userId },
   });
 
-  return goal ? calculateProgress(goal) : null;
+  return goal ? calculateProgress(mapGoal(goal)) : null;
 }
 
 // ─────────────────────────────────────────────
@@ -74,7 +112,7 @@ export async function createSavingsGoal(input: {
     },
   });
 
-  return calculateProgress(goal);
+  return calculateProgress(mapGoal(goal));
 }
 
 /** อัปเดต savings goal */
@@ -112,7 +150,7 @@ export async function updateSavingsGoal(
     },
   });
 
-  return calculateProgress(goal);
+  return calculateProgress(mapGoal(goal));
 }
 
 /** เพิ่มยอดออม (+/-) */
@@ -129,8 +167,11 @@ export async function adjustSavingsAmount(
     throw new Error("Savings goal not found");
   }
 
-  const newAmount = Math.max(0, goal.savedAmount + amount);
-  const isCompleted = newAmount >= goal.targetAmount;
+  // แปลง Decimal → number ก่อน arithmetic
+  const currentSaved = toNum(goal.savedAmount);
+  const target = toNum(goal.targetAmount);
+  const newAmount = Math.max(0, currentSaved + amount);
+  const isCompleted = newAmount >= target;
 
   const updated = await db.savingsGoal.update({
     where: { id },
@@ -140,7 +181,7 @@ export async function adjustSavingsAmount(
     },
   });
 
-  return calculateProgress(updated);
+  return calculateProgress(mapGoal(updated));
 }
 
 /** ลบ savings goal (soft delete) */
@@ -159,7 +200,7 @@ export async function deactivateSavingsGoal(
 // ─────────────────────────────────────────────
 
 /** คำนวณ progress และข้อมูลเพิ่มเติม */
-function calculateProgress(goal: SavingsGoal): SavingsGoalWithProgress {
+function calculateProgress(goal: SavingsGoalModel): SavingsGoalWithProgress {
   const progressPercentage =
     goal.targetAmount > 0
       ? Math.min((goal.savedAmount / goal.targetAmount) * 100, 100)

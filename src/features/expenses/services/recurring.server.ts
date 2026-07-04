@@ -6,13 +6,87 @@
  */
 
 import { db } from "@/lib/database/index";
-import type { RecurringTransaction, RecurringFrequency } from "@prisma/client";
+import type {
+  RecurringTransaction,
+  RecurringFrequency,
+  ExpenseCategory,
+} from "@prisma/client";
 import { toTransDate, toTransMonth } from "../helpers";
 import type { TransactionWithCategory } from "../types";
+import { toNum } from "./decimal";
 
-export type RecurringWithCategory = RecurringTransaction & {
+/** map Prisma Transaction row (Decimal amount) → TransactionWithCategory (number) */
+function mapTx<T extends { amount: unknown }>(row: T): T {
+  return { ...row, amount: toNum(row.amount as never) };
+}
+
+/**
+ * Recurring transaction ที่ส่งออกจาก service layer
+ * แทนที่จะใช้ Prisma `RecurringTransaction` (amount เป็น Decimal) ตรงๆ
+ * เรา map ให้ amount เป็น number เพื่อให้ consumer ใช้งานง่าย
+ */
+export interface RecurringModel {
+  id: string;
+  userId: string;
+  categoryId: string;
+  type: "INCOME" | "EXPENSE";
+  amount: number;
+  note: string | null;
+  tags: string | null;
+  frequency: RecurringFrequency;
+  dayOfMonth: number | null;
+  dayOfWeek: number | null;
+  nextRunDate: string;
+  lastRunDate: string | null;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type RecurringWithCategory = RecurringModel & {
   category: ExpenseCategory;
 };
+
+/** แปลง Prisma row → RecurringWithCategory (Decimal amount → number) */
+function mapRecurring<
+  T extends {
+    id: string;
+    userId: string;
+    categoryId: string;
+    type: unknown;
+    amount: unknown;
+    note: string | null;
+    tags: string | null;
+    frequency: RecurringFrequency;
+    dayOfMonth: number | null;
+    dayOfWeek: number | null;
+    nextRunDate: string;
+    lastRunDate: string | null;
+    isActive: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    category: ExpenseCategory;
+  },
+>(row: T): RecurringWithCategory {
+  return {
+    id: row.id,
+    userId: row.userId,
+    categoryId: row.categoryId,
+    type: row.type as "INCOME" | "EXPENSE",
+    amount: toNum(row.amount as never),
+    note: row.note,
+    tags: row.tags,
+    frequency: row.frequency,
+    dayOfMonth: row.dayOfMonth,
+    dayOfWeek: row.dayOfWeek,
+    nextRunDate: row.nextRunDate,
+    lastRunDate: row.lastRunDate,
+    isActive: row.isActive,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    category: row.category,
+  };
+}
 
 // ─────────────────────────────────────────────
 // Queries
@@ -31,7 +105,7 @@ export async function getRecurringTransactions(
     include: { category: true },
     orderBy: { nextRunDate: "asc" },
   });
-  return rows as RecurringWithCategory[];
+  return rows.map(mapRecurring);
 }
 
 /** ดึง recurring transaction เดียวตาม id */
@@ -43,7 +117,7 @@ export async function getRecurringById(
     where: { id, userId },
     include: { category: true },
   });
-  return row as RecurringWithCategory | null;
+  return row ? mapRecurring(row) : null;
 }
 
 /** ดึง recurring transactions ที่ควร run วันนี้ */
@@ -57,7 +131,7 @@ export async function getDueRecurringTransactions(
     },
     include: { category: true },
   });
-  return rows as RecurringWithCategory[];
+  return rows.map(mapRecurring);
 }
 
 // ─────────────────────────────────────────────
@@ -101,7 +175,7 @@ export async function createRecurringTransaction(input: {
     include: { category: true },
   });
 
-  return row as RecurringWithCategory;
+  return mapRecurring(row);
 }
 
 /** อัปเดต recurring transaction */
@@ -149,7 +223,7 @@ export async function updateRecurringTransaction(
     include: { category: true },
   });
 
-  return row as RecurringWithCategory;
+  return mapRecurring(row);
 }
 
 /** ลบ recurring transaction (soft delete) */
@@ -189,7 +263,7 @@ export async function executeRecurringTransaction(
       userId: recurring.userId,
       categoryId: recurring.categoryId,
       type: recurring.type,
-      amount: recurring.amount,
+      amount: recurring.amount, // Prisma รับ Decimal สำหรับ Decimal column ได้
       note: recurring.note,
       tags: recurring.tags,
       transDate: recurring.nextRunDate,
@@ -215,7 +289,7 @@ export async function executeRecurringTransaction(
     },
   });
 
-  return transaction as TransactionWithCategory;
+  return mapTx(transaction) as TransactionWithCategory;
 }
 
 /**
