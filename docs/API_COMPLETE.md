@@ -114,19 +114,15 @@ Update existing attendance record.
 
 Send attendance notifications via LINE push messages.
 
-**Authentication:** Cron authentication required  
+**Authentication:** Cron authentication required via `Authorization: Bearer {CRON_SECRET}`  
 **Method:** POST
 
 **Request Body:**
 
 ```json
 {
-  "authToken": "your-secure-cron-token",
-  "data": {
-    "userId": "U1234567890",
-    "message": "Reminder: Please check out",
-    "type": "checkout_reminder"
-  }
+  "userId": "U1234567890",
+  "messageType": "checkout_reminder"
 }
 ```
 
@@ -380,9 +376,7 @@ Debug LINE OAuth configuration.
 {
   "success": true,
   "message": "Operation completed successfully",
-  "data": {
-    /* response data */
-  }
+  "data": {/* response data */}
 }
 ```
 
@@ -391,9 +385,7 @@ Debug LINE OAuth configuration.
 ```json
 {
   "error": "Error description",
-  "details": [
-    /* optional validation details */
-  ],
+  "details": [/* optional validation details */],
   "code": "ERROR_CODE" // optional
 }
 ```

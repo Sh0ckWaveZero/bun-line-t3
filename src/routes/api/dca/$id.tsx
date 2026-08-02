@@ -40,7 +40,7 @@ export async function DELETE(request: Request, id: string) {
     // 🗑️ Emit SSE event เพื่อให้ clients รับทราบ
     dcaEventManager.emit({
       type: "dca-order-deleted",
-      data: { id },
+      data: { id, lineUserId },
     });
 
     return Response.json({ message: "ลบข้อมูลสำเร็จ" }, { status: 200 });

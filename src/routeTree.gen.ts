@@ -9,145 +9,75 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ThaiNamesGeneratorRouteImport } from './routes/thai-names-generator'
-import { Route as ThaiIdRouteImport } from './routes/thai-id'
-import { Route as SubscriptionsRouteImport } from './routes/subscriptions'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as PendingApprovalRouteImport } from './routes/pending-approval'
-import { Route as MonitoringRouteImport } from './routes/monitoring'
-import { Route as LogoutRouteImport } from './routes/logout'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as LineApprovalRouteImport } from './routes/line-approval'
-import { Route as LeaveRouteImport } from './routes/leave'
-import { Route as HelpRouteImport } from './routes/help'
-import { Route as ExpensesRouteImport } from './routes/expenses'
-import { Route as DcaHistoryRouteImport } from './routes/dca-history'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as CalendarRouteImport } from './routes/calendar'
-import { Route as AttendanceReportRouteImport } from './routes/attendance-report'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as CalendarMobileRouteImport } from './routes/calendar.mobile'
-import { Route as ApiLogoutRouteImport } from './routes/api/logout'
-import { Route as ApiLineRouteImport } from './routes/api/line'
-import { Route as ApiLeaveRouteImport } from './routes/api/leave'
-import { Route as ApiHolidaysRouteImport } from './routes/api/holidays'
-import { Route as ApiHealthRouteImport } from './routes/api/health'
-import { Route as ApiCheckoutReminderRouteImport } from './routes/api/checkout-reminder'
-import { Route as ApiAttendanceReportRouteImport } from './routes/api/attendance-report'
-import { Route as ApiAttendancePushRouteImport } from './routes/api/attendance-push'
+import { Route as AttendanceReportRouteImport } from './routes/attendance-report'
+import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as DcaHistoryRouteImport } from './routes/dca-history'
+import { Route as ExpensesRouteImport } from './routes/expenses'
+import { Route as HelpRouteImport } from './routes/help'
+import { Route as LeaveRouteImport } from './routes/leave'
+import { Route as LineApprovalRouteImport } from './routes/line-approval'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as LogoutRouteImport } from './routes/logout'
+import { Route as MonitoringRouteImport } from './routes/monitoring'
+import { Route as PendingApprovalRouteImport } from './routes/pending-approval'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SubscriptionsRouteImport } from './routes/subscriptions'
+import { Route as ThaiIdRouteImport } from './routes/thai-id'
+import { Route as ThaiNamesGeneratorRouteImport } from './routes/thai-names-generator'
 import { Route as AdminLinePermissionsRouteImport } from './routes/admin/line-permissions'
-import { Route as ApiSubscriptionsIndexRouteImport } from './routes/api/subscriptions/index'
-import { Route as ApiExpensesIndexRouteImport } from './routes/api/expenses/index'
-import { Route as ApiDcaIndexRouteImport } from './routes/api/dca/index'
-import { Route as ApiUserSettingsRouteImport } from './routes/api/user/settings'
-import { Route as ApiThaiIdValidateRouteImport } from './routes/api/thai-id/validate'
-import { Route as ApiThaiIdGenerateRouteImport } from './routes/api/thai-id/generate'
-import { Route as ApiTempChartsFilenameRouteImport } from './routes/api/temp-charts/$filename'
-import { Route as ApiSubscriptionsPaymentsRouteImport } from './routes/api/subscriptions/payments'
-import { Route as ApiSubscriptionsMembersRouteImport } from './routes/api/subscriptions/members'
-import { Route as ApiSubscriptionsSubscriptionIdRouteImport } from './routes/api/subscriptions/$subscriptionId'
-import { Route as ApiMonitoringDashboardRouteImport } from './routes/api/monitoring/dashboard'
-import { Route as ApiLinePermissionsRouteImport } from './routes/api/line/permissions'
-import { Route as ApiLineApprovalsRouteImport } from './routes/api/line/approvals'
-import { Route as ApiHealthEnhancedRouteImport } from './routes/api/health/enhanced'
-import { Route as ApiExpensesSummaryRouteImport } from './routes/api/expenses/summary'
-import { Route as ApiExpensesOverviewRouteImport } from './routes/api/expenses/overview'
-import { Route as ApiExpensesCategoriesRouteImport } from './routes/api/expenses/categories'
-import { Route as ApiExpensesBudgetsRouteImport } from './routes/api/expenses/budgets'
-import { Route as ApiExpensesTransactionIdRouteImport } from './routes/api/expenses/$transactionId'
-import { Route as ApiDcaSummaryRouteImport } from './routes/api/dca/summary'
-import { Route as ApiDcaStreamRouteImport } from './routes/api/dca/stream'
-import { Route as ApiDcaImportRouteImport } from './routes/api/dca/import'
-import { Route as ApiDcaExportRouteImport } from './routes/api/dca/export'
-import { Route as ApiDcaAllRouteImport } from './routes/api/dca/all'
-import { Route as ApiDcaIdRouteImport } from './routes/api/dca/$id'
-import { Route as ApiCronImageCleanupRouteImport } from './routes/api/cron/image-cleanup'
-import { Route as ApiCronEnhancedCheckoutReminderRouteImport } from './routes/api/cron/enhanced-checkout-reminder'
-import { Route as ApiCronCheckoutReminderRouteImport } from './routes/api/cron/checkout-reminder'
-import { Route as ApiCronCheckInReminderRouteImport } from './routes/api/cron/check-in-reminder'
-import { Route as ApiCronAutoCheckoutRouteImport } from './routes/api/cron/auto-checkout'
-import { Route as ApiAuthCheckLineApprovalRouteImport } from './routes/api/auth/check-line-approval'
-import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
-import { Route as ApiAttendanceUpdateRouteImport } from './routes/api/attendance/update'
-import { Route as ApiAdminDebugRouteImport } from './routes/api/admin/debug'
+import { Route as ApiAttendancePushRouteImport } from './routes/api/attendance-push'
+import { Route as ApiAttendanceReportRouteImport } from './routes/api/attendance-report'
+import { Route as ApiCheckoutReminderRouteImport } from './routes/api/checkout-reminder'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as ApiHolidaysRouteImport } from './routes/api/holidays'
+import { Route as ApiLeaveRouteImport } from './routes/api/leave'
+import { Route as ApiLineRouteImport } from './routes/api/line'
+import { Route as ApiLogoutRouteImport } from './routes/api/logout'
+import { Route as CalendarMobileRouteImport } from './routes/calendar.mobile'
 import { Route as ApiAdminCheckRouteImport } from './routes/api/admin/check'
-import { Route as ApiUserSettingsNotificationsRouteImport } from './routes/api/user/settings/notifications'
-import { Route as ApiExpensesCategoriesIdRouteImport } from './routes/api/expenses/categories/$id'
+import { Route as ApiAdminDebugRouteImport } from './routes/api/admin/debug'
+import { Route as ApiAttendanceUpdateRouteImport } from './routes/api/attendance/update'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiAuthCheckLineApprovalRouteImport } from './routes/api/auth/check-line-approval'
+import { Route as ApiCronAutoCheckoutRouteImport } from './routes/api/cron/auto-checkout'
+import { Route as ApiCronCheckInReminderRouteImport } from './routes/api/cron/check-in-reminder'
+import { Route as ApiCronCheckoutReminderRouteImport } from './routes/api/cron/checkout-reminder'
+import { Route as ApiCronEnhancedCheckoutReminderRouteImport } from './routes/api/cron/enhanced-checkout-reminder'
+import { Route as ApiCronImageCleanupRouteImport } from './routes/api/cron/image-cleanup'
+import { Route as ApiDcaIndexRouteImport } from './routes/api/dca/index'
+import { Route as ApiDcaIdRouteImport } from './routes/api/dca/$id'
+import { Route as ApiDcaAllRouteImport } from './routes/api/dca/all'
+import { Route as ApiDcaExportRouteImport } from './routes/api/dca/export'
+import { Route as ApiDcaImportRouteImport } from './routes/api/dca/import'
+import { Route as ApiDcaStreamRouteImport } from './routes/api/dca/stream'
+import { Route as ApiDcaSummaryRouteImport } from './routes/api/dca/summary'
+import { Route as ApiExpensesIndexRouteImport } from './routes/api/expenses/index'
+import { Route as ApiExpensesTransactionIdRouteImport } from './routes/api/expenses/$transactionId'
+import { Route as ApiExpensesBudgetsRouteImport } from './routes/api/expenses/budgets'
+import { Route as ApiExpensesCategoriesRouteImport } from './routes/api/expenses/categories'
+import { Route as ApiExpensesOverviewRouteImport } from './routes/api/expenses/overview'
+import { Route as ApiExpensesSummaryRouteImport } from './routes/api/expenses/summary'
+import { Route as ApiHealthEnhancedRouteImport } from './routes/api/health/enhanced'
+import { Route as ApiLineApprovalsRouteImport } from './routes/api/line/approvals'
+import { Route as ApiLinePermissionsRouteImport } from './routes/api/line/permissions'
+import { Route as ApiMonitoringDashboardRouteImport } from './routes/api/monitoring/dashboard'
+import { Route as ApiSubscriptionsIndexRouteImport } from './routes/api/subscriptions/index'
+import { Route as ApiSubscriptionsSubscriptionIdRouteImport } from './routes/api/subscriptions/$subscriptionId'
+import { Route as ApiSubscriptionsMembersRouteImport } from './routes/api/subscriptions/members'
+import { Route as ApiSubscriptionsPaymentsRouteImport } from './routes/api/subscriptions/payments'
+import { Route as ApiTempChartsFilenameRouteImport } from './routes/api/temp-charts/$filename'
+import { Route as ApiThaiIdGenerateRouteImport } from './routes/api/thai-id/generate'
+import { Route as ApiThaiIdValidateRouteImport } from './routes/api/thai-id/validate'
+import { Route as ApiUserSettingsRouteImport } from './routes/api/user/settings'
 import { Route as ApiExpensesBudgetsIdRouteImport } from './routes/api/expenses/budgets/$id'
+import { Route as ApiExpensesCategoriesIdRouteImport } from './routes/api/expenses/categories/$id'
+import { Route as ApiUserSettingsNotificationsRouteImport } from './routes/api/user/settings/notifications'
 
-const ThaiNamesGeneratorRoute = ThaiNamesGeneratorRouteImport.update({
-  id: '/thai-names-generator',
-  path: '/thai-names-generator',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ThaiIdRoute = ThaiIdRouteImport.update({
-  id: '/thai-id',
-  path: '/thai-id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SubscriptionsRoute = SubscriptionsRouteImport.update({
-  id: '/subscriptions',
-  path: '/subscriptions',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PendingApprovalRoute = PendingApprovalRouteImport.update({
-  id: '/pending-approval',
-  path: '/pending-approval',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MonitoringRoute = MonitoringRouteImport.update({
-  id: '/monitoring',
-  path: '/monitoring',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LogoutRoute = LogoutRouteImport.update({
-  id: '/logout',
-  path: '/logout',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LineApprovalRoute = LineApprovalRouteImport.update({
-  id: '/line-approval',
-  path: '/line-approval',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LeaveRoute = LeaveRouteImport.update({
-  id: '/leave',
-  path: '/leave',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HelpRoute = HelpRouteImport.update({
-  id: '/help',
-  path: '/help',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ExpensesRoute = ExpensesRouteImport.update({
-  id: '/expenses',
-  path: '/expenses',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DcaHistoryRoute = DcaHistoryRouteImport.update({
-  id: '/dca-history',
-  path: '/dca-history',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CalendarRoute = CalendarRouteImport.update({
-  id: '/calendar',
-  path: '/calendar',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AttendanceReportRoute = AttendanceReportRouteImport.update({
@@ -155,54 +85,79 @@ const AttendanceReportRoute = AttendanceReportRouteImport.update({
   path: '/attendance-report',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const CalendarRoute = CalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CalendarMobileRoute = CalendarMobileRouteImport.update({
-  id: '/mobile',
-  path: '/mobile',
-  getParentRoute: () => CalendarRoute,
-} as any)
-const ApiLogoutRoute = ApiLogoutRouteImport.update({
-  id: '/api/logout',
-  path: '/api/logout',
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiLineRoute = ApiLineRouteImport.update({
-  id: '/api/line',
-  path: '/api/line',
+const DcaHistoryRoute = DcaHistoryRouteImport.update({
+  id: '/dca-history',
+  path: '/dca-history',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiLeaveRoute = ApiLeaveRouteImport.update({
-  id: '/api/leave',
-  path: '/api/leave',
+const ExpensesRoute = ExpensesRouteImport.update({
+  id: '/expenses',
+  path: '/expenses',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiHolidaysRoute = ApiHolidaysRouteImport.update({
-  id: '/api/holidays',
-  path: '/api/holidays',
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiHealthRoute = ApiHealthRouteImport.update({
-  id: '/api/health',
-  path: '/api/health',
+const LeaveRoute = LeaveRouteImport.update({
+  id: '/leave',
+  path: '/leave',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiCheckoutReminderRoute = ApiCheckoutReminderRouteImport.update({
-  id: '/api/checkout-reminder',
-  path: '/api/checkout-reminder',
+const LineApprovalRoute = LineApprovalRouteImport.update({
+  id: '/line-approval',
+  path: '/line-approval',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAttendanceReportRoute = ApiAttendanceReportRouteImport.update({
-  id: '/api/attendance-report',
-  path: '/api/attendance-report',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAttendancePushRoute = ApiAttendancePushRouteImport.update({
-  id: '/api/attendance-push',
-  path: '/api/attendance-push',
+const LogoutRoute = LogoutRouteImport.update({
+  id: '/logout',
+  path: '/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MonitoringRoute = MonitoringRouteImport.update({
+  id: '/monitoring',
+  path: '/monitoring',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PendingApprovalRoute = PendingApprovalRouteImport.update({
+  id: '/pending-approval',
+  path: '/pending-approval',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SubscriptionsRoute = SubscriptionsRouteImport.update({
+  id: '/subscriptions',
+  path: '/subscriptions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ThaiIdRoute = ThaiIdRouteImport.update({
+  id: '/thai-id',
+  path: '/thai-id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ThaiNamesGeneratorRoute = ThaiNamesGeneratorRouteImport.update({
+  id: '/thai-names-generator',
+  path: '/thai-names-generator',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminLinePermissionsRoute = AdminLinePermissionsRouteImport.update({
@@ -210,158 +165,69 @@ const AdminLinePermissionsRoute = AdminLinePermissionsRouteImport.update({
   path: '/admin/line-permissions',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiSubscriptionsIndexRoute = ApiSubscriptionsIndexRouteImport.update({
-  id: '/api/subscriptions/',
-  path: '/api/subscriptions/',
+const ApiAttendancePushRoute = ApiAttendancePushRouteImport.update({
+  id: '/api/attendance-push',
+  path: '/api/attendance-push',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiExpensesIndexRoute = ApiExpensesIndexRouteImport.update({
-  id: '/api/expenses/',
-  path: '/api/expenses/',
+const ApiAttendanceReportRoute = ApiAttendanceReportRouteImport.update({
+  id: '/api/attendance-report',
+  path: '/api/attendance-report',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiDcaIndexRoute = ApiDcaIndexRouteImport.update({
-  id: '/api/dca/',
-  path: '/api/dca/',
+const ApiCheckoutReminderRoute = ApiCheckoutReminderRouteImport.update({
+  id: '/api/checkout-reminder',
+  path: '/api/checkout-reminder',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiUserSettingsRoute = ApiUserSettingsRouteImport.update({
-  id: '/api/user/settings',
-  path: '/api/user/settings',
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiThaiIdValidateRoute = ApiThaiIdValidateRouteImport.update({
-  id: '/api/thai-id/validate',
-  path: '/api/thai-id/validate',
+const ApiHolidaysRoute = ApiHolidaysRouteImport.update({
+  id: '/api/holidays',
+  path: '/api/holidays',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiThaiIdGenerateRoute = ApiThaiIdGenerateRouteImport.update({
-  id: '/api/thai-id/generate',
-  path: '/api/thai-id/generate',
+const ApiLeaveRoute = ApiLeaveRouteImport.update({
+  id: '/api/leave',
+  path: '/api/leave',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiTempChartsFilenameRoute = ApiTempChartsFilenameRouteImport.update({
-  id: '/api/temp-charts/$filename',
-  path: '/api/temp-charts/$filename',
+const ApiLineRoute = ApiLineRouteImport.update({
+  id: '/api/line',
+  path: '/api/line',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiSubscriptionsPaymentsRoute =
-  ApiSubscriptionsPaymentsRouteImport.update({
-    id: '/api/subscriptions/payments',
-    path: '/api/subscriptions/payments',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiSubscriptionsMembersRoute = ApiSubscriptionsMembersRouteImport.update({
-  id: '/api/subscriptions/members',
-  path: '/api/subscriptions/members',
+const ApiLogoutRoute = ApiLogoutRouteImport.update({
+  id: '/api/logout',
+  path: '/api/logout',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiSubscriptionsSubscriptionIdRoute =
-  ApiSubscriptionsSubscriptionIdRouteImport.update({
-    id: '/api/subscriptions/$subscriptionId',
-    path: '/api/subscriptions/$subscriptionId',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiMonitoringDashboardRoute = ApiMonitoringDashboardRouteImport.update({
-  id: '/api/monitoring/dashboard',
-  path: '/api/monitoring/dashboard',
+const CalendarMobileRoute = CalendarMobileRouteImport.update({
+  id: '/mobile',
+  path: '/mobile',
+  getParentRoute: () => CalendarRoute,
+} as any)
+const ApiAdminCheckRoute = ApiAdminCheckRouteImport.update({
+  id: '/api/admin/check',
+  path: '/api/admin/check',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiLinePermissionsRoute = ApiLinePermissionsRouteImport.update({
-  id: '/permissions',
-  path: '/permissions',
-  getParentRoute: () => ApiLineRoute,
-} as any)
-const ApiLineApprovalsRoute = ApiLineApprovalsRouteImport.update({
-  id: '/approvals',
-  path: '/approvals',
-  getParentRoute: () => ApiLineRoute,
-} as any)
-const ApiHealthEnhancedRoute = ApiHealthEnhancedRouteImport.update({
-  id: '/enhanced',
-  path: '/enhanced',
-  getParentRoute: () => ApiHealthRoute,
-} as any)
-const ApiExpensesSummaryRoute = ApiExpensesSummaryRouteImport.update({
-  id: '/api/expenses/summary',
-  path: '/api/expenses/summary',
+const ApiAdminDebugRoute = ApiAdminDebugRouteImport.update({
+  id: '/api/admin/debug',
+  path: '/api/admin/debug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiExpensesOverviewRoute = ApiExpensesOverviewRouteImport.update({
-  id: '/api/expenses/overview',
-  path: '/api/expenses/overview',
+const ApiAttendanceUpdateRoute = ApiAttendanceUpdateRouteImport.update({
+  id: '/api/attendance/update',
+  path: '/api/attendance/update',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiExpensesCategoriesRoute = ApiExpensesCategoriesRouteImport.update({
-  id: '/api/expenses/categories',
-  path: '/api/expenses/categories',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiExpensesBudgetsRoute = ApiExpensesBudgetsRouteImport.update({
-  id: '/api/expenses/budgets',
-  path: '/api/expenses/budgets',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiExpensesTransactionIdRoute =
-  ApiExpensesTransactionIdRouteImport.update({
-    id: '/api/expenses/$transactionId',
-    path: '/api/expenses/$transactionId',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiDcaSummaryRoute = ApiDcaSummaryRouteImport.update({
-  id: '/api/dca/summary',
-  path: '/api/dca/summary',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiDcaStreamRoute = ApiDcaStreamRouteImport.update({
-  id: '/api/dca/stream',
-  path: '/api/dca/stream',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiDcaImportRoute = ApiDcaImportRouteImport.update({
-  id: '/api/dca/import',
-  path: '/api/dca/import',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiDcaExportRoute = ApiDcaExportRouteImport.update({
-  id: '/api/dca/export',
-  path: '/api/dca/export',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiDcaAllRoute = ApiDcaAllRouteImport.update({
-  id: '/api/dca/all',
-  path: '/api/dca/all',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiDcaIdRoute = ApiDcaIdRouteImport.update({
-  id: '/api/dca/$id',
-  path: '/api/dca/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiCronImageCleanupRoute = ApiCronImageCleanupRouteImport.update({
-  id: '/api/cron/image-cleanup',
-  path: '/api/cron/image-cleanup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiCronEnhancedCheckoutReminderRoute =
-  ApiCronEnhancedCheckoutReminderRouteImport.update({
-    id: '/api/cron/enhanced-checkout-reminder',
-    path: '/api/cron/enhanced-checkout-reminder',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiCronCheckoutReminderRoute = ApiCronCheckoutReminderRouteImport.update({
-  id: '/api/cron/checkout-reminder',
-  path: '/api/cron/checkout-reminder',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiCronCheckInReminderRoute = ApiCronCheckInReminderRouteImport.update({
-  id: '/api/cron/check-in-reminder',
-  path: '/api/cron/check-in-reminder',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiCronAutoCheckoutRoute = ApiCronAutoCheckoutRouteImport.update({
-  id: '/api/cron/auto-checkout',
-  path: '/api/cron/auto-checkout',
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthCheckLineApprovalRoute =
@@ -370,25 +236,169 @@ const ApiAuthCheckLineApprovalRoute =
     path: '/api/auth/check-line-approval',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
-  id: '/api/auth/$',
-  path: '/api/auth/$',
+const ApiCronAutoCheckoutRoute = ApiCronAutoCheckoutRouteImport.update({
+  id: '/api/cron/auto-checkout',
+  path: '/api/cron/auto-checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAttendanceUpdateRoute = ApiAttendanceUpdateRouteImport.update({
-  id: '/api/attendance/update',
-  path: '/api/attendance/update',
+const ApiCronCheckInReminderRoute = ApiCronCheckInReminderRouteImport.update({
+  id: '/api/cron/check-in-reminder',
+  path: '/api/cron/check-in-reminder',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAdminDebugRoute = ApiAdminDebugRouteImport.update({
-  id: '/api/admin/debug',
-  path: '/api/admin/debug',
+const ApiCronCheckoutReminderRoute = ApiCronCheckoutReminderRouteImport.update({
+  id: '/api/cron/checkout-reminder',
+  path: '/api/cron/checkout-reminder',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAdminCheckRoute = ApiAdminCheckRouteImport.update({
-  id: '/api/admin/check',
-  path: '/api/admin/check',
+const ApiCronEnhancedCheckoutReminderRoute =
+  ApiCronEnhancedCheckoutReminderRouteImport.update({
+    id: '/api/cron/enhanced-checkout-reminder',
+    path: '/api/cron/enhanced-checkout-reminder',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiCronImageCleanupRoute = ApiCronImageCleanupRouteImport.update({
+  id: '/api/cron/image-cleanup',
+  path: '/api/cron/image-cleanup',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDcaIndexRoute = ApiDcaIndexRouteImport.update({
+  id: '/api/dca/',
+  path: '/api/dca/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDcaIdRoute = ApiDcaIdRouteImport.update({
+  id: '/api/dca/$id',
+  path: '/api/dca/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDcaAllRoute = ApiDcaAllRouteImport.update({
+  id: '/api/dca/all',
+  path: '/api/dca/all',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDcaExportRoute = ApiDcaExportRouteImport.update({
+  id: '/api/dca/export',
+  path: '/api/dca/export',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDcaImportRoute = ApiDcaImportRouteImport.update({
+  id: '/api/dca/import',
+  path: '/api/dca/import',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDcaStreamRoute = ApiDcaStreamRouteImport.update({
+  id: '/api/dca/stream',
+  path: '/api/dca/stream',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDcaSummaryRoute = ApiDcaSummaryRouteImport.update({
+  id: '/api/dca/summary',
+  path: '/api/dca/summary',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiExpensesIndexRoute = ApiExpensesIndexRouteImport.update({
+  id: '/api/expenses/',
+  path: '/api/expenses/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiExpensesTransactionIdRoute =
+  ApiExpensesTransactionIdRouteImport.update({
+    id: '/api/expenses/$transactionId',
+    path: '/api/expenses/$transactionId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiExpensesBudgetsRoute = ApiExpensesBudgetsRouteImport.update({
+  id: '/api/expenses/budgets',
+  path: '/api/expenses/budgets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiExpensesCategoriesRoute = ApiExpensesCategoriesRouteImport.update({
+  id: '/api/expenses/categories',
+  path: '/api/expenses/categories',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiExpensesOverviewRoute = ApiExpensesOverviewRouteImport.update({
+  id: '/api/expenses/overview',
+  path: '/api/expenses/overview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiExpensesSummaryRoute = ApiExpensesSummaryRouteImport.update({
+  id: '/api/expenses/summary',
+  path: '/api/expenses/summary',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiHealthEnhancedRoute = ApiHealthEnhancedRouteImport.update({
+  id: '/enhanced',
+  path: '/enhanced',
+  getParentRoute: () => ApiHealthRoute,
+} as any)
+const ApiLineApprovalsRoute = ApiLineApprovalsRouteImport.update({
+  id: '/approvals',
+  path: '/approvals',
+  getParentRoute: () => ApiLineRoute,
+} as any)
+const ApiLinePermissionsRoute = ApiLinePermissionsRouteImport.update({
+  id: '/permissions',
+  path: '/permissions',
+  getParentRoute: () => ApiLineRoute,
+} as any)
+const ApiMonitoringDashboardRoute = ApiMonitoringDashboardRouteImport.update({
+  id: '/api/monitoring/dashboard',
+  path: '/api/monitoring/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSubscriptionsIndexRoute = ApiSubscriptionsIndexRouteImport.update({
+  id: '/api/subscriptions/',
+  path: '/api/subscriptions/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSubscriptionsSubscriptionIdRoute =
+  ApiSubscriptionsSubscriptionIdRouteImport.update({
+    id: '/api/subscriptions/$subscriptionId',
+    path: '/api/subscriptions/$subscriptionId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiSubscriptionsMembersRoute = ApiSubscriptionsMembersRouteImport.update({
+  id: '/api/subscriptions/members',
+  path: '/api/subscriptions/members',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSubscriptionsPaymentsRoute =
+  ApiSubscriptionsPaymentsRouteImport.update({
+    id: '/api/subscriptions/payments',
+    path: '/api/subscriptions/payments',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiTempChartsFilenameRoute = ApiTempChartsFilenameRouteImport.update({
+  id: '/api/temp-charts/$filename',
+  path: '/api/temp-charts/$filename',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiThaiIdGenerateRoute = ApiThaiIdGenerateRouteImport.update({
+  id: '/api/thai-id/generate',
+  path: '/api/thai-id/generate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiThaiIdValidateRoute = ApiThaiIdValidateRouteImport.update({
+  id: '/api/thai-id/validate',
+  path: '/api/thai-id/validate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUserSettingsRoute = ApiUserSettingsRouteImport.update({
+  id: '/api/user/settings',
+  path: '/api/user/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiExpensesBudgetsIdRoute = ApiExpensesBudgetsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiExpensesBudgetsRoute,
+} as any)
+const ApiExpensesCategoriesIdRoute = ApiExpensesCategoriesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiExpensesCategoriesRoute,
 } as any)
 const ApiUserSettingsNotificationsRoute =
   ApiUserSettingsNotificationsRouteImport.update({
@@ -396,16 +406,6 @@ const ApiUserSettingsNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => ApiUserSettingsRoute,
   } as any)
-const ApiExpensesCategoriesIdRoute = ApiExpensesCategoriesIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ApiExpensesCategoriesRoute,
-} as any)
-const ApiExpensesBudgetsIdRoute = ApiExpensesBudgetsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ApiExpensesBudgetsRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -876,109 +876,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/thai-names-generator': {
-      id: '/thai-names-generator'
-      path: '/thai-names-generator'
-      fullPath: '/thai-names-generator'
-      preLoaderRoute: typeof ThaiNamesGeneratorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/thai-id': {
-      id: '/thai-id'
-      path: '/thai-id'
-      fullPath: '/thai-id'
-      preLoaderRoute: typeof ThaiIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/subscriptions': {
-      id: '/subscriptions'
-      path: '/subscriptions'
-      fullPath: '/subscriptions'
-      preLoaderRoute: typeof SubscriptionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pending-approval': {
-      id: '/pending-approval'
-      path: '/pending-approval'
-      fullPath: '/pending-approval'
-      preLoaderRoute: typeof PendingApprovalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/monitoring': {
-      id: '/monitoring'
-      path: '/monitoring'
-      fullPath: '/monitoring'
-      preLoaderRoute: typeof MonitoringRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/logout': {
-      id: '/logout'
-      path: '/logout'
-      fullPath: '/logout'
-      preLoaderRoute: typeof LogoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/line-approval': {
-      id: '/line-approval'
-      path: '/line-approval'
-      fullPath: '/line-approval'
-      preLoaderRoute: typeof LineApprovalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/leave': {
-      id: '/leave'
-      path: '/leave'
-      fullPath: '/leave'
-      preLoaderRoute: typeof LeaveRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/help': {
-      id: '/help'
-      path: '/help'
-      fullPath: '/help'
-      preLoaderRoute: typeof HelpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/expenses': {
-      id: '/expenses'
-      path: '/expenses'
-      fullPath: '/expenses'
-      preLoaderRoute: typeof ExpensesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dca-history': {
-      id: '/dca-history'
-      path: '/dca-history'
-      fullPath: '/dca-history'
-      preLoaderRoute: typeof DcaHistoryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/calendar': {
-      id: '/calendar'
-      path: '/calendar'
-      fullPath: '/calendar'
-      preLoaderRoute: typeof CalendarRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/attendance-report': {
@@ -988,74 +890,109 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AttendanceReportRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/calendar': {
+      id: '/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof CalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/calendar/mobile': {
-      id: '/calendar/mobile'
-      path: '/mobile'
-      fullPath: '/calendar/mobile'
-      preLoaderRoute: typeof CalendarMobileRouteImport
-      parentRoute: typeof CalendarRoute
-    }
-    '/api/logout': {
-      id: '/api/logout'
-      path: '/api/logout'
-      fullPath: '/api/logout'
-      preLoaderRoute: typeof ApiLogoutRouteImport
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/line': {
-      id: '/api/line'
-      path: '/api/line'
-      fullPath: '/api/line'
-      preLoaderRoute: typeof ApiLineRouteImport
+    '/dca-history': {
+      id: '/dca-history'
+      path: '/dca-history'
+      fullPath: '/dca-history'
+      preLoaderRoute: typeof DcaHistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/leave': {
-      id: '/api/leave'
-      path: '/api/leave'
-      fullPath: '/api/leave'
-      preLoaderRoute: typeof ApiLeaveRouteImport
+    '/expenses': {
+      id: '/expenses'
+      path: '/expenses'
+      fullPath: '/expenses'
+      preLoaderRoute: typeof ExpensesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/holidays': {
-      id: '/api/holidays'
-      path: '/api/holidays'
-      fullPath: '/api/holidays'
-      preLoaderRoute: typeof ApiHolidaysRouteImport
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/health': {
-      id: '/api/health'
-      path: '/api/health'
-      fullPath: '/api/health'
-      preLoaderRoute: typeof ApiHealthRouteImport
+    '/leave': {
+      id: '/leave'
+      path: '/leave'
+      fullPath: '/leave'
+      preLoaderRoute: typeof LeaveRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/checkout-reminder': {
-      id: '/api/checkout-reminder'
-      path: '/api/checkout-reminder'
-      fullPath: '/api/checkout-reminder'
-      preLoaderRoute: typeof ApiCheckoutReminderRouteImport
+    '/line-approval': {
+      id: '/line-approval'
+      path: '/line-approval'
+      fullPath: '/line-approval'
+      preLoaderRoute: typeof LineApprovalRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/attendance-report': {
-      id: '/api/attendance-report'
-      path: '/api/attendance-report'
-      fullPath: '/api/attendance-report'
-      preLoaderRoute: typeof ApiAttendanceReportRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/attendance-push': {
-      id: '/api/attendance-push'
-      path: '/api/attendance-push'
-      fullPath: '/api/attendance-push'
-      preLoaderRoute: typeof ApiAttendancePushRouteImport
+    '/logout': {
+      id: '/logout'
+      path: '/logout'
+      fullPath: '/logout'
+      preLoaderRoute: typeof LogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/monitoring': {
+      id: '/monitoring'
+      path: '/monitoring'
+      fullPath: '/monitoring'
+      preLoaderRoute: typeof MonitoringRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pending-approval': {
+      id: '/pending-approval'
+      path: '/pending-approval'
+      fullPath: '/pending-approval'
+      preLoaderRoute: typeof PendingApprovalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/subscriptions': {
+      id: '/subscriptions'
+      path: '/subscriptions'
+      fullPath: '/subscriptions'
+      preLoaderRoute: typeof SubscriptionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/thai-id': {
+      id: '/thai-id'
+      path: '/thai-id'
+      fullPath: '/thai-id'
+      preLoaderRoute: typeof ThaiIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/thai-names-generator': {
+      id: '/thai-names-generator'
+      path: '/thai-names-generator'
+      fullPath: '/thai-names-generator'
+      preLoaderRoute: typeof ThaiNamesGeneratorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/line-permissions': {
@@ -1065,235 +1002,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLinePermissionsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/subscriptions/': {
-      id: '/api/subscriptions/'
-      path: '/api/subscriptions'
-      fullPath: '/api/subscriptions/'
-      preLoaderRoute: typeof ApiSubscriptionsIndexRouteImport
+    '/api/attendance-push': {
+      id: '/api/attendance-push'
+      path: '/api/attendance-push'
+      fullPath: '/api/attendance-push'
+      preLoaderRoute: typeof ApiAttendancePushRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/expenses/': {
-      id: '/api/expenses/'
-      path: '/api/expenses'
-      fullPath: '/api/expenses/'
-      preLoaderRoute: typeof ApiExpensesIndexRouteImport
+    '/api/attendance-report': {
+      id: '/api/attendance-report'
+      path: '/api/attendance-report'
+      fullPath: '/api/attendance-report'
+      preLoaderRoute: typeof ApiAttendanceReportRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/dca/': {
-      id: '/api/dca/'
-      path: '/api/dca'
-      fullPath: '/api/dca/'
-      preLoaderRoute: typeof ApiDcaIndexRouteImport
+    '/api/checkout-reminder': {
+      id: '/api/checkout-reminder'
+      path: '/api/checkout-reminder'
+      fullPath: '/api/checkout-reminder'
+      preLoaderRoute: typeof ApiCheckoutReminderRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/user/settings': {
-      id: '/api/user/settings'
-      path: '/api/user/settings'
-      fullPath: '/api/user/settings'
-      preLoaderRoute: typeof ApiUserSettingsRouteImport
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/thai-id/validate': {
-      id: '/api/thai-id/validate'
-      path: '/api/thai-id/validate'
-      fullPath: '/api/thai-id/validate'
-      preLoaderRoute: typeof ApiThaiIdValidateRouteImport
+    '/api/holidays': {
+      id: '/api/holidays'
+      path: '/api/holidays'
+      fullPath: '/api/holidays'
+      preLoaderRoute: typeof ApiHolidaysRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/thai-id/generate': {
-      id: '/api/thai-id/generate'
-      path: '/api/thai-id/generate'
-      fullPath: '/api/thai-id/generate'
-      preLoaderRoute: typeof ApiThaiIdGenerateRouteImport
+    '/api/leave': {
+      id: '/api/leave'
+      path: '/api/leave'
+      fullPath: '/api/leave'
+      preLoaderRoute: typeof ApiLeaveRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/temp-charts/$filename': {
-      id: '/api/temp-charts/$filename'
-      path: '/api/temp-charts/$filename'
-      fullPath: '/api/temp-charts/$filename'
-      preLoaderRoute: typeof ApiTempChartsFilenameRouteImport
+    '/api/line': {
+      id: '/api/line'
+      path: '/api/line'
+      fullPath: '/api/line'
+      preLoaderRoute: typeof ApiLineRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/subscriptions/payments': {
-      id: '/api/subscriptions/payments'
-      path: '/api/subscriptions/payments'
-      fullPath: '/api/subscriptions/payments'
-      preLoaderRoute: typeof ApiSubscriptionsPaymentsRouteImport
+    '/api/logout': {
+      id: '/api/logout'
+      path: '/api/logout'
+      fullPath: '/api/logout'
+      preLoaderRoute: typeof ApiLogoutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/subscriptions/members': {
-      id: '/api/subscriptions/members'
-      path: '/api/subscriptions/members'
-      fullPath: '/api/subscriptions/members'
-      preLoaderRoute: typeof ApiSubscriptionsMembersRouteImport
-      parentRoute: typeof rootRouteImport
+    '/calendar/mobile': {
+      id: '/calendar/mobile'
+      path: '/mobile'
+      fullPath: '/calendar/mobile'
+      preLoaderRoute: typeof CalendarMobileRouteImport
+      parentRoute: typeof CalendarRoute
     }
-    '/api/subscriptions/$subscriptionId': {
-      id: '/api/subscriptions/$subscriptionId'
-      path: '/api/subscriptions/$subscriptionId'
-      fullPath: '/api/subscriptions/$subscriptionId'
-      preLoaderRoute: typeof ApiSubscriptionsSubscriptionIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/monitoring/dashboard': {
-      id: '/api/monitoring/dashboard'
-      path: '/api/monitoring/dashboard'
-      fullPath: '/api/monitoring/dashboard'
-      preLoaderRoute: typeof ApiMonitoringDashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/line/permissions': {
-      id: '/api/line/permissions'
-      path: '/permissions'
-      fullPath: '/api/line/permissions'
-      preLoaderRoute: typeof ApiLinePermissionsRouteImport
-      parentRoute: typeof ApiLineRoute
-    }
-    '/api/line/approvals': {
-      id: '/api/line/approvals'
-      path: '/approvals'
-      fullPath: '/api/line/approvals'
-      preLoaderRoute: typeof ApiLineApprovalsRouteImport
-      parentRoute: typeof ApiLineRoute
-    }
-    '/api/health/enhanced': {
-      id: '/api/health/enhanced'
-      path: '/enhanced'
-      fullPath: '/api/health/enhanced'
-      preLoaderRoute: typeof ApiHealthEnhancedRouteImport
-      parentRoute: typeof ApiHealthRoute
-    }
-    '/api/expenses/summary': {
-      id: '/api/expenses/summary'
-      path: '/api/expenses/summary'
-      fullPath: '/api/expenses/summary'
-      preLoaderRoute: typeof ApiExpensesSummaryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/expenses/overview': {
-      id: '/api/expenses/overview'
-      path: '/api/expenses/overview'
-      fullPath: '/api/expenses/overview'
-      preLoaderRoute: typeof ApiExpensesOverviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/expenses/categories': {
-      id: '/api/expenses/categories'
-      path: '/api/expenses/categories'
-      fullPath: '/api/expenses/categories'
-      preLoaderRoute: typeof ApiExpensesCategoriesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/expenses/budgets': {
-      id: '/api/expenses/budgets'
-      path: '/api/expenses/budgets'
-      fullPath: '/api/expenses/budgets'
-      preLoaderRoute: typeof ApiExpensesBudgetsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/expenses/$transactionId': {
-      id: '/api/expenses/$transactionId'
-      path: '/api/expenses/$transactionId'
-      fullPath: '/api/expenses/$transactionId'
-      preLoaderRoute: typeof ApiExpensesTransactionIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/dca/summary': {
-      id: '/api/dca/summary'
-      path: '/api/dca/summary'
-      fullPath: '/api/dca/summary'
-      preLoaderRoute: typeof ApiDcaSummaryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/dca/stream': {
-      id: '/api/dca/stream'
-      path: '/api/dca/stream'
-      fullPath: '/api/dca/stream'
-      preLoaderRoute: typeof ApiDcaStreamRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/dca/import': {
-      id: '/api/dca/import'
-      path: '/api/dca/import'
-      fullPath: '/api/dca/import'
-      preLoaderRoute: typeof ApiDcaImportRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/dca/export': {
-      id: '/api/dca/export'
-      path: '/api/dca/export'
-      fullPath: '/api/dca/export'
-      preLoaderRoute: typeof ApiDcaExportRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/dca/all': {
-      id: '/api/dca/all'
-      path: '/api/dca/all'
-      fullPath: '/api/dca/all'
-      preLoaderRoute: typeof ApiDcaAllRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/dca/$id': {
-      id: '/api/dca/$id'
-      path: '/api/dca/$id'
-      fullPath: '/api/dca/$id'
-      preLoaderRoute: typeof ApiDcaIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/cron/image-cleanup': {
-      id: '/api/cron/image-cleanup'
-      path: '/api/cron/image-cleanup'
-      fullPath: '/api/cron/image-cleanup'
-      preLoaderRoute: typeof ApiCronImageCleanupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/cron/enhanced-checkout-reminder': {
-      id: '/api/cron/enhanced-checkout-reminder'
-      path: '/api/cron/enhanced-checkout-reminder'
-      fullPath: '/api/cron/enhanced-checkout-reminder'
-      preLoaderRoute: typeof ApiCronEnhancedCheckoutReminderRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/cron/checkout-reminder': {
-      id: '/api/cron/checkout-reminder'
-      path: '/api/cron/checkout-reminder'
-      fullPath: '/api/cron/checkout-reminder'
-      preLoaderRoute: typeof ApiCronCheckoutReminderRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/cron/check-in-reminder': {
-      id: '/api/cron/check-in-reminder'
-      path: '/api/cron/check-in-reminder'
-      fullPath: '/api/cron/check-in-reminder'
-      preLoaderRoute: typeof ApiCronCheckInReminderRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/cron/auto-checkout': {
-      id: '/api/cron/auto-checkout'
-      path: '/api/cron/auto-checkout'
-      fullPath: '/api/cron/auto-checkout'
-      preLoaderRoute: typeof ApiCronAutoCheckoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/auth/check-line-approval': {
-      id: '/api/auth/check-line-approval'
-      path: '/api/auth/check-line-approval'
-      fullPath: '/api/auth/check-line-approval'
-      preLoaderRoute: typeof ApiAuthCheckLineApprovalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/auth/$': {
-      id: '/api/auth/$'
-      path: '/api/auth/$'
-      fullPath: '/api/auth/$'
-      preLoaderRoute: typeof ApiAuthSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/attendance/update': {
-      id: '/api/attendance/update'
-      path: '/api/attendance/update'
-      fullPath: '/api/attendance/update'
-      preLoaderRoute: typeof ApiAttendanceUpdateRouteImport
+    '/api/admin/check': {
+      id: '/api/admin/check'
+      path: '/api/admin/check'
+      fullPath: '/api/admin/check'
+      preLoaderRoute: typeof ApiAdminCheckRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/admin/debug': {
@@ -1303,19 +1079,243 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminDebugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/admin/check': {
-      id: '/api/admin/check'
-      path: '/api/admin/check'
-      fullPath: '/api/admin/check'
-      preLoaderRoute: typeof ApiAdminCheckRouteImport
+    '/api/attendance/update': {
+      id: '/api/attendance/update'
+      path: '/api/attendance/update'
+      fullPath: '/api/attendance/update'
+      preLoaderRoute: typeof ApiAttendanceUpdateRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/user/settings/notifications': {
-      id: '/api/user/settings/notifications'
-      path: '/notifications'
-      fullPath: '/api/user/settings/notifications'
-      preLoaderRoute: typeof ApiUserSettingsNotificationsRouteImport
-      parentRoute: typeof ApiUserSettingsRoute
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/check-line-approval': {
+      id: '/api/auth/check-line-approval'
+      path: '/api/auth/check-line-approval'
+      fullPath: '/api/auth/check-line-approval'
+      preLoaderRoute: typeof ApiAuthCheckLineApprovalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron/auto-checkout': {
+      id: '/api/cron/auto-checkout'
+      path: '/api/cron/auto-checkout'
+      fullPath: '/api/cron/auto-checkout'
+      preLoaderRoute: typeof ApiCronAutoCheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron/check-in-reminder': {
+      id: '/api/cron/check-in-reminder'
+      path: '/api/cron/check-in-reminder'
+      fullPath: '/api/cron/check-in-reminder'
+      preLoaderRoute: typeof ApiCronCheckInReminderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron/checkout-reminder': {
+      id: '/api/cron/checkout-reminder'
+      path: '/api/cron/checkout-reminder'
+      fullPath: '/api/cron/checkout-reminder'
+      preLoaderRoute: typeof ApiCronCheckoutReminderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron/enhanced-checkout-reminder': {
+      id: '/api/cron/enhanced-checkout-reminder'
+      path: '/api/cron/enhanced-checkout-reminder'
+      fullPath: '/api/cron/enhanced-checkout-reminder'
+      preLoaderRoute: typeof ApiCronEnhancedCheckoutReminderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron/image-cleanup': {
+      id: '/api/cron/image-cleanup'
+      path: '/api/cron/image-cleanup'
+      fullPath: '/api/cron/image-cleanup'
+      preLoaderRoute: typeof ApiCronImageCleanupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/dca/': {
+      id: '/api/dca/'
+      path: '/api/dca'
+      fullPath: '/api/dca/'
+      preLoaderRoute: typeof ApiDcaIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/dca/$id': {
+      id: '/api/dca/$id'
+      path: '/api/dca/$id'
+      fullPath: '/api/dca/$id'
+      preLoaderRoute: typeof ApiDcaIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/dca/all': {
+      id: '/api/dca/all'
+      path: '/api/dca/all'
+      fullPath: '/api/dca/all'
+      preLoaderRoute: typeof ApiDcaAllRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/dca/export': {
+      id: '/api/dca/export'
+      path: '/api/dca/export'
+      fullPath: '/api/dca/export'
+      preLoaderRoute: typeof ApiDcaExportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/dca/import': {
+      id: '/api/dca/import'
+      path: '/api/dca/import'
+      fullPath: '/api/dca/import'
+      preLoaderRoute: typeof ApiDcaImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/dca/stream': {
+      id: '/api/dca/stream'
+      path: '/api/dca/stream'
+      fullPath: '/api/dca/stream'
+      preLoaderRoute: typeof ApiDcaStreamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/dca/summary': {
+      id: '/api/dca/summary'
+      path: '/api/dca/summary'
+      fullPath: '/api/dca/summary'
+      preLoaderRoute: typeof ApiDcaSummaryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/expenses/': {
+      id: '/api/expenses/'
+      path: '/api/expenses'
+      fullPath: '/api/expenses/'
+      preLoaderRoute: typeof ApiExpensesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/expenses/$transactionId': {
+      id: '/api/expenses/$transactionId'
+      path: '/api/expenses/$transactionId'
+      fullPath: '/api/expenses/$transactionId'
+      preLoaderRoute: typeof ApiExpensesTransactionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/expenses/budgets': {
+      id: '/api/expenses/budgets'
+      path: '/api/expenses/budgets'
+      fullPath: '/api/expenses/budgets'
+      preLoaderRoute: typeof ApiExpensesBudgetsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/expenses/categories': {
+      id: '/api/expenses/categories'
+      path: '/api/expenses/categories'
+      fullPath: '/api/expenses/categories'
+      preLoaderRoute: typeof ApiExpensesCategoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/expenses/overview': {
+      id: '/api/expenses/overview'
+      path: '/api/expenses/overview'
+      fullPath: '/api/expenses/overview'
+      preLoaderRoute: typeof ApiExpensesOverviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/expenses/summary': {
+      id: '/api/expenses/summary'
+      path: '/api/expenses/summary'
+      fullPath: '/api/expenses/summary'
+      preLoaderRoute: typeof ApiExpensesSummaryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/health/enhanced': {
+      id: '/api/health/enhanced'
+      path: '/enhanced'
+      fullPath: '/api/health/enhanced'
+      preLoaderRoute: typeof ApiHealthEnhancedRouteImport
+      parentRoute: typeof ApiHealthRoute
+    }
+    '/api/line/approvals': {
+      id: '/api/line/approvals'
+      path: '/approvals'
+      fullPath: '/api/line/approvals'
+      preLoaderRoute: typeof ApiLineApprovalsRouteImport
+      parentRoute: typeof ApiLineRoute
+    }
+    '/api/line/permissions': {
+      id: '/api/line/permissions'
+      path: '/permissions'
+      fullPath: '/api/line/permissions'
+      preLoaderRoute: typeof ApiLinePermissionsRouteImport
+      parentRoute: typeof ApiLineRoute
+    }
+    '/api/monitoring/dashboard': {
+      id: '/api/monitoring/dashboard'
+      path: '/api/monitoring/dashboard'
+      fullPath: '/api/monitoring/dashboard'
+      preLoaderRoute: typeof ApiMonitoringDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/subscriptions/': {
+      id: '/api/subscriptions/'
+      path: '/api/subscriptions'
+      fullPath: '/api/subscriptions/'
+      preLoaderRoute: typeof ApiSubscriptionsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/subscriptions/$subscriptionId': {
+      id: '/api/subscriptions/$subscriptionId'
+      path: '/api/subscriptions/$subscriptionId'
+      fullPath: '/api/subscriptions/$subscriptionId'
+      preLoaderRoute: typeof ApiSubscriptionsSubscriptionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/subscriptions/members': {
+      id: '/api/subscriptions/members'
+      path: '/api/subscriptions/members'
+      fullPath: '/api/subscriptions/members'
+      preLoaderRoute: typeof ApiSubscriptionsMembersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/subscriptions/payments': {
+      id: '/api/subscriptions/payments'
+      path: '/api/subscriptions/payments'
+      fullPath: '/api/subscriptions/payments'
+      preLoaderRoute: typeof ApiSubscriptionsPaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/temp-charts/$filename': {
+      id: '/api/temp-charts/$filename'
+      path: '/api/temp-charts/$filename'
+      fullPath: '/api/temp-charts/$filename'
+      preLoaderRoute: typeof ApiTempChartsFilenameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/thai-id/generate': {
+      id: '/api/thai-id/generate'
+      path: '/api/thai-id/generate'
+      fullPath: '/api/thai-id/generate'
+      preLoaderRoute: typeof ApiThaiIdGenerateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/thai-id/validate': {
+      id: '/api/thai-id/validate'
+      path: '/api/thai-id/validate'
+      fullPath: '/api/thai-id/validate'
+      preLoaderRoute: typeof ApiThaiIdValidateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/user/settings': {
+      id: '/api/user/settings'
+      path: '/api/user/settings'
+      fullPath: '/api/user/settings'
+      preLoaderRoute: typeof ApiUserSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/expenses/budgets/$id': {
+      id: '/api/expenses/budgets/$id'
+      path: '/$id'
+      fullPath: '/api/expenses/budgets/$id'
+      preLoaderRoute: typeof ApiExpensesBudgetsIdRouteImport
+      parentRoute: typeof ApiExpensesBudgetsRoute
     }
     '/api/expenses/categories/$id': {
       id: '/api/expenses/categories/$id'
@@ -1324,12 +1324,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiExpensesCategoriesIdRouteImport
       parentRoute: typeof ApiExpensesCategoriesRoute
     }
-    '/api/expenses/budgets/$id': {
-      id: '/api/expenses/budgets/$id'
-      path: '/$id'
-      fullPath: '/api/expenses/budgets/$id'
-      preLoaderRoute: typeof ApiExpensesBudgetsIdRouteImport
-      parentRoute: typeof ApiExpensesBudgetsRoute
+    '/api/user/settings/notifications': {
+      id: '/api/user/settings/notifications'
+      path: '/notifications'
+      fullPath: '/api/user/settings/notifications'
+      preLoaderRoute: typeof ApiUserSettingsNotificationsRouteImport
+      parentRoute: typeof ApiUserSettingsRoute
     }
   }
 }

@@ -1,10 +1,21 @@
 import { env } from "@/env.mjs";
+import crypto from "node:crypto";
 
 interface AuthResult {
   success: boolean;
   error?: string;
   status?: number;
 }
+
+const secretsMatch = (received: string, expected: string): boolean => {
+  const receivedBuffer = Buffer.from(received, "utf8");
+  const expectedBuffer = Buffer.from(expected, "utf8");
+
+  return (
+    receivedBuffer.length === expectedBuffer.length &&
+    crypto.timingSafeEqual(receivedBuffer, expectedBuffer)
+  );
+};
 
 /**
  * Validates cron job authentication using Bearer token
@@ -32,7 +43,7 @@ export function validateCronAuth(req: Request): AuthResult {
   }
 
   const token = authHeader.slice(7); // Remove "Bearer " prefix
-  if (token !== cronSecret) {
+  if (!secretsMatch(token, cronSecret)) {
     return {
       success: false,
       error: "Invalid authorization token",
@@ -49,5 +60,8 @@ export function validateCronAuth(req: Request): AuthResult {
  * @returns boolean indicating if auth is valid
  */
 export function validateSimpleCronAuth(authHeader: string | null): boolean {
-  return authHeader === `Bearer ${env.CRON_SECRET}`;
+  const cronSecret = env.CRON_SECRET;
+  if (!cronSecret || !authHeader?.startsWith("Bearer ")) return false;
+
+  return secretsMatch(authHeader.slice(7), cronSecret);
 }

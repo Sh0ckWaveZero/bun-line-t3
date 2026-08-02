@@ -9,16 +9,21 @@ export async function POST(req: Request) {
     const rawBody = await req.text();
     const body = JSON.parse(rawBody);
     const secret = env.LINE_CHANNEL_SECRET;
-    console.log(secret);
     const signature = crypto
-      .createHmac("SHA256", secret as string)
+      .createHmac("sha256", secret)
       .update(rawBody)
       .digest("base64");
 
     // Compare your signature and header's signature
     const lineSignature = req.headers.get("x-line-signature");
 
-    if (signature !== lineSignature) {
+    const expectedSignature = Buffer.from(signature, "utf8");
+    const receivedSignature = Buffer.from(lineSignature ?? "", "utf8");
+    const isValidSignature =
+      expectedSignature.length === receivedSignature.length &&
+      crypto.timingSafeEqual(expectedSignature, receivedSignature);
+
+    if (!isValidSignature) {
       console.error("❌ [/api/line] Unauthorized - signature mismatch");
       return Response.json({ message: "Unauthorized" }, { status: 401 });
     }
@@ -40,7 +45,6 @@ export async function POST(req: Request) {
         messageType,
         botUserId,
         timestamp: event.timestamp,
-        replyToken: event.replyToken?.substring(0, 10) + "...",
       });
     });
 
@@ -72,7 +76,10 @@ export async function POST(req: Request) {
 
     return Response.json({ message: "ok" }, { status: 200 });
   } catch (error) {
-    console.error("LINE API error:", error);
+    console.error(
+      "LINE API error:",
+      error instanceof Error ? error.message : "unknown error",
+    );
     return Response.json({ message: "Internal server error" }, { status: 500 });
   }
 }

@@ -5,6 +5,7 @@ import { bubbleTemplate } from "@/lib/validation/line";
 import { attendanceService } from "@/features/attendance/services/attendance.server";
 import { db } from "@/lib/database/db";
 import type { LineMessage, LineFlexMessage } from "@/types/line-message";
+import { validateCronAuth } from "@/lib/utils/cron-auth";
 
 // Validation schema for request body
 const AttendancePushSchema = z.object({
@@ -69,6 +70,14 @@ const flexMessage = (
 
 export async function POST(req: Request) {
   try {
+    const authResult = validateCronAuth(req);
+    if (!authResult.success) {
+      return Response.json(
+        { success: false, message: "Unauthorized" },
+        { status: authResult.status ?? 401 },
+      );
+    }
+
     const body = await req.json();
 
     // Validate request body with Zod
@@ -91,8 +100,16 @@ export async function POST(req: Request) {
 
     // Find user account to get internal userId
     const userAccount = await db.account.findFirst({
-      where: { accountId: userId },
+      where: { accountId: userId, providerId: "line" },
+      select: { accountId: true, userId: true },
     });
+
+    if (!userAccount) {
+      return Response.json(
+        { success: false, message: "ไม่พบ LINE account ของผู้รับ" },
+        { status: 404 },
+      );
+    }
 
     let payload: LineMessage[];
 
@@ -168,7 +185,7 @@ export async function POST(req: Request) {
         }
     }
 
-    await sendPushMessage(userId, payload);
+    await sendPushMessage(userAccount.accountId, payload);
 
     return Response.json(
       {

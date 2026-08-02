@@ -61,5 +61,9 @@ public/temp-charts/*
 scripts/delete-old-line-accounts.ts
 .claude/settings.local.json
 .claude/skills/
-.agents/
+.agents/*
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/docker-optimize/
+!.agents/skills/docker-optimize/SKILL.md
 .commandcode/

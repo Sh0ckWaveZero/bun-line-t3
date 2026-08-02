@@ -20,6 +20,7 @@ import {
 } from "@/features/subscriptions/services/payment.server";
 import { getSubscriptionMonthlySummary } from "@/features/subscriptions/services/subscription.server";
 import { getCurrentMonthLabel } from "@/features/subscriptions/helpers";
+import { SubscriptionAccessError } from "@/features/subscriptions/services/access.server";
 
 export async function GET(request: Request) {
   try {
@@ -27,6 +28,11 @@ export async function GET(request: Request) {
     if (!session?.user?.id) {
       return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 });
     }
+
+    const actor = {
+      userId: session.user.id,
+      isAdmin: Boolean(session.isAdmin),
+    };
 
     const { searchParams } = new URL(request.url);
     const subscriptionId = searchParams.get("subscriptionId");
@@ -38,7 +44,7 @@ export async function GET(request: Request) {
 
     if (memberId) {
       const limit = parseInt(searchParams.get("limit") ?? "12");
-      const payments = await getPaymentsByMember(memberId, limit);
+      const payments = await getPaymentsByMember(memberId, actor, limit);
       return Response.json({ success: true, data: payments });
     }
 
@@ -50,22 +56,33 @@ export async function GET(request: Request) {
     }
 
     if (pending) {
-      const payments = await getPendingPayments(subscriptionId);
+      const payments = await getPendingPayments(subscriptionId, actor);
       return Response.json({ success: true, data: payments });
     }
 
-    const payments = await getPaymentsByMonth(subscriptionId, billingMonth);
+    const payments = await getPaymentsByMonth(
+      subscriptionId,
+      billingMonth,
+      actor,
+    );
     const result: Record<string, unknown> = { success: true, data: payments };
 
     if (withSummary) {
       result.summary = await getSubscriptionMonthlySummary(
         subscriptionId,
         billingMonth,
+        actor,
       );
     }
 
     return Response.json(result);
   } catch (error) {
+    if (error instanceof SubscriptionAccessError) {
+      return Response.json(
+        { error: "ไม่มีสิทธิ์เข้าถึง subscription นี้" },
+        { status: 403 },
+      );
+    }
     console.error("[GET /api/subscriptions/payments]", error);
     return Response.json(
       { error: "ไม่สามารถดึงข้อมูลการจ่ายเงินได้" },
@@ -92,6 +109,11 @@ export async function PATCH(request: Request) {
       return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 });
     }
 
+    const actor = {
+      userId: session.user.id,
+      isAdmin: Boolean(session.isAdmin),
+    };
+
     const { searchParams } = new URL(request.url);
     const paymentId = searchParams.get("paymentId");
     if (!paymentId) {
@@ -106,25 +128,21 @@ export async function PATCH(request: Request) {
       let updated;
       switch (input.action) {
         case "paid":
-          updated = await markPaymentPaid(
-            paymentId,
-            session.user.id,
-            input.paidAt,
-          );
+          updated = await markPaymentPaid(paymentId, actor, input.paidAt);
           return Response.json({
             success: true,
             data: updated,
             message: "บันทึกการจ่ายเงินสำเร็จ",
           });
         case "unpaid":
-          updated = await unmarkPaymentPaid(paymentId);
+          updated = await unmarkPaymentPaid(paymentId, actor);
           return Response.json({
             success: true,
             data: updated,
             message: "ยกเลิกการจ่ายเงินสำเร็จ",
           });
         case "skip":
-          updated = await skipPayment(paymentId);
+          updated = await skipPayment(paymentId, actor);
           return Response.json({
             success: true,
             data: updated,
@@ -136,12 +154,16 @@ export async function PATCH(request: Request) {
     }
 
     // New: custom field updates
-    const updated = await updatePayment(paymentId, {
-      ...(input.amount !== undefined && { amount: input.amount }),
-      ...(input.status !== undefined && { status: input.status }),
-      ...(input.paidAt !== undefined && { paidAt: input.paidAt }),
-      ...(input.note !== undefined && { note: input.note }),
-    });
+    const updated = await updatePayment(
+      paymentId,
+      {
+        ...(input.amount !== undefined && { amount: input.amount }),
+        ...(input.status !== undefined && { status: input.status }),
+        ...(input.paidAt !== undefined && { paidAt: input.paidAt }),
+        ...(input.note !== undefined && { note: input.note }),
+      },
+      actor,
+    );
 
     return Response.json({
       success: true,
@@ -149,6 +171,12 @@ export async function PATCH(request: Request) {
       message: "อัปเดตการจ่ายเงินสำเร็จ",
     });
   } catch (error) {
+    if (error instanceof SubscriptionAccessError) {
+      return Response.json(
+        { error: "ไม่มีสิทธิ์แก้ไข payment นี้" },
+        { status: 403 },
+      );
+    }
     console.error("[PATCH /api/subscriptions/payments]", error);
     if (error instanceof z.ZodError) {
       return Response.json(
@@ -183,9 +211,18 @@ export async function DELETE(request: Request) {
       return Response.json({ error: "กรุณาระบุ paymentId" }, { status: 400 });
     }
 
-    await deletePayment(paymentId);
+    await deletePayment(paymentId, {
+      userId: session.user.id,
+      isAdmin: true,
+    });
     return Response.json({ success: true, message: "ลบรายการจ่ายเงินสำเร็จ" });
   } catch (error) {
+    if (error instanceof SubscriptionAccessError) {
+      return Response.json(
+        { error: "ไม่มีสิทธิ์ลบ payment นี้" },
+        { status: 403 },
+      );
+    }
     console.error("[DELETE /api/subscriptions/payments]", error);
     return Response.json(
       { error: "ไม่สามารถลบรายการจ่ายเงินได้" },
@@ -201,6 +238,11 @@ export async function POST(request: Request) {
       return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 });
     }
 
+    const actor = {
+      userId: session.user.id,
+      isAdmin: Boolean(session.isAdmin),
+    };
+
     const { searchParams } = new URL(request.url);
     const subscriptionId = searchParams.get("subscriptionId");
     if (!subscriptionId) {
@@ -210,13 +252,19 @@ export async function POST(request: Request) {
       );
     }
 
-    const count = await generateNextMonthPayments(subscriptionId);
+    const count = await generateNextMonthPayments(subscriptionId, actor);
     return Response.json({
       success: true,
       message: `สร้าง payment สำเร็จ ${count} รายการ`,
       created: count,
     });
   } catch (error) {
+    if (error instanceof SubscriptionAccessError) {
+      return Response.json(
+        { error: "ไม่มีสิทธิ์สร้าง payment ของ subscription นี้" },
+        { status: 403 },
+      );
+    }
     console.error("[POST /api/subscriptions/payments]", error);
     return Response.json(
       { error: "ไม่สามารถสร้าง payments ได้" },
