@@ -1,7 +1,7 @@
 // src/components/attendance/LeaveForm.tsx
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { DayPicker as ThaiDayPicker } from "react-day-picker/buddhist";
+import { DayPicker as ThaiDayPicker } from "react-day-picker";
 import { useToast } from "@/components/common/ToastProvider";
 import { useSession } from "@/lib/auth/client";
 import { cn } from "@/lib/utils";
@@ -149,6 +149,10 @@ const THAI_WEEKDAYS = [
   "ศุกร์",
   "เสาร์",
 ];
+
+function formatThaiMonthCaption(month: Date): string {
+  return `${THAI_MONTHS_LONG[month.getMonth()] ?? ""} ${month.getFullYear() + 543}`;
+}
 
 /** แปลง "yyyy-mm-dd" → Date object (local time zone) */
 function parseDateStr(str: string): Date | undefined {
@@ -426,6 +430,7 @@ export const LeaveForm = ({ onSubmit }: LeaveFormProps) => {
                         }
                       }}
                       classNames={CALENDAR_CLASSNAMES}
+                      formatters={{ formatCaption: formatThaiMonthCaption }}
                       numerals="latn"
                       autoFocus
                     />

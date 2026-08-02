@@ -1,5 +1,5 @@
 import * as React from "react";
-import { DayPicker as ThaiDayPicker } from "react-day-picker/buddhist";
+import { DayPicker as ThaiDayPicker } from "react-day-picker";
 import { th } from "date-fns/locale";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -72,6 +72,10 @@ const THAI_WEEKDAYS = [
   "เสาร์",
 ];
 
+function formatThaiMonthCaption(month: Date): string {
+  return `${THAI_MONTHS_LONG[month.getMonth()] ?? ""} ${month.getFullYear() + 543}`;
+}
+
 function formatThaiFullDate(date?: Date) {
   if (!date) return "";
   const weekday = THAI_WEEKDAYS[date.getDay()] ?? "";
@@ -109,9 +113,10 @@ export function DatePicker({
         disabled={disabled}
         locale={th}
         month={date}
-        fromMonth={minDate}
-        toMonth={maxDate}
+        startMonth={minDate}
+        endMonth={maxDate}
         classNames={CALENDAR_CLASSNAMES}
+        formatters={{ formatCaption: formatThaiMonthCaption }}
         numerals="latn"
       />
     </div>
