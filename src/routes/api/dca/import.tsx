@@ -20,6 +20,27 @@ interface DcaDuplicateIdentity {
 }
 
 const VALID_FORMATS: ExportFormat[] = ["csv", "json", "xlsx"];
+const MAX_IMPORT_FILE_BYTES = 5 * 1024 * 1024;
+const MAX_MULTIPART_REQUEST_BYTES = MAX_IMPORT_FILE_BYTES + 128 * 1024;
+const MAX_IMPORT_ROWS = 500;
+const MAX_IMPORT_COLUMNS = 16;
+const MAX_IMPORT_FIELD_LENGTH = 1_000;
+const MAX_IMPORT_NOTE_LENGTH = 500;
+const MAX_IMPORT_DURATION_MS = 15_000;
+const MAX_IMPORT_ERRORS = 100;
+
+class ImportLimitError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ImportLimitError";
+  }
+}
+
+const assertImportBudget = (startedAt: number) => {
+  if (Date.now() - startedAt > MAX_IMPORT_DURATION_MS) {
+    throw new ImportLimitError("การนำเข้าใช้เวลานานเกินกำหนด");
+  }
+};
 
 /** unique key สำหรับตรวจ duplicate: coin + executedAt ISO */
 const dupKey = (coin: string, executedAt: Date) =>
@@ -28,9 +49,9 @@ const dupKey = (coin: string, executedAt: Date) =>
 /** Zod validator สำหรับตัวเลข positive (รองรับ string และ number จาก CSV/Excel) */
 const positiveFloat = (fieldName: string) =>
   z
-    .union([z.string(), z.number()])
+    .union([z.string().max(MAX_IMPORT_FIELD_LENGTH), z.number().finite()])
     .transform((v) => parseFloat(String(v)))
-    .refine((v) => !isNaN(v) && v > 0, `${fieldName} ต้องมากกว่า 0`);
+    .refine((v) => Number.isFinite(v) && v > 0, `${fieldName} ต้องมากกว่า 0`);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -61,9 +82,9 @@ const normalizeExecutedAt = (raw: unknown): string => {
 // ─── Validation schema สำหรับแต่ละแถวของข้อมูล ────────────────────────────────
 
 const importRowSchema = z.object({
-  orderId: z.string().optional(),
+  orderId: z.string().max(100).optional(),
   executedAt: z
-    .union([z.string(), z.number()])
+    .union([z.string().max(64), z.number().finite()])
     .transform(normalizeExecutedAt)
     .refine(
       (v) => v.length > 0 && !isNaN(new Date(v).getTime()),
@@ -81,7 +102,7 @@ const importRowSchema = z.object({
     .enum(["SUCCESS", "FAILED", "PENDING"])
     .optional()
     .default("SUCCESS"),
-  note: z.string().optional().default(""),
+  note: z.string().max(MAX_IMPORT_NOTE_LENGTH).optional().default(""),
 });
 
 // ─── Parsers ──────────────────────────────────────────────────────────────────
@@ -91,6 +112,9 @@ const parseJson = (text: string): unknown[] => {
   const parsed = JSON.parse(text);
   if (!Array.isArray(parsed))
     throw new Error("JSON ต้องเป็น array ของ objects");
+  if (parsed.length > MAX_IMPORT_ROWS) {
+    throw new ImportLimitError(`นำเข้าได้ไม่เกิน ${MAX_IMPORT_ROWS} แถว`);
+  }
   return parsed;
 };
 
@@ -103,10 +127,20 @@ const parseCsv = (text: string): Record<string, string>[] => {
     .filter((l) => l.trim().length > 0);
   if (lines.length < 2)
     throw new Error("CSV ต้องมีอย่างน้อย 1 แถวข้อมูล (นอกจาก header)");
+  if (lines.length - 1 > MAX_IMPORT_ROWS) {
+    throw new ImportLimitError(`นำเข้าได้ไม่เกิน ${MAX_IMPORT_ROWS} แถว`);
+  }
 
   const headers = lines[0]!
     .split(",")
     .map((h) => h.trim().replace(/^"|"$/g, ""));
+  if (
+    headers.length === 0 ||
+    headers.length > MAX_IMPORT_COLUMNS ||
+    headers.some((header) => header.length > MAX_IMPORT_FIELD_LENGTH)
+  ) {
+    throw new ImportLimitError("ไฟล์มีจำนวนหรือขนาด column มากเกินกำหนด");
+  }
 
   return lines.slice(1).map((line, idx) => {
     // Simple CSV parse ที่รองรับ quoted fields
@@ -129,11 +163,19 @@ const parseCsv = (text: string): Record<string, string>[] => {
       } else {
         current += ch;
       }
+
+      if (current.length > MAX_IMPORT_FIELD_LENGTH) {
+        throw new ImportLimitError("ข้อมูลในไฟล์มี field ยาวเกินกำหนด");
+      }
     }
     values.push(current);
 
     if (values.length !== headers.length) {
       throw new Error(`แถวที่ ${idx + 2}: จำนวน columns ไม่ตรงกับ header`);
+    }
+
+    if (values.some((value) => value.length > MAX_IMPORT_FIELD_LENGTH)) {
+      throw new ImportLimitError("ข้อมูลในไฟล์มี field ยาวเกินกำหนด");
     }
 
     return Object.fromEntries(headers.map((h, i) => [h, values[i] ?? ""]));
@@ -142,16 +184,35 @@ const parseCsv = (text: string): Record<string, string>[] => {
 
 /** Parse XLSX buffer → raw row array */
 const parseXlsx = (buffer: ArrayBuffer): unknown[] => {
-  const wb = XLSX.read(buffer, { type: "array" });
+  const wb = XLSX.read(buffer, {
+    type: "array",
+    sheetRows: MAX_IMPORT_ROWS + 1,
+  });
   const sheetName = wb.SheetNames[0];
   if (!sheetName) throw new Error("ไม่พบ sheet ใน Excel file");
   const ws = wb.Sheets[sheetName]!;
+
+  const rangeRef = ws["!fullref"] ?? ws["!ref"];
+  if (!rangeRef) throw new Error("ไม่พบข้อมูลใน Excel file");
+
+  const range = XLSX.utils.decode_range(rangeRef);
+  const rowCount = range.e.r - range.s.r;
+  const columnCount = range.e.c - range.s.c + 1;
+  if (rowCount > MAX_IMPORT_ROWS) {
+    throw new ImportLimitError(`นำเข้าได้ไม่เกิน ${MAX_IMPORT_ROWS} แถว`);
+  }
+  if (columnCount > MAX_IMPORT_COLUMNS) {
+    throw new ImportLimitError("ไฟล์มีจำนวน column มากเกินกำหนด");
+  }
+
   return XLSX.utils.sheet_to_json(ws, { defval: "" });
 };
 
 // ─── Main Handler ─────────────────────────────────────────────────────────────
 
 export async function POST(request: Request) {
+  const startedAt = Date.now();
+
   try {
     const contentType = request.headers.get("content-type") ?? "";
     if (!contentType.includes("multipart/form-data")) {
@@ -161,7 +222,19 @@ export async function POST(request: Request) {
       );
     }
 
+    const contentLength = Number(request.headers.get("content-length"));
+    if (
+      Number.isFinite(contentLength) &&
+      contentLength > MAX_MULTIPART_REQUEST_BYTES
+    ) {
+      return Response.json(
+        { error: `ไฟล์มีขนาดใหญ่เกิน ${MAX_IMPORT_FILE_BYTES} bytes` },
+        { status: 413 },
+      );
+    }
+
     const formData = await request.formData();
+    assertImportBudget(startedAt);
     const requestedLineUserId = formData.get("lineUserId");
     const lineUserId = await getAuthorizedLineUserId(
       request,
@@ -180,6 +253,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (file.size > MAX_IMPORT_FILE_BYTES) {
+      return Response.json(
+        { error: `ไฟล์มีขนาดใหญ่เกิน ${MAX_IMPORT_FILE_BYTES} bytes` },
+        { status: 413 },
+      );
+    }
+
     const fileName = file.name.toLowerCase();
     const ext = fileName.split(".").pop();
 
@@ -195,14 +275,21 @@ export async function POST(request: Request) {
 
     if (ext === "json") {
       const text = await file.text();
+      assertImportBudget(startedAt);
       rawRows = parseJson(text);
     } else if (ext === "csv") {
       const text = await file.text();
+      assertImportBudget(startedAt);
       rawRows = parseCsv(text);
     } else {
       // xlsx
       const arrayBuffer = await file.arrayBuffer();
+      assertImportBudget(startedAt);
       rawRows = parseXlsx(arrayBuffer);
+    }
+
+    if (rawRows.length > MAX_IMPORT_ROWS) {
+      throw new ImportLimitError(`นำเข้าได้ไม่เกิน ${MAX_IMPORT_ROWS} แถว`);
     }
 
     // ─── Step 1: Validate rows ────────────────────────────────────────────
@@ -217,6 +304,7 @@ export async function POST(request: Request) {
     const validRows: ValidRow[] = [];
 
     for (let i = 0; i < rawRows.length; i++) {
+      if (i % 25 === 0) assertImportBudget(startedAt);
       const rowLabel = `แถวที่ ${i + 1}`;
       const parsed = importRowSchema.safeParse(rawRows[i]);
 
@@ -224,7 +312,9 @@ export async function POST(request: Request) {
         const msg = parsed.error.issues
           .map((e: { message: string }) => e.message)
           .join(", ");
-        result.errors.push(`${rowLabel}: ${msg}`);
+        if (result.errors.length < MAX_IMPORT_ERRORS) {
+          result.errors.push(`${rowLabel}: ${msg}`);
+        }
         result.skipped++;
         continue;
       }
@@ -241,9 +331,11 @@ export async function POST(request: Request) {
     for (const row of validRows) {
       const key = dupKey(row.data.coin, row.executedAt);
       if (seenInFile.has(key)) {
-        result.errors.push(
-          `แถวที่ ${row.index + 1}: ซ้ำกับแถวอื่นในไฟล์เดียวกัน (${row.data.coin} @ ${row.executedAt.toISOString()})`,
-        );
+        if (result.errors.length < MAX_IMPORT_ERRORS) {
+          result.errors.push(
+            `แถวที่ ${row.index + 1}: ซ้ำกับแถวอื่นในไฟล์เดียวกัน (${row.data.coin} @ ${row.executedAt.toISOString()})`,
+          );
+        }
         result.skipped++;
       } else {
         seenInFile.add(key);
@@ -269,9 +361,11 @@ export async function POST(request: Request) {
 
     for (const row of uniqueInFile) {
       if (dupInDbKeys.has(dupKey(row.data.coin, row.executedAt))) {
-        result.errors.push(
-          `แถวที่ ${row.index + 1}: ซ้ำกับข้อมูลที่มีอยู่แล้ว (${row.data.coin} @ ${row.executedAt.toISOString()})`,
-        );
+        if (result.errors.length < MAX_IMPORT_ERRORS) {
+          result.errors.push(
+            `แถวที่ ${row.index + 1}: ซ้ำกับข้อมูลที่มีอยู่แล้ว (${row.data.coin} @ ${row.executedAt.toISOString()})`,
+          );
+        }
         result.skipped++;
       } else {
         rowsToInsert.push(row);
@@ -286,6 +380,7 @@ export async function POST(request: Request) {
     );
 
     for (const { data, executedAt, index } of rowsToInsert) {
+      assertImportBudget(startedAt);
       const rowLabel = `แถวที่ ${index + 1}`;
       try {
         await dcaService.createOrder({
@@ -299,19 +394,28 @@ export async function POST(request: Request) {
           note: data.note || undefined,
         });
         result.imported++;
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : "unknown error";
-        result.errors.push(`${rowLabel}: บันทึกไม่สำเร็จ — ${msg}`);
+      } catch {
+        if (result.errors.length < MAX_IMPORT_ERRORS) {
+          result.errors.push(`${rowLabel}: บันทึกไม่สำเร็จ`);
+        }
         result.skipped++;
       }
     }
 
     return Response.json(result, { status: 200 });
   } catch (error) {
-    console.error("DCA import error:", error);
-    const msg =
-      error instanceof Error ? error.message : "ไม่สามารถนำเข้าข้อมูลได้";
-    return Response.json({ error: msg }, { status: 500 });
+    if (error instanceof ImportLimitError) {
+      return Response.json({ error: error.message }, { status: 413 });
+    }
+
+    console.error(
+      "DCA import error:",
+      error instanceof Error ? error.message : "unknown error",
+    );
+    return Response.json(
+      { error: "ไม่สามารถนำเข้าข้อมูลได้" },
+      { status: 400 },
+    );
   }
 }
 

@@ -15,6 +15,11 @@ import {
   getMissingBillingMonths,
   toBillingMonth,
 } from "../helpers";
+import type { SubscriptionAccessActor } from "../types";
+import {
+  getSubscriptionAccessWhere,
+  SubscriptionAccessError,
+} from "./access.server";
 
 // ─────────────────────────────────────────────
 // Queries
@@ -96,9 +101,23 @@ export async function getSubscriptionsForUser(
 export async function getSubscriptionMonthlySummary(
   subscriptionId: string,
   billingMonth: string,
+  actor: SubscriptionAccessActor,
 ): Promise<MonthlySummary> {
+  const authorizedSubscription = await db.subscription.findFirst({
+    where: {
+      id: subscriptionId,
+      ...getSubscriptionAccessWhere(actor, "read"),
+    },
+    select: { id: true },
+  });
+  if (!authorizedSubscription) throw new SubscriptionAccessError();
+
   const payments = await db.subscriptionPayment.findMany({
-    where: { subscriptionId, billingMonth },
+    where: {
+      subscriptionId,
+      billingMonth,
+      subscription: getSubscriptionAccessWhere(actor, "read"),
+    },
   });
 
   const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0);

@@ -180,7 +180,10 @@ const handleAdd = async (req: any, args: string[]) => {
       });
 
       // 🎉 Emit SSE event เพื่อให้ web clients รับทราบ
-      dcaEventManager.emit({ type: "dca-order-created", data: order });
+      dcaEventManager.emit({
+        type: "dca-order-created",
+        data: { lineUserId: order.lineUserId },
+      });
       await sendMessage(req, [
         { type: "text", text: buildAddSuccessText(order, parsed) },
       ]);
@@ -269,7 +272,10 @@ const handleAdd = async (req: any, args: string[]) => {
       executedAt,
     });
 
-    dcaEventManager.emit({ type: "dca-order-created", data: order });
+    dcaEventManager.emit({
+      type: "dca-order-created",
+      data: { lineUserId: order.lineUserId },
+    });
     await sendMessage(req, [
       {
         type: "text",
@@ -438,7 +444,7 @@ const handleDelete = async (req: any, args: string[]) => {
     for (const order of found) {
       dcaEventManager.emit({
         type: "dca-order-deleted",
-        data: { id: order.id, round: order.round },
+        data: { id: order.id, lineUserId: identity.primaryLineUserId },
       });
     }
 

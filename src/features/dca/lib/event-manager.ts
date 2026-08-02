@@ -1,16 +1,32 @@
-// Global event emitter for DCA updates
-class DCAEventManager {
-  private listeners: Set<(data: any) => void> = new Set();
+export interface DcaEvent {
+  type: string;
+  data: {
+    lineUserId: string;
+    id?: string;
+  };
+}
 
-  subscribe(callback: (data: any) => void) {
-    this.listeners.add(callback);
+interface DcaListener {
+  lineUserId: string;
+  callback: (event: DcaEvent) => void;
+}
+
+// Global event emitter for DCA updates. Every listener is scoped to one LINE ID.
+class DCAEventManager {
+  private listeners: Set<DcaListener> = new Set();
+
+  subscribe(lineUserId: string, callback: (event: DcaEvent) => void) {
+    const listener = { lineUserId, callback };
+    this.listeners.add(listener);
     return () => {
-      this.listeners.delete(callback);
+      this.listeners.delete(listener);
     };
   }
 
-  emit(event: { type: string; data?: any }) {
-    this.listeners.forEach((callback) => {
+  emit(event: DcaEvent) {
+    this.listeners.forEach(({ lineUserId, callback }) => {
+      if (event.data.lineUserId !== lineUserId) return;
+
       try {
         callback(event);
       } catch (err) {

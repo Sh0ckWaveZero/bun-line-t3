@@ -21,6 +21,12 @@ export type SubscriptionPlanType = "INDIVIDUAL" | "FAMILY";
 export type BillingCycle = "MONTHLY" | "YEARLY";
 export type PaymentStatus = "PENDING" | "PAID" | "SKIPPED";
 
+/** Identity used by subscription service-layer authorization checks. */
+export interface SubscriptionAccessActor {
+  userId: string;
+  isAdmin: boolean;
+}
+
 // ─────────────────────────────────────────────
 // Subscription
 // ─────────────────────────────────────────────

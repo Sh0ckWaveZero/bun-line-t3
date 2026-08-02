@@ -103,7 +103,7 @@ export async function POST(request: Request) {
     // 🎉 Emit SSE event เพื่อให้ clients รับทราบ
     dcaEventManager.emit({
       type: "dca-order-created",
-      data: order,
+      data: { lineUserId: order.lineUserId },
     });
 
     return Response.json(order, { status: 201 });
