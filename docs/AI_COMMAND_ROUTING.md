@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `/ai` command provides an **intelligent natural language interface** for the LINE bot using **OpenAI GPT-5-nano**. Instead of memorizing specific commands, users can simply describe what they want in Thai or English.
+The `/ai` command provides an **intelligent natural language interface** for the LINE bot using **OpenAI GPT-5.6 Luna**. Instead of memorizing specific commands, users can simply describe what they want in Thai or English.
 
 ## Architecture
 
@@ -26,10 +26,10 @@ Response
    - Formatted context for AI understanding
 
 2. **OpenAI Client** (`src/lib/ai/openai-client.ts`)
-   - `routeCommand()`: Analyzes natural language and returns JSON
+   - `routeCommand()`: Analyzes natural language and returns a schema-validated route
    - Direct OpenAI API calls (no MCP overhead)
-   - Uses configurable AI model (default: gpt-5-nano from MCP_AI_MODEL env variable)
-   - Supports any OpenAI model: gpt-5-nano, gpt-4o, gpt-4-turbo, gpt-3.5-turbo, etc.
+   - Uses configurable AI model (default: gpt-5.6-luna from MCP_AI_MODEL env variable)
+   - Supports any OpenAI model: gpt-5.6-luna, gpt-5.4-nano, gpt-5.4-mini, etc.
    - `chat()`: General AI conversation functionality
 
 3. **AI Command Router** (`ai-command-router.ts`)
@@ -147,13 +147,12 @@ For general conversations that don't route to commands:
    User: /ai ดึงราคาทองให้หน่อย
    ```
 
-2. **AI Analysis** (via MCP)
+2. **AI Analysis** (via direct OpenAI API)
 
    ```json
    {
      "command": "gold",
      "parameters": {},
-     "reasoning": "ผู้ใช้ต้องการทราบราคาทอง",
      "confidence": 1.0
    }
    ```
@@ -165,6 +164,7 @@ For general conversations that don't route to commands:
    ```
 
 4. **Response**
+
    ```
    Bot: [Gold prices display]
    ```
@@ -177,20 +177,15 @@ For general conversations that don't route to commands:
 
 ### Confidence Levels
 
-The AI returns a confidence score (0.0 - 1.0):
-
-- **≥ 0.8**: High confidence - executes immediately
-- **0.6 - 0.8**: Medium confidence - executes with explanation
-- **< 0.6**: Low confidence - asks for clarification
+The AI returns a confidence score (0.0 - 1.0) for observability and future routing policy.
+The current handler uses `command: null` to trigger the clarification response rather than
+making an execution decision from the score alone.
 
 Example of low confidence:
 
-```
+```text
 User: /ai สวัสดี
 Bot: ขอโทษครับ ไม่แน่ใจว่าคุณต้องการอะไร
-
-     💭 ที่เข้าใจ: ผู้ใช้ทักทาย ไม่ใช่คำขอคำสั่งใดๆ
-
      ลองพิมพ์ /ai help เพื่อดูคำสั่งที่มี
 ```
 
@@ -236,9 +231,9 @@ Bot: ขอโทษครับ ไม่แน่ใจว่าคุณต�
 OPENAI_API_KEY=sk-your-openai-api-key
 
 # Optional - AI Model Configuration
-# Supports any OpenAI model: gpt-5-nano, gpt-4o, gpt-4-turbo, gpt-3.5-turbo, etc.
-# Default: gpt-5-nano (recommended for cost/performance balance)
-MCP_AI_MODEL=gpt-5-nano
+# Supports any OpenAI model: gpt-5.6-luna, gpt-5.4-nano, gpt-5.4-mini, etc.
+# Default: gpt-5.6-luna (recommended for this application)
+MCP_AI_MODEL=gpt-5.6-luna
 ```
 
 ### No Additional Setup Required
@@ -269,12 +264,13 @@ The AI command routing uses **direct OpenAI API calls** without any additional s
 
 ### AI Routing Prompt
 
-The OpenAI client uses a structured prompt that:
+The OpenAI client uses Structured Outputs with a Zod schema and a structured prompt that:
 
 - Provides complete command registry
 - Explains parameter extraction
 - Shows example mappings
-- Requests JSON response format
+- Enforces a typed response shape and removes null parameters
+- Validates the returned command against the registered command allowlist
 - Uses temperature 0.3 for consistent routing
 
 ### Parameter Extraction
@@ -338,7 +334,6 @@ Simply send messages to your LINE bot:
 
 ```
 Bot: ขอโทษครับ ไม่แน่ใจว่าคุณต้องการอะไร
-     💭 ที่เข้าใจ: [reasoning]
      ลองพิมพ์ /ai help เพื่อดูคำสั่งที่มี
 ```
 
@@ -346,7 +341,6 @@ Bot: ขอโทษครับ ไม่แน่ใจว่าคุณต�
 
 ```
 Bot: ไม่พบคำสั่งที่เหมาะสม
-     💭 [reasoning]
      พิมพ์ /help เพื่อดูคำสั่งทั้งหมด
 ```
 
@@ -415,7 +409,7 @@ Common causes:
 
 - Check command keywords in registry
 - Add more specific examples
-- Review AI reasoning in logs
+- Review the registered command context and examples
 
 ### Issue: Parameters not extracted correctly
 
@@ -461,10 +455,10 @@ Common causes:
 ## Cost Optimization
 
 - **Token Efficiency**: Compressed command registry (~2K tokens)
-- **Model Selection**: GPT-5-nano provides excellent cost/performance balance
+- **Model Selection**: GPT-5.6 Luna provides the best cost/performance balance for this application
 - **Temperature**: 0.3 for routing (consistent results with fewer tokens)
 - **Direct API**: No MCP overhead, faster and more efficient
-- **Response Limits**: Concise JSON responses (~200-300 tokens)
+- **Response Limits**: Schema-constrained responses with only the required routing fields
 
 ## Technical Implementation Notes
 

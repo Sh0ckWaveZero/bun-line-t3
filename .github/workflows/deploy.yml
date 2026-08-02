@@ -95,6 +95,7 @@ jobs:
           AQICN_TOKEN: ${{ secrets.AQICN_TOKEN }}
           CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          MCP_AI_MODEL: ${{ secrets.MCP_AI_MODEL || 'gpt-5.6-luna' }}
           APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
           ALLOWED_DOMAINS: ${{ secrets.ALLOWED_DOMAINS }}
 
@@ -166,7 +167,7 @@ jobs:
           CMC_API_KEY="${{ secrets.CMC_API_KEY }}"
           CMC_URL=https://pro-api.coinmarketcap.com
           OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}"
-          MCP_AI_MODEL="${{ secrets.MCP_AI_MODEL || 'gpt-5-nano' }}"
+          MCP_AI_MODEL="${{ secrets.MCP_AI_MODEL || 'gpt-5.6-luna' }}"
           SPOTIFY_CLIENT_ID="${{ secrets.SPOTIFY_CLIENT_ID }}"
           SPOTIFY_CLIENT_SECRET="${{ secrets.SPOTIFY_CLIENT_SECRET }}"
           APP_DOMAIN="${{ secrets.APP_DOMAIN }}"
@@ -216,6 +217,7 @@ jobs:
           AQICN_TOKEN: ${{ secrets.AQICN_TOKEN }}
           CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          MCP_AI_MODEL: ${{ secrets.MCP_AI_MODEL || 'gpt-5.6-luna' }}
           APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
           ALLOWED_DOMAINS: ${{ secrets.ALLOWED_DOMAINS }}
 

@@ -10,7 +10,7 @@ The check-in reminder system now supports AI-generated messages using the AI SDK
 
 - Dynamic, context-aware messages in Thai
 - Personalized based on user name, time of day, weather, and day of week
-- Uses OpenAI GPT-4o-mini model
+- Uses OpenAI GPT-5.6 Luna model
 
 ### 🔄 Fallback System
 
