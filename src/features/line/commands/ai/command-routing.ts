@@ -4,12 +4,11 @@ import {
   logAbuseReport,
 } from "@/lib/ai/content-safety";
 import { routeNaturalLanguageToCommand } from "@/lib/ai/command-intent";
-import { LINE_COMMANDS } from "../command-registry";
 import {
   executeCommand,
-  parseAICommandResponse,
   type CommandRouteResult,
-} from "../ai-command-router";
+} from "@/features/line/commands/ai-command-router";
+import { LINE_COMMANDS } from "@/features/line/commands/command-registry";
 
 const { sendMessage, sendLoadingAnimation } =
   await import("@/lib/utils/line-utils");
@@ -89,12 +88,8 @@ export async function handleCommandRouting(req: any, naturalLanguage: string) {
     return;
   }
 
-  const aiResponse = await routeNaturalLanguageToCommand(
-    naturalLanguage,
-    LINE_COMMANDS,
-  );
   const { command, parameters: parsedParameters } =
-    parseAICommandResponse(aiResponse);
+    await routeNaturalLanguageToCommand(naturalLanguage, LINE_COMMANDS);
 
   if (!command) {
     await sendMessage(req, [

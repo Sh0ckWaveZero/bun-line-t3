@@ -5,7 +5,7 @@
  * Uses AI to understand user intent and map to existing commands.
  */
 
-import { LINE_COMMANDS, type CommandDefinition } from "./command-registry";
+import type { CommandDefinition } from "./command-registry";
 import { handleExchangeCommand } from "./handleExchangeCommand";
 import { handleGoldCommand } from "./handleGoldCommand";
 import { handleLottoCommand } from "./handleLottoCommand";
@@ -526,32 +526,4 @@ export function parseAICommandResponse(aiResponse: string): {
 
     return { command, parameters, reasoning };
   }
-}
-
-/**
- * Get command registry as JSON schema for AI
- */
-export function getCommandSchemaForAI() {
-  return {
-    type: "object",
-    properties: {
-      command: {
-        type: ["string", "null"],
-        enum: [...LINE_COMMANDS.map((cmd) => cmd.command), null],
-        description: "The command to execute",
-      },
-      parameters: {
-        type: "object",
-        description: "Parameters for the command",
-        additionalProperties: true,
-      },
-      confidence: {
-        type: "number",
-        minimum: 0,
-        maximum: 1,
-        description: "Confidence score from 0 to 1",
-      },
-    },
-    required: ["command", "parameters", "confidence"],
-  };
 }

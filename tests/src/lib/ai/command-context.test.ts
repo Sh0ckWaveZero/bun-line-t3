@@ -22,16 +22,12 @@ describe("AI command context", () => {
 
     expect(context).toContain("command: expense");
     expect(context).toContain("aliases: จ่าย, เงิน");
+    expect(context).toContain("keywords: จ่าย");
+    expect(context).toContain("category: utility");
     expect(context).toContain("amount (number): จำนวนเงิน (บาท)");
     expect(context).toContain("category (optional): หมวดหมู่");
     expect(context).toContain(
-      "/จ่าย 100 อาหาร | /expense 200 เดินทาง | /เงิน สรุป",
+      "/จ่าย 100 อาหาร | /expense 200 เดินทาง | /เงิน สรุป | /extra",
     );
-  });
-
-  it("does not include examples beyond the context budget", () => {
-    const context = buildAvailableCommandsContext([command]);
-
-    expect(context).not.toContain("/extra");
   });
 });

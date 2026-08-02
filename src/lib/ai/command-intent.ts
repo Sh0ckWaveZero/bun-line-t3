@@ -1,5 +1,9 @@
-import { routeCommand, type CommandRouteResponse } from "./openai-client";
-import { buildAvailableCommandsContext } from "./command-context";
+import {
+  routeCommand,
+  type CommandContext,
+  type CommandRouteResponse,
+} from "@/lib/ai/openai-client";
+import { buildAvailableCommandsContext } from "@/lib/ai/command-context";
 import type { CommandDefinition } from "@/features/line/commands/command-registry";
 
 /**
@@ -11,21 +15,25 @@ import type { CommandDefinition } from "@/features/line/commands/command-registr
  */
 export async function routeNaturalLanguageToCommand(
   naturalLanguage: string,
-  commands: CommandDefinition[],
-): Promise<string> {
+  commands: readonly CommandDefinition[],
+): Promise<CommandRouteResponse> {
   const availableCommands = buildAvailableCommandsContext(commands);
+  const commandContext: CommandContext = {
+    availableCommands,
+    allowedCommands: commands.map((cmd) => cmd.command),
+    allowedParametersByCommand: Object.fromEntries(
+      commands.map((cmd) => [
+        cmd.command,
+        cmd.parameters?.map((parameter) => parameter.name) ?? [],
+      ]),
+    ),
+  };
 
   // Call OpenAI to route command
   const response: CommandRouteResponse = await routeCommand({
     userMessage: naturalLanguage,
-    availableCommands,
-    allowedCommands: commands.map((cmd) => cmd.command),
+    commandContext,
   });
 
-  // Convert to string format expected by parseAICommandResponse
-  return JSON.stringify({
-    command: response.command,
-    parameters: response.parameters,
-    confidence: response.confidence,
-  });
+  return response;
 }

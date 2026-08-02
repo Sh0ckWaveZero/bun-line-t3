@@ -10,8 +10,13 @@ const openai = createOpenAI({
 
 export interface RouteCommandParams {
   userMessage: string;
+  commandContext: CommandContext;
+}
+
+export interface CommandContext {
   availableCommands: string;
   allowedCommands: readonly string[];
+  allowedParametersByCommand: Readonly<Record<string, readonly string[]>>;
 }
 
 const commandParametersSchema = z.object({
@@ -54,24 +59,32 @@ type CommandRouteOutput = z.infer<typeof commandRouteOutputSchema>;
 
 function removeNullParameters(
   parameters: CommandRouteOutput["parameters"],
+  allowedParameterNames: readonly string[],
 ): Record<string, unknown> {
   return Object.fromEntries(
-    Object.entries(parameters).filter(([, value]) => value !== null),
+    Object.entries(parameters).filter(
+      ([name, value]) => value !== null && allowedParameterNames.includes(name),
+    ),
   );
 }
 
 function normalizeCommandRoute(
   output: CommandRouteOutput,
-  allowedCommands: readonly string[],
+  commandContext: CommandContext,
 ): CommandRouteResponse {
   const command =
-    output.command && allowedCommands.includes(output.command)
+    output.command && commandContext.allowedCommands.includes(output.command)
       ? output.command
       : null;
+  const allowedParameterNames = command
+    ? (commandContext.allowedParametersByCommand[command] ?? [])
+    : [];
 
   return {
     command,
-    parameters: command ? removeNullParameters(output.parameters) : {},
+    parameters: command
+      ? removeNullParameters(output.parameters, allowedParameterNames)
+      : {},
     confidence: command ? output.confidence : 0,
   };
 }
@@ -100,7 +113,7 @@ export async function routeCommand(
 
 รายการคำสั่งที่อนุญาต:
 <available_commands>
-${params.availableCommands}
+${params.commandContext.availableCommands}
 </available_commands>`;
 
   const { output } = await generateText({
@@ -115,7 +128,7 @@ ${params.availableCommands}
     throw new Error("AI did not return a structured command route");
   }
 
-  return normalizeCommandRoute(output, params.allowedCommands);
+  return normalizeCommandRoute(output, params.commandContext);
 }
 
 /**
