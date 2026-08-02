@@ -88,7 +88,7 @@ export const env = createEnv({
     DEV_TEST_USER_ID: z.string().optional(),
     // 🤖 AI Assistant Configuration
     OPENAI_API_KEY: z.string().optional(),
-    MCP_AI_MODEL: z.string().default("gpt-5-nano"),
+    MCP_AI_MODEL: z.string().default("gpt-5.6-luna"),
     SPOTIFY_CLIENT_ID: z.string().optional(),
     SPOTIFY_CLIENT_SECRET: z.string().optional(),
   },

@@ -15,7 +15,7 @@ export async function generatePersonalText(params: {
   personName: string;
   context?: string;
 }): Promise<{ text: string }> {
-  const modelName = env.MCP_AI_MODEL || "gpt-5-nano";
+  const modelName = env.MCP_AI_MODEL;
   const { personName, context = "สวยหลอ" } = params;
 
   const systemPrompt = `คุณเป็น AI ที่สร้างข้อความสั่งสอนใจ ชมเชย โดยใช้ชื่อบุคคลที่ชื่อ นะ

@@ -25,7 +25,7 @@ export interface CommandRouteResponse {
 export async function routeCommand(
   params: RouteCommandParams,
 ): Promise<CommandRouteResponse> {
-  const modelName = env.MCP_AI_MODEL || "gpt-5-nano";
+  const modelName = env.MCP_AI_MODEL;
 
   const systemPrompt = `คุณเป็น AI ที่ช่วยวิเคราะห์คำขอจากผู้ใช้และแปลงเป็นคำสั่ง LINE bot ที่เหมาะสม
 
@@ -79,7 +79,7 @@ export async function chat(params: {
   message: string;
   systemPrompt?: string;
 }): Promise<{ text: string }> {
-  const modelName = env.MCP_AI_MODEL || "gpt-5-nano";
+  const modelName = env.MCP_AI_MODEL;
   const systemPrompt =
     params.systemPrompt ||
     "คุณเป็นผู้ช่วย AI ที่เป็นมิตรและชาญฉลาด ตอบคำถามอย่างกระชับและเป็นประโยชน์";

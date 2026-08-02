@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `/ai` command provides an **intelligent natural language interface** for the LINE bot using **OpenAI GPT-5-nano**. Instead of memorizing specific commands, users can simply describe what they want in Thai or English.
+The `/ai` command provides an **intelligent natural language interface** for the LINE bot using **OpenAI GPT-5.6 Luna**. Instead of memorizing specific commands, users can simply describe what they want in Thai or English.
 
 ## Architecture
 
@@ -28,8 +28,8 @@ Response
 2. **OpenAI Client** (`src/lib/ai/openai-client.ts`)
    - `routeCommand()`: Analyzes natural language and returns JSON
    - Direct OpenAI API calls (no MCP overhead)
-   - Uses configurable AI model (default: gpt-5-nano from MCP_AI_MODEL env variable)
-   - Supports any OpenAI model: gpt-5-nano, gpt-4o, gpt-4-turbo, gpt-3.5-turbo, etc.
+   - Uses configurable AI model (default: gpt-5.6-luna from MCP_AI_MODEL env variable)
+   - Supports any OpenAI model: gpt-5.6-luna, gpt-5.4-nano, gpt-5.4-mini, etc.
    - `chat()`: General AI conversation functionality
 
 3. **AI Command Router** (`ai-command-router.ts`)
@@ -236,9 +236,9 @@ Bot: ขอโทษครับ ไม่แน่ใจว่าคุณต�
 OPENAI_API_KEY=sk-your-openai-api-key
 
 # Optional - AI Model Configuration
-# Supports any OpenAI model: gpt-5-nano, gpt-4o, gpt-4-turbo, gpt-3.5-turbo, etc.
-# Default: gpt-5-nano (recommended for cost/performance balance)
-MCP_AI_MODEL=gpt-5-nano
+# Supports any OpenAI model: gpt-5.6-luna, gpt-5.4-nano, gpt-5.4-mini, etc.
+# Default: gpt-5.6-luna (recommended for this application)
+MCP_AI_MODEL=gpt-5.6-luna
 ```
 
 ### No Additional Setup Required
@@ -461,7 +461,7 @@ Common causes:
 ## Cost Optimization
 
 - **Token Efficiency**: Compressed command registry (~2K tokens)
-- **Model Selection**: GPT-5-nano provides excellent cost/performance balance
+- **Model Selection**: GPT-5.6 Luna provides the best cost/performance balance for this application
 - **Temperature**: 0.3 for routing (consistent results with fewer tokens)
 - **Direct API**: No MCP overhead, faster and more efficient
 - **Response Limits**: Concise JSON responses (~200-300 tokens)

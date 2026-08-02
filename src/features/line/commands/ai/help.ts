@@ -43,7 +43,7 @@ export async function sendAIHelp(req: any) {
 • 🛠️ เครื่องมือ: สุ่มเลขบัตร, ตั้งค่า
 
 
-🔋 Powered by GPT-4o via MCP`;
+🔋 ขับเคลื่อนด้วย GPT-5.6 Luna ผ่าน OpenAI API`;
 
   await sendMessage(req, [
     {

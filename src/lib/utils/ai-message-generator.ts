@@ -28,7 +28,7 @@ export interface ConsolationOptions {
 }
 
 // Constants
-const AI_MODEL = "gpt-5-nano";
+const AI_MODEL = env.MCP_AI_MODEL;
 const AI_TEMPERATURE = 0.8;
 
 const CHECK_IN_FALLBACKS = [
