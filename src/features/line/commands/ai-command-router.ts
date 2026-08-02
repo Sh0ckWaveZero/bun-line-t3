@@ -536,8 +536,8 @@ export function getCommandSchemaForAI() {
     type: "object",
     properties: {
       command: {
-        type: "string",
-        enum: LINE_COMMANDS.map((cmd) => cmd.command),
+        type: ["string", "null"],
+        enum: [...LINE_COMMANDS.map((cmd) => cmd.command), null],
         description: "The command to execute",
       },
       parameters: {
@@ -545,11 +545,13 @@ export function getCommandSchemaForAI() {
         description: "Parameters for the command",
         additionalProperties: true,
       },
-      reasoning: {
-        type: "string",
-        description: "Explanation of why this command was chosen",
+      confidence: {
+        type: "number",
+        minimum: 0,
+        maximum: 1,
+        description: "Confidence score from 0 to 1",
       },
     },
-    required: ["command"],
+    required: ["command", "parameters", "confidence"],
   };
 }
