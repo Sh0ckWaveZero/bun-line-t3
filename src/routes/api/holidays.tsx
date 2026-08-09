@@ -2,7 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { getServerAuthSession } from "@/lib";
 import { holidayService } from "@/features/attendance/services/holidays.server";
 import { canRequestAttendanceReport } from "@/features/line/line/permissions";
+import { authorizeAdminResourceRequest } from "@/lib/auth/admin-resource.server";
 import { db } from "@/lib/database/db";
+
+type AdminResourceAuthorizer = typeof authorizeAdminResourceRequest;
 
 // GET - Fetch all holidays or filtered by year/month
 export async function GET(req: Request) {
@@ -126,43 +129,13 @@ export async function GET(req: Request) {
 }
 
 // POST - Create new holiday or batch import
-export async function POST(req: Request) {
+export async function POST(
+  req: Request,
+  authorizeAdmin: AdminResourceAuthorizer = authorizeAdminResourceRequest,
+) {
   try {
-    const session = await getServerAuthSession(req);
-    if (!session?.user?.id) {
-      return Response.json(
-        { success: false, message: "กรุณาเข้าสู่ระบบ" },
-        { status: 401 },
-      );
-    }
-
-    // LINE Permission check - ต้องได้รับอนุมัติให้ดูรายงาน
-    const lineAccount = await db.account.findFirst({
-      where: {
-        userId: session.user.id,
-        providerId: "line",
-      },
-      select: {
-        accountId: true,
-      },
-      orderBy: { updatedAt: "desc" },
-    });
-
-    if (lineAccount) {
-      const hasPermission = await canRequestAttendanceReport(
-        lineAccount.accountId,
-      );
-      if (!hasPermission) {
-        return Response.json(
-          {
-            success: false,
-            message:
-              "คุณยังไม่ได้รับอนุมัติให้จัดการข้อมูลวันหยุด กรุณาติดต่อผู้ดูแลระบบ",
-          },
-          { status: 403 },
-        );
-      }
-    }
+    const accessDenied = await authorizeAdmin(req);
+    if (accessDenied) return accessDenied;
 
     let body: any;
     try {
@@ -263,43 +236,13 @@ export async function POST(req: Request) {
 }
 
 // PUT - Update existing holiday
-export async function PUT(req: Request) {
+export async function PUT(
+  req: Request,
+  authorizeAdmin: AdminResourceAuthorizer = authorizeAdminResourceRequest,
+) {
   try {
-    const session = await getServerAuthSession(req);
-    if (!session?.user?.id) {
-      return Response.json(
-        { success: false, message: "กรุณาเข้าสู่ระบบ" },
-        { status: 401 },
-      );
-    }
-
-    // LINE Permission check
-    const lineAccount = await db.account.findFirst({
-      where: {
-        userId: session.user.id,
-        providerId: "line",
-      },
-      select: {
-        accountId: true,
-      },
-      orderBy: { updatedAt: "desc" },
-    });
-
-    if (lineAccount) {
-      const hasPermission = await canRequestAttendanceReport(
-        lineAccount.accountId,
-      );
-      if (!hasPermission) {
-        return Response.json(
-          {
-            success: false,
-            message:
-              "คุณยังไม่ได้รับอนุมัติให้จัดการข้อมูลวันหยุด กรุณาติดต่อผู้ดูแลระบบ",
-          },
-          { status: 403 },
-        );
-      }
-    }
+    const accessDenied = await authorizeAdmin(req);
+    if (accessDenied) return accessDenied;
 
     let body: any;
     try {
@@ -366,43 +309,13 @@ export async function PUT(req: Request) {
 }
 
 // DELETE - Soft delete holiday
-export async function DELETE(req: Request) {
+export async function DELETE(
+  req: Request,
+  authorizeAdmin: AdminResourceAuthorizer = authorizeAdminResourceRequest,
+) {
   try {
-    const session = await getServerAuthSession(req);
-    if (!session?.user?.id) {
-      return Response.json(
-        { success: false, message: "กรุณาเข้าสู่ระบบ" },
-        { status: 401 },
-      );
-    }
-
-    // LINE Permission check
-    const lineAccount = await db.account.findFirst({
-      where: {
-        userId: session.user.id,
-        providerId: "line",
-      },
-      select: {
-        accountId: true,
-      },
-      orderBy: { updatedAt: "desc" },
-    });
-
-    if (lineAccount) {
-      const hasPermission = await canRequestAttendanceReport(
-        lineAccount.accountId,
-      );
-      if (!hasPermission) {
-        return Response.json(
-          {
-            success: false,
-            message:
-              "คุณยังไม่ได้รับอนุมัติให้จัดการข้อมูลวันหยุด กรุณาติดต่อผู้ดูแลระบบ",
-          },
-          { status: 403 },
-        );
-      }
-    }
+    const accessDenied = await authorizeAdmin(req);
+    if (accessDenied) return accessDenied;
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

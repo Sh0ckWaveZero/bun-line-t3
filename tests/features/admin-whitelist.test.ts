@@ -31,8 +31,15 @@ mock.module("@/env.mjs", () => ({
 process.env.SKIP_ENV_VALIDATION = "1";
 process.env.APP_ENV = "test";
 
-const { getEnvAdminLineUserIds, isAdminLineUser, requireAdminLineUser, canManageApprovals } =
-  await import("@/lib/auth/admin");
+const {
+  getEnvAdminLineUserIds,
+  isAdminLineUser,
+  requireAdminLineUser,
+  canManageApprovals,
+  canManageAdminResources,
+} = await import("@/lib/auth/admin");
+const { authorizeAdminResourceRequest } =
+  await import("@/lib/auth/admin-resource.server");
 
 describe("📋 getEnvAdminLineUserIds — parse ADMIN_LINE_USER_IDS env", () => {
   beforeEach(() => {
@@ -112,5 +119,79 @@ describe("👤 canManageApprovals", () => {
 
   test("คืน false เมื่อ lineUserId ไม่ใช่ admin", () => {
     expect(canManageApprovals("U_NORMAL")).toBe(false);
+  });
+});
+
+describe("🛡️ canManageAdminResources", () => {
+  beforeEach(() => {
+    process.env.ADMIN_LINE_USER_IDS = "U_ENV_ADMIN";
+  });
+
+  test("อนุญาต session ที่มีสิทธิ์ admin จากฐานข้อมูล", () => {
+    expect(
+      canManageAdminResources({ isAdmin: true, user: { role: "admin" } }),
+    ).toBe(true);
+  });
+
+  test("อนุญาต LINE user ที่อยู่ใน env whitelist", () => {
+    expect(
+      canManageAdminResources(
+        { isAdmin: false, user: { role: "user" } },
+        "U_ENV_ADMIN",
+      ),
+    ).toBe(true);
+  });
+
+  test("ปฏิเสธผู้ใช้ทั่วไปแม้มี session", () => {
+    expect(
+      canManageAdminResources(
+        { isAdmin: false, user: { role: "user" } },
+        "U_NORMAL",
+      ),
+    ).toBe(false);
+  });
+});
+
+describe("🔐 authorizeAdminResourceRequest", () => {
+  beforeEach(() => {
+    process.env.ADMIN_LINE_USER_IDS = "U_ENV_ADMIN";
+  });
+
+  const request = new Request("http://localhost/api/protected");
+
+  test("คืน 401 เมื่อไม่มี session", async () => {
+    const response = await authorizeAdminResourceRequest(request, {
+      getSession: async () => null,
+      findLineAccount: async () => null,
+    });
+
+    expect(response?.status).toBe(401);
+  });
+
+  test("คืน 403 สำหรับ authenticated non-admin", async () => {
+    const response = await authorizeAdminResourceRequest(request, {
+      getSession: async () => ({ user: { id: "user-1", role: "user" } }),
+      findLineAccount: async () => ({ accountId: "U_NORMAL" }),
+    });
+
+    expect(response?.status).toBe(403);
+  });
+
+  test("อนุญาต admin จาก role ในฐานข้อมูล", async () => {
+    const response = await authorizeAdminResourceRequest(request, {
+      getSession: async () => ({ user: { id: "admin-1", role: "admin" } }),
+      findLineAccount: async () => null,
+    });
+
+    expect(response).toBeNull();
+  });
+
+  test("อนุญาต admin จาก LINE env whitelist", async () => {
+    const response = await authorizeAdminResourceRequest(request, {
+      getSession: async () => ({ user: { id: "user-1", role: "user" } }),
+      findLineAccount: async () => ({ accountId: "U_ENV_ADMIN" }),
+    });
+
+    expect(response).toBeNull();
   });
 });

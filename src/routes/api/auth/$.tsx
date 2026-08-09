@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { env } from "@/env.mjs";
+import { getPublicAuthErrorCode } from "@/features/auth/lib/auth-error";
 import { auth } from "@/lib/auth";
 
 const AUTH_ERROR_PATH = "/api/auth/error";
@@ -10,7 +11,7 @@ const shouldHandleAuthErrorRedirect = (pathname: string) =>
 
 const createLoginErrorRedirect = (error: string) => {
   const loginUrl = new URL("/login", new URL(env.APP_URL).origin);
-  loginUrl.searchParams.set("authError", error);
+  loginUrl.searchParams.set("authError", getPublicAuthErrorCode(error));
   return Response.redirect(loginUrl, 302);
 };
 
@@ -20,7 +21,7 @@ const logAuthFailure = (
   response?: Response,
 ) => {
   console.error("[Auth Handler] " + message, {
-    authError: requestUrl.searchParams.get("error"),
+    hasAuthError: requestUrl.searchParams.has("error"),
     hasCode: requestUrl.searchParams.has("code"),
     hasState: requestUrl.searchParams.has("state"),
     path: requestUrl.pathname,
@@ -29,12 +30,15 @@ const logAuthFailure = (
 };
 
 const handleAuthRequest = async (request: Request) => {
+  let requestPath = "/api/auth";
+
   try {
     const requestUrl = new URL(request.url);
+    requestPath = requestUrl.pathname;
 
     console.log("[Auth Handler] Processing request:", {
       method: request.method,
-      url: request.url,
+      path: requestPath,
     });
 
     if (requestUrl.pathname === AUTH_ERROR_PATH) {
@@ -77,16 +81,12 @@ const handleAuthRequest = async (request: Request) => {
 
     return createLoginErrorRedirect(error);
   } catch (error) {
-    console.error("[Auth Handler] Error processing auth request:", error);
+    console.error("[Auth Handler] Error processing auth request", {
+      errorName: error instanceof Error ? error.name : "UnknownError",
+      path: requestPath,
+    });
 
-    // Return a more specific error for debugging
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-    const loginUrl = new URL("/login", new URL(env.APP_URL).origin);
-    loginUrl.searchParams.set("authError", "line_oauth");
-    loginUrl.searchParams.set("error", errorMessage);
-
-    return Response.redirect(loginUrl, 302);
+    return createLoginErrorRedirect("line_oauth");
   }
 };
 

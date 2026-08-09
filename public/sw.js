@@ -1,21 +1,12 @@
-const CACHE_NAME = "bun-line-t3-calendar-v1";
+const CACHE_NAME = "bun-line-t3-static-v2";
 const urlsToCache = [
-  "/calendar/mobile",
-  "/api/holidays",
   "/manifest.json",
   "/icon-192x192.png",
   "/icon-512x512.png",
 ];
 
-// Routes that should never be cached (auth, API calls with side effects)
-const EXCLUDED_ROUTES = [
-  "/api/auth/",
-  "/api/logout",
-  "/login",
-  "/sign-in",
-  "/callback",
-  "/logout",
-];
+// API and auth-derived documents must always be fetched from the network.
+const EXCLUDED_ROUTES = ["/api/", "/login", "/sign-in", "/callback", "/logout"];
 
 const EXCLUDED_ASSET_PREFIXES = [
   "/@fs/",
@@ -39,7 +30,10 @@ const EXCLUDED_ASSET_EXTENSIONS = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache)),
+    Promise.all([
+      caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache)),
+      self.skipWaiting(),
+    ]),
   );
 });
 
@@ -105,14 +99,17 @@ self.addEventListener("fetch", (event) => {
 self.addEventListener("activate", (event) => {
   const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            return caches.delete(cacheName);
-          }
-        }),
-      );
-    }),
+    Promise.all([
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheWhitelist.indexOf(cacheName) === -1) {
+              return caches.delete(cacheName);
+            }
+          }),
+        );
+      }),
+      self.clients.claim(),
+    ]),
   );
 });

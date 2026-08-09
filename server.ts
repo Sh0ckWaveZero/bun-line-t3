@@ -10,16 +10,70 @@ import { pathToFileURL } from "node:url";
 // ด้านล่าง — server.ts access ผ่าน globalThis จึงใช้ instance เดียวกันเสมอ
 
 type DCAEventManagerLike = {
-  subscribe: (cb: (event: unknown) => void) => () => void;
+  subscribe: (
+    lineUserId: string,
+    cb: (event: { type: string }) => void,
+  ) => () => void;
 };
+
+type DcaStreamAuthorizer = (request: Request) => Promise<string | null>;
 
 function getDcaEventManager(): DCAEventManagerLike | undefined {
   return (globalThis as Record<string, unknown>).__dcaEventManager as
-    | DCAEventManagerLike
-    | undefined;
+    DCAEventManagerLike | undefined;
 }
 
-function handleDcaSseStream(request: Request): Response {
+function getDcaStreamAuthorizer(): DcaStreamAuthorizer | undefined {
+  return (globalThis as Record<string, unknown>).__authorizeDcaStreamRequest as
+    DcaStreamAuthorizer | undefined;
+}
+
+export async function initializeDcaServerBridge(serverEntry: ServerEntry) {
+  if (getDcaStreamAuthorizer()) return;
+
+  // TanStack route modules are lazy-loaded in the production bundle. Resolve
+  // the DCA route once so it can register the auth bridge on globalThis.
+  const response = await serverEntry.fetch(
+    new Request("http://localhost/api/dca/stream", { method: "OPTIONS" }),
+  );
+  await response.body?.cancel();
+
+  if (!getDcaStreamAuthorizer()) {
+    throw new Error("DCA stream authorization bridge failed to initialize");
+  }
+}
+
+export async function handleDcaSseStream(request: Request): Promise<Response> {
+  const authorizeRequest = getDcaStreamAuthorizer();
+  if (!authorizeRequest) {
+    return Response.json(
+      { error: "ระบบยังไม่พร้อมให้บริการ" },
+      { status: 503 },
+    );
+  }
+
+  let lineUserId: string | null;
+  try {
+    lineUserId = await authorizeRequest(request);
+  } catch {
+    return Response.json(
+      { error: "ระบบยังไม่พร้อมให้บริการ" },
+      { status: 503 },
+    );
+  }
+
+  if (!lineUserId) {
+    return Response.json({ error: "กรุณาเข้าสู่ระบบ" }, { status: 401 });
+  }
+
+  const eventManager = getDcaEventManager();
+  if (!eventManager) {
+    return Response.json(
+      { error: "ระบบยังไม่พร้อมให้บริการ" },
+      { status: 503 },
+    );
+  }
+
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
@@ -41,9 +95,8 @@ function handleDcaSseStream(request: Request): Response {
       );
 
       // Subscribe รับ DCA events จาก event manager (shared via globalThis)
-      const eventManager = getDcaEventManager();
-      const unsubscribe = eventManager?.subscribe((event) => {
-        send(`data: ${JSON.stringify(event)}\n\n`);
+      const unsubscribe = eventManager.subscribe(lineUserId, (event) => {
+        send(`data: ${JSON.stringify({ type: event.type })}\n\n`);
       });
 
       // Keep-alive ping ทุก 20 วินาที ป้องกัน proxy timeout
@@ -60,7 +113,7 @@ function handleDcaSseStream(request: Request): Response {
         if (closed) return;
         closed = true;
         clearInterval(pingInterval);
-        unsubscribe?.();
+        unsubscribe();
         try {
           controller.close();
         } catch {
@@ -94,10 +147,6 @@ interface ServerEntry {
 const port = Number(process.env.PORT ?? 3000);
 const hostname = process.env.HOSTNAME ?? "0.0.0.0";
 const rootDir = process.cwd();
-const serverEntryModule = (await import(
-  pathToFileURL(path.join(rootDir, "dist", "server", "server.js")).href
-)) as { default: ServerEntry };
-const serverEntry = serverEntryModule.default;
 const staticRoots = [
   path.join(rootDir, "dist", "client"),
   path.join(rootDir, "public"),
@@ -218,86 +267,96 @@ async function serveStaticFile(request: Request) {
   return new Response(Bun.file(staticFile.filePath), { headers });
 }
 
-const server = Bun.serve({
-  port,
-  hostname,
-  async fetch(request) {
-    // ─── SSE endpoint: handle ก่อน TanStack Start ───────────────────────────
-    // TanStack Start's server route ไม่ support long-lived streaming response
-    // ทำให้ stream ปิดทันที (HTTP/2 INTERNAL_ERROR err 2)
-    // จึง handle โดยตรงใน Bun native server แทน
-    const url = new URL(request.url);
-    if (url.pathname === "/api/dca/stream" && request.method === "GET") {
-      return handleDcaSseStream(request);
-    }
-    // ────────────────────────────────────────────────────────────────────────
+export async function startServer() {
+  const serverEntryModule = (await import(
+    pathToFileURL(path.join(rootDir, "dist", "server", "server.js")).href
+  )) as { default: ServerEntry };
+  const serverEntry = serverEntryModule.default;
+  await initializeDcaServerBridge(serverEntry);
 
-    // 🔒 Handle X-Forwarded-* headers from reverse proxy / Cloudflare
-    // This fixes OAuth callbacks by preserving the original HTTPS protocol
+  const server = Bun.serve({
+    port,
+    hostname,
+    async fetch(request) {
+      // ─── SSE endpoint: handle ก่อน TanStack Start ───────────────────────────
+      // TanStack Start's server route ไม่ support long-lived streaming response
+      // ทำให้ stream ปิดทันที (HTTP/2 INTERNAL_ERROR err 2)
+      // จึง handle โดยตรงใน Bun native server แทน
+      const url = new URL(request.url);
+      if (url.pathname === "/api/dca/stream" && request.method === "GET") {
+        return handleDcaSseStream(request);
+      }
+      // ────────────────────────────────────────────────────────────────────────
 
-    // Try X-Forwarded-Proto (standard reverse proxies)
-    let forwardedProto = request.headers.get("x-forwarded-proto");
+      // 🔒 Handle X-Forwarded-* headers from reverse proxy / Cloudflare
+      // This fixes OAuth callbacks by preserving the original HTTPS protocol
 
-    // Cloudflare Tunnel: Check CF-Visitor header
-    if (!forwardedProto) {
-      const cfVisitor = request.headers.get("cf-visitor");
-      if (cfVisitor) {
-        try {
-          const visitorData = JSON.parse(cfVisitor);
-          if (visitorData.scheme) {
-            forwardedProto = visitorData.scheme;
+      // Try X-Forwarded-Proto (standard reverse proxies)
+      let forwardedProto = request.headers.get("x-forwarded-proto");
+
+      // Cloudflare Tunnel: Check CF-Visitor header
+      if (!forwardedProto) {
+        const cfVisitor = request.headers.get("cf-visitor");
+        if (cfVisitor) {
+          try {
+            const visitorData = JSON.parse(cfVisitor);
+            if (visitorData.scheme) {
+              forwardedProto = visitorData.scheme;
+            }
+          } catch {
+            // Invalid JSON, ignore
           }
-        } catch {
-          // Invalid JSON, ignore
         }
       }
-    }
 
-    const forwardedHost =
-      request.headers.get("x-forwarded-host") ||
-      request.headers.get("x-forwarded-host");
-    const forwardedFor = request.headers.get("x-forwarded-for");
+      const forwardedHost = request.headers.get("x-forwarded-host");
+      if (forwardedProto || forwardedHost) {
+        // Reconstruct URL with forwarded headers
+        const protocol = forwardedProto ?? url.protocol;
+        const host = forwardedHost ?? url.host;
+        const forwardedUrl = new URL(request.url);
 
-    if (forwardedProto || forwardedHost) {
-      // Reconstruct URL with forwarded headers
-      const protocol = forwardedProto ?? url.protocol;
-      const host = forwardedHost ?? url.host;
-      const forwardedUrl = new URL(request.url);
+        if (forwardedProto) {
+          forwardedUrl.protocol = protocol;
+        }
+        if (forwardedHost) {
+          forwardedUrl.host = host;
+        }
 
-      if (forwardedProto) {
-        forwardedUrl.protocol = protocol;
+        // Create new request with corrected URL
+        request = new Request(forwardedUrl.toString(), {
+          method: request.method,
+          headers: request.headers,
+          body: request.body,
+          // @ts-expect-error - duplex is supported by Bun but absent from DOM types
+          duplex: "half",
+        });
+
+        // Log for debugging
+        if (process.env.APP_ENV === "production") {
+          console.log(
+            `[Proxy] Forwarded request: ${protocol}//${host}${forwardedUrl.pathname}`,
+          );
+        }
       }
-      if (forwardedHost) {
-        forwardedUrl.host = host;
+
+      const staticResponse = await serveStaticFile(request);
+
+      if (staticResponse) {
+        return staticResponse;
       }
 
-      // Create new request with corrected URL
-      request = new Request(forwardedUrl.toString(), {
-        method: request.method,
-        headers: request.headers,
-        body: request.body,
-        // @ts-ignore - duplex property is required for Node.js fetch
-        duplex: "half",
-      });
+      return serverEntry.fetch(request);
+    },
+  });
 
-      // Log for debugging
-      if (process.env.APP_ENV === "production") {
-        console.log(
-          `[Proxy] Forwarded request: ${protocol}//${host}${forwardedUrl.pathname}`,
-        );
-      }
-    }
+  console.info(
+    `TanStack Start server listening on http://${hostname}:${server.port}`,
+  );
 
-    const staticResponse = await serveStaticFile(request);
+  return server;
+}
 
-    if (staticResponse) {
-      return staticResponse;
-    }
-
-    return serverEntry.fetch(request);
-  },
-});
-
-console.info(
-  `TanStack Start server listening on http://${hostname}:${server.port}`,
-);
+if (import.meta.main) {
+  await startServer();
+}

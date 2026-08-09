@@ -48,6 +48,25 @@ export const canManageApprovals = (lineUserId: string | undefined): boolean => {
   return isAdminLineUser(lineUserId);
 };
 
+interface AdminResourceSession {
+  isAdmin?: boolean;
+  user?: {
+    role?: string | null;
+  };
+}
+
+/**
+ * ตรวจสอบสิทธิ์สำหรับทรัพยากรส่วนกลางของระบบ
+ * รองรับทั้ง User.role ในฐานข้อมูลและ LINE env whitelist
+ */
+export const canManageAdminResources = (
+  session: AdminResourceSession | null | undefined,
+  lineUserId?: string,
+): boolean => {
+  if (session?.isAdmin || session?.user?.role === "admin") return true;
+  return canManageApprovals(lineUserId);
+};
+
 /**
  * ตรวจสอบสิทธิ์ admin จากทั้ง env whitelist และฐานข้อมูล
  * ใช้กับ API/server-side logic ที่ต้องรองรับ admin ที่ตั้งผ่านหน้าเว็บ

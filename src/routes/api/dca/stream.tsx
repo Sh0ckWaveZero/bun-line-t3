@@ -2,10 +2,22 @@ import { createFileRoute } from "@tanstack/react-router";
 import { dcaEventManager } from "@/features/dca/lib/event-manager";
 import { getAuthorizedLineUserId } from "@/lib/auth";
 
+type DcaStreamAuthorizer = (request: Request) => Promise<string | null>;
+
+const dcaServerBridge = globalThis as typeof globalThis & {
+  __authorizeDcaStreamRequest?: DcaStreamAuthorizer;
+};
+
+// server.ts runs outside the TanStack bundle in production. Register only the
+// auth resolver on globalThis so the native SSE adapter can reuse session auth.
+if (typeof window === "undefined") {
+  dcaServerBridge.__authorizeDcaStreamRequest = getAuthorizedLineUserId;
+}
+
 export async function GET(req: Request) {
   const lineUserId = await getAuthorizedLineUserId(req);
   if (!lineUserId) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+    return Response.json({ error: "กรุณาเข้าสู่ระบบ" }, { status: 401 });
   }
 
   const headers = new Headers({
