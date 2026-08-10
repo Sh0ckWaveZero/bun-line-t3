@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getServerAuthSession } from "@/lib/auth/auth";
+import { authorizeAdminResourceRequest } from "@/lib/auth/admin-resource.server";
 import { db } from "@/lib/database/db";
 import { withRateLimit } from "@/lib/utils/rate-limiter";
 import { env } from "@/env.mjs";
@@ -106,21 +106,16 @@ interface MonitoringDashboardData {
  * Provides comprehensive monitoring data for the dashboard UI
  */
 // 🔐 Security: Protected API handler with authentication and rate limiting
-async function secureMonitoringHandler(request: Request): Promise<Response> {
+export async function secureMonitoringHandler(
+  request: Request,
+  authorizeAdmin = authorizeAdminResourceRequest,
+): Promise<Response> {
   const startTime = Date.now();
 
   try {
-    // 🔒 Step 1: Verify authentication
-    const session = await getServerAuthSession(request);
-    if (!session || !session.user) {
-      return Response.json(
-        {
-          error: "Authentication required",
-          message: "Please sign in to access monitoring dashboard",
-        },
-        { status: 401 },
-      );
-    }
+    // 🔒 Step 1: Verify authentication and admin authorization
+    const accessDenied = await authorizeAdmin(request);
+    if (accessDenied) return accessDenied;
 
     // 🛡️ Step 2: Validate request parameters
     const url = new URL(request.url);
