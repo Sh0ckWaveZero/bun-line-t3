@@ -22,10 +22,14 @@ services:
         # 🔧 RASPBERRY PI OPTIMIZATION: จำกัด parallel builds สำหรับ ARM64
         - MAX_PARALLEL_BUILDS=1
         - NODE_OPTIONS=--max_old_space_size=2048
-        - DATABASE_URL=${DATABASE_URL}
-        - APP_URL=${APP_URL}
-        - AUTH_SECRET=${AUTH_SECRET}
-        - OPENAI_API_KEY=${OPENAI_API_KEY}
+      # 🔐 SECURITY: Secrets ส่งเข้า build ผ่าน BuildKit secret mounts
+      # (ไม่ผ่าน build args — ค่าไม่ติดใน image layers หรือ docker history)
+      # ค่ามาจาก environment variables ที่ GitHub Actions inject (ดู deploy.yml)
+      secrets:
+        - database_url
+        - auth_secret
+        - openai_api_key
+        - admin_line_user_ids
       target: runner
       # 🔧 RASPBERRY PI: จำกัด memory สำหรับ build process
       shm_size: 512m
@@ -189,6 +193,19 @@ services:
 networks:
   yadom:
     external: true # ใช้ network yadom ที่มีอยู่แล้วในระบบ
+
+# 🔐 BUILD SECRETS: BuildKit secret mounts (build-time only — ไม่ mount ตอน runtime)
+# แปลง environment variables → /run/secrets/<name> ระหว่าง docker compose build
+# ต้องใช้ Docker Compose v2.19+
+secrets:
+  database_url:
+    environment: DATABASE_URL
+  auth_secret:
+    environment: AUTH_SECRET
+  openai_api_key:
+    environment: OPENAI_API_KEY
+  admin_line_user_ids:
+    environment: ADMIN_LINE_USER_IDS
 
 # 📁 VOLUMES: Named volumes สำหรับ data persistence
 volumes:
