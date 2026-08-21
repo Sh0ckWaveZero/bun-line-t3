@@ -4,7 +4,7 @@
 ###################
 # 🏗️ BASE BUILD STAGE
 ###################
-FROM --platform=$BUILDPLATFORM oven/bun:1-alpine AS build-base
+FROM --platform=$BUILDPLATFORM oven/bun:1.4.0-alpine AS build-base
 
 LABEL maintainer="security@company.com" \
     version="1.0" \
@@ -98,7 +98,7 @@ RUN echo "🚀 Building TanStack Start..." && \
 ###################
 # 📦 PRODUCTION DEPENDENCIES STAGE
 ###################
-FROM oven/bun:1-alpine AS prod-deps
+FROM oven/bun:1.4.0-alpine AS prod-deps
 
 WORKDIR /app
 
@@ -142,7 +142,7 @@ RUN find ./node_modules \
 ###################
 # 🚀 RUNTIME STAGE
 ###################
-FROM oven/bun:1-alpine AS runner
+FROM oven/bun:1.4.0-alpine AS runner
 WORKDIR /app
 
 RUN apk add --no-cache \
