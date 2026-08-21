@@ -49,51 +49,35 @@ RUN --mount=type=cache,target=/root/.cache/prisma \
 
 COPY . .
 
-ARG DATABASE_URL
+# 🌐 Public build configuration (non-sensitive — safe as build args)
 ARG APP_URL
-ARG AUTH_SECRET
 ARG APP_DOMAIN
 ARG ALLOWED_DOMAINS
-ARG LINE_CLIENT_ID
-ARG LINE_CLIENT_SECRET
-ARG LINE_CHANNEL_SECRET
-ARG LINE_MESSAGING_API
-ARG LINE_CHANNEL_ACCESS
-ARG ADMIN_LINE_USER_IDS
-ARG CMC_URL
-ARG CMC_API_KEY
 ARG FRONTEND_URL
-ARG AQICN_TOKEN
-ARG OPENAI_API_KEY
-ARG SPOTIFY_CLIENT_ID
-ARG SPOTIFY_CLIENT_SECRET
 
 ENV NODE_ENV=production \
     CI=true \
     SKIP_ENV_VALIDATION=true \
     NODE_OPTIONS="--max_old_space_size=1024 --no-warnings" \
-    DATABASE_URL=${DATABASE_URL} \
     APP_URL=${APP_URL} \
-    AUTH_SECRET=${AUTH_SECRET} \
     APP_DOMAIN=${APP_DOMAIN} \
     ALLOWED_DOMAINS=${ALLOWED_DOMAINS} \
-    LINE_CLIENT_ID=${LINE_CLIENT_ID} \
-    LINE_CLIENT_SECRET=${LINE_CLIENT_SECRET} \
-    LINE_CHANNEL_SECRET=${LINE_CHANNEL_SECRET} \
-    LINE_MESSAGING_API=${LINE_MESSAGING_API:-"https://api.line.me/v2/bot/message"} \
-    LINE_CHANNEL_ACCESS=${LINE_CHANNEL_ACCESS} \
-    ADMIN_LINE_USER_IDS=${ADMIN_LINE_USER_IDS} \
-    CMC_URL=${CMC_URL:-"https://pro-api.coinmarketcap.com"} \
-    CMC_API_KEY=${CMC_API_KEY} \
-    FRONTEND_URL=${FRONTEND_URL} \
-    AQICN_TOKEN=${AQICN_TOKEN} \
-    OPENAI_API_KEY=${OPENAI_API_KEY} \
-    SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID} \
-    SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
+    FRONTEND_URL=${FRONTEND_URL}
 
-RUN echo "🚀 Building TanStack Start..." && \
-    bun run build && \
-    echo "✅ Build completed"
+# 🔐 Secrets injected via BuildKit secret mounts — never stored in image layers,
+#    build cache, or `docker history`.
+#    Usage: docker build --secret id=database_url,env=DATABASE_URL ...
+RUN --mount=type=secret,id=database_url \
+    --mount=type=secret,id=auth_secret \
+    --mount=type=secret,id=openai_api_key \
+    --mount=type=secret,id=admin_line_user_ids \
+    export DATABASE_URL="$(cat /run/secrets/database_url 2>/dev/null || true)" \
+        AUTH_SECRET="$(cat /run/secrets/auth_secret 2>/dev/null || true)" \
+        OPENAI_API_KEY="$(cat /run/secrets/openai_api_key 2>/dev/null || true)" \
+        ADMIN_LINE_USER_IDS="$(cat /run/secrets/admin_line_user_ids 2>/dev/null || true)" \
+    && echo "🚀 Building TanStack Start..." \
+    && bun run build \
+    && echo "✅ Build completed"
 
 ###################
 # 📦 PRODUCTION DEPENDENCIES STAGE

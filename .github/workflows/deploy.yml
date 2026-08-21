@@ -182,16 +182,20 @@ jobs:
           [[ "${{ github.event.inputs.force_rebuild }}" == "true" ]] && BUILD_ARGS="--pull --no-cache"
 
           docker compose build $BUILD_ARGS \
-            --build-arg BUILDKIT_INLINE_CACHE=1 \
-            --build-arg DATABASE_URL="${{ secrets.DATABASE_URL }}" \
-            --build-arg APP_URL="${{ secrets.APP_URL }}" \
-            --build-arg AUTH_SECRET="${{ secrets.AUTH_SECRET }}" \
-            --build-arg FRONTEND_URL="${{ secrets.FRONTEND_URL }}" \
-            --build-arg ADMIN_LINE_USER_IDS="${{ secrets.ADMIN_LINE_USER_IDS }}" \
-            --build-arg OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
-            --build-arg APP_DOMAIN="${{ secrets.APP_DOMAIN }}" \
-            --build-arg ALLOWED_DOMAINS="${{ secrets.ALLOWED_DOMAINS }}"
+            --build-arg BUILDKIT_INLINE_CACHE=1
           echo "✅ Build completed"
+        env:
+          # 🌐 Public build config (build args)
+          APP_URL: ${{ secrets.APP_URL }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+          APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
+          ALLOWED_DOMAINS: ${{ secrets.ALLOWED_DOMAINS }}
+          # 🔐 SECURITY: BuildKit secret mounts (ไม่ผ่าน build args —
+          # ค่าไม่ติดใน image layers, build cache หรือ docker history)
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ADMIN_LINE_USER_IDS: ${{ secrets.ADMIN_LINE_USER_IDS }}
 
       - name: 🚀 Deploy Services
         run: |
