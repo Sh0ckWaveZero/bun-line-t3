@@ -154,6 +154,7 @@ export function createCustomPrismaAdapter(
                 },
                 data: {
                   // ไม่เขียนทับ userId — คง ownership ของ Account เดิมไว้
+                  issuer: "issuer" in data.data ? data.data.issuer : undefined,
                   accessToken:
                     "accessToken" in data.data
                       ? data.data.accessToken

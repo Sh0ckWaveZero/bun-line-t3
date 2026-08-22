@@ -13,6 +13,8 @@ datasource db {
 model Account {
   id                     String    @id @default(cuid())
   accountId              String
+  // better-auth >= 1.7: account identity is (issuer, accountId)
+  issuer                 String
   providerId             String
   userId                 String
   accessToken            String?
@@ -29,6 +31,7 @@ model Account {
   user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([providerId, accountId])
+  @@unique([issuer, accountId])
   @@index([userId])
   @@index([lineMessagingApiUserId])
   @@map("accounts")
