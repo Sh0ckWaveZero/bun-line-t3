@@ -541,6 +541,44 @@
   .stagger-4 {
     animation-delay: 240ms;
   }
+
+  /* Login entrance: card fade-up + masked word reveal */
+  @keyframes login-card-enter {
+    from {
+      opacity: 0;
+      transform: translateY(14px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .animate-login-card-enter {
+    animation: login-card-enter 550ms cubic-bezier(0.25, 1, 0.5, 1) both;
+  }
+
+  @keyframes login-rise {
+    from {
+      transform: translateY(110%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .login-rise-mask {
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: bottom;
+    padding-bottom: 0.1em;
+  }
+
+  .login-rise-target {
+    display: inline-block;
+    will-change: transform;
+    animation: login-rise 700ms cubic-bezier(0.25, 1, 0.5, 1) both;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -548,6 +586,12 @@
     animation: none;
   }
   .animate-tab-in {
+    animation: none;
+  }
+  .animate-login-card-enter {
+    animation: none;
+  }
+  .login-rise-target {
     animation: none;
   }
   .stagger-1,

@@ -2,9 +2,10 @@
 
 import { useSearch } from "@tanstack/react-router";
 import React from "react";
+import { LoginCard } from "@/features/auth/components/LoginCard";
+import { PredictiveArcCanvas } from "@/components/ui/PredictiveArcCanvas";
 import { useSession } from "@/lib/auth/client";
-import { LineLoginButton } from "@/components/ui/LineLoginButton";
-import { ParticleWaveCanvas } from "@/components/ui/ParticleWaveCanvas";
+import { useTheme } from "@/lib/theme/theme-provider";
 
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
   invalid_code:
@@ -32,6 +33,7 @@ const getSafeCallbackUrl = (value: unknown) => {
 
 export function LoginPage() {
   const { status } = useSession();
+  const { resolvedTheme } = useTheme();
   const search = useSearch({ strict: false }) as {
     authError?: string;
     callbackUrl?: string;
@@ -45,6 +47,8 @@ export function LoginPage() {
       : authError
         ? "เข้าสู่ระบบไม่สำเร็จ กรุณากด LINE Login ใหม่อีกครั้ง"
         : null;
+  const mode = resolvedTheme === "dark" ? "dark" : "light";
+  const isDark = mode === "dark";
 
   React.useEffect(() => {
     if (status === "authenticated") {
@@ -60,17 +64,24 @@ export function LoginPage() {
         role="status"
         aria-live="polite"
       >
-        <ParticleWaveCanvas />
+        <PredictiveArcCanvas mode={mode} className="absolute inset-0" />
         <div className="relative z-10 text-center">
           <div
             className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4"
             style={{
-              borderColor: "rgba(144, 112, 208, 0.3)",
-              borderTopColor: "rgba(144, 112, 208, 0.9)",
+              borderColor: isDark
+                ? "rgba(144, 112, 208, 0.3)"
+                : "rgba(124, 92, 191, 0.25)",
+              borderTopColor: isDark
+                ? "rgba(144, 112, 208, 0.9)"
+                : "rgba(124, 92, 191, 0.85)",
             }}
             aria-hidden="true"
           />
-          <p className="text-lg font-medium" style={{ color: "#e0dced" }}>
+          <p
+            className="text-lg font-medium"
+            style={{ color: isDark ? "#e0dced" : "#453f68" }}
+          >
             กำลังตรวจสอบสถานะการเข้าสู่ระบบ...
           </p>
         </div>
@@ -83,69 +94,29 @@ export function LoginPage() {
       id="login-page"
       className="fixed inset-0 z-55 flex items-center justify-center overflow-hidden"
     >
-      <ParticleWaveCanvas />
+      <PredictiveArcCanvas mode={mode} className="absolute inset-0" />
+
+      {/* Soft vignette keeps the card readable over the bright arc core */}
+      <div
+        id="login-vignette"
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-[1]"
+        style={{
+          background: isDark
+            ? "radial-gradient(ellipse 90% 80% at 50% 42%, rgba(3, 3, 3, 0) 0%, rgba(3, 3, 3, 0.5) 100%)"
+            : "radial-gradient(ellipse 90% 80% at 50% 42%, rgba(238, 241, 246, 0) 0%, rgba(238, 241, 246, 0.6) 100%)",
+        }}
+      />
 
       <div
         id="login-container"
         className="relative z-10 w-full max-w-sm p-4 sm:max-w-md sm:p-6"
       >
-        <div
-          id="login-card"
-          className="rounded-2xl border p-8 sm:p-10"
-          style={{
-            backgroundColor: "#2a2650",
-            borderColor: "rgba(140, 110, 200, 0.2)",
-            boxShadow: "0 20px 60px rgba(17, 15, 34, 0.7)",
-          }}
-        >
-          <div id="login-header" className="mb-8 text-center">
-            <div
-              id="login-logo"
-              className="mb-5 text-8xl"
-              role="img"
-              aria-label="โลโก้แอปพลิเคชัน"
-            >
-              🦦
-            </div>
-            <h1
-              id="login-title"
-              className="mb-1 text-2xl font-bold sm:text-3xl"
-              style={{ color: "#e0dced" }}
-            >
-              เข้าสู่ระบบ
-            </h1>
-            <p id="login-subtitle" className="text-sm sm:text-base" style={{ color: "#9d98b8" }}>
-              สำหรับบุคลที่ได้รับอนุมัติเท่านั้น
-            </p>
-          </div>
-
-          <div id="login-content" className="space-y-5">
-            {authErrorMessage ? (
-              <div
-                id="login-error-alert"
-                role="alert"
-                aria-live="assertive"
-                aria-atomic="true"
-                className="rounded-md border px-4 py-3 text-sm font-medium"
-                style={{
-                  backgroundColor: "rgba(196, 72, 48, 0.2)",
-                  borderColor: "rgba(196, 72, 48, 0.4)",
-                  color: "#fca5a5",
-                }}
-              >
-                {authErrorMessage}
-              </div>
-            ) : null}
-
-            <div id="login-actions">
-              <LineLoginButton
-                id="line-login-button"
-                callbackUrl={callbackUrl}
-                className="w-full"
-              />
-            </div>
-          </div>
-        </div>
+        <LoginCard
+          callbackUrl={callbackUrl}
+          authErrorMessage={authErrorMessage}
+          mode={mode}
+        />
       </div>
     </main>
   );
