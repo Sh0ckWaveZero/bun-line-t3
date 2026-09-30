@@ -4,7 +4,7 @@
 ###################
 # 🏗️ BASE BUILD STAGE
 ###################
-FROM --platform=$BUILDPLATFORM oven/bun:1.4.0-alpine AS build-base
+FROM oven/bun:1.4.2-slim AS build-base
 
 LABEL maintainer="security@company.com" \
     version="1.0" \
@@ -19,15 +19,14 @@ RUN echo "🔧 Building on $BUILDPLATFORM for $TARGETPLATFORM"
 
 WORKDIR /app
 
-RUN apk add --no-cache \
-    build-base \
-    cairo-dev \
-    giflib-dev \
-    jpeg-dev \
-    pango-dev \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libcairo2-dev \
+    libgif-dev \
+    libjpeg-dev \
+    libpango1.0-dev \
     python3 \
-    && rm -rf /var/cache/apk/* /var/tmp/* \
-    && echo "Build tools installed $(date)"
+    && rm -rf /var/lib/apt/lists/*
 
 ###################
 # 🏗️ APP BUILD STAGE
@@ -36,16 +35,15 @@ FROM build-base AS build
 
 COPY package.json bun.lock ./
 COPY prisma ./prisma
+COPY prisma.config.ts ./prisma.config.ts
 
 RUN --mount=type=cache,target=/root/.bun/install/cache \
     NODE_OPTIONS="--max_old_space_size=1536" \
-    bun install --frozen-lockfile --ignore-scripts --no-optional && \
-    rm -rf /root/.bun/install/cache/*
+    bun install --frozen-lockfile --ignore-scripts
 
 RUN --mount=type=cache,target=/root/.cache/prisma \
     NODE_OPTIONS="--max_old_space_size=1024" \
-    bunx prisma generate && \
-    rm -rf /root/.cache/prisma/*
+    bunx prisma generate
 
 COPY . .
 
@@ -82,7 +80,7 @@ RUN --mount=type=secret,id=database_url \
 ###################
 # 📦 PRODUCTION DEPENDENCIES STAGE
 ###################
-FROM oven/bun:1.4.0-alpine AS prod-deps
+FROM oven/bun:1.4.2-slim AS prod-deps
 
 WORKDIR /app
 
@@ -90,65 +88,58 @@ ENV SKIP_PRISMA_GENERATE=1 \
     NODE_ENV=production
 
 # Install build tools needed for native modules (canvas)
-RUN apk add --no-cache \
-    build-base \
-    cairo-dev \
-    giflib-dev \
-    jpeg-dev \
-    npm \
-    pango-dev \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libcairo2-dev \
+    libgif-dev \
+    libjpeg-dev \
+    libpango1.0-dev \
     python3 \
-    && rm -rf /var/cache/apk/* /var/tmp/*
+    && rm -rf /var/lib/apt/lists/*
 
 COPY package.json bun.lock ./
 
 # Install production dependencies with native modules (canvas)
-# Cachebust: 2025-04-25-v2 to ensure fresh build with node-gyp available
 RUN --mount=type=cache,target=/root/.bun/install/cache \
-    bun install --production --frozen-lockfile --no-optional
+    bun install --production --frozen-lockfile
 
 # Copy Prisma dependencies (already generated in node_modules)
 COPY --from=build /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=build /app/node_modules/pg ./node_modules/pg
 COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
 
-# Cleanup build tools after native modules are built
-RUN apk del build-base python3 && \
-    rm -rf /var/cache/apk/* /var/tmp/* /root/.cache
-
-# Aggressive cleanup in prod-deps stage BEFORE copying to runner
-RUN find ./node_modules \
-    -type d \( -name ".git" -o -name ".github" -o -name "test" -o -name "tests" -o -name "__tests__" -o -name "docs" -o -name "examples" \) -exec rm -rf {} + 2>/dev/null || true && \
-    find ./node_modules \
-    -type f \( -name "*.md" -o -name "*.ts" -o -name "*.tsx" -o -name "*.map" -o -name "*.test.*" -o -name "*.spec.*" -o -name "LICENSE*" -o -name "README*" -o -name "*.d.ts" \) -delete 2>/dev/null || true && \
-    find ./node_modules -type d -empty -delete 2>/dev/null || true
+# Prisma CLI ใช้ dependency จาก build stage โดยไม่ดาวน์โหลดขณะ deploy
+FROM build AS migrate
+CMD ["bun", "node_modules/prisma/build/index.js", "migrate", "deploy"]
 
 ###################
 # 🚀 RUNTIME STAGE
 ###################
-FROM oven/bun:1.4.0-alpine AS runner
+FROM oven/bun:1.4.2-slim AS runner
 WORKDIR /app
 
-RUN apk add --no-cache \
-    cairo \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libcairo2 \
+    libgif7 \
+    libjpeg62-turbo \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
     ca-certificates \
     curl \
     dumb-init \
-    giflib \
-    jpeg \
-    pango \
+    fontconfig \
+    fonts-noto-core \
+    openssl \
     tzdata \
-    && rm -rf /var/cache/apk/* /tmp/* /var/tmp/* /root/.cache \
-    && rm -rf /usr/share/fontconfig /usr/share/fonts /var/cache/fontconfig \
-    && rm -rf /usr/share/locale /usr/share/i18n/* /usr/share/zoneinfo/zoneinfo
+    && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production \
     BUN_ENV=production \
     PORT=12914 \
     HOSTNAME=0.0.0.0
 
-RUN addgroup --system --gid 1001 appgroup && \
-    adduser --system --uid 1001 appuser
+RUN groupadd --system --gid 1001 appgroup && \
+    useradd --system --uid 1001 --gid appgroup --no-create-home appuser
 
 COPY --from=build --chown=appuser:appgroup /app/dist ./dist
 COPY --from=build --chown=appuser:appgroup /app/public ./public
@@ -175,7 +166,7 @@ USER appuser
 EXPOSE 12914
 
 HEALTHCHECK --interval=60s --timeout=10s --start-period=30s --retries=3 \
-    CMD ["./scripts/monitoring/health-check.sh"]
+    CMD curl --fail --silent --max-time 5 "http://127.0.0.1:${PORT}/api/health" >/dev/null
 
 ENTRYPOINT ["dumb-init", "--"]
 CMD ["./scripts/devops/docker-entrypoint.sh"]

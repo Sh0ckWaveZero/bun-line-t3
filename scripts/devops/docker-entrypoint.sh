@@ -26,22 +26,18 @@ echo "✅ Runtime environment verified"
 # ─────────────────────────────────────────────
 # Database Migrations
 # ─────────────────────────────────────────────
-# Run pending migrations on every container start.
-# `migrate deploy` is idempotent — it only applies migrations not yet in the
-# `_prisma_migrations` table, so it's safe to run on every boot.
-#
-# Use `migrate deploy` (not `db push`) in production because:
-#   - Tracks applied migrations in history (db push does not)
-#   - Cannot cause data loss by design (migrations are authored, not generated)
-#   - Required by AGENTS.md: "ALWAYS use migrations for production schema changes"
-#
-# Opt out via RUN_MIGRATIONS=false (e.g. for read-only replicas or CI smoke tests).
+# Migration ต้องผ่านก่อนเปิดแอป ใช้ RUN_MIGRATIONS=false เมื่อ pipeline ทำแล้ว
 if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
     echo "🗄️ Running prisma migrate deploy..."
-    if bunx prisma migrate deploy 2>&1; then
+    if [ ! -f node_modules/prisma/build/index.js ]; then
+        echo "❌ ไม่พบ Prisma CLI ให้รัน migration ผ่าน image target migrate ก่อน"
+        exit 1
+    fi
+    if bun node_modules/prisma/build/index.js migrate deploy; then
         echo "✅ Database migrations applied"
     else
-        echo "⚠️ Database migration failed — starting app anyway (DB may be unavailable)"
+        echo "❌ Migration ล้มเหลว ยกเลิกการเปิดแอป"
+        exit 1
     fi
 else
     echo "⏭️ Prisma migrate deploy skipped (set RUN_MIGRATIONS=false to disable)"

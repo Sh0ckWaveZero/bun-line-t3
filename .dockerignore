@@ -1430,3 +1430,10 @@ yarn.lock
 !zod
 !zod-to-json-schema
 ### finished auto generated using `untracked`
+
+# ไฟล์จากเครื่อง host ห้ามทับ dependency และ output ใน build stage
+node_modules
+dist
+logs
+.env*
+.git
