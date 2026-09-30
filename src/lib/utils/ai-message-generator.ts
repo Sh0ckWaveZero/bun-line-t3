@@ -3,6 +3,7 @@ import { generateText } from "ai";
 import { selectRandomElement } from "@/lib/crypto-random";
 import { env } from "@/env.mjs";
 import { supportsTemperature } from "@/lib/ai/model-utils";
+import { buildCheckInPrompt } from "@/lib/ai/prompts";
 
 /**
  * AI-powered dynamic message generation utilities
@@ -92,14 +93,7 @@ export async function generateCheckInMessage(
     const { text } = await generateText({
       model: openai(AI_MODEL),
       system: CHECK_IN_SYSTEM_PROMPT,
-      prompt: `สร้างข้อความเตือนเช็คอินจากข้อมูลนี้:
-<check_in_context>
-ชื่อผู้ใช้: ${JSON.stringify(context?.userName || "เพื่อน")}
-ช่วงเวลา: ${JSON.stringify(context?.timeOfDay || "เช้า")}
-สภาพอากาศ: ${JSON.stringify(context?.weather || "สดใส")}
-</check_in_context>
-
-ส่งเฉพาะข้อความเดียวตามกติกาใน system prompt`,
+      prompt: buildCheckInPrompt(context),
       ...(supportsTemperature(AI_MODEL) ? { temperature: AI_TEMPERATURE } : {}),
     });
 
