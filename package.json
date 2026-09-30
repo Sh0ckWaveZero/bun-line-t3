@@ -49,7 +49,7 @@
     "docker:optimize": "./scripts/devops/optimize-bundle.sh",
     "runner:monitor": "./monitor-runner.sh",
     "docker:cleanup": "docker system prune -f && docker image prune -a -f",
-    "deploy:check": "bun scripts/generate-github-secrets.ts validate && docker system info"
+    "deploy:check": "bun scripts/secrets/generate-github-secrets.ts validate && docker system info"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.82",

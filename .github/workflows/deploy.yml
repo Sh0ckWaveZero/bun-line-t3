@@ -1,6 +1,3 @@
-# 🚀 GitHub Actions Deployment Workflow
-# สำหรับ Self-Hosted Runner (Raspberry Pi) และ GitHub Secrets Management
-
 name: 🚀 Deploy to Production
 
 on:
@@ -8,290 +5,69 @@ on:
     branches: [main, production]
     paths-ignore:
       - "docs/**"
+      - "logs/**"
       - "*.md"
       - ".vscode/**"
-
   workflow_dispatch:
     inputs:
       force_rebuild:
-        description: "Force rebuild Docker images"
-        required: false
+        description: "สร้าง image ใหม่โดยไม่ใช้ cache"
         default: false
         type: boolean
-      skip_health_checks:
-        description: "Skip health checks (for emergency deployments)"
-        required: false
-        default: false
-        type: boolean
-      environment:
-        description: "Target environment"
-        required: true
-        default: "production"
-        type: choice
-        options:
-          - production
-          - staging
 
 permissions:
   contents: read
-  actions: read
-  security-events: write
 
-env:
-  DOCKER_BUILDKIT: 1
-  COMPOSE_DOCKER_CLI_BUILD: 1
-  TZ: Asia/Bangkok
+# ทุก branch ใช้บริการ production ชุดเดียวกัน ห้าม deploy ซ้อนกัน
+concurrency:
+  group: bun-line-t3-production
+  cancel-in-progress: false
 
 jobs:
-  # Job 1: Security และ Environment Validation
-  security-check:
-    name: 🔐 Security & Environment Validation
-    runs-on: self-hosted
-    timeout-minutes: 5
-
-    steps:
-      - name: 📥 Checkout Repository
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 1
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 🔍 Validate Required Secrets
-        run: |
-          REQUIRED_SECRETS=(
-            "DATABASE_URL" "APP_URL" "AUTH_SECRET" "FRONTEND_URL"
-            "JWT_SECRET" "INTERNAL_API_KEY" "CRON_SECRET"
-            "LINE_CLIENT_ID" "LINE_CLIENT_SECRET"
-            "LINE_LOGIN_CHANNEL_ID" "LINE_LOGIN_CHANNEL_SECRET"
-            "LINE_CHANNEL_ACCESS" "LINE_CHANNEL_SECRET" "ADMIN_LINE_USER_IDS"
-            "AQICN_TOKEN" "CMC_API_KEY" "OPENAI_API_KEY"
-            "APP_DOMAIN" "ALLOWED_DOMAINS"
-          )
-          MISSING_SECRETS=()
-          for secret in "${REQUIRED_SECRETS[@]}"; do
-            [[ -z "${!secret}" ]] && MISSING_SECRETS+=("$secret")
-          done
-          if [[ ${#MISSING_SECRETS[@]} -gt 0 ]]; then
-            echo "❌ Missing secrets: ${MISSING_SECRETS[*]}"
-            echo "กรุณาตั้งค่า GitHub Secrets ใน Repository Settings"
-            exit 1
-          fi
-          echo "✅ All required secrets configured"
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          APP_URL: ${{ secrets.APP_URL }}
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
-          LINE_CLIENT_ID: ${{ secrets.LINE_CLIENT_ID }}
-          LINE_CLIENT_SECRET: ${{ secrets.LINE_CLIENT_SECRET }}
-          LINE_LOGIN_CHANNEL_ID: ${{ secrets.LINE_LOGIN_CHANNEL_ID }}
-          LINE_LOGIN_CHANNEL_SECRET: ${{ secrets.LINE_LOGIN_CHANNEL_SECRET }}
-          LINE_CHANNEL_ACCESS: ${{ secrets.LINE_CHANNEL_ACCESS }}
-          LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
-          ADMIN_LINE_USER_IDS: ${{ secrets.ADMIN_LINE_USER_IDS }}
-          AQICN_TOKEN: ${{ secrets.AQICN_TOKEN }}
-          CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          MCP_AI_MODEL: ${{ secrets.MCP_AI_MODEL || 'gpt-5.6-luna' }}
-          APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
-          ALLOWED_DOMAINS: ${{ secrets.ALLOWED_DOMAINS }}
-
-      - name: 🖥️ System Resource Check
-        run: |
-          AVAILABLE_MEMORY=$(free -m | awk 'NR==2{printf "%.0f", $7}')
-          [[ $AVAILABLE_MEMORY -lt 1024 ]] \
-            && echo "⚠️ Low memory: ${AVAILABLE_MEMORY}MB" \
-            || echo "✅ Memory: ${AVAILABLE_MEMORY}MB"
-
-          AVAILABLE_DISK=$(df -BM /var/lib/docker 2>/dev/null | awk 'NR==2{print $4}' | sed 's/M//' || echo "1000")
-          if [[ $AVAILABLE_DISK -lt 2048 ]]; then
-            echo "❌ Insufficient disk space: ${AVAILABLE_DISK}MB (required: 2048MB+)"
-            exit 1
-          fi
-          echo "✅ Disk: ${AVAILABLE_DISK}MB"
-
-          systemctl is-active --quiet docker \
-            && echo "✅ Docker running" \
-            || { echo "❌ Docker not running"; exit 1; }
-
-  # Job 2: Build และ Deploy
   deploy:
-    name: 🚀 Build & Deploy Application
+    name: ตรวจสอบ สร้าง และ deploy
     runs-on: self-hosted
-    needs: security-check
-    timeout-minutes: 30
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    env:
+      PORT: ${{ secrets.PORT || '12914' }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      APP_URL: ${{ secrets.APP_URL }}
+      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+      FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      LINE_CLIENT_ID: ${{ secrets.LINE_CLIENT_ID }}
+      LINE_CLIENT_SECRET: ${{ secrets.LINE_CLIENT_SECRET }}
+      LINE_LOGIN_CHANNEL_ID: ${{ secrets.LINE_LOGIN_CHANNEL_ID }}
+      LINE_LOGIN_CHANNEL_SECRET: ${{ secrets.LINE_LOGIN_CHANNEL_SECRET }}
+      LINE_CHANNEL_ACCESS: ${{ secrets.LINE_CHANNEL_ACCESS }}
+      LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
+      ADMIN_LINE_USER_IDS: ${{ secrets.ADMIN_LINE_USER_IDS }}
+      AQICN_TOKEN: ${{ secrets.AQICN_TOKEN }}
+      CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      MCP_AI_MODEL: ${{ secrets.MCP_AI_MODEL || 'gpt-5.6-luna' }}
+      APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
+      ALLOWED_DOMAINS: ${{ secrets.ALLOWED_DOMAINS }}
 
+      DOCKER_BUILDKIT: "1"
+      COMPOSE_PARALLEL_LIMIT: "1"
+      COMPOSE_PROJECT_NAME: bun-line-t3
+      TZ: Asia/Bangkok
+      FORCE_REBUILD: ${{ inputs.force_rebuild || false }}
+      RELEASE_TAG: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+      RUN_MIGRATIONS: "false"
     steps:
-      - name: 📥 Checkout Repository
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 1
-
-      - name: 🏷️ Tag Current Images for Rollback
-        run: |
-          docker tag bun-line-t3-app:latest bun-line-t3-app:previous 2>/dev/null || true
-          docker tag bun-line-t3-cron:latest bun-line-t3-cron:previous 2>/dev/null || true
-          echo "✅ Current images tagged as :previous"
-
-      - name: 🔧 Setup Environment File
-        run: |
-          cat > .env.prod << EOF
-          NODE_ENV=production
-          APP_ENV=production
-          NEXT_PUBLIC_APP_ENV=production
-          HOSTNAME=localhost
-          PORT=${{ secrets.PORT || '12914' }}
-          APP_URL="${{ secrets.APP_URL }}"
-          FRONTEND_URL="${{ secrets.FRONTEND_URL }}"
-          AUTH_SECRET="${{ secrets.AUTH_SECRET }}"
-          JWT_SECRET="${{ secrets.JWT_SECRET }}"
-          JWT_EXPIRES_IN=18144000000
-          INTERNAL_API_KEY="${{ secrets.INTERNAL_API_KEY }}"
-          CRON_SECRET="${{ secrets.CRON_SECRET }}"
-          LINE_CLIENT_ID="${{ secrets.LINE_CLIENT_ID }}"
-          LINE_CLIENT_SECRET="${{ secrets.LINE_CLIENT_SECRET }}"
-          LINE_LOGIN_CHANNEL_ID="${{ secrets.LINE_LOGIN_CHANNEL_ID }}"
-          LINE_LOGIN_CHANNEL_SECRET="${{ secrets.LINE_LOGIN_CHANNEL_SECRET }}"
-          LINE_CHANNEL_ACCESS="${{ secrets.LINE_CHANNEL_ACCESS }}"
-          LINE_MESSAGING_API=https://api.line.me/v2/bot/message
-          LINE_GET_CONTENT=https://api-data.line.me/v2/bot/message
-          LINE_CHANNEL_SECRET="${{ secrets.LINE_CHANNEL_SECRET }}"
-          ADMIN_LINE_USER_IDS="${{ secrets.ADMIN_LINE_USER_IDS }}"
-          MONGODB_URI="${{ secrets.DATABASE_URL }}"
-          DATABASE_URL="${{ secrets.DATABASE_URL }}"
-          DB_NAME=linebot
-          AQICN_TOKEN="${{ secrets.AQICN_TOKEN }}"
-          CMC_API_KEY="${{ secrets.CMC_API_KEY }}"
-          CMC_URL=https://pro-api.coinmarketcap.com
-          OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}"
-          MCP_AI_MODEL="${{ secrets.MCP_AI_MODEL || 'gpt-5.6-luna' }}"
-          SPOTIFY_CLIENT_ID="${{ secrets.SPOTIFY_CLIENT_ID }}"
-          SPOTIFY_CLIENT_SECRET="${{ secrets.SPOTIFY_CLIENT_SECRET }}"
-          APP_DOMAIN="${{ secrets.APP_DOMAIN }}"
-          ALLOWED_DOMAINS="${{ secrets.ALLOWED_DOMAINS }}"
-          EOF
-          chmod 600 .env.prod
-          echo "✅ Environment file created"
-
-      - name: 🏗️ Build Application
-        run: |
-          BUILD_ARGS=""
-          [[ "${{ github.event.inputs.force_rebuild }}" == "true" ]] && BUILD_ARGS="--pull --no-cache"
-
-          docker compose build $BUILD_ARGS \
-            --build-arg BUILDKIT_INLINE_CACHE=1
-          echo "✅ Build completed"
-        env:
-          # 🌐 Public build config (build args)
-          APP_URL: ${{ secrets.APP_URL }}
-          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
-          APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
-          ALLOWED_DOMAINS: ${{ secrets.ALLOWED_DOMAINS }}
-          # 🔐 SECURITY: BuildKit secret mounts (ไม่ผ่าน build args —
-          # ค่าไม่ติดใน image layers, build cache หรือ docker history)
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          ADMIN_LINE_USER_IDS: ${{ secrets.ADMIN_LINE_USER_IDS }}
-
-      - name: 🚀 Deploy Services
-        run: |
-          docker compose down --timeout 30 || true
-          docker compose up -d
-          echo "✅ Services started"
-        env:
-          PORT: ${{ secrets.PORT || '12914' }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          APP_URL: ${{ secrets.APP_URL }}
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
-          LINE_CLIENT_ID: ${{ secrets.LINE_CLIENT_ID }}
-          LINE_CLIENT_SECRET: ${{ secrets.LINE_CLIENT_SECRET }}
-          LINE_LOGIN_CHANNEL_ID: ${{ secrets.LINE_LOGIN_CHANNEL_ID }}
-          LINE_LOGIN_CHANNEL_SECRET: ${{ secrets.LINE_LOGIN_CHANNEL_SECRET }}
-          LINE_CHANNEL_ACCESS: ${{ secrets.LINE_CHANNEL_ACCESS }}
-          LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
-          ADMIN_LINE_USER_IDS: ${{ secrets.ADMIN_LINE_USER_IDS }}
-          AQICN_TOKEN: ${{ secrets.AQICN_TOKEN }}
-          CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          MCP_AI_MODEL: ${{ secrets.MCP_AI_MODEL || 'gpt-5.6-luna' }}
-          APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
-          ALLOWED_DOMAINS: ${{ secrets.ALLOWED_DOMAINS }}
-
-      - name: 🏥 Health Check
-        if: github.event.inputs.skip_health_checks != 'true'
-        run: |
-          PORT="${{ secrets.PORT || '12914' }}"
-          for i in {1..10}; do
-            echo "Health check $i/10..."
-            if curl -f -s -m 10 "http://localhost:$PORT/api/health" > /dev/null; then
-              echo "✅ Application healthy"
-              exit 0
-            fi
-            sleep 10
-          done
-          echo "❌ Health check failed after 10 attempts"
-          docker compose logs --tail=50
-          exit 1
-
-      - name: 🔄 Rollback on Failure
-        if: failure()
-        run: |
-          echo "🔄 Rolling back to previous version..."
-          docker compose down --timeout 30 || true
-          docker tag bun-line-t3-app:previous bun-line-t3-app:latest 2>/dev/null || true
-          docker tag bun-line-t3-cron:previous bun-line-t3-cron:latest 2>/dev/null || true
-          docker compose up -d
-          echo "✅ Rollback completed"
-        env:
-          PORT: ${{ secrets.PORT || '12914' }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          APP_URL: ${{ secrets.APP_URL }}
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
-          LINE_CLIENT_ID: ${{ secrets.LINE_CLIENT_ID }}
-          LINE_CLIENT_SECRET: ${{ secrets.LINE_CLIENT_SECRET }}
-          LINE_LOGIN_CHANNEL_ID: ${{ secrets.LINE_LOGIN_CHANNEL_ID }}
-          LINE_LOGIN_CHANNEL_SECRET: ${{ secrets.LINE_LOGIN_CHANNEL_SECRET }}
-          LINE_CHANNEL_ACCESS: ${{ secrets.LINE_CHANNEL_ACCESS }}
-          LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
-          ADMIN_LINE_USER_IDS: ${{ secrets.ADMIN_LINE_USER_IDS }}
-          AQICN_TOKEN: ${{ secrets.AQICN_TOKEN }}
-          CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
-          ALLOWED_DOMAINS: ${{ secrets.ALLOWED_DOMAINS }}
-
-      - name: 🧹 Post-deploy Cleanup
+      - name: ตรวจสอบและ deploy
+        run: bash scripts/devops/deploy.sh
+      - name: สรุปผล
         if: success()
         run: |
-          docker image prune -f || true
-          docker volume prune -f || true
-          echo "✅ Cleanup completed"
-
-      - name: 🔐 Security Cleanup
-        if: always()
-        run: |
-          [[ -f .env.prod ]] && shred -fz -n 1 .env.prod && echo "✅ Environment file deleted"
-          unset DATABASE_URL AUTH_SECRET APP_URL FRONTEND_URL
-          unset LINE_CHANNEL_SECRET LINE_CHANNEL_ACCESS
-          unset AQICN_TOKEN CMC_API_KEY OPENAI_API_KEY
-
-      - name: 🎉 Deployment Summary
-        if: success()
-        run: |
-          echo "🎉 Deploy สำเร็จ!"
-          echo "📅 $(date -Iseconds) | 🔖 ${{ github.sha }} | 🌿 ${{ github.ref_name }}"
-          echo "👤 ${{ github.actor }} → 🔗 ${{ secrets.APP_URL }}"
-          docker compose ps --format "table {{.Name}}\t{{.State}}\t{{.Ports}}"
-          docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}"
+          echo "Deploy สำเร็จ: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"

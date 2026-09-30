@@ -4,6 +4,7 @@
  * รองรับ Raspberry Pi monitoring
  */
 import { createFileRoute } from "@tanstack/react-router";
+import { db } from "@/lib/database";
 
 interface HealthCheckResponse {
   status: "healthy" | "unhealthy" | "degraded";
@@ -39,7 +40,9 @@ export const Route = createFileRoute("/api/health")({
   },
 });
 
-async function GET() {
+export async function GET(
+  checkDatabase: () => Promise<unknown> = () => db.$queryRaw`SELECT 1`,
+) {
   const startTime = Date.now();
   const timestamp = new Date().toISOString();
 
@@ -89,6 +92,17 @@ async function GET() {
     }
     healthCheck.checks.env = errors.length === 0;
 
+    // ตรวจ PostgreSQL จริงก่อนยืนยันว่าแอปพร้อมรับงาน
+    try {
+      await checkDatabase();
+      healthCheck.database = "connected";
+      healthCheck.checks.database = true;
+      healthCheck.checks.prisma = true;
+    } catch {
+      errors.push("ไม่สามารถเชื่อมต่อฐานข้อมูลได้");
+      healthStatus = "unhealthy";
+    }
+
     // Set final status
     healthCheck.status = healthStatus;
     if (errors.length > 0) {
@@ -96,12 +110,7 @@ async function GET() {
     }
 
     // Determine HTTP status code
-    const httpStatus =
-      healthStatus === "healthy"
-        ? 200
-        : healthStatus === "degraded"
-          ? 200
-          : 503;
+    const httpStatus = healthStatus === "healthy" ? 200 : 503;
 
     // Add response time
     const responseTime = Date.now() - startTime;

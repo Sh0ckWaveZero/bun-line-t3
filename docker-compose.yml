@@ -13,12 +13,41 @@
 # 4. Security: ไม่มีไฟล์ sensitive ใดๆ บน production server
 
 services:
+  migrate:
+    platform: linux/arm64
+    image: bun-line-t3-migrate:${RELEASE_TAG:-latest}
+    profiles: [deploy]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrate
+      args:
+        APP_URL: ${APP_URL}
+        FRONTEND_URL: ${FRONTEND_URL}
+        APP_DOMAIN: ${APP_DOMAIN}
+        ALLOWED_DOMAINS: ${ALLOWED_DOMAINS}
+      secrets:
+        - database_url
+        - auth_secret
+        - openai_api_key
+        - admin_line_user_ids
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?ต้องตั้งค่า DATABASE_URL}
+    networks:
+      - yadom
+
   app:
+    platform: linux/arm64
+    image: bun-line-t3-app:${APP_IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: Dockerfile
       args:
         - BUILDKIT_INLINE_CACHE=1
+        - APP_URL=${APP_URL}
+        - FRONTEND_URL=${FRONTEND_URL}
+        - APP_DOMAIN=${APP_DOMAIN}
+        - ALLOWED_DOMAINS=${ALLOWED_DOMAINS}
         # 🔧 RASPBERRY PI OPTIMIZATION: จำกัด parallel builds สำหรับ ARM64
         - MAX_PARALLEL_BUILDS=1
         - NODE_OPTIONS=--max_old_space_size=2048
@@ -47,6 +76,7 @@ services:
       # Application Environment (Static + Dynamic)
       # =============================================================================
       - NODE_ENV=production
+      - RUN_MIGRATIONS=${RUN_MIGRATIONS:-true}
       - APP_ENV=production
       - NEXT_PUBLIC_APP_ENV=production
       - HOSTNAME=0.0.0.0
@@ -108,7 +138,11 @@ services:
 
     # 🛡️ SECURITY: Health check ที่ปลอดภัยสำหรับตรวจสอบสถานะแอปพลิเคชัน
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:12914/api/health || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "curl --fail --silent --max-time 5 http://127.0.0.1:$$PORT/api/health >/dev/null",
+        ]
       interval: 60s
       timeout: 10s
       retries: 5
@@ -131,6 +165,8 @@ services:
       - yadom
 
   cron:
+    platform: linux/arm64
+    image: bun-line-t3-cron:${CRON_IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: Dockerfile.cron
