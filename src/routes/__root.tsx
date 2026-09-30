@@ -139,6 +139,8 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   },
   head: () => ({
     links: [
+      { rel: "icon", href: "/favicon.png", type: "image/png", sizes: "64x64" },
+      { rel: "icon", href: "/favicon.ico", sizes: "16x16 32x32 48x48" },
       // Noto Sans Thai — Google Fonts
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       {
@@ -156,7 +158,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       },
       {
         rel: "apple-touch-icon",
-        href: "/icon-192x192.png",
+        href: "/apple-touch-icon.png",
       },
     ],
     meta: [

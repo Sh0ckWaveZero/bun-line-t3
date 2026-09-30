@@ -1,4 +1,4 @@
-const CACHE_NAME = "bun-line-t3-static-v2";
+const CACHE_NAME = "bun-line-t3-static-v10";
 const urlsToCache = [
   "/manifest.json",
   "/icon-192x192.png",

@@ -225,7 +225,6 @@ export const auth = betterAuth({
       clientId: env.LINE_CLIENT_ID,
       clientSecret: env.LINE_CLIENT_SECRET,
       overrideUserInfoOnSignIn: true,
-      enableStateParam: true,
       mapProfileToUser(profile) {
         const lineProfile = profile as {
           displayName?: string;
@@ -291,15 +290,19 @@ export const getServerAuthSession = async (request?: Request) => {
     return null;
   }
 
+  // better-auth 1.7.6's inferred session type no longer surfaces
+  // user.additionalFields — `role` is declared in user.additionalFields above.
+  const user = session.user as typeof session.user & { role?: string | null };
+
   return {
     expires: toIsoString(session.session.expiresAt),
-    isAdmin: session.user.role === "admin",
+    isAdmin: user.role === "admin",
     user: {
-      email: session.user.email,
-      id: session.user.id,
-      image: session.user.image,
-      name: session.user.name,
-      role: session.user.role ?? null,
+      email: user.email,
+      id: user.id,
+      image: user.image,
+      name: user.name,
+      role: user.role ?? null,
     },
   } satisfies AppSession;
 };

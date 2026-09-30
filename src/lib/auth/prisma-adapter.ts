@@ -72,6 +72,28 @@ export function createCustomPrismaAdapter(
     return {
       ...baseAdapter,
       create: async (data: any) => {
+        // better-auth >= 1.7.6 reverted account identity to
+        // (providerId, accountId) and no longer writes the base `issuer`
+        // field on create, but this schema keeps issuer NOT NULL
+        // (migration 20260822000000) — synthesize it like that backfill did.
+        if (data.model === "account" && data.data) {
+          const providerId = data.data.providerId as string | undefined;
+          const hasIssuer =
+            typeof data.data.issuer === "string" && data.data.issuer.length > 0;
+          if (providerId && !hasIssuer) {
+            data = {
+              ...data,
+              data: {
+                ...data.data,
+                issuer:
+                  providerId === "line"
+                    ? "https://access.line.me"
+                    : `local:${providerId}`,
+              },
+            };
+          }
+        }
+
         // Handle LINE account creation with upsert to avoid duplicate key errors
         if (
           data.model === "account" &&
@@ -210,6 +232,6 @@ export function createCustomPrismaAdapter(
         // Default behavior for other models
         return baseAdapter.create(data);
       },
-    };
+    } as typeof baseAdapter;
   };
 }
