@@ -1,6 +1,6 @@
 # การ deploy production
 
-GitHub Actions รันบน self-hosted runner เมื่อ push เข้า `main` หรือ `production` และเรียกด้วยมือได้ผ่าน `workflow_dispatch` โดยทุกการ deploy รอคิวเดียวกัน
+GitHub Actions รันบน self-hosted runner ที่มี labels `linux` และ `ARM64` เมื่อ push เข้า `main` หรือ `production` และเรียกด้วยมือได้ผ่าน `workflow_dispatch` โดยทุกการ deploy รอคิวเดียวกัน
 
 ## สิ่งที่ runner ต้องมี
 
@@ -13,10 +13,14 @@ GitHub Actions รันบน self-hosted runner เมื่อ push เข้
 
 1. ตรวจ secrets และ Compose โดยไม่พิมพ์ค่าลับ และไม่สร้าง `.env.prod`
 2. เก็บ image ID ของ app และ cron ที่ใช้อยู่จริงไว้ด้วย tag สำหรับ rollback
-3. สร้าง app, cron และ migration image ด้วย tag ของ commit และรอบ workflow
+3. สร้าง app, cron และ migration image ทีละ service ด้วย tag ของ commit และรอบ workflow
 4. รัน Prisma CLI ที่ติดตั้งจาก lockfile ใน migration image ด้วย `migrate deploy` หากล้มเหลวจะหยุดก่อนเปลี่ยนบริการ
 5. ใช้ Compose เปลี่ยนบริการและรอทั้ง app และ cron ผ่าน health check แล้วตรวจ HTTP จาก runner อีกครั้ง โดย `/api/health` ตรวจ PostgreSQL ด้วย `SELECT 1` และคืน 503 หากฐานข้อมูลหรือ environment ไม่พร้อม
 6. หากขั้นตอนเปลี่ยนบริการล้มเหลว จะกลับไปใช้ image เดิมเมื่อมีครบสองบริการ โดย workflow ยังรายงานล้มเหลว
+
+แต่ละข้อแสดงเป็น step แยกใน Actions ยกเว้นการเปลี่ยนบริการ ตรวจ health และ rollback ซึ่งอยู่ใน step เดียวเพื่อให้ `trap` ทำงานต่อเนื่อง Image ID จาก backup step ส่งผ่าน `GITHUB_OUTPUT` ไปยัง release step โดยไม่ส่ง secrets
+
+`scripts/devops/deploy.sh` รองรับ `preflight`, `backup`, `build`, `migrate`, `release` และ `all` หากเรียกโดยไม่ระบุขั้นตอนจะทำทั้งหมดตามลำดับเหมือนเดิม การเรียก `release` แยกต้องส่ง `PREVIOUS_APP_IMAGE` และ `PREVIOUS_CRON_IMAGE` จาก backup เพื่อให้กู้คืนได้
 
 Compose ยังต้องหยุด container เดิมระหว่างสร้างตัวแทน จึงมีช่วงหยุดบริการสั้น ๆ ขั้นตอนนี้ไม่ได้รับรองการ deploy แบบไม่หยุดบริการ
 
@@ -39,6 +43,10 @@ Compose ยังต้องหยุด container เดิมระหว่�
 
 ## Raspberry Pi 4 RAM 4 GB
 
-ปลายทางใช้ Linux 64 บิตบน ARM กำหนด `platform: linux/arm64` ให้ทุก service และกำหนด `COMPOSE_PARALLEL_LIMIT=1` เพื่อให้ Compose build ทีละ service ลดการใช้ RAM พร้อมกัน โดยไม่เพิ่ม memory limit ของ app (1.5 GB) และ cron (512 MB)
+ปลายทางใช้ Linux 64 บิตบน ARM กำหนด `platform: linux/arm64` ให้ทุก service สคริปต์เรียก build แยกทีละ service และกำหนด `COMPOSE_PARALLEL_LIMIT=1` เพื่อลดการใช้ RAM พร้อมกัน โดยไม่เพิ่ม memory limit ของ app (1.5 GB) และ cron (512 MB)
 
 การ build ยังใช้หน่วยความจำร่วมกับบริการเดิมที่กำลังรัน ค่า `NODE_OPTIONS` จำกัด heap ของ Node.js แต่ไม่ได้จำกัดหน่วยความจำทั้งหมดของ Bun หรือ native compiler ต้องตรวจ peak memory บน runner จริงก่อนยืนยันว่า RAM เพียงพอ
+
+Preflight แสดง RAM เมื่อมีคำสั่ง `free` และพื้นที่ filesystem ของ checkout ด้วย `df` ให้ตรวจบน runner ก่อน build; ยังไม่ได้ตั้งเกณฑ์หยุดอัตโนมัติเพราะต้องวัด workload จริง BuildKit อาจทำงานหลาย stage ภายใน service เดียว และ `build.shm_size` กำหนดเฉพาะขนาด `/dev/shm` ไม่ใช่ RAM รวมของ build
+
+เพื่อจัดการพื้นที่ ให้เก็บอย่างน้อย image ที่บริการใช้อยู่และคู่ image สำหรับ rollback ล่าสุด ตรวจพื้นที่ด้วย `docker system df` แล้วลบเฉพาะ tag ของ release เก่าที่ไม่ต้องใช้งานผ่าน `docker image rm <repository:tag>` สคริปต์ไม่ลบ image, build cache หรือ volume อัตโนมัติ และไม่ใช้ `prune` ครอบคลุมบริการอื่นบน Pi

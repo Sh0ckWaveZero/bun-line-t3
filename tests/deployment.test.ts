@@ -3,7 +3,12 @@ import { mkdtempSync, writeFileSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
-function deploy(scenario: string, hasPrevious = true) {
+function deploy(
+  scenario: string,
+  hasPrevious = true,
+  staged = false,
+  forceRebuild = false,
+) {
   const directory = mkdtempSync(join(tmpdir(), "deployment-test-"));
   const calls = join(directory, "calls");
   writeFileSync(
@@ -15,7 +20,9 @@ case "$*" in
   "inspect "*)
     [[ "$HAS_PREVIOUS" == true ]] || exit 1
     echo sha256:previous ;;
-  *" build "*) [[ "$SCENARIO" != build-failure ]] || exit 1 ;;
+  *" build "*)
+    [[ "$SCENARIO" != build-failure ]] || exit 1
+    if [[ "$SCENARIO" == cron-build-failure && "$*" == *" cron" ]]; then exit 1; fi ;;
   *"run --rm"*) [[ "$SCENARIO" != migration-failure ]] || exit 1 ;;
   *"up -d"*)
     if [[ "$APP_IMAGE_TAG" != rollback-* && "$SCENARIO" == health-failure ]]; then exit 1; fi
@@ -40,6 +47,10 @@ printf '%s\n' "curl $*" >> "$CALLS"
     HAS_PREVIOUS: String(hasPrevious),
     RELEASE_TAG: "test-release",
     PORT: "14567",
+    FORCE_REBUILD: String(forceRebuild),
+    GITHUB_OUTPUT: join(directory, "outputs"),
+    PREVIOUS_APP_IMAGE: "",
+    PREVIOUS_CRON_IMAGE: "",
   };
   for (const key of [
     "DATABASE_URL",
@@ -66,10 +77,34 @@ printf '%s\n' "curl $*" >> "$CALLS"
   if (scenario === "missing-secret")
     Object.assign(environment, { AUTH_SECRET: "" });
   try {
-    const result = Bun.spawnSync(
-      ["bash", resolve("scripts/devops/deploy.sh")],
-      { env: environment },
-    );
+    let exitCode = 0;
+    let output = "";
+    const phases = staged
+      ? ["preflight", "backup", "build", "migrate", "release"]
+      : ["all"];
+    for (const phase of phases) {
+      const result = Bun.spawnSync(
+        [
+          "bash",
+          resolve("scripts/devops/deploy.sh"),
+          ...(staged ? [phase] : []),
+        ],
+        { env: environment },
+      );
+      exitCode = result.exitCode;
+      output += result.stdout.toString() + result.stderr.toString();
+      if (exitCode !== 0) break;
+      if (phase === "backup") {
+        const outputs = readFileSync(environment.GITHUB_OUTPUT, "utf8");
+        for (const line of outputs.trim().split("\n")) {
+          const separator = line.indexOf("=");
+          const key = line.slice(0, separator);
+          const value = line.slice(separator + 1);
+          if (key === "previous_app") environment.PREVIOUS_APP_IMAGE = value;
+          if (key === "previous_cron") environment.PREVIOUS_CRON_IMAGE = value;
+        }
+      }
+    }
     let commands = "";
     try {
       commands = readFileSync(calls, "utf8");
@@ -77,9 +112,9 @@ printf '%s\n' "curl $*" >> "$CALLS"
       /* ไม่มีการเรียก Docker */
     }
     return {
-      exitCode: result.exitCode,
+      exitCode,
       commands,
-      output: result.stdout.toString() + result.stderr.toString(),
+      output,
     };
   } finally {
     rmSync(directory, { recursive: true, force: true });
@@ -128,6 +163,70 @@ describe("ขั้นตอน deploy", () => {
   });
   test("deploy ครั้งแรกไม่มี image เดิมไม่อ้างว่ากู้คืนแล้ว", () => {
     const result = deploy("health-failure", false);
+    expect(result.exitCode).not.toBe(0);
+    expect(result.commands.match(/up -d/g)?.length).toBe(1);
+    expect(result.output).toContain("ไม่มี image เดิม");
+  });
+});
+
+describe("แยกขั้นตอน deploy เป็นคนละ shell", () => {
+  test("build ทีละ service ก่อน migration และ release", () => {
+    const result = deploy("success", true, true);
+    expect(result.exitCode).toBe(0);
+    const builds = result.commands
+      .split("\n")
+      .filter((line) => line.includes(" build "));
+    expect(builds.map((line) => line.split(" ").at(-1))).toEqual([
+      "app",
+      "cron",
+      "migrate",
+    ]);
+    expect(result.commands.indexOf("build migrate")).toBeLessThan(
+      result.commands.indexOf("run --rm"),
+    );
+    expect(result.commands.indexOf("run --rm")).toBeLessThan(
+      result.commands.indexOf("up -d"),
+    );
+  });
+  test("force rebuild ส่ง --pull --no-cache ให้ทุก service", () => {
+    const result = deploy("success", true, true, true);
+    expect(result.exitCode).toBe(0);
+    for (const service of ["app", "cron", "migrate"]) {
+      expect(result.commands).toContain(`build --pull --no-cache ${service}`);
+    }
+  });
+  for (const scenario of [
+    "missing-secret",
+    "build-failure",
+    "cron-build-failure",
+    "migration-failure",
+  ]) {
+    test(`${scenario} หยุดก่อนเปลี่ยนบริการ`, () => {
+      const result = deploy(scenario, true, true);
+      expect(result.exitCode).not.toBe(0);
+      expect(result.commands).not.toContain("up -d");
+      if (scenario === "cron-build-failure")
+        expect(result.commands).not.toContain("build migrate");
+    });
+  }
+  for (const scenario of [
+    "health-failure",
+    "http-failure",
+    "rollback-failure",
+  ]) {
+    test(`${scenario} ใช้ image จาก backup step และยังคืน failure`, () => {
+      const result = deploy(scenario, true, true);
+      expect(result.exitCode).not.toBe(0);
+      expect(result.commands.match(/up -d/g)?.length).toBe(2);
+      expect(result.output).toContain(
+        scenario === "rollback-failure"
+          ? "กู้บริการไม่สำเร็จ"
+          : "กู้ image เดิมแล้ว",
+      );
+    });
+  }
+  test("ไม่มี image เดิมส่ง output ว่างและไม่พยายาม rollback", () => {
+    const result = deploy("health-failure", false, true);
     expect(result.exitCode).not.toBe(0);
     expect(result.commands.match(/up -d/g)?.length).toBe(1);
     expect(result.output).toContain("ไม่มี image เดิม");

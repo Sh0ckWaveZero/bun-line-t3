@@ -48,9 +48,6 @@ services:
         - FRONTEND_URL=${FRONTEND_URL}
         - APP_DOMAIN=${APP_DOMAIN}
         - ALLOWED_DOMAINS=${ALLOWED_DOMAINS}
-        # 🔧 RASPBERRY PI OPTIMIZATION: จำกัด parallel builds สำหรับ ARM64
-        - MAX_PARALLEL_BUILDS=1
-        - NODE_OPTIONS=--max_old_space_size=2048
       # 🔐 SECURITY: Secrets ส่งเข้า build ผ่าน BuildKit secret mounts
       # (ไม่ผ่าน build args — ค่าไม่ติดใน image layers หรือ docker history)
       # ค่ามาจาก environment variables ที่ GitHub Actions inject (ดู deploy.yml)
@@ -60,7 +57,7 @@ services:
         - openai_api_key
         - admin_line_user_ids
       target: runner
-      # 🔧 RASPBERRY PI: จำกัด memory สำหรับ build process
+      # ขนาด /dev/shm ระหว่าง build ไม่ใช่ memory limit ของ build
       shm_size: 512m
     container_name: bun-line-t3-app
     ports:
@@ -172,8 +169,6 @@ services:
       dockerfile: Dockerfile.cron
       args:
         - BUILDKIT_INLINE_CACHE=1
-        # 🔧 RASPBERRY PI: Memory optimization สำหรับ cron build
-        - NODE_OPTIONS=--max_old_space_size=1024
     container_name: bun-line-t3-cron
 
     # 🔐 SECURITY: ใช้เฉพาะ GitHub Secrets (ไม่ต้องพึ่งไฟล์ .env.prod)
