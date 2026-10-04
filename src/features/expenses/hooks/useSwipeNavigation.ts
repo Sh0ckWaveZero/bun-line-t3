@@ -14,6 +14,8 @@ interface SwipeNavigationResult {
   isSwiping: boolean;
 }
 
+const allowSwipeLeft = () => true;
+
 /**
  * Custom hook สำหรับจัดการ swipe navigation (สำหรับ mobile touch devices)
  *
@@ -40,7 +42,7 @@ export function useSwipeNavigation(
     minSwipeDistance = 50,
     onSwipeLeft,
     onSwipeRight,
-    canSwipeLeft = () => true,
+    canSwipeLeft = allowSwipeLeft,
     onSwipeLeftBlocked,
     enabled = true,
   } = options;
@@ -54,6 +56,14 @@ export function useSwipeNavigation(
 
     let touchStartX = 0;
     let currentX = 0;
+    const timeoutIds = new Set<ReturnType<typeof setTimeout>>();
+    const scheduleTimeout = (callback: () => void, delay: number) => {
+      const timeoutId = setTimeout(() => {
+        timeoutIds.delete(timeoutId);
+        callback();
+      }, delay);
+      timeoutIds.add(timeoutId);
+    };
 
     const onTouchStart = (e: TouchEvent) => {
       const touch = e.changedTouches?.[0];
@@ -86,16 +96,16 @@ export function useSwipeNavigation(
             onSwipeLeft?.();
             // Animate swipe
             setSwipeTransform(-300);
-            setTimeout(() => {
+            scheduleTimeout(() => {
               setSwipeTransform(0);
             }, 150);
           } else {
             // Show blocked animation
             onSwipeLeftBlocked?.();
             setSwipeTransform(-50);
-            setTimeout(() => {
+            scheduleTimeout(() => {
               setSwipeTransform(50);
-              setTimeout(() => {
+              scheduleTimeout(() => {
                 setSwipeTransform(0);
               }, 100);
             }, 100);
@@ -106,7 +116,7 @@ export function useSwipeNavigation(
           onSwipeRight?.();
           // Animate swipe
           setSwipeTransform(300);
-          setTimeout(() => {
+          scheduleTimeout(() => {
             setSwipeTransform(0);
           }, 150);
         }
@@ -129,6 +139,8 @@ export function useSwipeNavigation(
     el.addEventListener("touchcancel", onTouchCancel);
 
     return () => {
+      timeoutIds.forEach(clearTimeout);
+      timeoutIds.clear();
       el.removeEventListener("touchstart", onTouchStart);
       el.removeEventListener("touchmove", onTouchMove);
       el.removeEventListener("touchend", onTouchEnd);

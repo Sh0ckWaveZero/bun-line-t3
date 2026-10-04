@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Line } from "react-chartjs-2";
+import { LazyLineChart } from "@/components/charts/LazyCharts";
 import { useHoursChartData } from "@/features/attendance/hooks/useAttendanceChartData";
 import { useChartTheme } from "@/hooks/useChartTheme";
 import type { AttendanceRecord } from "@/lib/types/attendance";
@@ -31,7 +31,7 @@ export const HoursWorkedChart: React.FC<HoursWorkedChartProps> = ({
   const maxHours = Math.max(10, ...records.map((r) => r.hoursWorked || 0));
 
   return (
-    <Line
+    <LazyLineChart
       data={chartData}
       options={getChartOptions({
         scales: {

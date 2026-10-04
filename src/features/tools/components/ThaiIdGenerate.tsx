@@ -176,6 +176,7 @@ export default function ThaiIdGenerate() {
                 </div>
                 <input
                   type="range"
+                  aria-label="จำนวนเลขบัตรที่ต้องการสุ่ม"
                   min="1"
                   max="20"
                   value={count}
@@ -202,6 +203,7 @@ export default function ThaiIdGenerate() {
                     </Label>
                     <input
                       type="text"
+                      aria-label="เลขบัตรประชาชนที่ต้องการตรวจสอบ"
                       value={validationInput}
                       onChange={handleInputChange}
                       placeholder="กรอกเลขบัตร 13 หลัก"

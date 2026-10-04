@@ -3,13 +3,12 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const Separator = React.forwardRef<
-  React.ElementRef<"div">,
-  React.ComponentPropsWithoutRef<"div">
+  React.ElementRef<"hr">,
+  React.ComponentPropsWithoutRef<"hr">
 >(({ className, ...props }, ref) => (
-  <div
+  <hr
     ref={ref}
-    className={cn("bg-border h-[1px] w-full shrink-0", className)}
-    role="separator"
+    className={cn("bg-border h-[1px] w-full shrink-0 border-0", className)}
     {...props}
   />
 ));

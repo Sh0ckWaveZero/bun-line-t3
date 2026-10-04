@@ -138,7 +138,7 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({
     return `${month} ${buddhistYear}`;
   };
 
-  const [selectedDate, setSelectedDate] = useState<Date>(
+  const [selectedDate, setSelectedDate] = useState<Date>(() =>
     parseMonthString(selectedMonth),
   );
   const [isOpen, setIsOpen] = useState(false);

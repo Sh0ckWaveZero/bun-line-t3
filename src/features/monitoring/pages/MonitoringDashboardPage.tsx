@@ -2,18 +2,9 @@
 
 import React, { useState, useEffect, useCallback, memo, useMemo } from "react";
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Tooltip,
-  Legend,
-  Filler,
-} from "chart.js";
-import { Doughnut, Bar } from "react-chartjs-2";
+  LazyBarChart,
+  LazyDoughnutChart,
+} from "@/components/charts/LazyCharts";
 import {
   AlertTriangle,
   Activity,
@@ -29,17 +20,11 @@ import { useChartTheme } from "@/hooks/useChartTheme";
 import { PendingApprovalModal } from "@/components/auth/PendingApprovalModal";
 import { useLineApproval } from "@/lib/auth/hooks/useLineApproval";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Tooltip,
-  Legend,
-  Filler,
-);
+const MONITORING_TIMESTAMP_FORMATTER = new Intl.DateTimeFormat("th-TH", {
+  dateStyle: "short",
+  timeStyle: "short",
+  timeZone: "Asia/Bangkok",
+});
 
 interface MonitoringData {
   timestamp: string;
@@ -190,14 +175,16 @@ const OverviewCard = memo(function OverviewCard({
   sub,
   icon: Icon,
   iconClass,
-  badge,
+  badgeText,
+  badgeClassName,
 }: {
   label: string;
   value: string;
   sub?: string;
   icon: React.ElementType;
   iconClass?: string;
-  badge?: React.ReactNode;
+  badgeText?: string;
+  badgeClassName?: string;
 }) {
   return (
     <div className="bg-card rounded-xl border p-5">
@@ -216,7 +203,18 @@ const OverviewCard = memo(function OverviewCard({
           )}
         />
       </div>
-      {badge && <div className="mt-3">{badge}</div>}
+      {badgeText && (
+        <div className="mt-3">
+          <span
+            className={cn(
+              "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium",
+              badgeClassName,
+            )}
+          >
+            {badgeText}
+          </span>
+        </div>
+      )}
     </div>
   );
 });
@@ -256,7 +254,7 @@ const HealthScoreChart = memo(function HealthScoreChart({
       </h3>
       <div className="flex h-48 items-center justify-center">
         <div className="h-48 w-48">
-          <Doughnut
+          <LazyDoughnutChart
             data={data}
             options={getDoughnutOptions({
               plugins: { legend: { display: false } },
@@ -304,7 +302,7 @@ const ResourceChart = memo(function ResourceChart({
         การใช้ทรัพยากร
       </h3>
       <div className="h-56">
-        <Bar
+        <LazyBarChart
           data={data}
           options={getChartOptions({
             plugins: { legend: { display: false } },
@@ -372,7 +370,9 @@ const AlertsList = memo(function AlertsList({
                 {alert.message}
               </p>
               <p className="text-muted-foreground mt-0.5 text-xs">
-                {new Date(alert.timestamp).toLocaleString("th-TH")}
+                {MONITORING_TIMESTAMP_FORMATTER.format(
+                  new Date(alert.timestamp),
+                )}
               </p>
             </div>
             <span
@@ -401,11 +401,11 @@ const LogTable = memo(function LogTable({
 }) {
   return (
     <div className="max-h-64 overflow-y-auto rounded-xl border">
-      {logs.map((log, i) => {
+      {logs.map((log) => {
         const cfg = LOG_LEVEL_MAP[log.level] ?? LOG_LEVEL_MAP.debug;
         return (
           <div
-            key={i}
+            key={`${log.timestamp}-${log.source}-${log.level}-${log.message}`}
             className="bg-card flex items-start gap-3 border-b px-4 py-3 last:border-b-0"
           >
             <span
@@ -417,7 +417,8 @@ const LogTable = memo(function LogTable({
             <div className="min-w-0 flex-1">
               <p className="text-foreground text-sm">{log.message}</p>
               <p className="text-muted-foreground mt-0.5 text-xs">
-                {log.source} · {new Date(log.timestamp).toLocaleString("th-TH")}
+                {log.source} ·{" "}
+                {MONITORING_TIMESTAMP_FORMATTER.format(new Date(log.timestamp))}
               </p>
             </div>
             <span
@@ -552,16 +553,8 @@ export function MonitoringDashboardPage() {
                   sub={`คะแนน ${monitoringData.systemHealth.score}/100`}
                   icon={Activity}
                   iconClass={statusCfg.color}
-                  badge={
-                    <span
-                      className={cn(
-                        "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium",
-                        statusCfg.badge,
-                      )}
-                    >
-                      {monitoringData.systemHealth.status}
-                    </span>
-                  }
+                  badgeText={monitoringData.systemHealth.status}
+                  badgeClassName={statusCfg.badge}
                 />
                 <OverviewCard
                   label="ระยะเวลาทำงาน"
@@ -631,9 +624,9 @@ export function MonitoringDashboardPage() {
                 </h2>
                 <div className="rounded-xl border border-blue-200 bg-blue-50 p-5 dark:border-blue-800 dark:bg-blue-950/30">
                   <ul className="space-y-1.5">
-                    {monitoringData.recommendations.map((rec, i) => (
+                    {monitoringData.recommendations.map((rec) => (
                       <li
-                        key={i}
+                        key={rec}
                         className="flex items-start gap-2 text-sm text-blue-800 dark:text-blue-300"
                       >
                         <span className="mt-0.5 text-blue-500">·</span>

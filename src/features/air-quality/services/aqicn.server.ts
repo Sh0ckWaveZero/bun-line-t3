@@ -1,14 +1,16 @@
 import { AqiData } from "../aqi_data";
 import type { AqicnResponse } from "../types/aqicn";
 
-const fetchAqicn = (
+const fetchAqicn = async (
   latitude: number,
   longitude: number,
 ): Promise<AqicnResponse> => {
   const token = process.env.AQICN_TOKEN;
-  return fetch(
+  const response = await fetch(
     `https://api.waqi.info/feed/geo:${latitude};${longitude}/?token=${token}`,
-  ).then((r) => r.json());
+  );
+  if (!response.ok) throw new Error("AQICN HTTP request failed");
+  return response.json();
 };
 
 const getAirQualityData = async (latitude: number, longitude: number) => {

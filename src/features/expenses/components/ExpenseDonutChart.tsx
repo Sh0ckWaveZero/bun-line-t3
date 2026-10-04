@@ -1,15 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatAmount } from "@/features/expenses/helpers";
 import type { CategorySummary } from "@/features/expenses/types";
-import {
-  ArcElement,
-  Chart as ChartJS,
-  Legend as ChartLegend,
-  Tooltip as ChartTooltip,
-} from "chart.js";
-import { Doughnut } from "react-chartjs-2";
-
-ChartJS.register(ArcElement, ChartTooltip, ChartLegend);
+import { LazyDoughnutChart } from "@/components/charts/LazyCharts";
 
 const DONUT_COLORS = [
   "#ef4444",
@@ -70,8 +62,7 @@ export function ExpenseDonutChart({
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           label: (ctx: any) => {
             const item = expenses[ctx.dataIndex as number] as
-              | CategorySummary
-              | undefined;
+              CategorySummary | undefined;
             return ` ${formatAmount(ctx.raw as number)} (${item?.percentage.toFixed(1) ?? 0}%)`;
           },
         },
@@ -88,7 +79,7 @@ export function ExpenseDonutChart({
       </CardHeader>
       <CardContent className="px-3 pb-3 sm:px-4 sm:pb-4">
         <div className="h-[240px] sm:h-[250px]">
-          <Doughnut data={chartData} options={options} />
+          <LazyDoughnutChart data={chartData} options={options} />
         </div>
       </CardContent>
     </Card>

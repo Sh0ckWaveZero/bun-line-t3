@@ -42,7 +42,7 @@ export const SubscriptionCard = ({
   );
 
   return (
-    <div className="group relative w-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+    <div className="group relative w-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
       {/* edit button */}
       {onEdit && (
         <button
@@ -51,7 +51,7 @@ export const SubscriptionCard = ({
             e.stopPropagation();
             onEdit(id);
           }}
-          className="absolute top-3 right-3 z-10 rounded-full p-1.5 text-gray-400 opacity-0 transition-all group-hover:opacity-100 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+          className="absolute top-3 right-3 z-10 rounded-full p-1.5 text-gray-400 opacity-0 transition-[opacity,color,background-color] group-hover:opacity-100 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
           aria-label="แก้ไข"
         >
           <Pencil className="h-3.5 w-3.5" />
@@ -94,17 +94,16 @@ export const SubscriptionCard = ({
         </div>
 
         {/* stats */}
-        <div
+        <dl
           className="mt-4 grid grid-cols-3 gap-3"
-          role="list"
           aria-label="ข้อมูลสรุป"
         >
           <div className="flex flex-col gap-0.5">
-            <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+            <dt className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
               <Banknote className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="text-xs">ราคารวม</span>
-            </div>
-            <p
+            </dt>
+            <dd
               className="text-sm font-bold text-gray-900 dark:text-white"
               id={`subscription-price-${id}`}
             >
@@ -112,32 +111,32 @@ export const SubscriptionCard = ({
               <span className="ml-0.5 text-xs font-normal text-gray-500">
                 {currency}
               </span>
-            </p>
+            </dd>
           </div>
 
           <div className="flex flex-col gap-0.5">
-            <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+            <dt className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
               {planType === "FAMILY" ? (
                 <Users className="h-3.5 w-3.5" aria-hidden="true" />
               ) : (
                 <User className="h-3.5 w-3.5" aria-hidden="true" />
               )}
               <span className="text-xs">สมาชิก</span>
-            </div>
-            <p
+            </dt>
+            <dd
               className="text-sm font-bold text-gray-900 dark:text-white"
               id={`subscription-members-${id}`}
             >
               {members.length} คน
-            </p>
+            </dd>
           </div>
 
           <div className="flex flex-col gap-0.5">
-            <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+            <dt className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
               <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="text-xs">ตัดเงิน</span>
-            </div>
-            <p
+            </dt>
+            <dd
               className="text-sm font-bold text-gray-900 dark:text-white"
               id={`subscription-billing-${id}`}
             >
@@ -145,37 +144,36 @@ export const SubscriptionCard = ({
               <span className="ml-1 text-xs font-normal text-gray-500">
                 {BILLING_CYCLE_LABELS[billingCycle]}
               </span>
-            </p>
+            </dd>
           </div>
-        </div>
+        </dl>
 
         {/* member avatars */}
         {members.length > 0 && (
           <div className="mt-4 flex items-center justify-between">
-            <div
-              className="flex -space-x-2"
-              role="list"
+            <ul
+              className="flex -space-x-2 list-none"
               aria-label={`สมาชิก ${members.length} คน`}
             >
               {members.slice(0, 5).map((m) => (
-                <div
+                <li
                   key={m.id}
                   className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-linear-to-br from-indigo-400 to-purple-500 text-xs font-semibold text-white dark:border-gray-800"
                   title={m.name}
                   aria-label={m.name}
                 >
                   {m.name.charAt(0).toUpperCase()}
-                </div>
+                </li>
               ))}
               {members.length > 5 && (
-                <div
+                <li
                   className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-gray-200 text-xs font-semibold text-gray-600 dark:border-gray-800 dark:bg-gray-700 dark:text-gray-300"
                   aria-label={`และอีก ${members.length - 5} คน`}
                 >
                   +{members.length - 5}
-                </div>
+                </li>
               )}
-            </div>
+            </ul>
             <span className="text-xs text-gray-400 dark:text-gray-500">
               {currentMonth}
             </span>

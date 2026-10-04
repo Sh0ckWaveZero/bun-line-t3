@@ -233,6 +233,7 @@ export const AlertDialogBox = ({
               <button
                 type="button"
                 className="cursor-pointer rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                aria-label="ปิดหน้าต่าง"
               >
                 <X className="h-4 w-4" />
               </button>

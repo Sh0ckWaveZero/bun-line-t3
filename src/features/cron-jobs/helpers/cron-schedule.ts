@@ -21,6 +21,14 @@ interface ParsedCronExpression {
 
 const BANGKOK_OFFSET_MINUTES = 7 * 60;
 const MINUTES_IN_YEAR = 366 * 24 * 60;
+const CRON_DATE_FORMATTER = new Intl.DateTimeFormat("th-TH", {
+  timeZone: "Asia/Bangkok",
+  day: "2-digit",
+  month: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
 
 function parseCronField(
   field: string,
@@ -162,14 +170,7 @@ export function getNextCronOccurrence(
 }
 
 export function formatCronDate(date: Date): string {
-  return new Intl.DateTimeFormat("th-TH", {
-    timeZone: "Asia/Bangkok",
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(date);
+  return CRON_DATE_FORMATTER.format(date);
 }
 
 export function formatRelativeUntil(nextRun: Date, now: Date): string {

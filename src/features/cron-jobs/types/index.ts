@@ -36,6 +36,17 @@ export interface CronJobLastRun {
   status: RunStatus;
   relative: string;
   duration: string;
+  message: string | null;
+  httpStatus: number | null;
+}
+
+export interface CronJobRunDetail {
+  id: string;
+  status: RunStatus;
+  relative: string;
+  duration: string;
+  message: string | null;
+  httpStatus: number | null;
 }
 
 export interface CronJobNextRun {
@@ -57,6 +68,7 @@ export interface CronJob {
   enabled: boolean;
   lastRun: CronJobLastRun;
   runHistory: RunStatus[];
+  runDetails: CronJobRunDetail[];
   nextRun: CronJobNextRun;
   target: CronJobTarget;
   owner: CronJobOwner;

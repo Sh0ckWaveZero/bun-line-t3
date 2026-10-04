@@ -118,12 +118,17 @@ export const DcaImportModal = ({ onClose, onSuccess }: DcaImportModalProps) => {
   return (
     <div
       id="dca-import-modal-overlay"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
     >
+      <button
+        type="button"
+        className="absolute inset-0 cursor-default bg-black/60 backdrop-blur-sm focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-inset"
+        aria-label="ปิดหน้าต่างนำเข้าประวัติคำสั่งซื้อ Auto DCA"
+        onClick={onClose}
+      />
       <Card
         id="dca-import-modal"
-        className="border-border w-full max-w-md"
+        className="border-border relative z-10 w-full max-w-md"
         role="dialog"
         aria-modal="true"
         aria-label="นำเข้าประวัติคำสั่งซื้อ Auto DCA"
@@ -156,6 +161,15 @@ export const DcaImportModal = ({ onClose, onSuccess }: DcaImportModalProps) => {
               <div
                 id="dca-import-dropzone"
                 onClick={() => inputRef.current?.click()}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    inputRef.current?.click();
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label="เลือกไฟล์สำหรับนำเข้าประวัติ Auto DCA"
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
@@ -316,9 +330,9 @@ export const DcaImportModal = ({ onClose, onSuccess }: DcaImportModalProps) => {
                     รายการที่ข้าม ({result.errors.length}):
                   </p>
                   <ul className="max-h-40 space-y-1 overflow-y-auto rounded-lg bg-red-500/10 px-4 py-3">
-                    {result.errors.map((e, i) => (
-                      <li key={i} className="text-xs text-red-300">
-                        • {e}
+                    {result.errors.map((error) => (
+                      <li key={error} className="text-xs text-red-300">
+                        • {error}
                       </li>
                     ))}
                   </ul>

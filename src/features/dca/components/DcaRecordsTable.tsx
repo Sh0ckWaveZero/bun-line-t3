@@ -171,6 +171,15 @@ export const DcaRecordsTable = ({
     return [1, "...", curPage - 1, curPage, curPage + 1, "...", totalPages];
   }
 
+  function pageNumItems(): Array<{ key: string; page: number | "..." }> {
+    let ellipsisNumber = 0;
+
+    return pageNums().map((page) => ({
+      key: page === "..." ? `ellipsis-${ellipsisNumber++}` : `page-${page}`,
+      page,
+    }));
+  }
+
   const posClass = "text-green-600 dark:text-green-400";
   const negClass = "text-red-600 dark:text-red-400";
 
@@ -351,7 +360,14 @@ export const DcaRecordsTable = ({
                 <th
                   key={c.key}
                   className={`bg-muted text-muted-foreground border-border hover:text-foreground cursor-pointer border-b px-3 py-2.5 text-[10px] font-medium tracking-wider whitespace-nowrap uppercase ${c.left ? "text-left" : "text-right"} ${c.hideMobile ? "hidden lg:table-cell" : ""}`}
+                  tabIndex={0}
                   onClick={() => toggleSort(c.key)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      toggleSort(c.key);
+                    }
+                  }}
                 >
                   {c.label}
                   <span
@@ -445,14 +461,14 @@ export const DcaRecordsTable = ({
           >
             &lsaquo;
           </button>
-          {pageNums().map((n, i) =>
+          {pageNumItems().map(({ page: n, key }) =>
             n === "..." ? (
-              <span key={i} className="px-1 opacity-50">
+              <span key={key} className="px-1 opacity-50">
                 &hellip;
               </span>
             ) : (
               <button
-                key={i}
+                key={key}
                 className={`rounded border px-2 py-1 text-xs ${
                   n === curPage
                     ? "bg-foreground text-background border-foreground"

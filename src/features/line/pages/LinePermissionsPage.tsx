@@ -154,6 +154,7 @@ export function LinePermissionsPage() {
           <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
+            aria-label="ค้นหาชื่อหรือ LINE User ID"
             placeholder="ค้นหาชื่อ หรือ LINE User ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -168,6 +169,7 @@ export function LinePermissionsPage() {
               queryKey: ["line-permissions"],
             })
           }
+          aria-label="รีเฟรชรายการสิทธิ์ LINE"
           className="cursor-pointer rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
         >
           <RefreshCw className="h-4 w-4" />
@@ -263,6 +265,7 @@ export function LinePermissionsPage() {
                     <td className="px-6 py-4 text-center">
                       <input
                         type="checkbox"
+                        aria-label={`อนุญาตให้ ${approval.lineUserId} ขอรายงานเวลาเข้างาน`}
                         checked={approval.canRequestAttendanceReport}
                         onChange={(e) =>
                           handleTogglePermission(
@@ -278,6 +281,7 @@ export function LinePermissionsPage() {
                     <td className="px-6 py-4 text-center">
                       <input
                         type="checkbox"
+                        aria-label={`อนุญาตให้ ${approval.lineUserId} ส่งคำขอลา`}
                         checked={approval.canRequestLeave}
                         onChange={(e) =>
                           handleTogglePermission(
@@ -293,6 +297,7 @@ export function LinePermissionsPage() {
                     <td className="px-6 py-4 text-center">
                       <input
                         type="checkbox"
+                        aria-label={`อนุญาตให้ ${approval.lineUserId} รับการแจ้งเตือน`}
                         checked={approval.canReceiveReminders}
                         onChange={(e) =>
                           handleTogglePermission(

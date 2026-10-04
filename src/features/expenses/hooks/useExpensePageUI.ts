@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { exportTransactionsToExcel } from "../export";
 import type { MonthlySummary, TransactionWithCategory } from "../types";
 
@@ -18,10 +18,6 @@ export function useExpensePageUI({
   const [hideAmounts, setHideAmounts] = useState(initialHideAmounts);
   const [showCharts, setShowCharts] = useState(false);
   const [exporting, setExporting] = useState(false);
-
-  useEffect(() => {
-    setHideAmounts(initialHideAmounts);
-  }, [initialHideAmounts]);
 
   const toggleHideAmounts = useCallback(() => setHideAmounts((v) => !v), []);
   const toggleCharts = useCallback(() => setShowCharts((v) => !v), []);

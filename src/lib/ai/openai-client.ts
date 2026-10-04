@@ -62,9 +62,10 @@ function removeNullParameters(
   parameters: CommandRouteOutput["parameters"],
   allowedParameterNames: readonly string[],
 ): Record<string, unknown> {
+  const allowedParameterNameSet = new Set(allowedParameterNames);
   return Object.fromEntries(
     Object.entries(parameters).filter(
-      ([name, value]) => value !== null && allowedParameterNames.includes(name),
+      ([name, value]) => value !== null && allowedParameterNameSet.has(name),
     ),
   );
 }

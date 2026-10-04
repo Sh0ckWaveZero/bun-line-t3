@@ -1,23 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatAmount } from "@/features/expenses/helpers";
 import type { MonthlySummary } from "@/features/expenses/types";
-import {
-  BarElement,
-  CategoryScale,
-  Chart as ChartJS,
-  Legend as ChartLegend,
-  LinearScale,
-  Tooltip as ChartTooltip,
-} from "chart.js";
-import { Bar } from "react-chartjs-2";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  ChartTooltip,
-  ChartLegend,
-);
+import { LazyBarChart } from "@/components/charts/LazyCharts";
 
 const MONTH_SHORT_TH = [
   "ม.ค",
@@ -133,7 +117,7 @@ export function MonthlyBarChart({ data, hideAmounts }: MonthlyBarChartProps) {
       </CardHeader>
       <CardContent className="px-3 pb-3 sm:px-4 sm:pb-4">
         <div className="h-[240px] sm:h-[250px]">
-          <Bar data={chartData} options={options} />
+          <LazyBarChart data={chartData} options={options} />
         </div>
       </CardContent>
     </Card>

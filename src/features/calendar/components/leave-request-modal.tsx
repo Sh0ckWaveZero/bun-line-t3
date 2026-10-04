@@ -43,6 +43,7 @@ export function LeaveRequestModal({
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const today = new Date();
 
   if (!isOpen) return null;
 
@@ -77,9 +78,9 @@ export function LeaveRequestModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      role="dialog"
+    <dialog
+      open
+      className="fixed inset-0 z-50 m-0 flex max-h-none max-w-none items-center justify-center border-0 bg-black/50 p-4 text-inherit shadow-none"
       aria-modal="true"
       aria-labelledby="leave-modal-title"
     >
@@ -109,7 +110,7 @@ export function LeaveRequestModal({
             value={date}
             onChange={setDate}
             placeholder="เลือกวันที่ที่ต้องการลา"
-            minDate={new Date()}
+            minDate={today}
             required={true}
           />
 
@@ -216,6 +217,6 @@ export function LeaveRequestModal({
           </div>
         </form>
       </Card>
-    </div>
+    </dialog>
   );
 }

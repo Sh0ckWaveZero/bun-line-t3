@@ -82,13 +82,28 @@ function nextMonth(billingMonth: string): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+function getMemberTags(memberId: string, tags: string) {
+  const occurrences = new Map<string, number>();
+
+  return tags
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean)
+    .map((label) => {
+      const occurrence = occurrences.get(label) ?? 0;
+      occurrences.set(label, occurrence + 1);
+
+      return { key: `${memberId}:${label}:${occurrence}`, label };
+    });
+}
+
 export function SubscriptionsPage() {
   const { data: session, status } = useSession();
   const isPending = status === "loading";
   const queryClient = useQueryClient();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [billingMonth, setBillingMonth] = useState(getCurrentMonthLabel());
+  const [billingMonth, setBillingMonth] = useState(getCurrentMonthLabel);
   const [showAddSub, setShowAddSub] = useState(false);
   const [editingSubId, setEditingSubId] = useState<string | null>(null);
   const [showAddMember, setShowAddMember] = useState(false);
@@ -454,6 +469,7 @@ export function SubscriptionsPage() {
           <button
             type="button"
             onClick={() => setBillingMonth(prevMonth(billingMonth))}
+            aria-label="เดือนก่อนหน้า"
             className="cursor-pointer rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -464,6 +480,7 @@ export function SubscriptionsPage() {
           <button
             type="button"
             onClick={() => setBillingMonth(nextMonth(billingMonth))}
+            aria-label="เดือนถัดไป"
             className="cursor-pointer rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
           >
             <ChevronRight className="h-5 w-5" />
@@ -569,12 +586,12 @@ export function SubscriptionsPage() {
                       )}
                       {m.tags && (
                         <div className="mt-1 flex flex-wrap gap-1">
-                          {m.tags.split(",").map((tag, i) => (
+                          {getMemberTags(m.id, m.tags).map(({ key, label }) => (
                             <span
-                              key={i}
+                              key={key}
                               className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
                             >
-                              {tag.trim()}
+                              {label}
                             </span>
                           ))}
                         </div>

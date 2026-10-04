@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   format,
   addMonths,
@@ -6,9 +7,8 @@ import {
   startOfMonth,
   endOfMonth,
   eachDayOfInterval,
-  getYear,
-  getMonth,
   isSameDay,
+  getYear,
 } from "date-fns";
 import { th } from "date-fns/locale";
 import {
@@ -23,23 +23,12 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { LeaveRequestModal } from "@/features/calendar/components/leave-request-modal";
 import { HolidayManageModal } from "@/features/calendar/components/holiday-manage-modal";
-
-interface Holiday {
-  id: string;
-  date: string;
-  nameEnglish: string;
-  nameThai: string;
-  year: number;
-  type: string;
-  description?: string;
-}
-
-interface Leave {
-  id: string;
-  date: string;
-  type: string;
-  reason?: string;
-}
+import {
+  CALENDAR_DATA_QUERY_KEY,
+  useCalendarData,
+  type CalendarHoliday as Holiday,
+  type CalendarLeave as Leave,
+} from "@/features/calendar/hooks/useCalendarData";
 
 interface CalendarEvent {
   date: Date;
@@ -49,47 +38,13 @@ interface CalendarEvent {
 }
 
 export function MobileCalendarPage() {
+  const queryClient = useQueryClient();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [holidays, setHolidays] = useState<Holiday[]>([]);
-  const [leaves, setLeaves] = useState<Leave[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { holidays, leaves, loading } = useCalendarData(currentDate);
   const [filter, setFilter] = useState<"all" | "holidays" | "leaves">("all");
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showHolidayModal, setShowHolidayModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      const year = getYear(currentDate);
-      const month = getMonth(currentDate) + 1;
-
-      try {
-        const holidaysRes = await fetch(`/api/holidays?year=${year}`);
-        if (holidaysRes.ok) {
-          const holidaysData = await holidaysRes.json();
-          if (holidaysData.success) {
-            setHolidays(holidaysData.holidays);
-          }
-        }
-
-        const leavesRes = await fetch(
-          `/api/leave?month=${year}-${month.toString().padStart(2, "0")}`,
-        );
-        if (leavesRes.ok) {
-          const leavesData = await leavesRes.json();
-          if (leavesData.success) {
-            setLeaves(leavesData.leaves);
-          }
-        }
-      } catch {
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [currentDate]);
 
   const navigateMonth = (direction: "prev" | "next") => {
     setCurrentDate((prev) =>
@@ -130,29 +85,10 @@ export function MobileCalendarPage() {
     return { holiday, leave, isToday: isSameDay(date, new Date()) };
   };
 
-  const refreshLeaves = async () => {
-    const year = getYear(currentDate);
-    const month = getMonth(currentDate) + 1;
-    const leavesRes = await fetch(
-      `/api/leave?month=${year}-${month.toString().padStart(2, "0")}`,
-    );
-    if (leavesRes.ok) {
-      const leavesData = await leavesRes.json();
-      if (leavesData.success) {
-        setLeaves(leavesData.leaves);
-      }
-    }
-  };
-
-  const refreshHolidays = async () => {
-    const year = getYear(currentDate);
-    const holidaysRes = await fetch(`/api/holidays?year=${year}`);
-    if (holidaysRes.ok) {
-      const holidaysData = await holidaysRes.json();
-      if (holidaysData.success) {
-        setHolidays(holidaysData.holidays);
-      }
-    }
+  const refreshCalendarData = async () => {
+    await queryClient.invalidateQueries({
+      queryKey: [...CALENDAR_DATA_QUERY_KEY, getYear(currentDate)],
+    });
   };
 
   const handleLeaveRequest = async (data: {
@@ -167,10 +103,11 @@ export function MobileCalendarPage() {
         body: JSON.stringify(data),
       });
 
+      if (!response.ok) throw new Error("ไม่สามารถส่งคำขอลาได้");
       const result = await response.json();
 
       if (result.success) {
-        await refreshLeaves();
+        await refreshCalendarData();
         alert("แจ้งลาสำเร็จ!");
       } else {
         alert(result.message);
@@ -189,10 +126,11 @@ export function MobileCalendarPage() {
         body: JSON.stringify(data),
       });
 
+      if (!response.ok) throw new Error("ไม่สามารถเพิ่มวันหยุดได้");
       const result = await response.json();
 
       if (result.success) {
-        await refreshHolidays();
+        await refreshCalendarData();
         alert("เพิ่มวันหยุดสำเร็จ!");
       } else {
         alert(result.message);
@@ -297,7 +235,6 @@ export function MobileCalendarPage() {
       <main
         id="mobile-calendar-main"
         className="space-y-4 px-4 py-4"
-        role="main"
         aria-label="รายการวันหยุดและวันลา"
       >
         <section
@@ -492,7 +429,6 @@ export function MobileCalendarPage() {
                     isToday &&
                       "ring-primary ring-offset-background ring-2 ring-offset-1",
                   )}
-                  role="listitem"
                   aria-label={`${dayOfWeek}ที่ ${format(date, "d")} ${format(date, "MMMM", { locale: th })}`}
                 >
                   <div
@@ -636,7 +572,6 @@ export function MobileCalendarPage() {
       <nav
         id="mobile-calendar-fab"
         className="border-border bg-card fixed inset-x-3 bottom-3 z-50 grid grid-cols-3 gap-2 rounded-xl border p-2"
-        role="navigation"
         aria-label="ปุ่มดำเนินการด่วน"
       >
         <Button

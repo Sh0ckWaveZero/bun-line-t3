@@ -303,22 +303,30 @@ export async function executeDueRecurringTransactions(): Promise<{
 }> {
   const dueTransactions = await getDueRecurringTransactions();
 
-  const results: TransactionWithCategory[] = [];
-  const errors: Array<{ id: string; error: string }> = [];
-
-  for (const recurring of dueTransactions) {
-    try {
-      const tx = await executeRecurringTransaction(recurring.id);
-      if (tx) {
-        results.push(tx);
+  const outcomes = await Promise.all(
+    dueTransactions.map(async (recurring) => {
+      try {
+        return {
+          transaction: await executeRecurringTransaction(recurring.id),
+          error: null,
+        };
+      } catch (error) {
+        return {
+          transaction: null,
+          error: {
+            id: recurring.id,
+            error: error instanceof Error ? error.message : "Unknown error",
+          },
+        };
       }
-    } catch (error) {
-      errors.push({
-        id: recurring.id,
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
-  }
+    }),
+  );
+  const results = outcomes.flatMap((outcome) =>
+    outcome.transaction ? [outcome.transaction] : [],
+  );
+  const errors = outcomes.flatMap((outcome) =>
+    outcome.error ? [outcome.error] : [],
+  );
 
   return {
     executed: results.length,

@@ -79,11 +79,15 @@ export async function GET(req: Request) {
     const usersNeedingReminder =
       await attendanceService.getUsersWithPendingCheckout();
     // กรอง user ที่ลาวันนี้ออก
-    const usersNotOnLeave = [];
-    for (const userId of usersNeedingReminder) {
-      const onLeave = await leaveService.isUserOnLeave(userId, today);
-      if (!onLeave) usersNotOnLeave.push(userId);
-    }
+    const leaveStatus = await Promise.all(
+      usersNeedingReminder.map(async (userId) => ({
+        userId,
+        onLeave: await leaveService.isUserOnLeave(userId, today),
+      })),
+    );
+    const usersNotOnLeave = leaveStatus
+      .filter(({ onLeave }) => !onLeave)
+      .map(({ userId }) => userId);
     if (!usersNotOnLeave.length) {
       return Response.json(
         {

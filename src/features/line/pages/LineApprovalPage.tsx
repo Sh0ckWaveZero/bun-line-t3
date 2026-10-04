@@ -119,15 +119,17 @@ const tabConfig: Record<ApprovalTab, { label: string; icon: React.ReactNode }> =
     },
   };
 
+const APPROVAL_DATE_FORMATTER = new Intl.DateTimeFormat("th-TH", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
 const formatDate = (dateStr: string | null): string => {
   if (!dateStr) return "—";
-  return new Intl.DateTimeFormat("th-TH", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(dateStr));
+  return APPROVAL_DATE_FORMATTER.format(new Date(dateStr));
 };
 
 function StatsCard({
@@ -228,12 +230,13 @@ function RejectDialog({
       <div className="bg-background w-full max-w-md rounded-xl shadow-xl">
         <div className="border-border border-b p-5">
           <h3 className="font-semibold">ยืนยันการปฏิเสธ</h3>
-          <p className="text-muted-foreground mt-1 text-sm">
+          <label htmlFor="line-rejection-reason" className="text-muted-foreground mt-1 block text-sm">
             กรุณาระบุเหตุผลในการปฏิเสธ (ไม่บังคับ)
-          </p>
+          </label>
         </div>
         <div className="p-5">
           <textarea
+            id="line-rejection-reason"
             className="border-input bg-background text-foreground placeholder:text-muted-foreground focus:ring-ring w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
             rows={3}
             placeholder="เช่น ไม่ผ่านเกณฑ์การใช้งาน, ข้อมูลไม่ครบ..."
@@ -510,7 +513,7 @@ export function LineApprovalPage() {
       >
         {toast && (
           <div
-            className={`fixed top-4 right-4 z-50 flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium shadow-lg transition-all ${toast.type === "success" ? "bg-emerald-500 text-white" : "bg-red-500 text-white"}`}
+            className={`fixed top-4 right-4 z-50 flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium shadow-lg transition-colors ${toast.type === "success" ? "bg-emerald-500 text-white" : "bg-red-500 text-white"}`}
           >
             {toast.type === "success" ? (
               <CheckCircle className="h-4 w-4" />

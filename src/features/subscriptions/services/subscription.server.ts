@@ -7,6 +7,7 @@ import type {
   CreateSubscriptionInput,
   UpdateSubscriptionInput,
   SubscriptionWithMembers,
+  SubscriptionMember,
   SubscriptionDetail,
   MonthlySummary,
 } from "../types";
@@ -209,36 +210,44 @@ export async function generateMissingPayments(
   });
   if (!subscription) return 0;
 
-  let created = 0;
-
-  for (const member of subscription.members) {
-    const existingPayments = await db.subscriptionPayment.findMany({
-      where: { memberId: member.id },
-      select: { billingMonth: true },
-    });
-    const existingMonths = existingPayments.map((p) => p.billingMonth);
-    const missingMonths = getMissingBillingMonths(
-      subscription.startDate,
-      existingMonths,
-    );
-
-    for (const billingMonth of missingMonths) {
-      const dueDate = getDueDate(subscription.billingDay, billingMonth);
-      await db.subscriptionPayment.upsert({
-        where: { memberId_billingMonth: { memberId: member.id, billingMonth } },
-        create: {
-          subscriptionId,
-          memberId: member.id,
-          billingMonth,
-          amount: member.shareAmount,
-          dueDate,
-          status: "PENDING",
-        },
-        update: {},
-      });
-      created++;
-    }
+  const memberIds = subscription.members.map(
+    (member: SubscriptionMember) => member.id,
+  );
+  const existingPayments = await db.subscriptionPayment.findMany({
+    where: { memberId: { in: memberIds } },
+    select: { memberId: true, billingMonth: true },
+  });
+  const existingMonthsByMember = new Map<string, Set<string>>();
+  for (const payment of existingPayments) {
+    const months = existingMonthsByMember.get(payment.memberId) ?? new Set();
+    months.add(payment.billingMonth);
+    existingMonthsByMember.set(payment.memberId, months);
   }
 
-  return created;
+  const paymentData = subscription.members.flatMap(
+    (member: SubscriptionMember) => {
+      const existingMonths = Array.from(
+        existingMonthsByMember.get(member.id) ?? [],
+      );
+      return getMissingBillingMonths(
+        subscription.startDate,
+        existingMonths,
+      ).map((billingMonth) => ({
+        subscriptionId,
+        memberId: member.id,
+        billingMonth,
+        amount: member.shareAmount,
+        dueDate: getDueDate(subscription.billingDay, billingMonth),
+        status: "PENDING" as const,
+      }));
+    },
+  );
+
+  if (paymentData.length === 0) return 0;
+
+  const { count } = await db.subscriptionPayment.createMany({
+    data: paymentData,
+    skipDuplicates: true,
+  });
+  return count;
 }

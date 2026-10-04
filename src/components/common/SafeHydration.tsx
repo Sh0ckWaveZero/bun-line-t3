@@ -11,6 +11,24 @@ import {
   useClientOnlyMounted,
 } from "@/hooks/useHydrationSafe";
 
+const DATE_FORMATTER = new Intl.DateTimeFormat("th-TH", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+const TIME_FORMATTER = new Intl.DateTimeFormat("th-TH", {
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+});
+const FULL_DATE_TIME_FORMATTER = new Intl.DateTimeFormat("th-TH", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
 /**
  * 📅 SafeTimestamp Component
  * แสดงเวลาที่ปลอดภัยจาก hydration mismatch
@@ -38,25 +56,11 @@ export function SafeTimestamp({
     // Client-side formatting with Intl API
     switch (format) {
       case "date":
-        return new Intl.DateTimeFormat("th-TH", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        }).format(date);
+        return DATE_FORMATTER.format(date);
       case "time":
-        return new Intl.DateTimeFormat("th-TH", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        }).format(date);
+        return TIME_FORMATTER.format(date);
       default:
-        return new Intl.DateTimeFormat("th-TH", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        }).format(date);
+        return FULL_DATE_TIME_FORMATTER.format(date);
     }
   };
 
@@ -209,11 +213,14 @@ export function HydrationExamples() {
       </div>
 
       {/* ✅ Client Only Content */}
-      <ClientOnlyWrapper fallback={<div>กำลังโหลด...</div>}>
-        <div className="rounded bg-yellow-100 p-2">
-          <strong>เนื้อหาเฉพาะ Client:</strong> {window.location.href}
-        </div>
-      </ClientOnlyWrapper>
+      <UserSpecificContent
+        serverContent={<div>กำลังโหลด...</div>}
+        clientContent={() => (
+          <div className="rounded bg-yellow-100 p-2">
+            <strong>เนื้อหาเฉพาะ Client:</strong> {window.location.href}
+          </div>
+        )}
+      />
 
       {/* ✅ User Specific Content */}
       <UserSpecificContent

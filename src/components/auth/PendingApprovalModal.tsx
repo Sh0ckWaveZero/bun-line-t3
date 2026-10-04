@@ -34,10 +34,10 @@ export function PendingApprovalModal({
   }
 
   return (
-    <div
+    <dialog
+      open
       id="pending-approval-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      role="dialog"
+      className="fixed inset-0 z-50 m-0 flex max-h-none max-w-none items-center justify-center border-0 bg-transparent p-4 text-inherit shadow-none"
       aria-modal="true"
       aria-labelledby="approval-modal-title"
       aria-describedby="approval-modal-description"
@@ -144,6 +144,6 @@ export function PendingApprovalModal({
           หากมีข้อสงสัย หรือต้องการติดต่อ admin โปรดติดต่อทีมงาน
         </p>
       </div>
-    </div>
+    </dialog>
   );
 }

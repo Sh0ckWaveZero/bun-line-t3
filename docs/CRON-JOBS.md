@@ -136,6 +136,31 @@ expression in `Asia/Bangkok`, claims the scheduled minute idempotently, invokes
 the configured endpoint with `CRON_SECRET`, and records the result in
 `cron_job_executions`.
 
+### Failure diagnosis for automatic checkout
+
+When `/api/cron/auto-checkout` cannot process one or more attendance records,
+it returns HTTP 500 with an aggregated reason such as the database error or
+the affected operation. The dispatcher stores that response message together
+with the HTTP status in `cron_job_executions.message` and
+`cron_job_executions.http_status`.
+
+To investigate a failed run:
+
+1. Open `/cron-jobs` and select `ลงชื่อออกงานอัตโนมัติ`.
+2. Read `สาเหตุการรันล่าสุด` in the action dialog. The same reason is shown in
+   the table row and the execution history status remains `ล้มเหลว`.
+3. If the failure is a partial run, the message includes the number of failed
+   users and groups identical reasons together. The response does not expose
+   user identifiers in the aggregated diagnostic message.
+
+Notification delivery problems are recorded as warnings separately. They do
+not mark the attendance update as failed when the database checkout itself
+has already succeeded.
+
+Cron endpoints are server-to-server requests and do not have an interactive
+browser session. Their access control is the `CRON_SECRET` bearer token; do
+not add a user-session or LINE approval guard to the worker endpoint.
+
 The migration is included at
 `prisma/migrations/20261004120000_add_cron_job_management`. Before applying it
 to another environment, confirm that `DATABASE_URL` points to the intended

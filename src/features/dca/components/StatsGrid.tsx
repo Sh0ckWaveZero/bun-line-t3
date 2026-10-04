@@ -321,10 +321,10 @@ export const StatsGrid = ({ summary, orders }: StatsGridProps) => {
       className="dca-stats-grid border-border grid grid-cols-2 overflow-hidden rounded-lg border sm:grid-cols-3 lg:grid-cols-5"
       style={{ background: "var(--border)" }}
     >
-      {cells.map((s, i) => (
+      {cells.map((s) => (
         <div
           className={`bg-card relative flex flex-col gap-1.5 p-3 sm:p-4 ${s.spark && s.spark.length >= 2 ? "pr-16 sm:pr-20" : ""}`}
-          key={i}
+          key={s.lbl}
         >
           <div className="text-muted-foreground relative z-10 text-[10px] font-medium tracking-wider uppercase sm:text-[11px]">
             {s.lbl}

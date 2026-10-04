@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/database/db";
 import {
+  extractCronResponseMessage,
   formatCronDate,
   formatRelativePast,
   formatRelativeUntil,
@@ -11,6 +12,7 @@ import {
 import type {
   CronHttpMethod,
   CronJob,
+  CronJobRunDetail,
   CronJobsSnapshot,
   RunStatus,
 } from "../types";
@@ -36,9 +38,12 @@ export interface CronJobInput {
 }
 
 interface CronExecutionRecord {
+  id: string;
   status: string;
   startedAt: Date;
   durationMs: number | null;
+  httpStatus: number | null;
+  message: string | null;
 }
 
 interface CronJobRecord {
@@ -136,6 +141,14 @@ function toMethod(value: string): CronHttpMethod {
 function makeCronJob(record: CronJobRecord, now: Date): CronJob {
   const latestExecution = record.executions[0];
   const history = record.executions.slice().reverse();
+  const runDetails: CronJobRunDetail[] = history.map((execution) => ({
+    id: execution.id,
+    status: toRunStatus(execution.status),
+    relative: formatRelativePast(execution.startedAt, now),
+    duration: formatDuration(execution.durationMs),
+    httpStatus: execution.httpStatus,
+    message: execution.message,
+  }));
   const nextRun = record.enabled
     ? getNextCronOccurrence(record.cronExpression, now)
     : null;
@@ -156,13 +169,18 @@ function makeCronJob(record: CronJobRecord, now: Date): CronJob {
           status: toRunStatus(latestExecution.status),
           relative: formatRelativePast(latestExecution.startedAt, now),
           duration: formatDuration(latestExecution.durationMs),
+          httpStatus: latestExecution.httpStatus,
+          message: latestExecution.message,
         }
       : {
           status: "unknown",
           relative: "ยังไม่มีข้อมูล",
           duration: "—",
+          httpStatus: null,
+          message: null,
         },
     runHistory: history.map((execution) => toRunStatus(execution.status)),
+    runDetails,
     nextRun: nextRun
       ? {
           relative: formatRelativeUntil(nextRun, now),
@@ -187,7 +205,14 @@ const executionInclude = {
   executions: {
     orderBy: { startedAt: "desc" as const },
     take: 20,
-    select: { status: true, startedAt: true, durationMs: true },
+    select: {
+      id: true,
+      status: true,
+      startedAt: true,
+      durationMs: true,
+      httpStatus: true,
+      message: true,
+    },
   },
 };
 
@@ -264,20 +289,22 @@ function isUniqueConstraintError(error: unknown): boolean {
 }
 
 async function readExecutionMessage(response: Response): Promise<string> {
-  if (!response.ok) return `HTTP ${response.status}`;
+  let body: string;
 
   try {
-    const payload: unknown = await response.json();
-    if (
-      typeof payload === "object" &&
-      payload !== null &&
-      "message" in payload &&
-      typeof payload.message === "string"
-    ) {
-      return payload.message.slice(0, 500);
-    }
+    body = await response.text();
   } catch {
-    // The endpoint may return an empty or non-JSON response.
+    return `HTTP ${response.status}`;
+  }
+
+  if (body.trim()) {
+    try {
+      const payload: unknown = JSON.parse(body);
+      const message = extractCronResponseMessage(payload);
+      if (message) return message.slice(0, 500);
+    } catch {
+      if (!response.ok) return body.trim().slice(0, 500);
+    }
   }
 
   return `HTTP ${response.status}`;

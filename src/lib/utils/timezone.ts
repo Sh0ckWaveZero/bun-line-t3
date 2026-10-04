@@ -6,6 +6,12 @@
 
 const THAILAND_TIMEZONE = "Asia/Bangkok";
 const BUDDHIST_ERA_OFFSET = 543;
+const THAILAND_DATE_FORMATTER = new Intl.DateTimeFormat("en-CA", {
+  timeZone: THAILAND_TIMEZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
 
 /**
  * Get current UTC time (for database storage)
@@ -60,12 +66,7 @@ export const convertUTCToBangkok = (utcDate: Date): Date => {
  */
 export const getTodayDateString = (): string => {
   const today = new Date();
-  const bangkokDate = new Intl.DateTimeFormat("en-CA", {
-    timeZone: THAILAND_TIMEZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(today);
+  const bangkokDate = THAILAND_DATE_FORMATTER.format(today);
   return bangkokDate; // Already in YYYY-MM-DD format
 };
 

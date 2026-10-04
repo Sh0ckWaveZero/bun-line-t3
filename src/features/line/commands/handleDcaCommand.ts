@@ -397,12 +397,14 @@ const handleDelete = async (req: any, args: string[]) => {
     .filter(Boolean);
   const validRounds: number[] = [];
   const invalidTokens: string[] = [];
+  const seenRounds = new Set<number>();
 
   for (const token of rawTokens) {
     const n = parseInt(token);
     if (isNaN(n) || n <= 0) {
       invalidTokens.push(token);
-    } else if (!validRounds.includes(n)) {
+    } else if (!seenRounds.has(n)) {
+      seenRounds.add(n);
       validRounds.push(n);
     }
   }
@@ -424,7 +426,8 @@ const handleDelete = async (req: any, args: string[]) => {
       identity.primaryLineUserId,
     )) as DcaOrderForCommand[];
     const foundRounds = found.map((order) => order.round);
-    const notFoundRounds = validRounds.filter((r) => !foundRounds.includes(r));
+    const foundRoundSet = new Set(foundRounds);
+    const notFoundRounds = validRounds.filter((round) => !foundRoundSet.has(round));
 
     if (found.length === 0) {
       const roundList = validRounds.join(", ");

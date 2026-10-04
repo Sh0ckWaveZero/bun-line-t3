@@ -4,7 +4,7 @@
  * EditPaymentModal — modal สำหรับแก้ไข/ลบรายการการจ่ายเงิน
  */
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { SubscriptionPayment } from "@/features/subscriptions/types";
 import type { PaymentStatus } from "@/features/subscriptions/types";
 import { X, Loader2, Trash2 } from "lucide-react";
@@ -25,40 +25,47 @@ export interface PaymentFormData {
   note?: string;
 }
 
-export const EditPaymentModal = ({
-  open,
+export const EditPaymentModal = (props: EditPaymentModalProps) => {
+  const { open, payment, ...modalProps } = props;
+  if (!open) return null;
+
+  const paymentKey = payment
+    ? [
+        payment.id,
+        payment.amount,
+        payment.status,
+        payment.paidAt?.toString() ?? "",
+        payment.note ?? "",
+      ].join(":")
+    : "none";
+
+  return (
+    <EditPaymentModalContent
+      key={paymentKey}
+      payment={payment}
+      {...modalProps}
+    />
+  );
+};
+
+function EditPaymentModalContent({
   onClose,
   payment,
   onSubmit,
   onDelete,
-}: EditPaymentModalProps) => {
+}: Omit<EditPaymentModalProps, "open">) {
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const [form, setForm] = useState<PaymentFormData>({
+  const [form, setForm] = useState<PaymentFormData>(() => ({
     amount: payment?.amount ?? 0,
     status: payment?.status ?? "PENDING",
     paidAt: payment?.paidAt
       ? new Date(payment.paidAt).toISOString().slice(0, 16)
       : "",
     note: payment?.note ?? "",
-  });
-
-  // Reset form เมื่อ modal เปิดใหม่หรือ payment เปลี่ยน
-  useEffect(() => {
-    if (open && payment) {
-      setForm({
-        amount: payment.amount,
-        status: payment.status,
-        paidAt: payment.paidAt
-          ? new Date(payment.paidAt).toISOString().slice(0, 16)
-          : "",
-        note: payment.note ?? "",
-      });
-      setShowDeleteConfirm(false);
-    }
-  }, [open, payment]);
+  }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,8 +94,6 @@ export const EditPaymentModal = ({
     }
   };
 
-  if (!open) return null;
-
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center">
       <div className="w-full max-w-md rounded-t-3xl bg-white shadow-2xl sm:rounded-2xl dark:bg-gray-900">
@@ -100,6 +105,7 @@ export const EditPaymentModal = ({
           <button
             type="button"
             onClick={onClose}
+            aria-label="ปิดหน้าต่าง"
             className="cursor-pointer rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
           >
             <X className="h-5 w-5" />
@@ -110,10 +116,14 @@ export const EditPaymentModal = ({
         <form onSubmit={handleSubmit} className="space-y-4 p-6">
           {/* amount */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="payment-amount"
+              className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               จำนวนเงิน (฿)
             </label>
             <input
+              id="payment-amount"
               type="number"
               inputMode="decimal"
               min="0"
@@ -132,17 +142,21 @@ export const EditPaymentModal = ({
 
           {/* status */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <p className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
               สถานะ
-            </label>
-            <div className="flex gap-2">
+            </p>
+            <div
+              role="group"
+              aria-label="สถานะการจ่ายเงิน"
+              className="flex gap-2"
+            >
               {(["PENDING", "PAID", "SKIPPED"] as PaymentStatus[]).map(
                 (status) => (
                   <button
                     key={status}
                     type="button"
                     onClick={() => setForm((p) => ({ ...p, status }))}
-                    className={`flex-1 rounded-xl border py-2.5 text-xs font-medium transition-all ${
+                    className={`flex-1 rounded-xl border py-2.5 text-xs font-medium transition-colors ${
                       form.status === status
                         ? status === "PAID"
                           ? "border-green-500 bg-green-50 text-green-700 dark:border-green-400 dark:bg-green-900/30 dark:text-green-300"
@@ -162,10 +176,14 @@ export const EditPaymentModal = ({
           {/* paidAt - แสดงเฉพาะเมื่อ status = PAID */}
           {form.status === "PAID" && (
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="payment-paid-at"
+                className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 วันเวลาที่จ่าย
               </label>
               <input
+                id="payment-paid-at"
                 type="datetime-local"
                 value={form.paidAt}
                 onChange={(e) =>
@@ -178,10 +196,14 @@ export const EditPaymentModal = ({
 
           {/* note */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="payment-note"
+              className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               หมายเหตุ (ไม่บังคับ)
             </label>
             <textarea
+              id="payment-note"
               rows={2}
               value={form.note}
               onChange={(e) => setForm((p) => ({ ...p, note: e.target.value }))}
@@ -226,6 +248,7 @@ export const EditPaymentModal = ({
               <button
                 type="button"
                 onClick={() => setShowDeleteConfirm(true)}
+                aria-label="ลบรายการจ่ายเงิน"
                 className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-red-200 px-3 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
               >
                 <Trash2 className="h-4 w-4" />
@@ -251,4 +274,4 @@ export const EditPaymentModal = ({
       </div>
     </div>
   );
-};
+}

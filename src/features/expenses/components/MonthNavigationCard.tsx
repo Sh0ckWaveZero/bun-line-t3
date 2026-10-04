@@ -65,7 +65,7 @@ export const MonthNavigationCard = forwardRef<
     return (
       <Card
         id="month-nav-card"
-        className="group hover:border-primary/30 border-border/70 bg-card/85 dark:bg-card/70 relative mb-4 border transition-all duration-300 hover:shadow-md sm:mb-6"
+        className="group hover:border-primary/30 border-border/70 bg-card/85 dark:bg-card/70 relative mb-4 border transition-[border-color,box-shadow] duration-300 hover:shadow-md sm:mb-6"
       >
         <CardContent
           ref={forwardedRef}
@@ -81,7 +81,7 @@ export const MonthNavigationCard = forwardRef<
                 size="sm"
                 onClick={onPreviousMonth}
                 aria-label="เดือนก่อน"
-                className="hover:bg-muted h-8 w-8 rounded-lg transition-all hover:scale-105 active:scale-95 sm:h-9 sm:w-9"
+                className="hover:bg-muted h-8 w-8 rounded-lg transition-[background-color,transform] hover:scale-105 active:scale-95 sm:h-9 sm:w-9"
               >
                 <ChevronLeft size={18} />
               </Button>
@@ -107,7 +107,7 @@ export const MonthNavigationCard = forwardRef<
                 onClick={onNextMonth}
                 disabled={!canGoNext}
                 aria-label="เดือนหน้า"
-                className="hover:bg-muted h-8 w-8 rounded-lg transition-all hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 sm:h-9 sm:w-9"
+                className="hover:bg-muted h-8 w-8 rounded-lg transition-[background-color,transform] hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 sm:h-9 sm:w-9"
               >
                 <ChevronRight size={18} />
               </Button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useLayoutEffect, useState } from "react";
 import { Pencil, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,7 +62,7 @@ export const GoalsSection = ({ orders }: GoalsSectionProps) => {
   const [editing, setEditing] = useState<EditField>(null);
   const [draft, setDraft] = useState<string>("");
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setGoals(loadGoals());
   }, []);
 
@@ -166,6 +166,7 @@ export const GoalsSection = ({ orders }: GoalsSectionProps) => {
                 variant="ghost"
                 size="icon"
                 onClick={saveEdit}
+                aria-label={`บันทึก${t.goals.goalFiat}`}
                 className="h-4 w-4 p-0"
               >
                 <Check className="h-3 w-3 text-green-600" />
@@ -174,6 +175,7 @@ export const GoalsSection = ({ orders }: GoalsSectionProps) => {
                 variant="ghost"
                 size="icon"
                 onClick={cancelEdit}
+                aria-label={`ยกเลิกการแก้ไข${t.goals.goalFiat}`}
                 className="h-4 w-4 p-0"
               >
                 <X className="h-3 w-3 text-red-500" />
@@ -236,6 +238,7 @@ export const GoalsSection = ({ orders }: GoalsSectionProps) => {
                 variant="ghost"
                 size="icon"
                 onClick={saveEdit}
+                aria-label={`บันทึก${t.goals.goalSatoshi}`}
                 className="h-4 w-4 p-0"
               >
                 <Check className="h-3 w-3 text-green-600" />
@@ -244,6 +247,7 @@ export const GoalsSection = ({ orders }: GoalsSectionProps) => {
                 variant="ghost"
                 size="icon"
                 onClick={cancelEdit}
+                aria-label={`ยกเลิกการแก้ไข${t.goals.goalSatoshi}`}
                 className="h-4 w-4 p-0"
               >
                 <X className="h-3 w-3 text-red-500" />

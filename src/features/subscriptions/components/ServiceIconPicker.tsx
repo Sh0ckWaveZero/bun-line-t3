@@ -49,6 +49,7 @@ export const ServiceIconPicker = ({
         <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
         <input
           type="text"
+          aria-label="ค้นหาบริการ"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="ค้นหา service..."
@@ -132,6 +133,7 @@ export const ServiceIconPickerModal = ({
           <button
             type="button"
             onClick={onClose}
+            aria-label="ปิดหน้าต่างเลือกบริการ"
             className="cursor-pointer rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800"
           >
             <X className="h-5 w-5" />
@@ -166,7 +168,8 @@ export const ServiceIconButton = ({
     <button
       type="button"
       onClick={onClick}
-      className="group flex items-center gap-3 rounded-2xl border-2 border-dashed border-gray-300 p-3 transition-all hover:border-indigo-400 hover:bg-indigo-50 dark:border-gray-600 dark:hover:border-indigo-500 dark:hover:bg-indigo-900/20"
+      aria-label={`เปลี่ยนบริการ: ${SUBSCRIPTION_SERVICE_LABELS[service]}`}
+      className="group flex items-center gap-3 rounded-2xl border-2 border-dashed border-gray-300 p-3 transition-colors hover:border-indigo-400 hover:bg-indigo-50 dark:border-gray-600 dark:hover:border-indigo-500 dark:hover:bg-indigo-900/20"
     >
       <ServiceIcon service={service} size={48} variant="badge" />
       <div className="text-left">

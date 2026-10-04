@@ -3,9 +3,6 @@
 import { useClientOnlyMounted } from "@/hooks/useHydrationSafe";
 import { useTheme } from "@/lib/theme/theme-provider";
 
-// Import optimized Chart.js registration
-import "@/lib/chart-registration";
-
 export interface ChartThemeColors {
   background: string;
   text: string;

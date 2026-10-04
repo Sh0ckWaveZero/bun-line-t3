@@ -253,6 +253,7 @@ export const LeaveForm = ({ onSubmit }: LeaveFormProps) => {
       setHistoryLoading(true);
       try {
         const res = await fetch(`/api/leave?month=${month}`);
+        if (!res.ok) throw new Error("ไม่สามารถโหลดประวัติวันลาได้");
         const data: { success: boolean; leaves?: LeaveRecord[] } =
           await res.json();
         if (data.success) setLeaves(data.leaves ?? []);
@@ -274,12 +275,12 @@ export const LeaveForm = ({ onSubmit }: LeaveFormProps) => {
   useEffect(() => {
     if (status === "unauthenticated") {
       showToast({ title: "กรุณาเข้าสู่ระบบ", type: "error" });
-      setTimeout(() => {
-        if (typeof window !== "undefined") {
-          const callbackUrl = window.location.pathname + window.location.search;
-          window.location.href = `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`;
-        }
+      const redirectTimeout = setTimeout(() => {
+        const callbackUrl = window.location.pathname + window.location.search;
+        window.location.href = `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`;
       }, 1200);
+
+      return () => clearTimeout(redirectTimeout);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
@@ -306,11 +307,25 @@ export const LeaveForm = ({ onSubmit }: LeaveFormProps) => {
       const isJson = res.headers
         .get("content-type")
         ?.includes("application/json");
+      if (!res.ok) {
+        const errorData: { message?: string } = isJson
+          ? await res.json().catch(() => ({}))
+          : {};
+        showToast({
+          title:
+            typeof errorData.message === "string"
+              ? errorData.message
+              : "ไม่สามารถบันทึกวันลาได้ กรุณาลองใหม่อีกครั้ง",
+          type: "error",
+        });
+        return;
+      }
+
       const data: { success?: boolean; message?: string } = isJson
         ? await res.json().catch(() => ({}))
         : {};
 
-      if (!res.ok || data?.success === false) {
+      if (data?.success === false) {
         const msg =
           typeof data.message === "string"
             ? data.message
@@ -466,7 +481,7 @@ export const LeaveForm = ({ onSubmit }: LeaveFormProps) => {
                         onClick={() => setType(lt.value)}
                         className={cn(
                           "bg-muted/30 flex items-center gap-3 rounded-xl border-2 p-3 text-left",
-                          "transition-all duration-150",
+                          "transition-colors duration-150",
                           "focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
                           isActive
                             ? "border-primary"

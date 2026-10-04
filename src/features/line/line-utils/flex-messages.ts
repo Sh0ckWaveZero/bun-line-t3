@@ -27,16 +27,18 @@ const formatTHB = (n: number) =>
     maximumFractionDigits: 2,
   });
 
+const DATE_FORMATTER = new Intl.DateTimeFormat("th-TH", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "Asia/Bangkok",
+  hour12: false,
+});
+
 const formatDate = (date: Date) =>
-  new Intl.DateTimeFormat("th-TH", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "Asia/Bangkok",
-    hour12: false,
-  }).format(date);
+  DATE_FORMATTER.format(date);
 
 const getDcaHistoryUrl = (appUrl: string) => {
   if (!appUrl) return null;

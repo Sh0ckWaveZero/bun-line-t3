@@ -21,7 +21,7 @@ import type {
   TransactionWithCategory,
 } from "@/features/expenses/types";
 import { Loader2, Tag, TrendingDown, TrendingUp, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CategoryCombobox } from "./CategoryCombobox";
 
 function formatAmount(value: string): string {
@@ -42,6 +42,67 @@ function formatAmount(value: string): string {
   return decPart !== undefined ? `${formattedInt}.${decPart}` : formattedInt;
 }
 
+interface TransactionFormState {
+  type: "INCOME" | "EXPENSE";
+  categoryId: string;
+  amount: string;
+  note: string;
+  tags: string;
+  transDate: string;
+}
+
+function getInitialFormState(
+  editData: TransactionWithCategory | null | undefined,
+): TransactionFormState {
+  if (!editData) {
+    return {
+      type: "EXPENSE",
+      categoryId: "",
+      amount: "",
+      note: "",
+      tags: "",
+      transDate: toTransDate(),
+    };
+  }
+
+  const isCoPayTx = shouldApplyCoPayment(
+    editData.type,
+    editData.note,
+    editData.tags?.split(","),
+  );
+  if (!isCoPayTx) {
+    return {
+      type: editData.type,
+      categoryId: editData.categoryId,
+      amount: formatAmount(editData.amount.toString()),
+      note: editData.note ?? "",
+      tags: editData.tags ?? "",
+      transDate: editData.transDate,
+    };
+  }
+
+  const subsidy = parseTransactionSubsidy(
+    editData.amount,
+    editData.note,
+    editData.tags,
+  );
+  const customNoteMatch = (editData.note ?? "").match(/ - (.+)$/);
+  const customTags = (editData.tags ?? "")
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter((tag) => tag && tag !== "ไทยช่วยไทย" && tag !== "60-40")
+    .join(",");
+
+  return {
+    type: editData.type,
+    categoryId: editData.categoryId,
+    amount: formatAmount((editData.amount + subsidy).toString()),
+    note: customNoteMatch?.[1] ?? "",
+    tags: customTags,
+    transDate: editData.transDate,
+  };
+}
+
 interface AddTransactionModalProps {
   categories: ExpenseCategory[];
   open: boolean;
@@ -52,21 +113,42 @@ interface AddTransactionModalProps {
   editData?: TransactionWithCategory | null;
 }
 
-export function AddTransactionModal({
+export function AddTransactionModal(props: AddTransactionModalProps) {
+  const { open, ...formProps } = props;
+  if (!open) return null;
+
+  const editData = props.editData;
+  const formKey = editData
+    ? [
+        editData.id,
+        editData.type,
+        editData.categoryId,
+        editData.amount,
+        editData.note ?? "",
+        editData.tags ?? "",
+        editData.transDate,
+      ].join(":")
+    : "new";
+
+  return <AddTransactionModalForm key={formKey} {...formProps} />;
+}
+
+function AddTransactionModalForm({
   categories,
-  open,
   onOpenChange,
   onSave,
   isLoading,
   onAddCategory,
   editData,
-}: AddTransactionModalProps) {
-  const [type, setType] = useState<"INCOME" | "EXPENSE">("EXPENSE");
-  const [categoryId, setCategoryId] = useState("");
-  const [amount, setAmount] = useState("");
-  const [note, setNote] = useState("");
-  const [tags, setTags] = useState("");
-  const [transDate, setTransDate] = useState(() => toTransDate());
+}: Omit<AddTransactionModalProps, "open">) {
+  const [initialFormState] = useState(() => getInitialFormState(editData));
+  const [type, setType] = useState(initialFormState.type);
+  const [categoryId, setCategoryId] = useState(initialFormState.categoryId);
+  const [amount, setAmount] = useState(initialFormState.amount);
+  const [note, setNote] = useState(initialFormState.note);
+  const [tags, setTags] = useState(initialFormState.tags);
+  const [transDate, setTransDate] = useState(initialFormState.transDate);
+  const today = new Date();
 
   const isCoPayTx =
     !!editData &&
@@ -75,44 +157,6 @@ export function AddTransactionModal({
       editData.note,
       editData.tags?.split(","),
     );
-
-  useEffect(() => {
-    if (open) {
-      if (editData) {
-        setType(editData.type);
-        setCategoryId(editData.categoryId);
-        setTransDate(editData.transDate);
-
-        if (isCoPayTx) {
-          const subsidy = parseTransactionSubsidy(
-            editData.amount,
-            editData.note,
-            editData.tags,
-          );
-          setAmount(formatAmount((editData.amount + subsidy).toString()));
-          const customNoteMatch = (editData.note ?? "").match(/ - (.+)$/);
-          setNote(customNoteMatch?.[1] ?? "");
-          const customTags = (editData.tags ?? "")
-            .split(",")
-            .map((t) => t.trim())
-            .filter((t) => t && t !== "ไทยช่วยไทย" && t !== "60-40")
-            .join(",");
-          setTags(customTags);
-        } else {
-          setAmount(formatAmount(editData.amount.toString()));
-          setNote(editData.note ?? "");
-          setTags(editData.tags ?? "");
-        }
-      } else {
-        setType("EXPENSE");
-        setCategoryId("");
-        setAmount("");
-        setNote("");
-        setTags("");
-        setTransDate(toTransDate());
-      }
-    }
-  }, [open, editData]);
 
   const filtered = categories.filter((c) => c.isActive);
 
@@ -155,7 +199,7 @@ export function AddTransactionModal({
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open onOpenChange={onOpenChange}>
       <AlertDialogContent
         id="add-transaction-modal"
         className="border-border bg-card fixed top-1/2 left-1/2 z-50 flex max-h-[85vh] w-[calc(100vw-2rem)] max-w-xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg border p-0"
@@ -177,6 +221,7 @@ export function AddTransactionModal({
             variant="ghost"
             size="icon"
             onClick={() => onOpenChange(false)}
+            aria-label="ปิดหน้าต่างรายการ"
             className="text-muted-foreground hover:bg-muted absolute top-1/2 right-4 h-8 w-8 -translate-y-1/2 rounded-full"
           >
             <X id="add-transaction-close-icon" size={18} />
@@ -217,7 +262,7 @@ export function AddTransactionModal({
                       id={`transaction-type-${t.toLowerCase()}-btn`}
                       type="button"
                       aria-label={`เลือกประเภทรายการ${t === "INCOME" ? "รายรับ" : "รายจ่าย"}`}
-                      className={`flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-all ${
+                      className={`flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors ${
                         isSelected ? activeClass : inactiveClass
                       }`}
                       onClick={() => setType(t)}
@@ -309,7 +354,7 @@ export function AddTransactionModal({
               required
               value={transDate ? new Date(transDate + "T00:00:00") : undefined}
               onChange={(date) => setTransDate(date ? toTransDate(date) : "")}
-              maxDate={new Date()}
+              maxDate={today}
             />
 
             <div id="transaction-note-group" className="space-y-2">

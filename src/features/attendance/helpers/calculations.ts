@@ -48,21 +48,23 @@ export const getWorkingDaysInMonth = async (
   year: number,
   month: number,
 ): Promise<number> => {
-  // Import dynamically to avoid circular dependencies
-  const { isWorkingDay } = await import("./validation");
+  const { getHolidaysByYear } = await import("../services/holidays.server");
+  const holidays = await getHolidaysByYear(year);
+  const holidayDates = new Set(
+    holidays.map((holiday: { date: string }) => holiday.date),
+  );
+  const workingDaysOfWeek = new Set<number>(WORKPLACE_POLICIES.WORKING_DAYS);
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  let workingDays = 0;
-
-  for (let day = 1; day <= daysInMonth; day++) {
-    const date = new Date(year, month, day);
-
-    // Use the isWorkingDay function which checks both weekends and public holidays
-    const isWorking = await isWorkingDay(date);
-    if (isWorking) {
-      workingDays++;
+  return Array.from(
+    { length: daysInMonth },
+    (_, index) => new Date(year, month, index + 1),
+  ).reduce((workingDays, date) => {
+    if (!workingDaysOfWeek.has(date.getUTCDay())) {
+      return workingDays;
     }
-  }
 
-  return workingDays;
+    const dateString = date.toISOString().split("T")[0] ?? "";
+    return workingDays + (holidayDates.has(dateString) ? 0 : 1);
+  }, 0);
 };

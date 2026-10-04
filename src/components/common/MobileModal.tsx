@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useEffectEvent } from "react";
 import { createPortal } from "react-dom";
 import { useSafePortal } from "@/hooks/useHydrationSafe";
 
@@ -21,13 +22,11 @@ export const MobileModal: React.FC<MobileModalProps> = ({
   const { canUsePortal, portalRoot } = useSafePortal();
 
   // 🎯 Handle escape key and prevent scroll - only when portal is ready
-  React.useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
+  const handleEscape = useEffectEvent((e: KeyboardEvent) => {
+    if (e.key === "Escape") onClose();
+  });
 
+  React.useEffect(() => {
     if (isOpen && canUsePortal) {
       document.addEventListener("keydown", handleEscape);
 
@@ -57,20 +56,14 @@ export const MobileModal: React.FC<MobileModalProps> = ({
         document.body.style.touchAction = "";
       }
     };
-  }, [isOpen, onClose, canUsePortal]);
+  }, [isOpen, canUsePortal]);
 
   // 🔐 SECURITY: ไม่แสดง modal หากไม่เปิดหรือยังไม่พร้อม
   if (!isOpen || !canUsePortal || !portalRoot) return null;
 
-  // 🎯 Handle background click to close modal
-  const handleBackgroundClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
   const modalElement = (
-    <div
+    <dialog
+      open
       className="mobile-modal-overlay"
       style={{
         backgroundColor: "rgba(0, 0, 0, 0.6)", // Darker overlay
@@ -81,13 +74,23 @@ export const MobileModal: React.FC<MobileModalProps> = ({
         zIndex: 10000,
         position: "fixed",
         inset: 0,
+        margin: 0,
+        maxWidth: "none",
+        maxHeight: "none",
+        border: 0,
+        padding: 0,
+        color: "inherit",
       }}
-      onClick={handleBackgroundClick}
-      role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
       aria-describedby="modal-description"
     >
+      <button
+        type="button"
+        className="absolute inset-0 z-0 cursor-default border-0 bg-transparent p-0 focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-inset"
+        aria-label="ปิดหน้าต่าง"
+        onClick={onClose}
+      />
       <div
         className={`mobile-modal border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 ${className}`}
         style={{
@@ -110,7 +113,6 @@ export const MobileModal: React.FC<MobileModalProps> = ({
           zIndex: 10001,
           position: "relative",
         }}
-        onClick={(e) => e.stopPropagation()}
       >
         {/* ✅ Wrap children ใน scrollable container */}
         <div
@@ -126,7 +128,7 @@ export const MobileModal: React.FC<MobileModalProps> = ({
           {children}
         </div>
       </div>
-    </div>
+    </dialog>
   );
 
   // Use portal to render at document body level - safely

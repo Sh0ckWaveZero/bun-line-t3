@@ -336,7 +336,7 @@ export function ExpensesPage() {
 
           <div
             id="content-animator"
-            className="min-h-[400px] transition-all duration-300 ease-out"
+            className="min-h-[400px] transition-[opacity,transform] duration-300 ease-out"
             style={{
               opacity: contentOpacity,
               transform: `translateY(${contentTransform}px)`,
