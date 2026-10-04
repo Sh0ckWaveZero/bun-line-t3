@@ -31,6 +31,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/common/ToastProvider";
 import {
   Tooltip,
   TooltipContent,
@@ -458,7 +459,7 @@ function JobToggle({
       disabled={disabled}
       onClick={onChange}
       className={cn(
-        "relative inline-flex h-6 w-11 items-center rounded-full border transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+        "relative inline-flex h-6 w-11 cursor-pointer items-center rounded-full border transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
         enabled
           ? "border-emerald-600 bg-emerald-600"
           : "border-slate-300 bg-slate-200 dark:border-white/[0.15] dark:bg-white/[0.1]",
@@ -1141,6 +1142,7 @@ function CronJobLastRunDetails({ lastRun }: { lastRun: CronJob["lastRun"] }) {
 }
 
 export function CronJobsPage() {
+  const { showToast } = useToast();
   const {
     jobs,
     source,
@@ -1274,19 +1276,23 @@ export function CronJobsPage() {
     try {
       await updateJob(job.id, { enabled: !job.enabled });
       setSelectedJob(null);
-      setNotice({
-        type: "success",
-        message: job.enabled
+      setNotice(null);
+      showToast({
+        title: job.enabled
           ? "หยุด Cron Job ชั่วคราวแล้ว"
           : "เปิดใช้งาน Cron Job แล้ว",
+        description: job.name,
+        type: "success",
       });
     } catch (toggleError) {
-      setNotice({
-        type: "error",
-        message:
+      setNotice(null);
+      showToast({
+        title: "เปลี่ยนสถานะ Cron Job ไม่สำเร็จ",
+        description:
           toggleError instanceof Error
             ? toggleError.message
-            : "เปลี่ยนสถานะ Cron Job ไม่สำเร็จ",
+            : "กรุณาลองใหม่อีกครั้ง",
+        type: "error",
       });
     }
   };
