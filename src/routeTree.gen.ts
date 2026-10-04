@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AttendanceReportRouteImport } from './routes/attendance-report'
 import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as CronJobsRouteImport } from './routes/cron-jobs'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DcaHistoryRouteImport } from './routes/dca-history'
 import { Route as ExpensesRouteImport } from './routes/expenses'
@@ -37,6 +38,7 @@ import { Route as ApiLineRouteImport } from './routes/api/line'
 import { Route as ApiLogoutRouteImport } from './routes/api/logout'
 import { Route as CalendarMobileRouteImport } from './routes/calendar.mobile'
 import { Route as ApiAdminCheckRouteImport } from './routes/api/admin/check'
+import { Route as ApiAdminCronJobsRouteImport } from './routes/api/admin/cron-jobs'
 import { Route as ApiAdminDebugRouteImport } from './routes/api/admin/debug'
 import { Route as ApiAttendanceUpdateRouteImport } from './routes/api/attendance/update'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -44,6 +46,7 @@ import { Route as ApiAuthCheckLineApprovalRouteImport } from './routes/api/auth/
 import { Route as ApiCronAutoCheckoutRouteImport } from './routes/api/cron/auto-checkout'
 import { Route as ApiCronCheckInReminderRouteImport } from './routes/api/cron/check-in-reminder'
 import { Route as ApiCronCheckoutReminderRouteImport } from './routes/api/cron/checkout-reminder'
+import { Route as ApiCronDispatchRouteImport } from './routes/api/cron/dispatch'
 import { Route as ApiCronEnhancedCheckoutReminderRouteImport } from './routes/api/cron/enhanced-checkout-reminder'
 import { Route as ApiCronImageCleanupRouteImport } from './routes/api/cron/image-cleanup'
 import { Route as ApiDcaIndexRouteImport } from './routes/api/dca/index'
@@ -71,9 +74,11 @@ import { Route as ApiTempChartsFilenameRouteImport } from './routes/api/temp-cha
 import { Route as ApiThaiIdGenerateRouteImport } from './routes/api/thai-id/generate'
 import { Route as ApiThaiIdValidateRouteImport } from './routes/api/thai-id/validate'
 import { Route as ApiUserSettingsRouteImport } from './routes/api/user/settings'
+import { Route as ApiAdminCronJobsJobIdRouteImport } from './routes/api/admin/cron-jobs/$jobId'
 import { Route as ApiExpensesBudgetsIdRouteImport } from './routes/api/expenses/budgets/$id'
 import { Route as ApiExpensesCategoriesIdRouteImport } from './routes/api/expenses/categories/$id'
 import { Route as ApiUserSettingsNotificationsRouteImport } from './routes/api/user/settings/notifications'
+import { Route as ApiAdminCronJobsJobIdRunRouteImport } from './routes/api/admin/cron-jobs/$jobId/run'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -88,6 +93,11 @@ const AttendanceReportRoute = AttendanceReportRouteImport.update({
 const CalendarRoute = CalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CronJobsRoute = CronJobsRouteImport.update({
+  id: '/cron-jobs',
+  path: '/cron-jobs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -215,6 +225,11 @@ const ApiAdminCheckRoute = ApiAdminCheckRouteImport.update({
   path: '/api/admin/check',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminCronJobsRoute = ApiAdminCronJobsRouteImport.update({
+  id: '/api/admin/cron-jobs',
+  path: '/api/admin/cron-jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdminDebugRoute = ApiAdminDebugRouteImport.update({
   id: '/api/admin/debug',
   path: '/api/admin/debug',
@@ -249,6 +264,11 @@ const ApiCronCheckInReminderRoute = ApiCronCheckInReminderRouteImport.update({
 const ApiCronCheckoutReminderRoute = ApiCronCheckoutReminderRouteImport.update({
   id: '/api/cron/checkout-reminder',
   path: '/api/cron/checkout-reminder',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCronDispatchRoute = ApiCronDispatchRouteImport.update({
+  id: '/api/cron/dispatch',
+  path: '/api/cron/dispatch',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiCronEnhancedCheckoutReminderRoute =
@@ -390,6 +410,11 @@ const ApiUserSettingsRoute = ApiUserSettingsRouteImport.update({
   path: '/api/user/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminCronJobsJobIdRoute = ApiAdminCronJobsJobIdRouteImport.update({
+  id: '/$jobId',
+  path: '/$jobId',
+  getParentRoute: () => ApiAdminCronJobsRoute,
+} as any)
 const ApiExpensesBudgetsIdRoute = ApiExpensesBudgetsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -406,11 +431,18 @@ const ApiUserSettingsNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => ApiUserSettingsRoute,
   } as any)
+const ApiAdminCronJobsJobIdRunRoute =
+  ApiAdminCronJobsJobIdRunRouteImport.update({
+    id: '/run',
+    path: '/run',
+    getParentRoute: () => ApiAdminCronJobsJobIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/attendance-report': typeof AttendanceReportRoute
   '/calendar': typeof CalendarRouteWithChildren
+  '/cron-jobs': typeof CronJobsRoute
   '/dashboard': typeof DashboardRoute
   '/dca-history': typeof DcaHistoryRoute
   '/expenses': typeof ExpensesRoute
@@ -436,6 +468,7 @@ export interface FileRoutesByFullPath {
   '/api/logout': typeof ApiLogoutRoute
   '/calendar/mobile': typeof CalendarMobileRoute
   '/api/admin/check': typeof ApiAdminCheckRoute
+  '/api/admin/cron-jobs': typeof ApiAdminCronJobsRouteWithChildren
   '/api/admin/debug': typeof ApiAdminDebugRoute
   '/api/attendance/update': typeof ApiAttendanceUpdateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -443,6 +476,7 @@ export interface FileRoutesByFullPath {
   '/api/cron/auto-checkout': typeof ApiCronAutoCheckoutRoute
   '/api/cron/check-in-reminder': typeof ApiCronCheckInReminderRoute
   '/api/cron/checkout-reminder': typeof ApiCronCheckoutReminderRoute
+  '/api/cron/dispatch': typeof ApiCronDispatchRoute
   '/api/cron/enhanced-checkout-reminder': typeof ApiCronEnhancedCheckoutReminderRoute
   '/api/cron/image-cleanup': typeof ApiCronImageCleanupRoute
   '/api/dca/$id': typeof ApiDcaIdRoute
@@ -470,14 +504,17 @@ export interface FileRoutesByFullPath {
   '/api/dca/': typeof ApiDcaIndexRoute
   '/api/expenses/': typeof ApiExpensesIndexRoute
   '/api/subscriptions/': typeof ApiSubscriptionsIndexRoute
+  '/api/admin/cron-jobs/$jobId': typeof ApiAdminCronJobsJobIdRouteWithChildren
   '/api/expenses/budgets/$id': typeof ApiExpensesBudgetsIdRoute
   '/api/expenses/categories/$id': typeof ApiExpensesCategoriesIdRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
+  '/api/admin/cron-jobs/$jobId/run': typeof ApiAdminCronJobsJobIdRunRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/attendance-report': typeof AttendanceReportRoute
   '/calendar': typeof CalendarRouteWithChildren
+  '/cron-jobs': typeof CronJobsRoute
   '/dashboard': typeof DashboardRoute
   '/dca-history': typeof DcaHistoryRoute
   '/expenses': typeof ExpensesRoute
@@ -503,6 +540,7 @@ export interface FileRoutesByTo {
   '/api/logout': typeof ApiLogoutRoute
   '/calendar/mobile': typeof CalendarMobileRoute
   '/api/admin/check': typeof ApiAdminCheckRoute
+  '/api/admin/cron-jobs': typeof ApiAdminCronJobsRouteWithChildren
   '/api/admin/debug': typeof ApiAdminDebugRoute
   '/api/attendance/update': typeof ApiAttendanceUpdateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -510,6 +548,7 @@ export interface FileRoutesByTo {
   '/api/cron/auto-checkout': typeof ApiCronAutoCheckoutRoute
   '/api/cron/check-in-reminder': typeof ApiCronCheckInReminderRoute
   '/api/cron/checkout-reminder': typeof ApiCronCheckoutReminderRoute
+  '/api/cron/dispatch': typeof ApiCronDispatchRoute
   '/api/cron/enhanced-checkout-reminder': typeof ApiCronEnhancedCheckoutReminderRoute
   '/api/cron/image-cleanup': typeof ApiCronImageCleanupRoute
   '/api/dca/$id': typeof ApiDcaIdRoute
@@ -537,15 +576,18 @@ export interface FileRoutesByTo {
   '/api/dca': typeof ApiDcaIndexRoute
   '/api/expenses': typeof ApiExpensesIndexRoute
   '/api/subscriptions': typeof ApiSubscriptionsIndexRoute
+  '/api/admin/cron-jobs/$jobId': typeof ApiAdminCronJobsJobIdRouteWithChildren
   '/api/expenses/budgets/$id': typeof ApiExpensesBudgetsIdRoute
   '/api/expenses/categories/$id': typeof ApiExpensesCategoriesIdRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
+  '/api/admin/cron-jobs/$jobId/run': typeof ApiAdminCronJobsJobIdRunRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/attendance-report': typeof AttendanceReportRoute
   '/calendar': typeof CalendarRouteWithChildren
+  '/cron-jobs': typeof CronJobsRoute
   '/dashboard': typeof DashboardRoute
   '/dca-history': typeof DcaHistoryRoute
   '/expenses': typeof ExpensesRoute
@@ -571,6 +613,7 @@ export interface FileRoutesById {
   '/api/logout': typeof ApiLogoutRoute
   '/calendar/mobile': typeof CalendarMobileRoute
   '/api/admin/check': typeof ApiAdminCheckRoute
+  '/api/admin/cron-jobs': typeof ApiAdminCronJobsRouteWithChildren
   '/api/admin/debug': typeof ApiAdminDebugRoute
   '/api/attendance/update': typeof ApiAttendanceUpdateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -578,6 +621,7 @@ export interface FileRoutesById {
   '/api/cron/auto-checkout': typeof ApiCronAutoCheckoutRoute
   '/api/cron/check-in-reminder': typeof ApiCronCheckInReminderRoute
   '/api/cron/checkout-reminder': typeof ApiCronCheckoutReminderRoute
+  '/api/cron/dispatch': typeof ApiCronDispatchRoute
   '/api/cron/enhanced-checkout-reminder': typeof ApiCronEnhancedCheckoutReminderRoute
   '/api/cron/image-cleanup': typeof ApiCronImageCleanupRoute
   '/api/dca/$id': typeof ApiDcaIdRoute
@@ -605,9 +649,11 @@ export interface FileRoutesById {
   '/api/dca/': typeof ApiDcaIndexRoute
   '/api/expenses/': typeof ApiExpensesIndexRoute
   '/api/subscriptions/': typeof ApiSubscriptionsIndexRoute
+  '/api/admin/cron-jobs/$jobId': typeof ApiAdminCronJobsJobIdRouteWithChildren
   '/api/expenses/budgets/$id': typeof ApiExpensesBudgetsIdRoute
   '/api/expenses/categories/$id': typeof ApiExpensesCategoriesIdRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
+  '/api/admin/cron-jobs/$jobId/run': typeof ApiAdminCronJobsJobIdRunRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -615,6 +661,7 @@ export interface FileRouteTypes {
     | '/'
     | '/attendance-report'
     | '/calendar'
+    | '/cron-jobs'
     | '/dashboard'
     | '/dca-history'
     | '/expenses'
@@ -640,6 +687,7 @@ export interface FileRouteTypes {
     | '/api/logout'
     | '/calendar/mobile'
     | '/api/admin/check'
+    | '/api/admin/cron-jobs'
     | '/api/admin/debug'
     | '/api/attendance/update'
     | '/api/auth/$'
@@ -647,6 +695,7 @@ export interface FileRouteTypes {
     | '/api/cron/auto-checkout'
     | '/api/cron/check-in-reminder'
     | '/api/cron/checkout-reminder'
+    | '/api/cron/dispatch'
     | '/api/cron/enhanced-checkout-reminder'
     | '/api/cron/image-cleanup'
     | '/api/dca/$id'
@@ -674,14 +723,17 @@ export interface FileRouteTypes {
     | '/api/dca/'
     | '/api/expenses/'
     | '/api/subscriptions/'
+    | '/api/admin/cron-jobs/$jobId'
     | '/api/expenses/budgets/$id'
     | '/api/expenses/categories/$id'
     | '/api/user/settings/notifications'
+    | '/api/admin/cron-jobs/$jobId/run'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/attendance-report'
     | '/calendar'
+    | '/cron-jobs'
     | '/dashboard'
     | '/dca-history'
     | '/expenses'
@@ -707,6 +759,7 @@ export interface FileRouteTypes {
     | '/api/logout'
     | '/calendar/mobile'
     | '/api/admin/check'
+    | '/api/admin/cron-jobs'
     | '/api/admin/debug'
     | '/api/attendance/update'
     | '/api/auth/$'
@@ -714,6 +767,7 @@ export interface FileRouteTypes {
     | '/api/cron/auto-checkout'
     | '/api/cron/check-in-reminder'
     | '/api/cron/checkout-reminder'
+    | '/api/cron/dispatch'
     | '/api/cron/enhanced-checkout-reminder'
     | '/api/cron/image-cleanup'
     | '/api/dca/$id'
@@ -741,14 +795,17 @@ export interface FileRouteTypes {
     | '/api/dca'
     | '/api/expenses'
     | '/api/subscriptions'
+    | '/api/admin/cron-jobs/$jobId'
     | '/api/expenses/budgets/$id'
     | '/api/expenses/categories/$id'
     | '/api/user/settings/notifications'
+    | '/api/admin/cron-jobs/$jobId/run'
   id:
     | '__root__'
     | '/'
     | '/attendance-report'
     | '/calendar'
+    | '/cron-jobs'
     | '/dashboard'
     | '/dca-history'
     | '/expenses'
@@ -774,6 +831,7 @@ export interface FileRouteTypes {
     | '/api/logout'
     | '/calendar/mobile'
     | '/api/admin/check'
+    | '/api/admin/cron-jobs'
     | '/api/admin/debug'
     | '/api/attendance/update'
     | '/api/auth/$'
@@ -781,6 +839,7 @@ export interface FileRouteTypes {
     | '/api/cron/auto-checkout'
     | '/api/cron/check-in-reminder'
     | '/api/cron/checkout-reminder'
+    | '/api/cron/dispatch'
     | '/api/cron/enhanced-checkout-reminder'
     | '/api/cron/image-cleanup'
     | '/api/dca/$id'
@@ -808,15 +867,18 @@ export interface FileRouteTypes {
     | '/api/dca/'
     | '/api/expenses/'
     | '/api/subscriptions/'
+    | '/api/admin/cron-jobs/$jobId'
     | '/api/expenses/budgets/$id'
     | '/api/expenses/categories/$id'
     | '/api/user/settings/notifications'
+    | '/api/admin/cron-jobs/$jobId/run'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AttendanceReportRoute: typeof AttendanceReportRoute
   CalendarRoute: typeof CalendarRouteWithChildren
+  CronJobsRoute: typeof CronJobsRoute
   DashboardRoute: typeof DashboardRoute
   DcaHistoryRoute: typeof DcaHistoryRoute
   ExpensesRoute: typeof ExpensesRoute
@@ -841,6 +903,7 @@ export interface RootRouteChildren {
   ApiLineRoute: typeof ApiLineRouteWithChildren
   ApiLogoutRoute: typeof ApiLogoutRoute
   ApiAdminCheckRoute: typeof ApiAdminCheckRoute
+  ApiAdminCronJobsRoute: typeof ApiAdminCronJobsRouteWithChildren
   ApiAdminDebugRoute: typeof ApiAdminDebugRoute
   ApiAttendanceUpdateRoute: typeof ApiAttendanceUpdateRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -848,6 +911,7 @@ export interface RootRouteChildren {
   ApiCronAutoCheckoutRoute: typeof ApiCronAutoCheckoutRoute
   ApiCronCheckInReminderRoute: typeof ApiCronCheckInReminderRoute
   ApiCronCheckoutReminderRoute: typeof ApiCronCheckoutReminderRoute
+  ApiCronDispatchRoute: typeof ApiCronDispatchRoute
   ApiCronEnhancedCheckoutReminderRoute: typeof ApiCronEnhancedCheckoutReminderRoute
   ApiCronImageCleanupRoute: typeof ApiCronImageCleanupRoute
   ApiDcaIdRoute: typeof ApiDcaIdRoute
@@ -895,6 +959,13 @@ declare module '@tanstack/react-router' {
       path: '/calendar'
       fullPath: '/calendar'
       preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cron-jobs': {
+      id: '/cron-jobs'
+      path: '/cron-jobs'
+      fullPath: '/cron-jobs'
+      preLoaderRoute: typeof CronJobsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -1072,6 +1143,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminCheckRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/cron-jobs': {
+      id: '/api/admin/cron-jobs'
+      path: '/api/admin/cron-jobs'
+      fullPath: '/api/admin/cron-jobs'
+      preLoaderRoute: typeof ApiAdminCronJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/debug': {
       id: '/api/admin/debug'
       path: '/api/admin/debug'
@@ -1119,6 +1197,13 @@ declare module '@tanstack/react-router' {
       path: '/api/cron/checkout-reminder'
       fullPath: '/api/cron/checkout-reminder'
       preLoaderRoute: typeof ApiCronCheckoutReminderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron/dispatch': {
+      id: '/api/cron/dispatch'
+      path: '/api/cron/dispatch'
+      fullPath: '/api/cron/dispatch'
+      preLoaderRoute: typeof ApiCronDispatchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/cron/enhanced-checkout-reminder': {
@@ -1310,6 +1395,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiUserSettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/cron-jobs/$jobId': {
+      id: '/api/admin/cron-jobs/$jobId'
+      path: '/$jobId'
+      fullPath: '/api/admin/cron-jobs/$jobId'
+      preLoaderRoute: typeof ApiAdminCronJobsJobIdRouteImport
+      parentRoute: typeof ApiAdminCronJobsRoute
+    }
     '/api/expenses/budgets/$id': {
       id: '/api/expenses/budgets/$id'
       path: '/$id'
@@ -1330,6 +1422,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/user/settings/notifications'
       preLoaderRoute: typeof ApiUserSettingsNotificationsRouteImport
       parentRoute: typeof ApiUserSettingsRoute
+    }
+    '/api/admin/cron-jobs/$jobId/run': {
+      id: '/api/admin/cron-jobs/$jobId/run'
+      path: '/run'
+      fullPath: '/api/admin/cron-jobs/$jobId/run'
+      preLoaderRoute: typeof ApiAdminCronJobsJobIdRunRouteImport
+      parentRoute: typeof ApiAdminCronJobsJobIdRoute
     }
   }
 }
@@ -1371,6 +1470,30 @@ const ApiLineRouteChildren: ApiLineRouteChildren = {
 const ApiLineRouteWithChildren =
   ApiLineRoute._addFileChildren(ApiLineRouteChildren)
 
+interface ApiAdminCronJobsJobIdRouteChildren {
+  ApiAdminCronJobsJobIdRunRoute: typeof ApiAdminCronJobsJobIdRunRoute
+}
+
+const ApiAdminCronJobsJobIdRouteChildren: ApiAdminCronJobsJobIdRouteChildren = {
+  ApiAdminCronJobsJobIdRunRoute: ApiAdminCronJobsJobIdRunRoute,
+}
+
+const ApiAdminCronJobsJobIdRouteWithChildren =
+  ApiAdminCronJobsJobIdRoute._addFileChildren(
+    ApiAdminCronJobsJobIdRouteChildren,
+  )
+
+interface ApiAdminCronJobsRouteChildren {
+  ApiAdminCronJobsJobIdRoute: typeof ApiAdminCronJobsJobIdRouteWithChildren
+}
+
+const ApiAdminCronJobsRouteChildren: ApiAdminCronJobsRouteChildren = {
+  ApiAdminCronJobsJobIdRoute: ApiAdminCronJobsJobIdRouteWithChildren,
+}
+
+const ApiAdminCronJobsRouteWithChildren =
+  ApiAdminCronJobsRoute._addFileChildren(ApiAdminCronJobsRouteChildren)
+
 interface ApiExpensesBudgetsRouteChildren {
   ApiExpensesBudgetsIdRoute: typeof ApiExpensesBudgetsIdRoute
 }
@@ -1411,6 +1534,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AttendanceReportRoute: AttendanceReportRoute,
   CalendarRoute: CalendarRouteWithChildren,
+  CronJobsRoute: CronJobsRoute,
   DashboardRoute: DashboardRoute,
   DcaHistoryRoute: DcaHistoryRoute,
   ExpensesRoute: ExpensesRoute,
@@ -1435,6 +1559,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiLineRoute: ApiLineRouteWithChildren,
   ApiLogoutRoute: ApiLogoutRoute,
   ApiAdminCheckRoute: ApiAdminCheckRoute,
+  ApiAdminCronJobsRoute: ApiAdminCronJobsRouteWithChildren,
   ApiAdminDebugRoute: ApiAdminDebugRoute,
   ApiAttendanceUpdateRoute: ApiAttendanceUpdateRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
@@ -1442,6 +1567,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCronAutoCheckoutRoute: ApiCronAutoCheckoutRoute,
   ApiCronCheckInReminderRoute: ApiCronCheckInReminderRoute,
   ApiCronCheckoutReminderRoute: ApiCronCheckoutReminderRoute,
+  ApiCronDispatchRoute: ApiCronDispatchRoute,
   ApiCronEnhancedCheckoutReminderRoute: ApiCronEnhancedCheckoutReminderRoute,
   ApiCronImageCleanupRoute: ApiCronImageCleanupRoute,
   ApiDcaIdRoute: ApiDcaIdRoute,
