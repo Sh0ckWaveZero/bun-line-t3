@@ -36,6 +36,8 @@ export interface CronJobLastRun {
   status: RunStatus;
   relative: string;
   duration: string;
+  message: string | null;
+  httpStatus: number | null;
 }
 
 export interface CronJobNextRun {

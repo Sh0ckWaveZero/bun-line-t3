@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/database/db";
 import {
+  extractCronResponseMessage,
   formatCronDate,
   formatRelativePast,
   formatRelativeUntil,
@@ -39,6 +40,8 @@ interface CronExecutionRecord {
   status: string;
   startedAt: Date;
   durationMs: number | null;
+  httpStatus: number | null;
+  message: string | null;
 }
 
 interface CronJobRecord {
@@ -156,11 +159,15 @@ function makeCronJob(record: CronJobRecord, now: Date): CronJob {
           status: toRunStatus(latestExecution.status),
           relative: formatRelativePast(latestExecution.startedAt, now),
           duration: formatDuration(latestExecution.durationMs),
+          httpStatus: latestExecution.httpStatus,
+          message: latestExecution.message,
         }
       : {
           status: "unknown",
           relative: "ยังไม่มีข้อมูล",
           duration: "—",
+          httpStatus: null,
+          message: null,
         },
     runHistory: history.map((execution) => toRunStatus(execution.status)),
     nextRun: nextRun
@@ -187,7 +194,13 @@ const executionInclude = {
   executions: {
     orderBy: { startedAt: "desc" as const },
     take: 20,
-    select: { status: true, startedAt: true, durationMs: true },
+    select: {
+      status: true,
+      startedAt: true,
+      durationMs: true,
+      httpStatus: true,
+      message: true,
+    },
   },
 };
 
@@ -264,20 +277,22 @@ function isUniqueConstraintError(error: unknown): boolean {
 }
 
 async function readExecutionMessage(response: Response): Promise<string> {
-  if (!response.ok) return `HTTP ${response.status}`;
+  let body: string;
 
   try {
-    const payload: unknown = await response.json();
-    if (
-      typeof payload === "object" &&
-      payload !== null &&
-      "message" in payload &&
-      typeof payload.message === "string"
-    ) {
-      return payload.message.slice(0, 500);
-    }
+    body = await response.text();
   } catch {
-    // The endpoint may return an empty or non-JSON response.
+    return `HTTP ${response.status}`;
+  }
+
+  if (body.trim()) {
+    try {
+      const payload: unknown = JSON.parse(body);
+      const message = extractCronResponseMessage(payload);
+      if (message) return message.slice(0, 500);
+    } catch {
+      if (!response.ok) return body.trim().slice(0, 500);
+    }
   }
 
   return `HTTP ${response.status}`;

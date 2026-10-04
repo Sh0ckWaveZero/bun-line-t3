@@ -1,6 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { CRON_JOB_DEFINITIONS } from "../../../../src/features/cron-jobs/constants/registry";
 import {
+  extractCronResponseMessage,
+  summarizeAutoCheckoutResults,
+} from "../../../../src/features/cron-jobs/helpers/cron-execution";
+import {
   formatRelativeUntil,
   getNextCronOccurrence,
   isValidCronExpression,
@@ -56,5 +60,37 @@ describe("runtime cron registry", () => {
         new Date("2026-10-04T01:01:00.000Z"),
       ),
     ).toBe(false);
+  });
+
+  test("surfaces auto-checkout failure reasons in the execution summary", () => {
+    const summary = summarizeAutoCheckoutResults([
+      { status: "success" },
+      { status: "failed", reason: "ไม่พบ attendance record" },
+      { status: "failed", reason: "ไม่พบ attendance record" },
+      { status: "skipped", reason: "ลงชื่อออกแล้ว" },
+    ]);
+
+    expect(summary.success).toBe(false);
+    expect(summary.summary).toEqual({
+      processed: 4,
+      successful: 1,
+      failed: 2,
+      skipped: 1,
+      warnings: 0,
+    });
+    expect(summary.failureReasons).toEqual([
+      { reason: "ไม่พบ attendance record", count: 2 },
+    ]);
+    expect(summary.message).toContain("ไม่พบ attendance record (2 คน)");
+  });
+
+  test("reads a failure message from a cron response payload", () => {
+    expect(
+      extractCronResponseMessage({ error: "LINE approval required" }),
+    ).toBe("LINE approval required");
+    expect(extractCronResponseMessage({ message: "ลงชื่อออกงานล้มเหลว" })).toBe(
+      "ลงชื่อออกงานล้มเหลว",
+    );
+    expect(extractCronResponseMessage({ status: "failed" })).toBeNull();
   });
 });

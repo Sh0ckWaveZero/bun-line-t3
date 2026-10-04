@@ -6,6 +6,25 @@ import { AttendanceStatusType } from "@prisma/client";
 import { checkCronLineApproval } from "@/lib/auth/approval-guard";
 import { validateSimpleCronAuth } from "@/lib/utils/cron-auth";
 import { resolveAutoCheckoutTarget } from "@/lib/utils/datetime";
+import {
+  summarizeAutoCheckoutResults,
+  type AutoCheckoutResultStatus,
+} from "@/features/cron-jobs/helpers";
+
+interface AutoCheckoutResult {
+  userId: string;
+  status: AutoCheckoutResultStatus;
+  reason?: string;
+  warning?: string;
+  checkInTime?: Date;
+  autoCheckoutTime?: Date;
+  workingHours?: string;
+}
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message) return error.message;
+  return "ไม่ทราบสาเหตุ";
+}
 
 /**
  * API handler สำหรับการลงชื่อออกงานอัตโนมัติตอนเที่ยงคืน
@@ -39,13 +58,15 @@ export async function GET(request: Request) {
           success: true,
           message: "ไม่มีพนักงานที่ต้องลงชื่อออกงานอัตโนมัติ",
           processedCount: 0,
+          failureReasons: [],
+          warningReasons: [],
         },
         { status: 200 },
       );
     }
 
     // ประมวลผลลงชื่อออกงานอัตโนมัติสำหรับแต่ละคน
-    const results = await Promise.all(
+    const results: AutoCheckoutResult[] = await Promise.all(
       usersWithoutCheckout.map(async (userId) => {
         try {
           // ค้นหา attendance record ของวันนี้
@@ -78,11 +99,14 @@ export async function GET(request: Request) {
           const workingHours = workingMilliseconds / (1000 * 60 * 60);
 
           // ส่งแจ้งเตือนให้ผู้ใช้ทราบ (ถ้าต้องการ)
-          await sendAutoCheckoutNotification(userId, {
-            checkInTime: todayAttendance.checkInTime,
-            checkOutTime: autoCheckoutTime,
-            workingHours,
-          });
+          const notificationWarning = await sendAutoCheckoutNotification(
+            userId,
+            {
+              checkInTime: todayAttendance.checkInTime,
+              checkOutTime: autoCheckoutTime,
+              workingHours,
+            },
+          );
 
           return {
             userId,
@@ -90,42 +114,34 @@ export async function GET(request: Request) {
             checkInTime: todayAttendance.checkInTime,
             autoCheckoutTime,
             workingHours: workingHours.toFixed(2),
+            warning: notificationWarning ?? undefined,
           };
-        } catch (error: any) {
+        } catch (error: unknown) {
           return {
             userId,
             status: "failed",
-            error: error.message,
+            reason: getErrorMessage(error),
           };
         }
       }),
     );
 
-    // นับจำนวนที่สำเร็จ
-    const successCount = results.filter((r) => r.status === "success").length;
-    const failedCount = results.filter((r) => r.status === "failed").length;
-    const skippedCount = results.filter((r) => r.status === "skipped").length;
+    const runSummary = summarizeAutoCheckoutResults(results);
 
     return Response.json(
       {
-        success: true,
-        message: `ลงชื่อออกงานอัตโนมัติเสร็จสิ้น: ${successCount} คน`,
-        summary: {
-          processed: usersWithoutCheckout.length,
-          successful: successCount,
-          failed: failedCount,
-          skipped: skippedCount,
-        },
+        ...runSummary,
         results,
       },
-      { status: 200 },
+      { status: runSummary.success ? 200 : 500 },
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const reason = getErrorMessage(error);
+    console.error("❌ Error in auto-checkout cron job:", error);
     return Response.json(
       {
         success: false,
-        message: "เกิดข้อผิดพลาดในระบบลงชื่อออกงานอัตโนมัติ",
-        error: error.message,
+        message: `ระบบลงชื่อออกงานอัตโนมัติล้มเหลว: ${reason}`,
       },
       { status: 500 },
     );
@@ -150,7 +166,7 @@ async function sendAutoCheckoutNotification(
     checkOutTime: Date;
     workingHours: number;
   },
-) {
+): Promise<string | null> {
   try {
     // ค้นหา LINE account ของผู้ใช้
     const userAccount = await db.account.findFirst({
@@ -162,7 +178,7 @@ async function sendAutoCheckoutNotification(
     });
 
     if (!userAccount) {
-      return;
+      return null;
     }
 
     // สร้างข้อความแจ้งเตือน
@@ -180,7 +196,7 @@ async function sendAutoCheckoutNotification(
 
     // ส่งข้อความผ่าน LINE
     const lineChannelAccessToken = env.LINE_CHANNEL_ACCESS;
-    await fetch(`${env.LINE_MESSAGING_API}/push`, {
+    const response = await fetch(`${env.LINE_MESSAGING_API}/push`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -191,7 +207,13 @@ async function sendAutoCheckoutNotification(
         messages: [message],
       }),
     });
-  } catch {
-    // Silently fail
+
+    if (!response.ok) {
+      return `ส่ง LINE แจ้งเตือนไม่สำเร็จ (HTTP ${response.status})`;
+    }
+
+    return null;
+  } catch (error: unknown) {
+    return `ส่ง LINE แจ้งเตือนไม่สำเร็จ: ${getErrorMessage(error)}`;
   }
 }
