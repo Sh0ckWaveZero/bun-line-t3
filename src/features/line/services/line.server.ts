@@ -65,6 +65,8 @@ const handleEvent = async (
     return res.status(200).json({ message: "pending approval" });
   }
 
+  // ประมวลผลตามลำดับ (ห้าม Promise.all) — command หลายอันใน batch เดียว
+  // เป็น ordered side effects: command หลังต้องเห็นผลของ command ก่อนหน้า
   for (let index = 0; index < events.length; index++) {
     const event = events[index];
     console.log(

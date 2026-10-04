@@ -111,7 +111,7 @@ export async function seedDefaultCategories(userId: string): Promise<void> {
     where: { userId },
     select: { name: true },
   });
-  const existingNames = new Set(existing.map((c) => c.name));
+  const existingNames = new Set(existing.map((c: { name: string }) => c.name));
 
   const rows = DEFAULT_CATEGORIES.filter((c) => !existingNames.has(c.name)).map(
     (c) => ({

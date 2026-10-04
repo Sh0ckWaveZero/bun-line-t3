@@ -64,17 +64,14 @@ export async function sendCheckInReminders(
 
   const messages = createReminderMessages(reminderMessage);
 
-  let pushSuccess = 0;
-  let pushFail = 0;
-
-  for (const lineId of lineUserIds) {
-    try {
-      await sendPushMessage(lineId, messages);
-      pushSuccess++;
-    } catch {
-      pushFail++;
-    }
-  }
+  // การส่งแยกกันแต่ละ user เป็นอิสระจากกัน — ส่งพร้อมกันได้ นับผลรวมท้ายงาน
+  const pushResults = await Promise.allSettled(
+    lineUserIds.map((lineId) => sendPushMessage(lineId, messages)),
+  );
+  const pushSuccess = pushResults.filter(
+    (result) => result.status === "fulfilled",
+  ).length;
+  const pushFail = pushResults.length - pushSuccess;
 
   return {
     success: pushSuccess > 0,
