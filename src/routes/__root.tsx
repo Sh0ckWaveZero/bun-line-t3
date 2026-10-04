@@ -206,8 +206,16 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <Providers>
             <ErrorBoundary>
               <div id="modal-root"></div>
+              <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[10000] focus:rounded-lg focus:bg-slate-900 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg focus:ring-2 focus:ring-emerald-400 focus:outline-none dark:focus:bg-white dark:focus:text-slate-900"
+              >
+                ข้ามไปเนื้อหาหลัก
+              </a>
               <Header />
-              <div id="main-content">{children}</div>
+              <div id="main-content" tabIndex={-1}>
+                {children}
+              </div>
             </ErrorBoundary>
           </Providers>
         </AuthSessionProvider>

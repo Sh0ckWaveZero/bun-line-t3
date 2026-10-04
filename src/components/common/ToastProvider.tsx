@@ -81,7 +81,9 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
           key={toastKey}
           open={open}
           onOpenChange={setOpen}
-          duration={toast?.duration ?? 3500}
+          duration={
+            toast?.duration ?? (toast?.type === "error" ? Infinity : 3500)
+          }
           className={cn(
             "pointer-events-auto relative w-full overflow-hidden rounded-2xl border px-4 py-3.5 pr-11 shadow-xl backdrop-blur-xl",
             "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-top-2 data-[state=open]:zoom-in-95",
@@ -119,7 +121,10 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
             <X className="size-4" aria-hidden="true" />
           </ToastPrimitive.Close>
         </ToastPrimitive.Root>
-        <ToastPrimitive.Viewport className="pointer-events-none fixed top-0 right-0 z-[9999] flex w-full max-w-sm flex-col gap-3 p-4 outline-none sm:w-[min(100%,24rem)]" />
+        <ToastPrimitive.Viewport
+          aria-label="การแจ้งเตือน"
+          className="pointer-events-none fixed top-0 right-0 z-[9999] flex w-full max-w-sm flex-col gap-3 p-4 outline-none sm:w-[min(100%,24rem)]"
+        />
       </ToastPrimitive.Provider>
     </ToastContext.Provider>
   );
