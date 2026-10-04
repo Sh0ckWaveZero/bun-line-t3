@@ -114,7 +114,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
           <ToastPrimitive.Close
             type="button"
             aria-label="ปิดการแจ้งเตือน"
-            className="absolute top-3 right-3 rounded-lg p-1 text-current/55 transition-colors hover:bg-black/5 hover:text-current focus-visible:ring-2 focus-visible:ring-current focus-visible:outline-none dark:hover:bg-white/10"
+            className="absolute top-3 right-3 cursor-pointer rounded-lg p-1 text-current/55 transition-colors hover:bg-black/5 hover:text-current focus-visible:ring-2 focus-visible:ring-current focus-visible:outline-none dark:hover:bg-white/10"
           >
             <X className="size-4" aria-hidden="true" />
           </ToastPrimitive.Close>

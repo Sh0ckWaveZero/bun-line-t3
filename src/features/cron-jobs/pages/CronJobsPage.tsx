@@ -579,7 +579,7 @@ function JobRow({
           type="button"
           onClick={() => onMenu(job)}
           aria-label={`จัดการ ${job.name}`}
-          className="rounded-lg p-1.5 text-slate-400 opacity-70 transition-colors group-hover:opacity-100 hover:bg-slate-200 hover:text-slate-700 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none dark:hover:bg-white/[0.08] dark:hover:text-slate-200"
+          className="cursor-pointer rounded-lg p-1.5 text-slate-400 opacity-70 transition-colors group-hover:opacity-100 hover:bg-slate-200 hover:text-slate-700 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none dark:hover:bg-white/[0.08] dark:hover:text-slate-200"
         >
           <MoreHorizontal className="size-4" aria-hidden="true" />
         </button>
@@ -711,7 +711,7 @@ function DialogShell({
             type="button"
             onClick={onClose}
             aria-label="ปิดหน้าต่าง"
-            className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-white/[0.08] dark:hover:text-slate-200"
+            className="cursor-pointer rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-white/[0.08] dark:hover:text-slate-200"
           >
             <X className="size-4" aria-hidden="true" />
           </button>
@@ -805,7 +805,7 @@ function CronJobFormDialog({
                   event.target.value as CronJobMutationInput["method"],
                 )
               }
-              className={DIALOG_INPUT_CLASS}
+              className={`${DIALOG_INPUT_CLASS} cursor-pointer`}
             >
               <option value="GET">GET</option>
               <option value="POST">POST</option>
@@ -870,19 +870,19 @@ function CronJobFormDialog({
                   event.target.value as CronJobMutationInput["environment"],
                 )
               }
-              className={DIALOG_INPUT_CLASS}
+              className={`${DIALOG_INPUT_CLASS} cursor-pointer`}
             >
               <option value="production">Production</option>
               <option value="staging">Staging</option>
               <option value="development">Development</option>
             </select>
           </label>
-          <label className="flex items-end gap-2 pb-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+          <label className="flex cursor-pointer items-end gap-2 pb-2 text-xs font-medium text-slate-600 dark:text-slate-300">
             <input
               type="checkbox"
               checked={form.enabled}
               onChange={(event) => updateField("enabled", event.target.checked)}
-              className="size-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+              className="size-4 cursor-pointer rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
             />
             เปิดใช้งานทันที
           </label>
@@ -910,7 +910,7 @@ function CronJobFormDialog({
                   event.target.value as CronJobMutationInput["targetKind"],
                 )
               }
-              className={DIALOG_INPUT_CLASS}
+              className={`${DIALOG_INPUT_CLASS} cursor-pointer`}
             >
               {TARGET_FILTER_OPTIONS.filter(
                 (option) => option.value !== "all",
@@ -969,14 +969,14 @@ function CronJobFormDialog({
           <button
             type="button"
             onClick={onClose}
-            className="h-9 rounded-lg px-3 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/[0.08]"
+            className="h-9 cursor-pointer rounded-lg px-3 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/[0.08]"
           >
             ยกเลิก
           </button>
           <button
             type="submit"
             disabled={isSaving}
-            className="inline-flex h-9 items-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSaving && <LoaderCircle className="size-3.5 animate-spin" />}
             บันทึก Cron Job
@@ -1021,7 +1021,7 @@ function CronJobActionsDialog({
           type="button"
           disabled={isBusy}
           onClick={() => void onRun()}
-          className="flex w-full items-center gap-3 rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-left text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-500/15 disabled:cursor-not-allowed disabled:opacity-60 dark:text-emerald-300"
+          className="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-left text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-500/15 disabled:cursor-not-allowed disabled:opacity-60 dark:text-emerald-300"
         >
           <Play className="size-4" aria-hidden="true" />
           <span>
@@ -1035,7 +1035,7 @@ function CronJobActionsDialog({
           type="button"
           disabled={isBusy}
           onClick={onEdit}
-          className="flex w-full items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60 dark:border-white/[0.1] dark:text-slate-200 dark:hover:bg-white/[0.06]"
+          className="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/[0.1] dark:text-slate-200 dark:hover:bg-white/[0.06]"
         >
           <Pencil className="size-4" aria-hidden="true" />
           แก้ไขรายละเอียดและตารางเวลา
@@ -1044,7 +1044,7 @@ function CronJobActionsDialog({
           type="button"
           disabled={isBusy}
           onClick={() => void onToggle()}
-          className="flex w-full items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60 dark:border-white/[0.1] dark:text-slate-200 dark:hover:bg-white/[0.06]"
+          className="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/[0.1] dark:text-slate-200 dark:hover:bg-white/[0.06]"
         >
           {job.enabled ? (
             <CircleX className="size-4" aria-hidden="true" />
@@ -1060,7 +1060,7 @@ function CronJobActionsDialog({
               type="button"
               disabled={isBusy}
               onClick={() => setConfirmDelete(true)}
-              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-rose-700 transition-colors hover:bg-rose-500/10 disabled:opacity-60 dark:text-rose-300"
+              className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-rose-700 transition-colors hover:bg-rose-500/10 disabled:cursor-not-allowed disabled:opacity-60 dark:text-rose-300"
             >
               <Trash2 className="size-4" aria-hidden="true" />
               ลบ Cron Job
@@ -1075,7 +1075,7 @@ function CronJobActionsDialog({
                 <button
                   type="button"
                   onClick={() => setConfirmDelete(false)}
-                  className="h-8 rounded-lg px-3 text-xs font-medium text-slate-600 hover:bg-white/60 dark:text-slate-300 dark:hover:bg-white/[0.08]"
+                  className="h-8 cursor-pointer rounded-lg px-3 text-xs font-medium text-slate-600 hover:bg-white/60 dark:text-slate-300 dark:hover:bg-white/[0.08]"
                 >
                   ยกเลิก
                 </button>
@@ -1083,7 +1083,7 @@ function CronJobActionsDialog({
                   type="button"
                   disabled={isBusy}
                   onClick={() => void onDelete()}
-                  className="h-8 rounded-lg bg-rose-600 px-3 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-60"
+                  className="h-8 cursor-pointer rounded-lg bg-rose-600 px-3 text-xs font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   ยืนยันการลบ
                 </button>
@@ -1364,7 +1364,7 @@ export function CronJobsPage() {
                   setEnvironmentFilter(event.target.value as EnvironmentFilter);
                   setPage(1);
                 }}
-                className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 pr-10 text-sm font-medium text-slate-700 shadow-sm transition-colors outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 sm:w-48 dark:border-white/[0.1] dark:bg-[#151719] dark:text-slate-200"
+                className="h-11 w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white px-4 pr-10 text-sm font-medium text-slate-700 shadow-sm transition-colors outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 sm:w-48 dark:border-white/[0.1] dark:bg-[#151719] dark:text-slate-200"
               >
                 <option value="all">ทุกสภาพแวดล้อม</option>
                 <option value="production">Production</option>
@@ -1379,7 +1379,7 @@ export function CronJobsPage() {
             <button
               type="button"
               onClick={handleOpenCreate}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-700 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+              className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-700 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
             >
               <Plus className="size-4" aria-hidden="true" />
               งานใหม่
@@ -1406,7 +1406,7 @@ export function CronJobsPage() {
               type="button"
               onClick={() => void refresh()}
               disabled={isRefreshing}
-              className="inline-flex h-8 items-center justify-center gap-2 rounded-lg border border-rose-400/30 px-3 text-xs font-semibold transition-colors hover:bg-rose-500/10 disabled:opacity-50"
+              className="inline-flex h-8 cursor-pointer items-center justify-center gap-2 rounded-lg border border-rose-400/30 px-3 text-xs font-semibold transition-colors hover:bg-rose-500/10 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <RefreshCw
                 className={cn("size-3.5", isRefreshing && "animate-spin")}
@@ -1443,7 +1443,7 @@ export function CronJobsPage() {
               type="button"
               onClick={() => setNotice(null)}
               aria-label="ปิดข้อความแจ้งเตือน"
-              className="ml-auto rounded-md p-1 opacity-70 hover:bg-black/5 hover:opacity-100 dark:hover:bg-white/[0.08]"
+              className="ml-auto cursor-pointer rounded-md p-1 opacity-70 hover:bg-black/5 hover:opacity-100 dark:hover:bg-white/[0.08]"
             >
               <X className="size-3.5" aria-hidden="true" />
             </button>
@@ -1555,7 +1555,7 @@ export function CronJobsPage() {
                   current === "compact" ? "comfortable" : "compact",
                 )
               }
-              className="inline-flex h-9 items-center justify-center gap-2 self-start rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none sm:self-auto dark:border-white/[0.1] dark:bg-white/[0.03] dark:text-slate-300 dark:hover:bg-white/[0.08]"
+              className="inline-flex h-9 cursor-pointer items-center justify-center gap-2 self-start rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none sm:self-auto dark:border-white/[0.1] dark:bg-white/[0.03] dark:text-slate-300 dark:hover:bg-white/[0.08]"
             >
               <SlidersHorizontal className="size-4" aria-hidden="true" />
               แสดงผล
@@ -1589,7 +1589,7 @@ export function CronJobsPage() {
                     setPage(1);
                   }}
                   className={cn(
-                    "relative flex shrink-0 items-center gap-2 py-3.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none",
+                    "relative flex shrink-0 cursor-pointer items-center gap-2 py-3.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none",
                     isActive
                       ? "text-slate-900 dark:text-white"
                       : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200",
@@ -1645,7 +1645,7 @@ export function CronJobsPage() {
                       type="button"
                       onClick={() => setFilterOpen(false)}
                       aria-label="ปิดตัวกรอง"
-                      className="rounded-md p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.08]"
+                      className="cursor-pointer rounded-md p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.08]"
                     >
                       <X className="size-4" aria-hidden="true" />
                     </button>
@@ -1666,7 +1666,7 @@ export function CronJobsPage() {
                         );
                         setPage(1);
                       }}
-                      className="h-9 w-full appearance-none rounded-lg border border-slate-200 bg-slate-50 px-3 pr-8 text-sm text-slate-700 outline-none focus:border-emerald-500 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-slate-200"
+                      className="h-9 w-full cursor-pointer appearance-none rounded-lg border border-slate-200 bg-slate-50 px-3 pr-8 text-sm text-slate-700 outline-none focus:border-emerald-500 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-slate-200"
                     >
                       {TARGET_FILTER_OPTIONS.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -1682,7 +1682,7 @@ export function CronJobsPage() {
                   <button
                     type="button"
                     onClick={handleResetFilters}
-                    className="mt-3 text-xs font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+                    className="mt-3 cursor-pointer text-xs font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
                   >
                     ล้างตัวกรองทั้งหมด
                   </button>
@@ -1693,7 +1693,7 @@ export function CronJobsPage() {
                 aria-expanded={filterOpen}
                 onClick={() => setFilterOpen((open) => !open)}
                 className={cn(
-                  "inline-flex h-9 items-center gap-2 rounded-lg border px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none",
+                  "inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none",
                   filterOpen || targetFilter !== "all"
                     ? "border-emerald-400/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
                     : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-white/[0.1] dark:bg-white/[0.03] dark:text-slate-300 dark:hover:bg-white/[0.08]",
@@ -1774,7 +1774,7 @@ export function CronJobsPage() {
                     setPageSize(Number(event.target.value));
                     setPage(1);
                   }}
-                  className="h-8 appearance-none rounded-lg border border-slate-200 bg-white px-2.5 pr-7 text-xs font-medium text-slate-700 outline-none focus:border-emerald-500 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-slate-200"
+                  className="h-8 cursor-pointer appearance-none rounded-lg border border-slate-200 bg-white px-2.5 pr-7 text-xs font-medium text-slate-700 outline-none focus:border-emerald-500 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-slate-200"
                 >
                   {PAGE_SIZE_OPTIONS.map((option) => (
                     <option key={option} value={option}>
@@ -1798,7 +1798,7 @@ export function CronJobsPage() {
                   disabled={currentPage === 1}
                   onClick={() => setPage((current) => Math.max(1, current - 1))}
                   aria-label="ไปหน้าก่อนหน้า"
-                  className="inline-flex size-8 items-center justify-center rounded-lg transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-35 dark:hover:bg-white/[0.08]"
+                  className="inline-flex size-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-35 dark:hover:bg-white/[0.08]"
                 >
                   <ChevronLeft className="size-4" aria-hidden="true" />
                 </button>
@@ -1813,7 +1813,7 @@ export function CronJobsPage() {
                       }
                       onClick={() => setPage(pageNumber)}
                       className={cn(
-                        "inline-flex size-8 items-center justify-center rounded-lg text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none",
+                        "inline-flex size-8 cursor-pointer items-center justify-center rounded-lg text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none",
                         currentPage === pageNumber
                           ? "bg-slate-200 text-slate-900 dark:bg-white/[0.12] dark:text-white"
                           : "hover:bg-slate-100 dark:hover:bg-white/[0.08]",
@@ -1829,7 +1829,7 @@ export function CronJobsPage() {
                     setPage((current) => Math.min(pageCount, current + 1))
                   }
                   aria-label="ไปหน้าถัดไป"
-                  className="inline-flex size-8 items-center justify-center rounded-lg transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-35 dark:hover:bg-white/[0.08]"
+                  className="inline-flex size-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-35 dark:hover:bg-white/[0.08]"
                 >
                   <ChevronRight className="size-4" aria-hidden="true" />
                 </button>
