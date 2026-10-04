@@ -52,8 +52,11 @@ export const findAndMergeDuplicateLineAccounts = async (
   const primaryUserId = primaryAccount.userId;
 
   // Merge accounts: ย้าย sessions และข้อมูลอื่นๆ ไปยัง primary user
-  for (let i = 1; i < accounts.length; i++) {
-    const duplicateAccount = accounts[i];
+  // แต่ละ duplicate user เป็นอิสระจากกัน (คนละ userId) — merge พร้อมกันได้
+  // กรณีสอง account ซ้ำใช้ userId เดียวกันก็ปลอดภัย: แต่ละ iteration ลบ
+  // account ของตัวเองก่อนนับเสมอ ผู้ใดนับได้ 0 จะเป็นคนลบ user row
+  // (อีกฝั่งโดน P2025 แล้ว catch ไว้ — ผลลัพธ์สุดท้ายเท่ากับรันตามลำดับ)
+  const mergeDuplicateAccount = async (duplicateAccount: (typeof accounts)[number]) => {
     const duplicateUserId = duplicateAccount.userId;
 
     console.log(
@@ -112,7 +115,9 @@ export const findAndMergeDuplicateLineAccounts = async (
         error,
       );
     }
-  }
+  };
+
+  await Promise.all(accounts.slice(1).map(mergeDuplicateAccount));
 
   return primaryAccount;
 };
