@@ -368,7 +368,7 @@ function RunSparkline({
   details: CronJobRunDetail[];
 }) {
   return (
-    <TooltipProvider delayDuration={180}>
+    <TooltipProvider delayDuration={180} disableHoverableContent>
       <div
         className="flex h-8 items-end gap-0.5"
         role="group"
