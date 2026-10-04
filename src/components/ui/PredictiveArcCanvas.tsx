@@ -230,10 +230,11 @@ export function PredictiveArcCanvas({
     let frameId = 0;
     let isOnScreen = true;
 
+    // เรซิวเม/หยุดด้วย cancelAnimationFrame จาก observer/visibility เท่านั้น
+    // loop จึง schedule ต่อไม่มีเงื่อนไข เพื่อให้ frameId ถูก track ทุกเฟรม
     const loop = () => {
       renderer.render();
-      frameId =
-        isOnScreen && !document.hidden ? requestAnimationFrame(loop) : 0;
+      frameId = requestAnimationFrame(loop);
     };
 
     const resizeObserver = new ResizeObserver(syncSize);
@@ -261,7 +262,7 @@ export function PredictiveArcCanvas({
     frameId = requestAnimationFrame(loop);
 
     return () => {
-      if (frameId) cancelAnimationFrame(frameId);
+      cancelAnimationFrame(frameId);
       resizeObserver.disconnect();
       intersectionObserver.disconnect();
       document.removeEventListener("visibilitychange", handleVisibility);
