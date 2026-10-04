@@ -157,6 +157,10 @@ Notification delivery problems are recorded as warnings separately. They do
 not mark the attendance update as failed when the database checkout itself
 has already succeeded.
 
+Cron endpoints are server-to-server requests and do not have an interactive
+browser session. Their access control is the `CRON_SECRET` bearer token; do
+not add a user-session or LINE approval guard to the worker endpoint.
+
 The migration is included at
 `prisma/migrations/20261004120000_add_cron_job_management`. Before applying it
 to another environment, confirm that `DATABASE_URL` points to the intended

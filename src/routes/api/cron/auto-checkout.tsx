@@ -3,7 +3,6 @@ import { env } from "@/env.mjs";
 import { attendanceService } from "@/features/attendance/services/attendance.server";
 import { db } from "@/lib/database/db";
 import { AttendanceStatusType } from "@prisma/client";
-import { checkCronLineApproval } from "@/lib/auth/approval-guard";
 import { validateSimpleCronAuth } from "@/lib/utils/cron-auth";
 import { resolveAutoCheckoutTarget } from "@/lib/utils/datetime";
 import {
@@ -35,12 +34,6 @@ export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
   if (!validateSimpleCronAuth(authHeader)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  // 🔐 SECURITY: Check LINE Messaging API approval
-  const approvalCheck = await checkCronLineApproval();
-  if (!approvalCheck.approved) {
-    return approvalCheck.response!;
   }
 
   try {

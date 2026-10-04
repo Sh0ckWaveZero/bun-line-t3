@@ -37,6 +37,15 @@ describe("runtime cron registry", () => {
     expect(crontab).not.toContain("/api/cron/auto-checkout");
   });
 
+  test("keeps automatic checkout independent of an interactive session", async () => {
+    const source = await Bun.file(
+      "src/routes/api/cron/auto-checkout.tsx",
+    ).text();
+
+    expect(source).toContain("validateSimpleCronAuth");
+    expect(source).not.toContain("checkCronLineApproval");
+  });
+
   test("calculates the next Bangkok schedule for the active expressions", () => {
     const now = new Date("2026-10-04T00:00:00.000Z");
     const nextRun = getNextCronOccurrence("0 */2 * * *", now);
