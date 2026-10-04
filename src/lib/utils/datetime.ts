@@ -49,16 +49,31 @@ export const convertUTCToBangkok = (utcDate: Date): Date => {
 };
 
 // Get today's date in YYYY-MM-DD format based on Bangkok timezone
-export const getTodayDateString = (): string => {
-  const today = new Date();
+export const getBangkokDateString = (date: Date = new Date()): string => {
   // Convert to Bangkok timezone and format as YYYY-MM-DD
-  const bangkokDate = new Intl.DateTimeFormat("en-CA", {
+  return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Bangkok",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).format(today);
-  return bangkokDate; // Already in YYYY-MM-DD format
+  }).format(date); // Already in YYYY-MM-DD format
+};
+
+export const getTodayDateString = (): string => getBangkokDateString();
+
+// The midnight auto-checkout fires at 00:00 Bangkok, when "today" has already
+// rolled over. Step back one hour so a delayed/retried tick still resolves to
+// the Bangkok day that just ended, and close it at 23:59:59.999 Bangkok.
+export const resolveAutoCheckoutTarget = (
+  now: Date = new Date(),
+): { workDate: string; checkOutTime: Date } => {
+  const workDate = getBangkokDateString(
+    new Date(now.getTime() - 60 * 60 * 1000),
+  );
+  return {
+    workDate,
+    checkOutTime: new Date(`${workDate}T23:59:59.999+07:00`),
+  };
 };
 
 // Format date to Thai format with Buddhist Era

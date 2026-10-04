@@ -457,14 +457,16 @@ const checkOut = async (userId: string): Promise<CheckInResult> => {
   }
 };
 
-const getTodayAttendance = async (userId: string) => {
+const getTodayAttendance = async (
+  userId: string,
+  workDate: string = getTodayDateString(),
+) => {
   try {
-    const todayDate = getTodayDateString();
     const attendance = await db.workAttendance.findUnique({
       where: {
         userId_workDate: {
           userId: userId,
-          workDate: todayDate,
+          workDate,
         },
       },
     });

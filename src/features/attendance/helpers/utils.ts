@@ -22,9 +22,12 @@ interface LineReminderPermission {
 
 /**
  * Finds all users who checked in today but haven't checked out yet
+ * @param workDate Bangkok work date (YYYY-MM-DD), defaults to today
  * @returns Array of user IDs who need checkout reminders
  */
-export const getUsersWithPendingCheckout = async (): Promise<string[]> => {
+export const getUsersWithPendingCheckout = async (
+  workDate: string = getTodayDateString(),
+): Promise<string[]> => {
   try {
     // 🚧 DEV MODE: ถ้าอยู่ในโหมด development ให้ใช้ test user ID
     if (
@@ -34,12 +37,10 @@ export const getUsersWithPendingCheckout = async (): Promise<string[]> => {
       return [process.env.DEV_TEST_USER_ID];
     }
 
-    const todayDate = getTodayDateString();
-
-    // Get all attendance records for today with status checked_in (either on time or late)
+    // Get all attendance records for the work date with status checked_in (either on time or late)
     const pendingCheckouts = (await db.workAttendance.findMany({
       where: {
-        workDate: todayDate,
+        workDate,
         status: {
           in: [
             AttendanceStatusType.CHECKED_IN_ON_TIME,

@@ -5,6 +5,7 @@ import { db } from "@/lib/database/db";
 import { AttendanceStatusType } from "@prisma/client";
 import { checkCronLineApproval } from "@/lib/auth/approval-guard";
 import { validateSimpleCronAuth } from "@/lib/utils/cron-auth";
+import { resolveAutoCheckoutTarget } from "@/lib/utils/datetime";
 
 /**
  * API handler สำหรับการลงชื่อออกงานอัตโนมัติตอนเที่ยงคืน
@@ -24,11 +25,13 @@ export async function GET(request: Request) {
   }
 
   try {
-    const currentTime = new Date();
+    // cron รัน 00:00 Bangkok ซึ่งเป็นวันใหม่แล้ว → ปิดงานของวันที่เพิ่งจบ
+    const { workDate, checkOutTime: autoCheckoutTime } =
+      resolveAutoCheckoutTarget();
 
-    // ค้นหาพนักงานที่ยังไม่ลงชื่อออกงานในวันนี้
+    // ค้นหาพนักงานที่ยังไม่ลงชื่อออกงานของวันที่เพิ่งจบ
     const usersWithoutCheckout =
-      await attendanceService.getUsersWithPendingCheckout();
+      await attendanceService.getUsersWithPendingCheckout(workDate);
 
     if (!usersWithoutCheckout.length) {
       return Response.json(
@@ -46,8 +49,10 @@ export async function GET(request: Request) {
       usersWithoutCheckout.map(async (userId) => {
         try {
           // ค้นหา attendance record ของวันนี้
-          const todayAttendance =
-            await attendanceService.getTodayAttendance(userId);
+          const todayAttendance = await attendanceService.getTodayAttendance(
+            userId,
+            workDate,
+          );
 
           if (!todayAttendance || todayAttendance.checkOutTime) {
             return {
@@ -56,10 +61,6 @@ export async function GET(request: Request) {
               reason: "ไม่พบ attendance record หรือลงชื่อออกแล้ว",
             };
           }
-
-          // คำนวณเวลาลงชื่อออกงานอัตโนมัติ: 23:59:59 Bangkok = 16:59:59 UTC
-          const autoCheckoutTime = new Date(currentTime);
-          autoCheckoutTime.setUTCHours(16, 59, 59, 999);
 
           // อัปเดต WorkAttendance record ด้วยการลงชื่อออกงานอัตโนมัติ
           await db.workAttendance.update({
