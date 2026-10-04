@@ -785,7 +785,7 @@ function CronJobFormDialog({
             Key
             <input
               required
-              pattern="[a-z0-9][a-z0-9-]*"
+              pattern="[a-z0-9][a-z0-9\-]*"
               value={form.key}
               onChange={(event) => updateField("key", event.target.value)}
               className={`${DIALOG_INPUT_CLASS} font-mono`}
