@@ -540,3 +540,52 @@ model LineApprovalRequest {
   @@index([lineUserId, status])
   @@map("line_approval_requests")
 }
+
+// ===========================
+// Cron Job Management
+// ===========================
+
+model CronJob {
+  id             String             @id @default(cuid())
+  key            String             @unique @map("job_key")
+  name           String
+  method         String
+  endpoint       String
+  cronExpression String             @map("cron_expression")
+  scheduleLabel  String             @map("schedule_label")
+  timezone       String             @default("Asia/Bangkok")
+  environment    String             @default("production")
+  targetName     String             @map("target_name")
+  targetKind     String             @map("target_kind")
+  ownerName      String             @map("owner_name")
+  ownerInitials  String             @map("owner_initials")
+  ownerColor     String             @map("owner_color")
+  enabled        Boolean            @default(true)
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+  executions     CronJobExecution[]
+
+  @@index([enabled])
+  @@index([environment, enabled])
+  @@map("cron_jobs")
+}
+
+model CronJobExecution {
+  id           String    @id @default(cuid())
+  cronJobId    String    @map("cron_job_id")
+  scheduledFor DateTime? @map("scheduled_for")
+  trigger      String    @default("scheduled")
+  status       String
+  startedAt    DateTime  @map("started_at")
+  finishedAt   DateTime? @map("finished_at")
+  durationMs   Int?      @map("duration_ms")
+  httpStatus   Int?      @map("http_status")
+  message      String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  cronJob      CronJob   @relation(fields: [cronJobId], references: [id], onDelete: Cascade)
+
+  @@unique([cronJobId, scheduledFor])
+  @@index([cronJobId, startedAt])
+  @@index([status, startedAt])
+  @@map("cron_job_executions")
+}

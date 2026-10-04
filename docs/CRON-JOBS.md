@@ -2,7 +2,9 @@
 
 ## Overview
 
-This document covers the automated cron job system for attendance reminders in the Bun LINE T3 application. The system includes two main cron jobs that send LINE notifications to users for check-in and checkout reminders.
+This document covers the automated cron job system in the Bun LINE T3
+application, including attendance reminders, automatic checkout and image
+cleanup. Runtime schedules are managed from PostgreSQL through the admin page.
 
 ## Architecture
 
@@ -16,10 +18,14 @@ This document covers the automated cron job system for attendance reminders in t
           │                           │                           │
           ▼                           ▼                           ▼
 ┌─────────────────────┐    ┌─────────────────────┐    ┌─────────────────────┐
-│   Schedule Config   │    │   Shared Utilities  │    │   User Notifications│
+│   Wake-up Trigger   │    │   Shared Utilities  │    │   User Notifications│
 │   (crontab)         │    │   (Auth, Messaging) │    │   (LINE App)        │
 └─────────────────────┘    └─────────────────────┘    └─────────────────────┘
 ```
+
+Individual schedules and execution history are stored in PostgreSQL. The
+container crontab only triggers the dispatcher and is deliberately not a job
+registry.
 
 ### Shared Utilities
 
@@ -100,6 +106,42 @@ flowchart TD
     D -->|No Users| L[Skip - No Pending Checkouts]
 ```
 
+## Cron Jobs Management Integration
+
+The admin page at `/cron-jobs` reads and manages jobs in the PostgreSQL
+`cron_jobs` table. The container `crontab` is only a one-minute wake-up trigger;
+it does not store individual schedules or enabled state. The registry at
+`src/features/cron-jobs/constants/registry.ts` is seed/reference data for the
+initial migration, not runtime source of truth:
+
+- `check-in-reminder`
+- `enhanced-checkout-reminder`
+- `auto-checkout`
+- `image-cleanup`
+
+The page uses these protected endpoints:
+
+- `GET /api/admin/cron-jobs` — list jobs, schedules and execution history
+- `POST /api/admin/cron-jobs` — create a job
+- `PATCH /api/admin/cron-jobs/:jobId` — edit a job or enable/disable it
+- `DELETE /api/admin/cron-jobs/:jobId` — delete a job and its history
+- `POST /api/admin/cron-jobs/:jobId/run` — manually invoke a job
+
+The worker endpoint is separate from the admin API:
+
+- `POST /api/cron/dispatch` — authenticated dispatcher called by the container
+
+The dispatcher reads enabled rows from PostgreSQL, evaluates each cron
+expression in `Asia/Bangkok`, claims the scheduled minute idempotently, invokes
+the configured endpoint with `CRON_SECRET`, and records the result in
+`cron_job_executions`.
+
+The migration is included at
+`prisma/migrations/20261004120000_add_cron_job_management`. Before applying it
+to another environment, confirm that `DATABASE_URL` points to the intended
+database and use the appropriate migration command. Do not apply this
+migration to production without a reviewed rollout and backup plan.
+
 ## Configuration
 
 ### Environment Variables
@@ -118,17 +160,11 @@ APP_ENV=production  # Enables time validation
 NODE_ENV=production
 ```
 
-### Cron Schedule (Docker)
+### Cron Schedule (Container image)
 
 ```bash
-# Check-in reminder - 8 AM Bangkok (Monday-Friday)
-0 8 * * 1-5 /usr/local/bin/cron-request.sh GET /api/cron/check-in-reminder
-
-# Enhanced checkout reminder - Every 5 minutes (4:40-8:00 PM Bangkok, Monday-Friday)
-*/5 16-20 * * 1-5 /usr/local/bin/cron-request.sh GET /api/cron/enhanced-checkout-reminder
-
-# Auto checkout - Midnight cleanup
-0 0 * * * /usr/local/bin/cron-request.sh GET /api/cron/auto-checkout
+# The only active crontab entry. Individual schedules live in PostgreSQL.
+* * * * * /usr/local/bin/cron-request.sh POST /api/cron/dispatch
 ```
 
 ## API Reference
@@ -283,6 +319,37 @@ function formatUTCTimeAsThaiTime(utcDate: Date): string;
 - User engagement metrics (reminder response rates)
 - Performance metrics (execution time, memory usage)
 
+### Local Apple Container simulation
+
+The local development machine uses Apple Container rather than Docker. Build
+and run the cron worker image with. When calling a host development server,
+bind Vite to `0.0.0.0` so the container can reach it. The command below is a
+safe request-shape check; it does not call an endpoint or touch the database:
+
+```bash
+# Terminal 1 - app server
+bunx vite dev --port 4325 --host 0.0.0.0
+
+# Terminal 2 - Apple Container (create the machine once)
+container machine create alpine:3.22 --name cron-dev
+container machine run -n cron-dev -- true
+container build --tag bun-line-t3-cron-dev --file Dockerfile.cron --platform linux/arm64 .
+container run --rm \
+  -e CRON_SECRET=local-test \
+  -e CRON_BASE_URL=http://192.168.64.1:4325 \
+  -e CRON_DRY_RUN=1 \
+  bun-line-t3-cron-dev:latest \
+  /usr/local/bin/cron-request.sh POST /api/cron/dispatch
+```
+
+`192.168.64.1` is the Apple Container host gateway observed on the local
+machine. `CRON_DRY_RUN=1` verifies method and endpoint without calling the app
+or sending LINE messages. To exercise the DB-backed flow, first apply the
+migration to an explicitly confirmed development database, start the app with
+`DATABASE_URL` and `CRON_SECRET`, then omit `CRON_DRY_RUN` and point
+`CRON_BASE_URL` at the development app. That path can invoke real business
+logic and external LINE calls, so use non-production credentials.
+
 ## Troubleshooting
 
 ### Common Issues
@@ -355,12 +422,13 @@ curl -H "Authorization: Bearer test-secret" \
 
 ### Adding New Cron Jobs
 
-1. Create new API endpoint in `/api/cron/`
+1. Create the API endpoint in `/api/cron/`
 2. Use shared utilities from `/lib/utils/cron-*`
 3. Add authentication with `validateCronAuth()` or `validateSimpleCronAuth()`
 4. Implement proper error handling and logging
-5. Add to Docker crontab configuration
-6. Update documentation
+5. Open `/cron-jobs` as an admin and create the job with its cron expression
+6. Confirm the endpoint with a safe manual run in development
+7. Do not add another per-job line to `crontab`; the dispatcher reads the row
 
 ### Testing
 
