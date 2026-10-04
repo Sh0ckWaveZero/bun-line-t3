@@ -12,6 +12,7 @@ import {
 import type {
   CronHttpMethod,
   CronJob,
+  CronJobRunDetail,
   CronJobsSnapshot,
   RunStatus,
 } from "../types";
@@ -37,6 +38,7 @@ export interface CronJobInput {
 }
 
 interface CronExecutionRecord {
+  id: string;
   status: string;
   startedAt: Date;
   durationMs: number | null;
@@ -139,6 +141,14 @@ function toMethod(value: string): CronHttpMethod {
 function makeCronJob(record: CronJobRecord, now: Date): CronJob {
   const latestExecution = record.executions[0];
   const history = record.executions.slice().reverse();
+  const runDetails: CronJobRunDetail[] = history.map((execution) => ({
+    id: execution.id,
+    status: toRunStatus(execution.status),
+    relative: formatRelativePast(execution.startedAt, now),
+    duration: formatDuration(execution.durationMs),
+    httpStatus: execution.httpStatus,
+    message: execution.message,
+  }));
   const nextRun = record.enabled
     ? getNextCronOccurrence(record.cronExpression, now)
     : null;
@@ -170,6 +180,7 @@ function makeCronJob(record: CronJobRecord, now: Date): CronJob {
           message: null,
         },
     runHistory: history.map((execution) => toRunStatus(execution.status)),
+    runDetails,
     nextRun: nextRun
       ? {
           relative: formatRelativeUntil(nextRun, now),
@@ -195,6 +206,7 @@ const executionInclude = {
     orderBy: { startedAt: "desc" as const },
     take: 20,
     select: {
+      id: true,
       status: true,
       startedAt: true,
       durationMs: true,

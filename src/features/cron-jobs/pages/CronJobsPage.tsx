@@ -31,9 +31,21 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { getCronJobStatus, getCronJobStatusCounts } from "../helpers";
 import { useCronJobs, type CronJobMutationInput } from "../hooks/useCronJobs";
-import type { CronJob, JobEnvironment, RunStatus, TargetKind } from "../types";
+import type {
+  CronJob,
+  CronJobRunDetail,
+  JobEnvironment,
+  RunStatus,
+  TargetKind,
+} from "../types";
 
 type JobFilter = "all" | "healthy" | "failing" | "paused";
 type EnvironmentFilter = "all" | JobEnvironment;
@@ -348,28 +360,83 @@ function StatusBadge({ status }: { status: RunStatus }) {
   );
 }
 
-function RunSparkline({ history }: { history: RunStatus[] }) {
+function RunSparkline({
+  history,
+  details,
+}: {
+  history: RunStatus[];
+  details: CronJobRunDetail[];
+}) {
   return (
-    <div
-      className="flex h-8 items-end gap-0.5"
-      role="img"
-      aria-label={`ผลการทำงานย้อนหลัง ${history.length} รอบ`}
-    >
-      {history.length > 0 ? (
-        history.map((status, index) => (
-          <span
-            key={`${status}-${index}`}
-            className={cn(
-              "w-1.5 rounded-t-sm",
-              RUN_STATUS_META[status].barClass,
-            )}
-            style={{ height: `${getSparkHeight(status, index)}%` }}
-          />
-        ))
-      ) : (
-        <span className="text-[11px] text-slate-400">ยังไม่มีข้อมูล</span>
-      )}
-    </div>
+    <TooltipProvider delayDuration={180}>
+      <div
+        className="flex h-8 items-end gap-0.5"
+        role="group"
+        aria-label={`ผลการทำงานย้อนหลัง ${history.length} รอบ`}
+      >
+        {history.length > 0 ? (
+          history.map((status, index) => {
+            const detail = details[index];
+            const resolvedStatus = detail?.status ?? status;
+            const meta = RUN_STATUS_META[resolvedStatus];
+            const runLabel = detail
+              ? `${meta.label} · ${detail.relative} · ${detail.duration}${detail.httpStatus ? ` · HTTP ${detail.httpStatus}` : ""}`
+              : `${meta.label} · รอบที่ ${index + 1}`;
+
+            return (
+              <Tooltip
+                key={
+                  detail?.id ??
+                  `${resolvedStatus}-${detail?.relative ?? "unknown"}`
+                }
+              >
+                <TooltipTrigger asChild>
+                  <span
+                    tabIndex={0}
+                    role="img"
+                    aria-label={runLabel}
+                    className={cn(
+                      "w-1.5 rounded-t-sm outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-[#151719]",
+                      meta.barClass,
+                    )}
+                    style={{
+                      height: `${getSparkHeight(resolvedStatus, index)}%`,
+                    }}
+                  />
+                </TooltipTrigger>
+                <TooltipContent
+                  side="top"
+                  align="center"
+                  className="max-w-[280px] border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white dark:bg-slate-800"
+                >
+                  <p className="font-semibold">{meta.label}</p>
+                  <p className="mt-0.5 text-slate-300">
+                    {detail
+                      ? `${detail.relative} · ${detail.duration}${detail.httpStatus ? ` · HTTP ${detail.httpStatus}` : ""}`
+                      : `รอบที่ ${index + 1}`}
+                  </p>
+                  {detail?.message && (
+                    <p
+                      className={cn(
+                        "mt-1 break-words",
+                        resolvedStatus === "failed" ||
+                          resolvedStatus === "timed-out"
+                          ? "text-rose-200"
+                          : "text-slate-300",
+                      )}
+                    >
+                      {detail.message}
+                    </p>
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            );
+          })
+        ) : (
+          <span className="text-[11px] text-slate-400">ยังไม่มีข้อมูล</span>
+        )}
+      </div>
+    </TooltipProvider>
   );
 }
 
@@ -468,7 +535,7 @@ function JobRow({
         </div>
       </td>
       <td className={cn("min-w-[150px] px-3", compact ? "py-2.5" : "py-4")}>
-        <RunSparkline history={job.runHistory} />
+        <RunSparkline history={job.runHistory} details={job.runDetails} />
       </td>
       <td className={cn("min-w-[130px] px-3", compact ? "py-2.5" : "py-4")}>
         <p className="text-[13px] text-slate-800 tabular-nums dark:text-slate-100">
