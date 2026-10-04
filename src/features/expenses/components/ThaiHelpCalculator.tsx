@@ -52,7 +52,12 @@ interface ThaiHelpCalculatorProps {
   refetch: () => void;
 }
 
-export function ThaiHelpCalculator({
+export function ThaiHelpCalculator(props: ThaiHelpCalculatorProps) {
+  if (!IS_CO_PAYMENT_ACTIVE) return null;
+  return <ThaiHelpCalculatorContent {...props} />;
+}
+
+function ThaiHelpCalculatorContent({
   categories,
   transactions,
   isSaving,
@@ -60,9 +65,6 @@ export function ThaiHelpCalculator({
   onSave,
   refetch,
 }: ThaiHelpCalculatorProps) {
-  // If the co-payment campaign is inactive, render absolutely nothing
-  if (!IS_CO_PAYMENT_ACTIVE) return null;
-
   const { showToast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"split" | "topup" | "stats">(
@@ -71,7 +73,24 @@ export function ThaiHelpCalculator({
 
   // Tab 1: Split Bill State
   const [totalBill, setTotalBill] = useState("");
-  const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const [userSelectedCategoryId, setUserSelectedCategoryId] = useState<
+    string | null
+  >(null);
+  const defaultCategoryId =
+    categories.find(
+      (category) =>
+        category.isActive &&
+        (category.name.includes("อาหาร") || category.name.includes("กิน")),
+    )?.id ??
+    categories.find((category) => category.isActive)?.id ??
+    "";
+  const selectedCategoryId =
+    userSelectedCategoryId &&
+    categories.some(
+      (category) => category.id === userSelectedCategoryId && category.isActive,
+    )
+      ? userSelectedCategoryId
+      : defaultCategoryId;
 
   // Tab 2: Top Up State
   const [desiredSubsidy, setDesiredSubsidy] = useState("");
@@ -79,24 +98,6 @@ export function ThaiHelpCalculator({
 
   // Save error state for inline retry
   const [saveError, setSaveError] = useState(false);
-
-  // Auto-select category (default to "อาหาร" or first active category)
-  useEffect(() => {
-    if (categories.length > 0 && !selectedCategoryId) {
-      const foodCat = categories.find(
-        (c) =>
-          c.isActive && (c.name.includes("อาหาร") || c.name.includes("กิน")),
-      );
-      if (foodCat) {
-        setSelectedCategoryId(foodCat.id);
-      } else {
-        const firstActive = categories.find((c) => c.isActive);
-        if (firstActive) {
-          setSelectedCategoryId(firstActive.id);
-        }
-      }
-    }
-  }, [categories, selectedCategoryId]);
 
   // Daily Stats (client-side only to avoid SSR hydration mismatch)
   const [dailyStats, setDailyStats] = useState({
@@ -173,7 +174,8 @@ export function ThaiHelpCalculator({
   const { subsidyAmount: rawSubsidy60 } = calculateCoPaymentSplit(numericBill);
   const subsidy60 = Math.min(rawSubsidy60, stats.remainingSubsidy);
   const userPaid40 = Math.max(numericBill - subsidy60, 0);
-  const monthlyQuotaExceeded = numericBill > 0 && rawSubsidy60 > stats.remainingSubsidy;
+  const monthlyQuotaExceeded =
+    numericBill > 0 && rawSubsidy60 > stats.remainingSubsidy;
 
   // Calculations for Top Up
   const numericSubsidy = parseFloat(desiredSubsidy) || 0;
@@ -243,7 +245,7 @@ export function ThaiHelpCalculator({
   return (
     <div
       id="thai-help-calculator-container"
-      className="font-noto-sans-thai relative border-border/30 bg-card dark:bg-card/85 mb-6 overflow-hidden rounded-xl border shadow-sm transition-all"
+      className="font-noto-sans-thai border-border/30 bg-card dark:bg-card/85 relative mb-6 overflow-hidden rounded-xl border shadow-sm"
     >
       {isLoading && <ThaiHelpCalculatorSkeleton />}
 
@@ -257,17 +259,20 @@ export function ThaiHelpCalculator({
           >
             {/* Row 1: icon + title + chevron */}
             <div className="flex items-center justify-between gap-3">
-              <div id="thai-help-title-group" className="flex items-center gap-2.5 sm:gap-3">
+              <div
+                id="thai-help-title-group"
+                className="flex items-center gap-2.5 sm:gap-3"
+              >
                 <div
                   id="thai-help-icon-wrapper"
-                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-violet-500/10 text-violet-600 dark:bg-violet-400/15 dark:text-violet-400 sm:h-10 sm:w-10"
+                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-violet-500/10 text-violet-600 sm:h-10 sm:w-10 dark:bg-violet-400/15 dark:text-violet-400"
                 >
                   <Coins className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
                 <div>
                   <h2
                     id="thai-help-heading"
-                    className="font-noto-sans-thai flex items-center gap-1.5 whitespace-nowrap text-sm font-bold sm:text-base"
+                    className="font-noto-sans-thai flex items-center gap-1.5 text-sm font-bold whitespace-nowrap sm:text-base"
                   >
                     เครื่องคำนวณสิทธิ์ 60/40
                     <span className="relative flex h-2 w-2 flex-shrink-0">
@@ -296,20 +301,31 @@ export function ThaiHelpCalculator({
             <div className="mt-2 flex items-center gap-1.5 pl-[2.375rem] sm:hidden">
               <div
                 id="thai-help-monthly-remaining-mobile"
-                className="flex items-center gap-1 whitespace-nowrap rounded-full bg-violet-500/10 px-2.5 py-1 text-xs font-semibold tabular-nums text-violet-700 dark:bg-violet-400/15 dark:text-violet-400"
+                className="flex items-center gap-1 rounded-full bg-violet-500/10 px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-violet-700 tabular-nums dark:bg-violet-400/15 dark:text-violet-400"
               >
-                <span>ใช้ได้/เดือน ฿{monthlyRemainingCombined.toLocaleString("th-TH", { maximumFractionDigits: 0 })}</span>
+                <span>
+                  ใช้ได้/เดือน ฿
+                  {monthlyRemainingCombined.toLocaleString("th-TH", {
+                    maximumFractionDigits: 0,
+                  })}
+                </span>
               </div>
               <div
                 id="thai-help-daily-remaining-mobile"
-                className={`flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums ${dailyStats.todayRemaining === 0
+                className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap tabular-nums ${
+                  dailyStats.todayRemaining === 0
                     ? "bg-red-500/10 text-red-600 dark:bg-red-400/15 dark:text-red-400"
                     : dailyStats.todayRemaining < 100
                       ? "bg-amber-500/10 text-amber-700 dark:bg-amber-400/15 dark:text-amber-400"
                       : "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-400"
-                  }`}
+                }`}
               >
-                <span>ใช้ได้/วัน ฿{dailyStats.todayRemaining.toLocaleString("th-TH", { maximumFractionDigits: 0 })}</span>
+                <span>
+                  ใช้ได้/วัน ฿
+                  {dailyStats.todayRemaining.toLocaleString("th-TH", {
+                    maximumFractionDigits: 0,
+                  })}
+                </span>
               </div>
             </div>
 
@@ -317,20 +333,31 @@ export function ThaiHelpCalculator({
             <div className="hidden flex-shrink-0 items-center gap-2 sm:flex">
               <div
                 id="thai-help-monthly-remaining"
-                className="flex items-center gap-1 whitespace-nowrap rounded-full bg-violet-500/10 px-2.5 py-1 text-xs font-semibold tabular-nums text-violet-700 dark:bg-violet-400/15 dark:text-violet-400"
+                className="flex items-center gap-1 rounded-full bg-violet-500/10 px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-violet-700 tabular-nums dark:bg-violet-400/15 dark:text-violet-400"
               >
-                <span>ใช้ได้/เดือน ฿{monthlyRemainingCombined.toLocaleString("th-TH", { maximumFractionDigits: 0 })}</span>
+                <span>
+                  ใช้ได้/เดือน ฿
+                  {monthlyRemainingCombined.toLocaleString("th-TH", {
+                    maximumFractionDigits: 0,
+                  })}
+                </span>
               </div>
               <div
                 id="thai-help-daily-remaining"
-                className={`flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums ${dailyStats.todayRemaining === 0
+                className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap tabular-nums ${
+                  dailyStats.todayRemaining === 0
                     ? "bg-red-500/10 text-red-600 dark:bg-red-400/15 dark:text-red-400"
                     : dailyStats.todayRemaining < 100
                       ? "bg-amber-500/10 text-amber-700 dark:bg-amber-400/15 dark:text-amber-400"
                       : "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-400"
-                  }`}
+                }`}
               >
-                <span>ใช้ได้/วัน ฿{dailyStats.todayRemaining.toLocaleString("th-TH", { maximumFractionDigits: 0 })}</span>
+                <span>
+                  ใช้ได้/วัน ฿
+                  {dailyStats.todayRemaining.toLocaleString("th-TH", {
+                    maximumFractionDigits: 0,
+                  })}
+                </span>
               </div>
               <div
                 id="thai-help-chevron"
@@ -344,26 +371,28 @@ export function ThaiHelpCalculator({
           {isOpen && (
             <div
               id="thai-help-content"
-              className="border-border/10 border-t p-5 transition-all duration-300 ease-out"
+              className="border-border/10 border-t p-5 transition-[opacity,transform] duration-300 ease-out"
             >
               {/* Daily Budget Progress Bar */}
               <div className="mb-5 space-y-1.5">
                 <div className="flex items-center justify-between text-xs font-medium">
                   <span className="text-muted-foreground">สิทธิ์รัฐรายวัน</span>
                   <span className="text-muted-foreground tabular-nums">
-                    ฿{dailyStats.todaySubsidyUsed.toFixed(0)} / ฿{CO_PAY_DAILY_MAX_SUBSIDY}
+                    ฿{dailyStats.todaySubsidyUsed.toFixed(0)} / ฿
+                    {CO_PAY_DAILY_MAX_SUBSIDY}
                   </span>
                 </div>
                 <div className="bg-muted/50 h-2 w-full overflow-hidden rounded-full">
                   <div
-                    className={`h-full rounded-full transition-all duration-500 ${dailyStats.todaySubsidyUsed === 0
+                    className={`h-full rounded-full transition-[width,background-color] duration-500 ${
+                      dailyStats.todaySubsidyUsed === 0
                         ? "bg-emerald-500"
                         : dailyStats.todayRemaining === 0
                           ? "bg-red-500"
                           : dailyStats.todayRemaining < 100
                             ? "bg-amber-500"
                             : "bg-emerald-500"
-                      }`}
+                    }`}
                     style={{
                       width: `${Math.min((dailyStats.todaySubsidyUsed / CO_PAY_DAILY_MAX_SUBSIDY) * 100, 100)}%`,
                     }}
@@ -379,11 +408,11 @@ export function ThaiHelpCalculator({
                     </span>
                     <span>
                       รัฐ{" "}
-                      <span className="font-semibold tabular-nums text-blue-600 dark:text-blue-400">
+                      <span className="font-semibold text-blue-600 tabular-nums dark:text-blue-400">
                         ฿{dailyStats.todaySubsidyUsed.toFixed(2)}
                       </span>{" "}
                       + คุณ{" "}
-                      <span className="font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+                      <span className="font-semibold text-emerald-600 tabular-nums dark:text-emerald-400">
                         ฿{dailyStats.todayUserSpent.toFixed(2)}
                       </span>
                     </span>
@@ -402,10 +431,11 @@ export function ThaiHelpCalculator({
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
-                      className={`relative z-10 flex-1 rounded-md py-1.5 text-center text-xs font-semibold transition-all duration-200 ${isActive
+                      className={`relative z-10 flex-1 rounded-md py-1.5 text-center text-xs font-semibold transition-[color,background-color,box-shadow] duration-200 ${
+                        isActive
                           ? "bg-card text-foreground font-bold shadow-sm"
                           : "text-muted-foreground hover:text-foreground"
-                        }`}
+                      }`}
                     >
                       {tab === "split" && "แยกบิล (60/40)"}
                       {tab === "topup" && "ต้องเติมเท่าไหร่"}
@@ -420,10 +450,10 @@ export function ThaiHelpCalculator({
                 {/* Split Bill */}
                 <div
                   id="thai-help-tab-split"
-                  className={`space-y-4 transition-all duration-200 ease-out ${
+                  className={`space-y-4 transition-[opacity,transform] duration-200 ease-out ${
                     activeTab === "split"
-                      ? "relative opacity-100 translate-y-0"
-                      : "pointer-events-none absolute inset-0 opacity-0 translate-y-1"
+                      ? "relative translate-y-0 opacity-100"
+                      : "pointer-events-none absolute inset-0 translate-y-1 opacity-0"
                   }`}
                   aria-hidden={activeTab !== "split"}
                 >
@@ -451,6 +481,7 @@ export function ThaiHelpCalculator({
                       {totalBill && (
                         <button
                           onClick={() => setTotalBill("")}
+                          aria-label="ล้างยอดซื้อทั้งหมด"
                           className="text-muted-foreground hover:bg-muted hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 rounded-full p-1"
                         >
                           <RotateCcw size={14} />
@@ -482,7 +513,15 @@ export function ThaiHelpCalculator({
                     <div className="flex items-start gap-2 rounded-lg border border-amber-500/25 bg-amber-500/5 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
                       <AlertCircle size={13} className="mt-0.5 shrink-0" />
                       <span>
-                        สิทธิ์เดือนนี้เหลือ <strong className="tabular-nums">฿{stats.remainingSubsidy.toFixed(0)}</strong> รัฐช่วยได้แค่ <strong className="tabular-nums">฿{subsidy60.toFixed(2)}</strong> ส่วนที่เหลือคุณจ่ายเอง
+                        สิทธิ์เดือนนี้เหลือ{" "}
+                        <strong className="tabular-nums">
+                          ฿{stats.remainingSubsidy.toFixed(0)}
+                        </strong>{" "}
+                        รัฐช่วยได้แค่{" "}
+                        <strong className="tabular-nums">
+                          ฿{subsidy60.toFixed(2)}
+                        </strong>{" "}
+                        ส่วนที่เหลือคุณจ่ายเอง
                       </span>
                     </div>
                   )}
@@ -503,7 +542,9 @@ export function ThaiHelpCalculator({
                           <select
                             id="tct-category-select"
                             value={selectedCategoryId}
-                            onChange={(e) => setSelectedCategoryId(e.target.value)}
+                            onChange={(e) =>
+                              setUserSelectedCategoryId(e.target.value)
+                            }
                             className="font-noto-sans-thai bg-card border-border/40 text-foreground h-9 w-full rounded-md border px-2 text-xs font-medium focus:ring-1 focus:ring-violet-500 focus:outline-none"
                           >
                             {categories
@@ -550,10 +591,10 @@ export function ThaiHelpCalculator({
                 {/* Top Up */}
                 <div
                   id="thai-help-tab-topup"
-                  className={`space-y-4 transition-all duration-200 ease-out ${
+                  className={`space-y-4 transition-[opacity,transform] duration-200 ease-out ${
                     activeTab === "topup"
-                      ? "relative opacity-100 translate-y-0"
-                      : "pointer-events-none absolute inset-0 opacity-0 translate-y-1"
+                      ? "relative translate-y-0 opacity-100"
+                      : "pointer-events-none absolute inset-0 translate-y-1 opacity-0"
                   }`}
                   aria-hidden={activeTab !== "topup"}
                 >
@@ -581,6 +622,7 @@ export function ThaiHelpCalculator({
                       {desiredSubsidy && (
                         <button
                           onClick={() => setDesiredSubsidy("")}
+                          aria-label="ล้างจำนวนเงินสนับสนุน"
                           className="text-muted-foreground hover:bg-muted hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 rounded-full p-1"
                         >
                           <RotateCcw size={14} />
@@ -588,8 +630,9 @@ export function ThaiHelpCalculator({
                       )}
                     </div>
                     <p className="text-muted-foreground text-xs leading-tight">
-                      ป้อนยอดเงินรัฐที่คุณต้องการสแกนใช้ เพื่อดูว่ากระเป๋าเป๋าตัง
-                      (G-Wallet) ของคุณต้องมีเงินอยู่อีกเท่าไหร่
+                      ป้อนยอดเงินรัฐที่คุณต้องการสแกนใช้
+                      เพื่อดูว่ากระเป๋าเป๋าตัง (G-Wallet)
+                      ของคุณต้องมีเงินอยู่อีกเท่าไหร่
                     </p>
                   </div>
 
@@ -605,14 +648,20 @@ export function ThaiHelpCalculator({
                         {numericSubsidy > 0 && (
                           <button
                             onClick={() => {
-                              void navigator.clipboard.writeText(topUpNeeded.toFixed(2));
+                              void navigator.clipboard.writeText(
+                                topUpNeeded.toFixed(2),
+                              );
                               setCopied(true);
                               setTimeout(() => setCopied(false), 2000);
                             }}
                             className="text-muted-foreground hover:text-foreground rounded p-0.5 transition-colors"
                             title="คัดลอก"
                           >
-                            {copied ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
+                            {copied ? (
+                              <Check size={13} className="text-emerald-600" />
+                            ) : (
+                              <Copy size={13} />
+                            )}
                           </button>
                         )}
                       </div>
@@ -631,10 +680,10 @@ export function ThaiHelpCalculator({
                 {/* Stats */}
                 <div
                   id="thai-help-tab-stats"
-                  className={`space-y-4 transition-all duration-200 ease-out ${
+                  className={`space-y-4 transition-[opacity,transform] duration-200 ease-out ${
                     activeTab === "stats"
-                      ? "relative opacity-100 translate-y-0"
-                      : "pointer-events-none absolute inset-0 opacity-0 translate-y-1"
+                      ? "relative translate-y-0 opacity-100"
+                      : "pointer-events-none absolute inset-0 translate-y-1 opacity-0"
                   }`}
                   aria-hidden={activeTab !== "stats"}
                 >

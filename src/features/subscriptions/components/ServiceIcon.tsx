@@ -137,7 +137,7 @@ export const ServiceIconGridItem = ({
     <button
       type="button"
       onClick={onClick}
-      className={`group flex flex-col items-center gap-2 rounded-2xl border-2 p-3 text-center transition-all ${
+      className={`group flex flex-col items-center gap-2 rounded-2xl border-2 p-3 text-center transition-colors ${
         selected
           ? "border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-900/20"
           : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600 dark:hover:bg-gray-700"

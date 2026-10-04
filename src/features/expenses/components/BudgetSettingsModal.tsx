@@ -123,8 +123,9 @@ export function BudgetSettingsModal({
 
                 {/* Category */}
                 <div className="space-y-2">
-                  <Label>หมวดหมู่</Label>
+                  <Label htmlFor="budget-category">หมวดหมู่</Label>
                   <select
+                    id="budget-category"
                     value={categoryId || ""}
                     onChange={(e) => setCategoryId(e.target.value || null)}
                     className="bg-background w-full rounded-md border px-3 py-2 text-sm"

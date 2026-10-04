@@ -2,18 +2,6 @@
 
 import React from "react";
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Tooltip,
-  Legend,
-  Filler,
-} from "chart.js";
-import {
   EditAttendanceModal,
   AttendanceSummaryCards,
   AttendanceCharts,
@@ -26,21 +14,6 @@ import {
 import { useAttendanceReport } from "@/features/attendance/hooks/useAttendanceReport";
 import { PendingApprovalModal } from "@/components/auth/PendingApprovalModal";
 import { useLineApproval } from "@/lib/auth/hooks/useLineApproval";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Tooltip,
-  Legend,
-  Filler,
-);
-
-ChartJS.defaults.font.family = "Prompt, sans-serif";
-ChartJS.defaults.font.size = 12;
 
 export function AttendanceReportPage() {
   const {

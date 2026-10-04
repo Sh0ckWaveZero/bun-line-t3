@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   format,
   addMonths,
@@ -28,23 +29,12 @@ import { cn } from "@/lib/utils";
 import { HolidayImport } from "@/features/calendar/components/holiday-import";
 import { LeaveRequestModal } from "@/features/calendar/components/leave-request-modal";
 import { HolidayManageModal } from "@/features/calendar/components/holiday-manage-modal";
-
-interface Holiday {
-  id: string;
-  date: string;
-  nameEnglish: string;
-  nameThai: string;
-  year: number;
-  type: string;
-  description?: string;
-}
-
-interface Leave {
-  id: string;
-  date: string;
-  type: string;
-  reason?: string;
-}
+import {
+  CALENDAR_DATA_QUERY_KEY,
+  useCalendarData,
+  type CalendarHoliday as Holiday,
+  type CalendarLeave as Leave,
+} from "@/features/calendar/hooks/useCalendarData";
 
 const WEEKDAYS = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"] as const;
 
@@ -74,18 +64,22 @@ function DayDetailPanel({
   };
 
   return (
-    <div
+    <dialog
+      open
       id={`day-detail-overlay-${dateStr}`}
-      className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4"
-      onClick={onClose}
-      role="dialog"
+      className="fixed inset-0 z-40 m-0 flex max-h-none max-w-none items-center justify-center border-0 bg-transparent p-4 text-inherit shadow-none"
       aria-modal="true"
       aria-label={`รายละเอียดวันที่ ${fullDate}`}
     >
+      <button
+        type="button"
+        className="absolute inset-0 z-0 cursor-default border-0 bg-black/30 p-0 focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-inset"
+        aria-label="ปิดรายละเอียดวัน"
+        onClick={onClose}
+      />
       <div
         id={`day-detail-panel-${dateStr}`}
-        className="border-border bg-card w-full max-w-sm overflow-hidden rounded-xl"
-        onClick={(e) => e.stopPropagation()}
+        className="border-border bg-card relative z-10 w-full max-w-sm overflow-hidden rounded-xl"
       >
         <div
           id={`day-detail-header-${dateStr}`}
@@ -242,7 +236,7 @@ function DayDetailPanel({
           </Button>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }
 
@@ -275,48 +269,23 @@ function SkeletonGrid() {
 }
 
 export function CalendarPage() {
+  const queryClient = useQueryClient();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [holidays, setHolidays] = useState<Holiday[]>([]);
-  const [leaves, setLeaves] = useState<Leave[]>([]);
+  const [today, setToday] = useState<Date | null>(null);
+  const { holidays, leaves, loading } = useCalendarData(currentDate);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [loading, setLoading] = useState(true);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showHolidayModal, setShowHolidayModal] = useState(false);
   const [showDayDetail, setShowDayDetail] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      const year = getYear(currentDate);
-      const month = getMonth(currentDate) + 1;
+    const updateToday = () => setToday(new Date());
+    updateToday();
+    const interval = window.setInterval(updateToday, 60_000);
 
-      try {
-        const holidaysRes = await fetch(`/api/holidays?year=${year}`);
-        if (holidaysRes.ok) {
-          const holidaysData = await holidaysRes.json();
-          if (holidaysData.success) {
-            setHolidays(holidaysData.holidays);
-          }
-        }
-
-        const leavesRes = await fetch(
-          `/api/leave?month=${year}-${month.toString().padStart(2, "0")}`,
-        );
-        if (leavesRes.ok) {
-          const leavesData = await leavesRes.json();
-          if (leavesData.success) {
-            setLeaves(leavesData.leaves);
-          }
-        }
-      } catch {
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [currentDate]);
+    return () => window.clearInterval(interval);
+  }, []);
 
   const navigateMonth = (direction: "prev" | "next") => {
     setCurrentDate((prev) =>
@@ -367,36 +336,17 @@ export function CalendarPage() {
   };
 
   const handleImport = async (importedHolidays: Holiday[]) => {
-    setHolidays((prev) => {
-      const existing = new Set(prev.map((h) => h.date));
-      const newHolidays = importedHolidays.filter((h) => !existing.has(h.date));
-      return [...prev, ...newHolidays];
+    if (importedHolidays.length > 0) {
+      await queryClient.invalidateQueries({
+        queryKey: [...CALENDAR_DATA_QUERY_KEY, getYear(currentDate)],
+      });
+    }
+  };
+
+  const refreshCalendarData = async () => {
+    await queryClient.invalidateQueries({
+      queryKey: [...CALENDAR_DATA_QUERY_KEY, getYear(currentDate)],
     });
-  };
-
-  const refreshLeaves = async () => {
-    const year = getYear(currentDate);
-    const month = getMonth(currentDate) + 1;
-    const leavesRes = await fetch(
-      `/api/leave?month=${year}-${month.toString().padStart(2, "0")}`,
-    );
-    if (leavesRes.ok) {
-      const leavesData = await leavesRes.json();
-      if (leavesData.success) {
-        setLeaves(leavesData.leaves);
-      }
-    }
-  };
-
-  const refreshHolidays = async () => {
-    const year = getYear(currentDate);
-    const holidaysRes = await fetch(`/api/holidays?year=${year}`);
-    if (holidaysRes.ok) {
-      const holidaysData = await holidaysRes.json();
-      if (holidaysData.success) {
-        setHolidays(holidaysData.holidays);
-      }
-    }
   };
 
   const handleLeaveRequest = async (data: {
@@ -411,10 +361,11 @@ export function CalendarPage() {
         body: JSON.stringify(data),
       });
 
+      if (!response.ok) throw new Error("ไม่สามารถส่งคำขอลาได้");
       const result = await response.json();
 
       if (result.success) {
-        await refreshLeaves();
+        await refreshCalendarData();
         alert("แจ้งลาสำเร็จ!");
       } else {
         alert(result.message);
@@ -433,10 +384,11 @@ export function CalendarPage() {
         body: JSON.stringify(data),
       });
 
+      if (!response.ok) throw new Error("ไม่สามารถเพิ่มวันหยุดได้");
       const result = await response.json();
 
       if (result.success) {
-        await refreshHolidays();
+        await refreshCalendarData();
         alert("เพิ่มวันหยุดสำเร็จ!");
       } else {
         alert(result.message);
@@ -675,7 +627,7 @@ export function CalendarPage() {
                 {days.map((date) => {
                   const holiday = getHolidayForDate(date);
                   const leave = getLeaveForDate(date);
-                  const isToday = isSameDay(date, new Date());
+                  const isToday = today ? isSameDay(date, today) : false;
                   const isWeekendDay = isWeekend(date);
                   const hasEvent = holiday || leave;
                   const dateStr = format(date, "yyyy-MM-dd");

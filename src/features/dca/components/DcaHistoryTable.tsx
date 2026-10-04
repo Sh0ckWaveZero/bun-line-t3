@@ -227,7 +227,15 @@ export const DcaHistoryTable = ({
                       <tr
                         id={`dca-order-row-${order.id}`}
                         className="hover:bg-muted/20 cursor-pointer transition-colors"
+                        tabIndex={0}
+                        aria-expanded={isExpanded}
                         onClick={() => toggleRow(order.id)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            toggleRow(order.id);
+                          }
+                        }}
                       >
                         <td className="w-px py-3 pr-1 pl-3">
                           {isExpanded ? (

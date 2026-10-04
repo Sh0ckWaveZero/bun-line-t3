@@ -97,7 +97,6 @@ export const PaymentTable = ({
       <div className="overflow-x-auto">
         <table
           className="w-full min-w-[520px] text-sm"
-          role="table"
           aria-label={`การจ่ายเงิน - ${formatBillingMonthThai(billingMonth)}`}
         >
           <thead>

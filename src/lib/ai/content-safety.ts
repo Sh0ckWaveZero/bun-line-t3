@@ -132,8 +132,6 @@ function getSeverity(
 export async function generateSafetyResponse(
   result: SafetyCheckResult,
 ): Promise<string> {
-  const { chat } = await import("@/lib/ai/openai-client");
-
   if (result.category === "injection") {
     return (
       "❌ ขอโทษครับ ไม่สามารถประมวลผลข้อมูลได้\n\n" +
@@ -142,6 +140,7 @@ export async function generateSafetyResponse(
   }
 
   if (result.category === "abusive" || result.category === "offensive") {
+    const { chat } = await import("@/lib/ai/openai-client");
     const quotedUserText = JSON.stringify(result.originalText);
 
     const prompt = `ข้อความของผู้ใช้:

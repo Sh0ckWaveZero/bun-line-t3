@@ -63,6 +63,7 @@ export function BudgetOverviewCard({
                     size="icon"
                     className="hover:bg-muted h-8 w-8 transition-colors"
                     onClick={onManageBudgets}
+                    aria-label="ตั้งค่างบประมาณ"
                   >
                     <Settings className="h-4 w-4" />
                   </Button>

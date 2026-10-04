@@ -6,6 +6,7 @@ import { db } from "@/lib/database";
 import type { Prisma } from "@prisma/client";
 import type {
   SubscriptionAccessActor,
+  SubscriptionMember,
   SubscriptionPayment,
   UpdatePaymentInput,
 } from "../types";
@@ -223,24 +224,16 @@ export async function generateNextMonthPayments(
   const billingMonth = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, "0")}`;
   const dueDate = getDueDate(subscription.billingDay, billingMonth);
 
-  let created = 0;
-  for (const member of subscription.members) {
-    const existing = await db.subscriptionPayment.findUnique({
-      where: { memberId_billingMonth: { memberId: member.id, billingMonth } },
-    });
-    if (!existing) {
-      await db.subscriptionPayment.create({
-        data: {
-          subscriptionId,
-          memberId: member.id,
-          billingMonth,
-          amount: member.shareAmount,
-          dueDate,
-          status: "PENDING",
-        },
-      });
-      created++;
-    }
-  }
-  return created;
+  const { count } = await db.subscriptionPayment.createMany({
+    data: subscription.members.map((member: SubscriptionMember) => ({
+      subscriptionId,
+      memberId: member.id,
+      billingMonth,
+      amount: member.shareAmount,
+      dueDate,
+      status: "PENDING",
+    })),
+    skipDuplicates: true,
+  });
+  return count;
 }

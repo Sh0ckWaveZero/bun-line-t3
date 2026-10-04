@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { DayPicker } from "react-day-picker";
 export type MonthPickerProps = {
   className?: string;
@@ -83,6 +83,7 @@ function MonthPicker({
         <button
           id={id ? `${id}-prev-year` : undefined}
           onClick={() => navigateYear("prev")}
+          aria-label="ปีก่อนหน้า"
           className={cn(
             buttonVariants({ variant: "outline" }),
             "h-8 w-8 rounded-lg bg-transparent p-0 opacity-50 hover:opacity-100",
@@ -101,6 +102,7 @@ function MonthPicker({
         <button
           id={id ? `${id}-next-year` : undefined}
           onClick={() => navigateYear("next")}
+          aria-label="ปีถัดไป"
           className={cn(
             buttonVariants({ variant: "outline" }),
             "h-8 w-8 rounded-lg bg-transparent p-0 opacity-50 hover:opacity-100",

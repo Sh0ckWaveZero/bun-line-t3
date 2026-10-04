@@ -66,6 +66,7 @@ export function AddCategoryModal({
               variant="ghost"
               size="icon"
               onClick={() => onOpenChange(false)}
+              aria-label="ปิดหน้าต่างหมวดหมู่"
               className="text-muted-foreground hover:bg-muted absolute top-1/2 right-4 h-8 w-8 -translate-y-1/2 rounded-full"
             >
               <X id="add-category-close-icon" size={18} />

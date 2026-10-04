@@ -18,6 +18,7 @@ interface DcaChartCardProps {
 }
 
 interface EnrichedPoint {
+  id: string;
   date: string;
   fiat: number;
   satoshi: number;
@@ -54,15 +55,46 @@ const fmtTHBFull = (n: number | null | undefined): string => {
   });
 };
 
-const fmtDateShort = (d: Date): string =>
-  d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+const ENGLISH_MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 
-const fmtDate = (d: Date): string =>
-  d.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "2-digit",
-  });
+const formatDateParts = (value: string) => {
+  const [year, month, day] = value.slice(0, 10).split("-");
+  const monthIndex = Number(month) - 1;
+  if (
+    !year ||
+    !day ||
+    !Number.isInteger(monthIndex) ||
+    !ENGLISH_MONTHS[monthIndex]
+  ) {
+    return "—";
+  }
+  return { year, month: ENGLISH_MONTHS[monthIndex], day };
+};
+
+const fmtDateShort = (value: string): string => {
+  const date = formatDateParts(value);
+  return typeof date === "string" ? date : `${date.day} ${date.month}`;
+};
+
+const fmtDate = (value: string): string => {
+  const date = formatDateParts(value);
+  return typeof date === "string"
+    ? date
+    : `${date.day} ${date.month} ${date.year.slice(-2)}`;
+};
 
 const fmtSat = (n: number): string => {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(2) + "M";
@@ -153,6 +185,7 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
       const unrealized = portfolioValue - cumFiat;
       const pctUnrealized = cumFiat > 0 ? (unrealized / cumFiat) * 100 : 0;
       return {
+        id: order.id,
         date: new Date(order.executedAt).toISOString().split("T")[0]!,
         fiat: order.amountTHB,
         satoshi,
@@ -545,8 +578,8 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
                 onPointerDown={onPointerInspect}
                 onPointerMove={onPointerInspect}
               >
-                {grid.map((g, i) => (
-                  <g key={i}>
+                {grid.map((g) => (
+                  <g key={g.v}>
                     <line
                       x1={padL}
                       x2={w - padR}
@@ -580,7 +613,7 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
                 )}
                 {xTicks.map((t, i) => (
                   <text
-                    key={i}
+                    key={data[t.idx]?.id ?? t.idx}
                     x={t.x}
                     y={h - 8}
                     textAnchor={
@@ -593,7 +626,7 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
                     fontSize="10"
                     fill="var(--muted-foreground)"
                   >
-                    {t.date ? fmtDateShort(new Date(t.date + "T00:00:00")) : ""}
+                    {t.date ? fmtDateShort(t.date) : ""}
                   </text>
                 ))}
                 {series.map(
@@ -622,7 +655,7 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
                 {mode === "entries" &&
                   data.map((d, i) => (
                     <circle
-                      key={i}
+                      key={d.id}
                       cx={x(i)}
                       cy={y(d.price)}
                       r="3.5"
@@ -669,10 +702,10 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
                   }}
                 >
                   <div className="border-border mb-1 border-b pb-1">
-                    {fmtDate(new Date(hovered.date + "T00:00:00"))}
+                    {fmtDate(hovered.date)}
                   </div>
-                  {tooltipRows.map((r, i) => (
-                    <div className="flex justify-between gap-4" key={i}>
+                  {tooltipRows.map((r) => (
+                    <div className="flex justify-between gap-4" key={r.lbl}>
                       <span className="opacity-70">{r.lbl}</span>
                       <span>{r.val}</span>
                     </div>

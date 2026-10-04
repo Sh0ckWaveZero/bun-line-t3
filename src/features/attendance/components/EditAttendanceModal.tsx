@@ -17,8 +17,11 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
   onUpdate,
 }) => {
   const [isMobile, setIsMobile] = React.useState(false);
+  const [isMounted, setIsMounted] = React.useState(false);
 
   React.useEffect(() => {
+    setIsMounted(true);
+
     const checkMobile = () => {
       const userAgent =
         navigator.userAgent || navigator.vendor || (window as any).opera;
@@ -70,7 +73,7 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
 
   const ModalComponent = isMobile ? MobileModal : CenteredModal;
 
-  if (!document) return null;
+  if (!isMounted) return null;
 
   const modalContent = (
     <div>

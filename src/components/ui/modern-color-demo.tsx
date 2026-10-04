@@ -30,7 +30,7 @@ export function ModernColorDemo() {
           </h2>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-5">
             {/* Attendance Card */}
-            <div className="bg-gradient-attendance shadow-ocean-glow transition-all-smooth hover:shadow-ocean-hover transform rounded-xl p-6 text-white duration-300 hover:scale-105">
+            <div className="bg-gradient-attendance shadow-ocean-glow hover:shadow-ocean-hover transform rounded-xl p-6 text-white transition-[transform,box-shadow] duration-300 hover:scale-105">
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-sm font-semibold text-white">
                   วันเข้างาน
@@ -44,7 +44,7 @@ export function ModernColorDemo() {
             </div>
 
             {/* Hours Card */}
-            <div className="bg-gradient-hours shadow-emerald-glow transition-all-smooth hover:shadow-emerald-hover transform rounded-xl p-6 text-white duration-300 hover:scale-105">
+            <div className="bg-gradient-hours shadow-emerald-glow hover:shadow-emerald-hover transform rounded-xl p-6 text-white transition-[transform,box-shadow] duration-300 hover:scale-105">
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-sm font-semibold text-white">
                   ชั่วโมงรวม
@@ -56,7 +56,7 @@ export function ModernColorDemo() {
             </div>
 
             {/* Overtime Card */}
-            <div className="bg-gradient-overtime shadow-rose-glow transition-all-smooth hover:shadow-rose-hover transform rounded-xl p-6 text-white duration-300 hover:scale-105">
+            <div className="bg-gradient-overtime shadow-rose-glow hover:shadow-rose-hover transform rounded-xl p-6 text-white transition-[transform,box-shadow] duration-300 hover:scale-105">
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-sm font-semibold text-white">
                   ล่วงเวลา
@@ -68,7 +68,7 @@ export function ModernColorDemo() {
             </div>
 
             {/* Efficiency Card */}
-            <div className="bg-gradient-efficiency shadow-amber-glow transition-all-smooth hover:shadow-emerald-hover transform rounded-xl p-6 text-white duration-300 hover:scale-105">
+            <div className="bg-gradient-efficiency shadow-amber-glow hover:shadow-emerald-hover transform rounded-xl p-6 text-white transition-[transform,box-shadow] duration-300 hover:scale-105">
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-sm font-semibold text-white">
                   ประสิทธิภาพ
@@ -80,7 +80,7 @@ export function ModernColorDemo() {
             </div>
 
             {/* Late Card */}
-            <div className="bg-gradient-late shadow-violet-glow transition-all-smooth hover:shadow-rose-hover transform rounded-xl p-6 text-white duration-300 hover:scale-105">
+            <div className="bg-gradient-late shadow-violet-glow hover:shadow-rose-hover transform rounded-xl p-6 text-white transition-[transform,box-shadow] duration-300 hover:scale-105">
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-sm font-semibold text-white">มาสาย</span>
                 <span className="text-2xl">⚠️</span>
@@ -98,7 +98,7 @@ export function ModernColorDemo() {
           </h2>
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             {/* Ocean Blue */}
-            <div className="bg-surface-modern-light shadow-card-modern transition-colors-shadow hover:shadow-card-hover dark:bg-surface-modern-dark rounded-xl p-6 duration-300">
+            <div className="bg-surface-modern-light shadow-card-modern hover:shadow-card-hover dark:bg-surface-modern-dark rounded-xl p-6 transition-[box-shadow] duration-300">
               <h3 className="text-text-modern-light-primary mb-4 text-lg font-black">
                 🌊 Ocean Blue
               </h3>
@@ -116,7 +116,7 @@ export function ModernColorDemo() {
             </div>
 
             {/* Rose */}
-            <div className="bg-surface-modern-light shadow-card-modern transition-colors-shadow hover:shadow-card-hover dark:bg-surface-modern-dark rounded-xl p-6 duration-300">
+            <div className="bg-surface-modern-light shadow-card-modern hover:shadow-card-hover dark:bg-surface-modern-dark rounded-xl p-6 transition-[box-shadow] duration-300">
               <h3 className="mb-4 text-lg font-black text-rose-600">🌹 Rose</h3>
               <div className="grid grid-cols-5 gap-2">
                 {["50", "200", "400", "600", "800"].map((shade) => (
@@ -132,7 +132,7 @@ export function ModernColorDemo() {
             </div>
 
             {/* Emerald */}
-            <div className="bg-surface-modern-light shadow-card-modern transition-colors-shadow hover:shadow-card-hover dark:bg-surface-modern-dark rounded-xl p-6 duration-300">
+            <div className="bg-surface-modern-light shadow-card-modern hover:shadow-card-hover dark:bg-surface-modern-dark rounded-xl p-6 transition-[box-shadow] duration-300">
               <h3 className="mb-4 text-lg font-black text-emerald-600">
                 💚 Emerald
               </h3>
@@ -150,7 +150,7 @@ export function ModernColorDemo() {
             </div>
 
             {/* Violet */}
-            <div className="bg-surface-modern-light shadow-card-modern transition-colors-shadow hover:shadow-card-hover dark:bg-surface-modern-dark rounded-xl p-6 duration-300">
+            <div className="bg-surface-modern-light shadow-card-modern hover:shadow-card-hover dark:bg-surface-modern-dark rounded-xl p-6 transition-[box-shadow] duration-300">
               <h3 className="mb-4 text-lg font-black text-violet-600">
                 💜 Violet
               </h3>
@@ -168,7 +168,7 @@ export function ModernColorDemo() {
             </div>
 
             {/* Amber */}
-            <div className="bg-surface-modern-light shadow-card-modern transition-colors-shadow hover:shadow-card-hover dark:bg-surface-modern-dark rounded-xl p-6 duration-300">
+            <div className="bg-surface-modern-light shadow-card-modern hover:shadow-card-hover dark:bg-surface-modern-dark rounded-xl p-6 transition-[box-shadow] duration-300">
               <h3 className="mb-4 text-lg font-black text-amber-600">
                 🧡 Amber
               </h3>
@@ -186,7 +186,7 @@ export function ModernColorDemo() {
             </div>
 
             {/* Teal */}
-            <div className="bg-surface-modern-light shadow-card-modern transition-colors-shadow hover:shadow-card-hover dark:bg-surface-modern-dark rounded-xl p-6 duration-300">
+            <div className="bg-surface-modern-light shadow-card-modern hover:shadow-card-hover dark:bg-surface-modern-dark rounded-xl p-6 transition-[box-shadow] duration-300">
               <h3 className="mb-4 text-lg font-black text-teal-600">🔷 Teal</h3>
               <div className="grid grid-cols-5 gap-2">
                 {["50", "200", "400", "600", "800"].map((shade) => (
@@ -210,7 +210,7 @@ export function ModernColorDemo() {
           </h2>
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             {/* Paper */}
-            <div className="bg-surface-book-light shadow-book transition-colors-shadow hover:shadow-book-hover rounded-xl p-6 duration-300">
+            <div className="bg-surface-book-light shadow-book hover:shadow-book-hover rounded-xl p-6 transition-[box-shadow] duration-300">
               <h3 className="text-text-book-primary mb-4 text-lg font-black">
                 📄 Paper
               </h3>
@@ -228,7 +228,7 @@ export function ModernColorDemo() {
             </div>
 
             {/* Ink */}
-            <div className="bg-surface-book-warm shadow-book transition-colors-shadow hover:shadow-book-hover rounded-xl p-6 duration-300">
+            <div className="bg-surface-book-warm shadow-book hover:shadow-book-hover rounded-xl p-6 transition-[box-shadow] duration-300">
               <h3 className="text-ink-700 mb-4 text-lg font-black">🖋️ Ink</h3>
               <div className="grid grid-cols-5 gap-2">
                 {["50", "200", "400", "600", "800"].map((shade) => (
@@ -244,7 +244,7 @@ export function ModernColorDemo() {
             </div>
 
             {/* Leather */}
-            <div className="bg-surface-book-vintage shadow-leather-glow transition-colors-shadow hover:shadow-leather-hover rounded-xl p-6 duration-300">
+            <div className="bg-surface-book-vintage shadow-leather-glow hover:shadow-leather-hover rounded-xl p-6 transition-[box-shadow] duration-300">
               <h3 className="text-leather-600 mb-4 text-lg font-black">
                 📖 Leather
               </h3>
@@ -262,7 +262,7 @@ export function ModernColorDemo() {
             </div>
 
             {/* Vintage */}
-            <div className="bg-surface-book-aged shadow-vintage-glow transition-colors-shadow hover:shadow-book-hover rounded-xl p-6 duration-300">
+            <div className="bg-surface-book-aged shadow-vintage-glow hover:shadow-book-hover rounded-xl p-6 transition-[box-shadow] duration-300">
               <h3 className="text-vintage-600 mb-4 text-lg font-black">
                 📜 Vintage
               </h3>
@@ -280,7 +280,7 @@ export function ModernColorDemo() {
             </div>
 
             {/* Sepia */}
-            <div className="bg-gradient-book-sepia shadow-sepia-glow transition-colors-shadow hover:shadow-book-hover rounded-xl p-6 duration-300">
+            <div className="bg-gradient-book-sepia shadow-sepia-glow hover:shadow-book-hover rounded-xl p-6 transition-[box-shadow] duration-300">
               <h3 className="text-sepia-700 mb-4 text-lg font-black">
                 🏺 Sepia
               </h3>
@@ -306,7 +306,7 @@ export function ModernColorDemo() {
           </h2>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
             {/* Reading Statistics */}
-            <div className="bg-gradient-book-warm shadow-paper-glow transition-all-smooth hover:shadow-paper-hover transform rounded-xl p-6 text-white duration-300 hover:scale-105">
+            <div className="bg-gradient-book-warm shadow-paper-glow hover:shadow-paper-hover transform rounded-xl p-6 text-white transition-[transform,box-shadow] duration-300 hover:scale-105">
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-sm font-medium text-white/90">
                   หน้าที่อ่าน
@@ -318,7 +318,7 @@ export function ModernColorDemo() {
             </div>
 
             {/* Reading Time */}
-            <div className="bg-gradient-book-classic shadow-leather-glow transition-all-smooth hover:shadow-leather-hover transform rounded-xl p-6 text-white duration-300 hover:scale-105">
+            <div className="bg-gradient-book-classic shadow-leather-glow hover:shadow-leather-hover transform rounded-xl p-6 text-white transition-[transform,box-shadow] duration-300 hover:scale-105">
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-sm font-medium text-white/90">
                   เวลาอ่าน
@@ -330,7 +330,7 @@ export function ModernColorDemo() {
             </div>
 
             {/* Books Completed */}
-            <div className="bg-gradient-book-antique shadow-vintage-glow transition-all-smooth hover:shadow-book-hover transform rounded-xl p-6 text-white duration-300 hover:scale-105">
+            <div className="bg-gradient-book-antique shadow-vintage-glow hover:shadow-book-hover transform rounded-xl p-6 text-white transition-[transform,box-shadow] duration-300 hover:scale-105">
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-sm font-medium text-white/90">
                   หนังสือจบ
@@ -342,7 +342,7 @@ export function ModernColorDemo() {
             </div>
 
             {/* Knowledge Score */}
-            <div className="text-leather-800 bg-gradient-book-paper shadow-paper-glow transition-all-smooth hover:shadow-paper-hover transform rounded-xl p-6 duration-300 hover:scale-105">
+            <div className="text-leather-800 bg-gradient-book-paper shadow-paper-glow hover:shadow-paper-hover transform rounded-xl p-6 transition-[transform,box-shadow] duration-300 hover:scale-105">
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-leather-700/90 text-sm font-medium">
                   คะแนนความรู้
@@ -367,13 +367,13 @@ export function ModernColorDemo() {
                 🔘 Modern Buttons
               </h3>
               <div className="space-y-3">
-                <button className="bg-gradient-ocean transition-all-smooth hover:shadow-ocean-hover w-full transform rounded-lg px-6 py-3 text-white duration-300 hover:scale-105">
+                <button className="bg-gradient-ocean hover:shadow-ocean-hover w-full transform rounded-lg px-6 py-3 text-white transition-[transform,box-shadow] duration-300 hover:scale-105">
                   Primary Action
                 </button>
-                <button className="bg-gradient-emerald transition-all-smooth hover:shadow-emerald-hover w-full transform rounded-lg px-6 py-3 text-white duration-300 hover:scale-105">
+                <button className="bg-gradient-emerald hover:shadow-emerald-hover w-full transform rounded-lg px-6 py-3 text-white transition-[transform,box-shadow] duration-300 hover:scale-105">
                   Success Action
                 </button>
-                <button className="bg-gradient-rose transition-all-smooth hover:shadow-rose-hover w-full transform rounded-lg px-6 py-3 text-white duration-300 hover:scale-105">
+                <button className="bg-gradient-rose hover:shadow-rose-hover w-full transform rounded-lg px-6 py-3 text-white transition-[transform,box-shadow] duration-300 hover:scale-105">
                   Warning Action
                 </button>
               </div>
@@ -385,13 +385,13 @@ export function ModernColorDemo() {
                 📚 Book Buttons
               </h3>
               <div className="space-y-3">
-                <button className="bg-gradient-book-warm transition-all-smooth hover:shadow-paper-hover w-full transform rounded-lg px-6 py-3 text-white duration-300 hover:scale-105">
+                <button className="bg-gradient-book-warm hover:shadow-paper-hover w-full transform rounded-lg px-6 py-3 text-white transition-[transform,box-shadow] duration-300 hover:scale-105">
                   เริ่มอ่าน
                 </button>
-                <button className="bg-gradient-book-classic transition-all-smooth hover:shadow-leather-hover w-full transform rounded-lg px-6 py-3 text-white duration-300 hover:scale-105">
+                <button className="bg-gradient-book-classic hover:shadow-leather-hover w-full transform rounded-lg px-6 py-3 text-white transition-[transform,box-shadow] duration-300 hover:scale-105">
                   บันทึกความคิดเห็น
                 </button>
-                <button className="bg-gradient-book-antique transition-all-smooth hover:shadow-vintage-glow w-full transform rounded-lg px-6 py-3 text-white duration-300 hover:scale-105">
+                <button className="bg-gradient-book-antique hover:shadow-vintage-glow w-full transform rounded-lg px-6 py-3 text-white transition-[transform,box-shadow] duration-300 hover:scale-105">
                   แชร์หนังสือ
                 </button>
               </div>
@@ -403,13 +403,13 @@ export function ModernColorDemo() {
                 📱 Modern Hover Cards
               </h3>
               <div className="space-y-3">
-                <div className="bg-gradient-sky transition-all-smooth hover:shadow-ocean-hover transform cursor-pointer rounded-lg p-4 duration-300 hover:scale-105">
+                <div className="bg-gradient-sky hover:shadow-ocean-hover transform cursor-pointer rounded-lg p-4 transition-[transform,box-shadow] duration-300 hover:scale-105">
                   <div className="font-medium text-white">Hover Effect 1</div>
                 </div>
-                <div className="bg-gradient-mint transition-all-smooth hover:shadow-emerald-hover transform cursor-pointer rounded-lg p-4 duration-300 hover:scale-105">
+                <div className="bg-gradient-mint hover:shadow-emerald-hover transform cursor-pointer rounded-lg p-4 transition-[transform,box-shadow] duration-300 hover:scale-105">
                   <div className="font-medium text-white">Hover Effect 2</div>
                 </div>
-                <div className="hover:shadow-violet-hover bg-gradient-dawn transition-all-smooth transform cursor-pointer rounded-lg p-4 duration-300 hover:scale-105">
+                <div className="hover:shadow-violet-hover bg-gradient-dawn transform cursor-pointer rounded-lg p-4 transition-[transform,box-shadow] duration-300 hover:scale-105">
                   <div className="font-medium text-white">Hover Effect 3</div>
                 </div>
               </div>
@@ -421,17 +421,17 @@ export function ModernColorDemo() {
                 📖 Reading Mode
               </h3>
               <div className="space-y-3">
-                <div className="bg-gradient-book-paper transition-all-smooth hover:shadow-paper-hover transform cursor-pointer rounded-lg p-4 duration-300 hover:scale-105">
+                <div className="bg-gradient-book-paper hover:shadow-paper-hover transform cursor-pointer rounded-lg p-4 transition-[transform,box-shadow] duration-300 hover:scale-105">
                   <div className="text-text-book-primary font-medium">
                     📄 Paper Mode
                   </div>
                 </div>
-                <div className="bg-gradient-book-vintage transition-all-smooth hover:shadow-vintage-glow transform cursor-pointer rounded-lg p-4 duration-300 hover:scale-105">
+                <div className="bg-gradient-book-vintage hover:shadow-vintage-glow transform cursor-pointer rounded-lg p-4 transition-[transform,box-shadow] duration-300 hover:scale-105">
                   <div className="text-text-book-vintage font-medium">
                     📜 Vintage Mode
                   </div>
                 </div>
-                <div className="bg-gradient-book-sepia transition-all-smooth hover:shadow-sepia-glow transform cursor-pointer rounded-lg p-4 duration-300 hover:scale-105">
+                <div className="bg-gradient-book-sepia hover:shadow-sepia-glow transform cursor-pointer rounded-lg p-4 transition-[transform,box-shadow] duration-300 hover:scale-105">
                   <div className="text-text-book-vintage font-medium">
                     🏺 Sepia Mode
                   </div>

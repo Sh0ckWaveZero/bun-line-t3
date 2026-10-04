@@ -25,13 +25,12 @@ export function MobileNav({
     if (item.requiresAdmin && !session?.isAdmin) return false;
     return true;
   });
+  const expandedSectionIds = new Set(expandedSections);
 
   return (
     <div
       id="mobile-nav"
       className={`bg-background/95 border-border block border-b backdrop-blur-sm lg:hidden ${isOpen ? "" : "hidden"}`}
-      role="navigation"
-      aria-label="เมนูมือถือ"
     >
       <nav className="container mx-auto px-6 py-5">
         <div className="space-y-5">
@@ -69,7 +68,7 @@ export function MobileNav({
 
             if (visibleChildren.length === 0) return null;
 
-            const isExpanded = expandedSections.includes(item.id);
+            const isExpanded = expandedSectionIds.has(item.id);
 
             return (
               <div

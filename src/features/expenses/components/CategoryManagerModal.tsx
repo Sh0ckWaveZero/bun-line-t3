@@ -46,6 +46,7 @@ export function CategoryManagerModal({
             variant="ghost"
             size="icon"
             onClick={() => onOpenChange(false)}
+            aria-label="ปิดหน้าต่างจัดการหมวดหมู่"
             className="text-muted-foreground hover:bg-muted absolute top-1/2 right-4 h-10 w-10 -translate-y-1/2 rounded-full"
           >
             <X id="category-manager-close-icon" size={22} />
@@ -109,6 +110,7 @@ export function CategoryManagerModal({
                       size="icon"
                       className="text-muted-foreground hover:text-foreground hover:bg-muted h-9 w-9 rounded-lg"
                       onClick={() => onEdit(category)}
+                      aria-label={`แก้ไขหมวดหมู่ ${category.name}`}
                     >
                       <Edit size={14} />
                     </Button>
@@ -118,6 +120,7 @@ export function CategoryManagerModal({
                       size="icon"
                       className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-9 w-9 rounded-lg"
                       onClick={() => onDelete(category.id)}
+                      aria-label={`ลบหมวดหมู่ ${category.name}`}
                     >
                       <Trash2 size={14} />
                     </Button>

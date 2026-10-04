@@ -684,12 +684,12 @@ function DialogShell({
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <section
+      <dialog
+        open
         className={cn(
-          "max-h-[90vh] w-full overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-white/[0.1] dark:bg-[#17191c]",
+          "relative m-0 max-h-[90vh] w-full max-w-none overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 text-inherit shadow-2xl dark:border-white/[0.1] dark:bg-[#17191c]",
           wide ? "max-w-3xl" : "max-w-lg",
         )}
-        role="dialog"
         aria-modal="true"
         aria-labelledby="cron-dialog-title"
       >
@@ -717,7 +717,7 @@ function DialogShell({
           </button>
         </div>
         <div className="mt-5">{children}</div>
-      </section>
+      </dialog>
     </div>
   );
 }

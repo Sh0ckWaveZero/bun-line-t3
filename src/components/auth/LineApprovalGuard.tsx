@@ -50,22 +50,3 @@ export function LineApprovalGuard({ children }: { children: React.ReactNode }) {
   // แสดง content ถ้าผ่าน
   return <>{children}</>;
 }
-
-/**
- * HOC pattern สำหรับใช้กับ existing components
- * Usage:
- * ```tsx
- * const ProtectedPage = withLineApproval(() => <DashboardPage />);
- * ```
- */
-export function withLineApproval<P extends object>(
-  Component: React.ComponentType<P>,
-) {
-  return function WithLineApproval(props: P) {
-    return (
-      <LineApprovalGuard>
-        <Component {...props} />
-      </LineApprovalGuard>
-    );
-  };
-}

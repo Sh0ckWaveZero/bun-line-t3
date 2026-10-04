@@ -25,12 +25,12 @@ export function HolidayManageModal({
   onSubmit,
   selectedDate,
 }: HolidayManageModalProps) {
-  const [date, setDate] = useState<Date | undefined>(
+  const [date, setDate] = useState<Date | undefined>(() =>
     selectedDate ? new Date(selectedDate) : undefined,
   );
   const [nameEnglish, setNameEnglish] = useState("");
   const [nameThai, setNameThai] = useState("");
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [year, setYear] = useState<number | "">(() => new Date().getFullYear());
   const [type, setType] = useState("national");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
@@ -52,7 +52,7 @@ export function HolidayManageModal({
     setLoading(true);
 
     // Validate
-    if (!date || !nameEnglish || !nameThai || !year) {
+    if (!date || !nameEnglish || !nameThai || typeof year !== "number") {
       setError("กรุณาระบุข้อมูลให้ครบถ้วน");
       setLoading(false);
       return;
@@ -83,9 +83,9 @@ export function HolidayManageModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      role="dialog"
+    <dialog
+      open
+      className="fixed inset-0 z-50 m-0 flex max-h-none max-w-none items-center justify-center border-0 bg-black/50 p-4 text-inherit shadow-none"
       aria-modal="true"
       aria-labelledby="holiday-modal-title"
     >
@@ -137,7 +137,10 @@ export function HolidayManageModal({
               type="number"
               inputMode="numeric"
               value={year}
-              onChange={(e) => setYear(parseInt(e.target.value))}
+              onChange={(e) => {
+                const value = e.target.value;
+                setYear(value === "" ? "" : Number.parseInt(value, 10));
+              }}
               className={cn(
                 "w-full [appearance:textfield] rounded-lg border px-3 py-2 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
                 "border-input bg-background text-foreground",
@@ -161,7 +164,7 @@ export function HolidayManageModal({
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground text-sm">ปี พ.ศ.</span>
               <span className="text-foreground text-lg font-bold">
-                {year + 543}
+                {typeof year === "number" ? year + 543 : "—"}
               </span>
             </div>
           </div>
@@ -331,6 +334,6 @@ export function HolidayManageModal({
           </div>
         </form>
       </Card>
-    </div>
+    </dialog>
   );
 }

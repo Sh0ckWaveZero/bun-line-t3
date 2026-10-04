@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Bar } from "react-chartjs-2";
+import { LazyBarChart } from "@/components/charts/LazyCharts";
 import { useDailyAverageHoursData } from "@/features/attendance/hooks/useAttendanceChartData";
 import { useChartTheme } from "@/hooks/useChartTheme";
 import type { AttendanceRecord } from "@/lib/types/attendance";
@@ -29,7 +29,7 @@ export const DailyAverageChart: React.FC<DailyAverageChartProps> = ({
   }
 
   return (
-    <Bar
+    <LazyBarChart
       data={chartData}
       options={getChartOptions({
         plugins: {

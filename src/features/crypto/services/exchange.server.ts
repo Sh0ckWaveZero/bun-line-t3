@@ -12,15 +12,26 @@ import {
 
 type CryptoInfoType = CryptoInfo | null;
 
+const fetchSuccessfulResponse = async (
+  input: RequestInfo | URL,
+  init?: RequestInit,
+): Promise<Response> => {
+  const response = await fetch(input, init);
+  if (!response.ok) {
+    throw new Error(`Exchange request failed with status ${response.status}`);
+  }
+  return response;
+};
+
 const getBitkub = async (_currency: any): Promise<CryptoInfoType> => {
   const currency = cryptoCurrencyService.mapSymbolsThai(_currency);
   const response: any = await bitkub(currency);
   if (utils.isEmpty(response)) return null;
 
-  const cryptoInfo = await cmcService.findOne(currency.toUpperCase());
-  const logoInfo = await cryptoCurrencyService.getCurrencyLogo(
-    _currency.toLowerCase(),
-  );
+  const [cryptoInfo, logoInfo] = await Promise.all([
+    cmcService.findOne(currency.toUpperCase()),
+    cryptoCurrencyService.getCurrencyLogo(_currency.toLowerCase()),
+  ]);
 
   return {
     exchange: "Bitkub",
@@ -45,10 +56,10 @@ const getSatangCorp = async (_currency: any): Promise<CryptoInfoType> => {
   const response: any = await satangCorp(currency);
   if (utils.isEmpty(response)) return null;
 
-  const cryptoInfo = await cmcService.findOne(currency.toUpperCase());
-  const logoInfo = await cryptoCurrencyService.getCurrencyLogo(
-    _currency.toLowerCase(),
-  );
+  const [cryptoInfo, logoInfo] = await Promise.all([
+    cmcService.findOne(currency.toUpperCase()),
+    cryptoCurrencyService.getCurrencyLogo(_currency.toLowerCase()),
+  ]);
 
   return {
     exchange: "Satang Pro",
@@ -76,10 +87,10 @@ const getBitazza = async (_currency: string): Promise<CryptoInfoType> => {
   const response: any = await bitazza(currency);
   if (utils.isEmpty(response)) return null;
 
-  const cryptoInfo = await cmcService.findOne(currency.toUpperCase());
-  const logoInfo = await cryptoCurrencyService.getCurrencyLogo(
-    _currency.toLowerCase(),
-  );
+  const [cryptoInfo, logoInfo] = await Promise.all([
+    cmcService.findOne(currency.toUpperCase()),
+    cryptoCurrencyService.getCurrencyLogo(_currency.toLowerCase()),
+  ]);
 
   return {
     exchange: "Bitazza",
@@ -109,10 +120,10 @@ const getBinance = async (
   const response: any = await binance(currency, pairCurrency);
   if (utils.isEmpty(response)) return null;
 
-  const cryptoInfo = await cmcService.findOne(currency.toUpperCase());
-  const logoInfo = await cryptoCurrencyService.getCurrencyLogo(
-    _currency.toLowerCase(),
-  );
+  const [cryptoInfo, logoInfo] = await Promise.all([
+    cmcService.findOne(currency.toUpperCase()),
+    cryptoCurrencyService.getCurrencyLogo(_currency.toLowerCase()),
+  ]);
 
   return {
     exchange: "Binance",
@@ -143,10 +154,10 @@ const getGeteio = async (_currency: string): Promise<CryptoInfoType> => {
     return null;
 
   const data = response[0]; // Gate.io returns an array, take first item
-  const cryptoInfo = await cmcService.findOne(currency.toUpperCase());
-  const logoInfo = await cryptoCurrencyService.getCurrencyLogo(
-    _currency.toLowerCase(),
-  );
+  const [cryptoInfo, logoInfo] = await Promise.all([
+    cmcService.findOne(currency.toUpperCase()),
+    cryptoCurrencyService.getCurrencyLogo(_currency.toLowerCase()),
+  ]);
 
   return {
     exchange: "Gate.io",
@@ -171,10 +182,10 @@ const getMexc = async (_currency: string): Promise<CryptoInfoType> => {
   const response: any = await mexc(currency);
   if (utils.isEmpty(response)) return null;
 
-  const cryptoInfo = await cmcService.findOne(currency.toUpperCase());
-  const logoInfo = await cryptoCurrencyService.getCurrencyLogo(
-    _currency.toLowerCase(),
-  );
+  const [cryptoInfo, logoInfo] = await Promise.all([
+    cmcService.findOne(currency.toUpperCase()),
+    cryptoCurrencyService.getCurrencyLogo(_currency.toLowerCase()),
+  ]);
 
   return {
     exchange: "MEXC",
@@ -228,7 +239,9 @@ const getCmcList = async (start: number, limit: number) => {
 
 const bitkub = async (currencyName: string): Promise<any> => {
   try {
-    const response = await fetch(`https://api.bitkub.com/api/market/ticker`);
+    const response = await fetchSuccessfulResponse(
+      "https://api.bitkub.com/api/market/ticker",
+    );
     const data = await response.json();
     return data?.[`THB_${currencyName.toUpperCase()}`];
   } catch (error) {
@@ -239,7 +252,7 @@ const bitkub = async (currencyName: string): Promise<any> => {
 const binance = async (currencyName: string, pairs = "USDT"): Promise<any> => {
   try {
     const url = `https://api.binance.com/api/v3/ticker/24hr?symbol=${currencyName.toUpperCase()}${pairs.toUpperCase()}`;
-    const response = await fetch(url);
+    const response = await fetchSuccessfulResponse(url);
     const data = await response.json();
     return data;
   } catch (error) {
@@ -249,7 +262,9 @@ const binance = async (currencyName: string, pairs = "USDT"): Promise<any> => {
 
 const bitazza = async (currencyName: string): Promise<any> => {
   try {
-    const response = await fetch(`https://apexapi.bitazza.com:8443/AP/summary`);
+    const response = await fetchSuccessfulResponse(
+      "https://apexapi.bitazza.com:8443/AP/summary",
+    );
     const data = await response.json();
     for (const key in data) {
       const value = data[key];
@@ -264,7 +279,9 @@ const bitazza = async (currencyName: string): Promise<any> => {
 
 const geteIO = async (currencyName: string) => {
   try {
-    const response = await fetch(`https://api.gateio.ws/api/v4/spot/tickers`);
+    const response = await fetchSuccessfulResponse(
+      "https://api.gateio.ws/api/v4/spot/tickers",
+    );
     const data = await response.json();
     return data.filter(
       (val: any) => val.currency_pair === `${currencyName.toUpperCase()}_USDT`,
@@ -276,7 +293,7 @@ const geteIO = async (currencyName: string) => {
 
 const mexc = async (currencyName: string): Promise<any> => {
   try {
-    const response = await fetch(
+    const response = await fetchSuccessfulResponse(
       `https://www.mexc.com/open/api/v2/market/ticker?symbol=${currencyName}_USDT`,
     );
     const data = await response.json();
@@ -294,7 +311,7 @@ const cmc = async (currencyName: string): Promise<any> => {
     const headers = {
       "X-CMC_PRO_API_KEY": env.CMC_API_KEY,
     };
-    const response = await fetch(url, { headers });
+    const response = await fetchSuccessfulResponse(url, { headers });
     const data = await response.json();
     return data.data?.[`${cryptoInfo}`];
   } catch (error) {
@@ -308,7 +325,7 @@ const cmcList = async (start: number, limit: number): Promise<any> => {
     const headers = {
       "X-CMC_PRO_API_KEY": env.CMC_API_KEY,
     };
-    const response = await fetch(url, { headers });
+    const response = await fetchSuccessfulResponse(url, { headers });
     const data = await response.json();
     return data?.data;
   } catch (error) {
@@ -318,7 +335,7 @@ const cmcList = async (start: number, limit: number): Promise<any> => {
 
 const satangCorp = async (currencyName: string): Promise<any> => {
   try {
-    const response = await fetch(
+    const response = await fetchSuccessfulResponse(
       `https://satangcorp.com/api/v3/ticker/24hr?symbol=${currencyName}_thb`,
     );
     const data = await response.json();
@@ -332,7 +349,9 @@ const getGoldPrice = async (): Promise<any> => {
   try {
     const goldPrice: any = {};
     // Fetch HTML
-    const response: any = await fetch("https://xn--42cah7d0cxcvbbb9x.com/");
+    const response = await fetchSuccessfulResponse(
+      "https://xn--42cah7d0cxcvbbb9x.com/",
+    );
     const data = await response.text();
     // Load HTML
     const $: any = cheerio.load(data);
@@ -404,7 +423,9 @@ const getGoldPrice = async (): Promise<any> => {
 const getGasPrice = async (provider: string): Promise<any> => {
   try {
     // Fetch HTML
-    const response = await fetch("http://gasprice.kapook.com/gasprice.php");
+    const response = await fetchSuccessfulResponse(
+      "http://gasprice.kapook.com/gasprice.php",
+    );
     const data = await response.text();
     // Load HTML
     const $: any = cheerio.load(data);
@@ -434,7 +455,7 @@ const getLotto = async (lottoNo: string[]): Promise<any> => {
       redirect: "follow",
     };
 
-    const response = await fetch(
+    const response = await fetchSuccessfulResponse(
       "https://www.glo.or.th/api/lottery/getLatestLottery",
       requestOptions,
     );

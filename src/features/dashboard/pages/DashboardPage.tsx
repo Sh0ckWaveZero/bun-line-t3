@@ -250,7 +250,7 @@ export function DashboardPage() {
                           {action.description}
                         </p>
                       </div>
-                      <ArrowRight className="h-4 w-4 shrink-0 translate-x-0 opacity-0 transition-all duration-200 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:translate-x-0.5 group-hover:opacity-100" />
+                      <ArrowRight className="h-4 w-4 shrink-0 translate-x-0 opacity-0 transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:translate-x-0.5 group-hover:opacity-100" />
                     </Link>
                   ))}
                 </div>

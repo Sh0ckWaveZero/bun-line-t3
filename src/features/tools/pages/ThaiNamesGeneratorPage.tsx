@@ -215,7 +215,7 @@ export function ThaiNamesGeneratorPage() {
                     const nameKey = (field: string) => `${i}-${field}`;
                     return (
                       <div
-                        key={i}
+                        key={fullName}
                         className="group bg-card hover:bg-accent/50 rounded-lg border p-3 transition-colors"
                       >
                         <div className="flex items-center justify-between gap-2">

@@ -32,9 +32,10 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
     setToastKey((k) => k + 1);
     setOpen(true);
   }, []);
+  const contextValue = React.useMemo(() => ({ showToast }), [showToast]);
 
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={contextValue}>
       <ToastPrimitive.Provider swipeDirection="right">
         {children}
         <ToastPrimitive.Root
@@ -42,7 +43,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
           open={open}
           onOpenChange={setOpen}
           duration={toast?.duration ?? 3500}
-          className={`text-high-contrast dark:text-high-contrast bg-background fixed top-4 right-4 z-[9999] max-w-xs min-w-[220px] rounded-lg border-2 border-gray-200 px-4 py-3 shadow-lg transition-all dark:border-gray-600 dark:bg-gray-900 ${toast?.type === "success" ? "border-green-500 text-green-700 dark:text-green-300" : ""} ${toast?.type === "error" ? "border-red-500 text-red-700 dark:text-red-300" : ""} ${toast?.type === "info" ? "border-blue-500 text-blue-700 dark:text-blue-300" : ""} ${toast?.type === "warning" ? "border-yellow-500 text-yellow-700 dark:text-yellow-300" : ""} `}
+          className={`text-high-contrast dark:text-high-contrast bg-background fixed top-4 right-4 z-[9999] max-w-xs min-w-[220px] rounded-lg border-2 border-gray-200 px-4 py-3 shadow-lg transition-colors dark:border-gray-600 dark:bg-gray-900 ${toast?.type === "success" ? "border-green-500 text-green-700 dark:text-green-300" : ""} ${toast?.type === "error" ? "border-red-500 text-red-700 dark:text-red-300" : ""} ${toast?.type === "info" ? "border-blue-500 text-blue-700 dark:text-blue-300" : ""} ${toast?.type === "warning" ? "border-yellow-500 text-yellow-700 dark:text-yellow-300" : ""} `}
         >
           <ToastPrimitive.Title className="font-semibold">
             {toast?.title}

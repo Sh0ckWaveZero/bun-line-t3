@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useEffectEvent } from "react";
 import { createPortal } from "react-dom";
 import { useSafePortal } from "@/hooks/useHydrationSafe";
 
@@ -21,13 +22,11 @@ export const CenteredModal: React.FC<CenteredModalProps> = ({
   const { canUsePortal, portalRoot } = useSafePortal();
 
   // 🎯 Handle escape key and body scroll - only when portal is ready
-  React.useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
+  const handleEscape = useEffectEvent((e: KeyboardEvent) => {
+    if (e.key === "Escape") onClose();
+  });
 
+  React.useEffect(() => {
     if (isOpen && canUsePortal) {
       document.addEventListener("keydown", handleEscape);
       document.body.classList.add("modal-open");
@@ -39,23 +38,15 @@ export const CenteredModal: React.FC<CenteredModalProps> = ({
         document.body.classList.remove("modal-open");
       }
     };
-  }, [isOpen, onClose, canUsePortal]);
+  }, [isOpen, canUsePortal]);
 
   // 🔐 SECURITY: ไม่แสดง modal หากไม่เปิดหรือยังไม่พร้อม
   if (!isOpen || !canUsePortal || !portalRoot) return null;
 
-  // 🎯 Handle background click to close modal
-  const handleBackgroundClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
   const modalContent = (
-    <div
+    <dialog
+      open
       className="modal-grid-center"
-      onClick={handleBackgroundClick}
-      role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
       aria-describedby="modal-description"
@@ -64,11 +55,23 @@ export const CenteredModal: React.FC<CenteredModalProps> = ({
         zIndex: 10000,
         position: "fixed",
         inset: 0,
+        margin: 0,
+        maxWidth: "none",
+        maxHeight: "none",
+        border: 0,
+        padding: 0,
+        background: "transparent",
+        color: "inherit",
       }}
     >
+      <button
+        type="button"
+        className="absolute inset-0 z-0 cursor-default border-0 bg-transparent p-0 focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-inset"
+        aria-label="ปิดหน้าต่าง"
+        onClick={onClose}
+      />
       <div
         className={`modal-content border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 ${className}`}
-        onClick={(e) => e.stopPropagation()}
         style={{
           animation: "modal-enter 0.2s ease-out",
           /* ✅ ปรับปรุงการจัดการขนาดและ layout */
@@ -79,7 +82,7 @@ export const CenteredModal: React.FC<CenteredModalProps> = ({
           /* ✅ ป้องกัน content overflow */
           overflow: "hidden",
           /* ✅ รับประกันการมองเห็น */
-          zIndex: 10001,
+          zIndex: 1,
           position: "relative",
           margin: "auto",
         }}
@@ -98,7 +101,7 @@ export const CenteredModal: React.FC<CenteredModalProps> = ({
           {children}
         </div>
       </div>
-    </div>
+    </dialog>
   );
 
   return createPortal(modalContent, portalRoot);

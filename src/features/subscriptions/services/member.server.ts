@@ -103,28 +103,32 @@ export async function addMember(input: CreateMemberInput) {
     );
     console.log("[addMember] Missing billing months:", missingMonths);
 
-    for (const billingMonth of missingMonths) {
-      const dueDate = getDueDate(subscription.billingDay, billingMonth);
-      console.log(
-        "[addMember] Creating payment for month:",
-        billingMonth,
-        "due date:",
-        dueDate,
-      );
-
-      await db.subscriptionPayment.upsert({
-        where: { memberId_billingMonth: { memberId: member.id, billingMonth } },
-        create: {
-          subscriptionId: input.subscriptionId,
-          memberId: member.id,
+    await Promise.all(
+      missingMonths.map((billingMonth) => {
+        const dueDate = getDueDate(subscription.billingDay, billingMonth);
+        console.log(
+          "[addMember] Creating payment for month:",
           billingMonth,
-          amount: member.shareAmount,
+          "due date:",
           dueDate,
-          status: "PENDING",
-        },
-        update: {},
-      });
-    }
+        );
+
+        return db.subscriptionPayment.upsert({
+          where: {
+            memberId_billingMonth: { memberId: member.id, billingMonth },
+          },
+          create: {
+            subscriptionId: input.subscriptionId,
+            memberId: member.id,
+            billingMonth,
+            amount: member.shareAmount,
+            dueDate,
+            status: "PENDING",
+          },
+          update: {},
+        });
+      }),
+    );
   }
 
   console.log("[addMember] Member creation complete");

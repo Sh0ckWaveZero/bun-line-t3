@@ -172,8 +172,7 @@ export function PopoverDatePicker({
             id={inputId}
             type="button"
             aria-label={label || placeholder}
-            aria-required={required}
-            aria-describedby={describedBy}
+            aria-describedby={required ? describedBy : undefined}
             aria-haspopup="dialog"
             aria-expanded={open}
             className={cn(
@@ -196,6 +195,11 @@ export function PopoverDatePicker({
             )}
           </button>
         </PopoverTrigger>
+        {required && (
+          <span id={describedBy} className="sr-only">
+            จำเป็นต้องเลือกวันที่
+          </span>
+        )}
         <PopoverContent
           className="w-auto p-0"
           align="start"

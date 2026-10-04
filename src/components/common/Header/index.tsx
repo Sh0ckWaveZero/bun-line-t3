@@ -86,7 +86,6 @@ export default function Header() {
       <header
         id="main-header"
         className="bg-background/80 border-border sticky top-0 z-50 w-full border-b backdrop-blur-sm"
-        role="banner"
       >
         <div className="container mx-auto flex h-14 items-center justify-between px-4">
           {/* Logo */}

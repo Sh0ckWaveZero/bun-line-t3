@@ -76,6 +76,7 @@ export async function getLineUserIds(request: Request): Promise<string[]> {
     const staleAccountIds = accountIdentities
       .filter((account) => account.id !== primaryAccount.id)
       .map((account) => account.id);
+    const staleAccountIdSet = new Set(staleAccountIds);
 
     if (staleAccountIds.length > 0) {
       await db.account.deleteMany({
@@ -89,7 +90,7 @@ export async function getLineUserIds(request: Request): Promise<string[]> {
       console.warn(`🧹 [getLineUserIds] Removed duplicate LINE accounts:`, {
         keptAccountId: primaryAccount.accountId,
         removedAccountIds: accountIdentities
-          .filter((account) => staleAccountIds.includes(account.id))
+          .filter((account) => staleAccountIdSet.has(account.id))
           .map((account) => account.accountId),
         userId: session.user.id,
       });

@@ -271,7 +271,6 @@ function RootNotFound() {
       <p
         id="not-found-code"
         className="text-muted-foreground text-sm font-medium tracking-[0.2em] uppercase"
-        role="text"
       >
         404
       </p>

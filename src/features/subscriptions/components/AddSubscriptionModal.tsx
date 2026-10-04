@@ -133,6 +133,7 @@ export const AddSubscriptionModal = ({
             <button
               type="button"
               onClick={onClose}
+              aria-label="ปิดหน้าต่าง"
               className="cursor-pointer rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-200"
             >
               <X className="h-5 w-5" />
@@ -146,9 +147,9 @@ export const AddSubscriptionModal = ({
           >
             {/* icon / service picker trigger */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <p className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 บริการ
-              </label>
+              </p>
               <ServiceIconButton
                 service={form.service}
                 onClick={() => setShowIconPicker(true)}
@@ -157,10 +158,11 @@ export const AddSubscriptionModal = ({
 
             {/* name */}
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label htmlFor="subscription-name" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 ชื่อที่แสดง
               </label>
               <input
+                id="subscription-name"
                 type="text"
                 value={form.name}
                 onChange={(e) =>
@@ -175,17 +177,17 @@ export const AddSubscriptionModal = ({
             {/* plan type + billing cycle */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <p className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   ประเภทแพ็กเกจ
-                </label>
-                <div className="flex gap-2">
+                </p>
+                <div role="group" aria-label="ประเภทแพ็กเกจ" className="flex gap-2">
                   {(["INDIVIDUAL", "FAMILY"] as SubscriptionPlanType[]).map(
                     (pt) => (
                       <button
                         key={pt}
                         type="button"
                         onClick={() => handlePlanTypeChange(pt)}
-                        className={`flex-1 rounded-xl border py-2 text-xs font-medium transition-all ${
+                        className={`flex-1 rounded-xl border py-2 text-xs font-medium transition-colors ${
                           form.planType === pt
                             ? "border-indigo-500 bg-indigo-50 text-indigo-700 dark:border-indigo-400 dark:bg-indigo-900/30 dark:text-indigo-300"
                             : "border-gray-200 bg-white text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
@@ -199,10 +201,10 @@ export const AddSubscriptionModal = ({
               </div>
 
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <p className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   รอบเรียกเก็บ
-                </label>
-                <div className="flex gap-2">
+                </p>
+                <div role="group" aria-label="รอบเรียกเก็บ" className="flex gap-2">
                   {(["MONTHLY", "YEARLY"] as BillingCycle[]).map((bc) => (
                     <button
                       key={bc}
@@ -210,7 +212,7 @@ export const AddSubscriptionModal = ({
                       onClick={() =>
                         setForm((p) => ({ ...p, billingCycle: bc }))
                       }
-                      className={`flex-1 rounded-xl border py-2 text-xs font-medium transition-all ${
+                      className={`flex-1 rounded-xl border py-2 text-xs font-medium transition-colors ${
                         form.billingCycle === bc
                           ? "border-indigo-500 bg-indigo-50 text-indigo-700 dark:border-indigo-400 dark:bg-indigo-900/30 dark:text-indigo-300"
                           : "border-gray-200 bg-white text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
@@ -226,10 +228,11 @@ export const AddSubscriptionModal = ({
             {/* price + billing day */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label htmlFor="subscription-total-price" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   ราคารวม (฿)
                 </label>
                 <input
+                  id="subscription-total-price"
                   type="number"
                   inputMode="decimal"
                   min="0"
@@ -247,10 +250,11 @@ export const AddSubscriptionModal = ({
               </div>
 
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label htmlFor="subscription-billing-day" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   วันตัดเงิน (1–31)
                 </label>
                 <input
+                  id="subscription-billing-day"
                   type="number"
                   inputMode="numeric"
                   min="1"
@@ -270,10 +274,11 @@ export const AddSubscriptionModal = ({
 
             {/* start date */}
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label htmlFor="subscription-start-date" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 วันเริ่มต้น
               </label>
               <input
+                id="subscription-start-date"
                 type="date"
                 value={form.startDate}
                 onChange={(e) =>
@@ -286,10 +291,11 @@ export const AddSubscriptionModal = ({
 
             {/* note */}
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label htmlFor="subscription-note" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 หมายเหตุ (ไม่บังคับ)
               </label>
               <textarea
+                id="subscription-note"
                 rows={2}
                 value={form.note}
                 onChange={(e) =>
@@ -336,6 +342,7 @@ export const AddSubscriptionModal = ({
                 <button
                   type="button"
                   onClick={() => setShowDeleteConfirm(true)}
+                  aria-label={`ลบ Subscription ${form.name}`}
                   className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-red-200 px-3 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
                 >
                   <Trash2 className="h-4 w-4" />

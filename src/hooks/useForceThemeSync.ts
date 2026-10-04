@@ -1,10 +1,11 @@
 "use client";
 
 import { useTheme } from "@/lib/theme/theme-provider";
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 
 export function useForceThemeSync() {
   const { theme, setTheme } = useTheme();
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const forceSync = useCallback(() => {
     const html = document.documentElement;
@@ -38,7 +39,9 @@ export function useForceThemeSync() {
     }
 
     // Step 6: Verify and retry if needed
-    setTimeout(() => {
+    if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
+    retryTimeoutRef.current = setTimeout(() => {
+      retryTimeoutRef.current = null;
       if (
         !html.classList.contains(stored) ||
         html.classList.contains(stored === "light" ? "dark" : "light")
@@ -48,6 +51,13 @@ export function useForceThemeSync() {
       }
     }, 100);
   }, [theme, setTheme]);
+
+  useEffect(
+    () => () => {
+      if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
+    },
+    [],
+  );
 
   // Auto-sync on theme changes
   useEffect(() => {

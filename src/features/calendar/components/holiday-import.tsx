@@ -88,6 +88,11 @@ export function HolidayImport({ onImport, onClose }: HolidayImportProps) {
         }),
       });
 
+      if (!response.ok) {
+        const errorResult = await response.json().catch(() => null);
+        throw new Error(errorResult?.message || "ไม่สามารถนำเข้าข้อมูลได้");
+      }
+
       const result = await response.json();
 
       if (result.success) {
@@ -162,8 +167,11 @@ export function HolidayImport({ onImport, onClose }: HolidayImportProps) {
                     </tr>
                   </thead>
                   <tbody className="text-foreground">
-                    {preview.map((item, i) => (
-                      <tr key={i} className="border-border border-t">
+                    {preview.map((item) => (
+                      <tr
+                        key={`${item.date}-${item.nameThai}-${item.nameEnglish}`}
+                        className="border-border border-t"
+                      >
                         <td className="p-2">{item.date}</td>
                         <td className="p-2">{item.nameThai}</td>
                         <td className="p-2">{item.nameEnglish}</td>
@@ -223,6 +231,7 @@ export function HolidayImport({ onImport, onClose }: HolidayImportProps) {
                   a.href = url;
                   a.download = "holidays-template.json";
                   a.click();
+                  window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
                 }}
               >
                 ดาวน์โหลด JSON Template
@@ -239,6 +248,7 @@ export function HolidayImport({ onImport, onClose }: HolidayImportProps) {
                   a.href = url;
                   a.download = "holidays-template.csv";
                   a.click();
+                  window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
                 }}
               >
                 ดาวน์โหลด CSV Template

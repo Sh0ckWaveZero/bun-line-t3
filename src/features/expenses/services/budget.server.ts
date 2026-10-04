@@ -189,40 +189,38 @@ export async function getBudgetUsage(
 
   if (budgets.length === 0) return [];
 
-  const usages: BudgetUsage[] = [];
+  return Promise.all(
+    budgets.map(async (budget) => {
+      // ดึง transactions ในเดือนนี้สำหรับ budget นี้
+      const transactions = await db.transaction.findMany({
+        where: {
+          userId,
+          transMonth,
+          type: budget.type,
+          ...(budget.categoryId && { categoryId: budget.categoryId }),
+        },
+      });
 
-  for (const budget of budgets) {
-    // ดึง transactions ในเดือนนี้สำหรับ budget นี้
-    const transactions = await db.transaction.findMany({
-      where: {
-        userId,
-        transMonth,
-        type: budget.type,
-        ...(budget.categoryId && { categoryId: budget.categoryId }),
-      },
-    });
+      const spent = transactions.reduce(
+        (sum: number, tx: { amount: unknown }) =>
+          sum + toNum(tx.amount as never),
+        0,
+      );
+      const remaining = budget.amount - spent;
+      const percentage = budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
+      const isOverBudget = spent > budget.amount;
+      const isNearLimit = percentage >= budget.alertAt;
 
-    const spent = transactions.reduce(
-      (sum: number, tx: { amount: unknown }) =>
-        sum + toNum(tx.amount as never),
-      0,
-    );
-    const remaining = budget.amount - spent;
-    const percentage = budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
-    const isOverBudget = spent > budget.amount;
-    const isNearLimit = percentage >= budget.alertAt;
-
-    usages.push({
-      budget,
-      spent,
-      remaining,
-      percentage,
-      isOverBudget,
-      isNearLimit,
-    });
-  }
-
-  return usages;
+      return {
+        budget,
+        spent,
+        remaining,
+        percentage,
+        isOverBudget,
+        isNearLimit,
+      };
+    }),
+  );
 }
 
 /**

@@ -61,7 +61,7 @@ export class RateLimiter {
   /**
    * Get identifier for rate limiting (IP + User-Agent hash)
    */
-  static async getIdentifier(request: Request): Promise<string> {
+  static getIdentifier(request: Request): string {
     try {
       const ip =
         request.headers.get("x-forwarded-for") ||
@@ -89,7 +89,7 @@ export class RateLimiter {
     maxRequests: number = MAX_REQUESTS_PER_WINDOW,
   ): Promise<Response | null> {
     try {
-      const identifier = await this.getIdentifier(request);
+      const identifier = this.getIdentifier(request);
       const result = this.checkRateLimit(identifier, maxRequests);
 
       if (!result.allowed) {
@@ -194,7 +194,7 @@ export function withRateLimit(
     const response = await handler(request);
 
     // Add rate limit headers
-    const identifier = await RateLimiter.getIdentifier(request);
+    const identifier = RateLimiter.getIdentifier(request);
     const result = RateLimiter.checkRateLimit(identifier, maxRequests);
 
     return RateLimiter.addRateLimitHeaders(

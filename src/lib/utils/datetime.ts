@@ -49,14 +49,16 @@ export const convertUTCToBangkok = (utcDate: Date): Date => {
 };
 
 // Get today's date in YYYY-MM-DD format based on Bangkok timezone
+const BANGKOK_DATE_FORMATTER = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Bangkok",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
 export const getBangkokDateString = (date: Date = new Date()): string => {
   // Convert to Bangkok timezone and format as YYYY-MM-DD
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Bangkok",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date); // Already in YYYY-MM-DD format
+  return BANGKOK_DATE_FORMATTER.format(date); // Already in YYYY-MM-DD format
 };
 
 export const getTodayDateString = (): string => getBangkokDateString();

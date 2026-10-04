@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Doughnut } from "react-chartjs-2";
+import { LazyDoughnutChart } from "@/components/charts/LazyCharts";
 import { useAttendanceDonutData } from "@/features/attendance/hooks/useAttendanceChartData";
 import { useChartTheme } from "@/hooks/useChartTheme";
 import type { MonthlyAttendanceReport } from "@/lib/types/attendance";
@@ -37,7 +37,7 @@ export const AttendanceDonutChart: React.FC<AttendanceDonutChartProps> = ({
 
   return (
     <div className="mx-auto" style={{ width: "250px", height: "250px" }}>
-      <Doughnut data={chartData} options={getDoughnutOptions()} />
+      <LazyDoughnutChart data={chartData} options={getDoughnutOptions()} />
     </div>
   );
 };

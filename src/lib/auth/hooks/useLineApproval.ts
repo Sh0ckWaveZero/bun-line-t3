@@ -43,6 +43,7 @@ export const useLineApproval = () => {
 
     try {
       const res = await fetch("/api/auth/check-line-approval");
+      if (!res.ok) throw new Error("Approval status request failed");
       const data = await res.json();
       setState({
         hasLineApproval: data.approved ?? false,

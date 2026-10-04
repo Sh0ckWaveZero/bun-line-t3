@@ -12,6 +12,7 @@ export function ThemeToggle() {
   if (!mounted) {
     return (
       <Button variant="outline" size="icon" disabled>
+        <span className="sr-only">กำลังโหลดการตั้งค่าธีม</span>
         <Sun className="h-[1.2rem] w-[1.2rem]" />
       </Button>
     );
@@ -49,12 +50,13 @@ export function ThemeToggle() {
       variant="outline"
       size="icon"
       onClick={handleThemeToggle}
+      aria-label={`เปลี่ยนเป็นโหมด ${theme === "light" ? "มืด" : "สว่าง"}`}
       title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
     >
       {theme === "light" ? (
-        <Moon className="h-[1.2rem] w-[1.2rem] transition-all" />
+        <Moon className="h-[1.2rem] w-[1.2rem]" />
       ) : (
-        <Sun className="h-[1.2rem] w-[1.2rem] transition-all" />
+        <Sun className="h-[1.2rem] w-[1.2rem]" />
       )}
       <span className="sr-only">Toggle theme</span>
     </Button>

@@ -78,8 +78,10 @@ self.addEventListener("fetch", (event) => {
       const fetchRequest = request.clone();
 
       return fetch(fetchRequest).then((response) => {
+        if (!response.ok) return response;
+
         // Check if valid response
-        if (!response || response.status !== 200 || response.type !== "basic") {
+        if (response.status !== 200 || response.type !== "basic") {
           return response;
         }
 

@@ -3,6 +3,15 @@ import { attendanceService } from "@/features/attendance/services/attendance.ser
 import { getCheckInMessage } from "@/lib/constants/checkin-reminder-messages";
 import { sendPushMessage } from "@/lib/utils/line-push";
 
+const BANGKOK_HOUR_FORMATTER = new Intl.DateTimeFormat("en-US", {
+  timeZone: "Asia/Bangkok",
+  hour: "numeric",
+  hour12: false,
+});
+const THAI_WEEKDAY_FORMATTER = new Intl.DateTimeFormat("th-TH", {
+  weekday: "long",
+});
+
 interface ReminderResult {
   success: boolean;
   sentCount: number;
@@ -33,11 +42,7 @@ export async function sendCheckInReminders(
   }
 
   const currentBangkokHour = parseInt(
-    new Intl.DateTimeFormat("en-US", {
-      timeZone: "Asia/Bangkok",
-      hour: "numeric",
-      hour12: false,
-    }).format(new Date()),
+    BANGKOK_HOUR_FORMATTER.format(new Date()),
     10,
   );
   const timeOfDay =
@@ -46,9 +51,7 @@ export async function sendCheckInReminders(
       : currentBangkokHour < 17
         ? "afternoon"
         : "evening";
-  const dayOfWeek = new Intl.DateTimeFormat("th-TH", {
-    weekday: "long",
-  }).format(new Date());
+  const dayOfWeek = THAI_WEEKDAY_FORMATTER.format(new Date());
 
   const reminderMessage = await getCheckInMessage({
     useAI: env.OPENAI_API_KEY ? true : false,

@@ -108,6 +108,7 @@ export const AddMemberModal = ({
           <button
             type="button"
             onClick={onClose}
+            aria-label="ปิดหน้าต่าง"
             className="cursor-pointer rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
           >
             <X className="h-5 w-5" />
@@ -129,10 +130,11 @@ export const AddMemberModal = ({
 
           {/* name */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label htmlFor="subscription-member-name" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
               ชื่อสมาชิก <span className="text-red-500">*</span>
             </label>
             <input
+              id="subscription-member-name"
               type="text"
               value={form.name}
               onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
@@ -144,10 +146,11 @@ export const AddMemberModal = ({
 
           {/* email */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label htmlFor="subscription-member-email" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
               อีเมล (ไม่บังคับ)
             </label>
             <input
+              id="subscription-member-email"
               type="email"
               value={form.email}
               onChange={(e) =>
@@ -160,11 +163,12 @@ export const AddMemberModal = ({
 
           {/* shareAmount */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label htmlFor="subscription-member-share-amount" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
               จำนวนเงินที่ต้องจ่าย (฿) <span className="text-red-500">*</span>
             </label>
             <div className="flex gap-2">
               <input
+                id="subscription-member-share-amount"
                 type="number"
                 inputMode="decimal"
                 min="0"
@@ -195,10 +199,11 @@ export const AddMemberModal = ({
 
           {/* note */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label htmlFor="subscription-member-note" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
               หมายเหตุ (ไม่บังคับ)
             </label>
             <input
+              id="subscription-member-note"
               type="text"
               value={form.note}
               onChange={(e) => setForm((p) => ({ ...p, note: e.target.value }))}
@@ -209,10 +214,11 @@ export const AddMemberModal = ({
 
           {/* tags */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label htmlFor="subscription-member-tags" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Tags (ไม่บังคับ)
             </label>
             <input
+              id="subscription-member-tags"
               type="text"
               value={form.tags}
               onChange={(e) => setForm((p) => ({ ...p, tags: e.target.value }))}
