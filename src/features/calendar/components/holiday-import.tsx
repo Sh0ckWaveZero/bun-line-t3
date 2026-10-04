@@ -58,7 +58,7 @@ export function HolidayImport({ onImport, onClose }: HolidayImportProps) {
 
   const parseCSV = (text: string) => {
     const lines = text.split("\n").filter((line) => line.trim());
-    const headers = lines[0].split(",").map((h) => h.trim());
+    const headers = lines[0]!.split(",").map((h) => h.trim());
 
     return lines.slice(1).map((line) => {
       const values = line.split(",").map((v) => v.trim().replace(/^"|"$/g, ""));

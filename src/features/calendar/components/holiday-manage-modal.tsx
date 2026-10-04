@@ -1,9 +1,14 @@
+import { Calendar as CalendarIcon, X } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PopoverDatePicker } from "@/components/ui/date-picker";
-import { cn } from "@/lib/utils";
-import { Calendar as CalendarIcon, X } from "lucide-react";
-import { useState } from "react";
+import {
+  HolidayDescriptionField,
+  HolidayTextField,
+  HolidayTypeField,
+  HolidayYearField,
+} from "@/features/calendar/components/holiday-form-fields";
 
 interface HolidayManageModalProps {
   isOpen: boolean;
@@ -125,171 +130,46 @@ export function HolidayManageModal({
           />
 
           {/* Year - Auto-filled from date but editable */}
-          <div>
-            <label
-              htmlFor="holiday-year"
-              className="text-foreground mb-1 block text-sm font-medium"
-            >
-              ปี ค.ศ. <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="holiday-year"
-              type="number"
-              inputMode="numeric"
-              value={year}
-              onChange={(e) => {
-                const value = e.target.value;
-                setYear(value === "" ? "" : Number.parseInt(value, 10));
-              }}
-              className={cn(
-                "w-full [appearance:textfield] rounded-lg border px-3 py-2 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
-                "border-input bg-background text-foreground",
-                "focus:ring-ring focus:ring-2 focus:outline-none",
-              )}
-              min={2000}
-              max={2100}
-              required
-              aria-describedby="holiday-year-description"
-            />
-            <p
-              id="holiday-year-description"
-              className="text-muted-foreground mt-1 text-xs"
-            >
-              ปีคริสต์ศักราช (ค.ศ.) - ถูกตั้งค่าจากวันที่โดยอัตโนมัติ
-            </p>
-          </div>
-
-          {/* Buddhist Year Display (Read-only) */}
-          <div className="bg-muted/50 rounded-lg p-3">
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground text-sm">ปี พ.ศ.</span>
-              <span className="text-foreground text-lg font-bold">
-                {typeof year === "number" ? year + 543 : "—"}
-              </span>
-            </div>
-          </div>
+          <HolidayYearField year={year} onValueChange={setYear} />
 
           {/* Name Thai */}
-          <div>
-            <label
-              htmlFor="holiday-name-thai"
-              className="text-foreground mb-1 block text-sm font-medium"
-            >
-              ชื่อวันหยุด (ไทย) <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="holiday-name-thai"
-              type="text"
-              value={nameThai}
-              onChange={(e) => setNameThai(e.target.value)}
-              placeholder="เช่น: วันขึ้นปีใหม่"
-              className={cn(
-                "w-full rounded-lg border px-3 py-2",
-                "border-input bg-background text-foreground",
-                "focus:ring-ring focus:ring-2 focus:outline-none",
-              )}
-              required
-              aria-describedby="holiday-name-thai-description"
-            />
-            <p
-              id="holiday-name-thai-description"
-              className="text-muted-foreground mt-1 text-xs"
-            >
-              ชื่อวันหยุดภาษาไทย
-            </p>
-          </div>
+          <HolidayTextField
+            id="holiday-name-thai"
+            label={
+              <>
+                ชื่อวันหยุด (ไทย) <span className="text-red-500">*</span>
+              </>
+            }
+            value={nameThai}
+            onValueChange={setNameThai}
+            placeholder="เช่น: วันขึ้นปีใหม่"
+            description="ชื่อวันหยุดภาษาไทย"
+            describedById="holiday-name-thai-description"
+          />
 
           {/* Name English */}
-          <div>
-            <label
-              htmlFor="holiday-name-english"
-              className="text-foreground mb-1 block text-sm font-medium"
-            >
-              ชื่อวันหยุด (อังกฤษ) <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="holiday-name-english"
-              type="text"
-              value={nameEnglish}
-              onChange={(e) => setNameEnglish(e.target.value)}
-              placeholder="E.g.: New Year's Day"
-              className={cn(
-                "w-full rounded-lg border px-3 py-2",
-                "border-input bg-background text-foreground",
-                "focus:ring-ring focus:ring-2 focus:outline-none",
-              )}
-              required
-              aria-describedby="holiday-name-english-description"
-            />
-            <p
-              id="holiday-name-english-description"
-              className="text-muted-foreground mt-1 text-xs"
-            >
-              ชื่อวันหยุดภาษาอังกฤษ
-            </p>
-          </div>
+          <HolidayTextField
+            id="holiday-name-english"
+            label={
+              <>
+                ชื่อวันหยุด (อังกฤษ) <span className="text-red-500">*</span>
+              </>
+            }
+            value={nameEnglish}
+            onValueChange={setNameEnglish}
+            placeholder="E.g.: New Year's Day"
+            description="ชื่อวันหยุดภาษาอังกฤษ"
+            describedById="holiday-name-english-description"
+          />
 
           {/* Type */}
-          <div>
-            <label
-              htmlFor="holiday-type"
-              className="text-foreground mb-1 block text-sm font-medium"
-            >
-              ประเภท <span className="text-red-500">*</span>
-            </label>
-            <select
-              id="holiday-type"
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-              className={cn(
-                "w-full rounded-lg border px-3 py-2",
-                "border-input bg-background text-foreground",
-                "focus:ring-ring focus:ring-2 focus:outline-none",
-              )}
-              required
-              aria-describedby="holiday-type-description"
-            >
-              <option value="national">วันหยุดราชการ</option>
-              <option value="royal">วันหยุดเกี่ยวกับราชวงศ์</option>
-              <option value="religious">วันหยุดศาสนาจาร</option>
-              <option value="special">วันหยุดพิเศษ</option>
-            </select>
-            <p
-              id="holiday-type-description"
-              className="text-muted-foreground mt-1 text-xs"
-            >
-              เลือกประเภทของวันหยุด
-            </p>
-          </div>
+          <HolidayTypeField value={type} onValueChange={setType} />
 
           {/* Description */}
-          <div>
-            <label
-              htmlFor="holiday-description"
-              className="text-foreground mb-1 block text-sm font-medium"
-            >
-              รายละเอียด (ถ้ามี)
-            </label>
-            <textarea
-              id="holiday-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="ระบุรายละเอียดเพิ่มเติม..."
-              className={cn(
-                "min-h-20 w-full rounded-lg border px-3 py-2",
-                "border-input bg-background text-foreground",
-                "focus:ring-ring focus:ring-2 focus:outline-none",
-                "resize-none",
-              )}
-              aria-describedby="holiday-description-description"
-            />
-            <p
-              id="holiday-description-description"
-              className="text-muted-foreground mt-1 text-xs"
-            >
-              ระบุรายละเอียดเพิ่มเติม (ไม่บังคับ)
-            </p>
-          </div>
+          <HolidayDescriptionField
+            value={description}
+            onValueChange={setDescription}
+          />
 
           {/* Error */}
           {error && (
