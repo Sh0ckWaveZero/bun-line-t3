@@ -4,7 +4,7 @@
 ###################
 # 🏗️ BASE BUILD STAGE
 ###################
-FROM oven/bun:1.4.2-slim AS build-base
+FROM oven/bun:1.4.3-slim AS build-base
 
 LABEL maintainer="security@company.com" \
     version="1.0" \
@@ -80,7 +80,7 @@ RUN --mount=type=secret,id=database_url \
 ###################
 # 📦 PRODUCTION DEPENDENCIES STAGE
 ###################
-FROM oven/bun:1.4.2-slim AS prod-deps
+FROM oven/bun:1.4.3-slim AS prod-deps
 
 WORKDIR /app
 
@@ -115,7 +115,7 @@ CMD ["bun", "node_modules/prisma/build/index.js", "migrate", "deploy"]
 ###################
 # 🚀 RUNTIME STAGE
 ###################
-FROM oven/bun:1.4.2-slim AS runner
+FROM oven/bun:1.4.3-slim AS runner
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
