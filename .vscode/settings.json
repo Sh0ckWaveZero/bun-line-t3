@@ -72,7 +72,6 @@
   "typescript.suggest.includeCompletionsForImportStatements": true,
   "typescript.suggest.includeAutomaticOptionalChainCompletions": true,
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit",
     "source.organizeImports": "explicit"
   },
   "editor.defaultFormatter": "esbenp.prettier-vscode",
