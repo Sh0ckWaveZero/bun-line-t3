@@ -1,9 +1,38 @@
 import * as React from "react";
-import { DayPicker as ThaiDayPicker } from "react-day-picker";
+import {
+  DayPicker as ThaiDayPicker,
+  type DayButtonProps,
+} from "react-day-picker";
 import { th } from "date-fns/locale";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
+
+/**
+ * react-day-picker (v10) ใส่ data-selected/data-today/data-outside ไว้บน Day cell ที่ครอบอยู่
+ * ไม่ใช่บนปุ่ม — ทำให้ data-[selected]:* บน day_button ไม่มีวัน match
+ * (ปุ่มจึงไม่ highlight วันที่เลือก) — override เพื่อส่ง state ลงบนปุ่มเอง
+ */
+function CalendarDayButton({
+  day: _day,
+  modifiers,
+  ...buttonProps
+}: DayButtonProps) {
+  const ref = React.useRef<HTMLButtonElement>(null);
+  React.useEffect(() => {
+    if (modifiers.focused) ref.current?.focus();
+  }, [modifiers.focused]);
+  return (
+    <button
+      ref={ref}
+      {...buttonProps}
+      data-selected={modifiers.selected || undefined}
+      data-today={modifiers.today || undefined}
+      data-outside={modifiers.outside || undefined}
+      data-disabled={modifiers.disabled || undefined}
+    />
+  );
+}
 
 const CALENDAR_CLASSNAMES = {
   root: "p-3 select-none",
@@ -116,6 +145,7 @@ export function DatePicker({
         startMonth={minDate}
         endMonth={maxDate}
         classNames={CALENDAR_CLASSNAMES}
+        components={{ DayButton: CalendarDayButton }}
         formatters={{ formatCaption: formatThaiMonthCaption }}
         numerals="latn"
       />

@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   format,
   addMonths,
@@ -18,43 +17,133 @@ import {
   ChevronRight,
   Upload,
   Plus,
-  CalendarPlus,
   X,
   Star,
   Clock,
   FileText,
+  Home,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { HolidayImport } from "@/features/calendar/components/holiday-import";
-import { LeaveRequestModal } from "@/features/calendar/components/leave-request-modal";
-import { HolidayManageModal } from "@/features/calendar/components/holiday-manage-modal";
 import {
-  CALENDAR_DATA_QUERY_KEY,
+  DayEventModal,
+  type DayEventType,
+} from "@/features/calendar/components/day-event-modal";
+import {
   useCalendarData,
   type CalendarHoliday as Holiday,
   type CalendarLeave as Leave,
+  type CalendarWorkModeDay as WorkModeDay,
 } from "@/features/calendar/hooks/useCalendarData";
+import { useDialogExit } from "@/features/calendar/hooks/useDialogExit";
+import { useCalendarMutations } from "@/features/calendar/hooks/useCalendarMutations";
 
 const WEEKDAYS = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"] as const;
+
+/** สี/ข้อความของการ์ด WFH/On Site ใน Day Detail Panel — ตรงกับ badge ใน grid */
+const WORK_MODE_META = {
+  wfh: {
+    icon: Home,
+    cardBg: "bg-emerald-500/[0.05]",
+    chipBg: "bg-emerald-500/10",
+    iconText: "text-emerald-700 dark:text-emerald-300",
+    label: "ทำงานจากที่บ้าน",
+    title: "WFH",
+  },
+  onsite: {
+    icon: MapPin,
+    cardBg: "bg-amber-500/[0.05]",
+    chipBg: "bg-amber-500/10",
+    iconText: "text-amber-700 dark:text-amber-300",
+    label: "ทำงานที่ไซต์",
+    title: "On Site",
+  },
+} as const;
+
+const HOLIDAY_TYPE_LABELS: Record<string, string> = {
+  national: "วันหยุดราชการ",
+  royal: "วันหยุดเกี่ยวกับราชวงศ์",
+  religious: "วันหยุดศาสนาจาร",
+  special: "วันหยุดพิเศษ",
+};
+
+function WorkModeCard({
+  dateStr,
+  workMode,
+}: {
+  dateStr: string;
+  workMode: WorkModeDay;
+}) {
+  const meta = WORK_MODE_META[workMode.type];
+  const Icon = meta.icon;
+  return (
+    <div
+      id={`day-detail-${workMode.type}-${dateStr}`}
+      className={cn("rounded-lg p-3", meta.cardBg)}
+    >
+      <div className="flex items-center gap-2">
+        <span
+          className={cn(
+            "flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
+            meta.chipBg,
+          )}
+        >
+          <Icon className={cn("h-3 w-3", meta.iconText)} />
+        </span>
+        <span
+          id={`day-detail-${workMode.type}-label-${dateStr}`}
+          className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase"
+        >
+          {meta.label}
+        </span>
+      </div>
+      <div className="mt-1.5 pl-7">
+        <p
+          id={`day-detail-${workMode.type}-type-${dateStr}`}
+          className="text-foreground text-sm font-bold"
+        >
+          {meta.title}
+        </p>
+        {workMode.note && (
+          <div
+            id={`day-detail-${workMode.type}-note-${dateStr}`}
+            className="mt-1 flex items-start gap-1.5"
+          >
+            <FileText className="text-muted-foreground mt-0.5 h-3 w-3 shrink-0" />
+            <p className="text-muted-foreground text-xs">{workMode.note}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function DayDetailPanel({
   date,
   holiday,
   leave,
+  workMode,
   onClose,
   onRequestLeave,
+  onRequestWorkMode,
+  onCancelWorkMode,
 }: {
   date: Date;
   holiday: Holiday | undefined;
   leave: Leave | undefined;
+  workMode: WorkModeDay | undefined;
   onClose: () => void;
   onRequestLeave: () => void;
+  onRequestWorkMode: (type: "wfh" | "onsite") => void;
+  onCancelWorkMode: () => void;
 }) {
   const dayOfWeek = format(date, "EEEE", { locale: th });
   const fullDate = format(date, "d MMMM yyyy", { locale: th });
   const dateStr = format(date, "yyyy-MM-dd");
-  const hasAny = holiday || leave;
+  const hasAny = holiday || leave || workMode;
+  const { isClosing, requestClose } = useDialogExit(onClose);
 
   const renderLeaveType = (type: string) => {
     if (type === "personal") return "ลากิจ";
@@ -67,7 +156,16 @@ function DayDetailPanel({
     <dialog
       open
       id={`day-detail-overlay-${dateStr}`}
-      className="fixed inset-0 z-40 m-0 flex max-h-none max-w-none items-center justify-center border-0 bg-transparent p-4 text-inherit shadow-none"
+      className={cn(
+        "t-modal-dialog fixed inset-0 z-40 m-0 flex max-h-none max-w-none items-center justify-center border-0 bg-transparent p-4 text-inherit shadow-none",
+        isClosing && "is-closing",
+      )}
+      style={{
+        /* UA ของ <dialog> บังคับ width/height: fit-content — ต้องบังคับเต็มจอ
+           ไม่งั้น overlay จะยึดมุมซ้ายบนขนาดเท่าเนื้อหา */
+        width: "100%",
+        height: "100%",
+      }}
       aria-modal="true"
       aria-label={`รายละเอียดวันที่ ${fullDate}`}
     >
@@ -75,11 +173,11 @@ function DayDetailPanel({
         type="button"
         className="absolute inset-0 z-0 cursor-default border-0 bg-black/30 p-0 focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-inset"
         aria-label="ปิดรายละเอียดวัน"
-        onClick={onClose}
+        onClick={requestClose}
       />
       <div
         id={`day-detail-panel-${dateStr}`}
-        className="border-border bg-card relative z-10 w-full max-w-sm overflow-hidden rounded-xl"
+        className="t-modal-card border-border bg-card relative z-10 w-full max-w-sm overflow-hidden rounded-xl"
       >
         <div
           id={`day-detail-header-${dateStr}`}
@@ -110,7 +208,7 @@ function DayDetailPanel({
             variant="ghost"
             size="icon"
             className="h-8 w-8 shrink-0"
-            onClick={onClose}
+            onClick={requestClose}
             aria-label="ปิด"
           >
             <X className="h-4 w-4" />
@@ -122,24 +220,32 @@ function DayDetailPanel({
           className="border-border border-t px-5 py-4"
         >
           {hasAny ? (
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {holiday && (
                 <div
                   id={`day-detail-holiday-${dateStr}`}
-                  className="space-y-1.5"
+                  className="bg-destructive/[0.04] rounded-lg p-3"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="bg-destructive text-destructive-foreground flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px]">
+                    <span className="bg-destructive/10 text-destructive flex h-5 w-5 shrink-0 items-center justify-center rounded-full">
                       <Star className="h-3 w-3" />
                     </span>
                     <span
                       id={`day-detail-holiday-label-${dateStr}`}
                       className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase"
                     >
-                      วันหยุดราชการ
+                      วันหยุด
                     </span>
+                    {HOLIDAY_TYPE_LABELS[holiday.type] && (
+                      <span
+                        id={`day-detail-holiday-type-${dateStr}`}
+                        className="bg-destructive/10 text-destructive rounded-md px-1.5 py-px text-[10px] font-semibold"
+                      >
+                        {HOLIDAY_TYPE_LABELS[holiday.type]}
+                      </span>
+                    )}
                   </div>
-                  <div className="pl-7">
+                  <div className="mt-1.5 pl-7">
                     <p
                       id={`day-detail-holiday-name-th-${dateStr}`}
                       className="text-foreground text-sm font-bold"
@@ -160,27 +266,18 @@ function DayDetailPanel({
                         {holiday.description}
                       </p>
                     )}
-                    <span
-                      id={`day-detail-holiday-type-${dateStr}`}
-                      className="text-muted-foreground bg-muted/60 mt-1 inline-block rounded-md px-1.5 py-px text-[10px] font-medium"
-                    >
-                      {holiday.type === "national" && "วันหยุดราชการ"}
-                      {holiday.type === "royal" && "วันหยุดเกี่ยวกับราชวงศ์"}
-                      {holiday.type === "religious" && "วันหยุดศาสนาจาร"}
-                      {holiday.type === "special" && "วันหยุดพิเศษ"}
-                      {!["national", "royal", "religious", "special"].includes(
-                        holiday.type,
-                      ) && holiday.type}
-                    </span>
                   </div>
                 </div>
               )}
 
               {leave && (
-                <div id={`day-detail-leave-${dateStr}`} className="space-y-1.5">
+                <div
+                  id={`day-detail-leave-${dateStr}`}
+                  className="bg-primary/[0.04] rounded-lg p-3"
+                >
                   <div className="flex items-center gap-2">
-                    <span className="border-primary flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2">
-                      <Clock className="text-primary h-2.5 w-2.5" />
+                    <span className="bg-primary/10 text-primary flex h-5 w-5 shrink-0 items-center justify-center rounded-full">
+                      <Clock className="h-3 w-3" />
                     </span>
                     <span
                       id={`day-detail-leave-label-${dateStr}`}
@@ -189,7 +286,7 @@ function DayDetailPanel({
                       วันลางาน
                     </span>
                   </div>
-                  <div className="pl-7">
+                  <div className="mt-1.5 pl-7">
                     <p
                       id={`day-detail-leave-type-${dateStr}`}
                       className="text-foreground text-sm font-bold"
@@ -210,6 +307,10 @@ function DayDetailPanel({
                   </div>
                 </div>
               )}
+
+              {workMode && (
+                <WorkModeCard dateStr={dateStr} workMode={workMode} />
+              )}
             </div>
           ) : (
             <p
@@ -223,7 +324,7 @@ function DayDetailPanel({
 
         <div
           id={`day-detail-actions-${dateStr}`}
-          className="border-border border-t px-5 py-3"
+          className="border-border space-y-2 border-t px-5 py-3"
         >
           <Button
             id={`day-detail-request-leave-${dateStr}`}
@@ -231,9 +332,41 @@ function DayDetailPanel({
             className="w-full"
             onClick={onRequestLeave}
           >
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            <Plus className="h-3.5 w-3.5" />
             แจ้งลาวันนี้
           </Button>
+          <div className="flex gap-2">
+            {(["wfh", "onsite"] as const).map((type) => {
+              const isActive = workMode?.type === type;
+              const meta = WORK_MODE_META[type];
+              const Icon = meta.icon;
+              return isActive ? (
+                <Button
+                  key={type}
+                  id={`day-detail-cancel-${type}-${dateStr}`}
+                  size="sm"
+                  variant="outline"
+                  className="text-destructive hover:text-destructive flex-1"
+                  onClick={onCancelWorkMode}
+                >
+                  <X className="h-3.5 w-3.5" />
+                  ยกเลิก {meta.title}
+                </Button>
+              ) : (
+                <Button
+                  key={type}
+                  id={`day-detail-request-${type}-${dateStr}`}
+                  size="sm"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => onRequestWorkMode(type)}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  ทำ {meta.title}
+                </Button>
+              );
+            })}
+          </div>
         </div>
       </div>
     </dialog>
@@ -269,15 +402,21 @@ function SkeletonGrid() {
 }
 
 export function CalendarPage() {
-  const queryClient = useQueryClient();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [today, setToday] = useState<Date | null>(null);
-  const { holidays, leaves, loading } = useCalendarData(currentDate);
+  const { holidays, leaves, workModeDays, loading } =
+    useCalendarData(currentDate);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
-  const [showLeaveModal, setShowLeaveModal] = useState(false);
-  const [showHolidayModal, setShowHolidayModal] = useState(false);
+  // modal เดียวรวมทุก type (ลางาน / WFH / On Site / วันหยุด) — null = ปิด
+  const [eventModal, setEventModal] = useState<DayEventType | null>(null);
   const [showDayDetail, setShowDayDetail] = useState(false);
+
+  // เปิด modal ได้ทีละหนึ่ง — เปิดอันใหม่ปิดอันอื่นทิ้ง
+  const openModal = useCallback((modal: DayEventType | "import") => {
+    setShowImportModal(modal === "import");
+    setEventModal(modal === "import" ? null : modal);
+  }, []);
 
   useEffect(() => {
     const updateToday = () => setToday(new Date());
@@ -308,12 +447,23 @@ export function CalendarPage() {
     return leaves.find((l) => l.date === dateStr);
   };
 
+  const getWorkModeForDate = (date: Date) => {
+    const dateStr = format(date, "yyyy-MM-dd");
+    return workModeDays.find((w) => w.date === dateStr);
+  };
+
   const buddhistYear = getYear(currentDate) + 543;
   const firstDayOfWeek = days[0]?.getDay() ?? 0;
   const calendarRowCount = Math.ceil((firstDayOfWeek + days.length) / 7);
   const trailingCellCount = calendarRowCount * 7 - firstDayOfWeek - days.length;
   const holidayCount = days.filter((date) => getHolidayForDate(date)).length;
   const leaveCount = days.filter((date) => getLeaveForDate(date)).length;
+  const wfhCount = days.filter(
+    (date) => getWorkModeForDate(date)?.type === "wfh",
+  ).length;
+  const onsiteCount = days.filter(
+    (date) => getWorkModeForDate(date)?.type === "onsite",
+  ).length;
   const workingDayCount = days.length - holidayCount - leaveCount;
 
   const selectedMonth = getMonth(currentDate);
@@ -335,67 +485,12 @@ export function CalendarPage() {
     setCurrentDate((prev) => new Date(year, getMonth(prev), 1));
   };
 
+  const { refreshCalendarData, handleWorkModeCancel, handleDayEventSubmit } =
+    useCalendarMutations(getYear(currentDate));
+
   const handleImport = async (importedHolidays: Holiday[]) => {
     if (importedHolidays.length > 0) {
-      await queryClient.invalidateQueries({
-        queryKey: [...CALENDAR_DATA_QUERY_KEY, getYear(currentDate)],
-      });
-    }
-  };
-
-  const refreshCalendarData = async () => {
-    await queryClient.invalidateQueries({
-      queryKey: [...CALENDAR_DATA_QUERY_KEY, getYear(currentDate)],
-    });
-  };
-
-  const handleLeaveRequest = async (data: {
-    date: string;
-    type: string;
-    reason?: string;
-  }) => {
-    try {
-      const response = await fetch("/api/leave", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) throw new Error("ไม่สามารถส่งคำขอลาได้");
-      const result = await response.json();
-
-      if (result.success) {
-        await refreshCalendarData();
-        alert("แจ้งลาสำเร็จ!");
-      } else {
-        alert(result.message);
-      }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "เกิดข้อผิดพลาด";
-      alert(message);
-    }
-  };
-
-  const handleHolidayAdd = async (data: Omit<Holiday, "id">) => {
-    try {
-      const response = await fetch("/api/holidays", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) throw new Error("ไม่สามารถเพิ่มวันหยุดได้");
-      const result = await response.json();
-
-      if (result.success) {
-        await refreshCalendarData();
-        alert("เพิ่มวันหยุดสำเร็จ!");
-      } else {
-        alert(result.message);
-      }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "เกิดข้อผิดพลาด";
-      alert(message);
+      await refreshCalendarData();
     }
   };
 
@@ -405,13 +500,14 @@ export function CalendarPage() {
       const dateStr = format(date, "yyyy-MM-dd");
       const hasHoliday = holidays.some((h) => h.date === dateStr);
       const hasLeave = leaves.some((l) => l.date === dateStr);
-      if (hasHoliday || hasLeave) {
+      const hasWorkMode = workModeDays.some((w) => w.date === dateStr);
+      if (hasHoliday || hasLeave || hasWorkMode) {
         setShowDayDetail(true);
       } else {
-        setShowLeaveModal(true);
+        openModal("leave");
       }
     },
-    [holidays, leaves],
+    [holidays, leaves, workModeDays, openModal],
   );
 
   const renderLeaveType = (type: string) => {
@@ -454,7 +550,7 @@ export function CalendarPage() {
               <span className="text-border">|</span>
               <span id="calendar-summary-text">
                 วันทำงาน {workingDayCount} · วันหยุด {holidayCount} · วันลา{" "}
-                {leaveCount}
+                {leaveCount} · WFH {wfhCount} · On Site {onsiteCount}
               </span>
             </div>
           </div>
@@ -467,27 +563,18 @@ export function CalendarPage() {
               id="calendar-import-btn"
               variant="outline"
               size="sm"
-              onClick={() => setShowImportModal(true)}
+              onClick={() => openModal("import")}
             >
               <Upload className="mr-1.5 h-3.5 w-3.5" />
               นำเข้า
             </Button>
             <Button
-              id="calendar-add-holiday-btn"
-              variant="outline"
+              id="calendar-add-event-btn"
               size="sm"
-              onClick={() => setShowHolidayModal(true)}
-            >
-              <CalendarPlus className="mr-1.5 h-3.5 w-3.5" />
-              เพิ่มวันหยุด
-            </Button>
-            <Button
-              id="calendar-request-leave-btn"
-              size="sm"
-              onClick={() => setShowLeaveModal(true)}
+              onClick={() => openModal("leave")}
             >
               <Plus className="mr-1.5 h-3.5 w-3.5" />
-              แจ้งลา
+              เพิ่มกิจกรรม
             </Button>
           </div>
         </header>
@@ -579,6 +666,17 @@ export function CalendarPage() {
             <span className="bg-primary h-2 w-2 rounded-full" />
             <span className="text-muted-foreground">วันลางาน</span>
           </span>
+          <span id="calendar-legend-wfh" className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            <span className="text-muted-foreground">ทำ WFH</span>
+          </span>
+          <span
+            id="calendar-legend-onsite"
+            className="flex items-center gap-1.5"
+          >
+            <span className="h-2 w-2 rounded-full bg-amber-500" />
+            <span className="text-muted-foreground">ทำ On Site</span>
+          </span>
         </div>
 
         <div
@@ -627,9 +725,10 @@ export function CalendarPage() {
                 {days.map((date) => {
                   const holiday = getHolidayForDate(date);
                   const leave = getLeaveForDate(date);
+                  const workMode = getWorkModeForDate(date);
                   const isToday = today ? isSameDay(date, today) : false;
                   const isWeekendDay = isWeekend(date);
-                  const hasEvent = holiday || leave;
+                  const hasEvent = holiday || leave || workMode;
                   const dateStr = format(date, "yyyy-MM-dd");
 
                   return (
@@ -651,7 +750,7 @@ export function CalendarPage() {
                           "bg-muted/15 hover:bg-muted/30",
                       )}
                       onClick={() => handleDayClick(date)}
-                      aria-label={`${format(date, "d MMMM yyyy", { locale: th })}${holiday ? ` ${holiday.nameThai}` : ""}${leave ? ` วันลา${renderLeaveType(leave.type)}` : ""}`}
+                      aria-label={`${format(date, "d MMMM yyyy", { locale: th })}${holiday ? ` ${holiday.nameThai}` : ""}${leave ? ` วันลา${renderLeaveType(leave.type)}` : ""}${workMode ? (workMode.type === "wfh" ? " ทำ WFH" : " ทำ On Site") : ""}`}
                     >
                       <span
                         id={`calendar-day-number-${dateStr}`}
@@ -702,6 +801,28 @@ export function CalendarPage() {
                             </span>
                           </div>
                         )}
+
+                        {workMode?.type === "wfh" && (
+                          <div
+                            id={`calendar-wfh-${dateStr}`}
+                            className="flex items-center gap-1 rounded border-emerald-400/25 bg-emerald-500/10 px-1 py-px text-[10px] leading-tight font-semibold text-emerald-700 lg:px-1.5 lg:py-0.5 lg:text-[11px] dark:text-emerald-300"
+                            title="ทำงานจากที่บ้าน (WFH)"
+                          >
+                            <Home className="h-3 w-3 shrink-0 lg:h-3.5 lg:w-3.5" />
+                            <span className="min-w-0 truncate">WFH</span>
+                          </div>
+                        )}
+
+                        {workMode?.type === "onsite" && (
+                          <div
+                            id={`calendar-onsite-${dateStr}`}
+                            className="flex items-center gap-1 rounded border-amber-400/25 bg-amber-500/10 px-1 py-px text-[10px] leading-tight font-semibold text-amber-700 lg:px-1.5 lg:py-0.5 lg:text-[11px] dark:text-amber-300"
+                            title="ทำงานที่ไซต์ (On Site)"
+                          >
+                            <MapPin className="h-3 w-3 shrink-0 lg:h-3.5 lg:w-3.5" />
+                            <span className="min-w-0 truncate">On Site</span>
+                          </div>
+                        )}
                       </div>
                     </button>
                   );
@@ -719,35 +840,22 @@ export function CalendarPage() {
           )}
         </div>
 
-        <div
-          id="calendar-mobile-actions"
-          className="mt-4 flex justify-center gap-2 sm:hidden"
-        >
+        <div id="calendar-mobile-actions" className="mt-4 flex gap-2 sm:hidden">
           <Button
-            id="calendar-mobile-leave-btn"
+            id="calendar-mobile-add-event-btn"
             size="sm"
             className="flex-1"
-            onClick={() => setShowLeaveModal(true)}
+            onClick={() => openModal("leave")}
           >
             <Plus className="mr-1.5 h-3.5 w-3.5" />
-            แจ้งลา
-          </Button>
-          <Button
-            id="calendar-mobile-holiday-btn"
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={() => setShowHolidayModal(true)}
-          >
-            <CalendarPlus className="mr-1.5 h-3.5 w-3.5" />
-            เพิ่มวันหยุด
+            เพิ่มกิจกรรม
           </Button>
           <Button
             id="calendar-mobile-import-btn"
             variant="outline"
             size="sm"
             className="flex-1"
-            onClick={() => setShowImportModal(true)}
+            onClick={() => openModal("import")}
           >
             <Upload className="mr-1.5 h-3.5 w-3.5" />
             นำเข้า
@@ -760,10 +868,20 @@ export function CalendarPage() {
           date={selectedDate}
           holiday={getHolidayForDate(selectedDate)}
           leave={getLeaveForDate(selectedDate)}
+          workMode={getWorkModeForDate(selectedDate)}
           onClose={() => setShowDayDetail(false)}
           onRequestLeave={() => {
             setShowDayDetail(false);
-            setShowLeaveModal(true);
+            openModal("leave");
+          }}
+          onRequestWorkMode={(type) => {
+            setShowDayDetail(false);
+            openModal(type);
+          }}
+          onCancelWorkMode={() => {
+            const dateStr = format(selectedDate, "yyyy-MM-dd");
+            setShowDayDetail(false);
+            void handleWorkModeCancel(dateStr);
           }}
         />
       )}
@@ -777,28 +895,19 @@ export function CalendarPage() {
         </div>
       )}
 
-      {showLeaveModal && (
-        <div id="calendar-leave-modal-wrapper">
-          <LeaveRequestModal
-            isOpen={showLeaveModal}
-            onClose={() => setShowLeaveModal(false)}
-            onSubmit={handleLeaveRequest}
+      {eventModal && (
+        <div id="calendar-event-modal-wrapper">
+          <DayEventModal
+            isOpen
+            onClose={() => {
+              setEventModal(null);
+              setSelectedDate(null);
+            }}
+            onSubmit={handleDayEventSubmit}
             selectedDate={
               selectedDate ? format(selectedDate, "yyyy-MM-dd") : undefined
             }
-          />
-        </div>
-      )}
-
-      {showHolidayModal && (
-        <div id="calendar-holiday-modal-wrapper">
-          <HolidayManageModal
-            isOpen={showHolidayModal}
-            onClose={() => setShowHolidayModal(false)}
-            onSubmit={handleHolidayAdd}
-            selectedDate={
-              selectedDate ? format(selectedDate, "yyyy-MM-dd") : undefined
-            }
+            initialType={eventModal}
           />
         </div>
       )}

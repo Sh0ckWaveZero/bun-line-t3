@@ -474,12 +474,22 @@
   --duration-slow: 400ms; /* panel open, skeleton content reveal, input clear */
   --duration-very-slow: 500ms; /* emphasis moments, badge appear, text reveal, success check */
   /* Easings */
-  --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1); /* open/close, slide, resize */
+  --ease-smooth-out: cubic-bezier(
+    0.22,
+    1,
+    0.36,
+    1
+  ); /* open/close, slide, resize */
   --ease-in-out: ease-in-out; /* icon swap, text swap, text reveal */
   --ease-out: ease-out; /* tooltip open / close */
   --ease-linear: linear; /* shimmer, skeleton pulse, spinner */
   --ease-bounce: cubic-bezier(0.34, 1.36, 0.64, 1); /* badge pop open */
-  --ease-bounce-strong: cubic-bezier(0.34, 3.85, 0.64, 1); /* bouncy hover-out */
+  --ease-bounce-strong: cubic-bezier(
+    0.34,
+    3.85,
+    0.64,
+    1
+  ); /* bouncy hover-out */
   /* Distances */
   --distance-micro: 4px;
   --distance-small: 6px;
@@ -599,6 +609,153 @@
 @media (prefers-reduced-motion: reduce) {
   .theme-toggle-switch > span {
     animation: none !important;
+  }
+}
+
+/* transitions.dev tabs sliding — pill เลื่อนไปซ้อนหลังแท็บที่เลือก
+   (JS เขียน offsetLeft/offsetWidth ของแท็บ active ลง pill inline, CSS เป็นคน tween)
+   (--tabs-dur ตรงกับ motion token --duration-fast, --tabs-ease ตรงกับ --ease-smooth-out)
+   สี/เงาใช้ธีมแทนค่า hardcode ของ recipe เพื่อรองรับ dark mode
+   หมายเหตุ: ต้องอยู่นอก @layer เพื่อชนะ transition utilities ของ Tailwind บนปุ่มเดียวกัน */
+:root {
+  --tabs-dur: 250ms;
+  --tabs-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+.t-tabs {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--muted);
+}
+.t-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  min-height: 36px;
+  padding: 4px 8px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 8px;
+  z-index: 1;
+  transition: color var(--tabs-dur) var(--tabs-ease);
+}
+.t-tab:not([aria-selected="true"]):hover,
+.t-tab[aria-selected="true"] {
+  color: var(--foreground);
+}
+.t-tabs-pill {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  height: calc(100% - 8px);
+  width: 0;
+  background: var(--background);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.08);
+  transform: translateX(0);
+  transition:
+    transform var(--tabs-dur) var(--tabs-ease),
+    width var(--tabs-dur) var(--tabs-ease);
+  will-change: transform, width;
+  z-index: 0;
+  pointer-events: none;
+}
+/* เนื้อหาแท็บ — ทุกแท็บ mounted ซ้อนกันแบบ absolute, JS วัดความสูงของแท็บ active
+   มาเขียน height ให้ container แล้วให้ CSS tween กันการ์ดสูง-ต่ำกระตุกตอนสลับแท็บ
+   แท็บที่ไม่ active fade out + เลื่อนลงเบา ๆ และซ่อนจากการ focus (visibility/inert) */
+.t-tabs-panels {
+  position: relative;
+  overflow: hidden;
+  transition: height var(--tabs-dur) var(--tabs-ease);
+}
+.t-tabs-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  opacity: 0;
+  translate: 0 8px;
+  pointer-events: none;
+  visibility: hidden;
+  transition:
+    opacity var(--tabs-dur) var(--tabs-ease),
+    translate var(--tabs-dur) var(--tabs-ease),
+    visibility 0s linear var(--tabs-dur);
+}
+.t-tabs-panel[data-active="true"] {
+  opacity: 1;
+  translate: 0 0;
+  pointer-events: auto;
+  visibility: visible;
+  transition-delay: 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .t-tabs-pill,
+  .t-tab,
+  .t-tabs-panels,
+  .t-tabs-panel {
+    transition: none !important;
+  }
+}
+
+/* transitions.dev modal open/close — เปิด: scale จาก 0.96 ขึ้นเป็น 1 + fade (250ms)
+   ปิด: ย่อกลับ 0.96 + fade (150ms) ค้างไว้ก่อน unmount จริง
+   (--modal-open-dur = --duration-fast, --modal-close-dur = --duration-quick,
+    --modal-scale = --scale-medium, --modal-ease = --ease-smooth-out)
+   ปรับจาก recipe: <dialog> ของเราแยกสองชั้น — overlay .t-modal-dialog + การ์ด .t-modal-card
+   ฝั่งเปิดใช้ @starting-style (enter animation ล้วน CSS) แทน JS class-flip ของต้นฉบับ
+   ฝั่งปิดใช้ hook ใส่ .is-closing ค้างไว้ตาม --modal-close-dur ก่อน unmount
+   หมายเหตุ: ต้องอยู่นอก @layer เพื่อไม่โดน transition utilities ของ Tailwind ทับ */
+:root {
+  --modal-open-dur: 250ms;
+  --modal-close-dur: 150ms;
+  --modal-scale: 0.96;
+  --modal-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+.t-modal-dialog {
+  transition: opacity var(--modal-open-dur) var(--modal-ease);
+}
+@starting-style {
+  .t-modal-dialog {
+    opacity: 0;
+  }
+}
+.t-modal-dialog.is-closing {
+  opacity: 0;
+  pointer-events: none;
+  transition-duration: var(--modal-close-dur);
+}
+.t-modal-card {
+  transition:
+    transform var(--modal-open-dur) var(--modal-ease),
+    opacity var(--modal-open-dur) var(--modal-ease);
+  will-change: transform, opacity;
+}
+@starting-style {
+  .t-modal-card {
+    transform: scale(var(--modal-scale));
+    opacity: 0;
+  }
+}
+.t-modal-dialog.is-closing .t-modal-card {
+  transform: scale(var(--modal-scale));
+  opacity: 0;
+  transition-duration: var(--modal-close-dur);
+}
+@media (prefers-reduced-motion: reduce) {
+  .t-modal-dialog,
+  .t-modal-card {
+    transition: none !important;
   }
 }
 
