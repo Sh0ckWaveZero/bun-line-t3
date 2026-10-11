@@ -1,5 +1,6 @@
 import { env } from "@/env.mjs";
 import { attendanceService } from "@/features/attendance/services/attendance.server";
+import { getBangkokCurrentWeather } from "@/features/weather/services/bangkok-weather.server";
 import { getCheckInMessage } from "@/lib/constants/checkin-reminder-messages";
 import { sendPushMessage } from "@/lib/utils/line-push";
 
@@ -9,6 +10,7 @@ const BANGKOK_HOUR_FORMATTER = new Intl.DateTimeFormat("en-US", {
   hour12: false,
 });
 const THAI_WEEKDAY_FORMATTER = new Intl.DateTimeFormat("th-TH", {
+  timeZone: "Asia/Bangkok",
   weekday: "long",
 });
 
@@ -41,24 +43,24 @@ export async function sendCheckInReminders(
     };
   }
 
-  const currentBangkokHour = parseInt(
-    BANGKOK_HOUR_FORMATTER.format(new Date()),
-    10,
-  );
+  const now = new Date();
+  const currentBangkokHour = parseInt(BANGKOK_HOUR_FORMATTER.format(now), 10);
   const timeOfDay =
     currentBangkokHour < 12
       ? "morning"
       : currentBangkokHour < 17
         ? "afternoon"
         : "evening";
-  const dayOfWeek = THAI_WEEKDAY_FORMATTER.format(new Date());
+  const dayOfWeek = THAI_WEEKDAY_FORMATTER.format(now);
+  const useAI = Boolean(env.OPENAI_API_KEY);
+  const weather = useAI ? await getBangkokCurrentWeather() : undefined;
 
   const reminderMessage = await getCheckInMessage({
-    useAI: env.OPENAI_API_KEY ? true : false,
+    useAI,
     context: {
       timeOfDay,
       dayOfWeek,
-      weather: "สดใส",
+      ...(weather ? { weather } : {}),
     },
   });
 
