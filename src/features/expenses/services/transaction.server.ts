@@ -19,9 +19,19 @@ import { toNum } from "./decimal";
 // Queries
 // ─────────────────────────────────────────────
 
-/** แปลง Prisma row (Decimal amount) → number amount สำหรับ consumer */
-function mapTx<T extends { amount: unknown }>(row: T): T {
-  return { ...row, amount: toNum(row.amount as never) };
+/** แปลง Prisma row (Decimal amount, Date transDate) → number/string ตาม app interface
+ * transDate แปลงเป็น ISO string — JSON.stringify(Date) ให้ผลเดียวกัน จึงไม่กระทบ client */
+function mapTx<T extends { amount: unknown; transDate: unknown }>(
+  row: T,
+): Omit<T, "amount" | "transDate"> & { amount: number; transDate: string } {
+  return {
+    ...row,
+    amount: toNum(row.amount as never),
+    transDate:
+      row.transDate instanceof Date
+        ? row.transDate.toISOString()
+        : String(row.transDate),
+  };
 }
 
 /** ดึง transactions ตาม filter พร้อม category */
@@ -54,7 +64,7 @@ export async function getTransactions(
     skip: offset,
   });
 
-  return rows.map(mapTx) as TransactionWithCategory[];
+  return rows.map(mapTx);
 }
 
 /** ดึง transaction เดียวตาม id + ตรวจสิทธิ์ */
@@ -66,7 +76,7 @@ export async function getTransactionById(
     where: { id, userId },
     include: { category: true },
   });
-  return row ? (mapTx(row) as TransactionWithCategory) : null;
+  return row ? mapTx(row) : null;
 }
 
 // ─────────────────────────────────────────────
@@ -93,7 +103,7 @@ export async function createTransaction(
     include: { category: true },
   });
 
-  return mapTx(row) as TransactionWithCategory;
+  return mapTx(row);
 }
 
 /** อัปเดต transaction */
@@ -119,7 +129,7 @@ export async function updateTransaction(
     include: { category: true },
   });
 
-  return mapTx(row) as TransactionWithCategory;
+  return mapTx(row);
 }
 
 /** ลบ transaction (hard delete) */

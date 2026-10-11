@@ -7,7 +7,7 @@
  * from true to false to disable holiday notifications by default.
  */
 
-import { db } from "../src/lib/database/db";
+import { db } from "../../src/lib/database/db";
 
 interface UpdateResult {
   totalUsers: number;
@@ -47,7 +47,8 @@ async function updateHolidayNotifications(): Promise<UpdateResult> {
 
     // Find users with holiday notifications enabled
     const usersWithHolidayNotificationsEnabled = allUserSettings.filter(
-      (settings) => settings.enableHolidayNotifications === true,
+      (settings: { enableHolidayNotifications: boolean }) =>
+        settings.enableHolidayNotifications === true,
     );
 
     result.usersWithHolidayNotificationsEnabled =
@@ -153,13 +154,18 @@ async function verifyUpdate(): Promise<void> {
       console.log(
         `❌ Verification failed: ${usersWithHolidayNotificationsEnabled.length} users still have holiday notifications enabled:`,
       );
-      usersWithHolidayNotificationsEnabled.forEach((userSettings) => {
-        const userName =
-          userSettings.user.name ||
-          userSettings.user.email ||
-          userSettings.userId;
-        console.log(`   - ${userName}`);
-      });
+      usersWithHolidayNotificationsEnabled.forEach(
+        (userSettings: {
+          user: { name: string; email: string };
+          userId: string;
+        }) => {
+          const userName =
+            userSettings.user.name ||
+            userSettings.user.email ||
+            userSettings.userId;
+          console.log(`   - ${userName}`);
+        },
+      );
     }
 
     // Show holiday notification settings distribution
@@ -171,11 +177,16 @@ async function verifyUpdate(): Promise<void> {
     });
 
     console.log("\n📊 Holiday notification settings distribution:");
-    holidayNotificationStats.forEach((stat) => {
-      console.log(
-        `   Holiday notifications: ${stat.enableHolidayNotifications ? "ENABLED" : "DISABLED"} → ${stat._count._all} users`,
-      );
-    });
+    holidayNotificationStats.forEach(
+      (stat: {
+        enableHolidayNotifications: boolean;
+        _count: { _all: number };
+      }) => {
+        console.log(
+          `   Holiday notifications: ${stat.enableHolidayNotifications ? "ENABLED" : "DISABLED"} → ${stat._count._all} users`,
+        );
+      },
+    );
   } catch (error) {
     console.error("❌ Verification failed:", error);
   }

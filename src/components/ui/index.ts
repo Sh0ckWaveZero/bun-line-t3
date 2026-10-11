@@ -12,6 +12,8 @@ export type { CalendarProps } from "./calendar";
 
 export { Popover, PopoverTrigger, PopoverContent } from "./popover";
 
+export { Select, type SelectOption } from "./select";
+
 export { Switch } from "./switch";
 
 export { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs";

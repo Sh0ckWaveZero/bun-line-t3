@@ -1,4 +1,8 @@
-import { db } from "../src/lib/database/db";
+import { db } from "../../src/lib/database/db";
+import { asRawDb } from "../lib/mongo-raw-db";
+
+// สคริปต์ mongo-era — เหตุผลที่ต้อง cast อยู่ใน scripts/lib/mongo-raw-db.ts
+const rawDb = asRawDb(db);
 
 async function createMissingIndexes() {
   try {
@@ -7,7 +11,7 @@ async function createMissingIndexes() {
     // Create users email index (allow null but unique non-null values)
     console.log("Creating users_email_key index...");
     try {
-      await db.$runCommandRaw({
+      await rawDb.$runCommandRaw({
         createIndexes: "users",
         indexes: [
           {
@@ -26,7 +30,7 @@ async function createMissingIndexes() {
     // Create health activities indexes
     console.log("\nCreating health_activities indexes...");
     try {
-      await db.$runCommandRaw({
+      await rawDb.$runCommandRaw({
         createIndexes: "health_activities",
         indexes: [
           {
@@ -47,7 +51,7 @@ async function createMissingIndexes() {
     // Create health metrics indexes
     console.log("\nCreating health_metrics indexes...");
     try {
-      await db.$runCommandRaw({
+      await rawDb.$runCommandRaw({
         createIndexes: "health_metrics",
         indexes: [
           {

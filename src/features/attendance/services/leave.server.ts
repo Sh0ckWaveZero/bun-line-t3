@@ -2,13 +2,20 @@ import { db } from "@/lib/database";
 import { AttendanceStatusType } from "@prisma/client";
 
 /**
+ * แปลง Date → "YYYY-MM-DD" ตามเขตเวลา Asia/Bangkok
+ * (toISOString ตรง ๆ จะเพี้ยนไปวันก่อนหน้าเมื่อ Date เป็นเที่ยงคืน local)
+ */
+const toBangkokDateKey = (date: Date): string =>
+  date.toLocaleDateString("en-CA", { timeZone: "Asia/Bangkok" });
+
+/**
  * ตรวจสอบว่าวันนี้ user ลาหรือไม่ (return true ถ้าลา)
  */
 export const isUserOnLeave = async (
   userId: string,
   date: Date,
 ): Promise<boolean> => {
-  const dateString = date.toISOString().split("T")[0];
+  const dateString = toBangkokDateKey(date);
   const leave = await db.leave.findFirst({
     where: {
       userId,

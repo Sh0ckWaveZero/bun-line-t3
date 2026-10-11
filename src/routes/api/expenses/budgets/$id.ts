@@ -110,9 +110,10 @@ export async function DELETE(
 export const Route = createFileRoute("/api/expenses/budgets/$id")({
   server: {
     handlers: {
-      PATCH: ({ request, params }) => PATCH(request, params as { id: string }),
+      PATCH: ({ request, params }) =>
+        PATCH(request, { params: params as { id: string } }),
       DELETE: ({ request, params }) =>
-        DELETE(request, params as { id: string }),
+        DELETE(request, { params: params as { id: string } }),
     },
   },
 });

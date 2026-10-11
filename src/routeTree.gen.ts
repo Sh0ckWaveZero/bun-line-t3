@@ -30,12 +30,14 @@ import { Route as ThaiNamesGeneratorRouteImport } from './routes/thai-names-gene
 import { Route as AdminLinePermissionsRouteImport } from './routes/admin/line-permissions'
 import { Route as ApiAttendancePushRouteImport } from './routes/api/attendance-push'
 import { Route as ApiAttendanceReportRouteImport } from './routes/api/attendance-report'
+import { Route as ApiCalendarRouteImport } from './routes/api/calendar'
 import { Route as ApiCheckoutReminderRouteImport } from './routes/api/checkout-reminder'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiHolidaysRouteImport } from './routes/api/holidays'
 import { Route as ApiLeaveRouteImport } from './routes/api/leave'
 import { Route as ApiLineRouteImport } from './routes/api/line'
 import { Route as ApiLogoutRouteImport } from './routes/api/logout'
+import { Route as ApiWorkModesRouteImport } from './routes/api/work-modes'
 import { Route as CalendarMobileRouteImport } from './routes/calendar.mobile'
 import { Route as ApiAdminCheckRouteImport } from './routes/api/admin/check'
 import { Route as ApiAdminCronJobsRouteImport } from './routes/api/admin/cron-jobs'
@@ -185,6 +187,11 @@ const ApiAttendanceReportRoute = ApiAttendanceReportRouteImport.update({
   path: '/api/attendance-report',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCalendarRoute = ApiCalendarRouteImport.update({
+  id: '/api/calendar',
+  path: '/api/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCheckoutReminderRoute = ApiCheckoutReminderRouteImport.update({
   id: '/api/checkout-reminder',
   path: '/api/checkout-reminder',
@@ -213,6 +220,11 @@ const ApiLineRoute = ApiLineRouteImport.update({
 const ApiLogoutRoute = ApiLogoutRouteImport.update({
   id: '/api/logout',
   path: '/api/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWorkModesRoute = ApiWorkModesRouteImport.update({
+  id: '/api/work-modes',
+  path: '/api/work-modes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CalendarMobileRoute = CalendarMobileRouteImport.update({
@@ -460,12 +472,14 @@ export interface FileRoutesByFullPath {
   '/admin/line-permissions': typeof AdminLinePermissionsRoute
   '/api/attendance-push': typeof ApiAttendancePushRoute
   '/api/attendance-report': typeof ApiAttendanceReportRoute
+  '/api/calendar': typeof ApiCalendarRoute
   '/api/checkout-reminder': typeof ApiCheckoutReminderRoute
   '/api/health': typeof ApiHealthRouteWithChildren
   '/api/holidays': typeof ApiHolidaysRoute
   '/api/leave': typeof ApiLeaveRoute
   '/api/line': typeof ApiLineRouteWithChildren
   '/api/logout': typeof ApiLogoutRoute
+  '/api/work-modes': typeof ApiWorkModesRoute
   '/calendar/mobile': typeof CalendarMobileRoute
   '/api/admin/check': typeof ApiAdminCheckRoute
   '/api/admin/cron-jobs': typeof ApiAdminCronJobsRouteWithChildren
@@ -532,12 +546,14 @@ export interface FileRoutesByTo {
   '/admin/line-permissions': typeof AdminLinePermissionsRoute
   '/api/attendance-push': typeof ApiAttendancePushRoute
   '/api/attendance-report': typeof ApiAttendanceReportRoute
+  '/api/calendar': typeof ApiCalendarRoute
   '/api/checkout-reminder': typeof ApiCheckoutReminderRoute
   '/api/health': typeof ApiHealthRouteWithChildren
   '/api/holidays': typeof ApiHolidaysRoute
   '/api/leave': typeof ApiLeaveRoute
   '/api/line': typeof ApiLineRouteWithChildren
   '/api/logout': typeof ApiLogoutRoute
+  '/api/work-modes': typeof ApiWorkModesRoute
   '/calendar/mobile': typeof CalendarMobileRoute
   '/api/admin/check': typeof ApiAdminCheckRoute
   '/api/admin/cron-jobs': typeof ApiAdminCronJobsRouteWithChildren
@@ -605,12 +621,14 @@ export interface FileRoutesById {
   '/admin/line-permissions': typeof AdminLinePermissionsRoute
   '/api/attendance-push': typeof ApiAttendancePushRoute
   '/api/attendance-report': typeof ApiAttendanceReportRoute
+  '/api/calendar': typeof ApiCalendarRoute
   '/api/checkout-reminder': typeof ApiCheckoutReminderRoute
   '/api/health': typeof ApiHealthRouteWithChildren
   '/api/holidays': typeof ApiHolidaysRoute
   '/api/leave': typeof ApiLeaveRoute
   '/api/line': typeof ApiLineRouteWithChildren
   '/api/logout': typeof ApiLogoutRoute
+  '/api/work-modes': typeof ApiWorkModesRoute
   '/calendar/mobile': typeof CalendarMobileRoute
   '/api/admin/check': typeof ApiAdminCheckRoute
   '/api/admin/cron-jobs': typeof ApiAdminCronJobsRouteWithChildren
@@ -679,12 +697,14 @@ export interface FileRouteTypes {
     | '/admin/line-permissions'
     | '/api/attendance-push'
     | '/api/attendance-report'
+    | '/api/calendar'
     | '/api/checkout-reminder'
     | '/api/health'
     | '/api/holidays'
     | '/api/leave'
     | '/api/line'
     | '/api/logout'
+    | '/api/work-modes'
     | '/calendar/mobile'
     | '/api/admin/check'
     | '/api/admin/cron-jobs'
@@ -751,12 +771,14 @@ export interface FileRouteTypes {
     | '/admin/line-permissions'
     | '/api/attendance-push'
     | '/api/attendance-report'
+    | '/api/calendar'
     | '/api/checkout-reminder'
     | '/api/health'
     | '/api/holidays'
     | '/api/leave'
     | '/api/line'
     | '/api/logout'
+    | '/api/work-modes'
     | '/calendar/mobile'
     | '/api/admin/check'
     | '/api/admin/cron-jobs'
@@ -823,12 +845,14 @@ export interface FileRouteTypes {
     | '/admin/line-permissions'
     | '/api/attendance-push'
     | '/api/attendance-report'
+    | '/api/calendar'
     | '/api/checkout-reminder'
     | '/api/health'
     | '/api/holidays'
     | '/api/leave'
     | '/api/line'
     | '/api/logout'
+    | '/api/work-modes'
     | '/calendar/mobile'
     | '/api/admin/check'
     | '/api/admin/cron-jobs'
@@ -896,12 +920,14 @@ export interface RootRouteChildren {
   AdminLinePermissionsRoute: typeof AdminLinePermissionsRoute
   ApiAttendancePushRoute: typeof ApiAttendancePushRoute
   ApiAttendanceReportRoute: typeof ApiAttendanceReportRoute
+  ApiCalendarRoute: typeof ApiCalendarRoute
   ApiCheckoutReminderRoute: typeof ApiCheckoutReminderRoute
   ApiHealthRoute: typeof ApiHealthRouteWithChildren
   ApiHolidaysRoute: typeof ApiHolidaysRoute
   ApiLeaveRoute: typeof ApiLeaveRoute
   ApiLineRoute: typeof ApiLineRouteWithChildren
   ApiLogoutRoute: typeof ApiLogoutRoute
+  ApiWorkModesRoute: typeof ApiWorkModesRoute
   ApiAdminCheckRoute: typeof ApiAdminCheckRoute
   ApiAdminCronJobsRoute: typeof ApiAdminCronJobsRouteWithChildren
   ApiAdminDebugRoute: typeof ApiAdminDebugRoute
@@ -1087,6 +1113,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAttendanceReportRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/calendar': {
+      id: '/api/calendar'
+      path: '/api/calendar'
+      fullPath: '/api/calendar'
+      preLoaderRoute: typeof ApiCalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/checkout-reminder': {
       id: '/api/checkout-reminder'
       path: '/api/checkout-reminder'
@@ -1127,6 +1160,13 @@ declare module '@tanstack/react-router' {
       path: '/api/logout'
       fullPath: '/api/logout'
       preLoaderRoute: typeof ApiLogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/work-modes': {
+      id: '/api/work-modes'
+      path: '/api/work-modes'
+      fullPath: '/api/work-modes'
+      preLoaderRoute: typeof ApiWorkModesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/calendar/mobile': {
@@ -1552,12 +1592,14 @@ const rootRouteChildren: RootRouteChildren = {
   AdminLinePermissionsRoute: AdminLinePermissionsRoute,
   ApiAttendancePushRoute: ApiAttendancePushRoute,
   ApiAttendanceReportRoute: ApiAttendanceReportRoute,
+  ApiCalendarRoute: ApiCalendarRoute,
   ApiCheckoutReminderRoute: ApiCheckoutReminderRoute,
   ApiHealthRoute: ApiHealthRouteWithChildren,
   ApiHolidaysRoute: ApiHolidaysRoute,
   ApiLeaveRoute: ApiLeaveRoute,
   ApiLineRoute: ApiLineRouteWithChildren,
   ApiLogoutRoute: ApiLogoutRoute,
+  ApiWorkModesRoute: ApiWorkModesRoute,
   ApiAdminCheckRoute: ApiAdminCheckRoute,
   ApiAdminCronJobsRoute: ApiAdminCronJobsRouteWithChildren,
   ApiAdminDebugRoute: ApiAdminDebugRoute,

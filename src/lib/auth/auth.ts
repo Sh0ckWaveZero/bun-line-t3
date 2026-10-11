@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { getRequest } from "@tanstack/react-start/server";
+import type { PrismaClient } from "@prisma/client";
 import { env } from "@/env.mjs";
 import { db } from "../database/db";
 import type { AppSession } from "./session-context";
@@ -186,7 +187,9 @@ validateProductionDomains();
 
 export const auth = betterAuth({
   baseURL: getAuthBaseUrl(),
-  database: createCustomPrismaAdapter(db, {
+  // db เป็น extended client ($extends session.create) — structurally compatible กับ
+  // PrismaClient ที่ adapter ต้องการ แต่ type ต่างกัน จึงต้อง cast
+  database: createCustomPrismaAdapter(db as unknown as PrismaClient, {
     provider: "postgresql",
   }),
   advanced: {

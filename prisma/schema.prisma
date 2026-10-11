@@ -65,6 +65,7 @@ model User {
   sessions          Session[]
   workAttendances   WorkAttendance[]
   leaves            Leave[]
+  workModeDays      WorkModeDay[]
   settings          UserSettings?
   expenseCategories     ExpenseCategory[]
   transactions          Transaction[]
@@ -159,6 +160,22 @@ model Leave {
 
   @@index([userId, date, isActive])
   @@map("leaves")
+}
+
+model WorkModeDay {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  date      String   @map("date") // YYYY-MM-DD
+  type      String   @default("wfh") // wfh | onsite
+  note      String?
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([date, isActive])
+  @@map("work_mode_days")
 }
 
 model UserSettings {

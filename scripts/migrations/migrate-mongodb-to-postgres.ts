@@ -17,7 +17,7 @@
  *   BATCH_SIZE    - จำนวน docs ต่อ batch (default: 100)
  */
 
-import { MongoClient, type Db, type Document } from "mongodb";
+import { MongoClient, type Db, type Document, type WithId } from "mongodb";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
@@ -77,9 +77,9 @@ async function* batchCursor<T extends Document>(
   db: Db,
   collection: string,
   batchSize: number,
-): AsyncGenerator<T[]> {
+): AsyncGenerator<WithId<T>[]> {
   const cursor = db.collection<T>(collection).find({});
-  let batch: T[] = [];
+  let batch: WithId<T>[] = [];
   for await (const doc of cursor) {
     batch.push(doc);
     if (batch.length >= batchSize) {

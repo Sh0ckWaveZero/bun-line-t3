@@ -49,11 +49,15 @@ export const findAndMergeDuplicateLineAccounts = async (
 
   // เลือก account แรก (เก่าสุด) เป็น primary account
   const primaryAccount = accounts[0];
+  if (!primaryAccount) {
+    return null;
+  }
   const primaryUserId = primaryAccount.userId;
 
   // Merge accounts: ย้าย sessions และข้อมูลอื่นๆ ไปยัง primary user
   for (let i = 1; i < accounts.length; i++) {
     const duplicateAccount = accounts[i];
+    if (!duplicateAccount) continue;
     const duplicateUserId = duplicateAccount.userId;
 
     console.log(

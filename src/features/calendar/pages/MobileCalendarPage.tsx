@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   format,
   addMonths,
@@ -17,34 +16,50 @@ import {
   Calendar as CalendarIcon,
   Download,
   Plus,
-  CalendarPlus,
+  Upload,
+  Home,
+  MapPin,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { LeaveRequestModal } from "@/features/calendar/components/leave-request-modal";
-import { HolidayManageModal } from "@/features/calendar/components/holiday-manage-modal";
 import {
-  CALENDAR_DATA_QUERY_KEY,
+  DayEventModal,
+  type DayEventType,
+} from "@/features/calendar/components/day-event-modal";
+import { HolidayImport } from "@/features/calendar/components/holiday-import";
+import { useCalendarMutations } from "@/features/calendar/hooks/useCalendarMutations";
+import {
   useCalendarData,
   type CalendarHoliday as Holiday,
   type CalendarLeave as Leave,
+  type CalendarWorkModeDay as WorkModeDay,
 } from "@/features/calendar/hooks/useCalendarData";
 
 interface CalendarEvent {
   date: Date;
   holiday: Holiday | undefined;
   leave: Leave | undefined;
+  workMode: WorkModeDay | undefined;
   isToday: boolean;
 }
 
 export function MobileCalendarPage() {
-  const queryClient = useQueryClient();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const { holidays, leaves, loading } = useCalendarData(currentDate);
-  const [filter, setFilter] = useState<"all" | "holidays" | "leaves">("all");
-  const [showLeaveModal, setShowLeaveModal] = useState(false);
-  const [showHolidayModal, setShowHolidayModal] = useState(false);
+  const { holidays, leaves, workModeDays, loading } =
+    useCalendarData(currentDate);
+  const [filter, setFilter] = useState<
+    "all" | "holidays" | "leaves" | "wfh" | "onsite"
+  >("all");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [showImportModal, setShowImportModal] = useState(false);
+  // modal เดียวรวมทุก type (ลางาน / WFH / On Site / วันหยุด) — null = ปิด
+  const [eventModal, setEventModal] = useState<DayEventType | null>(null);
+
+  // เปิด modal ได้ทีละหนึ่ง — เปิดอันใหม่ปิดอันอื่นทิ้ง
+  const openModal = (modal: DayEventType) => {
+    setEventModal(modal);
+  };
 
   const navigateMonth = (direction: "prev" | "next") => {
     setCurrentDate((prev) =>
@@ -82,62 +97,16 @@ export function MobileCalendarPage() {
     const dateStr = format(date, "yyyy-MM-dd");
     const holiday = holidays.find((h) => h.date === dateStr);
     const leave = leaves.find((l) => l.date === dateStr);
-    return { holiday, leave, isToday: isSameDay(date, new Date()) };
+    const workMode = workModeDays.find((w) => w.date === dateStr);
+    return { holiday, leave, workMode, isToday: isSameDay(date, new Date()) };
   };
 
-  const refreshCalendarData = async () => {
-    await queryClient.invalidateQueries({
-      queryKey: [...CALENDAR_DATA_QUERY_KEY, getYear(currentDate)],
-    });
-  };
+  const { refreshCalendarData, handleDayEventSubmit, handleWorkModeCancel } =
+    useCalendarMutations(getYear(currentDate));
 
-  const handleLeaveRequest = async (data: {
-    date: string;
-    type: string;
-    reason?: string;
-  }) => {
-    try {
-      const response = await fetch("/api/leave", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) throw new Error("ไม่สามารถส่งคำขอลาได้");
-      const result = await response.json();
-
-      if (result.success) {
-        await refreshCalendarData();
-        alert("แจ้งลาสำเร็จ!");
-      } else {
-        alert(result.message);
-      }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "เกิดข้อผิดพลาด";
-      alert(message);
-    }
-  };
-
-  const handleHolidayAdd = async (data: Omit<Holiday, "id">) => {
-    try {
-      const response = await fetch("/api/holidays", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) throw new Error("ไม่สามารถเพิ่มวันหยุดได้");
-      const result = await response.json();
-
-      if (result.success) {
-        await refreshCalendarData();
-        alert("เพิ่มวันหยุดสำเร็จ!");
-      } else {
-        alert(result.message);
-      }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "เกิดข้อผิดพลาด";
-      alert(message);
+  const handleImport = async (importedHolidays: Holiday[]) => {
+    if (importedHolidays.length > 0) {
+      await refreshCalendarData();
     }
   };
 
@@ -152,10 +121,13 @@ export function MobileCalendarPage() {
     return days
       .map((date) => {
         const events = getEventsForDate(date);
-        const hasEvent = events.holiday || events.leave;
+        const hasEvent = events.holiday || events.leave || events.workMode;
 
         if (filter === "holidays" && !events.holiday) return null;
         if (filter === "leaves" && !events.leave) return null;
+        if (filter === "wfh" && events.workMode?.type !== "wfh") return null;
+        if (filter === "onsite" && events.workMode?.type !== "onsite")
+          return null;
         if (filter === "all" && !hasEvent && !events.isToday) return null;
 
         return { date, ...events };
@@ -168,15 +140,23 @@ export function MobileCalendarPage() {
     (date) => getEventsForDate(date).holiday,
   ).length;
   const leaveCount = days.filter((date) => getEventsForDate(date).leave).length;
+  const wfhCount = days.filter(
+    (date) => getEventsForDate(date).workMode?.type === "wfh",
+  ).length;
+  const onsiteCount = days.filter(
+    (date) => getEventsForDate(date).workMode?.type === "onsite",
+  ).length;
   const totalMarkedDays = days.filter((date) => {
     const events = getEventsForDate(date);
-    return events.holiday || events.leave || events.isToday;
+    return events.holiday || events.leave || events.workMode || events.isToday;
   }).length;
   const todayEvent = days.find((date) => isSameDay(date, new Date()));
   const filterOptions = [
     { value: "all" as const, label: "ทั้งหมด", count: totalMarkedDays },
     { value: "holidays" as const, label: "วันหยุด", count: holidayCount },
     { value: "leaves" as const, label: "วันลา", count: leaveCount },
+    { value: "wfh" as const, label: "WFH", count: wfhCount },
+    { value: "onsite" as const, label: "On Site", count: onsiteCount },
   ];
 
   return (
@@ -264,7 +244,8 @@ export function MobileCalendarPage() {
                   id="mobile-calendar-summary"
                   className="text-muted-foreground mt-1 text-xs font-medium"
                 >
-                  วันหยุด {holidayCount} วัน · วันลา {leaveCount} วัน
+                  วันหยุด {holidayCount} · วันลา {leaveCount} · WFH {wfhCount} ·
+                  On Site {onsiteCount}
                 </p>
               </div>
               <div
@@ -290,9 +271,9 @@ export function MobileCalendarPage() {
 
           <div
             id="mobile-calendar-stats"
-            className="divide-border grid grid-cols-3 divide-x"
+            className="divide-border grid grid-cols-5 divide-x"
           >
-            <div id="mobile-calendar-stat-today" className="px-3 py-2.5">
+            <div id="mobile-calendar-stat-today" className="px-2 py-2.5">
               <p className="text-muted-foreground text-[10px] font-medium">
                 วันนี้
               </p>
@@ -302,7 +283,7 @@ export function MobileCalendarPage() {
                   : "นอกเดือนนี้"}
               </p>
             </div>
-            <div id="mobile-calendar-stat-holidays" className="px-3 py-2.5">
+            <div id="mobile-calendar-stat-holidays" className="px-2 py-2.5">
               <p className="text-muted-foreground text-[10px] font-medium">
                 วันหยุด
               </p>
@@ -310,12 +291,28 @@ export function MobileCalendarPage() {
                 {holidayCount} รายการ
               </p>
             </div>
-            <div id="mobile-calendar-stat-leaves" className="px-3 py-2.5">
+            <div id="mobile-calendar-stat-leaves" className="px-2 py-2.5">
               <p className="text-muted-foreground text-[10px] font-medium">
                 วันลา
               </p>
               <p className="text-primary mt-0.5 text-sm font-bold">
                 {leaveCount} รายการ
+              </p>
+            </div>
+            <div id="mobile-calendar-stat-wfh" className="px-2 py-2.5">
+              <p className="text-muted-foreground text-[10px] font-medium">
+                WFH
+              </p>
+              <p className="mt-0.5 text-sm font-bold text-emerald-700 dark:text-emerald-300">
+                {wfhCount} รายการ
+              </p>
+            </div>
+            <div id="mobile-calendar-stat-onsite" className="px-2 py-2.5">
+              <p className="text-muted-foreground text-[10px] font-medium">
+                On Site
+              </p>
+              <p className="mt-0.5 text-sm font-bold text-amber-700 dark:text-amber-300">
+                {onsiteCount} รายการ
               </p>
             </div>
           </div>
@@ -393,7 +390,11 @@ export function MobileCalendarPage() {
                 ? "ไม่มีวันหยุดหรือวันลาในเดือนนี้"
                 : filter === "holidays"
                   ? "ไม่มีวันหยุดในเดือนนี้"
-                  : "ไม่มีวันลาในเดือนนี้"}
+                  : filter === "wfh"
+                    ? "ไม่มีวัน WFH ในเดือนนี้"
+                    : filter === "onsite"
+                      ? "ไม่มีวัน On Site ในเดือนนี้"
+                      : "ไม่มีวันลาในเดือนนี้"}
             </p>
             <p
               id="mobile-calendar-empty-hint"
@@ -412,10 +413,14 @@ export function MobileCalendarPage() {
             {filteredEvents.map((event) => {
               if (!event) return null;
 
-              const { date, holiday, leave, isToday } = event;
+              const { date, holiday, leave, workMode, isToday } = event;
               const dayOfWeek = format(date, "EEEE", { locale: th });
               const dateStr = format(date, "yyyy-MM-dd");
-              const isMixed = holiday && leave;
+              const isMixed = Boolean(
+                (holiday && leave) ||
+                (holiday && workMode) ||
+                (leave && workMode),
+              );
 
               return (
                 <li
@@ -549,18 +554,121 @@ export function MobileCalendarPage() {
                       </div>
                     )}
 
-                    <Button
-                      id={`mobile-event-request-leave-${dateStr}`}
-                      type="button"
-                      variant="outline"
-                      className="mt-0.5 h-9 w-full rounded-lg text-xs font-bold"
-                      onClick={() => {
-                        setSelectedDate(dateStr);
-                        setShowLeaveModal(true);
-                      }}
-                    >
-                      แจ้งลาวันนี้
-                    </Button>
+                    {workMode?.type === "wfh" && (
+                      <div
+                        id={`mobile-event-wfh-${dateStr}`}
+                        className="flex items-start gap-2.5"
+                        role="group"
+                        aria-label="ทำงานจากที่บ้าน (WFH)"
+                      >
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border-emerald-400/25 bg-emerald-500/10">
+                          <Home
+                            className="h-4 w-4 text-emerald-700 dark:text-emerald-300"
+                            aria-hidden="true"
+                          />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div
+                            id={`mobile-event-wfh-type-${dateStr}`}
+                            className="text-foreground text-sm font-bold"
+                          >
+                            ทำ WFH
+                          </div>
+                          {workMode.note && (
+                            <div
+                              id={`mobile-event-wfh-note-${dateStr}`}
+                              className="text-muted-foreground mt-0.5 line-clamp-2 text-xs"
+                            >
+                              {workMode.note}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {workMode?.type === "onsite" && (
+                      <div
+                        id={`mobile-event-onsite-${dateStr}`}
+                        className="flex items-start gap-2.5"
+                        role="group"
+                        aria-label="ทำงานที่ไซต์ (On Site)"
+                      >
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border-amber-400/25 bg-amber-500/10">
+                          <MapPin
+                            className="h-4 w-4 text-amber-700 dark:text-amber-300"
+                            aria-hidden="true"
+                          />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div
+                            id={`mobile-event-onsite-type-${dateStr}`}
+                            className="text-foreground text-sm font-bold"
+                          >
+                            ทำ On Site
+                          </div>
+                          {workMode.note && (
+                            <div
+                              id={`mobile-event-onsite-note-${dateStr}`}
+                              className="text-muted-foreground mt-0.5 line-clamp-2 text-xs"
+                            >
+                              {workMode.note}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="mt-0.5 flex gap-2">
+                      <Button
+                        id={`mobile-event-request-leave-${dateStr}`}
+                        type="button"
+                        variant="outline"
+                        className="h-9 flex-1 rounded-lg text-xs font-bold"
+                        onClick={() => {
+                          setSelectedDate(dateStr);
+                          openModal("leave");
+                        }}
+                      >
+                        แจ้งลาวันนี้
+                      </Button>
+                      {workMode?.type === "wfh" ? (
+                        <Button
+                          id={`mobile-event-cancel-wfh-${dateStr}`}
+                          type="button"
+                          variant="outline"
+                          className="text-destructive hover:text-destructive h-9 flex-1 rounded-lg text-xs font-bold"
+                          onClick={() => void handleWorkModeCancel(dateStr)}
+                        >
+                          <X className="mr-1 h-3.5 w-3.5" />
+                          ยกเลิก WFH
+                        </Button>
+                      ) : workMode?.type === "onsite" ? (
+                        <Button
+                          id={`mobile-event-cancel-onsite-${dateStr}`}
+                          type="button"
+                          variant="outline"
+                          className="text-destructive hover:text-destructive h-9 flex-1 rounded-lg text-xs font-bold"
+                          onClick={() => void handleWorkModeCancel(dateStr)}
+                        >
+                          <X className="mr-1 h-3.5 w-3.5" />
+                          ยกเลิก On Site
+                        </Button>
+                      ) : (
+                        <Button
+                          id={`mobile-event-request-wfh-${dateStr}`}
+                          type="button"
+                          variant="outline"
+                          className="h-9 flex-1 rounded-lg text-xs font-bold"
+                          onClick={() => {
+                            setSelectedDate(dateStr);
+                            openModal("wfh");
+                          }}
+                        >
+                          <Home className="mr-1 h-3.5 w-3.5" />
+                          ทำ WFH
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </li>
               );
@@ -575,31 +683,28 @@ export function MobileCalendarPage() {
         aria-label="ปุ่มดำเนินการด่วน"
       >
         <Button
-          id="mobile-fab-leave"
+          id="mobile-fab-add-event"
           size="sm"
           className="h-11 rounded-lg text-xs font-bold"
           onClick={() => {
             setSelectedDate(null);
-            setShowLeaveModal(true);
+            openModal("leave");
           }}
-          aria-label="แจ้งลางาน"
+          aria-label="เพิ่มกิจกรรมในปฏิทิน"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
-          ลางาน
+          เพิ่มกิจกรรม
         </Button>
         <Button
-          id="mobile-fab-holiday"
+          id="mobile-fab-import"
           size="sm"
           variant="outline"
           className="h-11 rounded-lg text-xs font-bold"
-          onClick={() => {
-            setSelectedDate(null);
-            setShowHolidayModal(true);
-          }}
-          aria-label="เพิ่มวันหยุด"
+          onClick={() => setShowImportModal(true)}
+          aria-label="นำเข้าวันหยุด"
         >
-          <CalendarPlus className="h-4 w-4" aria-hidden="true" />
-          วันหยุด
+          <Upload className="h-4 w-4" aria-hidden="true" />
+          นำเข้า
         </Button>
         <Button
           id="mobile-fab-export"
@@ -614,24 +719,26 @@ export function MobileCalendarPage() {
         </Button>
       </nav>
 
-      {showLeaveModal && (
-        <div id="mobile-leave-modal-wrapper">
-          <LeaveRequestModal
-            isOpen={showLeaveModal}
-            onClose={() => setShowLeaveModal(false)}
-            onSubmit={handleLeaveRequest}
-            selectedDate={selectedDate || undefined}
+      {showImportModal && (
+        <div id="mobile-import-modal-wrapper">
+          <HolidayImport
+            onImport={handleImport}
+            onClose={() => setShowImportModal(false)}
           />
         </div>
       )}
 
-      {showHolidayModal && (
-        <div id="mobile-holiday-modal-wrapper">
-          <HolidayManageModal
-            isOpen={showHolidayModal}
-            onClose={() => setShowHolidayModal(false)}
-            onSubmit={handleHolidayAdd}
+      {eventModal && (
+        <div id="mobile-event-modal-wrapper">
+          <DayEventModal
+            isOpen
+            onClose={() => {
+              setEventModal(null);
+              setSelectedDate(null);
+            }}
+            onSubmit={handleDayEventSubmit}
             selectedDate={selectedDate || undefined}
+            initialType={eventModal}
           />
         </div>
       )}

@@ -86,7 +86,7 @@ async function isWorkingDay(date: Date): Promise<boolean> {
 }
 
 /**
- * ดึง LINE userId ของ user ที่มีบัญชี LINE และไม่ได้ลาวันนี้ (query เดียว)
+ * ดึง LINE userId ของ user ที่มีบัญชี LINE และไม่ได้ลาหรือทำ WFH วันนี้ (query เดียว)
  * @param todayString วันที่รูปแบบ YYYY-MM-DD (Bangkok)
  * @returns string[] LINE userId
  */
@@ -129,6 +129,10 @@ async function getActiveLineUserIdsForCheckinReminder(
           where: { date: todayString, isActive: true },
           select: { id: true },
         },
+        workModeDays: {
+          where: { date: todayString, isActive: true, type: "wfh" },
+          select: { id: true },
+        },
         settings: {
           select: { enableCheckInReminders: true },
         },
@@ -142,6 +146,7 @@ async function getActiveLineUserIdsForCheckinReminder(
       !loginChannelId ||
       !user ||
       user.leaves.length > 0 ||
+      user.workModeDays.length > 0 ||
       !notificationsEnabled
     ) {
       return [];
@@ -165,6 +170,10 @@ async function getActiveLineUserIdsForCheckinReminder(
         where: { date: todayString, isActive: true },
         select: { id: true },
       },
+      workModeDays: {
+        where: { date: todayString, isActive: true, type: "wfh" },
+        select: { id: true },
+      },
       settings: {
         select: { enableCheckInReminders: true },
       },
@@ -177,8 +186,9 @@ async function getActiveLineUserIdsForCheckinReminder(
   const candidates = users.filter((u: UserQueryResult) => {
     const hasLineAccount = u.accounts.length > 0 && !!u.accounts[0]?.accountId;
     const notOnLeave = u.leaves.length === 0;
+    const notWfh = u.workModeDays.length === 0;
     const notificationsEnabled = u.settings?.enableCheckInReminders ?? true;
-    return hasLineAccount && notOnLeave && notificationsEnabled;
+    return hasLineAccount && notOnLeave && notWfh && notificationsEnabled;
   });
 
   const loginChannelIds = candidates
