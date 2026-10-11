@@ -2,39 +2,46 @@
 
 import { useNavigate } from "@tanstack/react-router";
 import { useSession } from "@/lib/auth/client";
-import { useEffect, useState, useCallback } from "react";
 import {
-  CheckCircle,
-  XCircle,
-  Clock,
-  Users,
-  RefreshCw,
-  MessageSquare,
-  AlertCircle,
-  ShieldCheck,
-  ShieldPlus,
-  User,
-} from "lucide-react";
-import { Pagination } from "@/components/common/Pagination";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/components/common/ToastProvider";
 import { PendingApprovalModal } from "@/components/auth/PendingApprovalModal";
 import { useLineApproval } from "@/lib/auth/hooks/useLineApproval";
+import { cn } from "@/lib/utils";
+import {
+  CircleAlert,
+  CircleCheck,
+  CircleX,
+  Clock,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  MoreHorizontal,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  ShieldPlus,
+  Users,
+  User,
+  type LucideIcon,
+} from "lucide-react";
 
 type ApprovalStatus = "PENDING" | "APPROVED" | "REJECTED";
 type DisplayApprovalStatus = ApprovalStatus | "UNREQUESTED";
-type ApprovalTab = "ALL" | ApprovalStatus;
+type ApprovalTab = "all" | DisplayApprovalStatus;
 
-interface ApprovalRequest {
+interface ApprovalItem {
   id: string;
-  approvalId?: string | null;
-  accountId?: string;
+  approvalId: string | null;
+  accountId: string;
   lineUserId: string;
   displayName: string | null;
   pictureUrl: string | null;
@@ -47,7 +54,7 @@ interface ApprovalRequest {
   expiresAt: string | null;
   notifiedAt: string | null;
   createdAt: string;
-  updatedAt: string;
+  updatedAt: string | null;
   userName?: string | null;
   userEmail?: string | null;
   isAdmin?: boolean;
@@ -58,66 +65,74 @@ interface ApprovalStats {
   approved: number;
   rejected: number;
   total: number;
-  accountsTotal?: number;
+  accountsTotal: number;
 }
 
-interface ListResponse {
-  data: ApprovalRequest[];
+interface ApprovalListResponse {
+  data: ApprovalItem[];
   total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
 }
 
-const statusConfig: Record<
+const LINE_APPROVALS_KEY = ["line-approvals"] as const;
+const LINE_APPROVAL_STATS_KEY = ["line-approval-stats"] as const;
+
+/** ดึงรายการบัญชี LINE ทั้งหมดครั้งเดียวแล้วกรอง/แบ่งหน้า client-side (เหมือน cron-jobs) */
+const APPROVALS_FETCH_LIMIT = 500;
+
+const APPROVAL_TABS = [
+  ["all", "ทั้งหมด"],
+  ["PENDING", "รออนุมัติ"],
+  ["APPROVED", "อนุมัติแล้ว"],
+  ["REJECTED", "ปฏิเสธ"],
+  ["UNREQUESTED", "ยังไม่ขอ"],
+] as const satisfies readonly [ApprovalTab, string][];
+
+const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
+
+const STATUS_META: Record<
   DisplayApprovalStatus,
-  { label: string; color: string; icon: React.ReactNode }
+  { label: string; badgeClass: string; dotClass: string; Icon: LucideIcon }
 > = {
-  UNREQUESTED: {
-    label: "ยังไม่มีคำขอ",
-    color:
-      "border border-slate-300 bg-slate-200 text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200",
-    icon: <AlertCircle className="h-3.5 w-3.5" />,
-  },
   PENDING: {
     label: "รอการอนุมัติ",
-    color:
-      "border border-amber-300 bg-amber-100 text-amber-900 dark:border-amber-700/60 dark:bg-amber-900/30 dark:text-amber-300",
-    icon: <Clock className="h-3.5 w-3.5" />,
+    badgeClass:
+      "border-amber-400/25 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+    dotClass: "bg-amber-500 dark:bg-amber-400",
+    Icon: Clock,
   },
   APPROVED: {
     label: "อนุมัติแล้ว",
-    color:
-      "border border-emerald-300 bg-emerald-100 text-emerald-900 dark:border-emerald-700/60 dark:bg-emerald-900/30 dark:text-emerald-300",
-    icon: <CheckCircle className="h-3.5 w-3.5" />,
+    badgeClass:
+      "border-emerald-400/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+    dotClass: "bg-emerald-500 dark:bg-emerald-400",
+    Icon: CircleCheck,
   },
   REJECTED: {
     label: "ปฏิเสธแล้ว",
-    color:
-      "border border-red-300 bg-red-100 text-red-900 dark:border-red-700/60 dark:bg-red-900/30 dark:text-red-300",
-    icon: <XCircle className="h-3.5 w-3.5" />,
+    badgeClass:
+      "border-rose-400/20 bg-rose-500/10 text-rose-700 dark:text-rose-300",
+    dotClass: "bg-rose-500 dark:bg-rose-400",
+    Icon: CircleX,
+  },
+  UNREQUESTED: {
+    label: "ยังไม่ขออนุมัติ",
+    badgeClass:
+      "border-slate-400/20 bg-slate-500/10 text-slate-600 dark:text-slate-300",
+    dotClass: "bg-slate-400 dark:bg-slate-500",
+    Icon: CircleAlert,
   },
 };
 
-const tabConfig: Record<ApprovalTab, { label: string; icon: React.ReactNode }> =
-  {
-    ALL: {
-      label: "ทั้งหมด",
-      icon: <Users className="h-3.5 w-3.5" />,
-    },
-    PENDING: {
-      label: statusConfig.PENDING.label,
-      icon: statusConfig.PENDING.icon,
-    },
-    APPROVED: {
-      label: statusConfig.APPROVED.label,
-      icon: statusConfig.APPROVED.icon,
-    },
-    REJECTED: {
-      label: statusConfig.REJECTED.label,
-      icon: statusConfig.REJECTED.icon,
-    },
-  };
+const SEGMENT_BAR_CLASSES: Record<DisplayApprovalStatus, string> = {
+  PENDING: "bg-amber-400 dark:bg-amber-400/90",
+  APPROVED: "bg-emerald-400 dark:bg-emerald-400/90",
+  REJECTED: "bg-rose-400 dark:bg-rose-400/90",
+  UNREQUESTED: "bg-slate-300 dark:bg-slate-600",
+};
+
+const SKELETON_ROW_COUNT = 5;
+/** skeleton อยู่ต่อหลัง reveal เพื่อเล่น fade-out ให้จบ (--reveal-dur 400ms + buffer) */
+const SKELETON_REMOVE_DELAY_MS = 450;
 
 const APPROVAL_DATE_FORMATTER = new Intl.DateTimeFormat("th-TH", {
   day: "numeric",
@@ -127,49 +142,201 @@ const APPROVAL_DATE_FORMATTER = new Intl.DateTimeFormat("th-TH", {
   minute: "2-digit",
 });
 
+const APPROVAL_SHORT_DATE_FORMATTER = new Intl.DateTimeFormat("th-TH", {
+  day: "numeric",
+  month: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+const RELATIVE_FORMATTER = new Intl.RelativeTimeFormat("th-TH", {
+  numeric: "auto",
+});
+
+class ApprovalFetchError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
+
+async function fetchApprovals(): Promise<ApprovalListResponse> {
+  const res = await fetch(`/api/line/approvals?limit=${APPROVALS_FETCH_LIMIT}`);
+  if (!res.ok) {
+    const json = (await res.json().catch(() => null)) as {
+      error?: string;
+    } | null;
+    throw new ApprovalFetchError(
+      json?.error ?? "ไม่สามารถดึงรายการคำขอได้",
+      res.status,
+    );
+  }
+  return (await res.json()) as ApprovalListResponse;
+}
+
+async function fetchApprovalStats(): Promise<ApprovalStats> {
+  const res = await fetch("/api/line/approvals", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "stats" }),
+  });
+  if (!res.ok) {
+    const json = (await res.json().catch(() => null)) as {
+      error?: string;
+    } | null;
+    throw new ApprovalFetchError(
+      json?.error ?? "ไม่สามารถดึงสถิติได้",
+      res.status,
+    );
+  }
+  const json = await res.json();
+  return json.data as ApprovalStats;
+}
+
 const formatDate = (dateStr: string | null): string => {
   if (!dateStr) return "—";
   return APPROVAL_DATE_FORMATTER.format(new Date(dateStr));
 };
 
-function StatsCard({
+/** ประทับเวลาตามสถานะล่าสุด: อนุมัติ/ปฏิเสธใช้เวลาตัดสินใจ (approvedAt), รออนุมัติใช้เวลาที่ขอ */
+const getStatusTimestamp = (item: ApprovalItem): string | null => {
+  const decidedAt =
+    item.status === "APPROVED" || item.status === "REJECTED"
+      ? item.approvedAt
+      : null;
+  const at = decidedAt ?? (item.status === "PENDING" ? item.createdAt : null);
+  if (!at) return null;
+  const label =
+    item.status === "APPROVED"
+      ? "อนุมัติ"
+      : item.status === "REJECTED"
+        ? "ปฏิเสธ"
+        : "ขอ";
+  return `${label} ${APPROVAL_SHORT_DATE_FORMATTER.format(new Date(at))}`;
+};
+
+/** relative เฉพาะ ≤ 7 วัน — เกินกว่านั้น fallback เป็นวันที่เต็มจะซ้ำกับ formatDate จึงคืน null */
+const formatRelative = (dateStr: string): string | null => {
+  const diffMinutes = Math.round(
+    (Date.now() - new Date(dateStr).getTime()) / 60000,
+  );
+  if (Math.abs(diffMinutes) < 60) {
+    return RELATIVE_FORMATTER.format(-diffMinutes, "minute");
+  }
+  const diffHours = Math.round(diffMinutes / 60);
+  if (Math.abs(diffHours) < 24) {
+    return RELATIVE_FORMATTER.format(-diffHours, "hour");
+  }
+  const diffDays = Math.round(diffHours / 24);
+  if (Math.abs(diffDays) < 7) {
+    return RELATIVE_FORMATTER.format(-diffDays, "day");
+  }
+  return null;
+};
+
+/** อีเมลปลอมที่ระบบสร้างจาก LINE user ID (รูปแบบ <id>@line.local) ไม่มีประโยชน์โชว์ซ้ำ */
+const getRealEmail = (item: ApprovalItem): string | null => {
+  const email = item.userEmail;
+  if (!email) return null;
+  const lineId = item.lineUserId.toLowerCase();
+  const normalized = email.toLowerCase();
+  if (normalized === lineId || normalized.startsWith(lineId)) return null;
+  return email;
+};
+
+function MetricCard({
+  icon: Icon,
   label,
   value,
-  icon,
-  color,
+  detail,
+  children,
 }: {
+  icon: LucideIcon;
   label: string;
-  value: number;
-  icon: React.ReactNode;
-  color: string;
+  value: string;
+  detail: string;
+  children: ReactNode;
 }) {
   return (
-    <Card className="border-border bg-card text-card-foreground shadow-sm">
-      <CardContent className="p-5">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className={`shrink-0 rounded-lg p-2.5 ${color}`}>{icon}</div>
-          <div className="min-w-0">
-            <p className="truncate text-xs font-medium text-slate-600 dark:text-slate-400">
-              {label}
-            </p>
-            <p className="text-2xl leading-tight font-bold tabular-nums">
-              {value}
-            </p>
-          </div>
+    <article className="border-slate-200/80 bg-white shadow-[0_8px_28px_rgba(16,24,40,0.04)] dark:border-white/[0.08] dark:bg-[#151719] dark:shadow-none">
+      <div className="flex items-start gap-3 p-5 pb-3">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-100 text-slate-600 dark:border-white/[0.1] dark:bg-white/[0.06] dark:text-slate-200">
+          <Icon className="size-[18px]" strokeWidth={1.8} aria-hidden="true" />
         </div>
-      </CardContent>
-    </Card>
+        <div className="min-w-0">
+          <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+            {label}
+          </h2>
+          <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
+            {detail}
+          </p>
+        </div>
+      </div>
+      <div className="px-5 pb-4">
+        <p className="text-[27px] leading-tight font-semibold tracking-[-0.04em] text-slate-900 tabular-nums dark:text-white">
+          {value}
+        </p>
+        {children}
+      </div>
+    </article>
+  );
+}
+
+function ProportionBar({
+  segments,
+}: {
+  segments: Array<{
+    status: DisplayApprovalStatus;
+    label: string;
+    count: number;
+  }>;
+}) {
+  const total = segments.reduce((sum, segment) => sum + segment.count, 0);
+
+  return (
+    <div className="mt-5">
+      <div className="flex h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-white/[0.08]">
+        {segments.map((segment) => (
+          <span
+            key={segment.status}
+            className={SEGMENT_BAR_CLASSES[segment.status]}
+            style={{
+              width: total === 0 ? 0 : `${(segment.count / total) * 100}%`,
+            }}
+          />
+        ))}
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400">
+        {segments.map((segment) => (
+          <span key={segment.status} className="flex items-center gap-1.5">
+            <span
+              className={cn(
+                "size-1.5 rounded-full",
+                STATUS_META[segment.status].dotClass,
+              )}
+            />
+            {segment.label} {segment.count}
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }
 
 function StatusBadge({ status }: { status: DisplayApprovalStatus }) {
-  const cfg = statusConfig[status];
+  const meta = STATUS_META[status];
+
   return (
     <span
-      className={`inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-xs leading-none font-medium ${cfg.color}`}
+      className={cn(
+        "inline-flex shrink-0 items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] font-medium",
+        meta.badgeClass,
+      )}
     >
-      {cfg.icon}
-      {cfg.label}
+      <meta.Icon className="size-3.5" aria-hidden="true" />
+      {meta.label}
     </span>
   );
 }
@@ -184,7 +351,7 @@ function UserAvatar({
   const [hasImageError, setHasImageError] = useState(false);
   const initials = (displayName ?? "?")
     .split(" ")
-    .map((n) => n[0])
+    .map((part) => part[0])
     .join("")
     .slice(0, 2)
     .toUpperCase();
@@ -193,8 +360,8 @@ function UserAvatar({
     return (
       <img
         src={pictureUrl}
-        alt={displayName ?? "user"}
-        className="ring-border h-12 w-12 shrink-0 rounded-full object-cover ring-2"
+        alt={displayName ?? "ผู้ใช้ LINE"}
+        className="size-10 shrink-0 rounded-full object-cover ring-1 ring-slate-200 dark:ring-white/10"
         onError={() => setHasImageError(true)}
       />
     );
@@ -202,63 +369,501 @@ function UserAvatar({
 
   return (
     <div
-      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-slate-200 to-slate-300 text-sm font-semibold text-slate-700 ring-2 ring-slate-300 dark:from-slate-700 dark:to-slate-800 dark:text-slate-200 dark:ring-slate-600"
+      className="flex size-10 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-slate-200 to-slate-300 text-xs font-semibold text-slate-700 dark:from-slate-700 dark:to-slate-800 dark:text-slate-200 dark:ring-1 dark:ring-white/10"
       aria-label={displayName ?? "ผู้ใช้ LINE"}
     >
-      {initials === "?" ? <User className="h-5 w-5" /> : initials}
+      {initials === "?" ? <User className="size-4" /> : initials}
     </div>
   );
 }
 
-function RejectDialog({
-  isOpen,
-  onClose,
-  onConfirm,
-  isLoading,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: (reason: string) => void;
-  isLoading: boolean;
-}) {
-  const [reason, setReason] = useState("");
+interface ApprovalActionInput {
+  body: Record<string, unknown>;
+  lineUserId: string;
+  patch: Partial<ApprovalItem>;
+  successTitle: string;
+}
 
-  if (!isOpen) return null;
+function ApprovalRow({
+  item,
+  onOpenActions,
+}: {
+  item: ApprovalItem;
+  onOpenActions: (item: ApprovalItem, trigger: HTMLElement) => void;
+}) {
+  const statusTimestamp = getStatusTimestamp(item);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-background w-full max-w-md rounded-xl shadow-xl">
-        <div className="border-border border-b p-5">
-          <h3 className="font-semibold">ยืนยันการปฏิเสธ</h3>
-          <label htmlFor="line-rejection-reason" className="text-muted-foreground mt-1 block text-sm">
-            กรุณาระบุเหตุผลในการปฏิเสธ (ไม่บังคับ)
-          </label>
-        </div>
-        <div className="p-5">
-          <textarea
-            id="line-rejection-reason"
-            className="border-input bg-background text-foreground placeholder:text-muted-foreground focus:ring-ring w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
-            rows={3}
-            placeholder="เช่น ไม่ผ่านเกณฑ์การใช้งาน, ข้อมูลไม่ครบ..."
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            maxLength={500}
+    <tr className="group border-t border-slate-200/80 transition-colors hover:bg-slate-50 dark:border-white/[0.07] dark:hover:bg-white/[0.025]">
+      <td className="min-w-[280px] px-3 py-4">
+        <div className="flex min-w-0 items-start gap-3">
+          <UserAvatar
+            pictureUrl={item.pictureUrl}
+            displayName={item.displayName}
           />
-          <p className="text-muted-foreground mt-1 text-right text-xs">
-            {reason.length}/500
-          </p>
+          <div className="max-w-[240px] min-w-0">
+            <p className="truncate text-[13px] font-semibold text-slate-800 dark:text-slate-100">
+              {item.displayName ?? "ไม่ระบุชื่อ"}
+            </p>
+            <p className="mt-0.5 truncate font-mono text-[11px] text-slate-500 dark:text-slate-400">
+              {item.lineUserId}
+            </p>
+            {getRealEmail(item) && (
+              <p className="mt-0.5 truncate text-[11px] text-slate-500 dark:text-slate-400">
+                {getRealEmail(item)}
+              </p>
+            )}
+          </div>
         </div>
-        <div className="border-border flex justify-end gap-2 border-t p-5">
-          <Button variant="outline" onClick={onClose} disabled={isLoading}>
-            ยกเลิก
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={() => onConfirm(reason)}
-            disabled={isLoading}
+      </td>
+      <td className="min-w-[170px] px-3 py-4">
+        <div className="flex flex-col items-start gap-1.5">
+          <StatusBadge status={item.status} />
+          {statusTimestamp && (
+            <span className="text-[11px] text-slate-500 dark:text-slate-400">
+              {statusTimestamp}
+            </span>
+          )}
+          {item.status === "REJECTED" && item.rejectReason && (
+            <span
+              className="max-w-[160px] truncate text-[10px] text-rose-700 dark:text-rose-300"
+              title={item.rejectReason}
+            >
+              เหตุผล: {item.rejectReason}
+            </span>
+          )}
+          {item.status !== "REJECTED" && item.statusMessage && (
+            <span
+              className="max-w-[160px] truncate text-[10px] text-slate-500 italic dark:text-slate-400"
+              title={item.statusMessage}
+            >
+              “{item.statusMessage}”
+            </span>
+          )}
+        </div>
+      </td>
+      <td className="w-28 px-3 py-4 text-center">
+        {item.isAdmin ? (
+          <span className="inline-flex items-center gap-1.5 rounded-md border border-sky-400/20 bg-sky-500/10 px-2 py-0.5 text-[11px] font-medium text-sky-700 dark:text-sky-300">
+            <ShieldCheck className="size-3.5" aria-hidden="true" />
+            Admin
+          </span>
+        ) : (
+          <span className="text-xs text-slate-500 dark:text-slate-400">
+            ผู้ใช้ทั่วไป
+          </span>
+        )}
+      </td>
+      <td className="min-w-[140px] px-3 py-4">
+        <p className="text-[13px] text-slate-800 tabular-nums dark:text-slate-100">
+          {formatDate(item.createdAt)}
+        </p>
+        {formatRelative(item.createdAt) && (
+          <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+            {formatRelative(item.createdAt)}
+          </p>
+        )}
+      </td>
+      <td className="w-12 px-2 py-4 text-right">
+        <button
+          type="button"
+          onClick={(event) => onOpenActions(item, event.currentTarget)}
+          aria-haspopup="menu"
+          aria-label={`จัดการ ${item.displayName ?? item.lineUserId}`}
+          className="cursor-pointer rounded-lg p-1.5 text-slate-400 opacity-70 transition-colors group-hover:opacity-100 hover:bg-slate-200 hover:text-slate-700 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none dark:hover:bg-white/[0.08] dark:hover:text-slate-200"
+        >
+          <MoreHorizontal className="size-4" aria-hidden="true" />
+        </button>
+      </td>
+    </tr>
+  );
+}
+
+function EmptyApprovalsState({ hasFilters }: { hasFilters: boolean }) {
+  return (
+    <div className="flex min-h-64 flex-col items-center justify-center px-6 py-12 text-center">
+      <div className="flex size-12 items-center justify-center rounded-2xl border border-slate-200 bg-slate-100 text-slate-500 dark:border-white/[0.1] dark:bg-white/[0.06]">
+        <Users className="size-5" aria-hidden="true" />
+      </div>
+      <h3 className="mt-4 text-sm font-semibold text-slate-800 dark:text-slate-100">
+        {hasFilters
+          ? "ไม่พบบัญชีที่ตรงกับตัวกรอง"
+          : "ยังไม่มีบัญชี LINE ในระบบ"}
+      </h3>
+      <p className="mt-1 max-w-sm text-xs leading-5 text-slate-500 dark:text-slate-400">
+        {hasFilters
+          ? "ลองเปลี่ยนคำค้นหาหรือสถานะ แล้วค้นหาอีกครั้ง"
+          : "เมื่อผู้ใช้เพิ่มเพื่อนกับ LINE Bot จะแสดงรายการในหน้านี้"}
+      </p>
+    </div>
+  );
+}
+
+function ApprovalSkeleton() {
+  return (
+    <div>
+      <div className="border-b border-slate-200 px-5 py-5 sm:px-6 dark:border-white/[0.08]">
+        <div className="skel-bar h-4 w-44 rounded-md" />
+        <div className="skel-bar mt-2.5 h-3 w-64 rounded-md" />
+      </div>
+      <div className="flex gap-6 border-b border-slate-200 px-5 py-4 sm:px-6 dark:border-white/[0.08]">
+        {Array.from({ length: APPROVAL_TABS.length }, (_, index) => (
+          <div key={index} className="skel-bar h-4 w-16 rounded-md" />
+        ))}
+      </div>
+      <div className="border-b border-slate-200 px-5 py-3 sm:px-6 dark:border-white/[0.08]">
+        <div className="skel-bar h-10 max-w-[340px] rounded-xl" />
+      </div>
+      <div>
+        {Array.from({ length: SKELETON_ROW_COUNT }, (_, index) => (
+          <div
+            key={index}
+            className="flex items-center gap-3 border-b border-slate-200/80 px-3 py-4 dark:border-white/[0.07]"
           >
-            {isLoading ? "กำลังดำเนินการ..." : "ยืนยันปฏิเสธ"}
-          </Button>
+            <div className="skel-bar size-10 shrink-0 rounded-full" />
+            <div className="min-w-0 flex-1">
+              <div className="skel-bar h-3.5 w-40 rounded-md" />
+              <div className="skel-bar mt-1.5 h-3 w-52 rounded-md" />
+            </div>
+            <div className="skel-bar h-6 w-24 shrink-0 rounded-md" />
+            <div className="skel-bar size-8 shrink-0 rounded-lg" />
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center justify-between border-t border-slate-200 px-5 py-4 sm:px-6 dark:border-white/[0.08]">
+        <div className="skel-bar h-5 w-24 rounded-md" />
+        <div className="skel-bar h-5 w-40 rounded-md" />
+      </div>
+    </div>
+  );
+}
+
+interface OpenApprovalMenu {
+  item: ApprovalItem;
+  trigger: HTMLElement;
+  rect: DOMRect;
+}
+
+const MORPH_TRIGGER_SIZE = 32;
+
+/**
+ * เมนูจัดการแบบ plus-menu-morph (transitions.dev) — กล่องเดียว morph จากวงกลมปุ่ม
+ * … กลายเป็นแผงเมนู โดย CSS (input.css .t-morph) คุม animation และ React คุม state:
+ * เปิด/ปิดผ่าน data-open บน DOM (ตาม orchestration ของ recipe) ส่วนความสูงฝั่งเปิด
+ * วัดจากเนื้อหาจริงแล้ว set เป็น inline style เพื่อให้ height tween ได้
+ */
+function ApprovalActionsMenu({
+  menu,
+  isBusy,
+  onClose,
+  onApprove,
+  onReject,
+  onUnlock,
+  onToggleAdmin,
+}: {
+  menu: OpenApprovalMenu;
+  isBusy: boolean;
+  onClose: () => void;
+  onApprove: (item: ApprovalItem) => void;
+  onReject: (item: ApprovalItem, reason: string) => void;
+  onUnlock: (item: ApprovalItem) => void;
+  onToggleAdmin: (item: ApprovalItem) => void;
+}) {
+  const [confirmReject, setConfirmReject] = useState(false);
+  const [reason, setReason] = useState("");
+  // data-open เป็นของ React state — ทน re-render และไม่พึ่งจังหวะ rAF
+  const [isOpen, setIsOpen] = useState(false);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const closeTimerRef = useRef<number | null>(null);
+  const closedRef = useRef(false);
+  const { item, trigger, rect } = menu;
+
+  // พื้นที่ข้างล่างไม่พอ (แถวล่าง ๆ ของตาราง) → เปิดขึ้นบนแทน
+  const flipUp = rect.bottom + 240 > window.innerHeight;
+  const maxHeight = flipUp
+    ? rect.top - 8
+    : window.innerHeight - rect.bottom - 8;
+
+  // เมานต์แบบปิด (32px) → เฟรมถัดไปค่อยเปิด เพื่อให้ browser เห็นสถานะเริ่มต้นแล้ว transition ยิง
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      if (!closedRef.current) setIsOpen(true);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  // ความสูงฝั่งเปิด: รอ paint ของสถานะ 32px ก่อน แล้ว tween ตามเนื้อหาจริง + โฟกัสรายการแรก
+  useEffect(() => {
+    if (!isOpen) return;
+    const frame = requestAnimationFrame(() => {
+      const box = boxRef.current;
+      if (!box) return;
+      box.style.height = `${Math.max(
+        MORPH_TRIGGER_SIZE,
+        Math.min(
+          contentRef.current?.scrollHeight ?? MORPH_TRIGGER_SIZE,
+          maxHeight,
+        ),
+      )}px`;
+      contentRef.current
+        ?.querySelector<HTMLElement>('[role="menuitem"]:not([disabled])')
+        ?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [isOpen, maxHeight]);
+
+  const finishClose = useCallback(() => {
+    if (closeTimerRef.current !== null) {
+      window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    trigger.focus();
+    onClose();
+  }, [trigger, onClose]);
+
+  const startClose = useCallback(() => {
+    if (closedRef.current) return;
+    closedRef.current = true;
+    const box = boxRef.current;
+    if (box) {
+      box.style.height = `${MORPH_TRIGGER_SIZE}px`;
+    }
+    setIsOpen(false);
+    // fallback กรณี transition ไม่ยิง (เช่น prefers-reduced-motion)
+    closeTimerRef.current = window.setTimeout(finishClose, 280);
+  }, [finishClose]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const box = boxRef.current;
+    if (!box) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" || event.key === "Tab") {
+        event.preventDefault();
+        startClose();
+        return;
+      }
+      if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+
+      const menuItems = Array.from(
+        box.querySelectorAll<HTMLElement>('[role="menuitem"]:not([disabled])'),
+      );
+      if (menuItems.length === 0) return;
+      event.preventDefault();
+      const currentIndex = menuItems.indexOf(
+        document.activeElement as HTMLElement,
+      );
+      const nextIndex =
+        event.key === "ArrowDown"
+          ? (currentIndex + 1) % menuItems.length
+          : (currentIndex - 1 + menuItems.length) % menuItems.length;
+      menuItems[nextIndex]?.focus();
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, startClose]);
+
+  // scroll/resize ทำ rect เก่า → ปิดเมนู (ผูกหลัง open animation จบ กัน scroll
+  // ที่เกิดจากการ focus รายการแรกทำให้เมนูปิดทันที)
+  useEffect(() => {
+    if (!isOpen) return;
+    let detachViewportListeners = () => {};
+    const timer = window.setTimeout(() => {
+      const handleViewportChange = () => startClose();
+      window.addEventListener("resize", handleViewportChange);
+      window.addEventListener("scroll", handleViewportChange, true);
+      detachViewportListeners = () => {
+        window.removeEventListener("resize", handleViewportChange);
+        window.removeEventListener("scroll", handleViewportChange, true);
+      };
+    }, 400);
+    return () => {
+      window.clearTimeout(timer);
+      detachViewportListeners();
+    };
+  }, [isOpen, startClose]);
+
+  const runAction = useCallback(
+    (action: () => void) => {
+      action();
+      startClose();
+    },
+    [startClose],
+  );
+
+  // พับ/ขยายฟอร์มเหตุผล → ความสูงกล่องต้อง tween ตาม
+  const handleToggleConfirmReject = useCallback(() => {
+    setConfirmReject((current) => !current);
+    requestAnimationFrame(() => {
+      const box = boxRef.current;
+      if (!box || !isOpen) return;
+      void box.offsetWidth;
+      box.style.height = `${Math.max(
+        MORPH_TRIGGER_SIZE,
+        Math.min(
+          contentRef.current?.scrollHeight ?? MORPH_TRIGGER_SIZE,
+          maxHeight,
+        ),
+      )}px`;
+    });
+  }, [isOpen, maxHeight]);
+
+  const canUnlock = item.status === "REJECTED" && Boolean(item.approvalId);
+  const canReject = item.status !== "APPROVED" && !canUnlock;
+
+  return (
+    <div
+      className="fixed inset-0 z-50"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) startClose();
+      }}
+    >
+      <div
+        ref={boxRef}
+        data-open={isOpen ? "true" : "false"}
+        data-flip={flipUp ? "true" : "false"}
+        className="t-morph"
+        style={{
+          top: flipUp ? undefined : rect.top,
+          bottom: flipUp ? window.innerHeight - rect.bottom : undefined,
+          right: window.innerWidth - rect.right,
+          maxHeight,
+        }}
+        onTransitionEnd={(event) => {
+          if (
+            event.target === boxRef.current &&
+            event.propertyName === "width" &&
+            closedRef.current
+          ) {
+            finishClose();
+          }
+        }}
+      >
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-hidden="true"
+          className="t-morph-plus"
+        >
+          <MoreHorizontal className="size-4" aria-hidden="true" />
+        </button>
+
+        <div
+          ref={contentRef}
+          role="menu"
+          aria-label={`จัดการ ${item.displayName ?? item.lineUserId}`}
+          className="p-1.5"
+        >
+          <p className="truncate px-2 pt-1 pb-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+            {item.displayName ?? "ไม่ระบุชื่อ"}
+          </p>
+
+          {item.status === "PENDING" && (
+            <button
+              type="button"
+              role="menuitem"
+              disabled={isBusy || !item.approvalId}
+              onClick={() => runAction(() => onApprove(item))}
+              className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] font-medium text-emerald-700 transition-colors hover:bg-emerald-500/10 focus-visible:bg-emerald-500/10 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:text-emerald-300"
+            >
+              <CircleCheck className="size-4 shrink-0" aria-hidden="true" />
+              อนุมัติผู้ใช้
+            </button>
+          )}
+
+          {canUnlock && (
+            <button
+              type="button"
+              role="menuitem"
+              disabled={isBusy}
+              onClick={() => runAction(() => onUnlock(item))}
+              className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] font-medium text-sky-700 transition-colors hover:bg-sky-500/10 focus-visible:bg-sky-500/10 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:text-sky-300"
+            >
+              <RefreshCw className="size-4 shrink-0" aria-hidden="true" />
+              ปลดล็อคให้ขอใหม่
+            </button>
+          )}
+
+          <button
+            type="button"
+            role="menuitem"
+            disabled={isBusy}
+            onClick={() => runAction(() => onToggleAdmin(item))}
+            className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] font-medium text-slate-700 transition-colors hover:bg-slate-100 focus-visible:bg-slate-100 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-white/[0.08] dark:focus-visible:bg-white/[0.08]"
+          >
+            {item.isAdmin ? (
+              <ShieldCheck className="size-4 shrink-0" aria-hidden="true" />
+            ) : (
+              <ShieldPlus className="size-4 shrink-0" aria-hidden="true" />
+            )}
+            {item.isAdmin ? "ยกเลิกสิทธิ์ Admin" : "ตั้งเป็น Admin"}
+          </button>
+
+          {canReject && (
+            <>
+              <div className="mx-2 my-1 border-t border-slate-200 dark:border-white/[0.08]" />
+              {!confirmReject ? (
+                <button
+                  type="button"
+                  role="menuitem"
+                  disabled={isBusy}
+                  onClick={handleToggleConfirmReject}
+                  className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] font-medium text-rose-700 transition-colors hover:bg-rose-500/10 focus-visible:bg-rose-500/10 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:text-rose-300"
+                >
+                  <CircleX className="size-4 shrink-0" aria-hidden="true" />
+                  ปฏิเสธคำขอ
+                </button>
+              ) : (
+                <div className="px-1 pb-1">
+                  <label
+                    htmlFor="menu-rejection-reason"
+                    className="block text-[11px] font-medium text-slate-600 dark:text-slate-300"
+                  >
+                    เหตุผล (ไม่บังคับ)
+                    <textarea
+                      id="menu-rejection-reason"
+                      rows={3}
+                      maxLength={500}
+                      value={reason}
+                      onChange={(event) => setReason(event.target.value)}
+                      placeholder="เช่น ไม่ผ่านเกณฑ์การใช้งาน, ข้อมูลไม่ครบ…"
+                      className="mt-1 w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-800 transition-colors outline-none placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-slate-100 dark:placeholder:text-slate-600"
+                    />
+                  </label>
+                  <div className="mt-1.5 flex items-center justify-between gap-2">
+                    <span className="text-[10px] text-slate-400 tabular-nums">
+                      {reason.length}/500
+                    </span>
+                    <div className="flex gap-1.5">
+                      <button
+                        type="button"
+                        onClick={handleToggleConfirmReject}
+                        className="h-7 cursor-pointer rounded-lg px-2 text-xs font-medium text-slate-600 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none dark:text-slate-300 dark:hover:bg-white/[0.08]"
+                      >
+                        ยกเลิก
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isBusy}
+                        onClick={() => {
+                          onReject(item, reason.trim());
+                          startClose();
+                        }}
+                        className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-lg bg-rose-600 px-2.5 text-xs font-semibold text-white transition-colors hover:bg-rose-700 focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <CircleX className="size-3.5" aria-hidden="true" />
+                        ยืนยัน
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -266,240 +871,282 @@ function RejectDialog({
 }
 
 export function LineApprovalPage() {
-  const { data: session, status: authStatus } = useSession();
+  const { status: authStatus } = useSession();
   const navigate = useNavigate();
   const { needsApproval } = useLineApproval();
+  const queryClient = useQueryClient();
+  const { showToast } = useToast();
 
-  const [activeTab, setActiveTab] = useState<ApprovalTab>("ALL");
-  const [listData, setListData] = useState<ListResponse | null>(null);
-  const [stats, setStats] = useState<ApprovalStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<ApprovalTab>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [pageSize, setPageSize] = useState<number>(10);
   const [page, setPage] = useState(1);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [rejectTarget, setRejectTarget] = useState<ApprovalRequest | null>(
+  const [approvalMenu, setApprovalMenu] = useState<OpenApprovalMenu | null>(
     null,
   );
-  const [toast, setToast] = useState<{
-    type: "success" | "error";
-    msg: string;
-  } | null>(null);
-  const [permissionError, setPermissionError] = useState<string | null>(null);
+  const closeApprovalMenu = useCallback(() => setApprovalMenu(null), []);
 
-  const showToast = (type: "success" | "error", msg: string) => {
-    setToast({ type, msg });
-    setTimeout(() => setToast(null), 4000);
-  };
+  const approvalsQuery = useQuery({
+    queryKey: LINE_APPROVALS_KEY,
+    queryFn: fetchApprovals,
+    enabled: authStatus === "authenticated",
+  });
 
-  const fetchStats = useCallback(async () => {
-    try {
+  const statsQuery = useQuery({
+    queryKey: LINE_APPROVAL_STATS_KEY,
+    queryFn: fetchApprovalStats,
+    enabled: authStatus === "authenticated",
+  });
+
+  const approvalActionMutation = useMutation({
+    mutationFn: async (input: ApprovalActionInput) => {
       const res = await fetch("/api/line/approvals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "stats" }),
+        body: JSON.stringify(input.body),
       });
-      if (res.status === 403) {
-        const json = await res.json();
-        setPermissionError(json.error ?? "คุณไม่มีสิทธิ์ดำเนินการนี้");
-        return;
+      if (!res.ok) {
+        const json = (await res.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        throw new Error(json?.error ?? "ดำเนินการไม่สำเร็จ");
       }
-      if (res.ok) {
-        const json = await res.json();
-        setStats(json.data as ApprovalStats);
+      return input;
+    },
+    // Optimistic update: สถานะเปลี่ยนทันทีที่คลิก ไม่ต้องรอ round-trip
+    onMutate: async (input) => {
+      await queryClient.cancelQueries({ queryKey: LINE_APPROVALS_KEY });
+      const previous =
+        queryClient.getQueryData<ApprovalListResponse>(LINE_APPROVALS_KEY);
+      queryClient.setQueryData<ApprovalListResponse>(
+        LINE_APPROVALS_KEY,
+        (old) =>
+          old
+            ? {
+                ...old,
+                data: old.data.map((item) =>
+                  item.lineUserId === input.lineUserId
+                    ? { ...item, ...input.patch }
+                    : item,
+                ),
+              }
+            : old,
+      );
+      return { previous };
+    },
+    onSuccess: (_data, input) => {
+      showToast({ title: input.successTitle, type: "success" });
+    },
+    onError: (error, _input, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(LINE_APPROVALS_KEY, context.previous);
       }
-    } catch {
-      /* silent */
-    }
-  }, []);
+      showToast({
+        title: "ดำเนินการไม่สำเร็จ",
+        description:
+          error instanceof Error ? error.message : "กรุณาลองใหม่อีกครั้ง",
+        type: "error",
+      });
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: LINE_APPROVALS_KEY });
+      void queryClient.invalidateQueries({
+        queryKey: LINE_APPROVAL_STATS_KEY,
+      });
+    },
+  });
 
-  const fetchList = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const params = new URLSearchParams({
-        page: String(page),
-        limit: "10",
-      });
-      if (activeTab !== "ALL") {
-        params.set("status", activeTab);
+  // mutate เป็น stable reference (TanStack v5) — destructure ก่อนเพื่อไม่ให้
+  // callback identity เปลี่ยนทุก render
+  const { mutate: mutateApprovalAction } = approvalActionMutation;
+
+  const items = useMemo(
+    () => approvalsQuery.data?.data ?? [],
+    [approvalsQuery.data],
+  );
+  const stats = statsQuery.data ?? null;
+  const isFetchingList = approvalsQuery.isFetching;
+
+  const counts = useMemo(
+    () => ({
+      all: stats?.accountsTotal ?? items.length,
+      PENDING: stats?.pending ?? 0,
+      APPROVED: stats?.approved ?? 0,
+      REJECTED: stats?.rejected ?? 0,
+      UNREQUESTED: items.filter((item) => item.status === "UNREQUESTED").length,
+    }),
+    [stats, items],
+  );
+
+  // พิมพ์ค้นหาได้ลื่นขึ้น: ตารางอัปเดตตามหลัง input ที่ priority สูงกว่า
+  const deferredSearchQuery = useDeferredValue(searchQuery);
+
+  const filteredItems = useMemo(() => {
+    const query = deferredSearchQuery.trim().toLowerCase();
+    return items.filter((item) => {
+      if (activeTab !== "all" && item.status !== activeTab) {
+        return false;
       }
-      const res = await fetch(`/api/line/approvals?${params.toString()}`);
-      if (res.status === 403) {
-        const json = await res.json();
-        setPermissionError(json.error ?? "คุณไม่มีสิทธิ์ดำเนินการนี้");
-        return;
+      if (query) {
+        return (
+          item.displayName?.toLowerCase().includes(query) ||
+          item.userEmail?.toLowerCase().includes(query) ||
+          item.lineUserId.toLowerCase().includes(query)
+        );
       }
-      if (!res.ok) throw new Error("โหลดข้อมูลไม่สำเร็จ");
-      const json = await res.json();
-      setListData(json as ListResponse);
-    } catch (err: any) {
-      showToast("error", err.message ?? "เกิดข้อผิดพลาด");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [activeTab, page]);
+      return true;
+    });
+  }, [items, activeTab, deferredSearchQuery]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredItems.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const visibleItems = filteredItems.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
+  const firstVisibleRow =
+    filteredItems.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const lastVisibleRow = Math.min(currentPage * pageSize, filteredItems.length);
+  const hasFilters = Boolean(searchQuery) || activeTab !== "all";
+  const isTruncated = (approvalsQuery.data?.total ?? 0) > items.length;
+
+  const latestPending = useMemo(
+    () =>
+      [...items]
+        .filter((item) => item.status === "PENDING")
+        .sort(
+          (left, right) =>
+            new Date(right.createdAt).getTime() -
+            new Date(left.createdAt).getTime(),
+        )[0],
+    [items],
+  );
+  const rejectedWithReason = useMemo(
+    () =>
+      items.filter((item) => item.status === "REJECTED" && item.rejectReason)
+        .length,
+    [items],
+  );
+
+  // โหลดครั้งแรก = session ยังไม่มา หรือ query กำลังยิงครั้งแรก (refetch พื้นหลังไม่นับ)
+  const isInitialLoading =
+    authStatus !== "authenticated" || approvalsQuery.isLoading;
+  const isRevealed = !isInitialLoading;
+  // skeleton ติดตั้งแต่แรก และถูกปลดหลัง reveal + fade-out จบ (set ใน timer ไม่ใช่ effect)
+  const [skeletonDismissed, setSkeletonDismissed] = useState(false);
+  const skeletonMounted = !skeletonDismissed;
 
   useEffect(() => {
-    if (authStatus === "authenticated") {
-      void fetchList();
-      void fetchStats();
-    } else if (authStatus !== "loading") {
-      setIsLoading(false);
-    }
-  }, [fetchList, fetchStats, authStatus]);
-
-  const handleApprove = async (id: string) => {
-    setActionLoading(id);
-    try {
-      const res = await fetch("/api/line/approvals", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "approve", id }),
-      });
-      const json = await res.json();
-      if (res.status === 403) {
-        setPermissionError(json.error ?? "คุณไม่มีสิทธิ์ดำเนินการนี้");
-        return;
-      }
-      if (!res.ok) throw new Error(json.error ?? "อนุมัติไม่สำเร็จ");
-      showToast("success", "อนุมัติผู้ใช้เรียบร้อยแล้ว ✅");
-      await Promise.all([fetchList(), fetchStats()]);
-    } catch (err: any) {
-      showToast("error", err.message ?? "เกิดข้อผิดพลาด");
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handleRejectConfirm = async (reason: string) => {
-    if (!rejectTarget) return;
-    setActionLoading(rejectTarget.id);
-    const target = rejectTarget;
-    setRejectTarget(null);
-    try {
-      const res = await fetch("/api/line/approvals", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "reject",
-          id: target.approvalId ?? undefined,
-          lineUserId: target.approvalId ? undefined : target.lineUserId,
-          rejectReason: reason || undefined,
-        }),
-      });
-      const json = await res.json();
-      if (res.status === 403) {
-        setPermissionError(json.error ?? "คุณไม่มีสิทธิ์ดำเนินการนี้");
-        return;
-      }
-      if (!res.ok) throw new Error(json.error ?? "ปฏิเสธไม่สำเร็จ");
-      showToast("success", "ปฏิเสธผู้ใช้เรียบร้อยแล้ว ❌");
-      await Promise.all([fetchList(), fetchStats()]);
-    } catch (err: any) {
-      showToast("error", err.message ?? "เกิดข้อผิดพลาด");
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handleSetAdmin = async (req: ApprovalRequest, isAdmin: boolean) => {
-    const loadingKey = `admin:${req.lineUserId}`;
-    setActionLoading(loadingKey);
-    try {
-      const res = await fetch("/api/line/approvals", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "set-admin",
-          lineUserId: req.lineUserId,
-          isAdmin,
-        }),
-      });
-      const json = await res.json();
-      if (res.status === 403) {
-        setPermissionError(json.error ?? "คุณไม่มีสิทธิ์ดำเนินการนี้");
-        return;
-      }
-      if (!res.ok) {
-        throw new Error(json.error ?? "ตั้งค่าสิทธิ์ admin ไม่สำเร็จ");
-      }
-      showToast(
-        "success",
-        isAdmin
-          ? "ตั้งผู้ใช้นี้เป็น Admin เรียบร้อยแล้ว"
-          : "ยกเลิกสิทธิ์ Admin เรียบร้อยแล้ว",
-      );
-      await fetchList();
-    } catch (err: any) {
-      showToast("error", err.message ?? "เกิดข้อผิดพลาด");
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handleUnlock = async (req: ApprovalRequest) => {
-    if (!req.approvalId) {
-      showToast("error", "ไม่พบคำขออนุมัติ");
-      return;
-    }
-    setActionLoading(req.id);
-    try {
-      const res = await fetch("/api/line/approvals", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "unlock",
-          id: req.approvalId,
-        }),
-      });
-      const json = await res.json();
-      if (res.status === 403) {
-        setPermissionError(json.error ?? "คุณไม่มีสิทธิ์ดำเนินการนี้");
-        return;
-      }
-      if (!res.ok) throw new Error(json.error ?? "ปลดล็อคไม่สำเร็จ");
-      showToast("success", "ปลดล็อคผู้ใช้เรียบร้อยแล้ว ✅");
-      await Promise.all([fetchList(), fetchStats()]);
-    } catch (err: any) {
-      showToast("error", err.message ?? "เกิดข้อผิดพลาด");
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  if (authStatus === "loading") {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">กำลังโหลด...</p>
-      </div>
+    if (!isRevealed) return;
+    const timer = setTimeout(
+      () => setSkeletonDismissed(true),
+      SKELETON_REMOVE_DELAY_MS,
     );
-  }
+    return () => clearTimeout(timer);
+  }, [isRevealed]);
 
-  const getTabCount = (tab: ApprovalTab): number => {
-    if (!stats) return 0;
-    if (tab === "ALL") return stats.accountsTotal ?? stats.total;
-    if (tab === "PENDING") return stats.pending;
-    if (tab === "APPROVED") return stats.approved;
-    return stats.rejected;
-  };
+  const handleRefresh = useCallback(() => {
+    void approvalsQuery.refetch();
+    void statsQuery.refetch();
+  }, [approvalsQuery, statsQuery]);
+
+  const handleApprove = useCallback(
+    (item: ApprovalItem) => {
+      if (!item.approvalId) return;
+      mutateApprovalAction({
+        body: { action: "approve", id: item.approvalId },
+        lineUserId: item.lineUserId,
+        patch: {
+          status: "APPROVED",
+          approvedAt: new Date().toISOString(),
+          rejectReason: null,
+        },
+        successTitle: `อนุมัติ ${item.displayName ?? "ผู้ใช้"} เรียบร้อยแล้ว`,
+      });
+    },
+    [mutateApprovalAction],
+  );
+
+  const handleRejectConfirm = useCallback(
+    (item: ApprovalItem, reason: string) => {
+      mutateApprovalAction({
+        body: {
+          action: "reject",
+          id: item.approvalId ?? undefined,
+          lineUserId: item.approvalId ? undefined : item.lineUserId,
+          rejectReason: reason || undefined,
+        },
+        lineUserId: item.lineUserId,
+        patch: { status: "REJECTED", rejectReason: reason || null },
+        successTitle: `ปฏิเสธ ${item.displayName ?? "ผู้ใช้"} เรียบร้อยแล้ว`,
+      });
+    },
+    [mutateApprovalAction],
+  );
+
+  const handleUnlock = useCallback(
+    (item: ApprovalItem) => {
+      if (!item.approvalId) return;
+      mutateApprovalAction({
+        body: { action: "unlock", id: item.approvalId },
+        lineUserId: item.lineUserId,
+        patch: { status: "PENDING", rejectReason: null },
+        successTitle: `ปลดล็อค ${item.displayName ?? "ผู้ใช้"} เรียบร้อยแล้ว — รอคำขอใหม่`,
+      });
+    },
+    [mutateApprovalAction],
+  );
+
+  const handleToggleAdmin = useCallback(
+    (item: ApprovalItem) => {
+      const nextIsAdmin = !item.isAdmin;
+      mutateApprovalAction({
+        body: {
+          action: "set-admin",
+          lineUserId: item.lineUserId,
+          isAdmin: nextIsAdmin,
+        },
+        lineUserId: item.lineUserId,
+        patch: { isAdmin: nextIsAdmin },
+        successTitle: nextIsAdmin
+          ? `ตั้ง ${item.displayName ?? "ผู้ใช้"} เป็น Admin เรียบร้อยแล้ว`
+          : `ยกเลิกสิทธิ์ Admin ของ ${item.displayName ?? "ผู้ใช้"} แล้ว`,
+      });
+    },
+    [mutateApprovalAction],
+  );
+
+  const fetchError =
+    approvalsQuery.error instanceof ApprovalFetchError
+      ? approvalsQuery.error
+      : null;
+  const permissionError =
+    fetchError && (fetchError.status === 401 || fetchError.status === 403)
+      ? fetchError.message
+      : null;
 
   if (permissionError) {
     return (
-      <div className="bg-background flex min-h-screen items-center justify-center p-4">
-        <div className="border-border bg-card max-w-md rounded-xl border p-8 text-center shadow-lg">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/30">
-            <AlertCircle className="h-8 w-8" />
+      <main className="min-h-[calc(100vh-3.5rem)] bg-[#f5f7f8] px-4 py-7 text-slate-900 dark:bg-[#0d0f11] dark:text-slate-100">
+        <div className="mx-auto flex max-w-md flex-col items-center rounded-2xl border border-slate-200/80 bg-white px-8 py-10 text-center shadow-[0_10px_34px_rgba(16,24,40,0.05)] dark:border-white/[0.08] dark:bg-[#151719] dark:shadow-none">
+          <div className="flex size-14 items-center justify-center rounded-2xl border border-rose-400/25 bg-rose-500/10 text-rose-700 dark:text-rose-300">
+            <CircleAlert className="size-6" aria-hidden="true" />
           </div>
-          <h2 className="text-foreground mb-2 text-xl font-bold">
+          <h1 className="mt-4 text-lg font-semibold text-slate-900 dark:text-white">
             ไม่มีสิทธิ์เข้าถึง
-          </h2>
-          <p className="text-muted-foreground mb-6">{permissionError}</p>
-          <Button
+          </h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            {permissionError}
+          </p>
+          <button
+            type="button"
             onClick={() => void navigate({ to: "/dashboard" })}
-            variant="outline"
+            className="mt-6 inline-flex h-10 cursor-pointer items-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none dark:border-white/[0.1] dark:bg-white/[0.03] dark:text-slate-300 dark:hover:bg-white/[0.08]"
           >
             กลับหน้าหลัก
-          </Button>
+          </button>
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -507,301 +1154,387 @@ export function LineApprovalPage() {
     <>
       <PendingApprovalModal open={needsApproval} />
 
-      <div
-        id="line-approval-page"
-        className="bg-background text-foreground min-h-screen w-full pb-16"
-      >
-        {toast && (
-          <div
-            className={`fixed top-4 right-4 z-50 flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium shadow-lg transition-colors ${toast.type === "success" ? "bg-emerald-500 text-white" : "bg-red-500 text-white"}`}
-          >
-            {toast.type === "success" ? (
-              <CheckCircle className="h-4 w-4" />
-            ) : (
-              <AlertCircle className="h-4 w-4" />
-            )}
-            {toast.msg}
-          </div>
-        )}
-
-        <div
-          id="line-approval-container"
-          className="container mx-auto max-w-6xl px-4 py-8"
-        >
-          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-              <div className="rounded-xl bg-green-100 p-3 dark:bg-green-900/30">
-                <MessageSquare className="h-6 w-6 text-green-700 dark:text-green-400" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-slate-950 dark:text-slate-50">
+      <main className="min-h-[calc(100vh-3.5rem)] bg-[#f5f7f8] py-7 text-slate-900 dark:bg-[#0d0f11] dark:text-slate-100">
+        <div className="container mx-auto px-4">
+          <header className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="text-[28px] leading-none font-semibold tracking-[-0.04em] text-slate-950 dark:text-white">
                   LINE Approval
                 </h1>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  จัดการคำขอใช้งาน LINE Messaging API
-                </p>
+                <span className="inline-flex items-center gap-1.5 rounded-md border border-amber-400/25 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
+                  <Clock className="size-3.5" aria-hidden="true" />
+                  {counts.PENDING} รออนุมัติ
+                </span>
               </div>
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                จัดการคำขอใช้งาน LINE Messaging API · {counts.all} บัญชี LINE
+              </p>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                void fetchList();
-                void fetchStats();
-              }}
-              disabled={isLoading}
-              className="border-border bg-card text-foreground hover:bg-muted/50 gap-2"
+
+            <button
+              type="button"
+              onClick={handleRefresh}
+              aria-label="รีเฟรชรายการคำขออนุมัติ"
+              className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none dark:border-white/[0.1] dark:bg-[#151719] dark:text-slate-200 dark:hover:bg-white/[0.06]"
             >
               <RefreshCw
-                className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+                className={cn(
+                  "size-4 motion-reduce:animate-none",
+                  isFetchingList && "animate-spin",
+                )}
+                aria-hidden="true"
               />
               รีเฟรช
-            </Button>
-          </div>
+            </button>
+          </header>
 
-          <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatsCard
-              label="รอการอนุมัติ"
-              value={stats?.pending ?? 0}
-              icon={
-                <Clock className="h-5 w-5 text-amber-700 dark:text-amber-400" />
-              }
-              color="bg-amber-100 ring-1 ring-amber-200 dark:bg-amber-900/30 dark:ring-amber-700/50"
-            />
-            <StatsCard
-              label="อนุมัติแล้ว"
-              value={stats?.approved ?? 0}
-              icon={
-                <CheckCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              }
-              color="bg-emerald-100 ring-1 ring-emerald-200 dark:bg-emerald-900/30 dark:ring-emerald-700/50"
-            />
-            <StatsCard
-              label="ปฏิเสธแล้ว"
-              value={stats?.rejected ?? 0}
-              icon={
-                <XCircle className="h-5 w-5 text-red-700 dark:text-red-400" />
-              }
-              color="bg-red-100 ring-1 ring-red-200 dark:bg-red-900/30 dark:ring-red-700/50"
-            />
-            <StatsCard
-              label="ทั้งหมด"
-              value={stats?.accountsTotal ?? stats?.total ?? 0}
-              icon={
-                <Users className="h-5 w-5 text-blue-700 dark:text-blue-400" />
-              }
-              color="bg-blue-100 ring-1 ring-blue-200 dark:bg-blue-900/30 dark:ring-blue-700/50"
-            />
-          </div>
+          {approvalActionMutation.isError && (
+            <div
+              className="mt-5 flex items-center gap-2 rounded-xl border border-rose-400/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-800 dark:text-rose-200"
+              role="alert"
+            >
+              <CircleAlert className="size-4 shrink-0" aria-hidden="true" />
+              {approvalActionMutation.error.message}
+            </div>
+          )}
 
-          <div
-            className="mb-6 flex gap-2 overflow-x-auto border-b border-slate-200 dark:border-white/10"
-            role="tablist"
-            aria-label="สถานะคำขอ LINE Approval"
+          <section
+            className="mt-7 grid gap-4 md:grid-cols-2 xl:grid-cols-4"
+            aria-label="สรุปสถานะการอนุมัติ"
           >
-            {(["ALL", "PENDING", "APPROVED", "REJECTED"] as const).map(
-              (tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  role="tab"
-                  aria-selected={activeTab === tab}
-                  onClick={() => {
-                    setActiveTab(tab);
-                    setPage(1);
-                  }}
-                  className={`-mb-px inline-flex h-12 shrink-0 cursor-pointer items-center gap-2 border-b-2 px-4 text-sm font-medium transition-colors ${
-                    activeTab === tab
-                      ? "border-green-600 text-slate-950 dark:border-green-400 dark:text-slate-50"
-                      : "border-transparent text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-slate-100"
-                  }`}
-                >
-                  <span className="inline-flex items-center gap-1.5">
-                    {tabConfig[tab].icon}
-                    {tabConfig[tab].label}
-                  </span>
-                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-slate-200 px-1.5 text-[11px] leading-none font-bold text-slate-700 tabular-nums dark:bg-white/10 dark:text-slate-300">
-                    {getTabCount(tab)}
-                  </span>
-                </button>
-              ),
-            )}
-          </div>
+            <MetricCard
+              icon={Clock}
+              label="รอการอนุมัติ"
+              value={String(counts.PENDING)}
+              detail={`จากทั้งหมด ${counts.all} บัญชี LINE`}
+            >
+              <div className="mt-4 flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  ล่าสุด
+                </span>
+                <span className="truncate text-[13px]">
+                  {latestPending?.displayName ?? "ยังไม่มีคำขอรออนุมัติ"}
+                </span>
+                <span className="ml-auto shrink-0 text-xs text-slate-500 dark:text-slate-400">
+                  {latestPending
+                    ? (formatRelative(latestPending.createdAt) ??
+                      formatDate(latestPending.createdAt))
+                    : "—"}
+                </span>
+              </div>
+              <ProportionBar
+                segments={[
+                  {
+                    status: "PENDING",
+                    label: "รออนุมัติ",
+                    count: counts.PENDING,
+                  },
+                ]}
+              />
+            </MetricCard>
 
-          <Card className="border-border bg-card text-card-foreground shadow-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-base text-slate-950 dark:text-slate-50">
-                รายการคำขอ — {tabConfig[activeTab].label}
-              </CardTitle>
-              <CardDescription className="text-slate-600 dark:text-slate-400">
-                {listData ? `พบ ${listData.total} รายการ` : "กำลังโหลด..."}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              {isLoading || !listData ? (
-                <div className="flex items-center justify-center py-16">
-                  <RefreshCw className="h-6 w-6 animate-spin text-slate-500 dark:text-slate-400" />
+            <MetricCard
+              icon={CircleCheck}
+              label="อนุมัติแล้ว"
+              value={String(counts.APPROVED)}
+              detail={
+                counts.all > 0
+                  ? `${Math.round((counts.APPROVED / counts.all) * 100)}% ของบัญชีทั้งหมด`
+                  : "ยังไม่มีบัญชีในระบบ"
+              }
+            >
+              <ProportionBar
+                segments={[
+                  {
+                    status: "APPROVED",
+                    label: "อนุมัติแล้ว",
+                    count: counts.APPROVED,
+                  },
+                ]}
+              />
+            </MetricCard>
+
+            <MetricCard
+              icon={CircleX}
+              label="ปฏิเสธแล้ว"
+              value={String(counts.REJECTED)}
+              detail={`${rejectedWithReason} รายการมีเหตุผลบันทึกไว้`}
+            >
+              <ProportionBar
+                segments={[
+                  {
+                    status: "REJECTED",
+                    label: "ปฏิเสธแล้ว",
+                    count: counts.REJECTED,
+                  },
+                ]}
+              />
+            </MetricCard>
+
+            <MetricCard
+              icon={Users}
+              label="บัญชีทั้งหมด"
+              value={String(counts.all)}
+              detail="LINE accounts ที่ผูกกับระบบ"
+            >
+              <ProportionBar
+                segments={[
+                  {
+                    status: "PENDING",
+                    label: "รออนุมัติ",
+                    count: counts.PENDING,
+                  },
+                  {
+                    status: "APPROVED",
+                    label: "อนุมัติแล้ว",
+                    count: counts.APPROVED,
+                  },
+                  {
+                    status: "REJECTED",
+                    label: "ปฏิเสธแล้ว",
+                    count: counts.REJECTED,
+                  },
+                  {
+                    status: "UNREQUESTED",
+                    label: "ยังไม่ขอ",
+                    count: counts.UNREQUESTED,
+                  },
+                ]}
+              />
+            </MetricCard>
+          </section>
+
+          <section
+            className="mt-6 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_10px_34px_rgba(16,24,40,0.05)] dark:border-white/[0.08] dark:bg-[#151719] dark:shadow-none"
+            aria-label="รายการคำขออนุมัติ LINE users"
+          >
+            <div className={cn("t-skel", isRevealed && "is-revealed")}>
+              {skeletonMounted && (
+                <div
+                  className="t-skel-skeleton is-pulsing bg-white dark:bg-[#151719]"
+                  aria-hidden="true"
+                >
+                  <ApprovalSkeleton />
                 </div>
-              ) : !listData.data.length ? (
-                <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <MessageSquare className="mb-3 h-12 w-12 text-slate-300 dark:text-slate-600" />
-                  <p className="font-medium text-slate-600 dark:text-slate-400">
-                    ไม่มีรายการ{tabConfig[activeTab].label}
+              )}
+              <div className="t-skel-content" inert={!isRevealed}>
+                <div className="border-b border-slate-200 px-5 py-5 sm:px-6 dark:border-white/[0.08]">
+                  <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+                    คำขอทั้งหมด
+                  </h2>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    {counts.all} บัญชี · {counts.PENDING} รออนุมัติ ·{" "}
+                    {counts.REJECTED} ปฏิเสธ
+                    {isTruncated &&
+                      ` · แสดง ${items.length} รายการล่าสุดจาก ${approvalsQuery.data?.total ?? 0}`}
                   </p>
                 </div>
-              ) : (
-                <div className="divide-y divide-slate-200 dark:divide-white/10">
-                  {listData.data.map((req) => (
-                    <div
-                      key={req.id}
-                      id={`approval-row-${req.id}`}
-                      className="grid gap-4 p-4 transition-colors hover:bg-slate-50 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center dark:hover:bg-white/[0.03]"
-                    >
-                      <div className="flex min-w-0 items-start gap-3">
-                        <UserAvatar
-                          pictureUrl={req.pictureUrl}
-                          displayName={req.displayName}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate font-medium text-slate-950 dark:text-slate-50">
-                            {req.displayName ?? "ไม่ระบุชื่อ"}
-                          </p>
-                          <p className="truncate font-mono text-xs text-slate-600 dark:text-slate-400">
-                            {req.lineUserId}
-                          </p>
-                          {req.userEmail && (
-                            <p className="truncate text-xs text-slate-600 dark:text-slate-400">
-                              {req.userEmail}
-                            </p>
-                          )}
-                          {req.statusMessage && (
-                            <p className="truncate text-xs text-slate-600 italic dark:text-slate-400">
-                              &quot;{req.statusMessage}&quot;
-                            </p>
-                          )}
-                          <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                            {req.isAdmin && (
-                              <span className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full border border-sky-300 bg-sky-100 px-2.5 text-xs leading-none font-medium text-sky-900 dark:border-sky-700/60 dark:bg-sky-900/35 dark:text-sky-300">
-                                <ShieldCheck className="h-3.5 w-3.5" />
-                                Admin
-                              </span>
-                            )}
-                            <StatusBadge status={req.status} />
-                            <span className="text-xs text-slate-600 dark:text-slate-400">
-                              {formatDate(req.createdAt)}
-                            </span>
-                          </div>
-                          {req.rejectReason && (
-                            <p className="mt-1 text-xs text-red-500 dark:text-red-400">
-                              เหตุผล: {req.rejectReason}
-                            </p>
-                          )}
-                        </div>
-                      </div>
 
-                      <div className="flex shrink-0 flex-wrap gap-2 sm:justify-end">
-                        <Button
-                          size="sm"
-                          variant={req.isAdmin ? "outline" : "default"}
-                          className={
-                            req.isAdmin
-                              ? "gap-1.5 border-sky-300 text-sky-800 hover:bg-sky-50 dark:border-sky-700/60 dark:text-sky-300 dark:hover:bg-sky-900/20"
-                              : "gap-1.5 bg-sky-600 text-white hover:bg-sky-700"
-                          }
-                          onClick={() => void handleSetAdmin(req, !req.isAdmin)}
-                          disabled={actionLoading === `admin:${req.lineUserId}`}
-                        >
-                          {req.isAdmin ? (
-                            <ShieldCheck className="h-4 w-4" />
-                          ) : (
-                            <ShieldPlus className="h-4 w-4" />
-                          )}
-                          {actionLoading === `admin:${req.lineUserId}`
-                            ? "กำลังดำเนินการ..."
-                            : req.isAdmin
-                              ? "ยกเลิก Admin"
-                              : "ตั้งเป็น Admin"}
-                        </Button>
-                        {req.status === "REJECTED" && req.approvalId ? (
-                          <Button
-                            size="sm"
-                            className="gap-1.5 bg-blue-600 text-white hover:bg-blue-700"
-                            onClick={() => void handleUnlock(req)}
-                            disabled={actionLoading === req.id}
-                          >
-                            <RefreshCw className="h-4 w-4" />
-                            {actionLoading === req.id
-                              ? "กำลังดำเนินการ..."
-                              : "ขอใหม่"}
-                          </Button>
-                        ) : (
-                          <>
-                            {req.status === "PENDING" && (
-                              <Button
-                                size="sm"
-                                className="gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700"
-                                onClick={() => void handleApprove(req.id)}
-                                disabled={actionLoading === req.id}
-                              >
-                                <CheckCircle className="h-4 w-4" />
-                                {actionLoading === req.id
-                                  ? "กำลังดำเนินการ..."
-                                  : "อนุมัติ"}
-                              </Button>
-                            )}
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              className="gap-1.5"
-                              onClick={() => setRejectTarget(req)}
-                              disabled={actionLoading === req.id}
-                            >
-                              <XCircle className="h-4 w-4" />
-                              ปฏิเสธ
-                            </Button>
-                          </>
+                <div
+                  className="flex gap-6 overflow-x-auto border-b border-slate-200 px-5 sm:px-6 dark:border-white/[0.08]"
+                  role="group"
+                  aria-label="กรองตามสถานะ"
+                >
+                  {APPROVAL_TABS.map(([value, label]) => {
+                    const isActive = activeTab === value;
+
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        aria-pressed={isActive}
+                        onClick={() => {
+                          setActiveTab(value);
+                          setPage(1);
+                        }}
+                        className={cn(
+                          "relative flex shrink-0 cursor-pointer items-center gap-2 py-3.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none",
+                          isActive
+                            ? "text-slate-900 dark:text-white"
+                            : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200",
                         )}
-                      </div>
-                    </div>
-                  ))}
+                      >
+                        {label}
+                        <span
+                          className={cn(
+                            "rounded-full px-1.5 py-0.5 text-[10px]",
+                            isActive
+                              ? "bg-slate-100 text-slate-700 dark:bg-white/[0.1] dark:text-slate-200"
+                              : "bg-slate-100/70 text-slate-500 dark:bg-white/[0.06] dark:text-slate-400",
+                          )}
+                        >
+                          {counts[value]}
+                        </span>
+                        {isActive && (
+                          <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-slate-900 dark:bg-white" />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
-              )}
 
-              {listData && listData.total > 0 && (
-                <div className="border-t border-slate-200 px-4 dark:border-white/10">
-                  <Pagination
-                    currentPage={page}
-                    totalPages={listData.totalPages}
-                    onPageChange={(nextPage) => setPage(nextPage)}
-                    idPrefix="line-approval-pagination"
-                    classNames={{
-                      info: "text-slate-600 dark:text-slate-400",
-                      button:
-                        "border-border bg-card text-foreground hover:bg-muted/50",
-                      activeButton:
-                        "bg-green-600 text-white hover:bg-green-700 dark:bg-green-500 dark:text-slate-950 dark:hover:bg-green-400",
-                      mobileCurrent:
-                        "bg-slate-200 text-slate-800 dark:bg-white/10 dark:text-slate-100",
-                      ellipsis: "text-slate-500 dark:text-slate-400",
-                      input:
-                        "border-border bg-card text-foreground placeholder:text-muted-foreground",
-                      cancelButton:
-                        "text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/10",
-                    }}
-                  />
+                <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 dark:border-white/[0.08]">
+                  <div className="relative w-full sm:max-w-[340px]">
+                    <Search
+                      className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-slate-400"
+                      aria-hidden="true"
+                    />
+                    <label htmlFor="approval-search" className="sr-only">
+                      ค้นหาผู้ใช้
+                    </label>
+                    <input
+                      id="approval-search"
+                      value={searchQuery}
+                      onChange={(event) => {
+                        setSearchQuery(event.target.value);
+                        setPage(1);
+                      }}
+                      placeholder="ค้นหาชื่อ อีเมล หรือ LINE User ID…"
+                      className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pr-3 pl-10 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-slate-100 dark:placeholder:text-slate-600"
+                    />
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[760px] border-collapse text-left">
+                    <caption className="sr-only">
+                      รายชื่อ LINE users และสถานะการอนุมัติ
+                    </caption>
+                    <thead className="bg-slate-50/80 dark:bg-white/[0.02]">
+                      <tr className="text-[11px] font-semibold tracking-wide text-slate-500 dark:text-slate-400">
+                        <th scope="col" className="min-w-[280px] px-3 py-3">
+                          ผู้ใช้
+                        </th>
+                        <th scope="col" className="min-w-[170px] px-3 py-3">
+                          สถานะ
+                        </th>
+                        <th scope="col" className="w-28 px-3 py-3 text-center">
+                          สิทธิ์
+                        </th>
+                        <th scope="col" className="min-w-[140px] px-3 py-3">
+                          ขอเมื่อ
+                        </th>
+                        <th scope="col" className="w-12 px-2 py-3" />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {visibleItems.map((item) => (
+                        <ApprovalRow
+                          key={item.id}
+                          item={item}
+                          onOpenActions={(rowItem, trigger) =>
+                            setApprovalMenu({
+                              item: rowItem,
+                              trigger,
+                              rect: trigger.getBoundingClientRect(),
+                            })
+                          }
+                        />
+                      ))}
+                    </tbody>
+                  </table>
+                  {visibleItems.length === 0 && (
+                    <EmptyApprovalsState hasFilters={hasFilters} />
+                  )}
+                </div>
+
+                <footer className="flex flex-col gap-4 border-t border-slate-200 px-5 py-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 dark:border-white/[0.08] dark:text-slate-400">
+                  <label className="flex items-center gap-2">
+                    แถวต่อหน้า
+                    <span className="relative">
+                      <select
+                        value={pageSize}
+                        onChange={(event) => {
+                          setPageSize(Number(event.target.value));
+                          setPage(1);
+                        }}
+                        className="h-8 cursor-pointer appearance-none rounded-lg border border-slate-200 bg-white px-2.5 pr-7 text-xs font-medium text-slate-700 outline-none focus:border-emerald-500 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-slate-200"
+                      >
+                        {PAGE_SIZE_OPTIONS.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown
+                        className="pointer-events-none absolute top-1/2 right-2 size-3.5 -translate-y-1/2 text-slate-400"
+                        aria-hidden="true"
+                      />
+                    </span>
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <span>
+                      {firstVisibleRow}–{lastVisibleRow} จาก{" "}
+                      {filteredItems.length} คน
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        disabled={currentPage === 1}
+                        onClick={() =>
+                          setPage((current) => Math.max(1, current - 1))
+                        }
+                        aria-label="ไปหน้าก่อนหน้า"
+                        className="inline-flex size-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-35 dark:hover:bg-white/[0.08]"
+                      >
+                        <ChevronLeft className="size-4" aria-hidden="true" />
+                      </button>
+                      {Array.from(
+                        { length: pageCount },
+                        (_, index) => index + 1,
+                      )
+                        .slice(0, 5)
+                        .map((pageNumber) => (
+                          <button
+                            key={pageNumber}
+                            type="button"
+                            aria-current={
+                              currentPage === pageNumber ? "page" : undefined
+                            }
+                            onClick={() => setPage(pageNumber)}
+                            className={cn(
+                              "inline-flex size-8 cursor-pointer items-center justify-center rounded-lg text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none",
+                              currentPage === pageNumber
+                                ? "bg-slate-200 text-slate-900 dark:bg-white/[0.12] dark:text-white"
+                                : "hover:bg-slate-100 dark:hover:bg-white/[0.08]",
+                            )}
+                          >
+                            {pageNumber}
+                          </button>
+                        ))}
+                      <button
+                        type="button"
+                        disabled={currentPage === pageCount}
+                        onClick={() =>
+                          setPage((current) => Math.min(pageCount, current + 1))
+                        }
+                        aria-label="ไปหน้าถัดไป"
+                        className="inline-flex size-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-35 dark:hover:bg-white/[0.08]"
+                      >
+                        <ChevronRight className="size-4" aria-hidden="true" />
+                      </button>
+                    </div>
+                  </div>
+                </footer>
+              </div>
+            </div>
+          </section>
         </div>
 
-        <RejectDialog
-          isOpen={rejectTarget !== null}
-          onClose={() => setRejectTarget(null)}
-          onConfirm={(reason) => void handleRejectConfirm(reason)}
-          isLoading={actionLoading !== null}
-        />
-      </div>
+        {approvalMenu && (
+          <ApprovalActionsMenu
+            key={approvalMenu.item.id}
+            menu={approvalMenu}
+            isBusy={approvalActionMutation.isPending}
+            onClose={closeApprovalMenu}
+            onApprove={handleApprove}
+            onReject={handleRejectConfirm}
+            onUnlock={handleUnlock}
+            onToggleAdmin={handleToggleAdmin}
+          />
+        )}
+      </main>
     </>
   );
 }

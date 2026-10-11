@@ -20,7 +20,7 @@ import type { ApprovalStatus } from "@prisma/client";
 const listQuerySchema = z.object({
   status: z.enum(["PENDING", "APPROVED", "REJECTED"]).optional(),
   page: z.coerce.number().int().positive().optional().default(1),
-  limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+  limit: z.coerce.number().int().min(1).max(500).optional().default(20),
 });
 
 const approveSchema = z.object({
