@@ -11,7 +11,6 @@ export type {
   EditAttendanceModalProps,
   UserInfoCardProps,
   MonthSelectorProps,
-  LoadingSpinnerProps,
   ErrorMessageProps,
   UseAttendanceReportReturn,
   AttendanceStatusType,

@@ -13,7 +13,6 @@ export type {
   EditAttendanceModalProps,
   UserInfoCardProps,
   MonthSelectorProps,
-  LoadingSpinnerProps,
   ErrorMessageProps,
   UseAttendanceReportReturn,
 } from "./attendance";

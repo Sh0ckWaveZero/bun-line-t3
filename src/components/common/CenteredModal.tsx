@@ -52,15 +52,19 @@ export const CenteredModal: React.FC<CenteredModalProps> = ({
       aria-describedby="modal-description"
       style={{
         /* ✅ รับประกันการแสดงผลที่ชัดเจน */
+        /* ✅ UA ของ <dialog> บังคับ width/height: fit-content — ต้องบังคับเต็มจอ
+           ไม่งั้น dialog จะยึดมุมซ้ายบนขนาดเท่าเนื้อหา แล้ว place-items: center
+           ของ .modal-grid-center ไม่มีพื้นที่ให้จัดกลาง (padding/background
+           ปล่อยให้ class กำหนด: เว้นขอบ 1rem + ฉากหลังดำ 60%) */
         zIndex: 10000,
         position: "fixed",
         inset: 0,
+        width: "100%",
+        height: "100%",
         margin: 0,
         maxWidth: "none",
         maxHeight: "none",
         border: 0,
-        padding: 0,
-        background: "transparent",
         color: "inherit",
       }}
     >

@@ -61,8 +61,11 @@ export async function PUT(request: Request) {
       ? validateAndParseDateTime(validatedData.checkOutTime)
       : null;
 
-    // 🛡️ Security validations
-    if (!DateTimeSecurity.isWithinAcceptableRange(checkInTime)) {
+    // 🛡️ Security validation — หน้ารายงานเปิดให้เลือกแก้ไขได้ทุกเดือน
+    // จึงไม่จำกัดช่วงย้อนหลัง (36500 วัน ≈ 100 ปี ไว้กันค่ามั่วเท่านั้น)
+    // แต่ยังบล็อกอนาคตเกิน 30 วัน เพราะเวลาเข้า-ออกงานล่วงหน้าไม่มีความหมาย
+    const MAX_PAST_DAYS = 36500;
+    if (!DateTimeSecurity.isWithinAcceptableRange(checkInTime, MAX_PAST_DAYS)) {
       return Response.json(
         { error: "Check-in time is outside acceptable range" },
         { status: 400 },
@@ -71,7 +74,7 @@ export async function PUT(request: Request) {
 
     if (
       checkOutTime &&
-      !DateTimeSecurity.isWithinAcceptableRange(checkOutTime)
+      !DateTimeSecurity.isWithinAcceptableRange(checkOutTime, MAX_PAST_DAYS)
     ) {
       return Response.json(
         { error: "Check-out time is outside acceptable range" },

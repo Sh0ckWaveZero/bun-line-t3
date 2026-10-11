@@ -12,7 +12,7 @@ export const AttendanceSummaryCards: React.FC<AttendanceSummaryCardsProps> = ({
 }) => {
   return (
     <div
-      className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
+      className="grid grid-cols-2 gap-3 border-b border-slate-200 px-5 py-5 sm:grid-cols-3 sm:px-6 lg:grid-cols-5 dark:border-white/[0.08]"
       role="region"
       aria-label="สรุปข้อมูลการเข้างาน"
     >
@@ -49,13 +49,17 @@ const SummaryItem: React.FC<{
   value: string;
   sublabel?: string;
 }> = ({ label, value, sublabel }) => (
-  <div className="border-border bg-card rounded-xl border px-4 py-3">
-    <p className="text-muted-foreground text-xs font-medium">{label}</p>
-    <p className="text-foreground mt-1 font-mono text-xl font-semibold tracking-tight">
+  <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 px-4 py-3 dark:border-white/[0.06] dark:bg-white/[0.02]">
+    <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+      {label}
+    </p>
+    <p className="mt-1 font-mono text-xl font-semibold tracking-tight text-slate-900 dark:text-white">
       {value}
     </p>
     {sublabel && (
-      <p className="text-muted-foreground mt-0.5 text-xs">{sublabel}</p>
+      <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+        {sublabel}
+      </p>
     )}
   </div>
 );

@@ -17,12 +17,12 @@ interface DailyAverageChartProps {
 export const DailyAverageChart: React.FC<DailyAverageChartProps> = ({
   records,
 }) => {
-  const { getChartOptions } = useChartTheme();
-  const chartData = useDailyAverageHoursData(records);
+  const { isDark } = useChartTheme();
+  const { labels, values } = useDailyAverageHoursData(records);
 
   if (records.length === 0) {
     return (
-      <div className="flex h-64 items-center justify-center text-gray-400 dark:text-gray-500">
+      <div className="flex h-full items-center justify-center text-sm text-slate-400 dark:text-slate-500">
         ไม่มีข้อมูลการทำงานสำหรับเดือนนี้
       </div>
     );
@@ -30,20 +30,17 @@ export const DailyAverageChart: React.FC<DailyAverageChartProps> = ({
 
   return (
     <LazyBarChart
-      data={chartData}
-      options={getChartOptions({
-        plugins: {
-          legend: {
-            display: false,
-          },
+      labels={labels}
+      series={[
+        {
+          label: "ชั่วโมงทำงานเฉลี่ยตามวัน",
+          values,
+          color: isDark ? "#2dd4bf" : "#14b8a6",
         },
-        scales: {
-          y: {
-            beginAtZero: true,
-            max: 10,
-          },
-        },
-      })}
+      ]}
+      yMax={10}
+      formatValue={(value) => `${value.toFixed(1)} ชม.`}
+      ariaLabel="กราฟแท่งชั่วโมงทำงานเฉลี่ยแยกตามวันของสัปดาห์"
     />
   );
 };

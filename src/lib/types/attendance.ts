@@ -83,12 +83,9 @@ export interface MonthSelectorProps {
   onMonthChange: (month: string) => void;
 }
 
-export interface LoadingSpinnerProps {
-  message?: string;
-}
-
 export interface ErrorMessageProps {
   message: string;
+  className?: string;
 }
 
 // 🎣 Hook Return Type

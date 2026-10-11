@@ -70,10 +70,13 @@ export const MobileModal: React.FC<MobileModalProps> = ({
         // Force hardware acceleration
         transform: "translateZ(0)",
         WebkitTransform: "translateZ(0)",
-        /* ✅ รับประกันการแสดงผลที่ชัดเจน */
+        /* ✅ UA ของ <dialog> บังคับ width/height: fit-content — ต้องบังคับเต็มจอ
+           ไม่งั้น overlay จะยึดมุมซ้ายบนขนาดเท่าเนื้อหา */
         zIndex: 10000,
         position: "fixed",
         inset: 0,
+        width: "100%",
+        height: "100%",
         margin: 0,
         maxWidth: "none",
         maxHeight: "none",

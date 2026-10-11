@@ -17,8 +17,6 @@ const MONTH_SHORT_TH = [
   "พ.ย",
   "ธ.ค",
 ];
-const CHART_LABEL_COLOR = "#6b7280";
-const CHART_GRID_COLOR = "rgba(107,114,128,0.15)";
 
 function shortMonthLabel(transMonth: string): string {
   const month = parseInt(transMonth.split("-")[1] ?? "1", 10);
@@ -41,73 +39,6 @@ export function MonthlyBarChart({ data, hideAmounts }: MonthlyBarChartProps) {
 
   const reversed = [...data].reverse();
 
-  const chartData = {
-    labels: reversed.map((d) => shortMonthLabel(d.transMonth)),
-    datasets: [
-      {
-        label: "รายรับ",
-        data: reversed.map((d) => d.totalIncome),
-        backgroundColor: "#22c55e55",
-        borderColor: "#22c55e",
-        borderWidth: 1.5,
-        borderRadius: 4,
-        borderSkipped: false,
-      },
-      {
-        label: "รายจ่าย",
-        data: reversed.map((d) => d.totalExpense),
-        backgroundColor: "#ef444455",
-        borderColor: "#ef4444",
-        borderWidth: 1.5,
-        borderRadius: 4,
-        borderSkipped: false,
-      },
-    ],
-  };
-
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: "top" as const,
-        labels: {
-          font: { size: 10 },
-          color: CHART_LABEL_COLOR,
-          padding: 10,
-          boxWidth: 8,
-          usePointStyle: true,
-        },
-      },
-      tooltip: {
-        enabled: !hideAmounts,
-        callbacks: {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          label: (ctx: any) => ` ${formatAmount(ctx.raw as number)} บาท`,
-        },
-      },
-    },
-    scales: {
-      x: {
-        grid: { display: false },
-        ticks: { font: { size: 10 }, color: CHART_LABEL_COLOR, maxRotation: 0 },
-        border: { display: false },
-      },
-      y: {
-        grid: { color: CHART_GRID_COLOR },
-        ticks: {
-          font: { size: 10 },
-          color: CHART_LABEL_COLOR,
-          maxTicksLimit: 4,
-          callback: hideAmounts
-            ? () => "•••"
-            : (v: unknown) => shortAmount(v as number),
-        },
-        border: { display: false },
-      },
-    },
-  };
-
   return (
     <Card className="border-border/70 bg-card/85 dark:bg-card/70 border">
       <CardHeader className="px-3 pt-3 pb-2 sm:px-4 sm:pt-4 sm:pb-3">
@@ -117,7 +48,25 @@ export function MonthlyBarChart({ data, hideAmounts }: MonthlyBarChartProps) {
       </CardHeader>
       <CardContent className="px-3 pb-3 sm:px-4 sm:pb-4">
         <div className="h-[240px] sm:h-[250px]">
-          <LazyBarChart data={chartData} options={options} />
+          <LazyBarChart
+            labels={reversed.map((item) => shortMonthLabel(item.transMonth))}
+            series={[
+              {
+                label: "รายรับ",
+                values: reversed.map((item) => item.totalIncome),
+                color: "#22c55e",
+              },
+              {
+                label: "รายจ่าย",
+                values: reversed.map((item) => item.totalExpense),
+                color: "#ef4444",
+              },
+            ]}
+            formatValue={(value) => `${formatAmount(value)} บาท`}
+            formatYTick={hideAmounts ? () => "•••" : shortAmount}
+            tooltipDisabled={hideAmounts}
+            ariaLabel="กราฟแท่งรายรับ-รายจ่ายย้อนหลัง 6 เดือน"
+          />
         </div>
       </CardContent>
     </Card>

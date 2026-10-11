@@ -8,7 +8,6 @@ import { NAVIGATION_ITEMS } from "./navigation.config";
 import { DesktopNav } from "./DesktopNav";
 import { MobileNav } from "./MobileNav";
 import { UserSection } from "./UserSection";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import type { NavItem } from "./types";
 
 export default function Header() {
@@ -16,17 +15,11 @@ export default function Header() {
   const profileImageSrc = session?.user?.image?.trim() || DEFAULT_AVATAR_SRC;
   const routerState = useRouterState();
   const pathname = routerState.location.pathname;
-  const [isRouteChanging, setIsRouteChanging] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Initialize with closed menus to match server render
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-
-  // Track route changes for loading indicator (client-side only)
-  useEffect(() => {
-    setIsRouteChanging(routerState.status === "pending");
-  }, [routerState.status]);
 
   // Close mobile menu on resize to desktop
   useEffect(() => {
@@ -68,21 +61,6 @@ export default function Header() {
 
   return (
     <>
-      {/* Full-page Loading Overlay */}
-      {isRouteChanging && (
-        <div
-          className="bg-background/80 animate-in fade-in fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-sm duration-200"
-          role="status"
-          aria-live="polite"
-          aria-label="กำลังโหลดหน้า"
-        >
-          <div className="flex flex-col items-center gap-4">
-            <LoadingSpinner size="lg" />
-            <p className="text-foreground text-lg font-medium">กำลังโหลด...</p>
-          </div>
-        </div>
-      )}
-
       <header
         id="main-header"
         className="bg-background/80 border-border sticky top-0 z-50 w-full border-b backdrop-blur-sm"

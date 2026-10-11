@@ -1,4 +1,3 @@
-import { ChartConfiguration } from "chart.js";
 import {
   ChartGeneratorConfig,
   ChartMargins,
@@ -10,7 +9,7 @@ import {
 import { CHART_COLORS, COLOR_SCHEMES } from "./chart-colors";
 
 /**
- * Shared chart configuration constants
+ * Shared chart configuration constants (server-side d3/canvas generator)
  */
 
 // Default chart generator configuration
@@ -160,167 +159,6 @@ export const createChartDimensions = (
     chartHeight: height - margin.top - margin.bottom,
   };
 };
-
-// Chart.js base configuration for crypto line charts
-export const CRYPTO_LINE_CHART_CONFIG: Partial<ChartConfiguration<"line">> = {
-  type: "line",
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      x: {
-        display: true,
-        title: {
-          display: true,
-          text: "Time",
-          color: CHART_COLORS.TEXT_PRIMARY,
-        },
-        ticks: {
-          color: CHART_COLORS.TEXT_SECONDARY,
-          maxTicksLimit: 8,
-        },
-        grid: {
-          color: CHART_COLORS.GRID_COLOR,
-        },
-      },
-      y: {
-        display: true,
-        title: {
-          display: true,
-          text: "Price (THB)",
-          color: CHART_COLORS.TEXT_PRIMARY,
-        },
-        ticks: {
-          color: CHART_COLORS.TEXT_SECONDARY,
-          callback: function (value) {
-            return `฿${Number(value).toLocaleString("th-TH")}`;
-          },
-        },
-        grid: {
-          color: CHART_COLORS.GRID_COLOR,
-        },
-      },
-    },
-    plugins: {
-      legend: {
-        display: true,
-        position: "top",
-        labels: {
-          color: CHART_COLORS.TEXT_PRIMARY,
-        },
-      },
-      tooltip: {
-        backgroundColor: CHART_COLORS.BACKGROUND_SECONDARY,
-        titleColor: CHART_COLORS.TEXT_PRIMARY,
-        bodyColor: CHART_COLORS.TEXT_PRIMARY,
-        borderWidth: 1,
-      },
-    },
-    layout: {
-      padding: {
-        top: 20,
-        right: 20,
-        bottom: 20,
-        left: 20,
-      },
-    },
-  },
-};
-
-// Chart.js base configuration for crypto bar charts
-export const CRYPTO_BAR_CHART_CONFIG: Partial<ChartConfiguration<"bar">> = {
-  type: "bar",
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      x: {
-        ticks: {
-          color: CHART_COLORS.TEXT_SECONDARY,
-        },
-        grid: {
-          color: CHART_COLORS.GRID_COLOR,
-        },
-      },
-      y: {
-        beginAtZero: true,
-        ticks: {
-          color: CHART_COLORS.TEXT_SECONDARY,
-          callback: function (value) {
-            return `฿${Number(value).toLocaleString("th-TH")}`;
-          },
-        },
-        grid: {
-          color: CHART_COLORS.GRID_COLOR,
-        },
-      },
-    },
-    plugins: {
-      legend: {
-        display: false,
-      },
-      tooltip: {
-        backgroundColor: CHART_COLORS.BACKGROUND_SECONDARY,
-        titleColor: CHART_COLORS.TEXT_PRIMARY,
-        bodyColor: CHART_COLORS.TEXT_PRIMARY,
-      },
-    },
-    layout: {
-      padding: {
-        top: 20,
-        right: 20,
-        bottom: 20,
-        left: 20,
-      },
-    },
-  },
-};
-
-// Chart.js base configuration for portfolio doughnut charts
-export const PORTFOLIO_DOUGHNUT_CHART_CONFIG: Partial<
-  ChartConfiguration<"doughnut">
-> = {
-  type: "doughnut",
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: true,
-        position: "right",
-        labels: {
-          color: CHART_COLORS.TEXT_PRIMARY,
-        },
-      },
-      tooltip: {
-        backgroundColor: CHART_COLORS.BACKGROUND_SECONDARY,
-        titleColor: CHART_COLORS.TEXT_PRIMARY,
-        bodyColor: CHART_COLORS.TEXT_PRIMARY,
-      },
-    },
-    layout: {
-      padding: {
-        top: 20,
-        right: 20,
-        bottom: 20,
-        left: 20,
-      },
-    },
-  },
-};
-
-// Common Chart.js plugins registration
-export const CHART_JS_PLUGINS = [
-  "CategoryScale",
-  "LinearScale",
-  "PointElement",
-  "LineElement",
-  "BarElement",
-  "ArcElement",
-  "Title",
-  "Tooltip",
-  "Legend",
-] as const;
 
 // Export utility functions
 export const getChartTitle = (
