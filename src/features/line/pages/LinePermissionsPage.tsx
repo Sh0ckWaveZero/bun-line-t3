@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSession } from "@/lib/auth/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/components/common/ToastProvider";
 import {
   Shield,
   Users,
@@ -44,6 +45,7 @@ async function fetchPermissions(): Promise<LineApproval[]> {
 export function LinePermissionsPage() {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
 
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -74,6 +76,7 @@ export function LinePermissionsPage() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["line-permissions"] });
+      showToast({ title: "อัปเดตสิทธิ์สำเร็จ", type: "success" });
     },
   });
 
