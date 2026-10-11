@@ -85,3 +85,14 @@ export async function checkLinePermissions(
   const perms = await getLinePermissions(lineUserId);
   return requiredPermissions.every((perm) => perms[perm]);
 }
+
+export async function canAutoRecordDca(lineUserId: string): Promise<boolean> {
+  const approval = await db.lineApprovalRequest.findUnique({
+    where: { lineUserId },
+  });
+  return Boolean(
+    approval?.status === "APPROVED" &&
+    approval.canAutoRecordDca &&
+    (!approval.expiresAt || approval.expiresAt.getTime() > Date.now()),
+  );
+}

@@ -90,7 +90,8 @@ const isCacheStale = (client: PrismaClient): boolean => {
     return (
       !("lineApprovalRequest" in client) ||
       !("subscription" in client) ||
-      !("workAttendance" in client)
+      !("workAttendance" in client) ||
+      !("dcaWebhookReceipt" in client)
     );
   } catch {
     return true;
