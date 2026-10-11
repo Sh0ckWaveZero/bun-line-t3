@@ -80,6 +80,19 @@ export async function GET(request: Request) {
 
     const approvals = await db.lineApprovalRequest.findMany({
       orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        lineUserId: true,
+        displayName: true,
+        pictureUrl: true,
+        status: true,
+        canRequestAttendanceReport: true,
+        canRequestLeave: true,
+        canReceiveReminders: true,
+        canAutoRecordDca: true,
+        createdAt: true,
+        approvedAt: true,
+      },
     });
 
     return Response.json({ success: true, data: approvals });

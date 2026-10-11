@@ -11,9 +11,21 @@ interface ToastData {
   duration?: number;
 }
 
+interface ToastItem extends ToastData {
+  id: number;
+  open: boolean;
+}
+
 interface ToastContextProps {
   showToast: (data: ToastData) => void;
 }
+
+/** stack ลึกสูงสุด 3 ชั้น (depth 0–2) — ตัวที่เกินถูกปัดออกแบบ is-leaving ตาม recipe */
+const MAX_VISIBLE_TOASTS = 3;
+/** ลบออกจาก state หลัง exit transition (--stack-close 250ms) จบ + buffer */
+const REMOVE_DELAY_MS = 310;
+/** = --stack-spread-gap ใน input.css */
+const SPREAD_GAP_PX = 8;
 
 const TOAST_META = {
   success: {
@@ -56,74 +68,205 @@ const ToastContext = React.createContext<ToastContextProps | undefined>(
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [open, setOpen] = React.useState(false);
-  const [toast, setToast] = React.useState<ToastData | null>(null);
-  // เปลี่ยน key ทุกครั้งเพื่อ force remount Root → Radix เริ่ม duration timer ใหม่เสมอ
-  // รูปแบบเดิม (setOpen(false) → reopen หลัง 10ms) ไปแกะ controlled open ทำให้
-  // duration timer ไม่ทำงาน → toast ค้าง ไม่ auto-dismiss
-  const [toastKey, setToastKey] = React.useState(0);
+  const [toasts, setToasts] = React.useState<ToastItem[]>([]);
+  const toastsRef = React.useRef<ToastItem[]>([]);
+  const toastIdRef = React.useRef(0);
+  const removalTimersRef = React.useRef(
+    new Map<number, ReturnType<typeof setTimeout>>(),
+  );
+  const viewportRef = React.useRef<HTMLOListElement | null>(null);
+  const isSpreadRef = React.useRef(false);
 
-  const showToast = React.useCallback((data: ToastData) => {
-    setToast(data);
-    setToastKey((k) => k + 1);
-    setOpen(true);
+  // write path เดียวให้ toastsRef ตรงกับ state เสมอ — showToast ต้องอ่านสถานะล่าสุดเพื่อหา overflow
+  const writeToasts = React.useCallback(
+    (updater: (current: ToastItem[]) => ToastItem[]) => {
+      const next = updater(toastsRef.current);
+      toastsRef.current = next;
+      setToasts(next);
+    },
+    [],
+  );
+
+  const scheduleRemoval = React.useCallback(
+    (id: number) => {
+      const timers = removalTimersRef.current;
+      const existingTimer = timers.get(id);
+      if (existingTimer) {
+        clearTimeout(existingTimer);
+      }
+      timers.set(
+        id,
+        setTimeout(() => {
+          timers.delete(id);
+          writeToasts((current) =>
+            current.filter((toast) => toast.id !== id),
+          );
+        }, REMOVE_DELAY_MS),
+      );
+    },
+    [writeToasts],
+  );
+
+  const closeToast = React.useCallback(
+    (id: number) => {
+      writeToasts((current) =>
+        current.map((toast) =>
+          toast.id === id ? { ...toast, open: false } : toast,
+        ),
+      );
+      scheduleRemoval(id);
+    },
+    [writeToasts, scheduleRemoval],
+  );
+
+  const showToast = React.useCallback(
+    (data: ToastData) => {
+      const id = ++toastIdRef.current;
+      // เติมหน้า list → toast ใหม่อยู่หน้าสุดของ stack (depth 0)
+      writeToasts((current) => [{ ...data, id, open: true }, ...current]);
+      // เกิน 3 ชั้น → ตัวเก่าสุดออกแบบ is-leaving (open=false → data-state=closed)
+      const overflow = toastsRef.current
+        .filter((toast) => toast.open)
+        .slice(MAX_VISIBLE_TOASTS);
+      for (const toast of overflow) {
+        closeToast(toast.id);
+      }
+    },
+    [writeToasts, closeToast],
+  );
+
+  // banner-stacking: hover กาง stack ออกเป็นลิสต์ — เป็น geometry check ไม่ใช่ :hover
+  // เพราะช่องว่างระหว่างการ์ดที่กางแล้วไม่ใช่ hover target ของ element ใด
+  React.useEffect(() => {
+    const applySpread = (spread: boolean) => {
+      isSpreadRef.current = spread;
+      viewportRef.current?.classList.toggle("is-spread", spread);
+    };
+
+    const handlePointerMove = (event: PointerEvent) => {
+      const viewport = viewportRef.current;
+      if (!viewport) return;
+      const frontToast = viewport.querySelector<HTMLElement>(
+        ".toast-depth-0",
+      );
+      const backToast = viewport.querySelector<HTMLElement>(".toast-depth-1");
+      if (!frontToast) {
+        if (isSpreadRef.current) applySpread(false);
+        return;
+      }
+      const rect = frontToast.getBoundingClientRect();
+      const reachBelow = backToast ? (rect.height + SPREAD_GAP_PX) * 2 : 0;
+      const isWithin =
+        event.clientX >= rect.left &&
+        event.clientX <= rect.right &&
+        event.clientY >= rect.top &&
+        event.clientY <= rect.bottom + reachBelow;
+      if (isSpreadRef.current !== isWithin) {
+        applySpread(isWithin);
+      }
+    };
+
+    const handlePointerLeave = () => {
+      if (isSpreadRef.current) applySpread(false);
+    };
+
+    document.addEventListener("pointermove", handlePointerMove);
+    document.documentElement.addEventListener(
+      "pointerleave",
+      handlePointerLeave,
+    );
+    return () => {
+      document.removeEventListener("pointermove", handlePointerMove);
+      document.documentElement.removeEventListener(
+        "pointerleave",
+        handlePointerLeave,
+      );
+    };
   }, []);
+
+  React.useEffect(() => {
+    const timers = removalTimersRef.current;
+    return () => {
+      timers.forEach((timer) => clearTimeout(timer));
+      timers.clear();
+    };
+  }, []);
+
   const contextValue = React.useMemo(() => ({ showToast }), [showToast]);
-  const toastType = toast?.type ?? "info";
-  const toastMeta = TOAST_META[toastType];
-  const ToastIcon = toastMeta.icon;
+
+  // depth นับจากลำดับ toast ที่ยัง open (array เรียงใหม่สุดก่อน)
+  const depthByToastId = new Map<number, number>();
+  {
+    let depth = 0;
+    for (const toast of toasts) {
+      if (toast.open) {
+        depthByToastId.set(toast.id, depth);
+        depth += 1;
+      }
+    }
+  }
 
   return (
     <ToastContext.Provider value={contextValue}>
       <ToastPrimitive.Provider swipeDirection="right">
         {children}
-        <ToastPrimitive.Root
-          key={toastKey}
-          open={open}
-          onOpenChange={setOpen}
-          duration={
-            toast?.duration ?? (toast?.type === "error" ? Infinity : 3500)
-          }
-          className={cn(
-            "pointer-events-auto relative w-full overflow-hidden rounded-2xl border px-4 py-3.5 pr-11 shadow-xl backdrop-blur-xl",
-            "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-top-2 data-[state=open]:zoom-in-95",
-            "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-right-2 data-[state=closed]:zoom-out-95",
-            "duration-300 ease-out motion-reduce:animate-none motion-reduce:transition-none",
-            toastMeta.surfaceClass,
-          )}
-        >
-          <div className="flex items-center gap-3">
-            <span
+        {toasts.map((toast) => {
+          const toastType = toast.type ?? "info";
+          const toastMeta = TOAST_META[toastType];
+          const ToastIcon = toastMeta.icon;
+          const depth = depthByToastId.get(toast.id);
+
+          return (
+            <ToastPrimitive.Root
+              key={toast.id}
+              open={toast.open}
+              onOpenChange={(open) => {
+                if (!open) closeToast(toast.id);
+              }}
+              duration={
+                toast.duration ?? (toast.type === "error" ? Infinity : 3500)
+              }
               className={cn(
-                "flex size-8 shrink-0 items-center justify-center rounded-xl",
-                toastMeta.iconClass,
+                "toast-stack-item pointer-events-auto overflow-hidden rounded-2xl border px-4 py-3.5 pr-11 shadow-xl backdrop-blur-xl",
+                depth !== undefined && `toast-depth-${depth}`,
+                toastMeta.surfaceClass,
               )}
-              aria-hidden="true"
             >
-              <ToastIcon className="size-4" strokeWidth={2.25} />
-            </span>
-            <div className="min-w-0">
-              <ToastPrimitive.Title className="text-sm leading-5 font-semibold tracking-tight">
-                {toast?.title}
-              </ToastPrimitive.Title>
-              {toast?.description && (
-                <ToastPrimitive.Description className="mt-1 text-xs leading-5 opacity-75">
-                  {toast.description}
-                </ToastPrimitive.Description>
-              )}
-            </div>
-          </div>
-          <ToastPrimitive.Close
-            type="button"
-            aria-label="ปิดการแจ้งเตือน"
-            className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer rounded-lg p-1 text-current/55 transition-colors hover:bg-black/5 hover:text-current focus-visible:ring-2 focus-visible:ring-current focus-visible:outline-none dark:hover:bg-white/10"
-          >
-            <X className="size-4" aria-hidden="true" />
-          </ToastPrimitive.Close>
-        </ToastPrimitive.Root>
+              <div className="flex items-center gap-3">
+                <span
+                  className={cn(
+                    "flex size-8 shrink-0 items-center justify-center rounded-xl",
+                    toastMeta.iconClass,
+                  )}
+                  aria-hidden="true"
+                >
+                  <ToastIcon className="size-4" strokeWidth={2.25} />
+                </span>
+                <div className="min-w-0">
+                  <ToastPrimitive.Title className="text-sm leading-5 font-semibold tracking-tight">
+                    {toast.title}
+                  </ToastPrimitive.Title>
+                  {toast.description && (
+                    <ToastPrimitive.Description className="mt-1 text-xs leading-5 opacity-75">
+                      {toast.description}
+                    </ToastPrimitive.Description>
+                  )}
+                </div>
+              </div>
+              <ToastPrimitive.Close
+                type="button"
+                aria-label="ปิดการแจ้งเตือน"
+                className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer rounded-lg p-1 text-current/70 transition-colors hover:bg-black/5 hover:text-current focus-visible:ring-2 focus-visible:ring-current focus-visible:outline-none dark:hover:bg-white/10"
+              >
+                <X className="size-4" aria-hidden="true" />
+              </ToastPrimitive.Close>
+            </ToastPrimitive.Root>
+          );
+        })}
         <ToastPrimitive.Viewport
+          ref={viewportRef}
           aria-label="การแจ้งเตือน"
-          className="pointer-events-none fixed top-0 right-0 z-[9999] flex w-full max-w-sm flex-col gap-3 p-4 outline-none sm:w-[min(100%,24rem)]"
+          className="toast-stack pointer-events-none fixed top-0 right-0 z-[9999] w-full max-w-sm outline-none"
         />
       </ToastPrimitive.Provider>
     </ToastContext.Provider>

@@ -14,14 +14,15 @@ const TooltipTrigger = TooltipPrimitive.Trigger;
 const TooltipContent = React.forwardRef<
   React.ElementRef<typeof TooltipPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>
->(({ className, sideOffset = 4, children, ...props }, ref) => {
+>(({ className, sideOffset = 8, children, ...props }, ref) => {
   return (
     <TooltipPrimitive.Portal>
       <TooltipPrimitive.Content
         ref={ref}
         sideOffset={sideOffset}
         className={cn(
-          "border-border/50 bg-popover/95 text-popover-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-[9999] overflow-hidden rounded-md border px-3 py-1.5 text-sm shadow-md",
+          // motion ตาม recipe "tooltip open/close" (transitions.dev) — อยู่ใน input.css
+          "ui-tooltip-content z-[9999] overflow-hidden rounded-md border border-border/50 bg-popover/95 text-popover-foreground text-sm shadow-md px-3 py-1.5",
           className,
         )}
         {...props}

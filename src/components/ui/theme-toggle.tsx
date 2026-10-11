@@ -1,13 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { useClientOnlyMounted } from "@/hooks/useHydrationSafe";
 import { Moon, Sun } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useTheme } from "@/lib/theme/theme-provider";
+import { cn } from "@/lib/utils";
 
 const ThemeToggle = () => {
   const { theme, setTheme } = useTheme();
   const mounted = useClientOnlyMounted();
+  // recipe "toggle" (transitions.dev): ใส่ .is-init หลัง interaction แรก
+  // เพื่อไม่ให้ keyframes ตอน "ปิด" เล่นตอนหน้าโหลด
+  const [hasInteracted, setHasInteracted] = useState(false);
 
   if (!mounted) {
     // Show skeleton with exact same structure
@@ -53,6 +58,7 @@ const ThemeToggle = () => {
   const isDark = theme === "dark";
 
   const handleToggle = (checked: boolean) => {
+    setHasInteracted(true);
     const newTheme = checked ? "dark" : "light";
     setTheme(newTheme);
 
@@ -114,7 +120,10 @@ const ThemeToggle = () => {
           checked={isDark}
           onCheckedChange={handleToggle}
           aria-label="Toggle theme"
-          className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-300"
+          className={cn(
+            "theme-toggle-switch data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-300",
+            hasInteracted && "is-init",
+          )}
         />
         <Moon
           id="theme-icon-moon-desktop"
