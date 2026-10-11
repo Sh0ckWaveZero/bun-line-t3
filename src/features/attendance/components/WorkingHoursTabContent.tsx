@@ -13,9 +13,9 @@ export const WorkingHoursTabContent: React.FC<WorkingHoursTabContentProps> = ({
   records,
 }) => {
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      <div className="border-border bg-card rounded-xl border p-4">
-        <h3 className="text-muted-foreground mb-4 text-sm font-medium">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="rounded-xl border border-slate-200/80 p-4 dark:border-white/[0.06]">
+        <h3 className="mb-4 text-xs font-medium text-slate-500 dark:text-slate-400">
           ชั่วโมงทำงานรายวัน
         </h3>
         <div className="h-64">
@@ -23,8 +23,8 @@ export const WorkingHoursTabContent: React.FC<WorkingHoursTabContentProps> = ({
         </div>
       </div>
 
-      <div className="border-border bg-card rounded-xl border p-4">
-        <h3 className="text-muted-foreground mb-4 text-sm font-medium">
+      <div className="rounded-xl border border-slate-200/80 p-4 dark:border-white/[0.06]">
+        <h3 className="mb-4 text-xs font-medium text-slate-500 dark:text-slate-400">
           ชั่วโมงทำงานเฉลี่ยตามวัน
         </h3>
         <div className="h-64">

@@ -1,91 +1,54 @@
 "use client";
 
-import React from "react";
-import { useState } from "react";
-import { Calendar as CalendarIcon } from "lucide-react";
+import React, { useState } from "react";
+import { AlertTriangle, Calendar as CalendarIcon } from "lucide-react";
 import { MonthPicker } from "@/components/ui/calendar";
-import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { LineLoginButton } from "@/components/ui/LineLoginButton";
 import {
-  UserInfoCardProps,
-  LoadingSpinnerProps,
   ErrorMessageProps,
   MonthSelectorProps,
+  UserInfoCardProps,
 } from "@/lib/types/attendance";
 
 export const UserInfoCard: React.FC<UserInfoCardProps> = ({ user }) => (
-  <div className="border-border bg-card rounded-xl border p-4">
-    <div className="flex items-center gap-3">
-      {user.image && (
-        <img
-          src={user.image}
-          alt="Profile"
-          width={36}
-          height={36}
-          className="border-border h-9 w-9 rounded-full border"
-        />
-      )}
-      <div>
-        <p className="text-foreground text-sm font-medium">{user.name}</p>
-        <p className="text-muted-foreground text-xs">ID: {user.id}</p>
-      </div>
-    </div>
-  </div>
-);
-
-export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
-  message = "กำลังโหลดข้อมูล...",
-}) => (
-  <div className="py-8 text-center">
-    <div className="border-muted border-t-foreground mx-auto h-6 w-6 animate-spin rounded-full border-2" />
-    <p className="text-muted-foreground mt-3 text-sm">{message}</p>
-  </div>
-);
-
-export const AuthLoadingScreen: React.FC = () => (
-  <div className="bg-background flex min-h-screen items-center justify-center">
-    <div className="text-center">
-      <div className="border-muted border-t-foreground mx-auto h-8 w-8 animate-spin rounded-full border-2" />
-      <p className="text-muted-foreground mt-4 text-sm">
-        กำลังตรวจสอบการเข้าสู่ระบบ...
+  <div className="flex shrink-0 items-center gap-2.5 rounded-xl border border-slate-200/80 bg-slate-50/60 px-3 py-2 dark:border-white/[0.06] dark:bg-white/[0.02]">
+    {user.image && (
+      <img
+        src={user.image}
+        alt={user.name ?? "Profile"}
+        width={32}
+        height={32}
+        className="size-8 rounded-full border border-slate-200 object-cover dark:border-white/10"
+      />
+    )}
+    <div className="min-w-0">
+      <p className="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
+        {user.name}
+      </p>
+      <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+        ID: {user.id}
       </p>
     </div>
   </div>
 );
 
-export const LoginPrompt: React.FC = () => {
-  const [callbackUrl, setCallbackUrl] = React.useState<string>("");
-  React.useEffect(() => {
-    if (typeof window !== "undefined") {
-      setCallbackUrl(window.location.pathname + window.location.search);
-    }
-  }, []);
-
-  return (
-    <div className="bg-background flex min-h-screen items-center justify-center">
-      <div className="border-border bg-card mx-4 max-w-md rounded-xl border p-8">
-        <div className="text-center">
-          <h1 className="text-foreground mb-3 text-xl font-semibold">
-            รายงานการเข้างาน
-          </h1>
-          <p className="text-muted-foreground mb-6 text-sm">
-            กรุณาเข้าสู่ระบบเพื่อดูรายงานการเข้างาน
-          </p>
-          <LineLoginButton callbackUrl={callbackUrl} />
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export const ErrorMessage: React.FC<ErrorMessageProps> = ({ message }) => (
-  <div className="border-destructive/30 bg-destructive/5 text-destructive rounded-lg border px-4 py-3 text-sm">
+export const ErrorMessage: React.FC<ErrorMessageProps> = ({
+  message,
+  className,
+}) => (
+  <div
+    role="alert"
+    className={cn(
+      "flex items-center gap-2 rounded-xl border border-rose-400/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-800 dark:text-rose-200",
+      className,
+    )}
+  >
+    <AlertTriangle className="size-4 shrink-0" aria-hidden="true" />
     {message}
   </div>
 );
@@ -156,32 +119,29 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({
   };
 
   return (
-    <div className="mb-6 flex items-center gap-3">
-      <span className="text-muted-foreground text-sm font-medium">เดือน</span>
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className={cn(
-              "text-foreground hover:bg-muted h-10 w-[220px] justify-start rounded-lg text-left text-sm font-medium transition-colors",
-              !selectedDate && "text-muted-foreground",
-            )}
-          >
-            <CalendarIcon className="text-muted-foreground mr-2 h-4 w-4" />
-            {selectedDate ? formatBuddhistDate(selectedDate) : "เลือกเดือน"}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent
-          className="border-border bg-card w-auto rounded-xl border p-0"
-          align="start"
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="inline-flex h-10 w-[220px] cursor-pointer items-center justify-start gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm font-medium text-slate-800 transition-colors outline-none hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08]"
         >
-          <MonthPicker
-            selected={selectedDate}
-            onSelect={handleDateSelect}
-            className="p-4"
+          <CalendarIcon
+            className="size-4 shrink-0 text-slate-400"
+            aria-hidden="true"
           />
-        </PopoverContent>
-      </Popover>
-    </div>
+          {selectedDate ? formatBuddhistDate(selectedDate) : "เลือกเดือน"}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-auto rounded-xl border-slate-200/80 bg-white p-0 shadow-lg dark:border-white/[0.08] dark:bg-[#151719]"
+        align="start"
+      >
+        <MonthPicker
+          selected={selectedDate}
+          onSelect={handleDateSelect}
+          className="p-4"
+        />
+      </PopoverContent>
+    </Popover>
   );
 };

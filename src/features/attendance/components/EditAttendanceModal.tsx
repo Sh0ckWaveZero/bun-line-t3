@@ -77,20 +77,20 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
 
   const modalContent = (
     <div>
-      <div className="border-border border-b px-6 py-4">
+      <div className="border-b border-slate-200 px-6 py-4 dark:border-white/[0.08]">
         <div className="flex items-center justify-between">
-          <h3 className="text-foreground text-lg font-semibold">
+          <h3 className="text-base font-semibold text-slate-900 dark:text-white">
             แก้ไขเวลาเข้า-ออกงาน
           </h3>
           <button
             type="button"
             onClick={onClose}
             disabled={updateLoading}
-            className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-full p-1 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-full p-1 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-400 dark:hover:bg-white/[0.08] dark:hover:text-slate-200"
             aria-label="ปิดหน้าต่าง"
           >
             <svg
-              className="h-5 w-5"
+              className="size-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -104,11 +104,11 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
             </svg>
           </button>
         </div>
-        <p className="text-muted-foreground mt-2 text-sm">
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
           วันที่: {dateFormatters.fullDate(editingRecord.workDate)}
         </p>
-        <div className="bg-muted/50 mt-3 rounded-lg px-3 py-2">
-          <p className="text-muted-foreground text-xs">
+        <div className="mt-3 rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 dark:border-white/[0.06] dark:bg-white/[0.03]">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             เวลาที่แสดงเป็นเวลาประเทศไทย (UTC+7)
           </p>
         </div>
@@ -119,16 +119,16 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
           <div>
             <label
               htmlFor="edit-checkin"
-              className="text-foreground mb-1.5 block text-sm font-medium"
+              className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-200"
             >
-              เวลาเข้างาน <span className="text-destructive">*</span>
+              เวลาเข้างาน <span className="text-rose-500">*</span>
             </label>
             <input
               id="edit-checkin"
               type="time"
               value={editData.checkInTime}
               onChange={(e) => handleCheckInChange(e.target.value)}
-              className="border-input bg-background text-foreground focus:border-ring focus:ring-ring/20 w-full rounded-md border px-3 py-2 text-sm transition-colors focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-800 transition-colors outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-slate-100 dark:[color-scheme:dark]"
               required
               disabled={updateLoading}
             />
@@ -137,7 +137,7 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
           <div>
             <label
               htmlFor="edit-checkout"
-              className="text-foreground mb-1.5 block text-sm font-medium"
+              className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-200"
             >
               เวลาออกงาน
             </label>
@@ -146,21 +146,21 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
               type="time"
               value={editData.checkOutTime}
               onChange={(e) => handleCheckOutChange(e.target.value)}
-              className="border-input bg-background text-foreground focus:border-ring focus:ring-ring/20 w-full rounded-md border px-3 py-2 text-sm transition-colors focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-800 transition-colors outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-slate-100 dark:[color-scheme:dark]"
               disabled={updateLoading}
             />
-            <p className="text-muted-foreground mt-1.5 text-xs">
+            <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
               หากไม่ได้ออกงานให้เว้นว่างไว้
             </p>
           </div>
         </div>
 
-        <div className="border-border bg-muted/30 flex flex-col-reverse justify-end gap-3 rounded-b-xl border-t px-6 py-4 sm:flex-row">
+        <div className="flex flex-col-reverse justify-end gap-3 border-t border-slate-200 bg-slate-50/50 px-6 py-4 sm:flex-row dark:border-white/[0.08] dark:bg-white/[0.02]">
           <button
             type="button"
             onClick={onClose}
             disabled={updateLoading}
-            className="border-border bg-card text-foreground hover:bg-muted focus:ring-ring w-full rounded-md border px-4 py-2 text-sm font-medium transition-colors focus:ring-2 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+            className="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto dark:border-white/[0.1] dark:bg-white/[0.03] dark:text-slate-300 dark:hover:bg-white/[0.08]"
             style={{ minHeight: "40px" }}
           >
             ยกเลิก
@@ -168,13 +168,13 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
           <button
             type="submit"
             disabled={updateLoading || !editData.checkInTime}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-ring flex w-full items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors focus:ring-2 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+            className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto dark:focus-visible:ring-offset-[#151719]"
             style={{ minHeight: "40px" }}
           >
             {updateLoading ? (
               <>
                 <div
-                  className="border-primary-foreground/30 border-t-primary-foreground mr-2 h-4 w-4 animate-spin rounded-full border-2"
+                  className="mr-2 size-4 animate-spin rounded-full border-2 border-white/30 border-t-white"
                   aria-hidden="true"
                 />
                 <span>กำลังอัพเดท...</span>
