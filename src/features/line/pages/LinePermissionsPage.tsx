@@ -181,13 +181,6 @@ export function LinePermissionsPage() {
         </button>
       </div>
 
-      <p
-        id="auto-dca-permission-help"
-        className="mb-4 text-sm text-gray-600 dark:text-gray-400"
-      >
-        DCA อัตโนมัติปิดไว้เป็นค่าเริ่มต้น
-        เปิดให้ผู้ใช้ที่อนุมัติแล้วเพื่อบันทึกข้อความซื้อ Bitkub ในแชตส่วนตัว
-      </p>
       {updatePermissionMutation.isError && (
         <p role="alert" className="mb-4 text-sm text-red-700 dark:text-red-400">
           {updatePermissionMutation.error.message}
@@ -334,7 +327,6 @@ export function LinePermissionsPage() {
                       <input
                         type="checkbox"
                         aria-label={`อนุญาตให้ ${approval.lineUserId} บันทึก DCA จากข้อความในแชตส่วนตัวอัตโนมัติ`}
-                        aria-describedby="auto-dca-permission-help"
                         checked={approval.canAutoRecordDca ?? false}
                         onChange={(e) =>
                           handleTogglePermission(

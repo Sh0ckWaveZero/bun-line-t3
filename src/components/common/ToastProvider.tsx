@@ -92,17 +92,17 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
             toastMeta.surfaceClass,
           )}
         >
-          <div className="flex items-start gap-3">
+          <div className="flex items-center gap-3">
             <span
               className={cn(
-                "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl",
+                "flex size-8 shrink-0 items-center justify-center rounded-xl",
                 toastMeta.iconClass,
               )}
               aria-hidden="true"
             >
               <ToastIcon className="size-4" strokeWidth={2.25} />
             </span>
-            <div className="min-w-0 pt-0.5">
+            <div className="min-w-0">
               <ToastPrimitive.Title className="text-sm leading-5 font-semibold tracking-tight">
                 {toast?.title}
               </ToastPrimitive.Title>
@@ -116,7 +116,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
           <ToastPrimitive.Close
             type="button"
             aria-label="ปิดการแจ้งเตือน"
-            className="absolute top-3 right-3 cursor-pointer rounded-lg p-1 text-current/55 transition-colors hover:bg-black/5 hover:text-current focus-visible:ring-2 focus-visible:ring-current focus-visible:outline-none dark:hover:bg-white/10"
+            className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer rounded-lg p-1 text-current/55 transition-colors hover:bg-black/5 hover:text-current focus-visible:ring-2 focus-visible:ring-current focus-visible:outline-none dark:hover:bg-white/10"
           >
             <X className="size-4" aria-hidden="true" />
           </ToastPrimitive.Close>
