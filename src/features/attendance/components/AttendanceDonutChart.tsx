@@ -3,8 +3,8 @@
 import React from "react";
 import { LazyDoughnutChart } from "@/components/charts/LazyCharts";
 import { useAttendanceDonutData } from "@/features/attendance/hooks/useAttendanceChartData";
-import { useChartTheme } from "@/hooks/useChartTheme";
 import type { MonthlyAttendanceReport } from "@/lib/types/attendance";
+import { roundToOneDecimal } from "@/lib/utils/number";
 
 interface AttendanceDonutChartProps {
   report: MonthlyAttendanceReport;
@@ -13,8 +13,7 @@ interface AttendanceDonutChartProps {
 export const AttendanceDonutChart: React.FC<AttendanceDonutChartProps> = ({
   report,
 }) => {
-  const { getDoughnutOptions } = useChartTheme();
-  const chartData = useAttendanceDonutData(report);
+  const slices = useAttendanceDonutData(report);
 
   const daysAbsent = report.workingDaysInMonth - report.totalDaysWorked;
   const isPerfect = daysAbsent === 0;
@@ -22,13 +21,13 @@ export const AttendanceDonutChart: React.FC<AttendanceDonutChartProps> = ({
   if (isPerfect) {
     return (
       <div className="text-center">
-        <p className="text-foreground mb-2 text-sm font-semibold">
+        <p className="mb-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
           เข้างานครบทุกวัน
         </p>
-        <p className="text-muted-foreground text-xs">
+        <p className="text-xs text-slate-500 dark:text-slate-400">
           {report.totalDaysWorked} วัน จาก {report.workingDaysInMonth} วันทำงาน
         </p>
-        <p className="text-muted-foreground mt-1 font-mono text-xs">
+        <p className="mt-1 font-mono text-xs text-slate-500 dark:text-slate-400">
           {report.attendanceRate}%
         </p>
       </div>
@@ -36,8 +35,13 @@ export const AttendanceDonutChart: React.FC<AttendanceDonutChartProps> = ({
   }
 
   return (
-    <div className="mx-auto" style={{ width: "250px", height: "250px" }}>
-      <LazyDoughnutChart data={chartData} options={getDoughnutOptions()} />
+    <div className="mx-auto h-full w-full max-w-[280px]">
+      <LazyDoughnutChart
+        slices={slices}
+        centerValue={`${roundToOneDecimal(report.attendanceRate)}%`}
+        centerLabel="อัตราเข้างาน"
+        ariaLabel="กราฟโดนัทสัดส่วนวันมาทำงานและวันขาดงาน"
+      />
     </div>
   );
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, memo, useMemo } from "react";
+import React, { useState, useEffect, useCallback, memo } from "react";
 import {
   LazyBarChart,
   LazyDoughnutChart,
@@ -221,31 +221,19 @@ const OverviewCard = memo(function OverviewCard({
 
 const HealthScoreChart = memo(function HealthScoreChart({
   score,
-  getDoughnutOptions,
 }: {
   score: number;
-  getDoughnutOptions: (base?: any) => any;
 }) {
-  const data = useMemo(
-    () => ({
-      labels: ["Health Score"],
-      datasets: [
-        {
-          data: [score, 100 - score],
-          backgroundColor: [
-            score >= 80
-              ? "rgb(16, 185, 129)"
-              : score >= 60
-                ? "rgb(245, 158, 11)"
-                : "rgb(239, 68, 68)",
-            "rgb(229, 231, 235)",
-          ],
-          borderWidth: 0,
-        },
-      ],
-    }),
-    [score],
-  );
+  const { isDark } = useChartTheme();
+  const scoreColor =
+    score >= 80
+      ? "rgb(16, 185, 129)"
+      : score >= 60
+        ? "rgb(245, 158, 11)"
+        : "rgb(239, 68, 68)";
+  const remainderColor = isDark
+    ? "rgba(148, 163, 184, 0.25)"
+    : "rgb(229, 231, 235)";
 
   return (
     <div className="bg-card rounded-xl border p-5">
@@ -253,12 +241,19 @@ const HealthScoreChart = memo(function HealthScoreChart({
         คะแนนสุขภาพระบบ
       </h3>
       <div className="flex h-48 items-center justify-center">
-        <div className="h-48 w-48">
+        <div className="h-44 w-44">
           <LazyDoughnutChart
-            data={data}
-            options={getDoughnutOptions({
-              plugins: { legend: { display: false } },
-            })}
+            slices={[
+              { label: "คะแนน", value: score, color: scoreColor },
+              {
+                label: "ที่เหลือ",
+                value: Math.max(0, 100 - score),
+                color: remainderColor,
+              },
+            ]}
+            centerValue={`${score}%`}
+            showLegend={false}
+            ariaLabel="กราฟโดนัทคะแนนสุขภาพระบบ"
           />
         </div>
       </div>
@@ -272,29 +267,11 @@ const HealthScoreChart = memo(function HealthScoreChart({
 const ResourceChart = memo(function ResourceChart({
   memory,
   disk,
-  getChartOptions,
 }: {
   memory: number;
   disk: number;
-  getChartOptions: (base?: any) => any;
 }) {
-  const data = useMemo(
-    () => ({
-      labels: ["หน่วยความจำ", "ดิสก์"],
-      datasets: [
-        {
-          label: "การใช้งาน %",
-          data: [memory, disk],
-          backgroundColor: [
-            "rgba(14, 165, 233, 0.7)",
-            "rgba(124, 58, 237, 0.7)",
-          ],
-          borderRadius: 5,
-        },
-      ],
-    }),
-    [memory, disk],
-  );
+  const { isDark } = useChartTheme();
 
   return (
     <div className="bg-card rounded-xl border p-5">
@@ -303,11 +280,22 @@ const ResourceChart = memo(function ResourceChart({
       </h3>
       <div className="h-56">
         <LazyBarChart
-          data={data}
-          options={getChartOptions({
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, max: 100 } },
-          })}
+          labels={["หน่วยความจำ", "ดิสก์"]}
+          series={[
+            {
+              label: "การใช้งาน %",
+              values: [memory, disk],
+              color: isDark ? "#38bdf8" : "#0ea5e9",
+            },
+          ]}
+          barColors={[
+            isDark ? "rgba(56, 189, 248, 0.75)" : "rgba(14, 165, 233, 0.7)",
+            isDark ? "rgba(167, 139, 250, 0.75)" : "rgba(124, 58, 237, 0.7)",
+          ]}
+          yMax={100}
+          formatValue={(value) => `${value}%`}
+          showLegend={false}
+          ariaLabel="กราฟแท่งการใช้ทรัพยากรหน่วยความจำและดิสก์"
         />
       </div>
     </div>
@@ -444,7 +432,7 @@ export function MonitoringDashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
-  const { mounted, getChartOptions, getDoughnutOptions } = useChartTheme();
+  const { mounted } = useChartTheme();
   const { needsApproval } = useLineApproval();
 
   const fetchMonitoringData = useCallback(async () => {
@@ -582,14 +570,10 @@ export function MonitoringDashboardPage() {
 
             <section>
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <HealthScoreChart
-                  score={monitoringData.systemHealth.score}
-                  getDoughnutOptions={getDoughnutOptions}
-                />
+                <HealthScoreChart score={monitoringData.systemHealth.score} />
                 <ResourceChart
                   memory={monitoringData.metrics.memoryUsage.percentage}
                   disk={monitoringData.metrics.diskUsage.percentage}
-                  getChartOptions={getChartOptions}
                 />
               </div>
             </section>

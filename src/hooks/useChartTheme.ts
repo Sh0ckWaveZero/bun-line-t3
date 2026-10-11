@@ -2,13 +2,27 @@
 
 import { useClientOnlyMounted } from "@/hooks/useHydrationSafe";
 import { useTheme } from "@/lib/theme/theme-provider";
+import type { ChartTheme } from "@tanstack/charts";
 
-export interface ChartThemeColors {
-  background: string;
-  text: string;
-  grid: string;
-  border: string;
-}
+/**
+ * ธีมสีของกราฟ TanStack Charts ตามโหมด light/dark
+ * สีอิง palette slate ของ admin UI (line-permissions pattern)
+ */
+const LIGHT_CHART_THEME: Partial<ChartTheme> = {
+  foreground: "#0f172a",
+  muted: "#64748b",
+  grid: "rgba(100, 116, 139, 0.16)",
+  background: "transparent",
+  palette: ["#2563eb", "#0d9488", "#6366f1", "#f59e0b", "#10b981", "#94a3b8"],
+};
+
+const DARK_CHART_THEME: Partial<ChartTheme> = {
+  foreground: "#e2e8f0",
+  muted: "#94a3b8",
+  grid: "rgba(148, 163, 184, 0.14)",
+  background: "transparent",
+  palette: ["#60a5fa", "#2dd4bf", "#818cf8", "#fbbf24", "#34d399", "#94a3b8"],
+};
 
 export const useChartTheme = () => {
   const { theme, systemTheme } = useTheme();
@@ -18,90 +32,9 @@ export const useChartTheme = () => {
     mounted &&
     (theme === "dark" || (theme === "system" && systemTheme === "dark"));
 
-  const chartColors: ChartThemeColors = {
-    background: isDark ? "rgba(31, 41, 55, 1)" : "rgba(255, 255, 255, 1)", // gray-800 : white
-    text: isDark ? "rgba(243, 244, 246, 1)" : "rgba(17, 24, 39, 1)", // gray-100 : gray-900
-    grid: isDark ? "rgba(75, 85, 99, 0.3)" : "rgba(156, 163, 175, 0.3)", // gray-600 : gray-400
-    border: isDark ? "rgba(75, 85, 99, 1)" : "rgba(229, 231, 235, 1)", // gray-600 : gray-200
-  };
-
-  const getChartOptions = (baseOptions: any = {}) => ({
-    ...baseOptions,
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      ...baseOptions.plugins,
-      legend: {
-        ...baseOptions.plugins?.legend,
-        labels: {
-          ...baseOptions.plugins?.legend?.labels,
-          color: chartColors.text,
-          font: {
-            family: "Prompt, sans-serif",
-            ...baseOptions.plugins?.legend?.labels?.font,
-          },
-        },
-      },
-    },
-    scales: {
-      ...baseOptions.scales,
-      x: {
-        ...baseOptions.scales?.x,
-        grid: {
-          color: chartColors.grid,
-          ...baseOptions.scales?.x?.grid,
-        },
-        ticks: {
-          color: chartColors.text,
-          font: {
-            family: "Prompt, sans-serif",
-          },
-          ...baseOptions.scales?.x?.ticks,
-        },
-      },
-      y: {
-        ...baseOptions.scales?.y,
-        grid: {
-          color: chartColors.grid,
-          ...baseOptions.scales?.y?.grid,
-        },
-        ticks: {
-          color: chartColors.text,
-          font: {
-            family: "Prompt, sans-serif",
-          },
-          ...baseOptions.scales?.y?.ticks,
-        },
-      },
-    },
-  });
-
-  const getDoughnutOptions = (baseOptions: any = {}) => ({
-    ...baseOptions,
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      ...baseOptions.plugins,
-      legend: {
-        position: "bottom" as const,
-        labels: {
-          color: chartColors.text,
-          font: {
-            family: "Prompt, sans-serif",
-          },
-          padding: 20,
-          ...baseOptions.plugins?.legend?.labels,
-        },
-        ...baseOptions.plugins?.legend,
-      },
-    },
-  });
-
   return {
     isDark,
     mounted,
-    chartColors,
-    getChartOptions,
-    getDoughnutOptions,
+    chartTheme: isDark ? DARK_CHART_THEME : LIGHT_CHART_THEME,
   };
 };

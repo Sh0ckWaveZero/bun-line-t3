@@ -3,8 +3,8 @@
 import React from "react";
 import { LazyDoughnutChart } from "@/components/charts/LazyCharts";
 import { useComplianceDonutData } from "@/features/attendance/hooks/useAttendanceChartData";
-import { useChartTheme } from "@/hooks/useChartTheme";
 import type { MonthlyAttendanceReport } from "@/lib/types/attendance";
+import { roundToOneDecimal } from "@/lib/utils/number";
 
 interface ComplianceDonutChartProps {
   report: MonthlyAttendanceReport;
@@ -13,8 +13,7 @@ interface ComplianceDonutChartProps {
 export const ComplianceDonutChart: React.FC<ComplianceDonutChartProps> = ({
   report,
 }) => {
-  const { getDoughnutOptions } = useChartTheme();
-  const chartData = useComplianceDonutData(report);
+  const slices = useComplianceDonutData(report);
 
   const isFullCompliance =
     report.totalDaysWorked > 0 &&
@@ -23,13 +22,13 @@ export const ComplianceDonutChart: React.FC<ComplianceDonutChartProps> = ({
   if (isFullCompliance) {
     return (
       <div className="text-center">
-        <p className="text-foreground mb-2 text-sm font-semibold">
+        <p className="mb-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
           ทำงานครบ 9 ชั่วโมงทุกวัน
         </p>
-        <p className="text-muted-foreground text-xs">
+        <p className="text-xs text-slate-500 dark:text-slate-400">
           {report.completeDays} วัน จาก {report.totalDaysWorked} วันที่ทำงาน
         </p>
-        <p className="text-muted-foreground mt-1 font-mono text-xs">
+        <p className="mt-1 font-mono text-xs text-slate-500 dark:text-slate-400">
           อัตรา: {report.complianceRate}%
         </p>
       </div>
@@ -37,8 +36,13 @@ export const ComplianceDonutChart: React.FC<ComplianceDonutChartProps> = ({
   }
 
   return (
-    <div className="mx-auto" style={{ width: "250px", height: "250px" }}>
-      <LazyDoughnutChart data={chartData} options={getDoughnutOptions()} />
+    <div className="mx-auto h-full w-full max-w-[280px]">
+      <LazyDoughnutChart
+        slices={slices}
+        centerValue={`${roundToOneDecimal(report.complianceRate)}%`}
+        centerLabel="ครบ 9 ชม."
+        ariaLabel="กราฟโดนัทสัดส่วนวันทำงานครบ 9 ชั่วโมงและวันที่ไม่ครบ"
+      />
     </div>
   );
 };

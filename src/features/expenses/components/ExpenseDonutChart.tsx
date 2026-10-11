@@ -15,7 +15,6 @@ const DONUT_COLORS = [
   "#06b6d4",
   "#84cc16",
 ];
-const CHART_LABEL_COLOR = "#6b7280";
 
 interface ExpenseDonutChartProps {
   data: CategorySummary[];
@@ -29,46 +28,11 @@ export function ExpenseDonutChart({
   const expenses = data.filter((c) => c.type === "EXPENSE").slice(0, 6);
   if (expenses.length === 0) return null;
 
-  const chartData = {
-    labels: expenses.map((c) => `${c.icon ?? "📦"} ${c.categoryName}`),
-    datasets: [
-      {
-        data: expenses.map((c) => c.total),
-        backgroundColor: DONUT_COLORS.slice(0, expenses.length),
-        borderWidth: 0,
-        hoverOffset: 6,
-      },
-    ],
-  };
-
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    layout: { padding: { bottom: 4 } },
-    plugins: {
-      legend: {
-        position: "bottom" as const,
-        labels: {
-          font: { size: 10 },
-          color: CHART_LABEL_COLOR,
-          padding: 8,
-          boxWidth: 8,
-          usePointStyle: true,
-        },
-      },
-      tooltip: {
-        enabled: !hideAmounts,
-        callbacks: {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          label: (ctx: any) => {
-            const item = expenses[ctx.dataIndex as number] as
-              CategorySummary | undefined;
-            return ` ${formatAmount(ctx.raw as number)} (${item?.percentage.toFixed(1) ?? 0}%)`;
-          },
-        },
-      },
-    },
-  };
+  const slices = expenses.map((category, index) => ({
+    label: `${category.icon ?? "📦"} ${category.categoryName}`,
+    value: category.total,
+    color: DONUT_COLORS[index % DONUT_COLORS.length]!,
+  }));
 
   return (
     <Card className="border-border/70 bg-card/85 dark:bg-card/70 border">
@@ -79,7 +43,12 @@ export function ExpenseDonutChart({
       </CardHeader>
       <CardContent className="px-3 pb-3 sm:px-4 sm:pb-4">
         <div className="h-[240px] sm:h-[250px]">
-          <LazyDoughnutChart data={chartData} options={options} />
+          <LazyDoughnutChart
+            slices={slices}
+            formatValue={(value) => formatAmount(value)}
+            tooltipDisabled={hideAmounts}
+            ariaLabel="กราฟโดนัทสัดส่วนรายจ่ายตามหมวดหมู่"
+          />
         </div>
       </CardContent>
     </Card>

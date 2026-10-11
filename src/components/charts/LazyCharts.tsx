@@ -1,60 +1,53 @@
 import { lazy, Suspense } from "react";
-import type { ChartProps } from "react-chartjs-2";
-import { registerChartJs } from "@/lib/chart-registration";
+import type {
+  BarChartProps,
+  DoughnutChartProps,
+  DoughnutSlice,
+  LineChartProps,
+} from "./tanstack-charts";
 
-type DoughnutChartProps = Omit<ChartProps<"doughnut">, "type">;
-type BarChartProps = Omit<ChartProps<"bar">, "type">;
-type LineChartProps = Omit<ChartProps<"line">, "type">;
+export type {
+  BarChartProps,
+  DoughnutChartProps,
+  DoughnutSlice,
+  LineChartProps,
+};
 
-const LazyDoughnut = lazy(async () => {
-  await registerChartJs();
-  const { Doughnut } = await import("react-chartjs-2");
-  return { default: Doughnut };
-});
+const LazyLine = lazy(() =>
+  import("./tanstack-charts").then((m) => ({ default: m.LineChart })),
+);
 
-const LazyBar = lazy(async () => {
-  await registerChartJs();
-  const { Bar } = await import("react-chartjs-2");
-  return { default: Bar };
-});
+const LazyBar = lazy(() =>
+  import("./tanstack-charts").then((m) => ({ default: m.BarChart })),
+);
 
-const LazyLine = lazy(async () => {
-  await registerChartJs();
-  const { Line } = await import("react-chartjs-2");
-  return { default: Line };
-});
+const LazyDoughnut = lazy(() =>
+  import("./tanstack-charts").then((m) => ({ default: m.DoughnutChart })),
+);
 
-function ChartFallback() {
+/* ไม่ใส่ fallback ระหว่างโหลด chunk — skeleton ของหน้ารับงานแทนแล้ว
+   กราฟจะโผล่เองเมื่อพร้อม (แผงกราฟมี height ล็อกอยู่แล้ว ไม่มี layout shift) */
+
+export function LazyLineChart(props: LineChartProps) {
   return (
-    <div
-      className="text-muted-foreground flex min-h-48 items-center justify-center"
-      role="status"
-    >
-      กำลังโหลดกราฟ...
-    </div>
-  );
-}
-
-export function LazyDoughnutChart(props: DoughnutChartProps) {
-  return (
-    <Suspense fallback={<ChartFallback />}>
-      <LazyDoughnut {...props} />
+    <Suspense fallback={null}>
+      <LazyLine {...props} />
     </Suspense>
   );
 }
 
 export function LazyBarChart(props: BarChartProps) {
   return (
-    <Suspense fallback={<ChartFallback />}>
+    <Suspense fallback={null}>
       <LazyBar {...props} />
     </Suspense>
   );
 }
 
-export function LazyLineChart(props: LineChartProps) {
+export function LazyDoughnutChart(props: DoughnutChartProps) {
   return (
-    <Suspense fallback={<ChartFallback />}>
-      <LazyLine {...props} />
+    <Suspense fallback={null}>
+      <LazyDoughnut {...props} />
     </Suspense>
   );
 }

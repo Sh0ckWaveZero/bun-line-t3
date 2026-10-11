@@ -5,6 +5,7 @@ import type {
   AttendanceRecord,
   MonthlyAttendanceReport,
 } from "@/lib/types/attendance";
+import type { DoughnutSlice } from "@/components/charts/LazyCharts";
 
 /**
  * Safe date formatting for chart labels with error handling
@@ -35,12 +36,10 @@ const isValidDate = (dateString: string): boolean => {
 };
 
 /**
- * Hook for preparing hours worked chart data (Line chart)
- * Shows hours worked per day with target line
+ * Hook สำหรับกราฟเส้นชั่วโมงทำงานรายวัน (จัดเรียงตามวันที่)
  */
 export const useHoursChartData = (records: AttendanceRecord[]) => {
   return useMemo(() => {
-    // Safe sorting without direct date comparison
     const sortedRecords = [...records].sort((a, b) => {
       const dateA = new Date(a.workDate);
       const dateB = new Date(b.workDate);
@@ -52,136 +51,69 @@ export const useHoursChartData = (records: AttendanceRecord[]) => {
       return dateA.getTime() - dateB.getTime();
     });
 
-    return {
-      labels: sortedRecords.map((record) =>
-        formatShortDateSafe(record.workDate),
-      ),
-      datasets: [
-        {
-          label: "ชั่วโมงทำงาน",
-          data: sortedRecords.map((record) => record.hoursWorked || 0),
-          fill: true,
-          backgroundColor: "rgba(59, 130, 246, 0.1)",
-          borderColor: "rgb(37, 99, 235)",
-          borderWidth: 3,
-          tension: 0.3,
-          pointBackgroundColor: "rgb(59, 130, 246)",
-          pointBorderColor: "white",
-          pointBorderWidth: 2,
-          pointRadius: 4,
-          pointHoverRadius: 6,
-        },
-        {
-          label: "เป้าหมาย (9 ชม.)",
-          data: sortedRecords.map(() => 9),
-          borderColor: "rgba(20, 184, 166, 0.8)",
-          borderWidth: 2,
-          borderDash: [8, 4],
-          fill: false,
-          pointRadius: 0,
-          tension: 0,
-        },
-      ],
-    };
+    return sortedRecords.map((record) => ({
+      label: formatShortDateSafe(record.workDate),
+      value: record.hoursWorked || 0,
+    }));
   }, [records]);
 };
 
 /**
- * Hook for preparing attendance donut chart data
- * Shows days attended vs days absent
+ * Hook สำหรับ donut สัดส่วนการมาทำงาน (มาทำงาน / ขาดงาน)
  */
-export const useAttendanceDonutData = (report: MonthlyAttendanceReport) => {
+export const useAttendanceDonutData = (
+  report: MonthlyAttendanceReport,
+): DoughnutSlice[] => {
   return useMemo(() => {
-    const daysAbsent = report.workingDaysInMonth - report.totalDaysWorked;
+    const daysAbsent = Math.max(
+      0,
+      report.workingDaysInMonth - report.totalDaysWorked,
+    );
 
-    if (daysAbsent === 0) {
-      return {
-        labels: ["เข้างานครบทุกวัน 🎉"],
-        datasets: [
-          {
-            data: [100],
-            backgroundColor: ["rgb(16, 185, 129)"],
-            hoverOffset: 4,
-          },
-        ],
-      };
-    }
-
-    return {
-      labels: ["มาทำงาน", "ขาดงาน"],
-      datasets: [
-        {
-          data: [report.totalDaysWorked, daysAbsent],
-          backgroundColor: [
-            "rgb(16, 185, 129)", // Emerald-500
-            "rgb(148, 163, 184)", // Slate-400
-          ],
-          borderWidth: 2,
-          borderColor: "#ffffff",
-          hoverOffset: 6,
-          hoverBorderWidth: 3,
-        },
-      ],
-    };
+    return [
+      {
+        label: "มาทำงาน",
+        value: report.totalDaysWorked,
+        color: "rgb(16, 185, 129)", // Emerald-500
+      },
+      {
+        label: "ขาดงาน",
+        value: daysAbsent,
+        color: "rgb(148, 163, 184)", // Slate-400
+      },
+    ];
   }, [report.workingDaysInMonth, report.totalDaysWorked]);
 };
 
 /**
- * Hook for preparing compliance donut chart data
- * Shows days with full 9 hours vs incomplete days
+ * Hook สำหรับ donut การทำงานครบเวลา (ครบ 9 ชม. / ไม่ครบ)
  */
-export const useComplianceDonutData = (report: MonthlyAttendanceReport) => {
+export const useComplianceDonutData = (
+  report: MonthlyAttendanceReport,
+): DoughnutSlice[] => {
   return useMemo(() => {
-    const incompleteDays = report.totalDaysWorked - report.completeDays;
+    const incompleteDays = Math.max(
+      0,
+      report.totalDaysWorked - report.completeDays,
+    );
 
-    if (incompleteDays === 0 && report.totalDaysWorked > 0) {
-      return {
-        labels: ["ทำงานครบ 9 ชม. ทุกวัน 💪"],
-        datasets: [
-          {
-            data: [100],
-            backgroundColor: ["rgb(99, 102, 241)"],
-            hoverOffset: 4,
-          },
-        ],
-      };
-    }
-
-    if (report.totalDaysWorked === 0) {
-      return {
-        labels: ["ไม่มีข้อมูลการทำงาน"],
-        datasets: [
-          {
-            data: [100],
-            backgroundColor: ["rgb(148, 163, 184)"],
-            hoverOffset: 4,
-          },
-        ],
-      };
-    }
-
-    return {
-      labels: ["ทำงานครบ 9 ชม.", "ทำงานไม่ครบ 9 ชม."],
-      datasets: [
-        {
-          data: [report.completeDays, incompleteDays],
-          backgroundColor: [
-            "rgb(99, 102, 241)", // Indigo-500
-            "rgb(245, 158, 11)", // Amber-500
-          ],
-          borderWidth: 2,
-          borderColor: "#ffffff",
-          hoverOffset: 6,
-          hoverBorderWidth: 3,
-        },
-      ],
-    };
+    return [
+      {
+        label: "ทำงานครบ 9 ชม.",
+        value: report.completeDays,
+        color: "rgb(99, 102, 241)", // Indigo-500
+      },
+      {
+        label: "ทำงานไม่ครบ 9 ชม.",
+        value: incompleteDays,
+        color: "rgb(245, 158, 11)", // Amber-500
+      },
+    ];
   }, [report.totalDaysWorked, report.completeDays]);
 };
 
 /**
- * Hook for preparing daily average hours bar chart data
- * Shows average hours worked by day of week
+ * Hook สำหรับ bar chart ชั่วโมงทำงานเฉลี่ยแยกตามวันของสัปดาห์
  */
 export const useDailyAverageHoursData = (records: AttendanceRecord[]) => {
   return useMemo(() => {
@@ -213,32 +145,15 @@ export const useDailyAverageHoursData = (records: AttendanceRecord[]) => {
     ];
     const dayOrder = [1, 2, 3, 4, 5, 6, 0];
 
-    const labels = [];
-    const data = [];
+    const labels: string[] = [];
+    const values: number[] = [];
 
     for (const dayIndex of dayOrder) {
-      labels.push(dayNames[dayIndex === 0 ? 6 : dayIndex - 1]);
+      labels.push(dayNames[dayIndex === 0 ? 6 : dayIndex - 1]!);
       const dayData = dayMap.get(dayIndex);
-      const avgHours = dayData ? dayData.total / dayData.count : 0;
-      data.push(avgHours);
+      values.push(dayData ? dayData.total / dayData.count : 0);
     }
 
-    return {
-      labels,
-      datasets: [
-        {
-          label: "ชั่วโมงทำงานเฉลี่ยตามวัน",
-          data,
-          backgroundColor: "rgba(20, 184, 166, 0.8)",
-          borderColor: "rgb(13, 148, 136)",
-          borderWidth: 2,
-          borderRadius: 8,
-          borderSkipped: false,
-          hoverBackgroundColor: "rgba(20, 184, 166, 0.9)",
-          hoverBorderColor: "rgb(15, 118, 110)",
-          hoverBorderWidth: 3,
-        },
-      ],
-    };
+    return { labels, values };
   }, [records]);
 };
