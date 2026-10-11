@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useSession } from "@/lib/auth/client";
+import { useToast } from "@/components/common/ToastProvider";
 import {
   AttendanceRecord,
   MonthlyAttendanceReport,
@@ -16,6 +17,7 @@ import {
 export const useAttendanceReport = () => {
   const { data: session, status } = useSession();
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   // Report States
   const [report, setReport] = useState<MonthlyAttendanceReport | null>(null);
@@ -150,13 +152,21 @@ export const useAttendanceReport = () => {
       await fetchReport();
       closeEditModal();
 
-      alert("อัพเดทข้อมูลการลงเวลาเรียบร้อยแล้ว");
+      showToast({
+        title: "อัพเดทข้อมูลการลงเวลาเรียบร้อยแล้ว",
+        type: "success",
+      });
     } catch (err) {
-      alert(err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการอัพเดท");
+      showToast({
+        title: "อัพเดทข้อมูลไม่สำเร็จ",
+        description:
+          err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการอัพเดท",
+        type: "error",
+      });
     } finally {
       setUpdateLoading(false);
     }
-  }, [editingRecord, editData, fetchReport, closeEditModal]);
+  }, [editingRecord, editData, fetchReport, closeEditModal, showToast]);
 
   return {
     // Session
