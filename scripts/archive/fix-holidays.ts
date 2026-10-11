@@ -1,4 +1,4 @@
-import { db } from "../src/lib/database/db";
+import { db } from "../../src/lib/database/db";
 
 async function fixHolidays() {
   try {

@@ -1,9 +1,12 @@
 import { PrismaClient, Prisma } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
+// ต้องมี type จริง — ถ้าปล่อย any จะทำให้ db.* ทั้งโปรเจกต์ไม่มี type
+// และทุก callback ใน query result กลายเป็น implicit any (TS7006)
+type ExtendedPrismaClient = ReturnType<typeof createClient>;
+
 const globalForPrisma = globalThis as unknown as {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  prisma: any | undefined;
+  prisma?: ExtendedPrismaClient;
   prismaUrl: string | undefined;
 };
 
@@ -83,7 +86,7 @@ const createClient = () => {
  * ป้องกัน "Cannot read properties of undefined" หลัง schema เปลี่ยน
  * โดยที่ dev server ยังไม่ถูก restart
  */
-const isCacheStale = (client: PrismaClient): boolean => {
+const isCacheStale = (client: ExtendedPrismaClient): boolean => {
   try {
     // ตรวจสอบว่า DATABASE_URL เปลี่ยนหรือเปล่า (เช่น แก้ .env.local แล้ว HMR reload)
     if (globalForPrisma.prismaUrl !== process.env.DATABASE_URL) return true;

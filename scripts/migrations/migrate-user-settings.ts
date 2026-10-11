@@ -8,7 +8,7 @@
  * feature to ensure all users have proper notification preferences.
  */
 
-import { db } from "../src/lib/database/db";
+import { db } from "../../src/lib/database/db";
 
 interface MigrationResult {
   totalUsers: number;
@@ -48,8 +48,12 @@ async function migrateUserSettings(): Promise<MigrationResult> {
     console.log(`📊 Found ${result.totalUsers} total users`);
 
     // Separate users with and without settings
-    const usersWithSettings = allUsers.filter((user) => user.settings);
-    const usersWithoutSettings = allUsers.filter((user) => !user.settings);
+    const usersWithSettings = allUsers.filter(
+      (user: { settings?: unknown }) => user.settings,
+    );
+    const usersWithoutSettings = allUsers.filter(
+      (user: { settings?: unknown }) => !user.settings,
+    );
 
     result.usersWithSettings = usersWithSettings.length;
     result.usersWithoutSettings = usersWithoutSettings.length;
@@ -141,9 +145,11 @@ async function verifyMigration(): Promise<void> {
       console.log(
         `❌ Verification failed: ${usersWithoutSettings.length} users still without settings:`,
       );
-      usersWithoutSettings.forEach((user) => {
-        console.log(`   - ${user.name || user.email || user.id}`);
-      });
+      usersWithoutSettings.forEach(
+        (user: { name: string; email: string; id: string }) => {
+          console.log(`   - ${user.name || user.email || user.id}`);
+        },
+      );
     }
 
     // Show settings distribution
@@ -155,11 +161,17 @@ async function verifyMigration(): Promise<void> {
     });
 
     console.log("\n📊 Current notification settings distribution:");
-    settingsStats.forEach((stat) => {
-      console.log(
-        `   Check-in: ${stat.enableCheckInReminders ? "ON" : "OFF"}, Check-out: ${stat.enableCheckOutReminders ? "ON" : "OFF"} → ${stat._count._all} users`,
-      );
-    });
+    settingsStats.forEach(
+      (stat: {
+        enableCheckInReminders: boolean;
+        enableCheckOutReminders: boolean;
+        _count: { _all: number };
+      }) => {
+        console.log(
+          `   Check-in: ${stat.enableCheckInReminders ? "ON" : "OFF"}, Check-out: ${stat.enableCheckOutReminders ? "ON" : "OFF"} → ${stat._count._all} users`,
+        );
+      },
+    );
   } catch (error) {
     console.error("❌ Verification failed:", error);
   }

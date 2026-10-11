@@ -5,7 +5,7 @@
  * เพื่อให้ user login ใหม่ด้วย userId ที่ถูกต้อง
  */
 
-import { db } from "../src/lib/database/db";
+import { db } from "../../src/lib/database/db";
 
 interface Account {
   id: string;

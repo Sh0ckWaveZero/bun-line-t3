@@ -122,9 +122,7 @@ const createLineOrder = async (
   for (let attempt = 0; attempt < 5; attempt++) {
     try {
       return await db.$transaction(
-        async (
-          tx: Prisma.TransactionClient,
-        ): Promise<CreateLineDcaOrderResult> => {
+        async (tx) => {
           if (webhookEventId) {
             const receipt = await tx.dcaWebhookReceipt.findUnique({
               where: { webhookEventId },

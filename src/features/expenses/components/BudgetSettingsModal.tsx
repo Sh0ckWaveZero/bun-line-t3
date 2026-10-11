@@ -73,13 +73,13 @@ export function BudgetSettingsModal({
     if (editingId) {
       await onUpdateBudget(editingId, {
         amount: amountNum,
-        alertAt: alertAt[0],
+        alertAt: alertAt[0] ?? 80,
       });
     } else {
       await onCreateBudget({
         categoryId,
         amount: amountNum,
-        alertAt: alertAt[0],
+        alertAt: alertAt[0] ?? 80,
       });
     }
     resetForm();

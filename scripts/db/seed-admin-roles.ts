@@ -13,8 +13,8 @@
  *   ADMIN_LINE_USER_IDS=U123,U456,U789 bun run scripts/seed-admin-roles.ts
  */
 
-import { env } from "../src/env.mjs";
-import { db } from "../src/lib/database/db";
+import { env } from "../../src/env.mjs";
+import { db } from "../../src/lib/database/db";
 
 interface AdminSeedResult {
   adminUserIds: string[];
@@ -52,7 +52,7 @@ async function seedAdminRoles(): Promise<AdminSeedResult> {
 
     result.adminUserIds = adminIdsStr
       .split(",")
-      .map((id) => id.trim())
+      .map((id: string) => id.trim())
       .filter(Boolean);
 
     if (result.adminUserIds.length === 0) {
@@ -119,7 +119,9 @@ async function seedAdminRoles(): Promise<AdminSeedResult> {
     console.log(`🔄 Need to update: ${usersToUpdate.length} users`);
 
     // Find which admin IDs don't have accounts yet
-    const foundAccountIds = accounts.map((acc) => acc.accountId);
+    const foundAccountIds = accounts.map(
+      (acc: { accountId: string }) => acc.accountId,
+    );
     const missingAccountIds = result.adminUserIds.filter(
       (id) => !foundAccountIds.includes(id),
     );
@@ -205,9 +207,13 @@ async function verifySeeding(): Promise<void> {
     });
 
     console.log("\n📊 Current role distribution:");
-    roleDistribution.forEach((stat) => {
-      console.log(`   ${stat.role.toUpperCase()} → ${stat._count._all} users`);
-    });
+    roleDistribution.forEach(
+      (stat: { role: string; _count: { _all: number } }) => {
+        console.log(
+          `   ${stat.role.toUpperCase()} → ${stat._count._all} users`,
+        );
+      },
+    );
 
     // Show all admin users
     const adminUsers = await db.user.findMany({
@@ -229,17 +235,24 @@ async function verifySeeding(): Promise<void> {
     if (adminUsers.length === 0) {
       console.log("   ⚠️  No admin users found");
     } else {
-      adminUsers.forEach((user) => {
-        const lineAccount = user.accounts.find(
-          (acc) => acc.providerId === "line",
-        );
-        const lineUserId = lineAccount?.accountId || "N/A";
+      adminUsers.forEach(
+        (user: {
+          id: string;
+          name: string;
+          email: string;
+          accounts: { providerId: string; accountId: string }[];
+        }) => {
+          const lineAccount = user.accounts.find(
+            (acc: { providerId: string }) => acc.providerId === "line",
+          );
+          const lineUserId = lineAccount?.accountId || "N/A";
 
-        console.log(
-          `   👤 ${user.name || user.email || user.id}`,
-          `\n      └─ LINE ID: ${lineUserId}`,
-        );
-      });
+          console.log(
+            `   👤 ${user.name || user.email || user.id}`,
+            `\n      └─ LINE ID: ${lineUserId}`,
+          );
+        },
+      );
     }
   } catch (error) {
     console.error("❌ Verification failed:", error);

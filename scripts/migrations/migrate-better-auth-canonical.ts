@@ -1,5 +1,9 @@
 import type { Prisma } from "@prisma/client";
-import { db } from "../src/lib/database/db";
+import { db } from "../../src/lib/database/db";
+import { asRawDb } from "../lib/mongo-raw-db";
+
+// สคริปต์ mongo-era — เหตุผลที่ต้อง cast อยู่ใน scripts/lib/mongo-raw-db.ts
+const rawDb = asRawDb(db);
 
 interface MongoIndex {
   key?: Record<string, unknown>;
@@ -8,12 +12,12 @@ interface MongoIndex {
 
 async function runCommand(name: string, command: Prisma.InputJsonObject) {
   console.log(`Running ${name}...`);
-  const result = await db.$runCommandRaw(command);
+  const result = await rawDb.$runCommandRaw(command);
   console.log(`${name} result:`, JSON.stringify(result));
 }
 
 async function dropLegacyIndex(collection: string, fieldName: string) {
-  const result = await db.$runCommandRaw({
+  const result = await rawDb.$runCommandRaw({
     listIndexes: collection,
   });
   const indexes = (result as { cursor?: { firstBatch?: MongoIndex[] } }).cursor

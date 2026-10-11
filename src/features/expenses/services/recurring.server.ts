@@ -16,8 +16,18 @@ import type { TransactionWithCategory } from "../types";
 import { toNum } from "./decimal";
 
 /** map Prisma Transaction row (Decimal amount) → TransactionWithCategory (number) */
-function mapTx<T extends { amount: unknown }>(row: T): T {
-  return { ...row, amount: toNum(row.amount as never) };
+/** แปลง Prisma row (Decimal amount, Date transDate) → number/string ตาม app interface */
+function mapTx<T extends { amount: unknown; transDate: unknown }>(
+  row: T,
+): Omit<T, "amount" | "transDate"> & { amount: number; transDate: string } {
+  return {
+    ...row,
+    amount: toNum(row.amount as never),
+    transDate:
+      row.transDate instanceof Date
+        ? row.transDate.toISOString()
+        : String(row.transDate),
+  };
 }
 
 /**
@@ -289,7 +299,7 @@ export async function executeRecurringTransaction(
     },
   });
 
-  return mapTx(transaction) as TransactionWithCategory;
+  return mapTx(transaction);
 }
 
 /**
