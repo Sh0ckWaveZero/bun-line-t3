@@ -1,3 +1,9 @@
+import {
+  parseBitkubDcaMessage,
+  parsedDcaSchema,
+  parseDcaTimestamp,
+} from "@/features/dca/helpers/parse-bitkub-dca";
+import type { ParsedBitkubDcaMessage } from "@/features/dca/types";
 import { dcaService } from "@/features/dca";
 import { formatDate, formatTHB } from "@/features/dca/utils/format";
 import { sendMessage } from "@/lib/utils/line-utils";
@@ -153,147 +159,66 @@ const stripDcaAddPrefix = (fullText: string): string => {
  *   /dca add 107.99 BTC 0.00004634 2330307.8
  *   /dca add 107.99 BTC 0.00004634 2330307.8 2026-04-11
  */
-const handleAdd = async (req: any, args: string[]) => {
+export const handleParsedDcaAdd = async (
+  req: any,
+  parsed: ParsedBitkubDcaMessage,
+): Promise<void> => {
   const identity = await getDcaLineUserIdentity(req, "DCA Add");
-
   if (!identity) {
     await sendMessage(req, [
       { type: "text", text: "❌ ไม่สามารถระบุตัวตนผู้ใช้ได้ กรุณาลองใหม่" },
     ]);
     return;
   }
-
-  // ─── โหมด 1: ลอง parse ข้อความ Bitkub จาก full message text ───
-  const fullText = getFullMessageText(req);
-  const bitkubText = stripDcaAddPrefix(fullText);
-  const parsed = dcaService.parseBitkubDcaMessage(bitkubText);
-
-  if (parsed) {
-    try {
-      const order = await dcaService.createOrder({
-        lineUserId: identity.primaryLineUserId,
-        coin: parsed.coin,
-        amountTHB: parsed.amountTHB,
-        coinReceived: parsed.coinReceived,
-        pricePerCoin: parsed.pricePerCoin,
-        executedAt: parsed.executedAt,
-      });
-
-      // 🎉 Emit SSE event เพื่อให้ web clients รับทราบ
-      dcaEventManager.emit({
-        type: "dca-order-created",
-        data: { lineUserId: order.lineUserId },
-      });
-      await sendMessage(req, [
-        { type: "text", text: buildAddSuccessText(order, parsed) },
-      ]);
-    } catch (err) {
-      console.error("❌ DCA add (bitkub mode) error:", err);
-      await sendMessage(req, [
-        { type: "text", text: "❌ ไม่สามารถบันทึกได้ กรุณาลองใหม่อีกครั้ง" },
-      ]);
-    }
+  const result = await dcaService.createLineOrder(
+    { ...parsed, lineUserId: identity.primaryLineUserId },
+    req.body?.events?.[0]?.webhookEventId,
+  );
+  if (result.status === "replayed") return;
+  if (result.status === "duplicate") {
+    await sendMessage(req, [
+      { type: "text", text: "ℹ️ รายการ DCA นี้บันทึกไว้แล้ว จึงไม่บันทึกซ้ำ" },
+    ]);
     return;
   }
+  dcaEventManager.emit({
+    type: "dca-order-created",
+    data: { lineUserId: result.order.lineUserId },
+  });
+  await sendMessage(req, [
+    { type: "text", text: buildAddSuccessText(result.order, parsed) },
+  ]);
+};
 
-  // ─── โหมด 2: กรอกค่าทีละตัว ───
-  // args = ["107.99", "BTC", "0.00004634", "2330307.8", "2026-04-11"?]
-  if (args.length < 4) {
+const handleAdd = async (req: any, args: string[]) => {
+  const parsed = parseBitkubDcaMessage(
+    stripDcaAddPrefix(getFullMessageText(req)),
+  );
+  if (parsed) return handleParsedDcaAdd(req, parsed);
+  const numeric = /^(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?(?:[eE][+-]?\d+)?$/;
+  const validNumbers = [args[0], args[2], args[3]].every(
+    (value) => value !== undefined && numeric.test(value),
+  );
+  const executedAt = args[4]
+    ? parseDcaTimestamp(`${args[4]}T08:00:00+07:00`)
+    : new Date();
+  const manual = parsedDcaSchema.safeParse({
+    coin: args[1]?.toUpperCase(),
+    amountTHB: Number(args[0]?.replace(/,/g, "")),
+    coinReceived: Number(args[2]?.replace(/,/g, "")),
+    pricePerCoin: Number(args[3]?.replace(/,/g, "")),
+    executedAt,
+  });
+  if (!validNumbers || args.length < 4 || args.length > 5 || !manual.success) {
     await sendMessage(req, [
       {
         type: "text",
-        text: [
-          "❌ รูปแบบไม่ถูกต้อง",
-          "",
-          "✅ โหมด 1 — paste ข้อความจาก Bitkub:",
-          "/dca add [ข้อความ Bitkub ทั้งก้อน]",
-          "",
-          "✅ โหมด 2 — กรอกค่าทีละตัว:",
-          "/dca add [เงิน] [เหรียญ] [ได้รับ] [ราคา]",
-          "/dca add [เงิน] [เหรียญ] [ได้รับ] [ราคา] [YYYY-MM-DD]",
-          "",
-          "📌 ตัวอย่าง:",
-          "/dca add 107.99 BTC 0.00004634 2330307.8",
-          "/dca add 107.99 BTC 0.00004634 2330307.8 2026-04-11",
-        ].join("\n"),
+        text: "❌ รูปแบบไม่ถูกต้อง\nใช้ /dca add [ข้อความ Bitkub ทั้งก้อน]\nหรือ /dca add [เงิน] [เหรียญ] [ได้รับ] [ราคา] [YYYY-MM-DD]",
       },
     ]);
     return;
   }
-
-  const amountTHB = parseFloat(args[0]!.replace(/,/g, ""));
-  const coin = args[1]!.toUpperCase();
-  const coinReceived = parseFloat(args[2]!);
-  const pricePerCoin = parseFloat(args[3]!.replace(/,/g, ""));
-
-  // วันที่: ถ้ามี ใช้ 08:00 Bangkok, ถ้าไม่มีใช้เวลาปัจจุบัน
-  let executedAt: Date;
-  if (args[4]) {
-    executedAt = new Date(`${args[4].trim()}T08:00:00+07:00`);
-    if (isNaN(executedAt.getTime())) {
-      await sendMessage(req, [
-        {
-          type: "text",
-          text: `❌ รูปแบบวันที่ไม่ถูกต้อง\nใช้: YYYY-MM-DD เช่น 2026-04-11`,
-        },
-      ]);
-      return;
-    }
-  } else {
-    executedAt = new Date();
-  }
-
-  if (isNaN(amountTHB) || amountTHB <= 0) {
-    await sendMessage(req, [
-      { type: "text", text: `❌ จำนวนเงินไม่ถูกต้อง: "${args[0]}"` },
-    ]);
-    return;
-  }
-  if (isNaN(coinReceived) || coinReceived <= 0) {
-    await sendMessage(req, [
-      { type: "text", text: `❌ จำนวนเหรียญไม่ถูกต้อง: "${args[2]}"` },
-    ]);
-    return;
-  }
-  if (isNaN(pricePerCoin) || pricePerCoin <= 0) {
-    await sendMessage(req, [
-      { type: "text", text: `❌ ราคาต่อเหรียญไม่ถูกต้อง: "${args[3]}"` },
-    ]);
-    return;
-  }
-
-  try {
-    const order = await dcaService.createOrder({
-      lineUserId: identity.primaryLineUserId,
-      coin,
-      amountTHB,
-      coinReceived,
-      pricePerCoin,
-      executedAt,
-    });
-
-    dcaEventManager.emit({
-      type: "dca-order-created",
-      data: { lineUserId: order.lineUserId },
-    });
-    await sendMessage(req, [
-      {
-        type: "text",
-        text: buildAddSuccessText(order, {
-          coin,
-          amountTHB,
-          coinReceived,
-          pricePerCoin,
-          executedAt,
-        }),
-      },
-    ]);
-  } catch (err) {
-    console.error("❌ DCA add error:", err);
-    await sendMessage(req, [
-      { type: "text", text: "❌ ไม่สามารถบันทึกได้ กรุณาลองใหม่อีกครั้ง" },
-    ]);
-  }
+  await handleParsedDcaAdd(req, manual.data);
 };
 
 /**
@@ -427,7 +352,9 @@ const handleDelete = async (req: any, args: string[]) => {
     )) as DcaOrderForCommand[];
     const foundRounds = found.map((order) => order.round);
     const foundRoundSet = new Set(foundRounds);
-    const notFoundRounds = validRounds.filter((round) => !foundRoundSet.has(round));
+    const notFoundRounds = validRounds.filter(
+      (round) => !foundRoundSet.has(round),
+    );
 
     if (found.length === 0) {
       const roundList = validRounds.join(", ");

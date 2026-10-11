@@ -532,6 +532,7 @@ model LineApprovalRequest {
   canRequestAttendanceReport Boolean @default(false) @map("can_request_attendance_report")
   canRequestLeave            Boolean @default(false) @map("can_request_leave")
   canReceiveReminders        Boolean @default(false) @map("can_receive_reminders")
+  canAutoRecordDca           Boolean @default(false) @map("can_auto_record_dca")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -588,4 +589,12 @@ model CronJobExecution {
   @@index([cronJobId, startedAt])
   @@index([status, startedAt])
   @@map("cron_job_executions")
+}
+
+model DcaWebhookReceipt {
+  webhookEventId String   @id @map("webhook_event_id")
+  lineUserId     String   @map("line_user_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@map("dca_webhook_receipts")
 }

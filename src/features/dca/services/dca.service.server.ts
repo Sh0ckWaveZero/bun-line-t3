@@ -1,10 +1,15 @@
+import {
+  parseBitkubDcaMessage,
+  parsedDcaSchema,
+} from "../helpers/parse-bitkub-dca";
+import { z } from "zod";
 import { db } from "@/lib/database/db";
 import type { DcaOrder, Prisma } from "@prisma/client";
 import type {
   CreateDcaOrderInput,
   DcaOrderListParams,
   DcaOrderListResult,
-  ParsedBitkubDcaMessage,
+  CreateLineDcaOrderResult,
 } from "../types";
 
 /**
@@ -98,6 +103,91 @@ const createOrder = async (input: CreateDcaOrderInput) => {
   });
 };
 
+const createLineOrder = async (
+  input: CreateDcaOrderInput,
+  webhookEventId?: string,
+): Promise<CreateLineDcaOrderResult> => {
+  parsedDcaSchema.parse(input);
+  z.string().trim().min(1).parse(input.lineUserId);
+  if (webhookEventId !== undefined)
+    z.string().trim().min(1).parse(webhookEventId);
+  const coin = input.coin.toUpperCase();
+  const where = {
+    lineUserId_coin_executedAt: {
+      lineUserId: input.lineUserId,
+      coin,
+      executedAt: input.executedAt,
+    },
+  };
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      return await db.$transaction(
+        async (
+          tx: Prisma.TransactionClient,
+        ): Promise<CreateLineDcaOrderResult> => {
+          if (webhookEventId) {
+            const receipt = await tx.dcaWebhookReceipt.findUnique({
+              where: { webhookEventId },
+            });
+            if (receipt) return { status: "replayed" };
+            await tx.dcaWebhookReceipt.create({
+              data: { webhookEventId, lineUserId: input.lineUserId },
+            });
+          }
+          const duplicate = await tx.dcaOrder.findUnique({ where });
+          if (duplicate) return { status: "duplicate", order: duplicate };
+          const latest = await tx.dcaOrder.findFirst({
+            where: { lineUserId: input.lineUserId, coin },
+            orderBy: { round: "desc" },
+            select: { round: true },
+          });
+          const round = (latest?.round ?? 0) + 1;
+          const order = await tx.dcaOrder.create({
+            data: {
+              ...input,
+              coin,
+              round,
+              orderId: generateOrderId(coin, round),
+            },
+          });
+          return { status: "created", order };
+        },
+        { isolationLevel: "Serializable" },
+      );
+    } catch (error) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        (("code" in error && error.code === "P2034") ||
+          ("cause" in error &&
+            typeof error.cause === "object" &&
+            error.cause !== null &&
+            "kind" in error.cause &&
+            error.cause.kind === "TransactionWriteConflict" &&
+            "originalCode" in error.cause &&
+            (error.cause.originalCode === "40001" ||
+              error.cause.originalCode === "40P01"))) &&
+        attempt < 4
+      )
+        continue;
+      if (!(
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        error.code === "P2002"
+      ))
+        throw error;
+      const receipt = webhookEventId
+        ? await db.dcaWebhookReceipt.findUnique({ where: { webhookEventId } })
+        : null;
+      if (receipt) return { status: "replayed" };
+      const duplicate = await db.dcaOrder.findUnique({ where });
+      if (!duplicate || attempt === 4) throw error;
+    }
+  }
+  throw new Error("DCA ingestion retry exhausted");
+};
+
 /**
  * ดึงรายการ DCA orders พร้อม pagination
  */
@@ -186,113 +276,6 @@ const deleteOrder = async (id: string) => {
 };
 
 /**
- * ตรวจสอบว่า message จาก LINE เป็น Bitkub Auto DCA format หรือไม่
- *
- * รูปแบบ:
- * 🥳🎉 You Spent : 107.99 THB
- * Price : 2330307.8 THB/BTC
- * You Received : 0.00004634 BTC
- * Time : 2026-04-11T08:00:14.663+07:00
- */
-const parseBitkubDcaMessage = (
-  message: string,
-): ParsedBitkubDcaMessage | null => {
-  // Strip emoji และ special unicode characters ก่อน parse
-  // เพื่อ handle กรณีที่มี emoji prefix จาก Bitkub
-  let cleanMessage = message.replace(
-    /(?:[\u{1F300}-\u{1FFFF}\u{2600}-\u{27BF}]|\u{FE0F})/gu,
-    "",
-  );
-
-  // Normalize whitespace and newlines - จัดการ invisible characters จาก LINE
-  cleanMessage = cleanMessage
-    .replace(/[\r\n]+/g, "\n") // Normalize line endings
-    .replace(/[^\S\r\n]+/g, " ") // Replace all whitespace (except newlines) with single space
-    .trim();
-
-  // ตรวจสอบว่ามี keyword หลักครบ
-  if (
-    !cleanMessage.includes("You Spent") ||
-    !cleanMessage.includes("Price") ||
-    !cleanMessage.includes("You Received") ||
-    !cleanMessage.includes("Time")
-  ) {
-    return null;
-  }
-
-  try {
-    // Parse จำนวนเงิน THB: "You Spent : 107.99 THB"
-    const spentMatch = cleanMessage.match(
-      /You Spent\s*:\s*([\d,]+(?:\.\d+)?)\s*THB/i,
-    );
-    if (!spentMatch?.[1]) return null;
-    const amountTHB = parseFloat(spentMatch[1].replace(/,/g, ""));
-
-    // Parse ราคาและเหรียญ: "Price : 2330307.8 THB/BTC"
-    const priceMatch = cleanMessage.match(
-      /Price\s*:\s*([\d,]+(?:\.\d+)?)\s*THB\/(\w+)/i,
-    );
-    if (!priceMatch?.[1] || !priceMatch?.[2]) return null;
-    const pricePerCoin = parseFloat(priceMatch[1].replace(/,/g, ""));
-    const coin = priceMatch[2].toUpperCase();
-
-    // Parse จำนวนเหรียญที่ได้รับ: "You Received : 0.00004634 BTC"
-    const receivedMatch = cleanMessage.match(
-      /You Received\s*:\s*([\d.]+(?:e[+-]?\d+)?)\s*\w+/i,
-    );
-    if (!receivedMatch?.[1]) return null;
-    const coinReceived = parseFloat(receivedMatch[1]);
-
-    // Parse เวลา: รองรับทั้ง ISO format และ simple format
-    // "Time : 2026-04-11T08:00:14.663+07:00" หรือ "Time : 2025-12-19 07:34:28"
-    const timeMatch = cleanMessage.match(
-      /Time\s*:\s*(\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:[+-]\d{2}:\d{2})?)/,
-    );
-    if (!timeMatch?.[1]) return null;
-
-    // แปลง string เป็น Date
-    let executedAt: Date;
-    const timeStr = timeMatch[1];
-
-    if (timeStr.includes("+") || timeStr.includes("Z")) {
-      // ISO format ที่มี timezone
-      executedAt = new Date(timeStr);
-    } else {
-      // Simple format "2025-12-19 07:34:28" หรือ "2025-12-19T07:34:28"
-      // ให้ถือว่าเป็นเวลา Bangkok (07:34 ไม่ใช่ UTC)
-      const [datePart, timePart] = timeStr.includes("T")
-        ? timeStr.split("T")
-        : timeStr.split(" ");
-      if (!datePart || !timePart) return null;
-
-      const [year, month, day] = datePart.split("-").map(Number);
-      const timePartOnly = timePart.split(".")[0]; // ลบ milliseconds ถ้ามี
-      if (!year || !month || !day || !timePartOnly) return null;
-
-      const [hour, minute, second] = timePartOnly.split(":").map(Number);
-      if (hour === undefined || minute === undefined || second === undefined) {
-        return null;
-      }
-
-      executedAt = new Date(year, month - 1, day, hour, minute, second);
-    }
-
-    if (
-      isNaN(amountTHB) ||
-      isNaN(pricePerCoin) ||
-      isNaN(coinReceived) ||
-      isNaN(executedAt.getTime())
-    ) {
-      return null;
-    }
-
-    return { coin, amountTHB, pricePerCoin, coinReceived, executedAt };
-  } catch {
-    return null;
-  }
-};
-
-/**
  * ดึง DCA orders ทั้งหมดของ user โดยไม่มี pagination (ใช้สำหรับ export)
  */
 const listAllOrders = async (lineUserIds: string | string[]) => {
@@ -344,6 +327,7 @@ const getSummary = async (lineUserIds: string | string[]) => {
 
 export const dcaService = {
   createOrder,
+  createLineOrder,
   listOrders,
   listAllOrders,
   getOrderById,

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSession } from "@/lib/auth/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/components/common/ToastProvider";
 import {
   Shield,
   Users,
@@ -25,6 +26,7 @@ interface LineApproval {
   canRequestAttendanceReport: boolean;
   canRequestLeave: boolean;
   canReceiveReminders: boolean;
+  canAutoRecordDca: boolean;
   createdAt: string;
   approvedAt: string | null;
 }
@@ -43,6 +45,7 @@ async function fetchPermissions(): Promise<LineApproval[]> {
 export function LinePermissionsPage() {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
 
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,6 +76,7 @@ export function LinePermissionsPage() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["line-permissions"] });
+      showToast({ title: "อัปเดตสิทธิ์สำเร็จ", type: "success" });
     },
   });
 
@@ -116,7 +120,8 @@ export function LinePermissionsPage() {
               จัดการสิทธิ์ LINE Features
             </h1>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              อนุมัติสิทธิ์การใช้งานฟีเจอร์ต่างๆ สำหรับ LINE users
+              อนุมัติสิทธิ์การใช้งานฟีเจอร์ต่างๆ สำหรับ LINE users โดย DCA
+              อัตโนมัติใช้เฉพาะแชตส่วนตัว
             </p>
           </div>
         </div>
@@ -176,6 +181,11 @@ export function LinePermissionsPage() {
         </button>
       </div>
 
+      {updatePermissionMutation.isError && (
+        <p role="alert" className="mb-4 text-sm text-red-700 dark:text-red-400">
+          {updatePermissionMutation.error.message}
+        </p>
+      )}
       {isLoading ? (
         <div className="flex min-h-[400px] items-center justify-center">
           <p className="text-gray-500 dark:text-gray-400">กำลังโหลด...</p>
@@ -214,6 +224,9 @@ export function LinePermissionsPage() {
                       <Bell className="h-4 w-4" />
                       แจ้งเตือน
                     </div>
+                  </th>
+                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300">
+                    บันทึก DCA อัตโนมัติ
                   </th>
                 </tr>
               </thead>
@@ -307,6 +320,25 @@ export function LinePermissionsPage() {
                           )
                         }
                         disabled={approval.status !== "APPROVED"}
+                        className="h-5 w-5 cursor-pointer rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+                      />
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <input
+                        type="checkbox"
+                        aria-label={`อนุญาตให้ ${approval.lineUserId} บันทึก DCA จากข้อความในแชตส่วนตัวอัตโนมัติ`}
+                        checked={approval.canAutoRecordDca ?? false}
+                        onChange={(e) =>
+                          handleTogglePermission(
+                            approval.lineUserId,
+                            "canAutoRecordDca",
+                            e.target.checked,
+                          )
+                        }
+                        disabled={
+                          approval.status !== "APPROVED" ||
+                          updatePermissionMutation.isPending
+                        }
                         className="h-5 w-5 cursor-pointer rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
                       />
                     </td>

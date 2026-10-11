@@ -85,3 +85,8 @@ export interface ImportResult {
   skipped: number;
   errors: string[];
 }
+
+export type CreateLineDcaOrderResult =
+  | { status: "created"; order: DcaOrder }
+  | { status: "duplicate"; order: DcaOrder }
+  | { status: "replayed" };
