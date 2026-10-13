@@ -11,12 +11,12 @@ export async function handleChartCommand(
   userId: string,
   params: ChartCommandParams,
 ): Promise<void> {
-  const { symbol, exchange = "bitkub", type = "line" } = params;
+  const { symbol, exchange = "bitkub", type = "line", period = "24h" } = params;
 
   if (type === "comparison") {
     await handleComparisonChart(req, symbol);
   } else {
-    await handleSingleChart(req, symbol, exchange);
+    await handleSingleChart(req, symbol, exchange, period);
   }
 }
 
@@ -43,11 +43,15 @@ async function handleSingleChart(
   req: Request,
   symbol: string,
   exchange: string,
+  period: ChartCommandParams["period"] = "24h",
 ): Promise<void> {
+  await sendMessage(req, [ChartTemplates.createLoadingMessage(symbol)]);
+
   // Check historical data availability first
   const hasHistoricalData = await chartService.checkHistoricalDataAvailability(
     symbol,
     exchange,
+    period,
   );
 
   if (!hasHistoricalData) {
@@ -57,12 +61,17 @@ async function handleSingleChart(
   }
 
   try {
-    const chartData = await chartService.generateSingleChart(symbol, exchange);
+    const chartData = await chartService.generateSingleChart(
+      symbol,
+      exchange,
+      period,
+    );
 
     const chartMessage = ChartTemplates.createSingleChartCarousel(
       chartData.cryptoData,
       symbol,
       chartData.imageUrls,
+      chartData.marketStats,
       exchange,
     );
 
@@ -78,7 +87,12 @@ async function handleSingleChart(
           exchange,
         );
         await sendMessage(req, [fallbackMessage]);
+        return;
       }
+
+      await sendMessage(req, [
+        ChartTemplates.createChartErrorMessage(symbol, exchange),
+      ]);
     } catch {
       throw imageError;
     }

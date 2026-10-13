@@ -132,12 +132,19 @@ export class BinanceHistoryService {
   async getPopularCryptoHistory(
     symbol: string,
     hours: number = 24,
+    interval: string = "1h",
   ): Promise<ChartDataPoint[]> {
     const binanceSymbol = this.convertToUsdtPair(symbol);
 
-    // Calculate limit based on hours and interval
-    const interval = "1h";
-    const limit = Math.min(hours, 720);
+    const intervalHours: Record<string, number> = {
+      "1h": 1,
+      "4h": 4,
+      "1d": 24,
+    };
+    const limit = Math.min(
+      Math.ceil(hours / (intervalHours[interval] ?? 1)),
+      1000,
+    );
 
     const data = await this.fetchKlineData(binanceSymbol, interval, limit);
 

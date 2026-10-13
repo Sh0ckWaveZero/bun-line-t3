@@ -1,5 +1,9 @@
-import { CryptoInfo } from "@/features/crypto/types/crypto.interface";
-import { ChartImageUrls } from "@/features/crypto/services/chart.server";
+import type { CryptoInfo } from "@/features/crypto/types/crypto.interface";
+import type {
+  ChartImageUrls,
+  ChartMarketStats,
+} from "@/features/crypto/services/chart.server";
+import { CHART_PERIODS } from "@/features/crypto/constants/chart-periods";
 
 export interface LineFlexMessage {
   type: "flex";
@@ -34,12 +38,53 @@ export class ChartTemplates {
     };
   }
 
+  static createChartErrorMessage(
+    symbol: string,
+    exchange: string,
+  ): LineTextMessage {
+    return {
+      type: "text",
+      text: `❌ สร้างกราฟ ${symbol.toUpperCase()} จาก ${exchange.toUpperCase()} ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง`,
+    };
+  }
+
   static createSingleChartCarousel(
     cryptoData: CryptoInfo,
     symbol: string,
     imageUrls: ChartImageUrls,
+    marketStats: ChartMarketStats,
     exchange: string = "bitkub",
   ): LineFlexMessage {
+    const currencySymbol =
+      exchange.toLowerCase() === "binance" || exchange.toLowerCase() === "bn"
+        ? "$"
+        : "฿";
+    const formatAmount = (amount: number, maximumFractionDigits = 2) =>
+      amount.toLocaleString("th-TH", { maximumFractionDigits });
+    const isPositive = marketStats.changePercent >= 0;
+    const createStat = (label: string, amount: number) => ({
+      type: "box",
+      layout: "vertical",
+      flex: 1,
+      spacing: "xs",
+      contents: [
+        {
+          type: "text",
+          text: label,
+          size: "sm",
+          color: "#c4ccd7",
+          wrap: true,
+        },
+        {
+          type: "text",
+          text: `${currencySymbol}${formatAmount(amount)}`,
+          size: "sm",
+          color: "#f3f4f6",
+          weight: "bold",
+          wrap: false,
+        },
+      ],
+    });
     const chartBubble = {
       type: "bubble",
       body: {
@@ -50,9 +95,10 @@ export class ChartTemplates {
             type: "image",
             url: imageUrls.previewUrl,
             size: "full",
-            aspectMode: "cover",
-            aspectRatio: "2:3",
-            gravity: "top",
+            aspectMode: "fit",
+            aspectRatio: "16:9",
+            backgroundColor: "#111827",
+            gravity: "center",
             action: {
               type: "uri",
               uri: imageUrls.originalUrl,
@@ -63,21 +109,16 @@ export class ChartTemplates {
             layout: "vertical",
             contents: [
               {
-                type: "box",
-                layout: "vertical",
-                contents: [
-                  {
-                    type: "text",
-                    text: `${cryptoData.currencyName || symbol.toUpperCase()}`,
-                    size: "xl",
-                    color: "#ffffff",
-                    weight: "bold",
-                  },
-                ],
+                type: "text",
+                text: `${cryptoData.currencyName || symbol.toUpperCase()}`,
+                size: "xl",
+                color: "#ffffff",
+                weight: "bold",
+                wrap: true,
               },
               {
                 type: "box",
-                layout: "baseline",
+                layout: "vertical",
                 contents: [
                   {
                     type: "text",
@@ -87,45 +128,151 @@ export class ChartTemplates {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 8,
                     })}`,
-                    color: "#ebebeb",
-                    size: "lg",
+                    color: "#f3f4f6",
+                    size: "xxl",
+                    weight: "bold",
+                    wrap: true,
+                  },
+                ],
+                margin: "sm",
+              },
+              {
+                type: "box",
+                layout: "horizontal",
+                contents: [
+                  {
+                    type: "text",
+                    text: `${isPositive ? "ขึ้น" : "ลง"} ${isPositive ? "+" : ""}${marketStats.changePercent.toFixed(2)}%`,
+                    size: "sm",
+                    color: isPositive ? "#4ade80" : "#fca5a5",
                     weight: "bold",
                     flex: 0,
                   },
                   {
                     type: "text",
-                    text: `${(cryptoData.changePriceOriginal || 0) >= 0 ? "+" : ""}${(cryptoData.changePriceOriginal || 0).toFixed(2)}%`,
-                    color:
-                      (cryptoData.changePriceOriginal || 0) >= 0
-                        ? "#00FF88cc"
-                        : "#FF4444cc",
-                    gravity: "bottom",
-                    flex: 0,
+                    text: `ใน ${marketStats.periodLabel}`,
                     size: "sm",
-                    weight: "bold",
+                    color: "#c4ccd7",
+                    margin: "sm",
+                    flex: 0,
                   },
                 ],
-                spacing: "lg",
+                backgroundColor: isPositive ? "#153b2f" : "#472a31",
+                cornerRadius: "8px",
+                paddingAll: "8px",
+                margin: "md",
+              },
+              {
+                type: "separator",
+                color: "#465261",
+                margin: "lg",
+              },
+              {
+                type: "text",
+                text: `ช่วงราคา · ${marketStats.periodLabel}`,
+                size: "sm",
+                color: "#e5e7eb",
+                weight: "bold",
+                margin: "lg",
+              },
+              {
+                type: "box",
+                layout: "horizontal",
+                contents: [
+                  createStat("สูงสุด", marketStats.high),
+                  createStat("ต่ำสุด", marketStats.low),
+                ],
+                spacing: "md",
+                margin: "sm",
+              },
+              {
+                type: "text",
+                text: `แท่งล่าสุด · ${CHART_PERIODS[marketStats.period].candleLabel}`,
+                size: "sm",
+                color: "#e5e7eb",
+                weight: "bold",
+                margin: "lg",
+              },
+              {
+                type: "box",
+                layout: "horizontal",
+                contents: [
+                  createStat("เปิด", marketStats.latestCandle.open),
+                  createStat("สูงสุด", marketStats.latestCandle.high),
+                ],
+                spacing: "md",
+                margin: "sm",
+              },
+              {
+                type: "box",
+                layout: "horizontal",
+                contents: [
+                  createStat("ต่ำสุด", marketStats.latestCandle.low),
+                  createStat("ปิด", marketStats.latestCandle.close),
+                ],
+                spacing: "md",
+                margin: "sm",
+              },
+              {
+                type: "separator",
+                color: "#465261",
+                margin: "lg",
+              },
+              {
+                type: "box",
+                layout: "horizontal",
+                contents: [
+                  {
+                    type: "text",
+                    text: `ปริมาณรวม · ${marketStats.periodLabel}`,
+                    size: "sm",
+                    color: "#c4ccd7",
+                    flex: 1,
+                    wrap: true,
+                  },
+                  {
+                    type: "text",
+                    text: `${formatAmount(marketStats.totalVolume, 4)} ${symbol.toUpperCase()}`,
+                    size: "sm",
+                    color: "#f3f4f6",
+                    weight: "bold",
+                    align: "end",
+                    flex: 0,
+                    wrap: true,
+                  },
+                ],
+                margin: "md",
+              },
+              {
+                type: "text",
+                text: "แท่งเขียว: ปิดสูงกว่าเปิด · แดง: ปิดต่ำกว่าเปิด",
+                size: "sm",
+                color: "#c4ccd7",
+                wrap: true,
+                margin: "md",
+              },
+              {
+                type: "text",
+                text: `ดูช่วงอื่น: /c bk ${symbol.toLowerCase()} 7d`,
+                size: "xs",
+                color: "#aab4c2",
+                wrap: true,
+                margin: "sm",
               },
               this.createViewFullChartButton(imageUrls.originalUrl),
             ],
-            position: "absolute",
-            offsetBottom: "0px",
-            offsetStart: "0px",
-            offsetEnd: "0px",
-            backgroundColor: "#1DB446cc",
+            backgroundColor: "#1f2937",
             paddingAll: "20px",
-            paddingTop: "18px",
           },
-          this.createChartIcon(cryptoData.urlLogo),
         ],
         paddingAll: "0px",
+        spacing: "none",
       },
     };
 
     return {
       type: "flex",
-      altText: `📊 ${symbol.toUpperCase()} Chart & Data`,
+      altText: `กราฟ ${symbol.toUpperCase()} · ${marketStats.periodLabel} · สูงสุด ${formatAmount(marketStats.high)} · ต่ำสุด ${formatAmount(marketStats.low)}`,
       contents: {
         type: "carousel",
         contents: [chartBubble],
@@ -136,7 +283,7 @@ export class ChartTemplates {
   static createComparisonChartCarousel(
     symbol: string,
     imageUrls: ChartImageUrls,
-    logoUrl?: string,
+    _logoUrl?: string,
   ): LineFlexMessage {
     const comparisonBubbles = [
       {
@@ -150,9 +297,10 @@ export class ChartTemplates {
               type: "image",
               url: imageUrls.previewUrl,
               size: "full",
-              aspectMode: "cover",
-              aspectRatio: "2:3",
-              gravity: "top",
+              aspectMode: "fit",
+              aspectRatio: "16:9",
+              backgroundColor: "#111827",
+              gravity: "center",
               action: {
                 type: "uri",
                 uri: imageUrls.originalUrl,
@@ -163,31 +311,20 @@ export class ChartTemplates {
               layout: "vertical",
               contents: [
                 {
-                  type: "box",
-                  layout: "vertical",
-                  contents: [
-                    {
-                      type: "text",
-                      text: `${symbol.toUpperCase()} เปรียบเทียบ`,
-                      size: "xl",
-                      color: "#ffffff",
-                      weight: "bold",
-                    },
-                  ],
+                  type: "text",
+                  text: `${symbol.toUpperCase()} เปรียบเทียบ`,
+                  size: "xl",
+                  color: "#ffffff",
+                  weight: "bold",
                 },
                 this.createViewFullChartButton(imageUrls.originalUrl),
               ],
-              position: "absolute",
-              offsetBottom: "0px",
-              offsetStart: "0px",
-              offsetEnd: "0px",
-              backgroundColor: "#1DB446cc",
+              backgroundColor: "#1f2937",
               paddingAll: "20px",
-              paddingTop: "18px",
             },
-            this.createChartIcon(logoUrl),
           ],
           paddingAll: "0px",
+          spacing: "none",
         },
       },
       {
@@ -311,54 +448,8 @@ export class ChartTemplates {
       cornerRadius: "4px",
       spacing: "sm",
       borderColor: "#ffffff",
-      margin: "xxl",
-      height: "40px",
-    };
-  }
-
-  private static createChartIcon(logoUrl?: string) {
-    if (logoUrl) {
-      return {
-        type: "box",
-        layout: "vertical",
-        contents: [
-          {
-            type: "image",
-            url: logoUrl,
-            size: "full",
-            aspectMode: "cover",
-          },
-        ],
-        position: "absolute",
-        cornerRadius: "20px",
-        offsetTop: "18px",
-        backgroundColor: "#ffffff",
-        offsetStart: "18px",
-        height: "35px",
-        width: "35px",
-      };
-    }
-
-    return {
-      type: "box",
-      layout: "vertical",
-      contents: [
-        {
-          type: "text",
-          text: "📊",
-          color: "#ffffff",
-          align: "center",
-          size: "xs",
-          offsetTop: "3px",
-        },
-      ],
-      position: "absolute",
-      cornerRadius: "20px",
-      offsetTop: "18px",
-      backgroundColor: "#1DB446",
-      offsetStart: "18px",
-      height: "25px",
-      width: "35px",
+      margin: "lg",
+      height: "44px",
     };
   }
 }

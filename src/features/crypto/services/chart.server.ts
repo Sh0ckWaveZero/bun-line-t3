@@ -5,13 +5,31 @@ import { exchangeService } from "./exchange.server";
 import { bitkubHistoryService } from "./bitkub-history.server";
 import { binanceHistoryService } from "./binance-history.server";
 import { CryptoInfo } from "../types/crypto.interface";
+import { CHART_PERIODS, type ChartPeriod } from "../constants/chart-periods";
 
 export type ChartImageUrls = UploadResult;
+
+export interface ChartMarketStats {
+  period: ChartPeriod;
+  periodLabel: string;
+  changePercent: number;
+  high: number;
+  low: number;
+  totalVolume: number;
+  latestCandle: {
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+    volume: number;
+  };
+}
 
 export interface ChartData {
   cryptoData: CryptoInfo;
   imageUrls: ChartImageUrls;
   hasHistoricalData: boolean;
+  marketStats: ChartMarketStats;
 }
 
 export interface ComparisonChartData {
@@ -54,6 +72,7 @@ class ChartService {
   async generateSingleChart(
     symbol: string,
     exchange: string,
+    period: ChartPeriod = "24h",
   ): Promise<ChartData> {
     const cryptoData = await this.getCryptoData(symbol, exchange);
 
@@ -62,6 +81,7 @@ class ChartService {
     }
 
     // Get historical data based on exchange
+    const periodConfig = CHART_PERIODS[period];
     let historicalData;
     if (
       exchange.toLowerCase() === "binance" ||
@@ -69,12 +89,14 @@ class ChartService {
     ) {
       historicalData = await binanceHistoryService.getPopularCryptoHistory(
         symbol,
-        24,
+        periodConfig.hours,
+        periodConfig.binanceInterval,
       );
     } else {
       historicalData = await bitkubHistoryService.getPopularCryptoHistory(
         symbol,
-        24,
+        periodConfig.hours,
+        periodConfig.bitkubResolution,
       );
     }
 
@@ -82,12 +104,41 @@ class ChartService {
       throw new Error(`No historical data available for ${symbol}`);
     }
 
+    const firstCandle = historicalData[0]!;
+    const latestCandle = historicalData.at(-1)!;
+    const marketStats: ChartMarketStats = {
+      period,
+      periodLabel: periodConfig.label,
+      changePercent:
+        firstCandle.open > 0
+          ? ((latestCandle.close - firstCandle.open) / firstCandle.open) * 100
+          : 0,
+      high: Math.max(...historicalData.map((candle) => candle.high)),
+      low: Math.min(...historicalData.map((candle) => candle.low)),
+      totalVolume: historicalData.reduce(
+        (total, candle) => total + candle.volume,
+        0,
+      ),
+      latestCandle: {
+        open: latestCandle.open,
+        high: latestCandle.high,
+        low: latestCandle.low,
+        close: latestCandle.close,
+        volume: latestCandle.volume,
+      },
+    };
+
     // Generate chart
+    const isBinance =
+      exchange.toLowerCase() === "binance" || exchange.toLowerCase() === "bn";
+    const quoteAsset = isBinance ? "USDT" : "THB";
+    const chartTitle = `ราคา ${cryptoData.currencyName || symbol.toUpperCase()} · ${symbol.toUpperCase()}/${quoteAsset}`;
     const chartBuffer = await tanstackChartGenerator.generateHistoricalChart(
       symbol,
-      24,
-      `${cryptoData.currencyName || symbol.toUpperCase()} Price Chart (${exchange.toUpperCase()})`,
+      period,
+      chartTitle,
       exchange,
+      historicalData,
     );
 
     // Upload chart image
@@ -100,6 +151,7 @@ class ChartService {
       cryptoData,
       imageUrls,
       hasHistoricalData: true,
+      marketStats,
     };
   }
 
@@ -129,7 +181,7 @@ class ChartService {
       await tanstackChartGenerator.generateHistoricalComparison(
         [symbol],
         24,
-        `${symbol.toUpperCase()} Price Comparison`,
+        `${symbol.toUpperCase()} · เปรียบเทียบราคา`,
       );
 
     // Upload chart image
@@ -147,7 +199,9 @@ class ChartService {
   async checkHistoricalDataAvailability(
     symbol: string,
     exchange: string = "bitkub",
+    period: ChartPeriod = "24h",
   ): Promise<boolean> {
+    const periodConfig = CHART_PERIODS[period];
     let historicalData;
 
     if (
@@ -156,12 +210,14 @@ class ChartService {
     ) {
       historicalData = await binanceHistoryService.getPopularCryptoHistory(
         symbol,
-        24,
+        periodConfig.hours,
+        periodConfig.binanceInterval,
       );
     } else {
       historicalData = await bitkubHistoryService.getPopularCryptoHistory(
         symbol,
-        24,
+        periodConfig.hours,
+        periodConfig.bitkubResolution,
       );
     }
 

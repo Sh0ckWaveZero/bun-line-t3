@@ -126,7 +126,7 @@ async function processImageBuffers(
   try {
     const sharp = (await import("sharp")).default;
     previewBuffer = await sharp(imageBuffer)
-      .resize(400, 400, {
+      .resize(640, 640, {
         fit: "inside",
         kernel: sharp.kernel.lanczos3,
       })

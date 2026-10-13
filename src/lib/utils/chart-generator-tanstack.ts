@@ -1,27 +1,43 @@
 import {
-  areaY,
   createChartScene,
   defineChart,
   lineY,
+  link,
+  rect,
   renderChartSvg,
   ruleY,
   text,
 } from "@tanstack/charts";
 import { scaleLinear } from "@tanstack/charts/scales/linear";
 import sharp from "sharp";
+import {
+  CHART_PERIODS,
+  type ChartPeriod,
+} from "@/features/crypto/constants/chart-periods";
 import { bitkubHistoryService } from "@/features/crypto/services/bitkub-history.server";
-import { CHART_COLORS, getColorByTrend } from "./chart-colors";
+import { CHART_COLORS } from "./chart-colors";
 
-const CHART_WIDTH = 1040;
-const CHART_HEIGHT = 1040;
+const CHART_WIDTH = 1200;
+const CHART_HEIGHT = 675;
+const CHART_FONT_FAMILY = '"Noto Sans Thai", "Noto Sans", sans-serif';
 
 interface HistoricalDataPoint {
   time: string;
+  open: number;
+  high: number;
+  low: number;
   close: number;
+  volume: number;
 }
 
 interface IndexedPricePoint extends HistoricalDataPoint {
   index: number;
+  bodyLeft: number;
+  bodyRight: number;
+  bodyHigh: number;
+  bodyLow: number;
+  volumeBase: number;
+  volumeTop: number;
 }
 
 interface NormalizedPricePoint {
@@ -38,7 +54,7 @@ interface HistoricalSeries {
 const CHART_THEME = {
   foreground: CHART_COLORS.TEXT_PRIMARY,
   muted: CHART_COLORS.TEXT_SECONDARY,
-  grid: "rgba(148, 163, 184, 0.22)",
+  grid: "rgba(148, 163, 184, 0.3)",
   background: CHART_COLORS.BACKGROUND_PRIMARY,
   palette: [
     CHART_COLORS.SUCCESS,
@@ -76,14 +92,22 @@ const formatCryptoPrice = (price: number): string =>
 const formatPercentage = (percentage: number): string =>
   `${percentage >= 0 ? "+" : ""}${percentage.toFixed(2)}%`;
 
-const formatTime = (value: string): string =>
-  new Date(value).toLocaleString("th-TH", {
+const formatTime = (value: string, period: ChartPeriod): string => {
+  const dateOptions: Intl.DateTimeFormatOptions =
+    period === "24h"
+      ? {
+          hour: "2-digit",
+          minute: "2-digit",
+          day: "2-digit",
+          month: "2-digit",
+        }
+      : { day: "2-digit", month: "short" };
+
+  return new Date(value).toLocaleString("th-TH", {
     timeZone: "Asia/Bangkok",
-    hour: "2-digit",
-    minute: "2-digit",
-    day: "2-digit",
-    month: "2-digit",
+    ...dateOptions,
   });
+};
 
 const renderPng = async (
   definition: Parameters<typeof createChartScene>[0],
@@ -100,7 +124,12 @@ const renderPng = async (
     tabIndex: -1,
   });
 
-  return sharp(Buffer.from(svg))
+  const svgWithFont = svg.replace(
+    '<svg class="ts-chart"',
+    `<svg class="ts-chart" font-family='${CHART_FONT_FAMILY}'`,
+  );
+
+  return sharp(Buffer.from(svgWithFont))
     .flatten({ background: CHART_COLORS.BACKGROUND_PRIMARY })
     .png()
     .toBuffer();
@@ -109,26 +138,32 @@ const renderPng = async (
 export class TanstackChartGenerator {
   async generateHistoricalChart(
     symbol: string,
-    hours = 24,
+    period: ChartPeriod = "24h",
     title?: string,
     exchange = "bitkub",
+    providedData?: HistoricalDataPoint[],
   ): Promise<Buffer> {
-    let historicalData: HistoricalDataPoint[];
-    if (
-      exchange.toLowerCase() === "binance" ||
-      exchange.toLowerCase() === "bn"
-    ) {
-      const { binanceHistoryService } =
-        await import("@/features/crypto/services/binance-history.server");
-      historicalData = await binanceHistoryService.getPopularCryptoHistory(
-        symbol,
-        hours,
-      );
-    } else {
-      historicalData = await bitkubHistoryService.getPopularCryptoHistory(
-        symbol,
-        hours,
-      );
+    const periodConfig = CHART_PERIODS[period];
+    let historicalData = providedData;
+    if (!historicalData) {
+      if (
+        exchange.toLowerCase() === "binance" ||
+        exchange.toLowerCase() === "bn"
+      ) {
+        const { binanceHistoryService } =
+          await import("@/features/crypto/services/binance-history.server");
+        historicalData = await binanceHistoryService.getPopularCryptoHistory(
+          symbol,
+          periodConfig.hours,
+          periodConfig.binanceInterval,
+        );
+      } else {
+        historicalData = await bitkubHistoryService.getPopularCryptoHistory(
+          symbol,
+          periodConfig.hours,
+          periodConfig.bitkubResolution,
+        );
+      }
     }
 
     if (historicalData.length === 0) {
@@ -137,63 +172,134 @@ export class TanstackChartGenerator {
       );
     }
 
-    const data: IndexedPricePoint[] = historicalData.map((point, index) => ({
-      ...point,
-      index,
-    }));
-    const prices = data.map((point) => point.close);
-    const minimumPrice = Math.min(...prices);
-    const maximumPrice = Math.max(...prices);
-    const firstPrice = data[0]?.close ?? 0;
-    const lastPrice = data.at(-1)?.close ?? 0;
+    const minimumPrice = Math.min(...historicalData.map((point) => point.low));
+    const maximumPrice = Math.max(...historicalData.map((point) => point.high));
+    const firstCandle = historicalData[0]!;
+    const latestCandle = historicalData.at(-1)!;
+    const firstPrice = firstCandle.open;
+    const lastPrice = latestCandle.close;
     const priceChange =
       firstPrice > 0 ? ((lastPrice - firstPrice) / firstPrice) * 100 : 0;
     const range =
       maximumPrice - minimumPrice || Math.abs(maximumPrice) * 0.01 || 1;
-    const padding = range * 0.1;
-    const yMin = minimumPrice - padding;
-    const yMax = maximumPrice + padding;
+    const padding = range * 0.08;
+    const volumeBandHeight = range * 0.22;
+    const yMin = minimumPrice - padding - volumeBandHeight;
+    // Reserve space above the candles for the selected period and its summary.
+    const yMax = maximumPrice + padding + range * 0.72;
     const yRange = yMax - yMin;
+    const maximumVolume = Math.max(
+      ...historicalData.map((point) => point.volume),
+    );
+    const minimumBodyHeight = range * 0.004;
+    const data: IndexedPricePoint[] = historicalData.map((point, index) => {
+      const bodyCenter = (point.open + point.close) / 2;
+      const bodyHeight = Math.abs(point.close - point.open);
+      const adjustedBodyHeight = Math.max(bodyHeight, minimumBodyHeight);
+
+      return {
+        ...point,
+        index,
+        bodyLeft: index - 0.32,
+        bodyRight: index + 0.32,
+        bodyLow: bodyCenter - adjustedBodyHeight / 2,
+        bodyHigh: bodyCenter + adjustedBodyHeight / 2,
+        volumeBase: yMin,
+        volumeTop:
+          yMin +
+          (maximumVolume > 0 ? point.volume / maximumVolume : 0) *
+            volumeBandHeight,
+      };
+    });
+    const bullishCandles = data.filter((point) => point.close >= point.open);
+    const bearishCandles = data.filter((point) => point.close < point.open);
     const centerIndex = Math.max(0, (data.length - 1) / 2);
     const currencySymbol =
       exchange.toLowerCase() === "binance" || exchange.toLowerCase() === "bn"
         ? "$"
         : "฿";
-    const chartTitle =
-      title || `${symbol.toUpperCase()} Historical Price Chart (${hours}h)`;
-    const sourceLabel =
+    const sourceName =
       exchange.toLowerCase() === "binance" || exchange.toLowerCase() === "bn"
-        ? "Data: Binance API"
-        : "Data: Bitkub API";
-    const lineColor = getColorByTrend(priceChange);
-    const headerY = yMax - yRange * 0.025;
-    const subtitleY = yMax - yRange * 0.06;
+        ? "Binance"
+        : "Bitkub";
+    const sourceLabel = `ข้อมูล: ${sourceName} API`;
+    const headerY = yMax - yRange * 0.1;
+    const subtitleY = yMax - yRange * 0.19;
+    const summaryY = yMax - yRange * 0.28;
+    const chartTitle =
+      title || `${symbol.toUpperCase()} · ${periodConfig.shortLabel}`;
+    const subtitle = `${sourceName} · ${periodConfig.label} · ${formatPercentage(priceChange)} · แท่ง ${periodConfig.candleLabel} · วอลุ่ม ${symbol.toUpperCase()}`;
+    const summary = `สูงสุด ${currencySymbol}${formatCryptoPrice(maximumPrice)} · ต่ำสุด ${currencySymbol}${formatCryptoPrice(minimumPrice)} · ล่าสุด ${currencySymbol}${formatCryptoPrice(lastPrice)}`;
+    const priceTicks = Array.from(
+      { length: 5 },
+      (_, index) => minimumPrice + ((maximumPrice - minimumPrice) * index) / 4,
+    );
+    const timeTickCount = Math.min(5, data.length);
+    const timeTicks = Array.from({ length: timeTickCount }, (_, index) =>
+      Math.round((index / Math.max(1, timeTickCount - 1)) * (data.length - 1)),
+    );
     const definition = defineChart({
       theme: CHART_THEME,
-      margin: { top: 32, right: 60, bottom: 88, left: 110 },
+      margin: { top: 76, right: 48, bottom: 96, left: 208 },
       marks: [
-        areaY(data, {
-          x: "index",
-          y: "close",
-          y1: yMin,
-          y2: "close",
-          fill: lineColor,
-          fillOpacity: 0.24,
+        rect(bullishCandles, {
+          x1: "bodyLeft",
+          x2: "bodyRight",
+          y1: "volumeBase",
+          y2: "volumeTop",
+          fill: CHART_COLORS.SUCCESS,
+          fillOpacity: 0.38,
         }),
-        lineY(data, {
-          x: "index",
-          y: "close",
-          stroke: lineColor,
-          strokeWidth: 3,
-          points: true,
+        rect(bearishCandles, {
+          x1: "bodyLeft",
+          x2: "bodyRight",
+          y1: "volumeBase",
+          y2: "volumeTop",
+          fill: CHART_COLORS.ERROR,
+          fillOpacity: 0.38,
+        }),
+        link(bullishCandles, {
+          x1: "index",
+          y1: "low",
+          x2: "index",
+          y2: "high",
+          stroke: CHART_COLORS.SUCCESS,
+          strokeWidth: 2,
+        }),
+        link(bearishCandles, {
+          x1: "index",
+          y1: "low",
+          x2: "index",
+          y2: "high",
+          stroke: CHART_COLORS.ERROR,
+          strokeWidth: 2,
+        }),
+        rect(bullishCandles, {
+          x1: "bodyLeft",
+          x2: "bodyRight",
+          y1: "bodyLow",
+          y2: "bodyHigh",
+          fill: CHART_COLORS.SUCCESS,
+        }),
+        rect(bearishCandles, {
+          x1: "bodyLeft",
+          x2: "bodyRight",
+          y1: "bodyLow",
+          y2: "bodyHigh",
+          fill: CHART_COLORS.ERROR,
+        }),
+        ruleY([lastPrice], {
+          stroke: CHART_COLORS.TEXT_SECONDARY,
+          strokeDasharray: "4 5",
+          strokeOpacity: 0.5,
         }),
         text([{ index: centerIndex, y: headerY, label: chartTitle }], {
           x: "index",
           y: "y",
           text: "label",
           fill: CHART_COLORS.TEXT_PRIMARY,
-          fontSize: 20,
-          fontWeight: 600,
+          fontSize: 40,
+          fontWeight: 700,
           anchor: "middle",
         }),
         text(
@@ -201,7 +307,7 @@ export class TanstackChartGenerator {
             {
               index: centerIndex,
               y: subtitleY,
-              label: `${formatPercentage(priceChange)} (${hours}h) · High: ${currencySymbol}${formatCryptoPrice(maximumPrice)} · Low: ${currencySymbol}${formatCryptoPrice(minimumPrice)} · Current: ${currencySymbol}${formatCryptoPrice(lastPrice)}`,
+              label: subtitle,
             },
           ],
           {
@@ -209,41 +315,34 @@ export class TanstackChartGenerator {
             y: "y",
             text: "label",
             fill: CHART_COLORS.TEXT_SECONDARY,
-            fontSize: 12,
+            fontSize: 22,
+            fontWeight: 500,
             anchor: "middle",
           },
         ),
-        text(
-          [
-            {
-              index: 0,
-              y: yMin + yRange * 0.005,
-              label: sourceLabel,
-            },
-          ],
-          {
-            x: "index",
-            y: "y",
-            text: "label",
-            fill: CHART_COLORS.TEXT_TERTIARY,
-            fontSize: 11,
-            anchor: "start",
-          },
-        ),
+        text([{ index: centerIndex, y: summaryY, label: summary }], {
+          x: "index",
+          y: "y",
+          text: "label",
+          fill: CHART_COLORS.TEXT_SECONDARY,
+          fontSize: 18,
+          fontWeight: 500,
+          anchor: "middle",
+        }),
       ],
       scales: {
         x: {
-          scale: scaleLinear().domain([0, Math.max(1, data.length - 1)]),
+          scale: scaleLinear().domain([-0.5, Math.max(0.5, data.length - 0.5)]),
           axis: {
             line: false,
             ticks: {
-              count: Math.min(6, data.length),
+              values: timeTicks,
               line: false,
               format: (index) =>
-                formatTime(data[Math.round(index)]?.time ?? ""),
+                formatTime(data[Math.round(index)]?.time ?? "", period),
             },
-            tickLabels: { fontSize: 12, thin: true },
-            label: "Time",
+            tickLabels: { fontSize: 22, fontWeight: 500, thin: true },
+            label: { text: "เวลาไทย", fontSize: 20, fontWeight: 600 },
           },
         },
         y: {
@@ -252,15 +351,11 @@ export class TanstackChartGenerator {
           axis: {
             line: false,
             ticks: {
-              count: 5,
+              values: priceTicks,
               line: false,
               format: (value) => `${currencySymbol}${formatCryptoPrice(value)}`,
             },
-            tickLabels: { fontSize: 13 },
-            label:
-              exchange.toLowerCase() === "binance"
-                ? "Price (USD)"
-                : "Price (THB)",
+            tickLabels: { fontSize: 22, fontWeight: 500 },
           },
         },
       },
@@ -275,7 +370,7 @@ export class TanstackChartGenerator {
       CHART_WIDTH,
       CHART_HEIGHT,
       chartTitle,
-      `${sourceLabel}. ${formatPercentage(priceChange)} over ${hours} hours.`,
+      `${sourceLabel}. ${periodConfig.label}. ${formatPercentage(priceChange)}. High ${formatCryptoPrice(maximumPrice)}. Low ${formatCryptoPrice(minimumPrice)}. Latest volume ${latestCandle.volume} ${symbol.toUpperCase()}.`,
     );
   }
 
@@ -322,18 +417,18 @@ export class TanstackChartGenerator {
     const range = maximum - minimum || 1;
     const padding = range * 0.1;
     const yMin = Math.min(0, minimum - padding);
-    const yMax = Math.max(0, maximum + padding);
+    const yMax = Math.max(0, maximum + padding) + range * 0.42;
     const yRange = yMax - yMin || 1;
     const maxIndex = Math.max(
       1,
       ...series.map((item) => (item.points.at(-1)?.index ?? 0) + 1),
     );
     const chartTitle = title || `Price Comparison (${hours}h) - Normalized %`;
-    const headerY = yMax - yRange * 0.035;
-    const subtitleY = yMax - yRange * 0.075;
+    const headerY = yMax - yRange * 0.06;
+    const subtitleY = yMax - yRange * 0.14;
     const legendRows = series.map((item, index) => ({
       index: maxIndex - 0.1,
-      y: yMax - yRange * (0.035 + index * 0.035),
+      y: yMax - yRange * (0.22 + index * 0.05),
       label: item.symbol.toUpperCase(),
       color: CHART_COLORS_BY_SERIES[index % CHART_COLORS_BY_SERIES.length]!,
     }));
@@ -344,7 +439,7 @@ export class TanstackChartGenerator {
           y: "normalizedPrice",
           stroke:
             CHART_COLORS_BY_SERIES[index % CHART_COLORS_BY_SERIES.length]!,
-          strokeWidth: 2.5,
+          strokeWidth: 4,
           points: true,
         }),
       ),
@@ -358,8 +453,8 @@ export class TanstackChartGenerator {
         y: "y",
         text: "label",
         fill: CHART_COLORS.TEXT_PRIMARY,
-        fontSize: 20,
-        fontWeight: 600,
+        fontSize: 40,
+        fontWeight: 700,
         anchor: "middle",
       }),
       text(
@@ -367,7 +462,7 @@ export class TanstackChartGenerator {
           {
             index: maxIndex / 2,
             y: subtitleY,
-            label: "Percentage change from first observation",
+            label: `การเปลี่ยนแปลงจากจุดเริ่มต้น · ${hours} ชม.`,
           },
         ],
         {
@@ -375,7 +470,8 @@ export class TanstackChartGenerator {
           y: "y",
           text: "label",
           fill: CHART_COLORS.TEXT_SECONDARY,
-          fontSize: 12,
+          fontSize: 24,
+          fontWeight: 500,
           anchor: "middle",
         },
       ),
@@ -384,13 +480,14 @@ export class TanstackChartGenerator {
         y: "y",
         text: "label",
         fill: (datum) => datum.color,
-        fontSize: 12,
+        fontSize: 22,
+        fontWeight: 600,
         anchor: "end",
       }),
     ];
     const definition = defineChart({
       theme: CHART_THEME,
-      margin: { top: 40, right: 90, bottom: 88, left: 110 },
+      margin: { top: 76, right: 104, bottom: 96, left: 148 },
       marks,
       scales: {
         x: {
@@ -398,15 +495,19 @@ export class TanstackChartGenerator {
           axis: {
             line: false,
             ticks: {
-              count: 6,
+              count: 5,
               line: false,
               format: (index) => {
                 const point = series[0]?.points[Math.round(index)];
-                return point ? formatTime(point.time) : "";
+                return point ? formatTime(point.time, "24h") : "";
               },
             },
-            tickLabels: { fontSize: 12, thin: true },
-            label: `Time (${hours} hours)`,
+            tickLabels: { fontSize: 22, fontWeight: 500, thin: true },
+            label: {
+              text: `เวลาไทย (${hours} ชม.)`,
+              fontSize: 20,
+              fontWeight: 600,
+            },
           },
         },
         y: {
@@ -419,8 +520,7 @@ export class TanstackChartGenerator {
               line: false,
               format: (value) => `${value >= 0 ? "+" : ""}${value.toFixed(1)}%`,
             },
-            tickLabels: { fontSize: 12 },
-            label: "Price Change (%)",
+            tickLabels: { fontSize: 22, fontWeight: 500 },
           },
         },
       },
@@ -449,7 +549,7 @@ export class TanstackChartGenerator {
           y: "y",
           text: "label",
           fill: CHART_COLORS.TEXT_SECONDARY,
-          fontSize: 16,
+          fontSize: 28,
           anchor: "middle",
         }),
       ],
