@@ -51,6 +51,7 @@ jobs:
       CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       MCP_AI_MODEL: ${{ secrets.MCP_AI_MODEL || 'gpt-5.6-luna' }}
+      BITKUB_CREDENTIAL_ENCRYPTION_KEY: ${{ secrets.BITKUB_CREDENTIAL_ENCRYPTION_KEY }}
       APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
       ALLOWED_DOMAINS: ${{ secrets.ALLOWED_DOMAINS }}
 

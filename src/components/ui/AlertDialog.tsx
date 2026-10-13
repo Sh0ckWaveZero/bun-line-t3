@@ -184,7 +184,7 @@ export const ConfirmDialog = ({
             <button
               type="button"
               onClick={handleConfirm}
-              className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none ${variantStyles[variant]}`}
+              className={`cursor-pointer rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none ${variantStyles[variant]}`}
             >
               {confirmLabel}
             </button>

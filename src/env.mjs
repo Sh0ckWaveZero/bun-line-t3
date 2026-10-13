@@ -89,6 +89,10 @@ export const env = createEnv({
     // 🤖 AI Assistant Configuration
     OPENAI_API_KEY: z.string().optional(),
     MCP_AI_MODEL: z.string().default("gpt-5.6-luna"),
+    BITKUB_CREDENTIAL_ENCRYPTION_KEY: z
+      .string()
+      .regex(/^[a-fA-F0-9]{64}$/)
+      .optional(),
     SPOTIFY_CLIENT_ID: z.string().optional(),
     SPOTIFY_CLIENT_SECRET: z.string().optional(),
   },
@@ -118,6 +122,8 @@ export const env = createEnv({
     DEV_TEST_USER_ID: process.env.DEV_TEST_USER_ID,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     MCP_AI_MODEL: process.env.MCP_AI_MODEL,
+    BITKUB_CREDENTIAL_ENCRYPTION_KEY:
+      process.env.BITKUB_CREDENTIAL_ENCRYPTION_KEY || undefined,
     SPOTIFY_CLIENT_ID: process.env.SPOTIFY_CLIENT_ID,
     SPOTIFY_CLIENT_SECRET: process.env.SPOTIFY_CLIENT_SECRET,
   },

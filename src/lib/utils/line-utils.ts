@@ -114,7 +114,7 @@ export const sendMessage = async (
     const sourceType = source?.type; // "user", "group", หรือ "room"
 
     // ✅ ใช้ replyToken สำหรับตอบกลับ (รองรับทั้ง 1:1, group, และ room)
-    if (replyToken) {
+    if (replyToken && !req.__lineReplyTokenUsed) {
       if (options?.showLoading && userId) {
         try {
           await sendLoadingAnimation(req, 5);
@@ -132,6 +132,7 @@ export const sendMessage = async (
           messages: payload,
         },
       );
+      req.__lineReplyTokenUsed = true;
 
       console.info(
         `[sendMessage] ส่ง reply ไปยัง ${sourceType || "user"}: ${userId || "unknown"}`,
@@ -139,8 +140,13 @@ export const sendMessage = async (
       return response;
     }
 
-    // ถ้าไม่มี replyToken ให้ fallback ไปใช้ push
-    console.warn("[sendMessage] ไม่มี replyToken - ใช้ push แทน");
+    // Reply tokens work once per webhook event. Continue with a push after the
+    // first reply so progress and final messages can both reach the chat.
+    console.warn(
+      replyToken
+        ? "[sendMessage] ใช้ replyToken ไปแล้ว - ใช้ push สำหรับข้อความถัดไป"
+        : "[sendMessage] ไม่มี replyToken - ใช้ push แทน",
+    );
     return sendPushMessage(req, payload);
   } catch (error) {
     console.error("LINE reply failed, falling back to push:", error);
@@ -161,24 +167,29 @@ export const sendPushMessage = async (req: any, payload: any) => {
   };
 
   const source = req.body.events[0].source;
-  const userId = source?.userId;
+  const targetId =
+    source?.type === "group"
+      ? source.groupId
+      : source?.type === "room"
+        ? source.roomId
+        : source?.userId;
   const sourceType = source?.type; // "user", "group", หรือ "room"
 
-  // ต้องมี userId สำหรับการส่ง push message
-  if (!userId) {
-    console.error("[sendPushMessage] Event ไม่มี userId:", {
+  // Push to the originating chat (user, group, or room).
+  if (!targetId) {
+    console.error("[sendPushMessage] Event ไม่มี chat target:", {
       sourceType,
       source,
     });
-    throw new Error("Cannot send push message: missing userId");
+    throw new Error("Cannot send push message: missing chat target");
   }
 
   console.info(
-    `[sendPushMessage] ส่ง push ไปยัง ${sourceType || "user"}: ${userId}`,
+    `[sendPushMessage] ส่ง push ไปยัง ${sourceType || "user"}: ${targetId}`,
   );
 
   return sendRequest(`${env.LINE_MESSAGING_API}/push`, "POST", lineHeader, {
-    to: userId,
+    to: targetId,
     messages: payload,
   });
 };

@@ -1,8 +1,23 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { areaY, defineChart, lineY } from "@tanstack/charts";
+import { scaleLinear } from "@tanstack/charts/scales/linear";
+import { scalePoint } from "@tanstack/charts/scales/point";
+import { Chart } from "@tanstack/charts/react/tooltip";
+import { tooltip } from "@tanstack/charts/tooltip";
+import * as TabsPrimitive from "@radix-ui/react-tabs";
 import type { DcaOrder } from "@/features/dca/types";
 import { useDcaLocale } from "@/features/dca/lib/dca-locale-context";
+import { useChartTheme } from "@/hooks/useChartTheme";
 import {
   Popover,
   PopoverContent,
@@ -31,83 +46,84 @@ interface EnrichedPoint {
   pctUnrealized: number;
 }
 
-type SeriesItem = {
+interface ChartPoint extends EnrichedPoint {
+  index: number;
+  value: number;
+}
+
+interface SeriesItem {
   key: string;
   label: string;
   color: string;
-  fill: string | undefined;
-  dash: string | undefined;
-  zero: boolean;
+  fill: boolean;
+  dash?: string;
+  baseline?: "zero";
   values: number[];
-};
+}
 
-const fmtTHB = (n: number | null | undefined, decimals = 0): string => {
-  if (n === null || n === undefined || isNaN(n)) return "—";
-  if (Math.abs(n) >= 1_000_000) return (n / 1_000_000).toFixed(2) + "M";
-  return n.toLocaleString("en-US", { maximumFractionDigits: decimals });
-};
-
-const fmtTHBFull = (n: number | null | undefined): string => {
-  if (n === null || n === undefined || isNaN(n)) return "—";
-  return n.toLocaleString("en-US", {
-    maximumFractionDigits: 2,
-    minimumFractionDigits: 2,
-  });
-};
-
-const ENGLISH_MONTHS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
+const TIMEFRAMES: Timeframe[] = ["30D", "90D", "1Y", "ALL"];
+const useIsomorphicLayoutEffect =
+  typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 const formatDateParts = (value: string) => {
   const [year, month, day] = value.slice(0, 10).split("-");
-  const monthIndex = Number(month) - 1;
-  if (
-    !year ||
-    !day ||
-    !Number.isInteger(monthIndex) ||
-    !ENGLISH_MONTHS[monthIndex]
-  ) {
-    return "—";
-  }
-  return { year, month: ENGLISH_MONTHS[monthIndex], day };
+  const date = new Date(`${year}-${month}-${day}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return null;
+  return date;
 };
 
-const fmtDateShort = (value: string): string => {
+const formatShortDate = (value: string): string => {
   const date = formatDateParts(value);
-  return typeof date === "string" ? date : `${date.day} ${date.month}`;
+  return date
+    ? new Intl.DateTimeFormat("en", { day: "numeric", month: "short" }).format(
+        date,
+      )
+    : "—";
 };
 
-const fmtDate = (value: string): string => {
+const formatDate = (value: string): string => {
   const date = formatDateParts(value);
-  return typeof date === "string"
-    ? date
-    : `${date.day} ${date.month} ${date.year.slice(-2)}`;
+  return date
+    ? new Intl.DateTimeFormat("en", {
+        day: "numeric",
+        month: "short",
+        year: "2-digit",
+      }).format(date)
+    : "—";
 };
 
-const fmtSat = (n: number): string => {
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(2) + "M";
-  if (n >= 1000) return Math.round(n / 1000) + "K";
-  return n.toLocaleString("en-US");
+const formatThb = (value: number, decimals = 0): string => {
+  if (!Number.isFinite(value)) return "—";
+  if (Math.abs(value) >= 1_000_000) return `${(value / 1_000_000).toFixed(2)}M`;
+  return value.toLocaleString("en-US", { maximumFractionDigits: decimals });
 };
 
-const TIMEFRAMES: Timeframe[] = ["30D", "90D", "1Y", "ALL"];
+const formatThbFull = (value: number): string =>
+  Number.isFinite(value)
+    ? value.toLocaleString("en-US", {
+        maximumFractionDigits: 2,
+        minimumFractionDigits: 2,
+      })
+    : "—";
+
+const formatSatoshi = (value: number): string => {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(2)}M`;
+  if (value >= 1_000) return `${Math.round(value / 1_000)}K`;
+  return value.toLocaleString("en-US");
+};
 
 export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
   const { t } = useDcaLocale();
+  const { chartTheme } = useChartTheme();
+  const chartInstanceId = useId().replace(/:/g, "");
+  const [mode, setMode] = useState<ChartMode>("portfolio");
+  const [timeframe, setTimeframe] = useState<Timeframe>("ALL");
+  const [timeframeOpen, setTimeframeOpen] = useState(false);
+  const tabsListRef = useRef<HTMLDivElement>(null);
+  const tabsPillRef = useRef<HTMLSpanElement>(null);
+  const hasPositionedPill = useRef(false);
 
-  const TABS: { key: ChartMode; label: string; shortLabel: string }[] = [
+  const tabs: { key: ChartMode; label: string; shortLabel: string }[] = [
     {
       key: "portfolio",
       label: t.chart.modePortfolio,
@@ -122,71 +138,75 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
       shortLabel: t.chart.shortEntries,
     },
   ];
-  const [mode, setMode] = useState<ChartMode>("portfolio");
-  const [timeframe, setTimeframe] = useState<Timeframe>("ALL");
-  const [timeframeOpen, setTimeframeOpen] = useState(false);
-  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
-  const [touchIdx, setTouchIdx] = useState<number | null>(null);
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
-  const chartAreaRef = useRef<HTMLDivElement>(null);
-  const tooltipRef = useRef<HTMLDivElement>(null);
-  const [dims, setDims] = useState({ w: 800, h: 280 });
-  const [tooltipSize, setTooltipSize] = useState({ w: 0, h: 0 });
 
-  useEffect(() => {
-    if (!chartAreaRef.current) return;
-    const ro = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        if (width > 0 && height > 0) {
-          setDims({ w: width, h: height });
-        }
-      }
-    });
-    ro.observe(chartAreaRef.current);
-    return () => ro.disconnect();
+  const moveTabPill = useCallback((animate: boolean) => {
+    const tabsList = tabsListRef.current;
+    const pill = tabsPillRef.current;
+    const activeTab = tabsList?.querySelector<HTMLButtonElement>(
+      '[role="tab"][aria-selected="true"]',
+    );
+    if (!tabsList || !pill || !activeTab) return;
+
+    const transform = `translateX(${activeTab.offsetLeft}px)`;
+    const width = `${activeTab.offsetWidth}px`;
+    if (animate) {
+      pill.style.transform = transform;
+      pill.style.width = width;
+    } else {
+      const previousTransition = pill.style.transition;
+      pill.style.transition = "none";
+      pill.style.transform = transform;
+      pill.style.width = width;
+      void pill.offsetWidth;
+      pill.style.transition = previousTransition;
+    }
+
+    tabsList.dataset.pillPositioned = "true";
   }, []);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const media = window.matchMedia("(hover: none), (pointer: coarse)");
-    const apply = () => setIsTouchDevice(media.matches);
-    apply();
-    media.addEventListener("change", apply);
-    return () => media.removeEventListener("change", apply);
-  }, []);
+  useIsomorphicLayoutEffect(() => {
+    moveTabPill(hasPositionedPill.current);
+    hasPositionedPill.current = true;
+  }, [mode, moveTabPill]);
 
   useEffect(() => {
-    if (!tooltipRef.current) return;
-    const updateSize = () => {
-      if (!tooltipRef.current) return;
-      const rect = tooltipRef.current.getBoundingClientRect();
-      setTooltipSize({ w: rect.width, h: rect.height });
+    const tabsList = tabsListRef.current;
+    if (!tabsList) return;
+
+    const handleResize = () => moveTabPill(false);
+    window.addEventListener("resize", handleResize);
+    const observer =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(handleResize);
+    observer?.observe(tabsList);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      observer?.disconnect();
     };
-    updateSize();
-    const ro = new ResizeObserver(() => updateSize());
-    ro.observe(tooltipRef.current);
-    return () => ro.disconnect();
-  }, [touchIdx, hoverIdx, mode, timeframe, orders.length]);
+  }, [moveTabPill]);
 
-  const allPoints: EnrichedPoint[] = useMemo(() => {
+  const allPoints = useMemo<EnrichedPoint[]>(() => {
     if (!currentPrice || orders.length === 0) return [];
     const sorted = [...orders].sort(
-      (a, b) =>
-        new Date(a.executedAt).getTime() - new Date(b.executedAt).getTime(),
+      (left, right) =>
+        new Date(left.executedAt).getTime() -
+        new Date(right.executedAt).getTime(),
     );
     let cumSat = 0;
     let cumFiat = 0;
+
     return sorted.map((order) => {
       const satoshi = Math.round(order.coinReceived * 1e8);
       cumSat += satoshi;
       cumFiat += order.amountTHB;
       const portfolioValue = (cumSat / 1e8) * order.pricePerCoin;
       const unrealized = portfolioValue - cumFiat;
-      const pctUnrealized = cumFiat > 0 ? (unrealized / cumFiat) * 100 : 0;
+
       return {
         id: order.id,
-        date: new Date(order.executedAt).toISOString().split("T")[0]!,
+        date: new Date(order.executedAt).toISOString().slice(0, 10),
         fiat: order.amountTHB,
         satoshi,
         price: order.pricePerCoin,
@@ -195,323 +215,332 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
         portfolioValue,
         invested: cumFiat,
         unrealized,
-        pctUnrealized,
+        pctUnrealized: cumFiat > 0 ? (unrealized / cumFiat) * 100 : 0,
       };
     });
   }, [orders, currentPrice]);
 
   const data = useMemo(() => {
-    const n: Record<Timeframe, number> = {
+    const count: Record<Timeframe, number> = {
       "30D": 30,
       "90D": 90,
       "1Y": 365,
-      ALL: Infinity,
+      ALL: Number.POSITIVE_INFINITY,
     };
-    return n[timeframe] === Infinity
-      ? allPoints
-      : allPoints.slice(-n[timeframe]);
+    return Number.isFinite(count[timeframe])
+      ? allPoints.slice(-count[timeframe])
+      : allPoints;
   }, [allPoints, timeframe]);
 
-  const { w, h } = dims;
-  const padL = 46;
-  const padR = 8;
-  const padT = 10;
-  const padB = 24;
-  const cw = Math.max(0, w - padL - padR);
-  const ch = Math.max(0, h - padT - padB);
-
-  const series: SeriesItem[] = useMemo(() => {
-    if (mode === "portfolio")
+  const series = useMemo<SeriesItem[]>(() => {
+    const foreground = chartTheme.foreground ?? "currentColor";
+    const orange = "#f97316";
+    if (mode === "portfolio") {
       return [
         {
           key: "portfolio",
           label: t.chart.seriesPortfolioValue,
-          color: "rgb(249,115,22)",
-          fill: "rgba(249,115,22,0.12)",
-          dash: undefined,
-          zero: false,
-          values: data.map((d) => d.portfolioValue),
+          color: orange,
+          fill: true,
+          values: data.map((point) => point.portfolioValue),
         },
         {
           key: "invested",
           label: t.chart.seriesInvested,
-          color: "var(--foreground)",
+          color: foreground,
+          fill: false,
           dash: "4 4",
-          fill: undefined,
-          zero: false,
-          values: data.map((d) => d.invested),
+          values: data.map((point) => point.invested),
         },
       ];
-    if (mode === "pnl")
+    }
+    if (mode === "pnl") {
       return [
         {
           key: "unrealized",
           label: t.chart.seriesUnrealizedPnl,
-          color: "rgb(249,115,22)",
-          fill: "rgba(249,115,22,0.12)",
-          dash: undefined,
-          zero: true,
-          values: data.map((d) => d.unrealized),
+          color: orange,
+          fill: true,
+          baseline: "zero",
+          values: data.map((point) => point.unrealized),
         },
       ];
-    if (mode === "sats")
+    }
+    if (mode === "sats") {
       return [
         {
           key: "sats",
           label: t.chart.seriesCumulativeSatoshi,
-          color: "rgb(249,115,22)",
-          fill: "rgba(249,115,22,0.12)",
-          dash: undefined,
-          zero: false,
-          values: data.map((d) => d.cumSat),
+          color: orange,
+          fill: true,
+          values: data.map((point) => point.cumSat),
         },
       ];
-    if (mode === "entries")
+    }
+    if (mode === "entries") {
       return [
         {
           key: "price",
           label: t.chart.seriesBtcPrice,
-          color: "var(--muted-foreground)",
-          fill: undefined,
-          dash: undefined,
-          zero: false,
-          values: data.map((d) => d.price),
+          color: chartTheme.muted ?? "#64748b",
+          fill: false,
+          values: data.map((point) => point.price),
         },
       ];
+    }
     return [
       {
         key: "market",
         label: t.chart.seriesMarketPrice,
-        color: "rgb(249,115,22)",
-        fill: undefined,
-        dash: undefined,
-        zero: false,
-        values: data.map((d) => d.price),
+        color: orange,
+        fill: false,
+        values: data.map((point) => point.price),
       },
       {
         key: "cost",
         label: t.chart.seriesAvgCostBasis,
-        color: "var(--foreground)",
+        color: foreground,
+        fill: false,
         dash: "4 4",
-        fill: undefined,
-        zero: false,
-        values: data.map((d) => d.cumFiat / (d.cumSat / 1e8)),
+        values: data.map((point) => point.cumFiat / (point.cumSat / 1e8)),
       },
     ];
-  }, [data, mode, t]);
+  }, [chartTheme, data, mode, t]);
 
-  const allVals = series.flatMap((s) => s.values).filter((v) => isFinite(v));
-  let yMin = allVals.length > 0 ? Math.min(...allVals) : 0;
-  let yMax = allVals.length > 0 ? Math.max(...allVals) : 1;
-  const needsZeroBaseline = Boolean(series.find((s) => s.zero));
-  if (needsZeroBaseline) {
-    yMin = Math.min(yMin, 0);
-    yMax = Math.max(yMax, 0);
-    const yRange = yMax - yMin || 1;
-    yMin -= yRange * 0.06;
-    yMax += yRange * 0.06;
-  } else {
-    yMin = Math.max(0, yMin);
-    const yRange = yMax - yMin || 1;
-    yMin = Math.max(0, yMin - yRange * 0.02);
-    yMax += yRange * 0.04;
-  }
+  const definition = useMemo(() => {
+    if (data.length === 0) return null;
 
-  const x = (i: number) =>
-    padL + (data.length <= 1 ? 0 : (i / (data.length - 1)) * cw);
-  const y = (v: number) => padT + ch - ((v - yMin) / (yMax - yMin)) * ch;
-
-  const grid = Array.from({ length: 5 }, (_, i) => {
-    const v = yMin + ((yMax - yMin) / 4) * i;
-    return { v, y: y(v) };
-  });
-  const zeroY = yMin < 0 && yMax > 0 ? y(0) : null;
-
-  function buildPath(values: number[], withArea: boolean): string {
-    if (values.length === 0) return "";
-    let d = `M ${x(0)} ${y(values[0]!)}`;
-    for (let i = 1; i < values.length; i++) d += ` L ${x(i)} ${y(values[i]!)}`;
-    if (withArea) {
-      const baseY = zeroY !== null ? zeroY : padT + ch;
-      d += ` L ${x(values.length - 1)} ${baseY} L ${x(0)} ${baseY} Z`;
+    const values = series
+      .flatMap((item) => item.values)
+      .filter(Number.isFinite);
+    let yMin = values.length ? Math.min(...values) : 0;
+    let yMax = values.length ? Math.max(...values) : 1;
+    const range = yMax - yMin || Math.abs(yMax) * 0.02 || 1;
+    const hasZeroBaseline = series.some((item) => item.baseline === "zero");
+    if (hasZeroBaseline) {
+      yMin = Math.min(0, yMin) - range * 0.06;
+      yMax = Math.max(0, yMax) + range * 0.06;
+    } else {
+      yMin = Math.max(0, yMin - range * 0.02);
+      yMax += range * 0.04;
     }
-    return d;
-  }
 
-  const xTickCount = Math.min(6, data.length);
-  const xTicks = Array.from({ length: xTickCount }, (_, i) => {
-    const idx = Math.round((i / (xTickCount - 1 || 1)) * (data.length - 1));
-    return { idx, x: x(idx), date: data[idx]?.date };
-  });
+    const tickCount = Math.min(6, data.length);
+    const tickIndices = Array.from({ length: tickCount }, (_, index) =>
+      Math.round((index / Math.max(1, tickCount - 1)) * (data.length - 1)),
+    );
+    const formatValue = (value: number) =>
+      mode === "sats" ? formatSatoshi(value) : formatThb(value);
+    const chartPoints = series.map((item) =>
+      data.map((point, index): ChartPoint => ({
+        ...point,
+        index,
+        value: item.values[index] ?? 0,
+      })),
+    );
 
-  const onMove = useCallback(
-    (e: React.MouseEvent<SVGSVGElement>) => {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const mx = e.clientX - rect.left;
-      if (mx < padL) {
-        setHoverIdx(null);
-        return;
-      }
-      const rel = (mx - padL) / cw;
-      setHoverIdx(
-        Math.max(
-          0,
-          Math.min(data.length - 1, Math.round(rel * (data.length - 1))),
-        ),
-      );
-    },
-    [cw, data.length],
-  );
+    const marks = series.flatMap((item, index) => {
+      const points = chartPoints[index];
+      if (!points) return [];
+      return [
+        ...(item.fill
+          ? [
+              areaY(points, {
+                x: "index",
+                y: "value",
+                y1: item.baseline === "zero" ? 0 : yMin,
+                y2: "value",
+                fill: `url(#dca-area-${chartInstanceId}-${item.key})`,
+              }),
+            ]
+          : []),
+        lineY(points, {
+          x: "index",
+          y: "value",
+          stroke: item.color,
+          strokeWidth: 1.75,
+          strokeDasharray: item.dash,
+          points: mode === "entries",
+        }),
+      ];
+    });
 
-  const onLeave = useCallback(() => setHoverIdx(null), []);
-  const activeIdx = touchIdx ?? hoverIdx;
-  const hovered = activeIdx !== null ? (data[activeIdx] ?? null) : null;
+    return defineChart({
+      theme: chartTheme,
+      margin: { top: 12, right: 12, bottom: 30, left: 56 },
+      marks,
+      scales: {
+        x: {
+          scale: scalePoint<number>().domain(data.map((_, index) => index)),
+          axis: {
+            line: false,
+            ticks: {
+              values: tickIndices,
+              line: false,
+              format: (index) => {
+                const date = data[index]?.date;
+                return date ? formatShortDate(date) : "";
+              },
+            },
+            tickLabels: { fontSize: 10, thin: false },
+          },
+        },
+        y: {
+          scale: scaleLinear().domain([yMin, yMax]),
+          grid: true,
+          axis: {
+            line: false,
+            ticks: { count: 5, line: false, format: formatValue },
+            tickLabels: { fontSize: 10 },
+          },
+        },
+      },
+      focus: "group-x",
+      tooltip: {
+        use: tooltip,
+        format: (point) => formatDate(point.datum.date),
+      },
+      gradients: series
+        .filter((item) => item.fill)
+        .map((item) => ({
+          id: `dca-area-${chartInstanceId}-${item.key}`,
+          x1: 0,
+          y1: 1,
+          x2: 0,
+          y2: 0,
+          stops: [
+            { offset: 0, color: item.color, opacity: 0.14 },
+            { offset: 0.52, color: item.color, opacity: 0.4 },
+            { offset: 1, color: item.color, opacity: 0.68 },
+          ],
+        })),
+    });
+  }, [chartInstanceId, chartTheme, data, mode, series]);
 
-  const pickIndexByClientX = useCallback(
-    (clientX: number, rect: DOMRect): number | null => {
-      if (data.length === 0 || cw <= 0) return null;
-      const mx = clientX - rect.left;
-      if (mx < padL) return null;
-      const rel = (mx - padL) / cw;
-      return Math.max(
-        0,
-        Math.min(data.length - 1, Math.round(rel * (data.length - 1))),
-      );
-    },
-    [cw, data.length, padL],
-  );
+  const renderTooltip = ({
+    points,
+  }: {
+    points: readonly { datum: ChartPoint }[];
+  }) => {
+    const point = points[0]?.datum;
+    if (!point) return null;
 
-  const onPointerInspect = useCallback(
-    (e: React.PointerEvent<SVGSVGElement>) => {
-      const isTouchLikePointer =
-        e.pointerType === "touch" || e.pointerType === "pen" || isTouchDevice;
-      if (!isTouchLikePointer) return;
-      const rect = e.currentTarget.getBoundingClientRect();
-      const idx = pickIndexByClientX(e.clientX, rect);
-      if (idx === null) {
-        setTouchIdx(null);
-        return;
-      }
-      setTouchIdx(idx);
-    },
-    [pickIndexByClientX, isTouchDevice],
-  );
-
-  const tooltipRows: { lbl: string; val: string }[] = [];
-  if (hovered) {
+    const rows: { label: string; value: string }[] = [];
     if (mode === "portfolio") {
-      tooltipRows.push(
+      rows.push(
         {
-          lbl: t.chart.tooltipPortfolio,
-          val: fmtTHBFull(hovered.portfolioValue) + " ฿",
+          label: t.chart.tooltipPortfolio,
+          value: `${formatThbFull(point.portfolioValue)} ฿`,
         },
         {
-          lbl: t.chart.tooltipInvested,
-          val: fmtTHBFull(hovered.invested) + " ฿",
+          label: t.chart.tooltipInvested,
+          value: `${formatThbFull(point.invested)} ฿`,
         },
         {
-          lbl: t.chart.tooltipUnrealized,
-          val:
-            (hovered.unrealized >= 0 ? "+" : "") +
-            fmtTHBFull(hovered.unrealized) +
-            " ฿",
+          label: t.chart.tooltipUnrealized,
+          value: `${point.unrealized >= 0 ? "+" : ""}${formatThbFull(point.unrealized)} ฿`,
         },
       );
     } else if (mode === "pnl") {
-      tooltipRows.push(
+      rows.push(
         {
-          lbl: t.chart.tooltipUnrealized,
-          val:
-            (hovered.unrealized >= 0 ? "+" : "") +
-            fmtTHBFull(hovered.unrealized) +
-            " ฿",
+          label: t.chart.tooltipUnrealized,
+          value: `${point.unrealized >= 0 ? "+" : ""}${formatThbFull(point.unrealized)} ฿`,
         },
         {
-          lbl: t.chart.tooltipPercent,
-          val: hovered.pctUnrealized.toFixed(2) + "%",
+          label: t.chart.tooltipPercent,
+          value: `${point.pctUnrealized.toFixed(2)}%`,
         },
       );
     } else if (mode === "sats") {
-      tooltipRows.push(
+      rows.push(
         {
-          lbl: t.chart.tooltipCumulative,
-          val: hovered.cumSat.toLocaleString("en-US") + " sat",
+          label: t.chart.tooltipCumulative,
+          value: `${point.cumSat.toLocaleString("en-US")} sat`,
         },
         {
-          lbl: t.chart.tooltipTodaysBuy,
-          val: hovered.satoshi.toLocaleString("en-US") + " sat",
+          label: t.chart.tooltipTodaysBuy,
+          value: `${point.satoshi.toLocaleString("en-US")} sat`,
         },
       );
     } else if (mode === "entries") {
-      tooltipRows.push(
-        { lbl: t.chart.tooltipBtcPrice, val: fmtTHBFull(hovered.price) + " ฿" },
+      rows.push(
         {
-          lbl: t.chart.tooltipBought,
-          val: hovered.satoshi.toLocaleString("en-US") + " sat",
+          label: t.chart.tooltipBtcPrice,
+          value: `${formatThbFull(point.price)} ฿`,
+        },
+        {
+          label: t.chart.tooltipBought,
+          value: `${point.satoshi.toLocaleString("en-US")} sat`,
         },
       );
     } else {
-      const costBasis = hovered.cumFiat / (hovered.cumSat / 1e8);
-      tooltipRows.push(
-        { lbl: t.chart.tooltipMarket, val: fmtTHBFull(hovered.price) + " ฿" },
-        { lbl: t.chart.tooltipAvgCost, val: fmtTHBFull(costBasis) + " ฿" },
+      rows.push(
+        {
+          label: t.chart.tooltipMarket,
+          value: `${formatThbFull(point.price)} ฿`,
+        },
+        {
+          label: t.chart.tooltipAvgCost,
+          value: `${formatThbFull(point.cumFiat / (point.cumSat / 1e8))} ฿`,
+        },
       );
     }
-  }
 
-  const tooltipPad = 8;
-  const tooltipGap = 10;
-  const availableTooltipWidth = Math.max(140, w - padL - padR - tooltipPad * 2);
-  const tooltipWidth = Math.min(
-    Math.max(tooltipSize.w, 160),
-    availableTooltipWidth,
-  );
-  const rawTooltipX = activeIdx !== null ? x(activeIdx) : padL;
-  const minTooltipLeft = padL + tooltipPad;
-  const maxTooltipLeft = w - padR - tooltipWidth - tooltipPad;
-  const safeMaxTooltipLeft = Math.max(minTooltipLeft, maxTooltipLeft);
-  const rightEdgeLimit = w - padR - tooltipPad;
-  const preferredRightLeft = rawTooltipX + tooltipGap;
-  const preferredLeftLeft = rawTooltipX - tooltipWidth - tooltipGap;
-
-  const tooltipLeft = (() => {
-    const rightWouldOverflow =
-      preferredRightLeft + tooltipWidth > rightEdgeLimit;
-    const initialLeft = rightWouldOverflow
-      ? preferredLeftLeft
-      : preferredRightLeft;
-    return Math.max(minTooltipLeft, Math.min(safeMaxTooltipLeft, initialLeft));
-  })();
-  const showTooltipBelow = padT + tooltipSize.h + 16 > h;
+    return (
+      <div className="bg-card border-border text-foreground min-w-40 rounded-md border px-2.5 py-2 text-xs shadow-lg">
+        <div className="border-border mb-1 border-b pb-1 font-medium">
+          {formatDate(point.date)}
+        </div>
+        {rows.map((row) => (
+          <div className="flex justify-between gap-4" key={row.label}>
+            <span className="text-muted-foreground">{row.label}</span>
+            <span className="font-mono tabular-nums">{row.value}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
-    <div
+    <TabsPrimitive.Root
       id="dca-chart-card"
+      value={mode}
+      onValueChange={(value) => {
+        if (tabs.some((tab) => tab.key === value)) {
+          setMode(value as ChartMode);
+        }
+      }}
       className="bg-card border-border flex h-full w-full flex-col overflow-hidden rounded-lg border"
     >
-      {/* Header tabs + timeframe */}
       <div className="border-border relative z-10 flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2.5 sm:px-5 sm:py-3.5">
-        <div className="flex flex-wrap gap-0.5">
-          {TABS.map((tab) => (
-            <button
+        <TabsPrimitive.List
+          ref={tabsListRef}
+          aria-label="มุมมองกราฟ DCA"
+          className="t-tabs dca-chart-tabs"
+        >
+          <span
+            ref={tabsPillRef}
+            className="t-tabs-pill"
+            aria-hidden="true"
+          />
+          {tabs.map((tab) => (
+            <TabsPrimitive.Trigger
               key={tab.key}
-              className={`rounded px-2 py-1.5 text-[11px] font-medium sm:px-3 sm:text-xs ${
-                mode === tab.key
-                  ? "bg-foreground text-background"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-              onClick={() => setMode(tab.key)}
+              value={tab.key}
+              className="t-tab focus-visible:ring-ring focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             >
               <span className="sm:hidden">{tab.shortLabel}</span>
               <span className="hidden sm:inline">{tab.label}</span>
-            </button>
+            </TabsPrimitive.Trigger>
           ))}
-        </div>
+        </TabsPrimitive.List>
         <Popover open={timeframeOpen} onOpenChange={setTimeframeOpen}>
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="bg-card border-border text-foreground min-w-[72px] rounded border px-2 py-1 text-xs"
+              className="bg-card border-border text-foreground min-w-[72px] cursor-pointer rounded border px-2 py-1 text-xs"
+              aria-label="Chart timeframe"
             >
               {timeframe}
             </button>
@@ -522,11 +551,12 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
                 <button
                   key={value}
                   type="button"
+                  aria-pressed={timeframe === value}
                   onClick={() => {
                     setTimeframe(value);
                     setTimeframeOpen(false);
                   }}
-                  className={`rounded px-2 py-1.5 text-left text-xs ${
+                  className={`cursor-pointer rounded px-2 py-1.5 text-left text-xs ${
                     timeframe === value
                       ? "bg-foreground text-background"
                       : "text-foreground hover:bg-muted"
@@ -540,182 +570,54 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
         </Popover>
       </div>
 
-      {data.length === 0 ? (
-        <div className="text-muted-foreground flex h-[200px] items-center justify-center text-sm sm:h-[300px]">
-          {t.chart.addFirstBuy}
-        </div>
-      ) : (
-        <>
-          {/* Legend */}
-          <div className="text-muted-foreground flex gap-4 px-5 pt-2 text-[11px]">
-            {series.map((s) => (
-              <span key={s.key} className="inline-flex items-center gap-1.5">
+      <TabsPrimitive.Content
+        value={mode}
+        className="flex min-h-0 flex-1 flex-col outline-none"
+      >
+        {data.length === 0 ? (
+          <div className="text-muted-foreground flex h-[200px] items-center justify-center text-sm sm:h-[300px]">
+            {t.chart.addFirstBuy}
+          </div>
+        ) : (
+          <>
+            <div className="text-muted-foreground flex gap-4 px-5 pt-2 text-[11px]">
+              {series.map((item) => (
                 <span
-                  className="inline-block h-2.5 w-2.5 rounded-sm"
-                  style={{
-                    background: s.dash ? "transparent" : s.color,
-                    border: s.dash ? `2px dashed ${s.color}` : "none",
-                    height: s.dash ? 0 : 10,
-                  }}
-                />
-                {s.label}
-              </span>
-            ))}
-          </div>
-
-          {/* Chart area */}
-          <div className="relative z-0 min-h-[220px] flex-1 overflow-hidden px-2 pb-2 sm:min-h-[320px] sm:px-3 sm:pb-3">
-            <div ref={chartAreaRef} className="relative h-full w-full">
-              <svg
-                width="100%"
-                height="100%"
-                viewBox={`0 0 ${w} ${h}`}
-                preserveAspectRatio="none"
-                className="block"
-                style={{ touchAction: "pan-y" }}
-                onMouseMove={isTouchDevice ? undefined : onMove}
-                onMouseLeave={isTouchDevice ? undefined : onLeave}
-                onPointerDown={onPointerInspect}
-                onPointerMove={onPointerInspect}
-              >
-                {grid.map((g) => (
-                  <g key={g.v}>
-                    <line
-                      x1={padL}
-                      x2={w - padR}
-                      y1={g.y}
-                      y2={g.y}
-                      stroke="var(--border)"
-                      strokeWidth="1"
-                    />
-                    <text
-                      x={padL - 8}
-                      y={g.y + 3}
-                      textAnchor="end"
-                      fontSize="10"
-                      fill="var(--muted-foreground)"
-                    >
-                      {mode === "sats" ? fmtSat(g.v) : fmtTHB(g.v)}
-                    </text>
-                  </g>
-                ))}
-                {zeroY !== null && (
-                  <line
-                    x1={padL}
-                    x2={w - padR}
-                    y1={zeroY}
-                    y2={zeroY}
-                    stroke="var(--muted-foreground)"
-                    strokeWidth="1"
-                    strokeDasharray="2 3"
-                    opacity="0.6"
-                  />
-                )}
-                {xTicks.map((t, i) => (
-                  <text
-                    key={data[t.idx]?.id ?? t.idx}
-                    x={t.x}
-                    y={h - 8}
-                    textAnchor={
-                      i === 0
-                        ? "start"
-                        : i === xTicks.length - 1
-                          ? "end"
-                          : "middle"
-                    }
-                    fontSize="10"
-                    fill="var(--muted-foreground)"
-                  >
-                    {t.date ? fmtDateShort(t.date) : ""}
-                  </text>
-                ))}
-                {series.map(
-                  (s) =>
-                    s.fill && (
-                      <path
-                        key={s.key + "-a"}
-                        d={buildPath(s.values, true)}
-                        fill={s.fill}
-                        stroke="none"
-                      />
-                    ),
-                )}
-                {series.map((s) => (
-                  <path
-                    key={s.key + "-l"}
-                    d={buildPath(s.values, false)}
-                    fill="none"
-                    stroke={s.color}
-                    strokeWidth="1.75"
-                    strokeDasharray={s.dash ?? "none"}
-                    strokeLinejoin="round"
-                    strokeLinecap="round"
-                  />
-                ))}
-                {mode === "entries" &&
-                  data.map((d, i) => (
-                    <circle
-                      key={d.id}
-                      cx={x(i)}
-                      cy={y(d.price)}
-                      r="3.5"
-                      fill="rgb(249,115,22)"
-                      opacity="0.75"
-                    />
-                  ))}
-                {activeIdx !== null && (
-                  <g>
-                    <line
-                      x1={x(activeIdx)}
-                      x2={x(activeIdx)}
-                      y1={padT}
-                      y2={padT + ch}
-                      stroke="var(--foreground)"
-                      strokeWidth="1"
-                      strokeDasharray="2 3"
-                      opacity="0.5"
-                    />
-                    {series.map((s) => (
-                      <circle
-                        key={s.key}
-                        cx={x(activeIdx)}
-                        cy={y(s.values[activeIdx] ?? 0)}
-                        r="4"
-                        fill="var(--card)"
-                        stroke={s.color}
-                        strokeWidth="2"
-                      />
-                    ))}
-                  </g>
-                )}
-              </svg>
-              {hovered && activeIdx !== null && (
-                <div
-                  ref={tooltipRef}
-                  className="dca-tooltip dca-tooltip-visible"
-                  style={{
-                    left: tooltipLeft,
-                    top: showTooltipBelow ? padT + 8 : 8,
-                    transform: "translate(0, 0)",
-                    width: tooltipWidth,
-                    maxWidth: tooltipWidth,
-                  }}
+                  key={item.key}
+                  className="inline-flex items-center gap-1.5"
                 >
-                  <div className="border-border mb-1 border-b pb-1">
-                    {fmtDate(hovered.date)}
-                  </div>
-                  {tooltipRows.map((r) => (
-                    <div className="flex justify-between gap-4" key={r.lbl}>
-                      <span className="opacity-70">{r.lbl}</span>
-                      <span>{r.val}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+                  <span
+                    className="inline-block h-2.5 w-2.5 rounded-sm"
+                    aria-hidden="true"
+                    style={{
+                      background: item.dash ? "transparent" : item.color,
+                      border: item.dash ? `2px dashed ${item.color}` : "none",
+                      height: item.dash ? 0 : 10,
+                    }}
+                  />
+                  {item.label}
+                </span>
+              ))}
             </div>
-          </div>
-        </>
-      )}
-    </div>
+
+            <div className="relative z-0 min-h-[220px] flex-1 overflow-hidden px-2 pb-2 sm:min-h-[320px] sm:px-3 sm:pb-3">
+              <div className="relative h-full min-h-[220px] w-full sm:min-h-[320px]">
+                {definition && (
+                  <Chart
+                    definition={definition}
+                    idPrefix={`dca-chart-${chartInstanceId}`}
+                    ariaLabel={`${tabs.find((tab) => tab.key === mode)?.label ?? mode} BTC DCA chart`}
+                    ariaDescription="Use the arrow keys to inspect chart values."
+                    className="absolute inset-0"
+                    style={{ width: "100%", height: "100%" }}
+                    renderTooltipBody={renderTooltip}
+                  />
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </TabsPrimitive.Content>
+    </TabsPrimitive.Root>
   );
 };

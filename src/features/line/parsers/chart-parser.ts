@@ -1,7 +1,13 @@
+import {
+  isChartPeriod,
+  type ChartPeriod,
+} from "@/features/crypto/constants/chart-periods";
+
 export interface ChartCommandParams {
   symbol: string;
   exchange: string;
   type: "line" | "comparison";
+  period?: ChartPeriod;
 }
 
 export class ChartParser {
@@ -12,6 +18,7 @@ export class ChartParser {
    * - "/chart bn btc" -> { symbol: "btc", exchange: "binance", type: "line" }
    * - "/chart btc binance" -> { symbol: "btc", exchange: "binance", type: "line" }
    * - "/chart btc compare" -> { symbol: "btc", type: "comparison" }
+   * - "/chart bk btc 7d" -> { symbol: "btc", exchange: "bitkub", period: "7d" }
    * - "/c bn btc" -> { symbol: "btc", exchange: "binance", type: "line" }
    */
   static parseCommand(text: string): ChartCommandParams | null {
@@ -29,6 +36,7 @@ export class ChartParser {
     let symbol: string;
     let exchange: string = "bitkub";
     let type: "line" | "comparison" = "line";
+    let period: ChartPeriod | undefined;
 
     // Check if second parameter is an exchange (new format: /chart [exchange] [symbol])
     if (
@@ -43,6 +51,13 @@ export class ChartParser {
       // Check for additional parameters (comparison, etc.)
       for (let i = 3; i < parts.length; i++) {
         const part = parts[i];
+        if (!part) continue;
+
+        if (isChartPeriod(part)) {
+          period = part;
+          continue;
+        }
+
         if (part === "compare" || part === "comparison") {
           type = "comparison";
         }
@@ -58,6 +73,11 @@ export class ChartParser {
 
         if (!part) continue;
 
+        if (isChartPeriod(part)) {
+          period = part;
+          continue;
+        }
+
         // Check for comparison type
         if (part === "compare" || part === "comparison") {
           type = "comparison";
@@ -69,7 +89,7 @@ export class ChartParser {
       }
     }
 
-    return { symbol, exchange, type };
+    return { symbol, exchange, type, ...(period ? { period } : {}) };
   }
 
   private static isValidExchange(exchange: string): boolean {

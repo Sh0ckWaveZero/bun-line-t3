@@ -692,6 +692,7 @@ async function migrateDcaOrders(db: Db, pg: PrismaClient) {
       orderId: doc.order_id ?? doc.orderId ?? toStr(doc._id),
       lineUserId: doc.line_user_id ?? doc.lineUserId ?? "",
       coin: doc.coin ?? "BTC",
+      deduplicationKey: `legacy:${doc.coin ?? "BTC"}:${toDateRequired(doc.executed_at ?? doc.executedAt).toISOString()}`,
       amountTHB: doc.amount_thb ?? doc.amountTHB ?? 0,
       coinReceived: doc.coin_received ?? doc.coinReceived ?? 0,
       pricePerCoin: doc.price_per_coin ?? doc.pricePerCoin ?? 0,

@@ -87,19 +87,9 @@ WORKDIR /app
 ENV SKIP_PRISMA_GENERATE=1 \
     NODE_ENV=production
 
-# Install build tools needed for native modules (canvas)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libcairo2-dev \
-    libgif-dev \
-    libjpeg-dev \
-    libpango1.0-dev \
-    python3 \
-    && rm -rf /var/lib/apt/lists/*
-
 COPY package.json bun.lock ./
 
-# Install production dependencies with native modules (canvas)
+# Install production dependencies
 RUN --mount=type=cache,target=/root/.bun/install/cache \
     bun install --production --frozen-lockfile
 

@@ -72,6 +72,8 @@ model User {
   budgets               Budget[]
   recurringTransactions RecurringTransaction[]
   savingsGoals          SavingsGoal[]
+  bitkubConnection      BitkubConnection?
+  bitkubBtcBuys         BitkubBtcBuy[]
 
   @@map("users")
 }
@@ -381,7 +383,11 @@ model DcaOrder {
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
-  @@unique([lineUserId, coin, executedAt])
+  deduplicationKey String @map("deduplication_key")
+  bitkubBuyId String? @unique @map("bitkub_buy_id")
+  bitkubBuy BitkubBtcBuy? @relation(fields: [bitkubBuyId], references: [id], onDelete: Restrict)
+
+  @@unique([lineUserId, deduplicationKey])
   @@index([orderId])
   @@index([lineUserId, executedAt])
   @@index([coin, executedAt])
@@ -614,4 +620,37 @@ model DcaWebhookReceipt {
   createdAt      DateTime @default(now()) @map("created_at")
 
   @@map("dca_webhook_receipts")
+}
+
+// Credentials can be cleared independently of cached observations and DCA history.
+model BitkubConnection {
+  id String @id @default(cuid())
+  userId String @unique @map("user_id")
+  encryptedCredentials String? @map("encrypted_credentials")
+  keyHint String? @map("key_hint")
+  connectedAt DateTime? @map("connected_at")
+  lastSyncedAt DateTime? @map("last_synced_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("bitkub_connections")
+}
+
+model BitkubBtcBuy {
+  id String @id @default(cuid())
+  userId String @map("user_id")
+  externalTradeIdentity String @map("external_trade_identity")
+  externalOrderId String @map("external_order_id")
+  amountTHB Decimal @db.Decimal(38, 18) @map("amount_thb")
+  feeTHB Decimal @db.Decimal(38, 18) @map("fee_thb")
+  spentTHB Decimal @db.Decimal(38, 18) @map("spent_thb")
+  receivedBTC Decimal @db.Decimal(38, 18) @map("received_btc")
+  rate Decimal @db.Decimal(38, 18)
+  executedAt DateTime @map("executed_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dcaOrder DcaOrder?
+  @@unique([userId, externalTradeIdentity])
+  @@index([userId, executedAt])
+  @@map("bitkub_btc_buys")
 }

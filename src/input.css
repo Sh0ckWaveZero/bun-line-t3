@@ -670,6 +670,37 @@
   z-index: 0;
   pointer-events: none;
 }
+.dca-chart-tabs.t-tabs {
+  display: inline-flex;
+  grid-template-columns: none;
+  align-items: center;
+  gap: 3px;
+  width: max-content;
+  max-width: 100%;
+  padding: 3px;
+  border-radius: 8px;
+  background: transparent;
+}
+.dca-chart-tabs .t-tab {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+.dca-chart-tabs .t-tabs-pill {
+  top: 3px;
+  height: calc(100% - 6px);
+  background: var(--foreground);
+  box-shadow: none;
+}
+.dca-chart-tabs .t-tab[aria-selected="true"] {
+  color: var(--background);
+}
+.dca-chart-tabs .t-tab:not([aria-selected="true"]):hover {
+  color: var(--foreground);
+}
+.dca-chart-tabs:not([data-pill-positioned="true"])
+  .t-tab[aria-selected="true"] {
+  color: var(--foreground);
+}
 /* เนื้อหาแท็บ — ทุกแท็บ mounted ซ้อนกันแบบ absolute, JS วัดความสูงของแท็บ active
    มาเขียน height ให้ container แล้วให้ CSS tween กันการ์ดสูง-ต่ำกระตุกตอนสลับแท็บ
    แท็บที่ไม่ active fade out + เลื่อนลงเบา ๆ และซ่อนจากการ focus (visibility/inert) */
@@ -1110,16 +1141,16 @@
     }
   }
 
-  /* skeleton loader & reveal (transitions.dev) — skeleton เป็น layer ทับ (absolute)
-     content อยู่ in-flow เป็นตัวกำหนดความสูงจริง → swap ไม่กระโดดเลย์เอาต์
+  /* skeleton loader & reveal (transitions.dev) — วางทั้งสอง layer ใน grid cell เดียวกัน
+     เพื่อให้ layer ที่สูงกว่ากำหนดความสูงจริงของ section ป้องกัน skeleton ล้นไปทับเนื้อหาถัดไป
      พอข้อมูลมา: skeleton จาง+เบลอออก พร้อม content ชัดขึ้น (cross-fade เดียวกันทั้งคู่) */
   .t-skel {
     position: relative;
+    display: grid;
   }
 
   .t-skel-skeleton {
-    position: absolute;
-    inset: 0;
+    grid-area: 1 / 1;
     z-index: 1;
     opacity: 1;
     filter: blur(0);
@@ -1129,6 +1160,7 @@
   }
 
   .t-skel-content {
+    grid-area: 1 / 1;
     opacity: 0;
     filter: blur(var(--reveal-blur));
     transition:
@@ -1295,11 +1327,44 @@
     pointer-events: auto;
   }
 
+  @keyframes confirm-morph-hold-fill {
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  .confirm-morph-hold-fill {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-color: rgb(127 29 29 / 0.8);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 180ms ease-out;
+    pointer-events: none;
+  }
+
+  [data-holding="true"] > .confirm-morph-hold-fill {
+    animation: confirm-morph-hold-fill var(--confirm-hold-duration, 1200ms)
+      linear forwards;
+    transition: none;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .t-morph,
     .t-morph-plus,
     .t-morph-content {
       transition: none !important;
+    }
+    .confirm-morph-hold-fill {
+      transition: none !important;
+    }
+    [data-holding="true"] > .confirm-morph-hold-fill {
+      animation: none !important;
+    }
+    [data-holding="true"][data-hold-complete="true"]
+      > .confirm-morph-hold-fill {
+      transform: scaleX(1);
     }
   }
 

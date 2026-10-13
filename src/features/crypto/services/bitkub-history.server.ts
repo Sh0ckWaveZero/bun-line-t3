@@ -126,13 +126,19 @@ export class BitkubHistoryService {
   async getPopularCryptoHistory(
     symbol: string,
     hours: number = 24,
+    resolution: string = "60",
   ): Promise<ChartDataPoint[]> {
     const bitkubSymbol = this.convertToThbPair(symbol);
 
     const now = Math.floor(Date.now() / 1000);
     const from = now - hours * 60 * 60;
 
-    const data = await this.fetchHistoricalData(bitkubSymbol, "60", from, now);
+    const data = await this.fetchHistoricalData(
+      bitkubSymbol,
+      resolution,
+      from,
+      now,
+    );
 
     if (!data || data.s === "no_data") {
       return [];

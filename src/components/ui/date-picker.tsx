@@ -42,76 +42,68 @@ const CALENDAR_CLASSNAMES = {
   caption_label: "text-sm font-semibold text-foreground",
   nav: "absolute inset-x-0 top-0 z-10 flex h-9 items-center justify-between",
   button_previous: cn(
-    "flex h-7 w-7 items-center justify-center rounded-md",
-    "border border-input bg-background text-foreground",
-    "opacity-60 transition-opacity hover:opacity-100 active:scale-95",
+    "flex h-7 w-7 cursor-pointer items-center justify-center rounded-md",
+    "border border-foreground/60 bg-background text-foreground",
+    "transition-colors hover:bg-accent hover:text-accent-foreground active:scale-95",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
   ),
   button_next: cn(
-    "flex h-7 w-7 items-center justify-center rounded-md",
-    "border border-input bg-background text-foreground",
-    "opacity-60 transition-opacity hover:opacity-100 active:scale-95",
+    "flex h-7 w-7 cursor-pointer items-center justify-center rounded-md",
+    "border border-foreground/60 bg-background text-foreground",
+    "transition-colors hover:bg-accent hover:text-accent-foreground active:scale-95",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
   ),
   month_grid: "mt-2 w-full border-collapse",
   weekdays: "flex",
-  weekday:
-    "w-9 py-1 text-center text-[0.75rem] font-normal text-muted-foreground",
+  weekday: "w-9 py-1 text-center text-xs font-normal text-foreground",
   week: "mt-1 flex w-full",
   day: "relative p-0",
   day_button: cn(
-    "inline-flex h-9 w-9 items-center justify-center rounded-full text-sm font-normal",
+    "inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-sm font-normal",
     "transition-colors",
     "hover:bg-accent hover:text-accent-foreground",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-    "data-[selected]:bg-primary data-[selected]:text-primary-foreground",
-    "data-[selected]:hover:bg-primary/90 data-[selected]:hover:text-primary-foreground",
-    "data-[outside]:text-muted-foreground data-[outside]:opacity-40",
+    "data-[selected]:bg-foreground data-[selected]:text-background",
+    "data-[selected]:hover:bg-foreground/90 data-[selected]:hover:text-background",
+    "data-[outside]:text-foreground/80",
     "data-[disabled]:cursor-not-allowed data-[disabled]:opacity-30",
   ),
-  today: "ring-2 ring-primary/70 font-bold rounded-full",
+  today: "ring-2 ring-primary font-bold rounded-full",
   selected: "",
   outside: "",
   disabled: "",
   hidden: "invisible",
 } as const;
 
-const THAI_MONTHS_LONG = [
-  "มกราคม",
-  "กุมภาพันธ์",
-  "มีนาคม",
-  "เมษายน",
-  "พฤษภาคม",
-  "มิถุนายน",
-  "กรกฎาคม",
-  "สิงหาคม",
-  "กันยายน",
-  "ตุลาคม",
-  "พฤศจิกายน",
-  "ธันวาคม",
-];
-
-const THAI_WEEKDAYS = [
-  "อาทิตย์",
-  "จันทร์",
-  "อังคาร",
-  "พุธ",
-  "พฤหัสบดี",
-  "ศุกร์",
-  "เสาร์",
-];
-
 function formatThaiMonthCaption(month: Date): string {
-  return `${THAI_MONTHS_LONG[month.getMonth()] ?? ""} ${month.getFullYear() + 543}`;
+  return new Intl.DateTimeFormat("th-TH-u-nu-latn", {
+    month: "long",
+    year: "numeric",
+    timeZone: "Asia/Bangkok",
+  }).format(month);
 }
 
 function formatThaiFullDate(date?: Date) {
   if (!date) return "";
-  const weekday = THAI_WEEKDAYS[date.getDay()] ?? "";
-  const day = date.getDate();
-  const month = THAI_MONTHS_LONG[date.getMonth()] ?? "";
-  const buddhistYear = date.getFullYear() + 543;
-  return `วัน${weekday}ที่ ${day} ${month} ${buddhistYear}`;
+  return new Intl.DateTimeFormat("th-TH-u-nu-latn", {
+    dateStyle: "full",
+    timeZone: "Asia/Bangkok",
+  }).format(date);
+}
+
+const bangkokDateKeyFormatter = new Intl.DateTimeFormat("en-GB", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  timeZone: "Asia/Bangkok",
+});
+
+function getBangkokDateKey(date: Date): string {
+  const parts = bangkokDateKeyFormatter.formatToParts(date);
+  const year = parts.find((part) => part.type === "year")?.value ?? "";
+  const month = parts.find((part) => part.type === "month")?.value ?? "";
+  const day = parts.find((part) => part.type === "day")?.value ?? "";
+  return `${year}-${month}-${day}`;
 }
 
 export interface DatePickerProps {
@@ -137,16 +129,36 @@ export function DatePicker({
     <div id={id} className={cn("space-y-2", className)}>
       <ThaiDayPicker
         mode="single"
+        autoFocus
         selected={date}
         onSelect={onSelect}
-        disabled={disabled}
+        disabled={(day) => {
+          const dayKey = getBangkokDateKey(day);
+          return Boolean(
+            (minDate && dayKey < getBangkokDateKey(minDate)) ||
+            (maxDate && dayKey > getBangkokDateKey(maxDate)) ||
+            disabled?.(day),
+          );
+        }}
         locale={th}
+        timeZone="Asia/Bangkok"
         month={date}
         startMonth={minDate}
         endMonth={maxDate}
         classNames={CALENDAR_CLASSNAMES}
         components={{ DayButton: CalendarDayButton }}
         formatters={{ formatCaption: formatThaiMonthCaption }}
+        labels={{
+          labelGrid: (month) => formatThaiMonthCaption(month),
+          labelNav: () => "นำทางปฏิทิน",
+          labelNext: () => "ไปเดือนถัดไป",
+          labelPrevious: () => "ไปเดือนก่อนหน้า",
+          labelDayButton: (day, modifiers) => {
+            const label = formatThaiFullDate(day);
+            const withToday = modifiers.today ? `วันนี้ ${label}` : label;
+            return modifiers.selected ? `${withToday} เลือกแล้ว` : withToday;
+          },
+        }}
         numerals="latn"
       />
     </div>
@@ -162,8 +174,10 @@ export interface PopoverDatePickerProps {
   maxDate?: Date;
   id?: string;
   label?: string;
+  labelClassName?: string;
   required?: boolean;
   className?: string;
+  triggerClassName?: string;
 }
 
 export function PopoverDatePicker({
@@ -175,14 +189,18 @@ export function PopoverDatePicker({
   maxDate,
   id,
   label,
+  labelClassName,
   required,
   className,
+  triggerClassName,
 }: PopoverDatePickerProps) {
   const [open, setOpen] = React.useState(false);
   const generatedId = React.useId();
   const inputId = id || `date-input-${generatedId}`;
   const labelId = `${inputId}-label`;
+  const valueId = `${inputId}-value`;
   const describedBy = `${inputId}-description`;
+  const accessibleValue = value ? formatThaiFullDate(value) : placeholder;
 
   return (
     <div className={cn("space-y-2", className)}>
@@ -190,9 +208,17 @@ export function PopoverDatePicker({
         <label
           id={labelId}
           htmlFor={inputId}
-          className="block text-sm font-medium"
+          className={cn(
+            "text-foreground block text-sm font-medium",
+            labelClassName,
+          )}
         >
-          {label} {required && <span className="text-destructive">*</span>}
+          {label}{" "}
+          {required && (
+            <span className="text-destructive" aria-hidden="true">
+              *
+            </span>
+          )}
         </label>
       )}
 
@@ -201,28 +227,29 @@ export function PopoverDatePicker({
           <button
             id={inputId}
             type="button"
-            aria-label={label || placeholder}
+            aria-labelledby={label ? `${labelId} ${valueId}` : undefined}
+            aria-label={label ? undefined : accessibleValue}
             aria-describedby={required ? describedBy : undefined}
             aria-haspopup="dialog"
             aria-expanded={open}
+            aria-controls={open ? `${inputId}-dialog` : undefined}
             className={cn(
-              "border-border bg-background focus-visible:ring-foreground/30 flex h-12 w-full items-center gap-2.5 rounded-lg border px-4 text-left text-base font-medium",
-              "focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+              "border-foreground/60 bg-background text-foreground flex h-12 w-full cursor-pointer items-center gap-2.5 rounded-lg border px-4 text-left text-base font-medium",
+              "focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
               "hover:bg-accent hover:text-accent-foreground transition-colors",
-              !value && "text-muted-foreground",
+              triggerClassName,
             )}
           >
             <CalendarIcon
               className="text-muted-foreground h-4 w-4 shrink-0"
               aria-hidden="true"
             />
-            {value ? (
-              <span className="text-foreground font-medium" aria-live="polite">
-                {formatThaiFullDate(value)}
-              </span>
-            ) : (
-              <span>{placeholder}</span>
-            )}
+            <span className="font-medium" aria-hidden="true">
+              {accessibleValue}
+            </span>
+            <span id={valueId} className="sr-only">
+              {accessibleValue}
+            </span>
           </button>
         </PopoverTrigger>
         {required && (
@@ -231,6 +258,8 @@ export function PopoverDatePicker({
           </span>
         )}
         <PopoverContent
+          id={`${inputId}-dialog`}
+          aria-label={label ? `ปฏิทิน${label}` : "ปฏิทินเลือกวันที่"}
           className="w-auto p-0"
           align="start"
           sideOffset={4}

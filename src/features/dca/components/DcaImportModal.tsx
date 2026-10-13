@@ -122,7 +122,7 @@ export const DcaImportModal = ({ onClose, onSuccess }: DcaImportModalProps) => {
     >
       <button
         type="button"
-        className="absolute inset-0 cursor-default bg-black/60 backdrop-blur-sm focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-inset"
+        className="absolute inset-0 cursor-pointer bg-black/60 backdrop-blur-sm focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-inset"
         aria-label="ปิดหน้าต่างนำเข้าประวัติคำสั่งซื้อ Auto DCA"
         onClick={onClose}
       />

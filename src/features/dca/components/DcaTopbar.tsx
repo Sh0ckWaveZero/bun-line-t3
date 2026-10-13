@@ -68,6 +68,7 @@ export const DcaTopbar = ({
           size="sm"
           onClick={onRefresh}
           disabled={isLoading}
+          aria-label={t.topbar.refresh}
           className="gap-1.5 text-xs"
         >
           <RefreshCw
@@ -80,6 +81,7 @@ export const DcaTopbar = ({
           variant="outline"
           size="sm"
           onClick={onImport}
+          aria-label={t.topbar.import}
           className="gap-1.5 text-xs"
         >
           <Upload className="h-3.5 w-3.5" />
@@ -89,9 +91,10 @@ export const DcaTopbar = ({
         <button
           type="button"
           onClick={toggleLocale}
-          title="Switch language"
-          aria-label="Switch language"
-          className="inline-flex h-9 items-center gap-2 rounded-md px-1.5 text-xs"
+          title={t.topbar.switchLanguage}
+          aria-label={t.topbar.switchLanguage}
+          aria-pressed={locale === "th"}
+          className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-md px-1.5 text-xs"
         >
           <span
             className={
@@ -104,12 +107,11 @@ export const DcaTopbar = ({
           </span>
           <span className="bg-muted border-border relative inline-flex h-7 w-14 items-center rounded-full border p-0.5 shadow-inner">
             <span
-              className={`bg-card border-border grid h-6 w-6 place-items-center rounded-full border text-[12px] shadow transition-transform duration-200 ease-out ${
+              className={`bg-card border-border grid h-6 w-6 place-items-center rounded-full border shadow transition-transform duration-200 ease-out ${
                 locale === "th" ? "translate-x-7" : "translate-x-0"
               }`}
-            >
-              {locale === "th" ? "🇹🇭" : "🇬🇧"}
-            </span>
+              aria-hidden="true"
+            />
           </span>
           <span
             className={
