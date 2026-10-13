@@ -112,6 +112,10 @@ export interface DcaLocaleStrings {
     delete: string;
     deleteConfirmTitle: string;
     deleteConfirmDescription: string;
+    deleteHoldLabel: string;
+    deleteHoldReleaseLabel: string;
+    deleteHoldInstruction: string;
+    deleteHoldComplete: string;
     deleteCancel: string;
     deletePending: string;
     deleteSuccess: string;
