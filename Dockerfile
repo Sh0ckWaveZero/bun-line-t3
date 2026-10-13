@@ -34,6 +34,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 FROM build-base AS build
 
 COPY package.json bun.lock ./
+COPY patches ./patches
 COPY prisma ./prisma
 COPY prisma.config.ts ./prisma.config.ts
 
@@ -88,6 +89,7 @@ ENV SKIP_PRISMA_GENERATE=1 \
     NODE_ENV=production
 
 COPY package.json bun.lock ./
+COPY patches ./patches
 
 # Install production dependencies
 RUN --mount=type=cache,target=/root/.bun/install/cache \
