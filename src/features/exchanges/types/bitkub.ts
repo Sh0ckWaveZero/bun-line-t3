@@ -5,13 +5,6 @@ export interface BitkubConnectionStatus {
   lastSyncedAt: string | null;
 }
 
-export interface BitkubBalance {
-  currency: string;
-  available: string;
-  reserved: string;
-  total: string;
-}
-
 export interface BitkubBuy {
   id: string;
   externalTradeIdentity: string;
@@ -27,8 +20,12 @@ export interface BitkubBuy {
 export interface BitkubBuyPage {
   buys: BitkubBuy[];
   page: number;
+  pageSize: number;
+  total: number;
   totalPages: number;
 }
+
+export type BitkubBuyStatusFilter = "all" | "ready" | "imported";
 
 export interface BitkubSyncResult {
   cached: number;

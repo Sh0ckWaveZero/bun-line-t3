@@ -18,7 +18,15 @@ import { useDcaHistoryData } from "@/features/dca/hooks/useDcaHistoryData";
 import { useDcaRealtimeUpdates } from "@/features/dca/hooks/useDcaRealtimeUpdates";
 import { DcaLocaleProvider } from "@/features/dca/lib/dca-locale-context";
 import { PendingApprovalModal } from "@/components/auth/PendingApprovalModal";
+import { SkeletonReveal } from "@/components/ui/skeleton-reveal";
 import { useLineApproval } from "@/lib/auth/hooks/useLineApproval";
+import {
+  DcaChartSkeleton,
+  DcaGoalsSkeleton,
+  DcaPnlSkeleton,
+  DcaRecordsSkeleton,
+  DcaStatsSkeleton,
+} from "@/features/dca/components/DcaLoadingSkeletons";
 
 function DcaHistoryPageContent() {
   const [page, setPage] = useState(1);
@@ -31,6 +39,7 @@ function DcaHistoryPageContent() {
 
   const allOrdersQuery = useDcaAllOrders();
   const allOrders = allOrdersQuery.data?.orders ?? [];
+  const isOverviewLoading = isLoading || allOrdersQuery.isLoading;
   const refetchAllOrders = allOrdersQuery.refetch;
 
   useDcaRealtimeUpdates({
@@ -56,7 +65,7 @@ function DcaHistoryPageContent() {
       <PendingApprovalModal open={needsApproval} />
 
       <div id="dca-history-page" className="bg-background min-h-screen w-full">
-        <div className="container mx-auto max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8">
+        <div className="container mx-auto px-4 py-6 sm:py-8">
           {/* Topbar */}
           <DcaTopbar
             onAdd={() => setShowAddForm(true)}
@@ -79,48 +88,64 @@ function DcaHistoryPageContent() {
           )}
 
           {/* Section 01: Overview */}
-          <BitkubDcaPanel onImported={handleDataMutated} />
-          <SectionLabel
-            num="01"
-            title="Overview"
-            hint="PNL · chart · hover for daily values"
-          />
+          <SectionLabel num="01" />
           <div
             id="dca-section-overview"
             className="grid grid-cols-1 gap-4 md:grid-cols-[380px_1fr]"
           >
-            <PnlCard summary={summaryData} />
-            <DcaChartCard
-              orders={allOrders}
-              currentPrice={summaryData?.currentPrice ?? null}
-            />
+            <SkeletonReveal
+              isReady={!isLoading}
+              skeleton={<DcaPnlSkeleton />}
+              className="h-full min-h-[270px] sm:min-h-[410px]"
+            >
+              <PnlCard summary={summaryData} />
+            </SkeletonReveal>
+            <SkeletonReveal
+              isReady={!allOrdersQuery.isLoading}
+              skeleton={<DcaChartSkeleton />}
+              className="h-full min-h-[270px] sm:min-h-[410px]"
+            >
+              <DcaChartCard
+                orders={allOrders}
+                currentPrice={summaryData?.currentPrice ?? null}
+              />
+            </SkeletonReveal>
           </div>
 
           {/* Section 02: Metrics & Goals */}
-          <SectionLabel
-            num="02"
-            title="Metrics & Goals"
-            hint="core numbers · progress"
-          />
+          <SectionLabel num="02" />
           <div
             id="dca-section-metrics-goals"
             className="border-border bg-card/20 space-y-4 rounded-lg border p-3 sm:p-4"
           >
-            <StatsGrid summary={summaryData} orders={allOrders} />
-            <GoalsSection orders={allOrders} />
+            <SkeletonReveal
+              isReady={!isOverviewLoading}
+              skeleton={<DcaStatsSkeleton />}
+            >
+              <StatsGrid summary={summaryData} orders={allOrders} />
+            </SkeletonReveal>
+            <SkeletonReveal
+              isReady={!allOrdersQuery.isLoading}
+              skeleton={<DcaGoalsSkeleton />}
+            >
+              <GoalsSection orders={allOrders} />
+            </SkeletonReveal>
           </div>
 
           {/* Section 03: Buy History */}
-          <SectionLabel
-            num="03"
-            title="Buy History"
-            hint="sortable · searchable · paginated"
-          />
+          <SectionLabel num="03" />
           <div id="dca-section-buy-history">
-            <DcaRecordsTable
-              orders={allOrders}
-              currentPrice={summaryData?.currentPrice ?? null}
-            />
+            <BitkubDcaPanel onImported={handleDataMutated} />
+            <SkeletonReveal
+              isReady={!allOrdersQuery.isLoading}
+              skeleton={<DcaRecordsSkeleton />}
+            >
+              <DcaRecordsTable
+                orders={allOrders}
+                currentPrice={summaryData?.currentPrice ?? null}
+                onDataMutated={handleDataMutated}
+              />
+            </SkeletonReveal>
           </div>
 
           {/* Export buttons */}

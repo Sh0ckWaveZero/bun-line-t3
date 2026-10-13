@@ -1,7 +1,11 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
+import { useToast } from "@/components/common/ToastProvider";
 import { useAuthSession } from "@/lib/auth/session-context";
+import { requestBitkub } from "@/features/exchanges/lib/bitkub-api";
+import { useBitkubConnection } from "@/features/exchanges/hooks/useBitkubConnection";
+import type { BitkubBuyStatusFilter } from "@/features/exchanges/types/bitkub";
 
 const buyDateFormatter = new Intl.DateTimeFormat("th-TH", {
   dateStyle: "short",
@@ -9,20 +13,6 @@ const buyDateFormatter = new Intl.DateTimeFormat("th-TH", {
   timeZone: "Asia/Bangkok",
 });
 
-const statusSchema = z.object({
-  connected: z.boolean(),
-  configured: z.boolean(),
-  keyHint: z.string().nullable(),
-  lastSyncedAt: z.string().nullable(),
-});
-const balancesSchema = z.array(
-  z.object({
-    currency: z.string(),
-    available: z.string(),
-    reserved: z.string(),
-    total: z.string(),
-  }),
-);
 const buySchema = z.object({
   id: z.string(),
   externalTradeIdentity: z.string(),
@@ -37,6 +27,8 @@ const buySchema = z.object({
 const pageSchema = z.object({
   buys: z.array(buySchema),
   page: z.number(),
+  pageSize: z.number(),
+  total: z.number(),
   totalPages: z.number(),
 });
 const syncSchema = z.object({
@@ -51,51 +43,62 @@ const outcomesSchema = z.array(
   }),
 );
 
-async function requestBitkub<T>(
-  url: string,
-  schema: z.ZodType<T>,
-  init?: RequestInit,
-): Promise<T> {
-  let response: Response;
-  let body: unknown;
-  try {
-    response = await fetch(url, { ...init, cache: "no-store" });
-    body = await response.json();
-  } catch {
-    throw new Error("ไม่สามารถติดต่อระบบได้ กรุณาลองใหม่");
-  }
-  if (!response.ok) {
-    const error = z.object({ error: z.string() }).safeParse(body);
-    throw new Error(
-      error.success ? error.data.error : "ไม่สามารถโหลดข้อมูล Bitkub ได้",
-    );
-  }
-  const parsed = schema.safeParse(body);
-  if (!parsed.success)
-    throw new Error("รูปแบบข้อมูลจากระบบไม่ถูกต้อง กรุณาลองใหม่");
-  return parsed.data;
-}
-
-export function useBitkubDca(onImported: () => void) {
+export function useBitkubDca(onImported: () => void, enabled = true) {
   const userId = useAuthSession()?.user?.id;
+  const { showToast } = useToast();
+  const { connection } = useBitkubConnection({ enabled });
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [statusFilter, setStatusFilter] =
+    useState<BitkubBuyStatusFilter>("all");
   const [selected, setSelected] = useState<string[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [isSyncingHistory, setIsSyncingHistory] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [outcomes, setOutcomes] = useState<z.infer<typeof outcomesSchema>>([]);
-  const connection = useQuery({
-    queryKey: ["bitkub-connection", userId],
-    queryFn: () =>
-      requestBitkub("/api/exchanges/bitkub/connection", statusSchema),
-    enabled: Boolean(userId),
-  });
+  useEffect(() => {
+    const timeout = window.setTimeout(
+      () => setDebouncedSearch(search.trim()),
+      250,
+    );
+    return () => window.clearTimeout(timeout);
+  }, [search]);
+
   const history = useQuery({
-    queryKey: ["bitkub-buys", userId, page],
-    queryFn: () =>
-      requestBitkub(`/api/exchanges/bitkub/buys?page=${page}`, pageSchema),
-    enabled: Boolean(userId),
+    queryKey: [
+      "bitkub-buys",
+      userId,
+      page,
+      pageSize,
+      debouncedSearch,
+      statusFilter,
+      dateFrom,
+      dateTo,
+    ],
+    queryFn: () => {
+      const params = new URLSearchParams({
+        page: String(page),
+        pageSize: String(pageSize),
+        search: debouncedSearch,
+        status: statusFilter,
+        dateFrom,
+        dateTo,
+      });
+      return requestBitkub(
+        `/api/exchanges/bitkub/buys?${params.toString()}`,
+        pageSchema,
+      );
+    },
+    enabled: Boolean(userId) && enabled && hasLoadedHistory,
+    staleTime: Number.POSITIVE_INFINITY,
   });
   const dateLabels = useMemo(
     () =>
@@ -107,64 +110,68 @@ export function useBitkubDca(onImported: () => void) {
       ),
     [history.data],
   );
-  const balances = useQuery({
-    queryKey: ["bitkub-balances", userId],
-    queryFn: () =>
-      requestBitkub("/api/exchanges/bitkub/balances", balancesSchema),
-    enabled: Boolean(userId && connection.data?.connected),
-    staleTime: 60_000,
-  });
-
-  const runAction = async (action: () => Promise<void>) => {
+  const runAction = async (
+    action: () => Promise<void>,
+    errorToastTitle?: string,
+  ) => {
     setIsBusy(true);
     setError("");
     setMessage("");
     try {
       await action();
     } catch (cause) {
-      setError(
-        cause instanceof Error ? cause.message : "ไม่สามารถดำเนินการได้",
-      );
+      const errorMessage =
+        cause instanceof Error ? cause.message : "ไม่สามารถดำเนินการได้";
+      setError(errorMessage);
+      if (errorToastTitle) {
+        showToast({
+          title: errorToastTitle,
+          description: errorMessage,
+          type: "error",
+        });
+      }
     } finally {
       setIsBusy(false);
     }
   };
 
-  const handleConnect = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const data = new FormData(form);
-    // Credentials stay in native inputs and this request only, never in React state or query mutations.
-    const body = JSON.stringify({
-      apiKey: data.get("apiKey"),
-      apiSecret: data.get("apiSecret"),
-    });
-    form.reset();
-    void runAction(async () => {
-      await requestBitkub("/api/exchanges/bitkub/connection", statusSchema, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body,
-      });
-      setNextCursor(null);
-      await connection.refetch();
-      setMessage("เชื่อมต่อแล้ว สามารถโหลดประวัติซื้อและเลือกรายการนำเข้าได้");
-    });
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setPage(1);
+    setSelected([]);
   };
 
-  const handleDisconnect = () =>
-    void runAction(async () => {
-      await requestBitkub("/api/exchanges/bitkub/connection", statusSchema, {
-        method: "DELETE",
-      });
-      setNextCursor(null);
-      await connection.refetch();
-      setMessage(
-        "ยกเลิกการเชื่อมต่อแล้ว ข้อมูลรับรองถูกล้าง ประวัติที่โหลดและรายการ DCA ยังอยู่",
-      );
-    });
+  const handleStatusFilterChange = (value: BitkubBuyStatusFilter) => {
+    setStatusFilter(value);
+    setPage(1);
+    setSelected([]);
+  };
 
-  const handleSync = (cursor?: string) =>
+  const handleDateFromChange = (value: string) => {
+    setDateFrom(value);
+    setPage(1);
+    setSelected([]);
+  };
+
+  const handleDateToChange = (value: string) => {
+    setDateTo(value);
+    setPage(1);
+    setSelected([]);
+  };
+
+  const handlePageSizeChange = (value: number) => {
+    setPageSize(value);
+    setPage(1);
+    setSelected([]);
+  };
+
+  useEffect(() => {
+    const totalPages = Math.max(1, history.data?.totalPages ?? 1);
+    if (page > totalPages) setPage(totalPages);
+  }, [history.data?.totalPages, page]);
+
+  const handleSync = (cursor?: string) => {
+    setIsSyncingHistory(true);
     void runAction(async () => {
       const result = await requestBitkub(
         "/api/exchanges/bitkub/buys",
@@ -178,14 +185,18 @@ export function useBitkubDca(onImported: () => void) {
       setNextCursor(result.nextCursor);
       setSelected([]);
       setPage(1);
-      await history.refetch();
+      const historyResult = await history.refetch();
+      if (historyResult.isError) throw historyResult.error;
+      setHasLoadedHistory(true);
       await connection.refetch();
       setMessage(
-        `โหลดรายการซื้อที่ใช้ได้ ${result.cached} รายการ ข้าม ${result.rejected} รายการที่ข้อมูลไม่ครบ ยังไม่ปิดรายการ หรือตัวเลขไม่ถูกต้อง`,
+        `โหลดรายการซื้อที่ใช้ได้ ${result.cached} รายการ ข้าม ${result.rejected} รายการที่ข้อมูลไม่ครบหรือตัวเลขไม่ถูกต้อง`,
       );
-    });
+    }).finally(() => setIsSyncingHistory(false));
+  };
 
-  const handleImport = () =>
+  const handleImport = () => {
+    setIsImporting(true);
     void runAction(async () => {
       const result = await requestBitkub(
         "/api/dca/bitkub-import",
@@ -200,32 +211,75 @@ export function useBitkubDca(onImported: () => void) {
       setSelected([]);
       await history.refetch();
       if (result.some((row) => row.status === "imported")) onImported();
-      setMessage(
-        `นำเข้า ${result.filter((row) => row.status === "imported").length} รายการ นำเข้าแล้ว ${result.filter((row) => row.status === "already_imported").length} รายการ อาจซ้ำข้อมูลเดิม ${result.filter((row) => row.status === "legacy_conflict").length} รายการ`,
-      );
-    });
+      const importedCount = result.filter(
+        (row) => row.status === "imported",
+      ).length;
+      const alreadyImportedCount = result.filter(
+        (row) => row.status === "already_imported",
+      ).length;
+      const legacyConflictCount = result.filter(
+        (row) => row.status === "legacy_conflict",
+      ).length;
+      const feedback: string[] = [];
+      if (importedCount > 0) {
+        feedback.push(`เพิ่ม ${importedCount} รายการใน DCA แล้ว`);
+      }
+      if (alreadyImportedCount > 0) {
+        feedback.push(`ข้าม ${alreadyImportedCount} รายการที่นำเข้าแล้ว`);
+      }
+      if (legacyConflictCount > 0) {
+        feedback.push(`พบ ${legacyConflictCount} รายการที่อาจซ้ำ โปรดตรวจสอบ`);
+      }
+      const description = feedback.join(" · ") || "ไม่มีรายการที่นำเข้าได้";
+      showToast({
+        title:
+          legacyConflictCount > 0
+            ? importedCount > 0
+              ? "นำเข้าได้บางรายการ"
+              : "พบรายการที่อาจซ้ำ"
+            : importedCount > 0
+              ? "นำเข้า DCA สำเร็จ"
+              : alreadyImportedCount > 0
+                ? "รายการถูกนำเข้าแล้ว"
+                : "ไม่มีรายการให้เพิ่ม",
+        description,
+        type:
+          legacyConflictCount > 0
+            ? "warning"
+            : importedCount > 0
+              ? "success"
+              : "info",
+      });
+    }, "นำเข้ารายการไม่สำเร็จ").finally(() => setIsImporting(false));
+  };
 
   const visibleError =
-    error ||
-    connection.error?.message ||
-    history.error?.message ||
-    (connection.data?.connected ? balances.error?.message : "");
+    error || connection.error?.message || history.error?.message;
   return {
     connection,
     history,
     dateLabels,
-    balances,
     page,
     setPage,
+    pageSize,
+    search,
+    statusFilter,
+    dateFrom,
+    dateTo,
+    handleSearchChange,
+    handleStatusFilterChange,
+    handlePageSizeChange,
+    handleDateFromChange,
+    handleDateToChange,
     selected,
     setSelected,
     nextCursor,
     isBusy,
+    isImporting,
+    isSyncingHistory,
     message,
     outcomes,
     visibleError,
-    handleConnect,
-    handleDisconnect,
     handleSync,
     handleImport,
   };

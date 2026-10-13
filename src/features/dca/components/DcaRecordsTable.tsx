@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ConfirmMorph } from "@/components/ui/confirm-morph";
+import { useToast } from "@/components/common/ToastProvider";
+import { AddDcaForm } from "@/features/dca/components/AddDcaForm";
 import type { DcaOrder } from "@/features/dca/types";
 import { useDcaLocale } from "@/features/dca/lib/dca-locale-context";
+import { useAuthSession } from "@/lib/auth/session-context";
 import {
   Popover,
   PopoverContent,
@@ -25,6 +30,64 @@ const fmtDateShort = (date: Date | string): string => {
     timeZone: "Asia/Bangkok",
   });
 };
+const fmtDateTime = (date: Date | string): string =>
+  new Date(date).toLocaleString("en-GB", {
+    dateStyle: "medium",
+    timeStyle: "medium",
+    timeZone: "Asia/Bangkok",
+  });
+
+const searchQueryCache = new Map<string, string>();
+const searchQueryListeners = new Map<string, Set<() => void>>();
+
+function readStoredSearchQuery(key: string | null): string {
+  if (!key || typeof window === "undefined") return "";
+  const cachedQuery = searchQueryCache.get(key);
+  if (cachedQuery !== undefined) return cachedQuery;
+
+  try {
+    const storedQuery = window.sessionStorage.getItem(key) ?? "";
+    searchQueryCache.set(key, storedQuery);
+    return storedQuery;
+  } catch {
+    return "";
+  }
+}
+
+function subscribeToSearchQuery(
+  key: string | null,
+  listener: () => void,
+): () => void {
+  if (!key) return () => {};
+
+  const listeners = searchQueryListeners.get(key) ?? new Set<() => void>();
+  listeners.add(listener);
+  searchQueryListeners.set(key, listeners);
+
+  return () => {
+    listeners.delete(listener);
+    if (listeners.size === 0) searchQueryListeners.delete(key);
+  };
+}
+
+function updateStoredSearchQuery(key: string | null, query: string): void {
+  if (!key) return;
+  searchQueryCache.set(key, query);
+
+  try {
+    if (query) window.sessionStorage.setItem(key, query);
+    else window.sessionStorage.removeItem(key);
+  } catch {
+    searchQueryListeners.get(key)?.forEach((listener) => listener());
+    return;
+  }
+
+  searchQueryListeners.get(key)?.forEach((listener) => listener());
+}
+
+function getEmptySearchQuery(): string {
+  return "";
+}
 
 interface EnrichedRow {
   order: DcaOrder;
@@ -52,20 +115,65 @@ type SortKey =
 interface DcaRecordsTableProps {
   orders: DcaOrder[];
   currentPrice: number | null;
+  onDataMutated: () => void;
 }
 
 export const DcaRecordsTable = ({
   orders,
   currentPrice,
+  onDataMutated,
 }: DcaRecordsTableProps) => {
   const { t } = useDcaLocale();
+  const session = useAuthSession();
+  const userId = session?.user?.id;
+  const lineUserId = session?.user?.lineUserId;
+  const { showToast } = useToast();
+  const searchStorageKey = userId ? `dca-records-search:${userId}` : null;
   const [sortKey, setSortKey] = useState<SortKey>("dayActive");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [pageSizeOpen, setPageSizeOpen] = useState(false);
-  const [query, setQuery] = useState("");
+  const [editingOrder, setEditingOrder] = useState<DcaOrder | null>(null);
+  const subscribeToQuery = useCallback(
+    (listener: () => void) =>
+      subscribeToSearchQuery(searchStorageKey, listener),
+    [searchStorageKey],
+  );
+  const getQuerySnapshot = useCallback(
+    () => readStoredSearchQuery(searchStorageKey),
+    [searchStorageKey],
+  );
+  const query = useSyncExternalStore(
+    subscribeToQuery,
+    getQuerySnapshot,
+    getEmptySearchQuery,
+  );
   const PAGE_SIZE_OPTIONS = [10, 30, 50, 100] as const;
+
+  const handleDeleteOrder = async (order: DcaOrder) => {
+    if (!lineUserId) {
+      throw new Error(t.table.deleteError);
+    }
+
+    const response = await fetch(
+      `/api/dca/${encodeURIComponent(order.id)}?lineUserId=${encodeURIComponent(lineUserId)}`,
+      { method: "DELETE" },
+    );
+    if (!response.ok) {
+      const data = (await response.json().catch(() => null)) as {
+        error?: string;
+      } | null;
+      throw new Error(data?.error ?? t.table.deleteError);
+    }
+
+    showToast({
+      title: t.table.deleteSuccess,
+      description: t.table.deleteLocalOnly,
+      type: "success",
+    });
+    onDataMutated();
+  };
 
   const enrichedRows: EnrichedRow[] = useMemo(() => {
     if (!currentPrice || orders.length === 0) return [];
@@ -142,11 +250,8 @@ export const DcaRecordsTable = ({
   const curPage = Math.min(page, totalPages);
   const pageData = sorted.slice((curPage - 1) * pageSize, curPage * pageSize);
 
-  useEffect(() => {
-    setPage(1);
-  }, [pageSize, query, sortKey, sortDir]);
-
   function toggleSort(key: SortKey) {
+    setPage(1);
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else {
       setSortKey(key);
@@ -255,9 +360,13 @@ export const DcaRecordsTable = ({
           <div className="bg-muted border-border flex w-40 items-center gap-1.5 rounded border px-2 py-1 sm:w-52">
             <Search className="text-muted-foreground h-3 w-3 shrink-0" />
             <input
+              aria-label={t.table.searchPlaceholder}
               placeholder={t.table.searchPlaceholder}
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => {
+                updateStoredSearchQuery(searchStorageKey, e.target.value);
+                setPage(1);
+              }}
               className="text-foreground w-full bg-transparent font-mono text-xs outline-none placeholder:text-[var(--muted-foreground)]"
             />
           </div>
@@ -271,7 +380,7 @@ export const DcaRecordsTable = ({
             <PopoverTrigger asChild>
               <button
                 type="button"
-                className="bg-card border-border text-foreground min-w-[64px] rounded border px-2 py-1 text-right font-mono text-xs"
+                className="bg-card border-border text-foreground min-w-[64px] cursor-pointer rounded border px-2 py-1 text-right font-mono text-xs"
               >
                 {pageSize}
               </button>
@@ -284,9 +393,10 @@ export const DcaRecordsTable = ({
                     type="button"
                     onClick={() => {
                       setPageSize(size);
+                      setPage(1);
                       setPageSizeOpen(false);
                     }}
-                    className={`rounded px-2 py-1.5 text-right font-mono text-xs ${
+                    className={`cursor-pointer rounded px-2 py-1.5 text-right font-mono text-xs ${
                       pageSize === size
                         ? "bg-foreground text-background"
                         : "text-foreground hover:bg-muted"
@@ -346,6 +456,38 @@ export const DcaRecordsTable = ({
                   </div>
                 </div>
               </div>
+              <div className="mt-3 flex flex-wrap justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="min-h-10"
+                  onClick={() => setEditingOrder(r.order)}
+                  aria-label={`${t.table.edit} ${r.order.coin} ${fmtDateTime(r.order.executedAt)}`}
+                >
+                  <Pencil aria-hidden="true" className="mr-1.5 h-4 w-4" />
+                  {t.table.edit}
+                </Button>
+                <ConfirmMorph
+                  label={t.table.delete}
+                  ariaLabel={`${t.table.delete} ${r.order.coin} ${fmtDateTime(r.order.executedAt)}`}
+                  prompt={t.table.deleteConfirmTitle}
+                  description={t.table.deleteConfirmDescription}
+                  confirmLabel={t.table.delete}
+                  holdLabel={t.table.deleteHoldLabel}
+                  holdReleaseLabel={t.table.deleteHoldReleaseLabel}
+                  holdInstruction={t.table.deleteHoldInstruction}
+                  holdCompleteLabel={t.table.deleteHoldComplete}
+                  cancelLabel={t.table.deleteCancel}
+                  pendingLabel={t.table.deletePending}
+                  doneLabel={t.table.deleteSuccess}
+                  doneDescription={t.table.deleteLocalOnly}
+                  errorLabel={t.table.deleteError}
+                  retryLabel={t.table.deleteRetry}
+                  onConfirm={() => handleDeleteOrder(r.order)}
+                  showIdleLabel
+                />
+              </div>
             </div>
           ))
         )}
@@ -359,31 +501,56 @@ export const DcaRecordsTable = ({
               {columns.map((c) => (
                 <th
                   key={c.key}
-                  className={`bg-muted text-muted-foreground border-border hover:text-foreground cursor-pointer border-b px-3 py-2.5 text-[10px] font-medium tracking-wider whitespace-nowrap uppercase ${c.left ? "text-left" : "text-right"} ${c.hideMobile ? "hidden lg:table-cell" : ""}`}
-                  tabIndex={0}
-                  onClick={() => toggleSort(c.key)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      toggleSort(c.key);
-                    }
-                  }}
+                  scope="col"
+                  aria-sort={
+                    sortKey === c.key
+                      ? sortDir === "asc"
+                        ? "ascending"
+                        : "descending"
+                      : undefined
+                  }
+                  className={`bg-muted text-muted-foreground border-border border-b px-3 py-2.5 text-[10px] font-medium tracking-wider whitespace-nowrap uppercase ${c.left ? "text-left" : "text-right"} ${c.hideMobile ? "hidden lg:table-cell" : ""}`}
                 >
-                  {c.label}
-                  <span
-                    className={`ml-1 inline-block ${sortKey === c.key ? "text-orange-500 opacity-100" : "opacity-40"}`}
+                  <button
+                    type="button"
+                    onClick={() => toggleSort(c.key)}
+                    className={`hover:text-foreground focus-visible:outline-ring inline-flex w-full cursor-pointer items-center gap-1 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 ${c.left ? "justify-start" : "justify-end"}`}
                   >
-                    {sortKey === c.key ? (sortDir === "asc" ? "↑" : "↓") : "↕"}
-                  </span>
+                    <span>{c.label}</span>
+                    {sortKey === c.key ? (
+                      sortDir === "asc" ? (
+                        <ArrowUp
+                          aria-hidden="true"
+                          className="h-3.5 w-3.5 shrink-0 text-orange-500"
+                        />
+                      ) : (
+                        <ArrowDown
+                          aria-hidden="true"
+                          className="h-3.5 w-3.5 shrink-0 text-orange-500"
+                        />
+                      )
+                    ) : (
+                      <ArrowUpDown
+                        aria-hidden="true"
+                        className="text-muted-foreground h-3.5 w-3.5 shrink-0 opacity-60"
+                      />
+                    )}
+                  </button>
                 </th>
               ))}
+              <th
+                scope="col"
+                className="bg-muted text-muted-foreground border-border border-b px-3 py-2.5 text-right text-[10px] font-medium tracking-wider whitespace-nowrap uppercase"
+              >
+                {t.table.actions}
+              </th>
             </tr>
           </thead>
           <tbody>
             {pageData.length === 0 ? (
               <tr>
                 <td
-                  colSpan={columns.length}
+                  colSpan={columns.length + 1}
                   className="text-muted-foreground py-8 text-center text-sm"
                 >
                   {t.table.noRecordsFound}
@@ -428,6 +595,39 @@ export const DcaRecordsTable = ({
                     {r.pctUnrealized >= 0 ? "+" : ""}
                     {r.pctUnrealized.toFixed(2)}%
                   </td>
+                  <td className="px-3 py-2 text-right">
+                    <div className="inline-flex items-center justify-end gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="min-h-9 px-2"
+                        onClick={() => setEditingOrder(r.order)}
+                        aria-label={`${t.table.edit} ${r.order.coin} ${fmtDateTime(r.order.executedAt)}`}
+                      >
+                        <Pencil aria-hidden="true" className="h-4 w-4" />
+                        <span className="sr-only">{t.table.edit}</span>
+                      </Button>
+                      <ConfirmMorph
+                        label={t.table.delete}
+                        ariaLabel={`${t.table.delete} ${r.order.coin} ${fmtDateTime(r.order.executedAt)}`}
+                        prompt={t.table.deleteConfirmTitle}
+                        description={t.table.deleteConfirmDescription}
+                        confirmLabel={t.table.delete}
+                        holdLabel={t.table.deleteHoldLabel}
+                        holdReleaseLabel={t.table.deleteHoldReleaseLabel}
+                        holdInstruction={t.table.deleteHoldInstruction}
+                        holdCompleteLabel={t.table.deleteHoldComplete}
+                        cancelLabel={t.table.deleteCancel}
+                        pendingLabel={t.table.deletePending}
+                        doneLabel={t.table.deleteSuccess}
+                        doneDescription={t.table.deleteLocalOnly}
+                        errorLabel={t.table.deleteError}
+                        retryLabel={t.table.deleteRetry}
+                        onConfirm={() => handleDeleteOrder(r.order)}
+                      />
+                    </div>
+                  </td>
                 </tr>
               ))
             )}
@@ -448,14 +648,14 @@ export const DcaRecordsTable = ({
         </span>
         <div className="dca-pager flex gap-1">
           <button
-            className="bg-card border-border text-foreground/70 rounded border px-2 py-1 text-xs disabled:opacity-30"
+            className="bg-card border-border text-foreground/70 cursor-pointer rounded border px-2 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-30"
             disabled={curPage === 1}
             onClick={() => setPage(1)}
           >
             &laquo;
           </button>
           <button
-            className="bg-card border-border text-foreground/70 rounded border px-2 py-1 text-xs disabled:opacity-30"
+            className="bg-card border-border text-foreground/70 cursor-pointer rounded border px-2 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-30"
             disabled={curPage === 1}
             onClick={() => setPage(curPage - 1)}
           >
@@ -469,7 +669,7 @@ export const DcaRecordsTable = ({
             ) : (
               <button
                 key={key}
-                className={`rounded border px-2 py-1 text-xs ${
+                className={`cursor-pointer rounded border px-2 py-1 text-xs ${
                   n === curPage
                     ? "bg-foreground text-background border-foreground"
                     : "bg-card border-border text-foreground/70 hover:bg-muted"
@@ -481,14 +681,14 @@ export const DcaRecordsTable = ({
             ),
           )}
           <button
-            className="bg-card border-border text-foreground/70 rounded border px-2 py-1 text-xs disabled:opacity-30"
+            className="bg-card border-border text-foreground/70 cursor-pointer rounded border px-2 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-30"
             disabled={curPage === totalPages}
             onClick={() => setPage(curPage + 1)}
           >
             &rsaquo;
           </button>
           <button
-            className="bg-card border-border text-foreground/70 rounded border px-2 py-1 text-xs disabled:opacity-30"
+            className="bg-card border-border text-foreground/70 cursor-pointer rounded border px-2 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-30"
             disabled={curPage === totalPages}
             onClick={() => setPage(totalPages)}
           >
@@ -496,6 +696,15 @@ export const DcaRecordsTable = ({
           </button>
         </div>
       </div>
+
+      {editingOrder && (
+        <AddDcaForm
+          key={editingOrder.id}
+          order={editingOrder}
+          onClose={() => setEditingOrder(null)}
+          onSuccess={onDataMutated}
+        />
+      )}
     </div>
   );
 };

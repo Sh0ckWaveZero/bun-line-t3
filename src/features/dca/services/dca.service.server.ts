@@ -8,6 +8,7 @@ import { db } from "@/lib/database/db";
 import type { DcaOrder, Prisma } from "@prisma/client";
 import type {
   CreateDcaOrderInput,
+  UpdateDcaOrderInput,
   DcaOrderListParams,
   DcaOrderListResult,
   CreateLineDcaOrderResult,
@@ -255,6 +256,35 @@ const deleteOrder = async (id: string) => {
 };
 
 /**
+ * แก้ไขข้อมูล DCA โดยรักษา key ต้นทางของรายการที่เชื่อมกับ Bitkub
+ */
+const updateOrder = async (id: string, input: UpdateDcaOrderInput) => {
+  const existing = await db.dcaOrder.findUnique({
+    where: { id },
+    select: { coin: true, bitkubBuyId: true, deduplicationKey: true },
+  });
+  if (!existing) return null;
+
+  parsedDcaSchema.parse({ ...input, coin: existing.coin });
+  const note = input.note?.trim() || null;
+  const deduplicationKey = existing.bitkubBuyId
+    ? existing.deduplicationKey
+    : `legacy:${existing.coin}:${input.executedAt.toISOString()}`;
+
+  return db.dcaOrder.update({
+    where: { id },
+    data: {
+      amountTHB: input.amountTHB,
+      coinReceived: input.coinReceived,
+      pricePerCoin: input.pricePerCoin,
+      executedAt: input.executedAt,
+      note,
+      deduplicationKey,
+    },
+  });
+};
+
+/**
  * ดึง DCA orders ทั้งหมดของ user โดยไม่มี pagination (ใช้สำหรับ export)
  */
 const listAllOrders = async (lineUserIds: string | string[]) => {
@@ -314,6 +344,7 @@ export const dcaService = {
   findByRounds,
   findDuplicates,
   deleteOrder,
+  updateOrder,
   parseBitkubDcaMessage,
   getSummary,
   generateOrderId,

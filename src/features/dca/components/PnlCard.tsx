@@ -22,7 +22,7 @@ export const PnlCard = ({ summary }: PnlCardProps) => {
     return (
       <div
         id="dca-pnl-card"
-        className="bg-card border-border flex flex-col gap-4 rounded-lg border p-5"
+        className="bg-card border-border flex h-full flex-col gap-4 rounded-lg border p-5"
       >
         <div className="text-muted-foreground flex items-center justify-between text-[11px] font-medium tracking-wider uppercase">
           <span>{t.pnl.unrealizedPnl}</span>
@@ -72,7 +72,7 @@ export const PnlCard = ({ summary }: PnlCardProps) => {
   return (
     <div
       id="dca-pnl-card"
-      className="bg-card border-border flex flex-col gap-4 rounded-lg border p-5"
+      className="bg-card border-border flex h-full flex-col gap-4 rounded-lg border p-5"
     >
       {/* Header */}
       <div className="text-muted-foreground flex items-center justify-between text-[11px] font-medium tracking-wider uppercase">

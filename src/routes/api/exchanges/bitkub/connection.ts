@@ -1,8 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  bitkubCredentialsSchema,
-  bitkubService,
-} from "@/features/exchanges/services/bitkub.service.server";
+import { bitkubService } from "@/features/exchanges/services/bitkub.service.server";
+import { bitkubCredentialsSchema } from "@/features/exchanges/lib/bitkub-credentials";
 import {
   readBitkubJson,
   withBitkubOwner,

@@ -27,6 +27,14 @@ export interface CreateDcaOrderInput {
   status?: DcaStatus;
 }
 
+export interface UpdateDcaOrderInput {
+  amountTHB: number;
+  coinReceived: number;
+  pricePerCoin: number;
+  executedAt: Date;
+  note?: string;
+}
+
 export interface DcaOrderListParams {
   page?: number;
   limit?: number;

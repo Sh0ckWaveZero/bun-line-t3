@@ -78,7 +78,6 @@ import { Route as ApiThaiIdGenerateRouteImport } from './routes/api/thai-id/gene
 import { Route as ApiThaiIdValidateRouteImport } from './routes/api/thai-id/validate'
 import { Route as ApiUserSettingsRouteImport } from './routes/api/user/settings'
 import { Route as ApiAdminCronJobsJobIdRouteImport } from './routes/api/admin/cron-jobs/$jobId'
-import { Route as ApiExchangesBitkubBalancesRouteImport } from './routes/api/exchanges/bitkub/balances'
 import { Route as ApiExchangesBitkubBuysRouteImport } from './routes/api/exchanges/bitkub/buys'
 import { Route as ApiExchangesBitkubConnectionRouteImport } from './routes/api/exchanges/bitkub/connection'
 import { Route as ApiExpensesBudgetsIdRouteImport } from './routes/api/expenses/budgets/$id'
@@ -436,12 +435,6 @@ const ApiAdminCronJobsJobIdRoute = ApiAdminCronJobsJobIdRouteImport.update({
   path: '/$jobId',
   getParentRoute: () => ApiAdminCronJobsRoute,
 } as any)
-const ApiExchangesBitkubBalancesRoute =
-  ApiExchangesBitkubBalancesRouteImport.update({
-    id: '/api/exchanges/bitkub/balances',
-    path: '/api/exchanges/bitkub/balances',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiExchangesBitkubBuysRoute = ApiExchangesBitkubBuysRouteImport.update({
   id: '/api/exchanges/bitkub/buys',
   path: '/api/exchanges/bitkub/buys',
@@ -546,7 +539,6 @@ export interface FileRoutesByFullPath {
   '/api/expenses/': typeof ApiExpensesIndexRoute
   '/api/subscriptions/': typeof ApiSubscriptionsIndexRoute
   '/api/admin/cron-jobs/$jobId': typeof ApiAdminCronJobsJobIdRouteWithChildren
-  '/api/exchanges/bitkub/balances': typeof ApiExchangesBitkubBalancesRoute
   '/api/exchanges/bitkub/buys': typeof ApiExchangesBitkubBuysRoute
   '/api/exchanges/bitkub/connection': typeof ApiExchangesBitkubConnectionRoute
   '/api/expenses/budgets/$id': typeof ApiExpensesBudgetsIdRoute
@@ -624,7 +616,6 @@ export interface FileRoutesByTo {
   '/api/expenses': typeof ApiExpensesIndexRoute
   '/api/subscriptions': typeof ApiSubscriptionsIndexRoute
   '/api/admin/cron-jobs/$jobId': typeof ApiAdminCronJobsJobIdRouteWithChildren
-  '/api/exchanges/bitkub/balances': typeof ApiExchangesBitkubBalancesRoute
   '/api/exchanges/bitkub/buys': typeof ApiExchangesBitkubBuysRoute
   '/api/exchanges/bitkub/connection': typeof ApiExchangesBitkubConnectionRoute
   '/api/expenses/budgets/$id': typeof ApiExpensesBudgetsIdRoute
@@ -703,7 +694,6 @@ export interface FileRoutesById {
   '/api/expenses/': typeof ApiExpensesIndexRoute
   '/api/subscriptions/': typeof ApiSubscriptionsIndexRoute
   '/api/admin/cron-jobs/$jobId': typeof ApiAdminCronJobsJobIdRouteWithChildren
-  '/api/exchanges/bitkub/balances': typeof ApiExchangesBitkubBalancesRoute
   '/api/exchanges/bitkub/buys': typeof ApiExchangesBitkubBuysRoute
   '/api/exchanges/bitkub/connection': typeof ApiExchangesBitkubConnectionRoute
   '/api/expenses/budgets/$id': typeof ApiExpensesBudgetsIdRoute
@@ -783,7 +773,6 @@ export interface FileRouteTypes {
     | '/api/expenses/'
     | '/api/subscriptions/'
     | '/api/admin/cron-jobs/$jobId'
-    | '/api/exchanges/bitkub/balances'
     | '/api/exchanges/bitkub/buys'
     | '/api/exchanges/bitkub/connection'
     | '/api/expenses/budgets/$id'
@@ -861,7 +850,6 @@ export interface FileRouteTypes {
     | '/api/expenses'
     | '/api/subscriptions'
     | '/api/admin/cron-jobs/$jobId'
-    | '/api/exchanges/bitkub/balances'
     | '/api/exchanges/bitkub/buys'
     | '/api/exchanges/bitkub/connection'
     | '/api/expenses/budgets/$id'
@@ -939,7 +927,6 @@ export interface FileRouteTypes {
     | '/api/expenses/'
     | '/api/subscriptions/'
     | '/api/admin/cron-jobs/$jobId'
-    | '/api/exchanges/bitkub/balances'
     | '/api/exchanges/bitkub/buys'
     | '/api/exchanges/bitkub/connection'
     | '/api/expenses/budgets/$id'
@@ -1013,7 +1000,6 @@ export interface RootRouteChildren {
   ApiDcaIndexRoute: typeof ApiDcaIndexRoute
   ApiExpensesIndexRoute: typeof ApiExpensesIndexRoute
   ApiSubscriptionsIndexRoute: typeof ApiSubscriptionsIndexRoute
-  ApiExchangesBitkubBalancesRoute: typeof ApiExchangesBitkubBalancesRoute
   ApiExchangesBitkubBuysRoute: typeof ApiExchangesBitkubBuysRoute
   ApiExchangesBitkubConnectionRoute: typeof ApiExchangesBitkubConnectionRoute
 }
@@ -1503,13 +1489,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminCronJobsJobIdRouteImport
       parentRoute: typeof ApiAdminCronJobsRoute
     }
-    '/api/exchanges/bitkub/balances': {
-      id: '/api/exchanges/bitkub/balances'
-      path: '/api/exchanges/bitkub/balances'
-      fullPath: '/api/exchanges/bitkub/balances'
-      preLoaderRoute: typeof ApiExchangesBitkubBalancesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/exchanges/bitkub/buys': {
       id: '/api/exchanges/bitkub/buys'
       path: '/api/exchanges/bitkub/buys'
@@ -1717,7 +1696,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiDcaIndexRoute: ApiDcaIndexRoute,
   ApiExpensesIndexRoute: ApiExpensesIndexRoute,
   ApiSubscriptionsIndexRoute: ApiSubscriptionsIndexRoute,
-  ApiExchangesBitkubBalancesRoute: ApiExchangesBitkubBalancesRoute,
   ApiExchangesBitkubBuysRoute: ApiExchangesBitkubBuysRoute,
   ApiExchangesBitkubConnectionRoute: ApiExchangesBitkubConnectionRoute,
 }
@@ -1726,13 +1704,10 @@ export const routeTree = rootRouteImport
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
-
 import type { createStart } from '@tanstack/react-start'
-
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
-
     router: Awaited<ReturnType<typeof getRouter>>
   }
 }

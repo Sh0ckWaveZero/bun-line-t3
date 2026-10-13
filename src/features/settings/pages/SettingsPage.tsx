@@ -11,6 +11,7 @@ import {
 import { useUserSettings } from "../hooks/useUserSettings";
 import { SettingsSection } from "../components/SettingsSection";
 import { SettingsToggle } from "../components/SettingsToggle";
+import { BitkubConnectionSettings } from "../components/BitkubConnectionSettings";
 
 export function SettingsPage() {
   const { settings, loading, saving, error, updateSetting } = useUserSettings();
@@ -61,6 +62,8 @@ export function SettingsPage() {
       )}
 
       <div className="space-y-5">
+        <BitkubConnectionSettings />
+
         {/* ===== ความเป็นส่วนตัว — ซ่อนจำนวนเงิน ===== */}
         <SettingsSection
           title="ความเป็นส่วนตัว"

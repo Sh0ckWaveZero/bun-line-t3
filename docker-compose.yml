@@ -9,7 +9,8 @@
 # 2. Docker Compose ใช้ค่าเหล่านั้นโดยตรง (ไม่ต้องพึ่งไฟล์ .env.prod)
 # 3. ครอบคลุม required secrets เช่น DATABASE_URL, APP_URL, AUTH_SECRET, JWT_SECRET,
 #    INTERNAL_API_KEY, CRON_SECRET, LINE_* (6 secrets), AQICN_TOKEN,
-#    CMC_API_KEY, OPENAI_API_KEY, APP_DOMAIN, ALLOWED_DOMAINS
+#    CMC_API_KEY, OPENAI_API_KEY, BITKUB_CREDENTIAL_ENCRYPTION_KEY,
+#    APP_DOMAIN, ALLOWED_DOMAINS
 # 4. Security: ไม่มีไฟล์ sensitive ใดๆ บน production server
 
 services:
@@ -67,7 +68,7 @@ services:
     # GitHub Actions จะ inject environment variables ทั้งหมดจาก repository secrets
 
     # 🛡️ PRODUCTION: Environment variables จาก GitHub Secrets เท่านั้น
-    # ค่าทั้งหมดมาจาก GitHub Actions environment injection (17 secrets + static configs)
+    # ค่าทั้งหมดมาจาก GitHub Actions environment injection
     environment:
       # =============================================================================
       # Application Environment (Static + Dynamic)
@@ -119,6 +120,7 @@ services:
       - CMC_URL=https://pro-api.coinmarketcap.com
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - MCP_AI_MODEL=${MCP_AI_MODEL:-gpt-5.6-luna}
+      - BITKUB_CREDENTIAL_ENCRYPTION_KEY=${BITKUB_CREDENTIAL_ENCRYPTION_KEY:-}
 
       # =============================================================================
       # Domain Security Configuration (GitHub Secrets)

@@ -16,6 +16,7 @@ export const useDcaRealtimeUpdates = ({
 
         if (
           data.type === "dca-order-created" ||
+          data.type === "dca-order-updated" ||
           data.type === "dca-order-deleted"
         ) {
           onUpdate();

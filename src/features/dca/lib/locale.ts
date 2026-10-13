@@ -9,6 +9,7 @@ export interface DcaLocaleStrings {
     refresh: string;
     import: string;
     addDca: string;
+    switchLanguage: string;
   };
 
   // PnlCard
@@ -106,6 +107,17 @@ export interface DcaLocaleStrings {
     colInvested: string;
     colUnrealized: string;
     colPctUnrealized: string;
+    actions: string;
+    edit: string;
+    delete: string;
+    deleteConfirmTitle: string;
+    deleteConfirmDescription: string;
+    deleteCancel: string;
+    deletePending: string;
+    deleteSuccess: string;
+    deleteError: string;
+    deleteRetry: string;
+    deleteLocalOnly: string;
   };
 
   // SectionLabel
@@ -126,8 +138,9 @@ export const dcaLocales: Record<DcaLocale, DcaLocaleStrings> = {
       subtitle: "sats/THB",
       lastSync: "ซิงค์ล่าสุด",
       refresh: "รีเฟรช",
-      import: "นำเข้า",
+      import: "นำเข้าจากไฟล์",
       addDca: "เพิ่ม DCA",
+      switchLanguage: "สลับภาษา",
     },
     pnl: {
       unrealizedPnl: "กำไร/ขาดทุน ยังไม่เกิด",
@@ -217,6 +230,23 @@ export const dcaLocales: Record<DcaLocale, DcaLocaleStrings> = {
       colInvested: "ลงทุนแล้ว",
       colUnrealized: "P&L",
       colPctUnrealized: "%",
+      actions: "จัดการ",
+      edit: "แก้ไข",
+      delete: "ลบ",
+      deleteConfirmTitle: "ลบรายการ DCA นี้หรือไม่?",
+      deleteConfirmDescription:
+        "ลบเฉพาะรายการใน DCA ประวัติซื้อจาก Bitkub ยังอยู่",
+      deleteHoldLabel: "กดค้าง",
+      deleteHoldReleaseLabel: "ปล่อย",
+      deleteHoldInstruction:
+        "กดค้างประมาณ 1.2 วินาทีจนแถบสีเต็ม แล้วปล่อยเพื่อยืนยันการลบ",
+      deleteHoldComplete: "ปล่อยเพื่อยืนยันการลบ",
+      deleteCancel: "ยกเลิก",
+      deletePending: "กำลังลบรายการ...",
+      deleteSuccess: "ลบรายการ DCA แล้ว",
+      deleteError: "ลบรายการ DCA ไม่สำเร็จ",
+      deleteRetry: "ลองอีกครั้ง",
+      deleteLocalOnly: "ลบเฉพาะรายการในแอป ข้อมูลต้นทางจาก Bitkub ยังอยู่",
     },
     section: {
       overviewTitle: "ภาพรวม",
@@ -233,8 +263,9 @@ export const dcaLocales: Record<DcaLocale, DcaLocaleStrings> = {
       subtitle: "sats/THB",
       lastSync: "Last sync",
       refresh: "Refresh",
-      import: "Import",
+      import: "Import file",
       addDca: "Add DCA",
+      switchLanguage: "Switch language",
     },
     pnl: {
       unrealizedPnl: "Unrealized P&L",
@@ -324,6 +355,24 @@ export const dcaLocales: Record<DcaLocale, DcaLocaleStrings> = {
       colInvested: "Invested",
       colUnrealized: "P&L",
       colPctUnrealized: "%",
+      actions: "Actions",
+      edit: "Edit",
+      delete: "Delete",
+      deleteConfirmTitle: "Delete this DCA entry?",
+      deleteConfirmDescription:
+        "Only the DCA entry is removed. Bitkub purchase history stays.",
+      deleteHoldLabel: "Hold",
+      deleteHoldReleaseLabel: "Release",
+      deleteHoldInstruction:
+        "Hold for about 1.2 seconds until the progress bar fills, then release to confirm deletion.",
+      deleteHoldComplete: "Release to confirm deletion.",
+      deleteCancel: "Cancel",
+      deletePending: "Deleting entry...",
+      deleteSuccess: "DCA entry deleted",
+      deleteError: "Could not delete DCA entry",
+      deleteRetry: "Retry",
+      deleteLocalOnly:
+        "Only the app entry was deleted. The Bitkub source record remains.",
     },
     section: {
       overviewTitle: "Overview",

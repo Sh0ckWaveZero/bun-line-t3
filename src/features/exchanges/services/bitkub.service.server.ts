@@ -8,9 +8,10 @@ import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { env } from "@/env.mjs";
 import { db } from "@/lib/database/db";
+import { bitkubCredentialsSchema } from "../lib/bitkub-credentials";
 import type {
-  BitkubBalance,
   BitkubBuyPage,
+  BitkubBuyStatusFilter,
   BitkubConnectionStatus,
   BitkubSyncResult,
 } from "../types/bitkub";
@@ -22,23 +23,6 @@ const decimalSchema = z
   .max(60)
   .regex(/^\d+(?:\.\d{1,18})?$/);
 const timestampSchema = z.number().int().positive().max(8_640_000_000_000_000);
-const credentialSchema = z
-  .string()
-  .trim()
-  .min(1)
-  .max(512)
-  .refine(
-    (value) =>
-      Array.from(value).every(
-        (character) =>
-          character.charCodeAt(0) > 32 && character.charCodeAt(0) !== 127,
-      ),
-    "Invalid credential characters",
-  );
-export const bitkubCredentialsSchema = z.strictObject({
-  apiKey: credentialSchema.max(256),
-  apiSecret: credentialSchema,
-});
 export const bitkubCursorSchema = z
   .string()
   .min(1)
@@ -67,22 +51,8 @@ const buySchema = z.object({
   amount: decimalSchema,
   fee: decimalSchema,
   ts: timestampSchema,
-  order_closed_at: timestampSchema,
+  order_closed_at: timestampSchema.nullish(),
 });
-const balancesSchema = z.object({
-  code: z.union([z.literal("0"), z.literal(0)]),
-  data: z
-    .array(
-      z.object({
-        currency: z.string().min(1).max(20),
-        available: decimalSchema,
-        reserved: decimalSchema,
-        total: decimalSchema,
-      }),
-    )
-    .max(1000),
-});
-
 const parseProvider = <T>(schema: z.ZodType<T>, value: unknown): T => {
   const parsed = schema.safeParse(value);
   if (!parsed.success) throw new Error("Invalid Bitkub server data");
@@ -137,10 +107,9 @@ const decryptCredentials = (userId: string, encrypted: string) => {
   );
 };
 
-// Only these fixed read endpoints can receive authenticated requests.
+// Only the fixed BTC/THB order-history endpoint can receive authenticated requests.
 const readBitkub = async (
   credentials: z.infer<typeof bitkubCredentialsSchema>,
-  endpoint: "balances" | "history",
   cursor?: string,
 ): Promise<unknown> => {
   const timeResponse = await fetch(`${BITKUB_ORIGIN}/api/v3/servertime`, {
@@ -157,10 +126,7 @@ const readBitkub = async (
     lmt: "50",
   });
   if (cursor) query.set("cursor", bitkubCursorSchema.parse(cursor));
-  const path =
-    endpoint === "balances"
-      ? "/api/v4/wallet/balances"
-      : `/api/v3/market/my-order-history?${query.toString()}`;
+  const path = `/api/v3/market/my-order-history?${query.toString()}`;
   const signature = createHmac("sha256", credentials.apiSecret)
     .update(`${timestamp}GET${path}`)
     .digest("hex");
@@ -210,7 +176,7 @@ const connect = async (
 ) => {
   const credentials = bitkubCredentialsSchema.parse(input);
   const encryptedCredentials = encryptCredentials(userId, credentials);
-  parseProvider(balancesSchema, await readBitkub(credentials, "balances"));
+  parseProvider(historySchema, await readBitkub(credentials));
   const data = {
     encryptedCredentials,
     keyHint:
@@ -233,19 +199,13 @@ const disconnect = async (userId: string) => {
   return getStatus(userId);
 };
 
-const getBalances = async (userId: string): Promise<BitkubBalance[]> =>
-  parseProvider(
-    balancesSchema,
-    await readBitkub(await getCredentials(userId), "balances"),
-  ).data;
-
 const syncBuys = async (
   userId: string,
   cursor?: string,
 ): Promise<BitkubSyncResult> => {
   const response = parseProvider(
     historySchema,
-    await readBitkub(await getCredentials(userId), "history", cursor),
+    await readBitkub(await getCredentials(userId), cursor),
   );
   if (response.pagination.has_next && !response.pagination.cursor)
     throw new Error("Invalid Bitkub pagination");
@@ -310,21 +270,53 @@ const syncBuys = async (
 
 const listBuys = async (
   userId: string,
-  page: number,
+  params: {
+    page: number;
+    pageSize: number;
+    search: string;
+    status: BitkubBuyStatusFilter;
+    dateFrom: string;
+    dateTo: string;
+  },
 ): Promise<BitkubBuyPage> => {
+  const where: Prisma.BitkubBtcBuyWhereInput = { userId };
+  const search = params.search.trim();
+  if (search) {
+    where.OR = [
+      { externalTradeIdentity: { contains: search, mode: "insensitive" } },
+      { externalOrderId: { contains: search, mode: "insensitive" } },
+    ];
+  }
+  if (params.status === "imported") where.dcaOrder = { isNot: null };
+  if (params.status === "ready") where.dcaOrder = { is: null };
+  if (params.dateFrom || params.dateTo) {
+    const dateFilter: NonNullable<Prisma.BitkubBtcBuyWhereInput["executedAt"]> =
+      {
+        ...(params.dateFrom && {
+          gte: new Date(`${params.dateFrom}T00:00:00+07:00`),
+        }),
+        ...(params.dateTo && {
+          lt: getBangkokDayAfter(params.dateTo),
+        }),
+      };
+    where.executedAt = dateFilter;
+  }
+
   const [buys, total] = await Promise.all([
     db.bitkubBtcBuy.findMany({
-      where: { userId },
+      where,
       orderBy: [{ executedAt: "desc" }, { id: "desc" }],
-      skip: (page - 1) * 20,
-      take: 20,
+      skip: (params.page - 1) * params.pageSize,
+      take: params.pageSize,
       include: { dcaOrder: { select: { id: true } } },
     }),
-    db.bitkubBtcBuy.count({ where: { userId } }),
+    db.bitkubBtcBuy.count({ where }),
   ]);
   return {
-    page,
-    totalPages: Math.ceil(total / 20),
+    page: params.page,
+    pageSize: params.pageSize,
+    total,
+    totalPages: Math.ceil(total / params.pageSize),
     buys: buys.map((buy) => ({
       id: buy.id,
       externalTradeIdentity: buy.externalTradeIdentity,
@@ -339,11 +331,16 @@ const listBuys = async (
   };
 };
 
+function getBangkokDayAfter(dateValue: string): Date {
+  const endExclusive = new Date(`${dateValue}T00:00:00+07:00`);
+  endExclusive.setUTCDate(endExclusive.getUTCDate() + 1);
+  return endExclusive;
+}
+
 export const bitkubService = {
   getStatus,
   connect,
   disconnect,
-  getBalances,
   syncBuys,
   listBuys,
 };

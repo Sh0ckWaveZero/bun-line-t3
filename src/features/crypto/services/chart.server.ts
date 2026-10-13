@@ -1,4 +1,4 @@
-import { d3ChartGenerator } from "@/lib/utils/chart-generator-d3";
+import { tanstackChartGenerator } from "@/lib/utils/chart-generator-tanstack";
 import { uploadImageToTemporaryHost } from "@/lib/utils/line-messaging";
 import type { UploadResult } from "@/lib/types/line-messaging";
 import { exchangeService } from "./exchange.server";
@@ -83,7 +83,7 @@ class ChartService {
     }
 
     // Generate chart
-    const chartBuffer = await d3ChartGenerator.generateHistoricalChart(
+    const chartBuffer = await tanstackChartGenerator.generateHistoricalChart(
       symbol,
       24,
       `${cryptoData.currencyName || symbol.toUpperCase()} Price Chart (${exchange.toUpperCase()})`,
@@ -125,11 +125,12 @@ class ChartService {
     }
 
     // Generate comparison chart
-    const chartBuffer = await d3ChartGenerator.generateHistoricalComparison(
-      [symbol],
-      24,
-      `${symbol.toUpperCase()} Price Comparison`,
-    );
+    const chartBuffer =
+      await tanstackChartGenerator.generateHistoricalComparison(
+        [symbol],
+        24,
+        `${symbol.toUpperCase()} Price Comparison`,
+      );
 
     // Upload chart image
     const imageUrls = await uploadImageToTemporaryHost(
