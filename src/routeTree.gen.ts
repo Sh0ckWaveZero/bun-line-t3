@@ -54,6 +54,7 @@ import { Route as ApiCronImageCleanupRouteImport } from './routes/api/cron/image
 import { Route as ApiDcaIndexRouteImport } from './routes/api/dca/index'
 import { Route as ApiDcaIdRouteImport } from './routes/api/dca/$id'
 import { Route as ApiDcaAllRouteImport } from './routes/api/dca/all'
+import { Route as ApiDcaBitkubImportRouteImport } from './routes/api/dca/bitkub-import'
 import { Route as ApiDcaExportRouteImport } from './routes/api/dca/export'
 import { Route as ApiDcaImportRouteImport } from './routes/api/dca/import'
 import { Route as ApiDcaStreamRouteImport } from './routes/api/dca/stream'
@@ -77,6 +78,9 @@ import { Route as ApiThaiIdGenerateRouteImport } from './routes/api/thai-id/gene
 import { Route as ApiThaiIdValidateRouteImport } from './routes/api/thai-id/validate'
 import { Route as ApiUserSettingsRouteImport } from './routes/api/user/settings'
 import { Route as ApiAdminCronJobsJobIdRouteImport } from './routes/api/admin/cron-jobs/$jobId'
+import { Route as ApiExchangesBitkubBalancesRouteImport } from './routes/api/exchanges/bitkub/balances'
+import { Route as ApiExchangesBitkubBuysRouteImport } from './routes/api/exchanges/bitkub/buys'
+import { Route as ApiExchangesBitkubConnectionRouteImport } from './routes/api/exchanges/bitkub/connection'
 import { Route as ApiExpensesBudgetsIdRouteImport } from './routes/api/expenses/budgets/$id'
 import { Route as ApiExpensesCategoriesIdRouteImport } from './routes/api/expenses/categories/$id'
 import { Route as ApiUserSettingsNotificationsRouteImport } from './routes/api/user/settings/notifications'
@@ -309,6 +313,11 @@ const ApiDcaAllRoute = ApiDcaAllRouteImport.update({
   path: '/api/dca/all',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDcaBitkubImportRoute = ApiDcaBitkubImportRouteImport.update({
+  id: '/api/dca/bitkub-import',
+  path: '/api/dca/bitkub-import',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiDcaExportRoute = ApiDcaExportRouteImport.update({
   id: '/api/dca/export',
   path: '/api/dca/export',
@@ -427,6 +436,23 @@ const ApiAdminCronJobsJobIdRoute = ApiAdminCronJobsJobIdRouteImport.update({
   path: '/$jobId',
   getParentRoute: () => ApiAdminCronJobsRoute,
 } as any)
+const ApiExchangesBitkubBalancesRoute =
+  ApiExchangesBitkubBalancesRouteImport.update({
+    id: '/api/exchanges/bitkub/balances',
+    path: '/api/exchanges/bitkub/balances',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiExchangesBitkubBuysRoute = ApiExchangesBitkubBuysRouteImport.update({
+  id: '/api/exchanges/bitkub/buys',
+  path: '/api/exchanges/bitkub/buys',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiExchangesBitkubConnectionRoute =
+  ApiExchangesBitkubConnectionRouteImport.update({
+    id: '/api/exchanges/bitkub/connection',
+    path: '/api/exchanges/bitkub/connection',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiExpensesBudgetsIdRoute = ApiExpensesBudgetsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -495,6 +521,7 @@ export interface FileRoutesByFullPath {
   '/api/cron/image-cleanup': typeof ApiCronImageCleanupRoute
   '/api/dca/$id': typeof ApiDcaIdRoute
   '/api/dca/all': typeof ApiDcaAllRoute
+  '/api/dca/bitkub-import': typeof ApiDcaBitkubImportRoute
   '/api/dca/export': typeof ApiDcaExportRoute
   '/api/dca/import': typeof ApiDcaImportRoute
   '/api/dca/stream': typeof ApiDcaStreamRoute
@@ -519,6 +546,9 @@ export interface FileRoutesByFullPath {
   '/api/expenses/': typeof ApiExpensesIndexRoute
   '/api/subscriptions/': typeof ApiSubscriptionsIndexRoute
   '/api/admin/cron-jobs/$jobId': typeof ApiAdminCronJobsJobIdRouteWithChildren
+  '/api/exchanges/bitkub/balances': typeof ApiExchangesBitkubBalancesRoute
+  '/api/exchanges/bitkub/buys': typeof ApiExchangesBitkubBuysRoute
+  '/api/exchanges/bitkub/connection': typeof ApiExchangesBitkubConnectionRoute
   '/api/expenses/budgets/$id': typeof ApiExpensesBudgetsIdRoute
   '/api/expenses/categories/$id': typeof ApiExpensesCategoriesIdRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
@@ -569,6 +599,7 @@ export interface FileRoutesByTo {
   '/api/cron/image-cleanup': typeof ApiCronImageCleanupRoute
   '/api/dca/$id': typeof ApiDcaIdRoute
   '/api/dca/all': typeof ApiDcaAllRoute
+  '/api/dca/bitkub-import': typeof ApiDcaBitkubImportRoute
   '/api/dca/export': typeof ApiDcaExportRoute
   '/api/dca/import': typeof ApiDcaImportRoute
   '/api/dca/stream': typeof ApiDcaStreamRoute
@@ -593,6 +624,9 @@ export interface FileRoutesByTo {
   '/api/expenses': typeof ApiExpensesIndexRoute
   '/api/subscriptions': typeof ApiSubscriptionsIndexRoute
   '/api/admin/cron-jobs/$jobId': typeof ApiAdminCronJobsJobIdRouteWithChildren
+  '/api/exchanges/bitkub/balances': typeof ApiExchangesBitkubBalancesRoute
+  '/api/exchanges/bitkub/buys': typeof ApiExchangesBitkubBuysRoute
+  '/api/exchanges/bitkub/connection': typeof ApiExchangesBitkubConnectionRoute
   '/api/expenses/budgets/$id': typeof ApiExpensesBudgetsIdRoute
   '/api/expenses/categories/$id': typeof ApiExpensesCategoriesIdRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
@@ -644,6 +678,7 @@ export interface FileRoutesById {
   '/api/cron/image-cleanup': typeof ApiCronImageCleanupRoute
   '/api/dca/$id': typeof ApiDcaIdRoute
   '/api/dca/all': typeof ApiDcaAllRoute
+  '/api/dca/bitkub-import': typeof ApiDcaBitkubImportRoute
   '/api/dca/export': typeof ApiDcaExportRoute
   '/api/dca/import': typeof ApiDcaImportRoute
   '/api/dca/stream': typeof ApiDcaStreamRoute
@@ -668,6 +703,9 @@ export interface FileRoutesById {
   '/api/expenses/': typeof ApiExpensesIndexRoute
   '/api/subscriptions/': typeof ApiSubscriptionsIndexRoute
   '/api/admin/cron-jobs/$jobId': typeof ApiAdminCronJobsJobIdRouteWithChildren
+  '/api/exchanges/bitkub/balances': typeof ApiExchangesBitkubBalancesRoute
+  '/api/exchanges/bitkub/buys': typeof ApiExchangesBitkubBuysRoute
+  '/api/exchanges/bitkub/connection': typeof ApiExchangesBitkubConnectionRoute
   '/api/expenses/budgets/$id': typeof ApiExpensesBudgetsIdRoute
   '/api/expenses/categories/$id': typeof ApiExpensesCategoriesIdRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
@@ -720,6 +758,7 @@ export interface FileRouteTypes {
     | '/api/cron/image-cleanup'
     | '/api/dca/$id'
     | '/api/dca/all'
+    | '/api/dca/bitkub-import'
     | '/api/dca/export'
     | '/api/dca/import'
     | '/api/dca/stream'
@@ -744,6 +783,9 @@ export interface FileRouteTypes {
     | '/api/expenses/'
     | '/api/subscriptions/'
     | '/api/admin/cron-jobs/$jobId'
+    | '/api/exchanges/bitkub/balances'
+    | '/api/exchanges/bitkub/buys'
+    | '/api/exchanges/bitkub/connection'
     | '/api/expenses/budgets/$id'
     | '/api/expenses/categories/$id'
     | '/api/user/settings/notifications'
@@ -794,6 +836,7 @@ export interface FileRouteTypes {
     | '/api/cron/image-cleanup'
     | '/api/dca/$id'
     | '/api/dca/all'
+    | '/api/dca/bitkub-import'
     | '/api/dca/export'
     | '/api/dca/import'
     | '/api/dca/stream'
@@ -818,6 +861,9 @@ export interface FileRouteTypes {
     | '/api/expenses'
     | '/api/subscriptions'
     | '/api/admin/cron-jobs/$jobId'
+    | '/api/exchanges/bitkub/balances'
+    | '/api/exchanges/bitkub/buys'
+    | '/api/exchanges/bitkub/connection'
     | '/api/expenses/budgets/$id'
     | '/api/expenses/categories/$id'
     | '/api/user/settings/notifications'
@@ -868,6 +914,7 @@ export interface FileRouteTypes {
     | '/api/cron/image-cleanup'
     | '/api/dca/$id'
     | '/api/dca/all'
+    | '/api/dca/bitkub-import'
     | '/api/dca/export'
     | '/api/dca/import'
     | '/api/dca/stream'
@@ -892,6 +939,9 @@ export interface FileRouteTypes {
     | '/api/expenses/'
     | '/api/subscriptions/'
     | '/api/admin/cron-jobs/$jobId'
+    | '/api/exchanges/bitkub/balances'
+    | '/api/exchanges/bitkub/buys'
+    | '/api/exchanges/bitkub/connection'
     | '/api/expenses/budgets/$id'
     | '/api/expenses/categories/$id'
     | '/api/user/settings/notifications'
@@ -942,6 +992,7 @@ export interface RootRouteChildren {
   ApiCronImageCleanupRoute: typeof ApiCronImageCleanupRoute
   ApiDcaIdRoute: typeof ApiDcaIdRoute
   ApiDcaAllRoute: typeof ApiDcaAllRoute
+  ApiDcaBitkubImportRoute: typeof ApiDcaBitkubImportRoute
   ApiDcaExportRoute: typeof ApiDcaExportRoute
   ApiDcaImportRoute: typeof ApiDcaImportRoute
   ApiDcaStreamRoute: typeof ApiDcaStreamRoute
@@ -962,6 +1013,9 @@ export interface RootRouteChildren {
   ApiDcaIndexRoute: typeof ApiDcaIndexRoute
   ApiExpensesIndexRoute: typeof ApiExpensesIndexRoute
   ApiSubscriptionsIndexRoute: typeof ApiSubscriptionsIndexRoute
+  ApiExchangesBitkubBalancesRoute: typeof ApiExchangesBitkubBalancesRoute
+  ApiExchangesBitkubBuysRoute: typeof ApiExchangesBitkubBuysRoute
+  ApiExchangesBitkubConnectionRoute: typeof ApiExchangesBitkubConnectionRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1281,6 +1335,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDcaAllRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/dca/bitkub-import': {
+      id: '/api/dca/bitkub-import'
+      path: '/api/dca/bitkub-import'
+      fullPath: '/api/dca/bitkub-import'
+      preLoaderRoute: typeof ApiDcaBitkubImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/dca/export': {
       id: '/api/dca/export'
       path: '/api/dca/export'
@@ -1441,6 +1502,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/admin/cron-jobs/$jobId'
       preLoaderRoute: typeof ApiAdminCronJobsJobIdRouteImport
       parentRoute: typeof ApiAdminCronJobsRoute
+    }
+    '/api/exchanges/bitkub/balances': {
+      id: '/api/exchanges/bitkub/balances'
+      path: '/api/exchanges/bitkub/balances'
+      fullPath: '/api/exchanges/bitkub/balances'
+      preLoaderRoute: typeof ApiExchangesBitkubBalancesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/exchanges/bitkub/buys': {
+      id: '/api/exchanges/bitkub/buys'
+      path: '/api/exchanges/bitkub/buys'
+      fullPath: '/api/exchanges/bitkub/buys'
+      preLoaderRoute: typeof ApiExchangesBitkubBuysRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/exchanges/bitkub/connection': {
+      id: '/api/exchanges/bitkub/connection'
+      path: '/api/exchanges/bitkub/connection'
+      fullPath: '/api/exchanges/bitkub/connection'
+      preLoaderRoute: typeof ApiExchangesBitkubConnectionRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/expenses/budgets/$id': {
       id: '/api/expenses/budgets/$id'
@@ -1614,6 +1696,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCronImageCleanupRoute: ApiCronImageCleanupRoute,
   ApiDcaIdRoute: ApiDcaIdRoute,
   ApiDcaAllRoute: ApiDcaAllRoute,
+  ApiDcaBitkubImportRoute: ApiDcaBitkubImportRoute,
   ApiDcaExportRoute: ApiDcaExportRoute,
   ApiDcaImportRoute: ApiDcaImportRoute,
   ApiDcaStreamRoute: ApiDcaStreamRoute,
@@ -1634,16 +1717,22 @@ const rootRouteChildren: RootRouteChildren = {
   ApiDcaIndexRoute: ApiDcaIndexRoute,
   ApiExpensesIndexRoute: ApiExpensesIndexRoute,
   ApiSubscriptionsIndexRoute: ApiSubscriptionsIndexRoute,
+  ApiExchangesBitkubBalancesRoute: ApiExchangesBitkubBalancesRoute,
+  ApiExchangesBitkubBuysRoute: ApiExchangesBitkubBuysRoute,
+  ApiExchangesBitkubConnectionRoute: ApiExchangesBitkubConnectionRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
+
 import type { createStart } from '@tanstack/react-start'
+
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
+
     router: Awaited<ReturnType<typeof getRouter>>
   }
 }

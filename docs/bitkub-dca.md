@@ -1,0 +1,17 @@
+# Bitkub DCA import
+
+Apply `prisma migrate deploy` and regenerate Prisma Client before enabling this feature. Configure `BITKUB_CREDENTIAL_ENCRYPTION_KEY` with 32 random bytes encoded as 64 hexadecimal characters in the server environment. Keep this key stable and protect it with the same controls as other server secrets. Losing or changing it requires users to reconnect their Bitkub credentials.
+
+Users should create a Bitkub API key with trading, deposit, and withdrawal permissions disabled, and restrict its allowed IPs where possible. Successful GET requests do not prove that the user's key permissions are restricted. The application calls only GET server time, wallet balances v4, and BTC/THB order history v3. It does not expose a generic exchange request endpoint.
+
+Each authenticated Better Auth user owns one encrypted credential connection and their cached BTC buys. Credentials use AES-256-GCM with a random nonce and the user's ID as authenticated additional data. Only the last four characters of the API key are returned as a hint. Disconnect clears the credential envelope and hint while keeping cached buys and DCA records. Reconnecting replaces credentials for the same application user without clearing or relabeling cached observations. The API integration does not verify the Bitkub account identity, so changing to another Bitkub account combines newly loaded history with the existing user cache. Users should reconnect keys for the same Bitkub account when they want one account history. Separate exchange accounts per application user are not supported in v1.
+
+History uses Bitkub keyset pagination. It caches only closed buy rows with a transaction ID, valid millisecond timestamps, positive THB amount and rate, and a nonnegative THB fee. Market and limit rows use the same documented history fields. Rows with a missing closure timestamp, invalid numeric fields, or values outside the database decimal range are skipped and reported as a count. Per-fill `order-info.history` units are not inferred.
+
+The history contract defines buy `amount` as quote THB and `fee` as THB. Normalization stores the quoted amount, fee, and raw rate as decimals. Spent THB is `amount + fee`; received BTC is `amount / rate`, rounded to 18 decimal places. Import writes the effective cost per BTC, `spentTHB / receivedBTC`. Decimal arithmetic stays on the server until conversion into the existing Float-based DCA fields. Wallet balances remain separate from DCA cost and profit calculations.
+
+Users explicitly select cached buy IDs to import. The server obtains the owner from the authenticated session, checks LINE approval, resolves the user's LINE account when writing DCA, and derives all accounting values from owned database records. Shared transaction locks serialize DCA round allocation with LINE and file imports. Serializable transaction retries and unique source keys prevent repeat imports. `DcaOrder.orderId` remains an internal DCA round identifier.
+
+Existing records receive `legacy:<coin>:<executedAt ISO>` keys in the migration. Bitkub imports use `bitkub:<cached buy ID>` and a unique reference to the cached buy, allowing distinct transactions at the same timestamp. A legacy record with exactly the same LINE owner, BTC coin, and timestamp is returned as a possible conflict for manual review instead of being duplicated. Imported buys return an already-imported outcome.
+
+Only history returned by the Bitkub API can be imported. This feature does not create or reconcile automatic exchange orders.

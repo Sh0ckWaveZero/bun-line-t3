@@ -3,6 +3,7 @@ import {
   parsedDcaSchema,
 } from "../helpers/parse-bitkub-dca";
 import { z } from "zod";
+import { lockDcaOwner } from "./dca-lock.server";
 import { db } from "@/lib/database/db";
 import type { DcaOrder, Prisma } from "@prisma/client";
 import type {
@@ -70,37 +71,9 @@ const getNextRound = async (
  * สร้าง DCA order ใหม่
  */
 const createOrder = async (input: CreateDcaOrderInput) => {
-  const coin = input.coin.toUpperCase();
-  const duplicate = await db.dcaOrder.findFirst({
-    where: {
-      lineUserId: input.lineUserId,
-      coin,
-      executedAt: input.executedAt,
-    },
-    select: { orderId: true },
-  });
-
-  if (duplicate) {
-    throw new Error(`DCA order already exists: ${duplicate.orderId}`);
-  }
-
-  const round = await getNextRound(coin, input.lineUserId);
-  const orderId = generateOrderId(coin, round);
-
-  return db.dcaOrder.create({
-    data: {
-      orderId,
-      lineUserId: input.lineUserId,
-      coin,
-      amountTHB: input.amountTHB,
-      coinReceived: input.coinReceived,
-      pricePerCoin: input.pricePerCoin,
-      round,
-      status: input.status ?? "SUCCESS",
-      note: input.note ?? null,
-      executedAt: input.executedAt,
-    },
-  });
+  const result = await createLineOrder(input);
+  if (result.status === "created") return result.order;
+  throw new Error("DCA order already exists");
 };
 
 const createLineOrder = async (
@@ -113,16 +86,16 @@ const createLineOrder = async (
     z.string().trim().min(1).parse(webhookEventId);
   const coin = input.coin.toUpperCase();
   const where = {
-    lineUserId_coin_executedAt: {
+    lineUserId_deduplicationKey: {
       lineUserId: input.lineUserId,
-      coin,
-      executedAt: input.executedAt,
+      deduplicationKey: `legacy:${coin}:${input.executedAt.toISOString()}`,
     },
   };
   for (let attempt = 0; attempt < 5; attempt++) {
     try {
       return await db.$transaction(
         async (tx) => {
+          await lockDcaOwner(tx, input.lineUserId);
           if (webhookEventId) {
             const receipt = await tx.dcaWebhookReceipt.findUnique({
               where: { webhookEventId },
@@ -132,7 +105,13 @@ const createLineOrder = async (
               data: { webhookEventId, lineUserId: input.lineUserId },
             });
           }
-          const duplicate = await tx.dcaOrder.findUnique({ where });
+          const duplicate = await tx.dcaOrder.findFirst({
+            where: {
+              lineUserId: input.lineUserId,
+              coin,
+              executedAt: input.executedAt,
+            },
+          });
           if (duplicate) return { status: "duplicate", order: duplicate };
           const latest = await tx.dcaOrder.findFirst({
             where: { lineUserId: input.lineUserId, coin },
@@ -143,6 +122,8 @@ const createLineOrder = async (
           const order = await tx.dcaOrder.create({
             data: {
               ...input,
+              deduplicationKey:
+                where.lineUserId_deduplicationKey.deduplicationKey,
               coin,
               round,
               orderId: generateOrderId(coin, round),
