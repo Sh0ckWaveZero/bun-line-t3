@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import "@/styles/dca-dashboard.css";
 import { AddDcaForm } from "@/features/dca/components/AddDcaForm";
+import { BitkubDcaPanel } from "@/features/dca/components/BitkubDcaPanel";
 import { DcaChartCard } from "@/features/dca/components/DcaChartCard";
 import { DcaExportButtons } from "@/features/dca/components/DcaExportButtons";
 import { DcaImportModal } from "@/features/dca/components/DcaImportModal";
@@ -78,6 +79,7 @@ function DcaHistoryPageContent() {
           )}
 
           {/* Section 01: Overview */}
+          <BitkubDcaPanel onImported={handleDataMutated} />
           <SectionLabel
             num="01"
             title="Overview"
