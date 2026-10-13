@@ -35,7 +35,7 @@ export function BitkubBuyHistory({
       <p className="text-muted-foreground text-sm">
         ต้นทุนรวมค่าธรรมเนียม THB จำนวน BTC คำนวณจากยอดซื้อ THB ÷ ราคา
         เลือกเฉพาะรายการที่ต้องการเพิ่มใน DCA ประวัติจาก API
-        อาจไม่ครอบคลุมข้อมูลเก่าที่ Bitkub จัดเก็บถาวร
+        นำเข้าได้เฉพาะรายการที่ API ส่งกลับมา
       </p>
       {history.data?.buys.length ? (
         <div className="overflow-x-auto">
