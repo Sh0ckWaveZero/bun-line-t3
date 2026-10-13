@@ -152,5 +152,8 @@
     "shell-quote": "^1.10.0",
     "valibot": "^1.4.2",
     "@hono/node-server": "^1.19.13"
+  },
+  "patchedDependencies": {
+    "@tanstack/start-server-core@1.169.40": "patches/@tanstack%2Fstart-server-core@1.169.40.patch"
   }
 }

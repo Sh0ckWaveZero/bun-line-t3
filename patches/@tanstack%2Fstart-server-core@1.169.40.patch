@@ -1,0 +1,67 @@
+diff --git a/dist/esm/request-response.js b/dist/esm/request-response.js
+index 64087753c35af1bbe8738574429be35086e949b4..f3f3378e023afe947365d9097154fa8367468ce8 100644
+--- a/dist/esm/request-response.js
++++ b/dist/esm/request-response.js
+@@ -29,14 +29,15 @@ function finalizeResponse(value, event) {
+ 	return response;
+ }
+ function finalizeMaybeResponse(value, event) {
+-	if (isPromiseLike(value)) return Promise.resolve(value).then((resolved) => finalizeResponse(resolved, event), (error) => finalizeResponse(handleResponseError(error), event));
++	if (isPromiseLike(value)) return Promise.resolve(value).then((resolved) => finalizeResponse(resolved, event), (error) => finalizeResponse(handleResponseError(error, event.req), event));
+ 	return finalizeResponse(value, event);
+ }
+ function ensureResponse(value) {
+ 	if (value instanceof Response) return value;
+ 	return new Response("Internal Server Error", { status: 500 });
+ }
+-function handleResponseError(error) {
++function handleResponseError(error, request) {
++	if (request?.signal.aborted && error === request.signal.reason) return new Response(null, { status: 500 });
+ 	if (error instanceof Response) return error;
+ 	if (error instanceof Error) throw error;
+ 	return new Response("Internal Server Error", { status: 500 });
+@@ -57,7 +58,7 @@ function requestHandler(handler) {
+ 		try {
+ 			response = eventStorage.run({ h3Event }, () => handler(request, requestOpts));
+ 		} catch (error) {
+-			response = handleResponseError(error);
++			response = handleResponseError(error, request);
+ 		}
+ 		return toResponse(finalizeMaybeResponse(response, h3Event), h3Event);
+ 	};
+diff --git a/src/request-response.ts b/src/request-response.ts
+index bde014a1535fa855e470589dbadccf7d3a24cc59..6e3920d23901e75d5f5793cd3cd9ed7932e7aabc 100644
+--- a/src/request-response.ts
++++ b/src/request-response.ts
+@@ -115,7 +115,8 @@ function finalizeMaybeResponse(
+   if (isPromiseLike(value)) {
+     return Promise.resolve(value).then(
+       (resolved) => finalizeResponse(resolved, event),
+-      (error) => finalizeResponse(handleResponseError(error), event),
++      (error) =>
++        finalizeResponse(handleResponseError(error, event.req), event),
+     )
+   }
+ 
+@@ -130,7 +131,11 @@ function ensureResponse(value: unknown): Response {
+   return new Response('Internal Server Error', { status: 500 })
+ }
+ 
+-function handleResponseError(error: unknown): Response {
++function handleResponseError(error: unknown, request?: Request): Response {
++  if (request?.signal.aborted && error === request.signal.reason) {
++    return new Response(null, { status: 500 })
++  }
++
+   if (error instanceof Response) {
+     return error
+   }
+@@ -164,7 +169,7 @@ export function requestHandler<TRegister = unknown>(
+         handler(request, requestOpts),
+       )
+     } catch (error) {
+-      response = handleResponseError(error)
++      response = handleResponseError(error, request)
+     }
+     return h3_toResponse(finalizeMaybeResponse(response, h3Event), h3Event)
+   }

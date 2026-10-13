@@ -85,6 +85,9 @@
       },
     },
   },
+  "patchedDependencies": {
+    "@tanstack/start-server-core@1.169.40": "patches/@tanstack%2Fstart-server-core@1.169.40.patch",
+  },
   "overrides": {
     "@hono/node-server": "^1.19.13",
     "@tanstack/router-core": "1.171.35",
