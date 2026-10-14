@@ -1,0 +1,13 @@
+diff --git a/dist/esm/internal-request-response.js b/dist/esm/internal-request-response.js
+index 5aa9265e492a64e9c4daa3f5bf0b36d486123682..27b768434f2af1314d7de34748decb82fe249ab4 100644
+--- a/dist/esm/internal-request-response.js
++++ b/dist/esm/internal-request-response.js
+@@ -337,6 +337,8 @@ function createErrorResponse(error, event) {
+ 	}), event);
+ }
+ function finalizeError(error, event) {
++	const request = event?.request;
++	if (request?.signal.aborted && error === request.signal.reason) return new Response(null, { status: 500 });
+ 	if (error instanceof Response) return finalizeResponse(error, event);
+ 	return createErrorResponse(error, event);
+ }
