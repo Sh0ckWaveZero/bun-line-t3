@@ -154,6 +154,6 @@
     "@hono/node-server": "^1.19.13"
   },
   "patchedDependencies": {
-    "@tanstack/start-server-core@1.169.40": "patches/@tanstack%2Fstart-server-core@1.169.40.patch"
+    "@tanstack/start-server-core@1.169.42": "patches/@tanstack%2Fstart-server-core@1.169.42.patch"
   }
 }
