@@ -8,6 +8,7 @@ import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { env } from "@/env.mjs";
 import { db } from "@/lib/database/db";
+import { bitkubBalancesSchema, findThbAvailable } from "../lib/bitkub-balances";
 import { bitkubCredentialsSchema } from "../lib/bitkub-credentials";
 import type {
   BitkubBuyPage,
@@ -107,10 +108,13 @@ const decryptCredentials = (userId: string, encrypted: string) => {
   );
 };
 
-// Only the fixed BTC/THB order-history endpoint can receive authenticated requests.
-const readBitkub = async (
+// Authenticated reads are limited to two fixed read-only endpoints:
+// v3 BTC/THB order history and the v4 wallet balances (THB funding check for DCA).
+const BALANCES_PATH = "/api/v4/wallet/balances";
+
+const signedBitkubGet = async (
   credentials: z.infer<typeof bitkubCredentialsSchema>,
-  cursor?: string,
+  path: string,
 ): Promise<unknown> => {
   const timeResponse = await fetch(`${BITKUB_ORIGIN}/api/v3/servertime`, {
     method: "GET",
@@ -120,13 +124,6 @@ const readBitkub = async (
   });
   if (!timeResponse.ok) throw new Error("Bitkub server time unavailable");
   const timestamp = parseProvider(timestampSchema, await timeResponse.json());
-  const query = new URLSearchParams({
-    sym: "BTC_THB",
-    pagination_type: "keyset",
-    lmt: "50",
-  });
-  if (cursor) query.set("cursor", bitkubCursorSchema.parse(cursor));
-  const path = `/api/v3/market/my-order-history?${query.toString()}`;
   const signature = createHmac("sha256", credentials.apiSecret)
     .update(`${timestamp}GET${path}`)
     .digest("hex");
@@ -143,8 +140,25 @@ const readBitkub = async (
       "X-BTK-SIGN": signature,
     },
   });
-  if (!response.ok) throw new Error("Bitkub read request failed");
+  if (!response.ok)
+    throw new Error(`Bitkub read request failed (${response.status})`);
   return response.json();
+};
+
+const readBitkub = async (
+  credentials: z.infer<typeof bitkubCredentialsSchema>,
+  cursor?: string,
+): Promise<unknown> => {
+  const query = new URLSearchParams({
+    sym: "BTC_THB",
+    pagination_type: "keyset",
+    lmt: "50",
+  });
+  if (cursor) query.set("cursor", bitkubCursorSchema.parse(cursor));
+  return signedBitkubGet(
+    credentials,
+    `/api/v3/market/my-order-history?${query.toString()}`,
+  );
 };
 
 const getCredentials = async (userId: string) => {
@@ -155,6 +169,21 @@ const getCredentials = async (userId: string) => {
   if (!connection?.encryptedCredentials)
     throw new Error("Bitkub is disconnected");
   return decryptCredentials(userId, connection.encryptedCredentials);
+};
+
+/**
+ * ยอดเงินบาทที่ใช้ได้ (available) ใน Bitkub wallet — ใช้ตรวจเงินทุน DCA
+ * throw ถ้า disconnect / Bitkub ตอบไม่ตรงรูปแบบ
+ */
+const getThbBalance = async (userId: string): Promise<number> => {
+  const credentials = await getCredentials(userId);
+  const balances = parseProvider(
+    bitkubBalancesSchema,
+    await signedBitkubGet(credentials, BALANCES_PATH),
+  );
+  const thbAvailable = findThbAvailable(balances);
+  if (thbAvailable === null) throw new Error("Bitkub THB balance unavailable");
+  return thbAvailable;
 };
 
 const getStatus = async (userId: string): Promise<BitkubConnectionStatus> => {
@@ -343,4 +372,5 @@ export const bitkubService = {
   disconnect,
   syncBuys,
   listBuys,
+  getThbBalance,
 };
