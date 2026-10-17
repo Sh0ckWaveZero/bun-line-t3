@@ -1,8 +1,9 @@
 import { db } from "@/lib/database/db";
 import { sendPushMessage } from "@/lib/utils/line-push";
 import { bitkubService } from "@/features/exchanges/services/bitkub.service.server";
+import { createDcaBalanceAlertFlexMessage } from "@/features/line/line-utils/flex-messages";
 import {
-  buildDcaFundingAlertMessage,
+  DCA_FUNDING_THRESHOLD_THB,
   isDcaFundingLow,
 } from "../constants/funding-alert";
 
@@ -57,6 +58,7 @@ export const runDcaBalanceAlert = async (): Promise<DcaBalanceAlertSummary> => {
     failed: 0,
     skipped: 0,
   };
+  const appUrl = process.env["APP_URL"] ?? process.env["NEXTAUTH_URL"] ?? "";
 
   for (const userId of await listConnectedUserIds()) {
     summary.checkedConnections += 1;
@@ -81,7 +83,10 @@ export const runDcaBalanceAlert = async (): Promise<DcaBalanceAlertSummary> => {
 
     try {
       await sendPushMessage(lineUserId, [
-        { type: "text", text: buildDcaFundingAlertMessage(thbAvailable) },
+        createDcaBalanceAlertFlexMessage(
+          { thbAvailable, threshold: DCA_FUNDING_THRESHOLD_THB },
+          appUrl,
+        ),
       ]);
       summary.sent += 1;
     } catch (error) {
