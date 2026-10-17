@@ -37,8 +37,7 @@ const DATE_FORMATTER = new Intl.DateTimeFormat("th-TH", {
   hour12: false,
 });
 
-const formatDate = (date: Date) =>
-  DATE_FORMATTER.format(date);
+const formatDate = (date: Date) => DATE_FORMATTER.format(date);
 
 const getDcaHistoryUrl = (appUrl: string) => {
   if (!appUrl) return null;
@@ -213,6 +212,96 @@ export function createDcaSummaryFlexMessage(
         paddingAll: "lg",
         paddingTop: "sm",
         spacing: "sm",
+      },
+    },
+  };
+}
+
+interface DcaBalanceAlertData {
+  thbAvailable: number;
+  threshold: number;
+}
+
+/**
+ * สร้าง Flex Message แจ้งเตือนเงินทุน DCA เมื่อเงินบาทใน Bitkub ต่ำกว่าเกณฑ์
+ */
+export function createDcaBalanceAlertFlexMessage(
+  data: DcaBalanceAlertData,
+  appUrl: string,
+): {
+  type: "flex";
+  altText: string;
+  contents: any;
+} {
+  const bodyContents: any[] = [
+    createMetricRow("เกณฑ์ขั้นต่ำ", `${formatTHB(data.threshold)} บาท`),
+    createMetricRow("คงเหลือใช้ได้", `${formatTHB(data.thbAvailable)} บาท`),
+    { type: "separator", margin: "md" },
+    createMetricRow("รอบซื้อถัดไป", "รอเติมเงิน"),
+  ];
+  // ยอดคงเหลือเป็นสีแดงเพื่อสื่อว่าต่ำกว่าเกณฑ์
+  bodyContents[1].contents[1].color = "#DC2626";
+
+  const dcaHistoryUrl = getDcaHistoryUrl(appUrl);
+
+  return {
+    type: "flex",
+    altText: `แจ้งเตือนเงินทุน DCA: เงินบาทคงเหลือ ${formatTHB(
+      data.thbAvailable,
+    )} บาท ต่ำกว่าเกณฑ์ ${formatTHB(data.threshold)} บาท`,
+    contents: {
+      type: "bubble",
+      size: "mega",
+      header: {
+        type: "box",
+        layout: "vertical",
+        contents: [
+          {
+            type: "text",
+            text: "💰 แจ้งเตือนเงินทุน DCA",
+            weight: "bold",
+            color: "#111827",
+            size: "xl",
+          },
+        ],
+        paddingAll: "lg",
+        paddingBottom: "sm",
+      },
+      body: {
+        type: "box",
+        layout: "vertical",
+        contents: bodyContents,
+        paddingAll: "lg",
+        paddingTop: "sm",
+        spacing: "md",
+      },
+      footer: {
+        type: "box",
+        layout: "vertical",
+        contents: dcaHistoryUrl
+          ? [
+              {
+                type: "button",
+                action: {
+                  type: "uri",
+                  label: "ดูรายละเอียด",
+                  uri: dcaHistoryUrl,
+                },
+                style: "primary",
+                color: "#F59E0B",
+              },
+            ]
+          : [
+              {
+                type: "text",
+                text: "เติมเงินเพื่อรอบซื้อถัดไปได้แล้ว 🙏",
+                color: "#6B7280",
+                size: "xs",
+                wrap: true,
+              },
+            ],
+        paddingAll: "lg",
+        paddingTop: "sm",
       },
     },
   };

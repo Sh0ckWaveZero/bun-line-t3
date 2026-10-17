@@ -48,6 +48,7 @@ import { Route as ApiAuthCheckLineApprovalRouteImport } from './routes/api/auth/
 import { Route as ApiCronAutoCheckoutRouteImport } from './routes/api/cron/auto-checkout'
 import { Route as ApiCronCheckInReminderRouteImport } from './routes/api/cron/check-in-reminder'
 import { Route as ApiCronCheckoutReminderRouteImport } from './routes/api/cron/checkout-reminder'
+import { Route as ApiCronDcaBalanceAlertRouteImport } from './routes/api/cron/dca-balance-alert'
 import { Route as ApiCronDispatchRouteImport } from './routes/api/cron/dispatch'
 import { Route as ApiCronEnhancedCheckoutReminderRouteImport } from './routes/api/cron/enhanced-checkout-reminder'
 import { Route as ApiCronImageCleanupRouteImport } from './routes/api/cron/image-cleanup'
@@ -281,6 +282,11 @@ const ApiCronCheckoutReminderRoute = ApiCronCheckoutReminderRouteImport.update({
   path: '/api/cron/checkout-reminder',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCronDcaBalanceAlertRoute = ApiCronDcaBalanceAlertRouteImport.update({
+  id: '/api/cron/dca-balance-alert',
+  path: '/api/cron/dca-balance-alert',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCronDispatchRoute = ApiCronDispatchRouteImport.update({
   id: '/api/cron/dispatch',
   path: '/api/cron/dispatch',
@@ -509,6 +515,7 @@ export interface FileRoutesByFullPath {
   '/api/cron/auto-checkout': typeof ApiCronAutoCheckoutRoute
   '/api/cron/check-in-reminder': typeof ApiCronCheckInReminderRoute
   '/api/cron/checkout-reminder': typeof ApiCronCheckoutReminderRoute
+  '/api/cron/dca-balance-alert': typeof ApiCronDcaBalanceAlertRoute
   '/api/cron/dispatch': typeof ApiCronDispatchRoute
   '/api/cron/enhanced-checkout-reminder': typeof ApiCronEnhancedCheckoutReminderRoute
   '/api/cron/image-cleanup': typeof ApiCronImageCleanupRoute
@@ -586,6 +593,7 @@ export interface FileRoutesByTo {
   '/api/cron/auto-checkout': typeof ApiCronAutoCheckoutRoute
   '/api/cron/check-in-reminder': typeof ApiCronCheckInReminderRoute
   '/api/cron/checkout-reminder': typeof ApiCronCheckoutReminderRoute
+  '/api/cron/dca-balance-alert': typeof ApiCronDcaBalanceAlertRoute
   '/api/cron/dispatch': typeof ApiCronDispatchRoute
   '/api/cron/enhanced-checkout-reminder': typeof ApiCronEnhancedCheckoutReminderRoute
   '/api/cron/image-cleanup': typeof ApiCronImageCleanupRoute
@@ -664,6 +672,7 @@ export interface FileRoutesById {
   '/api/cron/auto-checkout': typeof ApiCronAutoCheckoutRoute
   '/api/cron/check-in-reminder': typeof ApiCronCheckInReminderRoute
   '/api/cron/checkout-reminder': typeof ApiCronCheckoutReminderRoute
+  '/api/cron/dca-balance-alert': typeof ApiCronDcaBalanceAlertRoute
   '/api/cron/dispatch': typeof ApiCronDispatchRoute
   '/api/cron/enhanced-checkout-reminder': typeof ApiCronEnhancedCheckoutReminderRoute
   '/api/cron/image-cleanup': typeof ApiCronImageCleanupRoute
@@ -743,6 +752,7 @@ export interface FileRouteTypes {
     | '/api/cron/auto-checkout'
     | '/api/cron/check-in-reminder'
     | '/api/cron/checkout-reminder'
+    | '/api/cron/dca-balance-alert'
     | '/api/cron/dispatch'
     | '/api/cron/enhanced-checkout-reminder'
     | '/api/cron/image-cleanup'
@@ -820,6 +830,7 @@ export interface FileRouteTypes {
     | '/api/cron/auto-checkout'
     | '/api/cron/check-in-reminder'
     | '/api/cron/checkout-reminder'
+    | '/api/cron/dca-balance-alert'
     | '/api/cron/dispatch'
     | '/api/cron/enhanced-checkout-reminder'
     | '/api/cron/image-cleanup'
@@ -897,6 +908,7 @@ export interface FileRouteTypes {
     | '/api/cron/auto-checkout'
     | '/api/cron/check-in-reminder'
     | '/api/cron/checkout-reminder'
+    | '/api/cron/dca-balance-alert'
     | '/api/cron/dispatch'
     | '/api/cron/enhanced-checkout-reminder'
     | '/api/cron/image-cleanup'
@@ -974,6 +986,7 @@ export interface RootRouteChildren {
   ApiCronAutoCheckoutRoute: typeof ApiCronAutoCheckoutRoute
   ApiCronCheckInReminderRoute: typeof ApiCronCheckInReminderRoute
   ApiCronCheckoutReminderRoute: typeof ApiCronCheckoutReminderRoute
+  ApiCronDcaBalanceAlertRoute: typeof ApiCronDcaBalanceAlertRoute
   ApiCronDispatchRoute: typeof ApiCronDispatchRoute
   ApiCronEnhancedCheckoutReminderRoute: typeof ApiCronEnhancedCheckoutReminderRoute
   ApiCronImageCleanupRoute: typeof ApiCronImageCleanupRoute
@@ -1277,6 +1290,13 @@ declare module '@tanstack/react-router' {
       path: '/api/cron/checkout-reminder'
       fullPath: '/api/cron/checkout-reminder'
       preLoaderRoute: typeof ApiCronCheckoutReminderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron/dca-balance-alert': {
+      id: '/api/cron/dca-balance-alert'
+      path: '/api/cron/dca-balance-alert'
+      fullPath: '/api/cron/dca-balance-alert'
+      preLoaderRoute: typeof ApiCronDcaBalanceAlertRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/cron/dispatch': {
@@ -1670,6 +1690,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCronAutoCheckoutRoute: ApiCronAutoCheckoutRoute,
   ApiCronCheckInReminderRoute: ApiCronCheckInReminderRoute,
   ApiCronCheckoutReminderRoute: ApiCronCheckoutReminderRoute,
+  ApiCronDcaBalanceAlertRoute: ApiCronDcaBalanceAlertRoute,
   ApiCronDispatchRoute: ApiCronDispatchRoute,
   ApiCronEnhancedCheckoutReminderRoute: ApiCronEnhancedCheckoutReminderRoute,
   ApiCronImageCleanupRoute: ApiCronImageCleanupRoute,
@@ -1702,12 +1723,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

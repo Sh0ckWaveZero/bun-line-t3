@@ -13,10 +13,11 @@ import {
 
 describe("runtime cron registry", () => {
   test("keeps the seed registry complete", () => {
-    expect(CRON_JOB_DEFINITIONS).toHaveLength(4);
+    expect(CRON_JOB_DEFINITIONS).toHaveLength(5);
     expect(CRON_JOB_DEFINITIONS.map((job) => job.id)).toEqual([
       "check-in-reminder",
       "enhanced-checkout-reminder",
+      "dca-balance-alert",
       "auto-checkout",
       "image-cleanup",
     ]);
@@ -39,7 +40,7 @@ describe("runtime cron registry", () => {
 
   test("keeps automatic checkout independent of an interactive session", async () => {
     const source = await Bun.file(
-      "src/routes/api/cron/auto-checkout.tsx",
+      "src/routes/api/cron/auto-checkout.ts",
     ).text();
 
     expect(source).toContain("validateSimpleCronAuth");
