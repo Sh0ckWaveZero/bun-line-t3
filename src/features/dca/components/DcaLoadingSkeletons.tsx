@@ -211,11 +211,15 @@ export function BitkubHistorySkeleton() {
       <div className="space-y-2 sm:hidden">
         {Array.from({ length: 10 }, (_, index) => (
           <div key={index} className="space-y-3 rounded-md border p-3">
-            <Bar className="h-3 w-36 max-w-full" />
+            <div className="flex items-start justify-between gap-2">
+              <Bar className="h-3 w-36 max-w-full" />
+              <Bar className="h-6 w-16 shrink-0 rounded-full" />
+            </div>
             <Bar className="h-3 w-44 max-w-full" />
-            <div className="flex justify-between">
-              <Bar className="h-3 w-20" />
-              <Bar className="h-3 w-24" />
+            <div className="grid grid-cols-3 gap-3">
+              <Bar className="h-8 w-full" />
+              <Bar className="h-8 w-full" />
+              <Bar className="h-8 w-full" />
             </div>
           </div>
         ))}
