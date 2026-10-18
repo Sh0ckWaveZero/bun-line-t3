@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AttendanceReportRouteImport } from './routes/attendance-report'
+import { Route as BodyWeightRouteImport } from './routes/body-weight'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as CronJobsRouteImport } from './routes/cron-jobs'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -45,6 +46,9 @@ import { Route as ApiAdminDebugRouteImport } from './routes/api/admin/debug'
 import { Route as ApiAttendanceUpdateRouteImport } from './routes/api/attendance/update'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiAuthCheckLineApprovalRouteImport } from './routes/api/auth/check-line-approval'
+import { Route as ApiBodyWeightIndexRouteImport } from './routes/api/body-weight/index'
+import { Route as ApiBodyWeightProfilesRouteImport } from './routes/api/body-weight/profiles'
+import { Route as ApiBodyWeightWebhookRouteImport } from './routes/api/body-weight/webhook'
 import { Route as ApiCronAutoCheckoutRouteImport } from './routes/api/cron/auto-checkout'
 import { Route as ApiCronCheckInReminderRouteImport } from './routes/api/cron/check-in-reminder'
 import { Route as ApiCronCheckoutReminderRouteImport } from './routes/api/cron/checkout-reminder'
@@ -94,6 +98,11 @@ const IndexRoute = IndexRouteImport.update({
 const AttendanceReportRoute = AttendanceReportRouteImport.update({
   id: '/attendance-report',
   path: '/attendance-report',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BodyWeightRoute = BodyWeightRouteImport.update({
+  id: '/body-weight',
+  path: '/body-weight',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CalendarRoute = CalendarRouteImport.update({
@@ -267,6 +276,21 @@ const ApiAuthCheckLineApprovalRoute =
     path: '/api/auth/check-line-approval',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiBodyWeightIndexRoute = ApiBodyWeightIndexRouteImport.update({
+  id: '/api/body-weight/',
+  path: '/api/body-weight/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBodyWeightProfilesRoute = ApiBodyWeightProfilesRouteImport.update({
+  id: '/api/body-weight/profiles',
+  path: '/api/body-weight/profiles',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBodyWeightWebhookRoute = ApiBodyWeightWebhookRouteImport.update({
+  id: '/api/body-weight/webhook',
+  path: '/api/body-weight/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCronAutoCheckoutRoute = ApiCronAutoCheckoutRouteImport.update({
   id: '/api/cron/auto-checkout',
   path: '/api/cron/auto-checkout',
@@ -478,6 +502,7 @@ const ApiAdminCronJobsJobIdRunRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/attendance-report': typeof AttendanceReportRoute
+  '/body-weight': typeof BodyWeightRoute
   '/calendar': typeof CalendarRouteWithChildren
   '/cron-jobs': typeof CronJobsRoute
   '/dashboard': typeof DashboardRoute
@@ -512,6 +537,8 @@ export interface FileRoutesByFullPath {
   '/api/attendance/update': typeof ApiAttendanceUpdateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/auth/check-line-approval': typeof ApiAuthCheckLineApprovalRoute
+  '/api/body-weight/profiles': typeof ApiBodyWeightProfilesRoute
+  '/api/body-weight/webhook': typeof ApiBodyWeightWebhookRoute
   '/api/cron/auto-checkout': typeof ApiCronAutoCheckoutRoute
   '/api/cron/check-in-reminder': typeof ApiCronCheckInReminderRoute
   '/api/cron/checkout-reminder': typeof ApiCronCheckoutReminderRoute
@@ -542,6 +569,7 @@ export interface FileRoutesByFullPath {
   '/api/thai-id/generate': typeof ApiThaiIdGenerateRoute
   '/api/thai-id/validate': typeof ApiThaiIdValidateRoute
   '/api/user/settings': typeof ApiUserSettingsRouteWithChildren
+  '/api/body-weight/': typeof ApiBodyWeightIndexRoute
   '/api/dca/': typeof ApiDcaIndexRoute
   '/api/expenses/': typeof ApiExpensesIndexRoute
   '/api/subscriptions/': typeof ApiSubscriptionsIndexRoute
@@ -556,6 +584,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/attendance-report': typeof AttendanceReportRoute
+  '/body-weight': typeof BodyWeightRoute
   '/calendar': typeof CalendarRouteWithChildren
   '/cron-jobs': typeof CronJobsRoute
   '/dashboard': typeof DashboardRoute
@@ -590,6 +619,8 @@ export interface FileRoutesByTo {
   '/api/attendance/update': typeof ApiAttendanceUpdateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/auth/check-line-approval': typeof ApiAuthCheckLineApprovalRoute
+  '/api/body-weight/profiles': typeof ApiBodyWeightProfilesRoute
+  '/api/body-weight/webhook': typeof ApiBodyWeightWebhookRoute
   '/api/cron/auto-checkout': typeof ApiCronAutoCheckoutRoute
   '/api/cron/check-in-reminder': typeof ApiCronCheckInReminderRoute
   '/api/cron/checkout-reminder': typeof ApiCronCheckoutReminderRoute
@@ -620,6 +651,7 @@ export interface FileRoutesByTo {
   '/api/thai-id/generate': typeof ApiThaiIdGenerateRoute
   '/api/thai-id/validate': typeof ApiThaiIdValidateRoute
   '/api/user/settings': typeof ApiUserSettingsRouteWithChildren
+  '/api/body-weight': typeof ApiBodyWeightIndexRoute
   '/api/dca': typeof ApiDcaIndexRoute
   '/api/expenses': typeof ApiExpensesIndexRoute
   '/api/subscriptions': typeof ApiSubscriptionsIndexRoute
@@ -635,6 +667,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/attendance-report': typeof AttendanceReportRoute
+  '/body-weight': typeof BodyWeightRoute
   '/calendar': typeof CalendarRouteWithChildren
   '/cron-jobs': typeof CronJobsRoute
   '/dashboard': typeof DashboardRoute
@@ -669,6 +702,8 @@ export interface FileRoutesById {
   '/api/attendance/update': typeof ApiAttendanceUpdateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/auth/check-line-approval': typeof ApiAuthCheckLineApprovalRoute
+  '/api/body-weight/profiles': typeof ApiBodyWeightProfilesRoute
+  '/api/body-weight/webhook': typeof ApiBodyWeightWebhookRoute
   '/api/cron/auto-checkout': typeof ApiCronAutoCheckoutRoute
   '/api/cron/check-in-reminder': typeof ApiCronCheckInReminderRoute
   '/api/cron/checkout-reminder': typeof ApiCronCheckoutReminderRoute
@@ -699,6 +734,7 @@ export interface FileRoutesById {
   '/api/thai-id/generate': typeof ApiThaiIdGenerateRoute
   '/api/thai-id/validate': typeof ApiThaiIdValidateRoute
   '/api/user/settings': typeof ApiUserSettingsRouteWithChildren
+  '/api/body-weight/': typeof ApiBodyWeightIndexRoute
   '/api/dca/': typeof ApiDcaIndexRoute
   '/api/expenses/': typeof ApiExpensesIndexRoute
   '/api/subscriptions/': typeof ApiSubscriptionsIndexRoute
@@ -715,6 +751,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/attendance-report'
+    | '/body-weight'
     | '/calendar'
     | '/cron-jobs'
     | '/dashboard'
@@ -749,6 +786,8 @@ export interface FileRouteTypes {
     | '/api/attendance/update'
     | '/api/auth/$'
     | '/api/auth/check-line-approval'
+    | '/api/body-weight/profiles'
+    | '/api/body-weight/webhook'
     | '/api/cron/auto-checkout'
     | '/api/cron/check-in-reminder'
     | '/api/cron/checkout-reminder'
@@ -779,6 +818,7 @@ export interface FileRouteTypes {
     | '/api/thai-id/generate'
     | '/api/thai-id/validate'
     | '/api/user/settings'
+    | '/api/body-weight/'
     | '/api/dca/'
     | '/api/expenses/'
     | '/api/subscriptions/'
@@ -793,6 +833,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/attendance-report'
+    | '/body-weight'
     | '/calendar'
     | '/cron-jobs'
     | '/dashboard'
@@ -827,6 +868,8 @@ export interface FileRouteTypes {
     | '/api/attendance/update'
     | '/api/auth/$'
     | '/api/auth/check-line-approval'
+    | '/api/body-weight/profiles'
+    | '/api/body-weight/webhook'
     | '/api/cron/auto-checkout'
     | '/api/cron/check-in-reminder'
     | '/api/cron/checkout-reminder'
@@ -857,6 +900,7 @@ export interface FileRouteTypes {
     | '/api/thai-id/generate'
     | '/api/thai-id/validate'
     | '/api/user/settings'
+    | '/api/body-weight'
     | '/api/dca'
     | '/api/expenses'
     | '/api/subscriptions'
@@ -871,6 +915,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/attendance-report'
+    | '/body-weight'
     | '/calendar'
     | '/cron-jobs'
     | '/dashboard'
@@ -905,6 +950,8 @@ export interface FileRouteTypes {
     | '/api/attendance/update'
     | '/api/auth/$'
     | '/api/auth/check-line-approval'
+    | '/api/body-weight/profiles'
+    | '/api/body-weight/webhook'
     | '/api/cron/auto-checkout'
     | '/api/cron/check-in-reminder'
     | '/api/cron/checkout-reminder'
@@ -935,6 +982,7 @@ export interface FileRouteTypes {
     | '/api/thai-id/generate'
     | '/api/thai-id/validate'
     | '/api/user/settings'
+    | '/api/body-weight/'
     | '/api/dca/'
     | '/api/expenses/'
     | '/api/subscriptions/'
@@ -950,6 +998,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AttendanceReportRoute: typeof AttendanceReportRoute
+  BodyWeightRoute: typeof BodyWeightRoute
   CalendarRoute: typeof CalendarRouteWithChildren
   CronJobsRoute: typeof CronJobsRoute
   DashboardRoute: typeof DashboardRoute
@@ -983,6 +1032,8 @@ export interface RootRouteChildren {
   ApiAttendanceUpdateRoute: typeof ApiAttendanceUpdateRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiAuthCheckLineApprovalRoute: typeof ApiAuthCheckLineApprovalRoute
+  ApiBodyWeightProfilesRoute: typeof ApiBodyWeightProfilesRoute
+  ApiBodyWeightWebhookRoute: typeof ApiBodyWeightWebhookRoute
   ApiCronAutoCheckoutRoute: typeof ApiCronAutoCheckoutRoute
   ApiCronCheckInReminderRoute: typeof ApiCronCheckInReminderRoute
   ApiCronCheckoutReminderRoute: typeof ApiCronCheckoutReminderRoute
@@ -1010,6 +1061,7 @@ export interface RootRouteChildren {
   ApiThaiIdGenerateRoute: typeof ApiThaiIdGenerateRoute
   ApiThaiIdValidateRoute: typeof ApiThaiIdValidateRoute
   ApiUserSettingsRoute: typeof ApiUserSettingsRouteWithChildren
+  ApiBodyWeightIndexRoute: typeof ApiBodyWeightIndexRoute
   ApiDcaIndexRoute: typeof ApiDcaIndexRoute
   ApiExpensesIndexRoute: typeof ApiExpensesIndexRoute
   ApiSubscriptionsIndexRoute: typeof ApiSubscriptionsIndexRoute
@@ -1031,6 +1083,13 @@ declare module '@tanstack/react-router' {
       path: '/attendance-report'
       fullPath: '/attendance-report'
       preLoaderRoute: typeof AttendanceReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/body-weight': {
+      id: '/body-weight'
+      path: '/body-weight'
+      fullPath: '/body-weight'
+      preLoaderRoute: typeof BodyWeightRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/calendar': {
@@ -1269,6 +1328,27 @@ declare module '@tanstack/react-router' {
       path: '/api/auth/check-line-approval'
       fullPath: '/api/auth/check-line-approval'
       preLoaderRoute: typeof ApiAuthCheckLineApprovalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/body-weight/': {
+      id: '/api/body-weight/'
+      path: '/api/body-weight'
+      fullPath: '/api/body-weight/'
+      preLoaderRoute: typeof ApiBodyWeightIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/body-weight/profiles': {
+      id: '/api/body-weight/profiles'
+      path: '/api/body-weight/profiles'
+      fullPath: '/api/body-weight/profiles'
+      preLoaderRoute: typeof ApiBodyWeightProfilesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/body-weight/webhook': {
+      id: '/api/body-weight/webhook'
+      path: '/api/body-weight/webhook'
+      fullPath: '/api/body-weight/webhook'
+      preLoaderRoute: typeof ApiBodyWeightWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/cron/auto-checkout': {
@@ -1654,6 +1734,7 @@ const ApiUserSettingsRouteWithChildren = ApiUserSettingsRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AttendanceReportRoute: AttendanceReportRoute,
+  BodyWeightRoute: BodyWeightRoute,
   CalendarRoute: CalendarRouteWithChildren,
   CronJobsRoute: CronJobsRoute,
   DashboardRoute: DashboardRoute,
@@ -1687,6 +1768,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAttendanceUpdateRoute: ApiAttendanceUpdateRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiAuthCheckLineApprovalRoute: ApiAuthCheckLineApprovalRoute,
+  ApiBodyWeightProfilesRoute: ApiBodyWeightProfilesRoute,
+  ApiBodyWeightWebhookRoute: ApiBodyWeightWebhookRoute,
   ApiCronAutoCheckoutRoute: ApiCronAutoCheckoutRoute,
   ApiCronCheckInReminderRoute: ApiCronCheckInReminderRoute,
   ApiCronCheckoutReminderRoute: ApiCronCheckoutReminderRoute,
@@ -1714,6 +1797,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiThaiIdGenerateRoute: ApiThaiIdGenerateRoute,
   ApiThaiIdValidateRoute: ApiThaiIdValidateRoute,
   ApiUserSettingsRoute: ApiUserSettingsRouteWithChildren,
+  ApiBodyWeightIndexRoute: ApiBodyWeightIndexRoute,
   ApiDcaIndexRoute: ApiDcaIndexRoute,
   ApiExpensesIndexRoute: ApiExpensesIndexRoute,
   ApiSubscriptionsIndexRoute: ApiSubscriptionsIndexRoute,
@@ -1723,3 +1807,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
