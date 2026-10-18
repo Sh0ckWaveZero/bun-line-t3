@@ -486,6 +486,7 @@ export const DcaRecordsTable = ({
                   retryLabel={t.table.deleteRetry}
                   onConfirm={() => handleDeleteOrder(r.order)}
                   showIdleLabel
+                  inline
                 />
               </div>
             </div>

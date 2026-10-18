@@ -90,13 +90,12 @@ export function BitkubDcaPanel({ onImported }: { onImported: () => void }) {
       </h2>
       <div id="bitkub-panel-content" hidden={!isExpanded} className="space-y-4">
         <p className="text-muted-foreground text-sm">
-          โหลดประวัติซื้อจาก Bitkub เมื่อกดปุ่มเท่านั้น
-          แล้วเลือกเฉพาะรายการที่ต้องการเพิ่มใน DCA
+          โหลดประวัติซื้อจาก Bitkub เมื่อกดปุ่มเท่านั้น แล้วเลือกรายการที่ต้องการนำเข้า DCA{" "}
           <Link
             to="/settings"
-            className="text-primary ml-1 underline-offset-4 hover:underline"
+            className="text-primary underline-offset-4 hover:underline"
           >
-            จัดการการเชื่อมต่อ Bitkub ในตั้งค่า
+            จัดการการเชื่อมต่อ
           </Link>
         </p>
         {isConnectionUnknown && (
@@ -125,7 +124,7 @@ export function BitkubDcaPanel({ onImported }: { onImported: () => void }) {
               className="gap-2"
             >
               <Download aria-hidden="true" className="size-4" />
-              โหลดประวัติล่าสุดจาก Bitkub
+              โหลดประวัติล่าสุด
             </Button>
             {nextCursor && (
               <Button
@@ -134,7 +133,7 @@ export function BitkubDcaPanel({ onImported }: { onImported: () => void }) {
                 disabled={isBusy}
                 onClick={() => handleSync(nextCursor)}
               >
-                โหลดประวัติก่อนหน้านี้
+                โหลดก่อนหน้านี้
               </Button>
             )}
           </div>
