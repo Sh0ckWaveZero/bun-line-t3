@@ -21,6 +21,11 @@ const saveProfileSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, "รูปแบบวันเกิดไม่ถูกต้อง (YYYY-MM-DD)")
     .nullable(),
   male: z.boolean(),
+  refWeightKg: z
+    .number()
+    .min(1, "น้ำหนักอ้างอิงไม่ถูกต้อง")
+    .max(300, "น้ำหนักอ้างอิงไม่ถูกต้อง")
+    .nullable(),
 });
 
 export async function PUT(request: Request) {

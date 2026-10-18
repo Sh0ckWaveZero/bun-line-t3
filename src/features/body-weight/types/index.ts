@@ -10,6 +10,8 @@ export interface ScaleProfileDto {
   /** "YYYY-MM-DD" หรือ null */
   birthDate: string | null;
   male: boolean;
+  /** น้ำหนักอ้างอิง (กก.) — ใช้เดาเจ้าของเมื่อยังไม่มีประวัติ */
+  refWeightKg: number | null;
   upstreamName: string | null;
 }
 

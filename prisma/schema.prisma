@@ -665,6 +665,7 @@ model ScaleProfile {
   heightCm     Float?    @map("height_cm") // ส่วนสูง (ซม.) — ต้องมีค่านี้ + birthDate ถึงจะคำนวณ body composition ได้
   birthDate    DateTime? @map("birth_date") // UTC midnight ของวันเกิด
   male         Boolean   @default(true)
+  refWeightKg  Float?    @map("ref_weight_kg") // น้ำหนักอ้างอิงสำหรับเดาเจ้าของเมื่อยังไม่มีประวัติ
   upstreamName String?   @unique @map("upstream_name") // ชื่อ profile ฝั่ง miscale-dashboard ที่ใช้จับคู่
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
@@ -678,6 +679,7 @@ model ScaleMeasurement {
   profileId  String?       @map("profile_id") // null = น้ำหนักไม่ตรงกับใครเลย (ของ/สัตว์เลี้ยง/แขก)
   profile    ScaleProfile? @relation(fields: [profileId], references: [id], onDelete: SetNull)
   upstreamId Int?          @unique @map("upstream_id") // measurement id ฝั่ง miscale-dashboard — กัน webhook ยิงซ้ำ
+  address    String?       // อุปกรณ์ที่ส่งมา (MAC บน Linux / UUID บน macOS) — ใช้จับกลุ่มการชั่ง
   weightKg   Float         @map("weight_kg")
   impedance  Int?          // ความต้านทาน (โอห์ม) — null เมื่อไม่ได้รับ impedance packet
   measuredAt DateTime      @map("measured_at")

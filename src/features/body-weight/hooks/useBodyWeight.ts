@@ -11,6 +11,8 @@ export interface SaveProfileInput {
   /** "YYYY-MM-DD" หรือ null */
   birthDate: string | null;
   male: boolean;
+  /** น้ำหนักอ้างอิง (กก.) หรือ null */
+  refWeightKg: number | null;
 }
 
 interface SaveProfileCallbacks {

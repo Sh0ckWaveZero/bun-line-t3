@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Save } from "lucide-react";
+import { Plus, Save } from "lucide-react";
 import { useToast } from "@/components/common/ToastProvider";
 import type { ScaleProfileDto } from "@/features/body-weight/types";
 import type { SaveProfileInput } from "@/features/body-weight/hooks/useBodyWeight";
@@ -21,7 +21,31 @@ interface ProfileEditorProps {
 const inputClassName =
   "bg-muted border-border text-foreground w-full rounded border px-2 py-1.5 font-mono text-xs outline-none focus:border-ring";
 
-/** แถวโปรไฟล์หนึ่งรายการ — แก้ส่วนสูง/วันเกิด/เพศ แล้วบันทึก (metrics ทั้งประวัติจะถูกคำนวณใหม่) */
+const parseOptionalNumber = (
+  value: string,
+  min: number,
+  max: number,
+): { value: number | null; error: string | null } => {
+  const trimmed = value.trim();
+  if (trimmed === "") return { value: null, error: null };
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed) || parsed < min || parsed > max) {
+    return { value: null, error: `ต้องเป็นตัวเลข ${min}–${max}` };
+  }
+  return { value: parsed, error: null };
+};
+
+const BLANK_PROFILE: ScaleProfileDto = {
+  id: "",
+  name: "",
+  heightCm: null,
+  birthDate: null,
+  male: true,
+  refWeightKg: null,
+  upstreamName: null,
+};
+
+/** แถวโปรไฟล์หนึ่งรายการ — แก้ข้อมูลแล้วบันทึก (metrics ทั้งประวัติจะถูกคำนวณใหม่) */
 const ProfileRow = ({
   profile,
   isSaving,
@@ -37,40 +61,48 @@ const ProfileRow = ({
     profile.heightCm === null ? "" : String(profile.heightCm),
   );
   const [birthDate, setBirthDate] = useState(profile.birthDate ?? "");
+  const [refWeightKg, setRefWeightKg] = useState(
+    profile.refWeightKg === null ? "" : String(profile.refWeightKg),
+  );
   const [male, setMale] = useState(profile.male);
+  const isNew = profile.id === "";
 
   const isDirty =
+    isNew ||
     name !== profile.name ||
     heightCm !== (profile.heightCm === null ? "" : String(profile.heightCm)) ||
     birthDate !== (profile.birthDate ?? "") ||
+    refWeightKg !==
+      (profile.refWeightKg === null ? "" : String(profile.refWeightKg)) ||
     male !== profile.male;
 
   const handleSave = () => {
-    const trimmedHeight = heightCm.trim();
-    let parsedHeight: number | null = null;
-    if (trimmedHeight !== "") {
-      parsedHeight = Number(trimmedHeight);
-      if (
-        !Number.isFinite(parsedHeight) ||
-        parsedHeight < 50 ||
-        parsedHeight > 260
-      ) {
-        showToast({ title: "ส่วนสูงต้องเป็นตัวเลข 50–260 ซม.", type: "error" });
-        return;
-      }
+    const height = parseOptionalNumber(heightCm, 50, 260);
+    if (height.error) {
+      showToast({ title: `ส่วนสูง${height.error} (ซม.)`, type: "error" });
+      return;
+    }
+    const refWeight = parseOptionalNumber(refWeightKg, 1, 300);
+    if (refWeight.error) {
+      showToast({
+        title: `น้ำหนักอ้างอิง${refWeight.error} (กก.)`,
+        type: "error",
+      });
+      return;
     }
     onSave(
       {
-        id: profile.id,
-        name: name.trim() || profile.name,
-        heightCm: parsedHeight,
+        id: isNew ? undefined : profile.id,
+        name: name.trim() || profile.name.trim(),
+        heightCm: height.value,
         birthDate: birthDate === "" ? null : birthDate,
         male,
+        refWeightKg: refWeight.value,
       },
       {
         onSuccess: () =>
           showToast({
-            title: "บันทึกโปรไฟล์สำเร็จ",
+            title: isNew ? "สร้างโปรไฟล์สำเร็จ" : "บันทึกโปรไฟล์สำเร็จ",
             description: "คำนวณสัดส่วนร่างกายใหม่ทั้งประวัติแล้ว",
             type: "success",
           }),
@@ -84,26 +116,27 @@ const ProfileRow = ({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="bg-foreground text-background rounded-sm px-1.5 py-0.5 font-mono text-[10px]">
-            {profile.upstreamName ? "AUTO" : "MANUAL"}
+            {isNew ? "ใหม่" : profile.upstreamName ? "AUTO" : "MANUAL"}
           </span>
           <input
             aria-label="ชื่อโปรไฟล์"
             value={name}
             onChange={(event) => setName(event.target.value)}
-            className="text-foreground w-40 bg-transparent text-sm font-semibold outline-none sm:w-52"
+            placeholder="ชื่อ"
+            className="text-foreground placeholder:text-muted-foreground/60 w-40 bg-transparent text-sm font-semibold outline-none sm:w-52"
           />
         </div>
         <button
           type="button"
           onClick={handleSave}
-          disabled={isSaving || !isDirty}
+          disabled={isSaving || !isDirty || name.trim() === ""}
           className="border-border bg-card text-foreground hover:bg-muted flex cursor-pointer items-center gap-1.5 rounded border px-2.5 py-1.5 font-mono text-xs transition-colors disabled:cursor-default disabled:opacity-40"
         >
           <Save className="h-3 w-3" />
           <span className="hidden sm:inline">บันทึก</span>
         </button>
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <label className="space-y-1">
           <span className="text-muted-foreground block font-mono text-[10px]">
             ส่วนสูง (ซม.)
@@ -126,6 +159,19 @@ const ProfileRow = ({
             type="date"
             value={birthDate}
             onChange={(event) => setBirthDate(event.target.value)}
+            className={inputClassName}
+          />
+        </label>
+        <label className="space-y-1">
+          <span className="text-muted-foreground block font-mono text-[10px]">
+            น้ำหนักอ้างอิง (กก.)
+          </span>
+          <input
+            aria-label="น้ำหนักอ้างอิง (กก.)"
+            inputMode="decimal"
+            value={refWeightKg}
+            onChange={(event) => setRefWeightKg(event.target.value)}
+            placeholder="ช่วยจับคู่เจ้าของ"
             className={inputClassName}
           />
         </label>
@@ -155,12 +201,14 @@ const ProfileRow = ({
         </div>
         <div className="space-y-1">
           <span className="text-muted-foreground block font-mono text-[10px]">
-            อัปเดตล่าสุด
+            จับคู่
           </span>
           <p className="text-muted-foreground py-1.5 font-mono text-[11px]">
-            {profile.upstreamName
-              ? `จับคู่กับ "${profile.upstreamName}"`
-              : "สร้างเองในหน้าเว็บ"}
+            {isNew
+              ? "บันทึกเพื่อเริ่มใช้งาน"
+              : profile.upstreamName
+                ? `อัตโนมัติ "${profile.upstreamName}"`
+                : "จากน้ำหนักล่าสุด"}
           </p>
         </div>
       </div>
@@ -173,22 +221,46 @@ export function ProfileEditor({
   isSaving,
   onSave,
 }: ProfileEditorProps) {
+  const [draftCount, setDraftCount] = useState(0);
+
   return (
     <div className="bg-card border-border rounded-lg border">
-      {profiles.length === 0 ? (
-        <p className="text-muted-foreground p-6 text-center text-sm">
-          ยังไม่มีโปรไฟล์ —
-          โปรไฟล์จะถูกสร้างให้อัตโนมัติเมื่อตาชั่งส่งข้อมูลเข้ามา
+      <div className="flex items-center justify-between gap-2 p-4 pb-0">
+        <p className="text-muted-foreground font-mono text-[11px]">
+          ระบบเดาเจ้าของจากน้ำหนักล่าสุด/น้ำหนักอ้างอิง (ผิดพลาดแก้ได้ในประวัติ)
+        </p>
+        <button
+          type="button"
+          onClick={() => setDraftCount((count) => count + 1)}
+          className="border-border bg-card text-foreground hover:bg-muted flex shrink-0 cursor-pointer items-center gap-1.5 rounded border px-2.5 py-1.5 font-mono text-xs transition-colors"
+        >
+          <Plus className="h-3 w-3" />
+          <span className="hidden sm:inline">เพิ่มโปรไฟล์</span>
+        </button>
+      </div>
+      {profiles.length === 0 && draftCount === 0 ? (
+        <p className="text-muted-foreground p-6 pt-4 text-center text-sm">
+          ยังไม่มีโปรไฟล์ — กด “เพิ่มโปรไฟล์” เพื่อเริ่มบันทึก
         </p>
       ) : (
-        profiles.map((profile) => (
-          <ProfileRow
-            key={profile.id}
-            profile={profile}
-            isSaving={isSaving}
-            onSave={onSave}
-          />
-        ))
+        <>
+          {profiles.map((profile) => (
+            <ProfileRow
+              key={profile.id}
+              profile={profile}
+              isSaving={isSaving}
+              onSave={onSave}
+            />
+          ))}
+          {Array.from({ length: draftCount }, (_, index) => (
+            <ProfileRow
+              key={`draft-${index}`}
+              profile={BLANK_PROFILE}
+              isSaving={isSaving}
+              onSave={onSave}
+            />
+          ))}
+        </>
       )}
     </div>
   );

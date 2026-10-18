@@ -1,18 +1,23 @@
 /**
- * Body Weight Webhook — รับผลชั่งจาก miscale-dashboard
+ * Body Weight Webhook — ทางเข้าข้อมูลตาชั่งทั้งหมด
  * POST /api/body-weight/webhook?secret=<SCALE_WEBHOOK_SECRET>
  *
- * ตั้งค่าฝั่งตาชั่ง: MISCALE_WEBHOOK_URL=https://<app>/api/body-weight/webhook?secret=<ค่าเดียวกับ env>
+ * event "reading" — packet ดิบจาก BLE listener ของเราเอง (`bun run scale:listen`)
+ * event "measurement" — ผลชั่งจัดกลุ่มแล้วจาก miscale-dashboard (ทางเลือกเก่า)
+ * event "analysis" — ไม่รองรับ รับแล้วข้าม
  */
 
 import { timingSafeEqual } from "node:crypto";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { env } from "@/env.mjs";
-import { ingestScaleWebhook } from "@/features/body-weight/services/body-weight.server";
+import {
+  ingestScaleReading,
+  ingestScaleWebhook,
+} from "@/features/body-weight/services/body-weight.server";
 
-const webhookSchema = z.object({
-  event: z.enum(["measurement", "analysis"]),
+const measurementEventSchema = z.object({
+  event: z.literal("measurement"),
   text: z.string().max(4000).optional(),
   message: z.string().max(4000).optional(),
   profile: z
@@ -30,6 +35,24 @@ const webhookSchema = z.object({
     impedance: z.number().int().positive().max(3000).nullable().optional(),
   }),
 });
+
+/** packet ดิบที่ BLE listener parse แล้ว — ฝั่ง service เป็นคนจับกลุ่มเป็นการชั่ง */
+const readingEventSchema = z.object({
+  event: z.literal("reading"),
+  reading: z.object({
+    address: z.string().min(1).max(64),
+    weightKg: z.number().positive().max(500),
+    impedance: z.number().int().positive().max(3000).nullable(),
+    stabilized: z.boolean(),
+    removed: z.boolean(),
+  }),
+});
+
+const webhookSchema = z.discriminatedUnion("event", [
+  measurementEventSchema,
+  readingEventSchema,
+  z.object({ event: z.literal("analysis") }),
+]);
 
 /** เทียบ secret แบบ timing-safe (กับ secret ใน query หรือ header) */
 const hasValidSecret = (request: Request): boolean => {
@@ -67,7 +90,12 @@ export async function POST(request: Request) {
     }
 
     const input = webhookSchema.parse(await request.json());
-    const result = await ingestScaleWebhook(input);
+    const result =
+      input.event === "measurement"
+        ? await ingestScaleWebhook(input)
+        : input.event === "reading"
+          ? await ingestScaleReading(input.reading)
+          : { status: "ignored" };
 
     return Response.json({ success: true, status: result.status });
   } catch (error) {

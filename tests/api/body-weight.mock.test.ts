@@ -7,6 +7,9 @@
  */
 import { describe, it, expect, mock, beforeEach } from "bun:test";
 
+// ย่อเวลาหน่วงรอ impedance ให้ test ไม่ต้องรอจริง (service อ่านค่าตอนโหลดโมดูล)
+process.env.SCALE_NOTIFY_WAIT_MS = "10";
+
 // --- Mocks ---
 
 let secretValue: string | undefined = "test-webhook-secret-123";
@@ -34,6 +37,9 @@ mock.module("@/lib/auth/admin", () => ({
 
 let existingMeasurementId: string | null = null;
 let previousWeight: number | null = null;
+let recentMeasurement: Record<string, unknown> | null = null;
+let createdRows: Array<Record<string, unknown>> = [];
+let profilesList: Array<Record<string, unknown>> = [];
 let createCalls: Array<Record<string, unknown>> = [];
 let storedMeasurements: Array<Record<string, unknown>> = [];
 let profileFindResult: Record<string, unknown> | null = null;
@@ -52,14 +58,56 @@ const dbRoundTrip = (metrics: unknown) => {
 
 const dbMocks = {
   scaleMeasurement: {
-    findUnique: async () =>
-      existingMeasurementId ? { id: existingMeasurementId } : null,
-    findFirst: async () =>
-      previousWeight === null ? null : { weightKg: previousWeight },
+    findUnique: async ({
+      where,
+    }: {
+      where: { id?: string; upstreamId?: number };
+    }) => {
+      // dedupe ของ ingestScaleWebhook (where: upstreamId)
+      if (where.upstreamId !== undefined) {
+        return existingMeasurementId ? { id: existingMeasurementId } : null;
+      }
+      // อ่าน measurement กลับด้วย id (notify / ingestScaleReading)
+      if (recentMeasurement && recentMeasurement.id === where.id) {
+        return {
+          id: recentMeasurement.id,
+          profileId: recentMeasurement.profileId,
+          profile: recentMeasurement.profileId ? { name: "Alex" } : null,
+          weightKg: recentMeasurement.weightKg,
+          impedance: recentMeasurement.impedance,
+          measuredAt: recentMeasurement.measuredAt,
+          metrics: dbRoundTrip(recentMeasurement.metrics),
+        };
+      }
+      const created = [...createdRows]
+        .reverse()
+        .find((row) => row.id === where.id);
+      if (created) {
+        return {
+          id: created.id,
+          profileId: created.profileId,
+          profile: created.profileId ? { name: "Alex" } : null,
+          weightKg: created.weightKg,
+          impedance: created.impedance,
+          measuredAt: created.measuredAt,
+          metrics: dbRoundTrip(created.metrics),
+        };
+      }
+      return null;
+    },
+    findFirst: async (args: { where?: { profileId?: string } }) => {
+      // query ของ Session.handle (หาการชั่งล่าสุด — ไม่มี where)
+      if (!args?.where?.profileId) {
+        return recentMeasurement;
+      }
+      // query ของ notify / guessProfileId (ต่อโปรไฟล์)
+      return previousWeight === null ? null : { weightKg: previousWeight };
+    },
+    count: async () => (previousWeight === null ? 0 : 1),
     create: async ({ data }: { data: Record<string, unknown> }) => {
       createCalls.push(data);
-      return {
-        id: "m-new",
+      const row = {
+        id: `m-${createCalls.length}`,
         profileId: data.profileId,
         profile: profileFindResult ? { name: "Alex" } : null,
         weightKg: data.weightKg,
@@ -67,6 +115,8 @@ const dbMocks = {
         measuredAt: data.measuredAt,
         metrics: dbRoundTrip(data.metrics),
       };
+      createdRows.push(row);
+      return row;
     },
     findMany: async () => storedMeasurements,
     update: async ({ data }: { data: Record<string, unknown> }) => {
@@ -87,7 +137,21 @@ const dbMocks = {
         name: create.name,
         upstreamName: where.upstreamName,
       },
-    findMany: async () => [],
+    findMany: async () => profilesList,
+    findUnique: async ({ where }: { where: { id: string } }) => {
+      const found = profilesList.find((profile) => profile.id === where.id);
+      if (found) return found;
+      return (
+        profileFindResult ?? {
+          id: where.id,
+          name: "Alex",
+          heightCm: null,
+          birthDate: null,
+          male: true,
+          refWeightKg: null,
+        }
+      );
+    },
     update: async ({
       where,
       data,
@@ -106,7 +170,7 @@ mock.module("@/lib/database", () => ({ db: dbMocks }));
 mock.module("@/lib/database/db", () => ({ db: dbMocks }));
 
 const { POST } = await import("../../src/routes/api/body-weight/webhook");
-const { ingestScaleWebhook, saveScaleProfile } =
+const { ingestScaleReading, ingestScaleWebhook, saveScaleProfile } =
   await import("@/features/body-weight/services/body-weight.server");
 
 // --- Fixtures ---
@@ -148,6 +212,9 @@ describe("Unit Test: body-weight webhook route", () => {
     updateCalls = [];
     existingMeasurementId = null;
     previousWeight = null;
+    recentMeasurement = null;
+    createdRows = [];
+    profilesList = [];
     storedMeasurements = [];
     profileFindResult = null;
     secretValue = "test-webhook-secret-123";
@@ -235,6 +302,9 @@ describe("Unit Test: body-weight service", () => {
     updateCalls = [];
     existingMeasurementId = null;
     previousWeight = null;
+    recentMeasurement = null;
+    createdRows = [];
+    profilesList = [];
     storedMeasurements = [];
     profileFindResult = null;
   });
@@ -321,6 +391,7 @@ describe("Unit Test: body-weight service", () => {
       heightCm: 172,
       birthDate: "1990-05-14",
       male: true,
+      refWeightKg: null,
     });
 
     expect(profile.id).toBe("p-1");
@@ -330,5 +401,145 @@ describe("Unit Test: body-weight service", () => {
       bmi: 25.5,
       age: 36,
     });
+  });
+});
+
+describe("Unit Test: body-weight service (event reading จาก BLE listener)", () => {
+  const reading = (overrides: Record<string, unknown> = {}) => ({
+    address: "AA:BB:CC",
+    weightKg: 75.3,
+    impedance: null,
+    stabilized: true,
+    removed: false,
+    ...overrides,
+  });
+
+  beforeEach(() => {
+    pushCalls = [];
+    createCalls = [];
+    updateCalls = [];
+    existingMeasurementId = null;
+    previousWeight = null;
+    recentMeasurement = null;
+    createdRows = [];
+    profilesList = [];
+    storedMeasurements = [];
+    profileFindResult = null;
+  });
+
+  it("packet ยังไม่นิ่ง (stabilized=false) — ข้าม", async () => {
+    const result = await ingestScaleReading(reading({ stabilized: false }));
+    expect(result).toEqual({ status: "ignored" });
+    expect(createCalls.length).toBe(0);
+  });
+
+  it("การชั่งใหม่ — บันทึกพร้อม address และหน่วง push รอ impedance", async () => {
+    const result = await ingestScaleReading(reading());
+    if (result.status !== "saved") {
+      throw new Error("expected saved");
+    }
+    expect(createCalls.length).toBe(1);
+    expect(createCalls[0]).toMatchObject({
+      address: "AA:BB:CC",
+      weightKg: 75.3,
+      impedance: null,
+    });
+    // push ยังไม่เกิดทันที — รอ impedance ภายใน NOTIFY_IMPEDANCE_WAIT_MS
+    expect(pushCalls.length).toBe(0);
+  });
+
+  it("packet ซ้ำ (น้ำหนัก/อุปกรณ์เดิมใน 3 นาที) — duplicate ไม่สร้างใหม่", async () => {
+    recentMeasurement = {
+      id: "m-recent",
+      address: "AA:BB:CC",
+      profileId: "p-1",
+      weightKg: 75.3,
+      impedance: null,
+      measuredAt: new Date(),
+      metrics: null,
+    };
+    const result = await ingestScaleReading(reading({ weightKg: 75.35 }));
+    expect(result).toEqual({ status: "duplicate" });
+    expect(createCalls.length).toBe(0);
+  });
+
+  it("impedance ตามมาทีหลัง — อัปเดตของเดิม คำนวณ metrics แล้ว push ทันที", async () => {
+    // flow จริง: saved (schedule รอ impedance) → packet impedance (flush แจ้งทันที)
+    profilesList = [{ id: "p-1", name: "Alex", refWeightKg: 75.0, male: true }];
+    const saved = await ingestScaleReading(
+      reading({ weightKg: 75.3, impedance: null }),
+    );
+    if (saved.status !== "saved") {
+      throw new Error("expected saved");
+    }
+    expect(pushCalls.length).toBe(0);
+
+    recentMeasurement = {
+      id: "m-1",
+      address: "AA:BB:CC",
+      profileId: "p-1",
+      weightKg: 75.3,
+      impedance: null,
+      measuredAt: new Date(),
+      metrics: null,
+    };
+    const result = await ingestScaleReading(
+      reading({ weightKg: 75.35, impedance: 501 }),
+    );
+    if (result.status !== "updated") {
+      throw new Error("expected updated");
+    }
+    expect(updateCalls.length).toBe(1);
+    expect(updateCalls[0]).toMatchObject({ impedance: 501 });
+    // flushNotify → notifyMeasurementById → push (SCALE_NOTIFY_WAIT_MS=10ms ใน test)
+    await Bun.sleep(50);
+    expect(pushCalls.length).toBe(1);
+    expect(pushCalls[0].userId).toBe("admin-line-1");
+  });
+
+  it("packet removed ที่ไม่ตรงการชั่งล่าสุด — ผลเก่าส่งซ้ำ ไม่สร้างใหม่", async () => {
+    const result = await ingestScaleReading(reading({ removed: true }));
+    expect(result).toEqual({ status: "ignored" });
+    expect(createCalls.length).toBe(0);
+  });
+
+  it("เดาเจ้าของจากน้ำหนักล่าสุดของโปรไฟล์", async () => {
+    profilesList = [
+      { id: "p-alex", name: "Alex", refWeightKg: null, male: true },
+      { id: "p-sam", name: "Sam", refWeightKg: null, male: false },
+    ];
+    recentMeasurement = null;
+    // โปรไฟล์ Alex มีประวัติ 74.9 → 75.0 ห่าง 0.1 (จับคู่ผ่าน previousWeight mock ที่ใช้ร่วมทุกโปรไฟล์)
+    previousWeight = 74.9;
+    const result = await ingestScaleReading(reading({ weightKg: 75.0 }));
+    if (result.status !== "saved") {
+      throw new Error("expected saved");
+    }
+    // mock findFirst คืน previousWeight ให้ทุกโปรไฟล์ — diff เท่ากัน เลือกตัวแรกที่เจอ
+    expect(createCalls[0].profileId).toBe("p-alex");
+  });
+
+  it("น้ำหนักเกิน tolerance จากทุกโปรไฟล์ — ไม่มีเจ้าของ", async () => {
+    profilesList = [
+      { id: "p-alex", name: "Alex", refWeightKg: 60.0, male: true },
+    ];
+    previousWeight = null;
+    const result = await ingestScaleReading(reading({ weightKg: 95.0 }));
+    if (result.status !== "saved") {
+      throw new Error("expected saved");
+    }
+    expect(createCalls[0].profileId).toBeNull();
+  });
+
+  it("โปรไฟล์เดียวที่ยังไม่มีประวัติ — การชั่งแรกเป็นของเขา", async () => {
+    profilesList = [
+      { id: "p-only", name: "Alex", refWeightKg: null, male: true },
+    ];
+    previousWeight = null;
+    const result = await ingestScaleReading(reading({ weightKg: 70.0 }));
+    if (result.status !== "saved") {
+      throw new Error("expected saved");
+    }
+    expect(createCalls[0].profileId).toBe("p-only");
   });
 });
