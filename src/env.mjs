@@ -95,6 +95,9 @@ export const env = createEnv({
       .optional(),
     SPOTIFY_CLIENT_ID: z.string().optional(),
     SPOTIFY_CLIENT_SECRET: z.string().optional(),
+    // ⚖️ Shared secret ของ webhook รับข้อมูลตาชั่งจาก miscale-dashboard
+    // (ตั้ง URL ฝั่งตาชั่งเป็น https://<app>/api/body-weight/webhook?secret=<ค่าเดียวกัน>)
+    SCALE_WEBHOOK_SECRET: z.string().min(12).optional(),
   },
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL,
@@ -126,6 +129,7 @@ export const env = createEnv({
       process.env.BITKUB_CREDENTIAL_ENCRYPTION_KEY || undefined,
     SPOTIFY_CLIENT_ID: process.env.SPOTIFY_CLIENT_ID,
     SPOTIFY_CLIENT_SECRET: process.env.SPOTIFY_CLIENT_SECRET,
+    SCALE_WEBHOOK_SECRET: process.env.SCALE_WEBHOOK_SECRET || undefined,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 });
