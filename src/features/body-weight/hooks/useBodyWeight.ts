@@ -75,6 +75,45 @@ export function useBodyWeight() {
     onSuccess: invalidate,
   });
 
+  const reassignMutation = useMutation({
+    mutationFn: async (input: {
+      measurementId: string;
+      profileId: string | null;
+    }): Promise<void> => {
+      const res = await fetchWithTimeout(
+        `/api/body-weight/measurements/${encodeURIComponent(input.measurementId)}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ profileId: input.profileId }),
+        },
+      );
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(
+          (json as { error?: string }).error ?? "เปลี่ยนเจ้าของไม่สำเร็จ",
+        );
+      }
+    },
+    onSuccess: invalidate,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (measurementId: string): Promise<void> => {
+      const res = await fetchWithTimeout(
+        `/api/body-weight/measurements/${encodeURIComponent(measurementId)}`,
+        { method: "DELETE" },
+      );
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(
+          (json as { error?: string }).error ?? "ลบการชั่งไม่สำเร็จ",
+        );
+      }
+    },
+    onSuccess: invalidate,
+  });
+
   const saveProfile = async (
     input: SaveProfileInput,
     callbacks?: SaveProfileCallbacks,
@@ -97,5 +136,13 @@ export function useBodyWeight() {
     refetch,
     saveProfile,
     isSaving: saveMutation.isPending,
+    reassignMeasurement: reassignMutation.mutateAsync,
+    deleteMeasurement: deleteMutation.mutateAsync,
+    /** id ของการชั่งที่กำลังแก้/ลบ — ใช้ disable ปุ่มเฉพาะแถว */
+    busyMeasurementId: reassignMutation.isPending
+      ? (reassignMutation.variables?.measurementId ?? null)
+      : deleteMutation.isPending
+        ? (deleteMutation.variables ?? null)
+        : null,
   };
 }

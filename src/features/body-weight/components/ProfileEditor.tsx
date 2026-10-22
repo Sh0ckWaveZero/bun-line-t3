@@ -19,7 +19,7 @@ interface ProfileEditorProps {
 }
 
 const inputClassName =
-  "bg-muted border-border text-foreground w-full rounded border px-2 py-1.5 font-mono text-xs outline-none focus:border-ring";
+  "bg-muted border-border text-foreground w-full rounded border px-2 py-1.5 font-mono text-xs outline-none focus:border-ring focus-visible:ring-2 focus-visible:ring-ring/60";
 
 const parseOptionalNumber = (
   value: string,
@@ -123,16 +123,17 @@ const ProfileRow = ({
             value={name}
             onChange={(event) => setName(event.target.value)}
             placeholder="ชื่อ"
-            className="text-foreground placeholder:text-muted-foreground/60 w-40 bg-transparent text-sm font-semibold outline-none sm:w-52"
+            className="text-foreground placeholder:text-muted-foreground w-40 rounded bg-transparent px-1 text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring/60 sm:w-52"
           />
         </div>
         <button
           type="button"
           onClick={handleSave}
           disabled={isSaving || !isDirty || name.trim() === ""}
-          className="border-border bg-card text-foreground hover:bg-muted flex cursor-pointer items-center gap-1.5 rounded border px-2.5 py-1.5 font-mono text-xs transition-colors disabled:cursor-default disabled:opacity-40"
+          aria-label={`บันทึกโปรไฟล์${name.trim() ? ` ${name.trim()}` : "ใหม่"}`}
+          className="border-border bg-card text-foreground hover:bg-muted flex min-h-8 cursor-pointer items-center gap-1.5 rounded border px-2.5 py-1.5 font-mono text-xs transition-colors disabled:cursor-default disabled:opacity-40"
         >
-          <Save className="h-3 w-3" />
+          <Save className="h-3 w-3" aria-hidden="true" />
           <span className="hidden sm:inline">บันทึก</span>
         </button>
       </div>
@@ -179,7 +180,11 @@ const ProfileRow = ({
           <span className="text-muted-foreground block font-mono text-[10px]">
             เพศ
           </span>
-          <div className="border-border bg-muted flex overflow-hidden rounded border">
+          <div
+            role="group"
+            aria-label="เพศ"
+            className="border-border bg-muted flex overflow-hidden rounded border"
+          >
             {[
               { label: "ชาย", value: true },
               { label: "หญิง", value: false },
@@ -187,6 +192,7 @@ const ProfileRow = ({
               <button
                 key={option.label}
                 type="button"
+                aria-pressed={male === option.value}
                 onClick={() => setMale(option.value)}
                 className={`flex-1 cursor-pointer px-2 py-1.5 font-mono text-xs transition-colors ${
                   male === option.value
@@ -232,9 +238,10 @@ export function ProfileEditor({
         <button
           type="button"
           onClick={() => setDraftCount((count) => count + 1)}
-          className="border-border bg-card text-foreground hover:bg-muted flex shrink-0 cursor-pointer items-center gap-1.5 rounded border px-2.5 py-1.5 font-mono text-xs transition-colors"
+          aria-label="เพิ่มโปรไฟล์"
+          className="border-border bg-card text-foreground hover:bg-muted flex min-h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded border px-2.5 py-1.5 font-mono text-xs transition-colors"
         >
-          <Plus className="h-3 w-3" />
+          <Plus className="h-3 w-3" aria-hidden="true" />
           <span className="hidden sm:inline">เพิ่มโปรไฟล์</span>
         </button>
       </div>
