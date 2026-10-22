@@ -127,6 +127,11 @@ services:
       # =============================================================================
       - APP_DOMAIN=${APP_DOMAIN}
       - ALLOWED_DOMAINS=${ALLOWED_DOMAINS}
+
+      # =============================================================================
+      # Body Weight (ตาชั่ง Mi Scale) — ไม่ตั้ง = webhook ตอบ 503 (ฟีเจอร์ปิด)
+      # =============================================================================
+      - SCALE_WEBHOOK_SECRET=${SCALE_WEBHOOK_SECRET:-}
     # 🔄 AUTO-RESTART: เริ่มต้นอัตโนมัติหลังเปิดเครื่อง และ restart เมื่อ crash
     restart: always
 
@@ -221,6 +226,46 @@ services:
     # 🔐 SECURITY: Network isolation - ใช้ yadom network ที่มีอยู่แล้ว
     networks:
       - yadom
+
+  # ⚖️ BLE listener ตาชั่ง Mi Body Composition Scale 2
+  # รับสัญญาณ Bluetooth ของ Pi แล้วยิง webhook ของ app ทาง loopback ของเครื่อง
+  # deploy.sh สตาร์ทแยกจาก app/cron หลัง health check ผ่าน — พังก็ไม่ rollback แอป
+  scale-listener:
+    platform: linux/arm64
+    image: bun-line-t3-scale-listener:${SCALE_LISTENER_IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile.scale-listener
+    container_name: bun-line-t3-scale-listener
+
+    # Bluetooth (raw HCI socket) ต้องอยู่ใน network namespace ของเครื่อง
+    # จึงเข้า yadom network ไม่ได้ — คุยกับ app ผ่านพอร์ตที่ publish บน host แทน
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+
+    # ส่งเฉพาะที่ listener ใช้ — ไม่มี DATABASE_URL หรือ LINE secrets
+    environment:
+      - TZ=Asia/Bangkok
+      # override APP_URL สาธารณะ: ยิงตรงเข้าเครื่องเดียวกัน ไม่ออกอินเทอร์เน็ต
+      - APP_URL=http://127.0.0.1:${PORT:-12914}
+      - SCALE_WEBHOOK_SECRET=${SCALE_WEBHOOK_SECRET:-}
+      # ชื่อที่โชว์ในหน้า /body-weight สำหรับสลับเครื่องที่รับสัญญาณ
+      - SCALE_LISTENER_NAME=pi
+
+    # listener ออก (exit 1) เมื่อ Bluetooth ปิด/หลุด — Docker สตาร์ทใหม่ให้
+    restart: always
+
+    mem_limit: 256m
+    mem_reservation: 64m
+    cpus: 0.5
+
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,size=16m,mode=1777
 
 # 🔐 SECURITY: Network configuration สำหรับ Raspberry Pi deployment
 networks:
