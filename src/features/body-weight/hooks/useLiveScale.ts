@@ -10,10 +10,10 @@ import {
 } from "@/features/body-weight/helpers/live-scale";
 import type { LiveScaleState } from "@/features/body-weight/types";
 
-const POLL_INTERVAL_MS = 1000;
+const LIVE_POLL_INTERVAL_MS = 1000;
 
 /**
- * poll สถานะตาชั่งสดทุก 1 วินาที (หยุดเองเมื่อแท็บถูกซ่อน)
+ * poll ทุก 1 วินาทีเพื่อให้ตรวจพบ packet จากตาชั่งได้เร็ว และหยุดเมื่อซ่อนแท็บ
  * — version เปลี่ยน = มีการชั่งบันทึก/อัปเดต → โหลด snapshot ["body-weight"] ใหม่
  * query key อยู่นอก prefix ["body-weight"] เพื่อไม่โดน invalidate ตามไปด้วย
  */
@@ -33,7 +33,7 @@ export function useLiveScale() {
       const json = await res.json();
       return (json as { data: LiveScaleState }).data;
     },
-    refetchInterval: POLL_INTERVAL_MS,
+    refetchInterval: LIVE_POLL_INTERVAL_MS,
     staleTime: 0,
     retry: false,
   });

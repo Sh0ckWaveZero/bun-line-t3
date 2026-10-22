@@ -3,11 +3,17 @@
 import { useState } from "react";
 import { Plus, Save } from "lucide-react";
 import { useToast } from "@/components/common/ToastProvider";
-import type { ScaleProfileDto } from "@/features/body-weight/types";
+import { Select } from "@/components/ui/select";
+import type {
+  ScaleOwnerOption,
+  ScaleProfileDto,
+} from "@/features/body-weight/types";
 import type { SaveProfileInput } from "@/features/body-weight/hooks/useBodyWeight";
 
 interface ProfileEditorProps {
   profiles: ScaleProfileDto[];
+  owners: ScaleOwnerOption[];
+  isAdmin: boolean;
   isSaving: boolean;
   onSave: (
     input: SaveProfileInput,
@@ -43,15 +49,23 @@ const BLANK_PROFILE: ScaleProfileDto = {
   male: true,
   refWeightKg: null,
   upstreamName: null,
+  ownerId: null,
+  ownerName: null,
 };
+
+const NO_OWNER = "__none__";
 
 /** แถวโปรไฟล์หนึ่งรายการ — แก้ข้อมูลแล้วบันทึก (metrics ทั้งประวัติจะถูกคำนวณใหม่) */
 const ProfileRow = ({
   profile,
+  owners,
+  isAdmin,
   isSaving,
   onSave,
 }: {
   profile: ScaleProfileDto;
+  owners: ScaleOwnerOption[];
+  isAdmin: boolean;
   isSaving: boolean;
   onSave: ProfileEditorProps["onSave"];
 }) => {
@@ -65,6 +79,7 @@ const ProfileRow = ({
     profile.refWeightKg === null ? "" : String(profile.refWeightKg),
   );
   const [male, setMale] = useState(profile.male);
+  const [ownerId, setOwnerId] = useState(profile.ownerId ?? NO_OWNER);
   const isNew = profile.id === "";
 
   const isDirty =
@@ -74,7 +89,8 @@ const ProfileRow = ({
     birthDate !== (profile.birthDate ?? "") ||
     refWeightKg !==
       (profile.refWeightKg === null ? "" : String(profile.refWeightKg)) ||
-    male !== profile.male;
+    male !== profile.male ||
+    (isAdmin && ownerId !== (profile.ownerId ?? NO_OWNER));
 
   const handleSave = () => {
     const height = parseOptionalNumber(heightCm, 50, 260);
@@ -90,6 +106,13 @@ const ProfileRow = ({
       });
       return;
     }
+    const ownerIdForSave =
+      isAdmin && (!isNew || ownerId !== NO_OWNER)
+        ? ownerId === NO_OWNER
+          ? null
+          : ownerId
+        : undefined;
+
     onSave(
       {
         id: isNew ? undefined : profile.id,
@@ -98,6 +121,7 @@ const ProfileRow = ({
         birthDate: birthDate === "" ? null : birthDate,
         male,
         refWeightKg: refWeight.value,
+        ...(ownerIdForSave === undefined ? {} : { ownerId: ownerIdForSave }),
       },
       {
         onSuccess: () =>
@@ -123,7 +147,7 @@ const ProfileRow = ({
             value={name}
             onChange={(event) => setName(event.target.value)}
             placeholder="ชื่อ"
-            className="text-foreground placeholder:text-muted-foreground w-40 rounded bg-transparent px-1 text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring/60 sm:w-52"
+            className="text-foreground placeholder:text-muted-foreground focus-visible:ring-ring/60 w-40 rounded bg-transparent px-1 text-sm font-semibold outline-none focus-visible:ring-2 sm:w-52"
           />
         </div>
         <button
@@ -205,6 +229,30 @@ const ProfileRow = ({
             ))}
           </div>
         </div>
+        {isAdmin && (
+          <div className="space-y-1">
+            <label
+              htmlFor={`owner-${profile.id || "new"}`}
+              className="text-muted-foreground block font-mono text-[10px]"
+            >
+              เจ้าของ (LINE)
+            </label>
+            <Select
+              id={`owner-${profile.id || "new"}`}
+              value={ownerId}
+              options={[
+                { value: NO_OWNER, label: "ยังไม่กำหนด" },
+                ...owners.map((owner) => ({
+                  value: owner.id,
+                  label: owner.name,
+                })),
+              ]}
+              disabled={isSaving}
+              className="h-8 text-xs"
+              onValueChange={setOwnerId}
+            />
+          </div>
+        )}
         <div className="space-y-1">
           <span className="text-muted-foreground block font-mono text-[10px]">
             จับคู่
@@ -224,6 +272,8 @@ const ProfileRow = ({
 
 export function ProfileEditor({
   profiles,
+  owners,
+  isAdmin,
   isSaving,
   onSave,
 }: ProfileEditorProps) {
@@ -255,6 +305,8 @@ export function ProfileEditor({
             <ProfileRow
               key={profile.id}
               profile={profile}
+              owners={owners}
+              isAdmin={isAdmin}
               isSaving={isSaving}
               onSave={onSave}
             />
@@ -263,6 +315,8 @@ export function ProfileEditor({
             <ProfileRow
               key={`draft-${index}`}
               profile={BLANK_PROFILE}
+              owners={owners}
+              isAdmin={isAdmin}
               isSaving={isSaving}
               onSave={onSave}
             />

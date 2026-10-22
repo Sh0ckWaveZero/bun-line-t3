@@ -8,7 +8,6 @@
 import { describe, it, expect, mock, beforeEach } from "bun:test";
 import { Prisma } from "@prisma/client";
 
-
 // --- Mocks ---
 
 let secretValue: string | undefined = "test-webhook-secret-123";
@@ -19,6 +18,16 @@ mock.module("@/env.mjs", () => ({
     },
     APP_URL: "http://localhost:4325",
   },
+}));
+
+type TestSession = {
+  user: { id: string };
+  isAdmin: boolean;
+} | null;
+let currentSession: TestSession = null;
+mock.module("@/lib/auth/auth", () => ({
+  AUTH_COOKIE_PREFIX: "better-auth",
+  getServerAuthSession: async () => currentSession,
 }));
 
 let pushCalls: Array<{ userId: string; messages: unknown[] }> = [];
@@ -56,6 +65,162 @@ const dbRoundTrip = (metrics: unknown) => {
       (symbol) => symbol.description === "prisma.objectEnumValue",
     );
   return isNullSentinel ? null : (metrics ?? null);
+};
+
+interface FakeUser {
+  id: string;
+  name: string;
+}
+interface FakeProfile {
+  id: string;
+  name: string;
+  userId: string | null;
+  heightCm: number | null;
+  birthDate: Date | null;
+  male: boolean;
+  refWeightKg: number | null;
+  upstreamName: string | null;
+}
+interface FakeMeasurement {
+  id: string;
+  profileId: string | null;
+  address?: string | null;
+  weightKg: number;
+  impedance: number | null;
+  measuredAt: Date;
+  metrics: unknown;
+}
+interface FakeAccount {
+  userId: string;
+  providerId: string;
+  accountId: string;
+}
+
+interface FakeDb {
+  users: FakeUser[];
+  profiles: FakeProfile[];
+  measurements: FakeMeasurement[];
+  accounts: FakeAccount[];
+  metricsWrites: Array<{ id: string; metrics: unknown }>;
+}
+let fake: FakeDb | null = null;
+
+const matches = (
+  fakeDb: FakeDb,
+  row: Record<string, unknown>,
+  where: Record<string, unknown> = {},
+): boolean =>
+  Object.entries(where).every(([key, expected]) => {
+    if (key === "profile") {
+      const profile = fakeDb.profiles.find((p) => p.id === row.profileId);
+      return (
+        !!profile &&
+        matches(
+          fakeDb,
+          profile as unknown as Record<string, unknown>,
+          expected as Record<string, unknown>,
+        )
+      );
+    }
+    if (expected && typeof expected === "object" && "lt" in expected) {
+      return (row[key] as Date) < (expected as { lt: Date }).lt;
+    }
+    return row[key] === expected;
+  });
+
+const withProfile = (fakeDb: FakeDb, row: FakeMeasurement) => {
+  const profile = fakeDb.profiles.find((p) => p.id === row.profileId);
+  return { ...row, profile: profile ? { name: profile.name } : null };
+};
+const withUser = (fakeDb: FakeDb, row: FakeProfile) => {
+  const user = fakeDb.users.find((u) => u.id === row.userId);
+  return { ...row, user: user ? { name: user.name } : null };
+};
+const newestFirst = (rows: FakeMeasurement[]) =>
+  [...rows].sort((a, b) => b.measuredAt.getTime() - a.measuredAt.getTime());
+
+const fakeMeasurement = {
+  findFirst: async ({ where }: { where?: Record<string, unknown> }) =>
+    newestFirst(fake!.measurements).find((m) =>
+      matches(fake!, m as never, where),
+    ) ?? null,
+  findMany: async ({ where }: { where?: Record<string, unknown> }) =>
+    newestFirst(fake!.measurements)
+      .filter((m) => matches(fake!, m as never, where))
+      .map((m) => withProfile(fake!, m)),
+  update: async ({
+    where,
+    data,
+  }: {
+    where: { id: string };
+    data: Record<string, unknown>;
+  }) => {
+    const row = fake!.measurements.find((m) => m.id === where.id)!;
+    Object.assign(row, data);
+    if ("metrics" in data)
+      fake!.metricsWrites.push({ id: row.id, metrics: data.metrics });
+    return withProfile(fake!, row);
+  },
+  findUnique: async ({ where }: { where: { id: string } }) => {
+    const row = fake!.measurements.find((m) => m.id === where.id);
+    return row ? withProfile(fake!, row) : null;
+  },
+  create: async ({ data }: { data: Partial<FakeMeasurement> }) => {
+    const row: FakeMeasurement = {
+      id: `m-new-${fake!.measurements.length}`,
+      profileId: null,
+      weightKg: 0,
+      impedance: null,
+      measuredAt: new Date(),
+      metrics: null,
+      ...data,
+    };
+    fake!.measurements.push(row);
+    return withProfile(fake!, row);
+  },
+  deleteMany: async ({ where }: { where: Record<string, unknown> }) => {
+    const doomed = fake!.measurements.filter((m) =>
+      matches(fake!, m as never, where),
+    );
+    fake!.measurements = fake!.measurements.filter((m) => !doomed.includes(m));
+    return { count: doomed.length };
+  },
+};
+const fakeProfile = {
+  findFirst: async ({ where }: { where?: Record<string, unknown> }) =>
+    fake!.profiles.find((p) => matches(fake!, p as never, where)) ?? null,
+  findMany: async ({ where }: { where?: Record<string, unknown> } = {}) =>
+    fake!.profiles
+      .filter((p) => matches(fake!, p as never, where))
+      .map((p) => withUser(fake!, p)),
+  findUnique: async ({ where }: { where: { id: string } }) =>
+    fake!.profiles.find((p) => p.id === where.id) ?? null,
+  create: async ({ data }: { data: Partial<FakeProfile> }) => {
+    const row: FakeProfile = {
+      id: `p-new-${fake!.profiles.length}`,
+      name: "",
+      userId: null,
+      heightCm: null,
+      birthDate: null,
+      male: true,
+      refWeightKg: null,
+      upstreamName: null,
+      ...data,
+    };
+    fake!.profiles.push(row);
+    return withUser(fake!, row);
+  },
+  update: async ({
+    where,
+    data,
+  }: {
+    where: { id: string };
+    data: Partial<FakeProfile>;
+  }) => {
+    const row = fake!.profiles.find((p) => p.id === where.id)!;
+    Object.assign(row, data);
+    return withUser(fake!, row);
+  },
 };
 
 let settingsTableExists = true;
@@ -210,25 +375,61 @@ const dbMocks = {
   },
 };
 
-mock.module("@/lib/database", () => ({ db: dbMocks }));
-mock.module("@/lib/database/db", () => ({ db: dbMocks }));
+/** ใช้ fake DB (ถ้าตั้งไว้) แทน mock เดิม เฉพาะ method ที่ test สิทธิ์ต้องใช้ */
+const route = <T extends Record<string, unknown>>(
+  real: T,
+  fakeMethods: Record<string, (...args: never[]) => unknown>,
+): T => {
+  const out: Record<string, unknown> = { ...real };
+  for (const [name, fn] of Object.entries(fakeMethods)) {
+    const original = real[name] as
+      ((...args: unknown[]) => unknown) | undefined;
+    out[name] = (...args: unknown[]) =>
+      fake || !original
+        ? (fn as (...a: unknown[]) => unknown)(...args)
+        : original(...args);
+  }
+  return out as T;
+};
+const routedDb = {
+  ...dbMocks,
+  scaleMeasurement: route(dbMocks.scaleMeasurement, fakeMeasurement),
+  scaleProfile: route(dbMocks.scaleProfile, fakeProfile),
+  user: {
+    findMany: async () => fake?.users ?? [],
+    findUnique: async ({ where }: { where: { id: string } }) =>
+      fake?.users.find((u) => u.id === where.id) ?? null,
+  },
+  account: {
+    findFirst: async ({ where }: { where: Record<string, unknown> }) =>
+      fake?.accounts.find((a) => matches(fake!, a as never, where)) ?? null,
+  },
+};
+mock.module("@/lib/database", () => ({ db: routedDb }));
+mock.module("@/lib/database/db", () => ({ db: routedDb }));
 
 const { POST } = await import("../../src/routes/api/body-weight/webhook");
 const {
   deleteMeasurement,
+  getBodyWeightSnapshot,
   ingestScaleReading,
   ingestScaleWebhook,
   saveScaleProfile,
   updateMeasurementProfile,
 } = await import("@/features/body-weight/services/body-weight.server");
-const { getLiveScaleState, setPendingWeighIn } = await import(
-  "@/features/body-weight/services/live-scale.server"
-);
-const { isListenerAccepted, setActiveListener, getListenerOverview, getActiveListener } =
-  await import("@/features/body-weight/services/scale-listeners.server");
-const { GET: listenerCheckIn } = await import(
-  "../../src/routes/api/body-weight/listener"
-);
+const { getLiveScaleState, setPendingWeighIn, recordMeasurementChange } =
+  await import("@/features/body-weight/services/live-scale.server");
+const {
+  isListenerAccepted,
+  setActiveListener,
+  getListenerOverview,
+  getActiveListener,
+} = await import("@/features/body-weight/services/scale-listeners.server");
+const { GET: listenerCheckIn } =
+  await import("../../src/routes/api/body-weight/listener");
+const { GET: listenersGet, PUT: listenersPut } =
+  await import("../../src/routes/api/body-weight/listeners");
+const { GET: liveGet } = await import("../../src/routes/api/body-weight/live");
 
 // --- Fixtures ---
 
@@ -431,34 +632,6 @@ describe("Unit Test: body-weight service", () => {
     expect(flex.type).toBe("flex");
     expect(flex.altText).toContain("75.30");
   });
-
-  it("saveScaleProfile — บันทึกแล้วคำนวณ metrics ใหม่ทั้งประวัติ", async () => {
-    storedMeasurements = [
-      {
-        id: "m-1",
-        weightKg: 75.3,
-        impedance: 501,
-        measuredAt: new Date("2026-10-18T01:00:00.000Z"),
-      },
-    ];
-
-    const profile = await saveScaleProfile({
-      id: "p-1",
-      name: "Alex",
-      heightCm: 172,
-      birthDate: "1990-05-14",
-      male: true,
-      refWeightKg: null,
-    });
-
-    expect(profile.id).toBe("p-1");
-    expect(profile.birthDate).toBe("1990-05-14");
-    expect(updateCalls.length).toBe(1);
-    expect(dbRoundTrip(updateCalls[0].metrics)).toMatchObject({
-      bmi: 25.5,
-      age: 36,
-    });
-  });
 });
 
 describe("Unit Test: body-weight service (event reading จาก BLE listener)", () => {
@@ -632,7 +805,9 @@ describe("Unit Test: body-weight service (event reading จาก BLE listener)"
     recentMeasurement = null;
     // โปรไฟล์ Alex มีประวัติ 74.9 → 75.0 ห่าง 0.1 (จับคู่ผ่าน previousWeight mock ที่ใช้ร่วมทุกโปรไฟล์)
     previousWeight = 74.9;
-    const result = await ingestScaleReading(reading({ weightKg: 75.0, impedance: 500 }));
+    const result = await ingestScaleReading(
+      reading({ weightKg: 75.0, impedance: 500 }),
+    );
     if (result.status !== "saved") {
       throw new Error("expected saved");
     }
@@ -645,7 +820,9 @@ describe("Unit Test: body-weight service (event reading จาก BLE listener)"
       { id: "p-alex", name: "Alex", refWeightKg: 60.0, male: true },
     ];
     previousWeight = null;
-    const result = await ingestScaleReading(reading({ weightKg: 95.0, impedance: 500 }));
+    const result = await ingestScaleReading(
+      reading({ weightKg: 95.0, impedance: 500 }),
+    );
     if (result.status !== "saved") {
       throw new Error("expected saved");
     }
@@ -657,7 +834,9 @@ describe("Unit Test: body-weight service (event reading จาก BLE listener)"
       { id: "p-only", name: "Alex", refWeightKg: null, male: true },
     ];
     previousWeight = null;
-    const result = await ingestScaleReading(reading({ weightKg: 70.0, impedance: 500 }));
+    const result = await ingestScaleReading(
+      reading({ weightKg: 70.0, impedance: 500 }),
+    );
     if (result.status !== "saved") {
       throw new Error("expected saved");
     }
@@ -726,75 +905,6 @@ describe("Unit Test: body-weight webhook → สถานะตาชั่ง�
   });
 });
 
-describe("Unit Test: body-weight service (แก้เจ้าของ / ลบการชั่ง)", () => {
-  beforeEach(() => {
-    updateCalls = [];
-    deleteCalls = [];
-    profilesList = [];
-    profileFindResult = null;
-    isProfileMissing = false;
-    recentMeasurement = {
-      id: "m-1",
-      profileId: null,
-      weightKg: 75.3,
-      impedance: 501,
-      measuredAt: new Date("2026-10-18T01:00:00.000Z"),
-      metrics: null,
-    };
-  });
-
-  it("เปลี่ยนเจ้าของ — คำนวณ metrics ใหม่ตามโปรไฟล์ใหม่", async () => {
-    profilesList = [
-      {
-        id: "p-alex",
-        name: "Alex",
-        heightCm: 175,
-        birthDate: new Date("1990-01-01T00:00:00.000Z"),
-        male: true,
-        refWeightKg: null,
-      },
-    ];
-    const result = await updateMeasurementProfile("m-1", "p-alex");
-    if (result.status !== "updated") {
-      throw new Error("expected updated");
-    }
-    expect(updateCalls[0]).toMatchObject({ profileId: "p-alex" });
-    expect(result.measurement.profileId).toBe("p-alex");
-    expect(result.measurement.metrics.bodyFat).toBeNumber();
-  });
-
-  it("ย้ายเป็นไม่ระบุ — ล้าง metrics", async () => {
-    const result = await updateMeasurementProfile("m-1", null);
-    if (result.status !== "updated") {
-      throw new Error("expected updated");
-    }
-    expect(updateCalls[0]?.profileId).toBeNull();
-    expect(result.measurement.metrics).toEqual({});
-  });
-
-  it("ไม่พบการชั่ง — measurement_not_found ไม่อัปเดต", async () => {
-    const result = await updateMeasurementProfile("missing", "p-alex");
-    expect(result.status).toBe("measurement_not_found");
-    expect(updateCalls.length).toBe(0);
-  });
-
-  it("ไม่พบโปรไฟล์ — profile_not_found ไม่อัปเดต", async () => {
-    isProfileMissing = true;
-    const result = await updateMeasurementProfile("m-1", "p-ghost");
-    expect(result.status).toBe("profile_not_found");
-    expect(updateCalls.length).toBe(0);
-  });
-
-  it("ลบสำเร็จ", async () => {
-    expect(await deleteMeasurement("m-1")).toBe(true);
-    expect(deleteCalls).toEqual(["m-1"]);
-  });
-
-  it("ลบรายการที่ไม่มีอยู่ — false", async () => {
-    expect(await deleteMeasurement("missing")).toBe(false);
-  });
-});
-
 describe("Unit Test: เลือกเครื่องที่รับสัญญาณตาชั่ง", () => {
   const readingPayload = (listener?: string) => ({
     event: "reading",
@@ -836,12 +946,19 @@ describe("Unit Test: เลือกเครื่องที่รับส�
 
   it("เลือก pi แล้ว packet จากเครื่อง dev — ตอบ disabled ไม่แตะสถานะตาชั่งสด", async () => {
     await setActiveListener("pi");
-    const before = getLiveScaleState().reading;
+    const before = getLiveScaleState();
     const response = await postWebhook(readingPayload("macbook"));
     const data = await response.json();
+    const after = getLiveScaleState();
     expect(response.status).toBe(200);
     expect(data.status).toBe("disabled");
-    expect(getLiveScaleState().reading).toEqual(before);
+    expect(after.reading?.weightKg).toBe(before.reading?.weightKg);
+    expect(after.reading?.impedance).toBe(before.reading?.impedance);
+    expect(after.reading?.stabilized).toBe(before.reading?.stabilized);
+    expect(after.reading?.removed).toBe(before.reading?.removed);
+    expect(after.lastMeasurement).toEqual(before.lastMeasurement);
+    expect(after.version).toBe(before.version);
+    expect(after.pending).toEqual(before.pending);
   });
 
   it("เลือก pi แล้ว packet จาก pi — รับตามปกติ", async () => {
@@ -871,13 +988,387 @@ describe("Unit Test: เลือกเครื่องที่รับส�
   it("ตาราง scale_settings ยังไม่มี — รับทุกเครื่อง ไม่ query ตาราง (ไม่ให้ Prisma log error)", async () => {
     settingsTableExists = false;
     settingsReads = 0;
-    const listenerStore = (globalThis as { __scaleListenerStore?: Record<string, unknown> }).__scaleListenerStore!;
-    Object.assign(listenerStore, { tableReady: false, tableCheckedAt: 0, cache: null });
+    const listenerStore = (
+      globalThis as { __scaleListenerStore?: Record<string, unknown> }
+    ).__scaleListenerStore!;
+    Object.assign(listenerStore, {
+      tableReady: false,
+      tableCheckedAt: 0,
+      cache: null,
+    });
     // now ไกลพอให้ cache ที่ beforeEach ตั้งไว้หมดอายุ และพ้นช่วงเช็กตารางครั้งก่อน
     const active = await getActiveListener(Date.now() + 10 * 60_000);
     settingsTableExists = true;
-    Object.assign(listenerStore, { tableReady: false, tableCheckedAt: 0, cache: null });
+    Object.assign(listenerStore, {
+      tableReady: false,
+      tableCheckedAt: 0,
+      cache: null,
+    });
     expect(active).toBe("all");
     expect(settingsReads).toBe(0);
+  });
+});
+
+describe("Unit Test: body-weight แยกข้อมูลตามเจ้าของ (LINE login)", () => {
+  const ALEX = { userId: "u-alex", isAdmin: false };
+  const SAM = { userId: "u-sam", isAdmin: false };
+  const ADMIN = { userId: "u-admin", isAdmin: true };
+  const at = (day: number) => new Date(Date.UTC(2026, 9, day));
+
+  const makeFake = (overrides: Partial<FakeDb> = {}): FakeDb => ({
+    users: [
+      { id: "u-alex", name: "Alex" },
+      { id: "u-sam", name: "Sam" },
+      { id: "u-admin", name: "Admin" },
+    ],
+    profiles: [
+      {
+        id: "p-alex",
+        name: "Alex",
+        userId: "u-alex",
+        heightCm: 175,
+        birthDate: new Date("1990-05-14T00:00:00.000Z"),
+        male: true,
+        refWeightKg: null,
+        upstreamName: null,
+      },
+      {
+        id: "p-sam",
+        name: "Sam",
+        userId: "u-sam",
+        heightCm: null,
+        birthDate: null,
+        male: false,
+        refWeightKg: null,
+        upstreamName: null,
+      },
+      {
+        id: "p-none",
+        name: "Unowned",
+        userId: null,
+        heightCm: null,
+        birthDate: null,
+        male: true,
+        refWeightKg: null,
+        upstreamName: null,
+      },
+    ],
+    measurements: [
+      {
+        id: "m-alex",
+        profileId: "p-alex",
+        weightKg: 75,
+        impedance: 500,
+        measuredAt: at(3),
+        metrics: null,
+      },
+      {
+        id: "m-sam",
+        profileId: "p-sam",
+        weightKg: 60,
+        impedance: 480,
+        measuredAt: at(2),
+        metrics: null,
+      },
+      {
+        id: "m-none",
+        profileId: null,
+        weightKg: 90,
+        impedance: 450,
+        measuredAt: at(1),
+        metrics: null,
+      },
+    ],
+    accounts: [
+      { userId: "u-alex", providerId: "line", accountId: "LINE-ALEX" },
+    ],
+    metricsWrites: [],
+    ...overrides,
+  });
+
+  beforeEach(() => {
+    fake = makeFake();
+    pushCalls = [];
+    setPendingWeighIn(null);
+  });
+
+  it("snapshot — ผู้ใช้ทั่วไปเห็นเฉพาะโปรไฟล์/การชั่งของตัวเอง ไม่เห็นรายชื่อ user", async () => {
+    const snapshot = await getBodyWeightSnapshot(ALEX);
+    expect(snapshot.profiles.map((p) => p.id)).toEqual(["p-alex"]);
+    expect(snapshot.measurements.map((m) => m.id)).toEqual(["m-alex"]);
+    expect(snapshot.owners).toEqual([]);
+    expect(snapshot.viewer.isAdmin).toBe(false);
+  });
+
+  it("snapshot — admin เห็นทุกอย่างรวมการชั่งที่ยังไม่มีเจ้าของ และรายชื่อ user", async () => {
+    const snapshot = await getBodyWeightSnapshot(ADMIN);
+    expect(snapshot.profiles).toHaveLength(3);
+    expect(snapshot.measurements.map((m) => m.id).sort()).toEqual([
+      "m-alex",
+      "m-none",
+      "m-sam",
+    ]);
+    expect(snapshot.owners.map((o) => o.id).sort()).toEqual([
+      "u-admin",
+      "u-alex",
+      "u-sam",
+    ]);
+    expect(snapshot.profiles.find((p) => p.id === "p-alex")?.ownerName).toBe(
+      "Alex",
+    );
+  });
+
+  // ---- reassign ----
+  it("เปลี่ยนเจ้าของ — ผู้ใช้ทั่วไปแก้ของคนอื่นหรือที่ไม่มีเจ้าของไม่ได้ (ตอบเหมือนไม่มีแถว)", async () => {
+    expect(await updateMeasurementProfile(ALEX, "m-sam", "p-alex")).toEqual({
+      status: "measurement_not_found",
+    });
+    expect(await updateMeasurementProfile(ALEX, "m-none", "p-alex")).toEqual({
+      status: "measurement_not_found",
+    });
+    expect(fake!.measurements.find((m) => m.id === "m-sam")?.profileId).toBe(
+      "p-sam",
+    );
+  });
+
+  it("เปลี่ยนเจ้าของ — ผู้ใช้ทั่วไปย้ายไปโปรไฟล์ของคนอื่นไม่ได้", async () => {
+    expect(await updateMeasurementProfile(ALEX, "m-alex", "p-sam")).toEqual({
+      status: "profile_not_found",
+    });
+    expect(fake!.measurements.find((m) => m.id === "m-alex")?.profileId).toBe(
+      "p-alex",
+    );
+  });
+
+  it("เปลี่ยนเจ้าของ — admin ย้ายการชั่งที่ไม่มีเจ้าของไปโปรไฟล์ใดก็ได้ และคำนวณ metrics ใหม่", async () => {
+    const result = await updateMeasurementProfile(ADMIN, "m-none", "p-alex");
+    expect(result.status).toBe("updated");
+    expect(fake!.measurements.find((m) => m.id === "m-none")?.profileId).toBe(
+      "p-alex",
+    );
+    expect(fake!.metricsWrites.at(-1)?.metrics).toBeDefined();
+  });
+
+  // ---- delete ----
+  it("ลบ — ผู้ใช้ทั่วไปลบได้เฉพาะของตัวเอง", async () => {
+    expect(await deleteMeasurement(ALEX, "m-sam")).toBe(false);
+    expect(await deleteMeasurement(ALEX, "m-none")).toBe(false);
+    expect(fake!.measurements).toHaveLength(3);
+    expect(await deleteMeasurement(ALEX, "m-alex")).toBe(true);
+    expect(fake!.measurements.map((m) => m.id).sort()).toEqual([
+      "m-none",
+      "m-sam",
+    ]);
+  });
+
+  it("ลบ — admin ลบการชั่งที่ไม่มีเจ้าของได้", async () => {
+    expect(await deleteMeasurement(ADMIN, "m-none")).toBe(true);
+  });
+
+  // ---- profile save ----
+  const profileInput = (
+    overrides: Partial<Parameters<typeof saveScaleProfile>[1]> = {},
+  ) => ({
+    name: "Edited",
+    heightCm: 175,
+    birthDate: "1990-05-14",
+    male: true,
+    refWeightKg: null,
+    ...overrides,
+  });
+
+  it("บันทึกโปรไฟล์ — ผู้ใช้ทั่วไปแก้ของคนอื่นไม่ได้", async () => {
+    expect(await saveScaleProfile(ALEX, profileInput({ id: "p-sam" }))).toEqual(
+      { status: "not_found" },
+    );
+    expect(
+      await saveScaleProfile(ALEX, profileInput({ id: "p-none" })),
+    ).toEqual({ status: "not_found" });
+    expect(fake!.profiles.find((p) => p.id === "p-sam")?.name).toBe("Sam");
+  });
+
+  it("บันทึกโปรไฟล์ — ผู้ใช้ทั่วไปแก้ของตัวเองได้ แต่ส่ง ownerId มาก็ไม่ย้ายเจ้าของ และคำนวณ metrics ใหม่", async () => {
+    const result = await saveScaleProfile(
+      ALEX,
+      profileInput({ id: "p-alex", ownerId: "u-sam" }),
+    );
+    expect(result.status).toBe("saved");
+    expect(fake!.profiles.find((p) => p.id === "p-alex")?.userId).toBe(
+      "u-alex",
+    );
+    expect(fake!.metricsWrites.map((w) => w.id)).toContain("m-alex");
+  });
+
+  it("สร้างโปรไฟล์ — ผู้ใช้ทั่วไปเป็นเจ้าของเองเสมอ", async () => {
+    const result = await saveScaleProfile(
+      SAM,
+      profileInput({ ownerId: "u-alex" }),
+    );
+    if (result.status !== "saved") throw new Error("expected saved");
+    expect(result.profile.ownerId).toBe("u-sam");
+  });
+
+  it("บันทึกโปรไฟล์ — admin กำหนด/ย้ายเจ้าของได้ แต่ต้องเป็น user ที่มีจริง", async () => {
+    const assigned = await saveScaleProfile(
+      ADMIN,
+      profileInput({ id: "p-none", ownerId: "u-sam" }),
+    );
+    if (assigned.status !== "saved") throw new Error("expected saved");
+    expect(assigned.profile.ownerId).toBe("u-sam");
+    expect(assigned.profile.ownerName).toBe("Sam");
+    expect(
+      await saveScaleProfile(
+        ADMIN,
+        profileInput({ id: "p-none", ownerId: "u-ghost" }),
+      ),
+    ).toEqual({ status: "owner_not_found" });
+  });
+
+  it("สร้างโปรไฟล์ — admin ไม่ระบุ = เป็นเจ้าของเอง, ระบุ null = ยังไม่กำหนด", async () => {
+    const own = await saveScaleProfile(ADMIN, profileInput());
+    const none = await saveScaleProfile(ADMIN, profileInput({ ownerId: null }));
+    if (own.status !== "saved" || none.status !== "saved")
+      throw new Error("expected saved");
+    expect(own.profile.ownerId).toBe("u-admin");
+    expect(none.profile.ownerId).toBeNull();
+  });
+
+  // ---- live state ----
+  it("สถานะสด — ชื่อของการชั่งที่รอผลเห็นเฉพาะเจ้าของและ admin; น้ำหนักสดเห็นทุกคน", () => {
+    setPendingWeighIn({
+      address: "A",
+      weightKg: 75,
+      profileId: "p-alex",
+      profileName: "Alex",
+      ownerUserId: "u-alex",
+      at: Date.now(),
+    });
+    const ofOwner = getLiveScaleState(ALEX);
+    const ofOther = getLiveScaleState(SAM);
+    const ofAdmin = getLiveScaleState(ADMIN);
+    expect(ofOwner.pending).toEqual({
+      weightKg: 75,
+      profileId: "p-alex",
+      profileName: "Alex",
+    });
+    expect(ofAdmin.pending?.profileName).toBe("Alex");
+    expect(ofOther.pending).toEqual({
+      weightKg: 75,
+      profileId: null,
+      profileName: null,
+    });
+  });
+
+  it("สถานะสด — การชั่งที่บันทึกแล้วไม่บอก id ให้คนอื่น (หน้าเต็มจอไม่ผูกกับแถวที่เขาไม่เห็น)", () => {
+    recordMeasurementChange("m-alex", "saved", "u-alex");
+    expect(getLiveScaleState(ALEX).lastMeasurement?.id).toBe("m-alex");
+    expect(getLiveScaleState(ADMIN).lastMeasurement?.id).toBe("m-alex");
+    expect(getLiveScaleState(SAM).lastMeasurement).toBeNull();
+    // ไม่มีเจ้าของ → admin เท่านั้น
+    recordMeasurementChange("m-none", "saved", null);
+    expect(getLiveScaleState(ALEX).lastMeasurement).toBeNull();
+    expect(getLiveScaleState(ADMIN).lastMeasurement?.id).toBe("m-none");
+  });
+
+  // ---- push target ----
+  const weighIn = (weightKg: number) =>
+    ingestScaleReading({
+      address: "AA",
+      weightKg,
+      impedance: 480,
+      stabilized: true,
+      removed: false,
+    });
+
+  it("push LINE — ส่งให้เจ้าของโปรไฟล์ ไม่ส่งให้ admin", async () => {
+    fake = makeFake({
+      measurements: [],
+      profiles: [makeFake().profiles[0]!].map((p) => ({
+        ...p,
+        refWeightKg: 70,
+      })),
+    });
+    const result = await weighIn(70.2);
+    expect(result.status).toBe("saved");
+    await Bun.sleep(30);
+    expect(pushCalls.map((c) => c.userId)).toEqual(["LINE-ALEX"]);
+  });
+
+  it("push LINE — เจ้าของไม่มี LINE account หรือยังไม่มีเจ้าของ → ส่งให้ admin (พฤติกรรมเดิม)", async () => {
+    fake = makeFake({
+      measurements: [],
+      profiles: [{ ...makeFake().profiles[1]!, refWeightKg: 60 }],
+    });
+    await weighIn(60.1);
+    await Bun.sleep(30);
+    expect(pushCalls.map((c) => c.userId)).toEqual(["admin-line-1"]);
+
+    pushCalls = [];
+    fake = makeFake({
+      measurements: [],
+      profiles: [{ ...makeFake().profiles[2]!, refWeightKg: 80 }],
+    });
+    await weighIn(80.1);
+    await Bun.sleep(30);
+    expect(pushCalls.map((c) => c.userId)).toEqual(["admin-line-1"]);
+  });
+});
+
+describe("Unit Test: สิทธิ์ของ API เลือกเครื่องรับสัญญาณและสถานะสด", () => {
+  const request = (method: string, body?: unknown) =>
+    new Request("http://localhost:4325/api/body-weight/listeners", {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+
+  beforeEach(async () => {
+    fake = null;
+    await setActiveListener("all");
+  });
+
+  it("ไม่ login — 401", async () => {
+    currentSession = null;
+    expect((await listenersGet(request("GET"))).status).toBe(401);
+    expect((await listenersPut(request("PUT", { active: "off" }))).status).toBe(
+      401,
+    );
+    expect((await liveGet(request("GET"))).status).toBe(401);
+  });
+
+  it("ผู้ใช้ทั่วไป — เปลี่ยน/ดูเครื่องรับสัญญาณไม่ได้ (403) และค่าไม่เปลี่ยน", async () => {
+    currentSession = { user: { id: "u-alex" }, isAdmin: false };
+    expect((await listenersGet(request("GET"))).status).toBe(403);
+    expect((await listenersPut(request("PUT", { active: "off" }))).status).toBe(
+      403,
+    );
+    expect(await getActiveListener()).toBe("all");
+  });
+
+  it("admin — เปลี่ยนเครื่องรับสัญญาณได้", async () => {
+    currentSession = { user: { id: "u-admin" }, isAdmin: true };
+    const response = await listenersPut(request("PUT", { active: "off" }));
+    expect(response.status).toBe(200);
+    expect((await response.json()).data.active).toBe("off");
+  });
+
+  it("live — ผู้ใช้ทั่วไปได้สถานะสดที่ถูกกรอง", async () => {
+    currentSession = { user: { id: "u-sam" }, isAdmin: false };
+    setPendingWeighIn({
+      address: "A",
+      weightKg: 70,
+      profileId: "p-alex",
+      profileName: "Alex",
+      ownerUserId: "u-alex",
+      at: Date.now(),
+    });
+    const response = await liveGet(request("GET"));
+    expect(response.status).toBe(200);
+    expect((await response.json()).data.pending).toEqual({
+      weightKg: 70,
+      profileId: null,
+      profileName: null,
+    });
+    setPendingWeighIn(null);
   });
 });

@@ -14,7 +14,10 @@ export async function GET(request: Request) {
       return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 });
     }
 
-    const snapshot = await getBodyWeightSnapshot();
+    const snapshot = await getBodyWeightSnapshot({
+      userId: session.user.id,
+      isAdmin: session.isAdmin,
+    });
     return Response.json(
       { success: true, data: snapshot },
       { headers: { "Cache-Control": "no-store" } },

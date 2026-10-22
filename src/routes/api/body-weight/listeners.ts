@@ -7,6 +7,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { getServerAuthSession } from "@/lib/auth/auth";
+import { getBodyWeightReadSession } from "@/features/body-weight/services/read-session.server";
 import {
   getListenerOverview,
   setActiveListener,
@@ -26,9 +27,12 @@ const updateSchema = z.object({
 
 export async function GET(request: Request) {
   try {
-    const session = await getServerAuthSession(request);
+    const session = await getBodyWeightReadSession(request);
     if (!session?.user?.id) {
       return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 });
+    }
+    if (!session.isAdmin) {
+      return Response.json({ error: "เฉพาะผู้ดูแลระบบ" }, { status: 403 });
     }
     return Response.json(
       { success: true, data: await getListenerOverview() },
@@ -51,6 +55,9 @@ export async function PUT(request: Request) {
     const session = await getServerAuthSession(request);
     if (!session?.user?.id) {
       return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 });
+    }
+    if (!session.isAdmin) {
+      return Response.json({ error: "เฉพาะผู้ดูแลระบบ" }, { status: 403 });
     }
     const input = updateSchema.parse(await request.json());
     await setActiveListener(input.active);
