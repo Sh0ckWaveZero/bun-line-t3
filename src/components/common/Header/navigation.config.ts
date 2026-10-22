@@ -14,6 +14,7 @@ import {
   HelpCircle,
   Activity,
   Clock3,
+  Scale,
   Shield,
   CheckCircle2,
   type LucideIcon,
@@ -65,6 +66,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   idCard: IdCard,
   helpCircle: HelpCircle,
   activity: Activity,
+  scale: Scale,
   shield: Shield,
   checkCircle2: CheckCircle2,
 };
@@ -140,6 +142,14 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         icon: CalendarDays,
       },
     ],
+  },
+  {
+    id: "body-weight",
+    label: "บันทึกน้ำหนัก",
+    href: "/body-weight",
+    icon: Scale,
+    requiresAuth: true,
+    ariaLabel: "ไปที่หน้าบันทึกน้ำหนัก",
   },
   {
     id: "tools",

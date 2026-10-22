@@ -222,6 +222,172 @@ interface DcaBalanceAlertData {
   threshold: number;
 }
 
+interface WeighInData {
+  profileName: string | null;
+  weightKg: number;
+  impedance: number | null;
+  measuredAt: Date;
+  deltaKg: number | null;
+  metrics: {
+    bmi?: number;
+    bodyFat?: number;
+    muscleMass?: number;
+  } | null;
+}
+
+const formatKg = (n: number) =>
+  n.toLocaleString("th-TH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+const getBodyWeightUrl = (appUrl: string) => {
+  if (!appUrl) return null;
+
+  try {
+    return new URL("/body-weight", appUrl).toString();
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * ม่วง "T3" ของโลโก้ (hsl(280,100%,70%) = #cc66ff) ผสมดำ 75% ให้ตัวอักษรขาว
+ * บนปุ่มผ่าน contrast (5.04:1) — LINE Flex รับเฉพาะ hex
+ */
+const WEIGH_IN_THEME_COLOR = "#994dbf";
+
+/**
+ * สร้าง Flex Message แจ้งผลชั่งน้ำหนักใหม่จากตาชั่ง Mi Body Composition Scale 2
+ */
+export function createWeighInFlexMessage(
+  data: WeighInData,
+  appUrl: string,
+): {
+  type: "flex";
+  altText: string;
+  contents: any;
+} {
+  const hasMetrics = data.metrics?.bodyFat != null;
+  const delta =
+    data.deltaKg === null
+      ? null
+      : `${data.deltaKg >= 0 ? "+" : "−"}${formatKg(Math.abs(data.deltaKg))} กก.`;
+
+  const bodyContents: any[] = [];
+  if (delta !== null) {
+    bodyContents.push(createMetricRow("เทียบครั้งก่อน", delta));
+  }
+  if (hasMetrics) {
+    bodyContents.push(
+      createMetricRow("ไขมัน", `${data.metrics!.bodyFat!.toFixed(1)}%`),
+      createMetricRow(
+        "กล้ามเนื้อ",
+        `${formatKg(data.metrics!.muscleMass ?? 0)} กก.`,
+      ),
+      createMetricRow("BMI", `${(data.metrics!.bmi ?? 0).toFixed(1)}`),
+    );
+  }
+  if (data.impedance) {
+    bodyContents.push(createMetricRow("ความต้านทาน", `${data.impedance} Ω`));
+  }
+  if (bodyContents.length > 0) {
+    bodyContents.unshift({ type: "separator", margin: "md" });
+  }
+
+  const bodyWeightUrl = getBodyWeightUrl(appUrl);
+  const title = data.profileName
+    ? `⚖️ บันทึกน้ำหนัก · ${data.profileName}`
+    : "⚖️ บันทึกน้ำหนัก";
+
+  return {
+    type: "flex",
+    altText: `${title}: ${formatKg(data.weightKg)} กก.${
+      delta !== null ? ` (${delta})` : ""
+    }`,
+    contents: {
+      type: "bubble",
+      size: "mega",
+      header: {
+        type: "box",
+        layout: "vertical",
+        contents: [
+          {
+            type: "text",
+            text: title,
+            weight: "bold",
+            color: "#111827",
+            size: "lg",
+            wrap: true,
+          },
+        ],
+        paddingAll: "lg",
+        paddingBottom: "sm",
+      },
+      body: {
+        type: "box",
+        layout: "vertical",
+        contents: [
+          {
+            type: "text",
+            text: `${formatKg(data.weightKg)} กก.`,
+            weight: "bold",
+            color: "#111827",
+            size: "3xl",
+          },
+          {
+            type: "text",
+            text: new Intl.DateTimeFormat("th-TH", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              timeZone: "Asia/Bangkok",
+              hour12: false,
+            }).format(data.measuredAt),
+            color: "#6B7280",
+            size: "xs",
+            margin: "sm",
+          },
+          ...bodyContents,
+        ],
+        paddingAll: "lg",
+        paddingTop: "sm",
+        spacing: "md",
+      },
+      footer: {
+        type: "box",
+        layout: "vertical",
+        contents: bodyWeightUrl
+          ? [
+              {
+                type: "button",
+                action: {
+                  type: "uri",
+                  label: "ดูประวัติการชั่ง",
+                  uri: bodyWeightUrl,
+                },
+                style: "primary",
+                color: WEIGH_IN_THEME_COLOR,
+              },
+            ]
+          : [
+              {
+                type: "text",
+                text: "ขึ้นชั่งแบบเท้าเปล่าเพื่อวัดสัดส่วนร่างกายครบถ้วน 🙏",
+                color: "#6B7280",
+                size: "xs",
+                wrap: true,
+              },
+            ],
+        paddingAll: "lg",
+        paddingTop: "sm",
+      },
+    },
+  };
+}
+
 /**
  * สร้าง Flex Message แจ้งเตือนเงินทุน DCA เมื่อเงินบาทใน Bitkub ต่ำกว่าเกณฑ์
  */

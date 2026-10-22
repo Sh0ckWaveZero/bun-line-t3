@@ -11,7 +11,9 @@ import {
   Briefcase,
   Calendar,
   FileText,
+  HeartPulse,
   MessageSquare,
+  Scale,
   Shield,
   Wallet,
   Wrench,
@@ -60,6 +62,17 @@ const actions: ActionItem[] = [
     icon: <Calendar className="h-5 w-5" />,
     href: "/leave",
     category: "work",
+    colorClass: "text-card-green",
+    bgClass: "bg-card-green",
+    hoverClass: "hover:bg-card-green-hover",
+  },
+  {
+    id: "body-weight",
+    title: "บันทึกน้ำหนัก",
+    description: "ประวัติการชั่งและสัดส่วนร่างกาย",
+    icon: <Scale className="h-5 w-5" />,
+    href: "/body-weight",
+    category: "health",
     colorClass: "text-card-green",
     bgClass: "bg-card-green",
     hoverClass: "hover:bg-card-green-hover",
@@ -141,6 +154,11 @@ const categoryMeta: Record<
     description: "เวลาเข้างานและวันลา",
     icon: <Briefcase className="h-4 w-4" />,
   },
+  health: {
+    title: "สุขภาพ",
+    description: "น้ำหนักและสัดส่วนร่างกาย",
+    icon: <HeartPulse className="h-4 w-4" />,
+  },
   tools: {
     title: "เครื่องมือ",
     description: "คำสั่งและเครื่องมือช่วยงาน",
@@ -153,7 +171,7 @@ const categoryMeta: Record<
   },
 };
 
-const categoryOrder = ["work", "finance", "tools", "admin"];
+const categoryOrder = ["work", "finance", "health", "tools", "admin"];
 
 export function DashboardPage() {
   const { data: session } = useSession();

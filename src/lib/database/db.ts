@@ -96,7 +96,9 @@ const isCacheStale = (client: ExtendedPrismaClient): boolean => {
       !("workAttendance" in client) ||
       !("dcaWebhookReceipt" in client) ||
       !("bitkubConnection" in client) ||
-      !("bitkubBtcBuy" in client)
+      !("bitkubBtcBuy" in client) ||
+      !("scaleProfile" in client) ||
+      !("scaleMeasurement" in client)
     );
   } catch {
     return true;

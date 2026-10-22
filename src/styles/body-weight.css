@@ -1,0 +1,109 @@
+/* หน้าชั่งเต็มจอ (/body-weight) — animation แบบ weigh-in ของ miscale-dashboard */
+
+/* สีเน้นของหน้าใช้ --brand (ม่วง "T3" ของโลโก้) ที่ประกาศใน src/input.css */
+
+/* วงคลื่นด้านหลัง ขยายออกแล้วจางหาย ไล่จังหวะกัน */
+.weigh-in-ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 70vmin;
+  height: 70vmin;
+  border: 2px solid rgb(255 255 255 / 0.22);
+  border-radius: 9999px;
+  transform: translate(-50%, -50%) scale(0.6);
+  opacity: 0;
+  animation: weigh-in-ripple 4.5s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  pointer-events: none;
+}
+
+.weigh-in-ripple:nth-child(2) {
+  animation-delay: 1.5s;
+}
+
+.weigh-in-ripple:nth-child(3) {
+  animation-delay: 3s;
+}
+
+@keyframes weigh-in-ripple {
+  0% {
+    transform: translate(-50%, -50%) scale(0.6);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.4);
+    opacity: 0;
+  }
+}
+
+/* วงแหวนหมุนรอบ avatar ระหว่างรอ */
+.weigh-in-spinner {
+  animation: weigh-in-spin 1.4s linear infinite;
+}
+
+@keyframes weigh-in-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* เนื้อหาแต่ละขั้นค่อย ๆ ลอยขึ้น */
+.weigh-in-enter {
+  animation: weigh-in-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes weigh-in-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* check mark เด้งตอนชั่งเสร็จ */
+.weigh-in-pop {
+  animation: weigh-in-pop 500ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes weigh-in-pop {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* แถบนับถอยหลังก่อนปิดเอง — ระยะเวลาตั้งผ่าน --weigh-in-close-ms */
+.weigh-in-countdown {
+  transform-origin: left;
+  animation: weigh-in-countdown var(--weigh-in-close-ms, 20000ms) linear both;
+}
+
+@keyframes weigh-in-countdown {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .weigh-in-ripple,
+  .weigh-in-spinner,
+  .weigh-in-enter,
+  .weigh-in-pop {
+    animation: none;
+  }
+  .weigh-in-ripple {
+    opacity: 0.4;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
