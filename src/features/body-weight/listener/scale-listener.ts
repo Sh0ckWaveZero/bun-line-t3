@@ -7,9 +7,10 @@
  * parse แล้วเข้า webhook ของแอป (event "reading") — ฝั่งแอปเป็นคนจับกลุ่ม
  * เป็นการชั่ง เดาเจ้าของ คำนวณ body composition และ push LINE เอง
  *
- * env ที่ต้องมี:
+ * env (Bun โหลด .env / .env.local ให้เอง):
  *   SCALE_WEBHOOK_SECRET  — ค่าเดียวกับ env ฝั่งแอป (บังคับ)
- *   SCALE_WEBHOOK_URL     — ค่าเริ่มต้น http://127.0.0.1:4325/api/body-weight/webhook
+ *   APP_URL               — ยิงไป `${APP_URL}/api/body-weight/webhook`
+ *                           (ไม่ตั้ง = http://localhost:4325/api/body-weight/webhook)
  *
  * หมายเหตุตามแพลตฟอร์ม:
  * - macOS: CoreBluetooth ไม่เปิดเผย MAC จริง (ได้ UUID แทน) และครั้งแรกจะมี
@@ -24,9 +25,12 @@ import {
   parseScalePacket,
 } from "@/features/body-weight/helpers/ble-packet";
 
-const WEBHOOK_URL =
-  process.env.SCALE_WEBHOOK_URL ??
-  "http://127.0.0.1:4325/api/body-weight/webhook";
+// localhost ไม่ใช่ 127.0.0.1 — Vite บน macOS bind แค่ IPv6 [::1]
+const APP_URL = (process.env.APP_URL || "http://localhost:4325").replace(
+  /\/+$/,
+  "",
+);
+const WEBHOOK_URL = `${APP_URL}/api/body-weight/webhook`;
 const SECRET = process.env.SCALE_WEBHOOK_SECRET;
 
 if (!SECRET) {
@@ -46,11 +50,14 @@ const postReading = async (reading: {
   stabilized: boolean;
   removed: boolean;
 }): Promise<void> => {
-  const url = `${WEBHOOK_URL}?secret=${encodeURIComponent(SECRET)}`;
   try {
-    const response = await fetch(url, {
+    // secret ทาง header ไม่ใส่ใน query — URL ไปโผล่ใน access log ของ tunnel/proxy
+    const response = await fetch(WEBHOOK_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-webhook-secret": SECRET,
+      },
       body: JSON.stringify({ event: "reading", reading }),
     });
     if (!response.ok) {
