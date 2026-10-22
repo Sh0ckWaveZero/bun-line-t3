@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { RefreshCw, Weight } from "lucide-react";
+import { ListenerSourceSelect } from "@/features/body-weight/components/ListenerSourceSelect";
 import { LiveScaleCard } from "@/features/body-weight/components/LiveScaleCard";
 import { ProfileEditor } from "@/features/body-weight/components/ProfileEditor";
 import { WeighInOverlay } from "@/features/body-weight/components/WeighInOverlay";
@@ -129,12 +130,13 @@ function BodyWeightPageContent() {
           </button>
         </div>
 
-        <div className="mt-4">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           <ProfileSwitcher
             profiles={profiles}
             selectedId={selectedProfileId}
             onSelect={setPickedProfileId}
           />
+          <ListenerSourceSelect onError={setActionError} />
         </div>
 
         {/* Error banner */}

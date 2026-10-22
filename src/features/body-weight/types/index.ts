@@ -46,6 +46,22 @@ export interface LiveScaleState {
   } | null;
 }
 
+/** ค่าพิเศษของ "เครื่องที่รับสัญญาณ" — นอกนั้นคือชื่อ listener */
+export const LISTENER_MODE = {
+  all: "all",
+  off: "off",
+} as const;
+
+/** ชื่อ listener ที่ยอมรับ (ตัวเล็ก ตัวเลข ขีด) — ห้ามชนกับ LISTENER_MODE */
+export const LISTENER_NAME_PATTERN = /^[a-z0-9][a-z0-9-]{0,31}$/;
+
+export interface ScaleListenerOverview {
+  /** "all" | "off" | ชื่อ listener */
+  active: string;
+  /** listener ที่เคย check-in ตั้งแต่แอปเริ่มทำงาน */
+  listeners: { name: string; lastSeenAgoMs: number }[];
+}
+
 export interface BodyWeightSnapshot {
   measurements: ScaleMeasurementDto[]; // เรียงใหม่ → เก่า
   profiles: ScaleProfileDto[]; // เรียงตามชื่อ

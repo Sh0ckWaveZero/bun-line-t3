@@ -45,6 +45,7 @@ let profileFindResult: Record<string, unknown> | null = null;
 let updateCalls: Array<Record<string, unknown>> = [];
 let deleteCalls: string[] = [];
 let isProfileMissing = false;
+let activeListenerRow: { activeListener: string } | null = null;
 
 /** จำลอง DB round-trip: Prisma.DbNull (sentinel) อ่านกลับมาเป็น null เสมอ */
 const dbRoundTrip = (metrics: unknown) => {
@@ -149,6 +150,13 @@ const dbMocks = {
       return recentMeasurement;
     },
   },
+  scaleSettings: {
+    findUnique: async () => activeListenerRow,
+    upsert: async ({ update }: { update: { activeListener: string } }) => {
+      activeListenerRow = { activeListener: update.activeListener };
+      return activeListenerRow;
+    },
+  },
   scaleProfile: {
     upsert: async ({
       where,
@@ -205,6 +213,11 @@ const {
 } = await import("@/features/body-weight/services/body-weight.server");
 const { getLiveScaleState, setPendingWeighIn } = await import(
   "@/features/body-weight/services/live-scale.server"
+);
+const { isListenerAccepted, setActiveListener, getListenerOverview } =
+  await import("@/features/body-weight/services/scale-listeners.server");
+const { GET: listenerCheckIn } = await import(
+  "../../src/routes/api/body-weight/listener"
 );
 
 // --- Fixtures ---
@@ -769,5 +782,79 @@ describe("Unit Test: body-weight service (แก้เจ้าของ / ล�
 
   it("ลบรายการที่ไม่มีอยู่ — false", async () => {
     expect(await deleteMeasurement("missing")).toBe(false);
+  });
+});
+
+describe("Unit Test: เลือกเครื่องที่รับสัญญาณตาชั่ง", () => {
+  const readingPayload = (listener?: string) => ({
+    event: "reading",
+    ...(listener ? { listener } : {}),
+    reading: {
+      address: "AA:BB:CC",
+      weightKg: 61.2,
+      impedance: null,
+      stabilized: false,
+      removed: false,
+    },
+  });
+  const checkInUrl = (name: string) =>
+    `http://localhost:4325/api/body-weight/listener?name=${name}`;
+  const checkIn = (name: string, secret = "test-webhook-secret-123") =>
+    listenerCheckIn(
+      new Request(checkInUrl(name), {
+        headers: { "x-webhook-secret": secret },
+      }),
+    );
+
+  beforeEach(async () => {
+    secretValue = "test-webhook-secret-123";
+    createCalls = [];
+    recentMeasurement = null;
+    setPendingWeighIn(null);
+    await setActiveListener("all");
+  });
+
+  it("isListenerAccepted — all รับทุกเครื่อง, off ปิดหมด, ชื่อ = เฉพาะเครื่องนั้น", () => {
+    expect(isListenerAccepted("pi", "all")).toBe(true);
+    expect(isListenerAccepted(null, "all")).toBe(true);
+    expect(isListenerAccepted("pi", "off")).toBe(false);
+    expect(isListenerAccepted("pi", "pi")).toBe(true);
+    expect(isListenerAccepted("macbook", "pi")).toBe(false);
+    // listener รุ่นเก่าไม่ส่งชื่อ — รับเฉพาะโหมดทุกเครื่อง
+    expect(isListenerAccepted(null, "pi")).toBe(false);
+  });
+
+  it("เลือก pi แล้ว packet จากเครื่อง dev — ตอบ disabled ไม่แตะสถานะตาชั่งสด", async () => {
+    await setActiveListener("pi");
+    const before = getLiveScaleState().reading;
+    const response = await postWebhook(readingPayload("macbook"));
+    const data = await response.json();
+    expect(response.status).toBe(200);
+    expect(data.status).toBe("disabled");
+    expect(getLiveScaleState().reading).toEqual(before);
+  });
+
+  it("เลือก pi แล้ว packet จาก pi — รับตามปกติ", async () => {
+    await setActiveListener("pi");
+    await postWebhook(readingPayload("pi"));
+    expect(getLiveScaleState().reading?.weightKg).toBe(61.2);
+  });
+
+  it("check-in — ตอบว่าเครื่องนี้เปิดอยู่ไหม และบันทึกเป็นออนไลน์", async () => {
+    await setActiveListener("pi");
+    const pi = await (await checkIn("pi")).json();
+    const dev = await (await checkIn("macbook")).json();
+    expect(pi).toMatchObject({ success: true, enabled: true, active: "pi" });
+    expect(dev).toMatchObject({ success: true, enabled: false });
+    const overview = await getListenerOverview();
+    expect(overview.listeners.map((l) => l.name)).toEqual(
+      expect.arrayContaining(["pi", "macbook"]),
+    );
+  });
+
+  it("check-in — secret ผิด 401, ชื่อสงวน/ผิดรูปแบบ 400", async () => {
+    expect((await checkIn("pi", "wrong-secret")).status).toBe(401);
+    expect((await checkIn("off")).status).toBe(400);
+    expect((await checkIn("Bad Name!")).status).toBe(400);
   });
 });
