@@ -1,0 +1,9 @@
+{
+  "name": "scale-listener",
+  "private": true,
+  "dependencies": {
+    "@stoprocent/noble": "2.8.0",
+    "@stoprocent/bluetooth-hci-socket": "2.3.0"
+  },
+  "trustedDependencies": ["@stoprocent/noble", "@stoprocent/bluetooth-hci-socket"]
+}

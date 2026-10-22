@@ -691,3 +691,13 @@ model ScaleMeasurement {
   @@index([profileId, measuredAt])
   @@map("scale_measurements")
 }
+
+// การตั้งค่าตาชั่งระดับครัวเรือน — มีแถวเดียว (id = "default")
+model ScaleSettings {
+  id             String   @id @default("default")
+  // listener ที่รับข้อมูล: "all" = ทุกเครื่อง, "off" = ปิด, อื่น ๆ = ชื่อ listener (SCALE_LISTENER_NAME)
+  activeListener String   @default("all") @map("active_listener")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("scale_settings")
+}

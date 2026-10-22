@@ -1,0 +1,48 @@
+# Dockerfile.scale-listener
+# ⚖️ BLE listener ตาชั่ง Mi Body Composition Scale 2 — รันบน Pi ตัวเดียวกับแอป
+# รับ advertisement ผ่าน Bluetooth ของเครื่อง แล้วยิง webhook ของแอปทาง loopback
+#
+# image เล็ก: bundle listener เป็นไฟล์เดียว + node_modules เฉพาะ noble
+# (ไม่ติดตั้ง dependency ทั้ง repo — Pi 4 RAM 4 GB)
+
+# ---- builder: bundle + compile native module ของ noble ----
+FROM oven/bun:1.4.4-slim AS builder
+
+# node-gyp fallback ต้องใช้ python3/make/g++ (prebuilt linux-arm64 ใช้ไม่ได้ใน image นี้
+# ตอน deploy ครั้งก่อน) และ header ของ BlueZ
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 make g++ libbluetooth-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+# ติดตั้งเฉพาะ noble — เวอร์ชันตรงกับ bun.lock ของ repo หลัก, lockfile แยกของ listener
+# trustedDependencies ใน package.json จำเป็น ไม่งั้น Bun ข้าม install script (native build)
+COPY docker/scale-listener/package.json docker/scale-listener/bun.lock ./
+RUN bun install --production --frozen-lockfile
+
+# bundle listener + helper ภายใน (แก้ path alias @/ ตอน build) เหลือ noble เป็น external
+COPY tsconfig.json ./
+COPY src/features/body-weight/listener ./src/features/body-weight/listener
+COPY src/features/body-weight/helpers/ble-packet.ts src/features/body-weight/helpers/body-composition.ts ./src/features/body-weight/helpers/
+RUN bun build src/features/body-weight/listener/scale-listener.ts \
+    --target=bun --external @stoprocent/noble --outfile dist/scale-listener.js \
+    && bun -e "require('@stoprocent/noble'); console.log('✅ noble native module loads')"
+
+# ---- runtime ----
+FROM oven/bun:1.4.4-slim AS runner
+
+# libbluetooth3: runtime library ของ BlueZ สำหรับ native module
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libbluetooth3 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+ENV NODE_ENV=production
+
+COPY --from=builder /build/node_modules ./node_modules
+COPY --from=builder /build/dist/scale-listener.js ./scale-listener.js
+
+# รันเป็น root ใน container: raw HCI socket ต้องใช้ CAP_NET_RAW/NET_ADMIN ที่ให้ผ่าน
+# cap_add ใน docker-compose (user อื่นไม่ได้ capability) — จำกัดด้วย no-new-privileges + read_only
+CMD ["bun", "scale-listener.js"]

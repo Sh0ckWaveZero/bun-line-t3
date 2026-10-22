@@ -54,6 +54,8 @@ jobs:
       BITKUB_CREDENTIAL_ENCRYPTION_KEY: ${{ secrets.BITKUB_CREDENTIAL_ENCRYPTION_KEY }}
       APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
       ALLOWED_DOMAINS: ${{ secrets.ALLOWED_DOMAINS }}
+      # ตาชั่ง (ไม่บังคับ): ไม่ตั้ง = webhook ตอบ 503 และไม่สตาร์ท scale-listener
+      SCALE_WEBHOOK_SECRET: ${{ secrets.SCALE_WEBHOOK_SECRET }}
 
       DOCKER_BUILDKIT: "1"
       COMPOSE_PARALLEL_LIMIT: "1"

@@ -1,16 +1,15 @@
 /**
  * Body Weight Webhook — ทางเข้าข้อมูลตาชั่งทั้งหมด
- * POST /api/body-weight/webhook?secret=<SCALE_WEBHOOK_SECRET>
+ * POST /api/body-weight/webhook (header x-webhook-secret: <SCALE_WEBHOOK_SECRET>)
  *
  * event "reading" — packet ดิบจาก BLE listener ของเราเอง (`bun run scale:listen`)
+ *   รับเฉพาะจากเครื่องที่เลือกไว้ในหน้า /body-weight (ตอบ "disabled" ถ้าไม่ใช่)
  * event "measurement" — ผลชั่งจัดกลุ่มแล้วจาก miscale-dashboard (ทางเลือกเก่า)
  * event "analysis" — ไม่รองรับ รับแล้วข้าม
  */
 
-import { timingSafeEqual } from "node:crypto";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { env } from "@/env.mjs";
 import {
   ingestScaleReading,
   ingestScaleWebhook,
@@ -19,6 +18,12 @@ import {
   recordLiveReading,
   recordMeasurementChange,
 } from "@/features/body-weight/services/live-scale.server";
+import {
+  getActiveListener,
+  isListenerAccepted,
+} from "@/features/body-weight/services/scale-listeners.server";
+import { rejectInvalidScaleSecret } from "@/features/body-weight/services/webhook-auth.server";
+import { LISTENER_NAME_PATTERN } from "@/features/body-weight/types";
 
 const measurementEventSchema = z.object({
   event: z.literal("measurement"),
@@ -43,6 +48,8 @@ const measurementEventSchema = z.object({
 /** packet ดิบที่ BLE listener parse แล้ว — ฝั่ง service เป็นคนจับกลุ่มเป็นการชั่ง */
 const readingEventSchema = z.object({
   event: z.literal("reading"),
+  /** ชื่อเครื่อง (SCALE_LISTENER_NAME) — listener รุ่นเก่าไม่ส่ง */
+  listener: z.string().regex(LISTENER_NAME_PATTERN).optional(),
   reading: z.object({
     address: z.string().min(1).max(64),
     weightKg: z.number().positive().max(500),
@@ -58,44 +65,22 @@ const webhookSchema = z.discriminatedUnion("event", [
   z.object({ event: z.literal("analysis") }),
 ]);
 
-/** เทียบ secret แบบ timing-safe (กับ secret ใน query หรือ header) */
-const hasValidSecret = (request: Request): boolean => {
-  const expected = env.SCALE_WEBHOOK_SECRET;
-  if (!expected) return false;
-  const provided =
-    new URL(request.url).searchParams.get("secret") ??
-    request.headers.get("x-webhook-secret") ??
-    "";
-  const a = Buffer.from(expected, "utf8");
-  const b = Buffer.from(provided, "utf8");
-  return a.length === b.length && timingSafeEqual(a, b);
-};
-
 export async function POST(request: Request) {
   try {
-    if (!hasValidSecret(request)) {
-      // แยกกรณียังไม่ตั้งค่า env ออกจาก secret ผิด เพื่อ debug ง่าย
-      if (!env.SCALE_WEBHOOK_SECRET) {
-        console.error(
-          "❌ [/api/body-weight/webhook] SCALE_WEBHOOK_SECRET is not configured",
-        );
-        return Response.json(
-          { success: false, message: "ยังไม่ได้ตั้งค่า SCALE_WEBHOOK_SECRET" },
-          { status: 503 },
-        );
-      }
-      console.error(
-        "❌ [/api/body-weight/webhook] Unauthorized - secret mismatch",
-      );
-      return Response.json(
-        { success: false, message: "Unauthorized" },
-        { status: 401 },
-      );
-    }
+    const rejection = rejectInvalidScaleSecret(
+      request,
+      "/api/body-weight/webhook",
+    );
+    if (rejection) return rejection;
 
     const input = webhookSchema.parse(await request.json());
-    // ก่อน ingest — packet ที่ยังไม่นิ่ง (ingest ข้าม) ก็ต้องโชว์ในการ์ดตาชั่งสด
     if (input.event === "reading") {
+      // เครื่องที่ไม่ได้ถูกเลือกในหน้าเว็บ — ทิ้ง กันสองเครื่องบันทึกการชั่งเดียวกันซ้ำ
+      const active = await getActiveListener();
+      if (!isListenerAccepted(input.listener ?? null, active)) {
+        return Response.json({ success: true, status: "disabled" });
+      }
+      // ก่อน ingest — packet ที่ยังไม่นิ่ง (ingest ข้าม) ก็ต้องโชว์ในการ์ดตาชั่งสด
       recordLiveReading(input.reading);
     }
     const result =
