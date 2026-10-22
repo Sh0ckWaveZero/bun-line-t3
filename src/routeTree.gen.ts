@@ -47,6 +47,7 @@ import { Route as ApiAttendanceUpdateRouteImport } from './routes/api/attendance
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiAuthCheckLineApprovalRouteImport } from './routes/api/auth/check-line-approval'
 import { Route as ApiBodyWeightIndexRouteImport } from './routes/api/body-weight/index'
+import { Route as ApiBodyWeightLiveRouteImport } from './routes/api/body-weight/live'
 import { Route as ApiBodyWeightProfilesRouteImport } from './routes/api/body-weight/profiles'
 import { Route as ApiBodyWeightWebhookRouteImport } from './routes/api/body-weight/webhook'
 import { Route as ApiCronAutoCheckoutRouteImport } from './routes/api/cron/auto-checkout'
@@ -83,6 +84,7 @@ import { Route as ApiThaiIdGenerateRouteImport } from './routes/api/thai-id/gene
 import { Route as ApiThaiIdValidateRouteImport } from './routes/api/thai-id/validate'
 import { Route as ApiUserSettingsRouteImport } from './routes/api/user/settings'
 import { Route as ApiAdminCronJobsJobIdRouteImport } from './routes/api/admin/cron-jobs/$jobId'
+import { Route as ApiBodyWeightMeasurementsIdRouteImport } from './routes/api/body-weight/measurements/$id'
 import { Route as ApiExchangesBitkubBuysRouteImport } from './routes/api/exchanges/bitkub/buys'
 import { Route as ApiExchangesBitkubConnectionRouteImport } from './routes/api/exchanges/bitkub/connection'
 import { Route as ApiExpensesBudgetsIdRouteImport } from './routes/api/expenses/budgets/$id'
@@ -281,6 +283,11 @@ const ApiBodyWeightIndexRoute = ApiBodyWeightIndexRouteImport.update({
   path: '/api/body-weight/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiBodyWeightLiveRoute = ApiBodyWeightLiveRouteImport.update({
+  id: '/api/body-weight/live',
+  path: '/api/body-weight/live',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiBodyWeightProfilesRoute = ApiBodyWeightProfilesRouteImport.update({
   id: '/api/body-weight/profiles',
   path: '/api/body-weight/profiles',
@@ -465,6 +472,12 @@ const ApiAdminCronJobsJobIdRoute = ApiAdminCronJobsJobIdRouteImport.update({
   path: '/$jobId',
   getParentRoute: () => ApiAdminCronJobsRoute,
 } as any)
+const ApiBodyWeightMeasurementsIdRoute =
+  ApiBodyWeightMeasurementsIdRouteImport.update({
+    id: '/api/body-weight/measurements/$id',
+    path: '/api/body-weight/measurements/$id',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiExchangesBitkubBuysRoute = ApiExchangesBitkubBuysRouteImport.update({
   id: '/api/exchanges/bitkub/buys',
   path: '/api/exchanges/bitkub/buys',
@@ -537,6 +550,7 @@ export interface FileRoutesByFullPath {
   '/api/attendance/update': typeof ApiAttendanceUpdateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/auth/check-line-approval': typeof ApiAuthCheckLineApprovalRoute
+  '/api/body-weight/live': typeof ApiBodyWeightLiveRoute
   '/api/body-weight/profiles': typeof ApiBodyWeightProfilesRoute
   '/api/body-weight/webhook': typeof ApiBodyWeightWebhookRoute
   '/api/cron/auto-checkout': typeof ApiCronAutoCheckoutRoute
@@ -574,6 +588,7 @@ export interface FileRoutesByFullPath {
   '/api/expenses/': typeof ApiExpensesIndexRoute
   '/api/subscriptions/': typeof ApiSubscriptionsIndexRoute
   '/api/admin/cron-jobs/$jobId': typeof ApiAdminCronJobsJobIdRouteWithChildren
+  '/api/body-weight/measurements/$id': typeof ApiBodyWeightMeasurementsIdRoute
   '/api/exchanges/bitkub/buys': typeof ApiExchangesBitkubBuysRoute
   '/api/exchanges/bitkub/connection': typeof ApiExchangesBitkubConnectionRoute
   '/api/expenses/budgets/$id': typeof ApiExpensesBudgetsIdRoute
@@ -619,6 +634,7 @@ export interface FileRoutesByTo {
   '/api/attendance/update': typeof ApiAttendanceUpdateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/auth/check-line-approval': typeof ApiAuthCheckLineApprovalRoute
+  '/api/body-weight/live': typeof ApiBodyWeightLiveRoute
   '/api/body-weight/profiles': typeof ApiBodyWeightProfilesRoute
   '/api/body-weight/webhook': typeof ApiBodyWeightWebhookRoute
   '/api/cron/auto-checkout': typeof ApiCronAutoCheckoutRoute
@@ -656,6 +672,7 @@ export interface FileRoutesByTo {
   '/api/expenses': typeof ApiExpensesIndexRoute
   '/api/subscriptions': typeof ApiSubscriptionsIndexRoute
   '/api/admin/cron-jobs/$jobId': typeof ApiAdminCronJobsJobIdRouteWithChildren
+  '/api/body-weight/measurements/$id': typeof ApiBodyWeightMeasurementsIdRoute
   '/api/exchanges/bitkub/buys': typeof ApiExchangesBitkubBuysRoute
   '/api/exchanges/bitkub/connection': typeof ApiExchangesBitkubConnectionRoute
   '/api/expenses/budgets/$id': typeof ApiExpensesBudgetsIdRoute
@@ -702,6 +719,7 @@ export interface FileRoutesById {
   '/api/attendance/update': typeof ApiAttendanceUpdateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/auth/check-line-approval': typeof ApiAuthCheckLineApprovalRoute
+  '/api/body-weight/live': typeof ApiBodyWeightLiveRoute
   '/api/body-weight/profiles': typeof ApiBodyWeightProfilesRoute
   '/api/body-weight/webhook': typeof ApiBodyWeightWebhookRoute
   '/api/cron/auto-checkout': typeof ApiCronAutoCheckoutRoute
@@ -739,6 +757,7 @@ export interface FileRoutesById {
   '/api/expenses/': typeof ApiExpensesIndexRoute
   '/api/subscriptions/': typeof ApiSubscriptionsIndexRoute
   '/api/admin/cron-jobs/$jobId': typeof ApiAdminCronJobsJobIdRouteWithChildren
+  '/api/body-weight/measurements/$id': typeof ApiBodyWeightMeasurementsIdRoute
   '/api/exchanges/bitkub/buys': typeof ApiExchangesBitkubBuysRoute
   '/api/exchanges/bitkub/connection': typeof ApiExchangesBitkubConnectionRoute
   '/api/expenses/budgets/$id': typeof ApiExpensesBudgetsIdRoute
@@ -786,6 +805,7 @@ export interface FileRouteTypes {
     | '/api/attendance/update'
     | '/api/auth/$'
     | '/api/auth/check-line-approval'
+    | '/api/body-weight/live'
     | '/api/body-weight/profiles'
     | '/api/body-weight/webhook'
     | '/api/cron/auto-checkout'
@@ -823,6 +843,7 @@ export interface FileRouteTypes {
     | '/api/expenses/'
     | '/api/subscriptions/'
     | '/api/admin/cron-jobs/$jobId'
+    | '/api/body-weight/measurements/$id'
     | '/api/exchanges/bitkub/buys'
     | '/api/exchanges/bitkub/connection'
     | '/api/expenses/budgets/$id'
@@ -868,6 +889,7 @@ export interface FileRouteTypes {
     | '/api/attendance/update'
     | '/api/auth/$'
     | '/api/auth/check-line-approval'
+    | '/api/body-weight/live'
     | '/api/body-weight/profiles'
     | '/api/body-weight/webhook'
     | '/api/cron/auto-checkout'
@@ -905,6 +927,7 @@ export interface FileRouteTypes {
     | '/api/expenses'
     | '/api/subscriptions'
     | '/api/admin/cron-jobs/$jobId'
+    | '/api/body-weight/measurements/$id'
     | '/api/exchanges/bitkub/buys'
     | '/api/exchanges/bitkub/connection'
     | '/api/expenses/budgets/$id'
@@ -950,6 +973,7 @@ export interface FileRouteTypes {
     | '/api/attendance/update'
     | '/api/auth/$'
     | '/api/auth/check-line-approval'
+    | '/api/body-weight/live'
     | '/api/body-weight/profiles'
     | '/api/body-weight/webhook'
     | '/api/cron/auto-checkout'
@@ -987,6 +1011,7 @@ export interface FileRouteTypes {
     | '/api/expenses/'
     | '/api/subscriptions/'
     | '/api/admin/cron-jobs/$jobId'
+    | '/api/body-weight/measurements/$id'
     | '/api/exchanges/bitkub/buys'
     | '/api/exchanges/bitkub/connection'
     | '/api/expenses/budgets/$id'
@@ -1032,6 +1057,7 @@ export interface RootRouteChildren {
   ApiAttendanceUpdateRoute: typeof ApiAttendanceUpdateRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiAuthCheckLineApprovalRoute: typeof ApiAuthCheckLineApprovalRoute
+  ApiBodyWeightLiveRoute: typeof ApiBodyWeightLiveRoute
   ApiBodyWeightProfilesRoute: typeof ApiBodyWeightProfilesRoute
   ApiBodyWeightWebhookRoute: typeof ApiBodyWeightWebhookRoute
   ApiCronAutoCheckoutRoute: typeof ApiCronAutoCheckoutRoute
@@ -1065,6 +1091,7 @@ export interface RootRouteChildren {
   ApiDcaIndexRoute: typeof ApiDcaIndexRoute
   ApiExpensesIndexRoute: typeof ApiExpensesIndexRoute
   ApiSubscriptionsIndexRoute: typeof ApiSubscriptionsIndexRoute
+  ApiBodyWeightMeasurementsIdRoute: typeof ApiBodyWeightMeasurementsIdRoute
   ApiExchangesBitkubBuysRoute: typeof ApiExchangesBitkubBuysRoute
   ApiExchangesBitkubConnectionRoute: typeof ApiExchangesBitkubConnectionRoute
 }
@@ -1337,6 +1364,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiBodyWeightIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/body-weight/live': {
+      id: '/api/body-weight/live'
+      path: '/api/body-weight/live'
+      fullPath: '/api/body-weight/live'
+      preLoaderRoute: typeof ApiBodyWeightLiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/body-weight/profiles': {
       id: '/api/body-weight/profiles'
       path: '/api/body-weight/profiles'
@@ -1589,6 +1623,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminCronJobsJobIdRouteImport
       parentRoute: typeof ApiAdminCronJobsRoute
     }
+    '/api/body-weight/measurements/$id': {
+      id: '/api/body-weight/measurements/$id'
+      path: '/api/body-weight/measurements/$id'
+      fullPath: '/api/body-weight/measurements/$id'
+      preLoaderRoute: typeof ApiBodyWeightMeasurementsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/exchanges/bitkub/buys': {
       id: '/api/exchanges/bitkub/buys'
       path: '/api/exchanges/bitkub/buys'
@@ -1768,6 +1809,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAttendanceUpdateRoute: ApiAttendanceUpdateRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiAuthCheckLineApprovalRoute: ApiAuthCheckLineApprovalRoute,
+  ApiBodyWeightLiveRoute: ApiBodyWeightLiveRoute,
   ApiBodyWeightProfilesRoute: ApiBodyWeightProfilesRoute,
   ApiBodyWeightWebhookRoute: ApiBodyWeightWebhookRoute,
   ApiCronAutoCheckoutRoute: ApiCronAutoCheckoutRoute,
@@ -1801,6 +1843,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiDcaIndexRoute: ApiDcaIndexRoute,
   ApiExpensesIndexRoute: ApiExpensesIndexRoute,
   ApiSubscriptionsIndexRoute: ApiSubscriptionsIndexRoute,
+  ApiBodyWeightMeasurementsIdRoute: ApiBodyWeightMeasurementsIdRoute,
   ApiExchangesBitkubBuysRoute: ApiExchangesBitkubBuysRoute,
   ApiExchangesBitkubConnectionRoute: ApiExchangesBitkubConnectionRoute,
 }

@@ -26,6 +26,26 @@ export interface ScaleMeasurementDto {
   metrics: ScaleMetricValues;
 }
 
+/** สถานะตาชั่งสดจาก GET /api/body-weight/live */
+export interface LiveScaleState {
+  reading: {
+    weightKg: number;
+    impedance: number | null;
+    stabilized: boolean;
+    removed: boolean;
+    /** อายุของ packet ล่าสุด (ms) คำนวณฝั่ง server */
+    ageMs: number;
+  } | null;
+  lastMeasurement: { id: string; status: "saved" | "updated" } | null;
+  version: number;
+  /** น้ำหนักนิ่งแล้ว รอ impedance — ยังไม่ถูกบันทึก */
+  pending: {
+    weightKg: number;
+    profileId: string | null;
+    profileName: string | null;
+  } | null;
+}
+
 export interface BodyWeightSnapshot {
   measurements: ScaleMeasurementDto[]; // เรียงใหม่ → เก่า
   profiles: ScaleProfileDto[]; // เรียงตามชื่อ

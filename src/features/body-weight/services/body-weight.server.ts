@@ -4,7 +4,7 @@
  * ทางเข้าข้อมูลมี 2 ช่องทาง:
  * - event "reading" จาก BLE listener ของเราเอง (bun run scale:listen) — packet ดิบ
  *   ที่ parse แล้ว ฝั่งนี้จัดกลุ่มเป็นการชั่ง (dedupe น้ำหนัก ±0.1 กก. ใน 3 นาที)
- *   เดาเจ้าของจากน้ำหนักล่าสุดของแต่ละโปรไฟล์ และรอ impedance ก่อน push LINE
+ *   เดาเจ้าของจากน้ำหนักล่าสุดของแต่ละโปรไฟล์ และบันทึกเฉพาะการชั่งที่ได้ impedance ครบ
  * - event "measurement" จาก miscale-dashboard (ทางเลือกเก่า) — ผลชั่งจัดกลุ่มมาแล้ว
  * ทั้งสองทางคำนวณ body composition ฝั่งนี้และ push LINE เหมือนกัน
  */
@@ -14,6 +14,10 @@ import { getEnvAdminLineUserIds } from "@/lib/auth/admin";
 import { db } from "@/lib/database";
 import { sendPushMessage } from "@/lib/utils/line-push";
 import { createWeighInFlexMessage } from "@/features/line/line-utils/flex-messages";
+import {
+  getPendingWeighIn,
+  setPendingWeighIn,
+} from "@/features/body-weight/services/live-scale.server";
 import {
   computeBodyComposition,
   toBangkokDateParts,
@@ -42,6 +46,8 @@ export interface ScaleWebhookPayload {
 export type IngestResult =
   | { status: "saved" | "updated"; measurement: ScaleMeasurementDto }
   | { status: "duplicate" }
+  /** น้ำหนักนิ่งแล้ว รอ impedance — ยังไม่บันทึก */
+  | { status: "pending" }
   | { status: "ignored" };
 
 /** ระยะผ่อนปรนการจับคู่เจ้าของด้วยน้ำหนัก (เหมือน default ของ upstream) */
@@ -188,46 +194,12 @@ const notifyWeighIn = async (
   }
 };
 
-/** รอ impedance packet มาถึงก่อนค่อย push LINE (เหมือน NOTIFY_WAIT ของ upstream) */
-const NOTIFY_IMPEDANCE_WAIT_MS = 20_000;
-const pendingNotifications = new Map<string, ReturnType<typeof setTimeout>>();
-
-const notifyMeasurementById = async (measurementId: string): Promise<void> => {
-  const row = await db.scaleMeasurement.findUnique({
-    where: { id: measurementId },
-    include: { profile: { select: { name: true } } },
-  });
-  if (!row || !row.profileId) return;
-  await notifyWeighIn(toMeasurementDto(row), row.profile?.name ?? null);
-};
-
-const scheduleNotify = (measurementId: string): void => {
-  pendingNotifications.set(
-    measurementId,
-    setTimeout(() => {
-      pendingNotifications.delete(measurementId);
-      void notifyMeasurementById(measurementId).catch((error) => {
-        console.error(
-          "[body-weight] notify failed:",
-          (error as Error)?.message ?? error,
-        );
-      });
-    }, NOTIFY_IMPEDANCE_WAIT_MS),
-  );
-};
-
-/** impedance มาถึงก่อนเวลา — ยกเลิกการรอแล้วแจ้งทันที */
-const flushNotify = (measurementId: string): void => {
-  const timer = pendingNotifications.get(measurementId);
-  if (!timer) return;
-  clearTimeout(timer);
-  pendingNotifications.delete(measurementId);
-  void notifyMeasurementById(measurementId).catch((error) => {
-    console.error(
-      "[body-weight] notify failed:",
-      (error as Error)?.message ?? error,
-    );
-  });
+/** push LINE เบื้องหลัง — ไม่ให้ webhook ต้องรอ LINE API */
+const notifyInBackground = (
+  measurement: ScaleMeasurementDto,
+  profileName: string | null,
+): void => {
+  void notifyWeighIn(measurement, profileName);
 };
 
 /**
@@ -339,9 +311,22 @@ const guessProfileId = async (weightKg: number): Promise<string | null> => {
 };
 
 /**
- * บันทึก packet จาก BLE listener — จับกลุ่ม packet ของการชั่งเดียวกัน
- * (น้ำหนัก ±0.1 กก. จากอุปกรณ์เดิมภายใน 3 นาที) แล้วอัปเดต impedance ทับ,
- * เดาเจ้าของ และหน่วงการ push LINE รอ impedance (port ของ Session.handle)
+ * น้ำหนักต่างกันไม่เกิน 0.1 กก. = การชั่งเดียวกัน — เทียบเป็นหน่วย 10 กรัม (จำนวนเต็ม)
+ * เพราะ float: 67.9 − 67.8 = 0.10000000000000853 > 0.1 ทำให้ตาชั่งที่ขยับ 0.1 กก.
+ * หลังได้ impedance ถูกนับเป็นการชั่งใหม่ที่ไม่มีวันได้ impedance
+ */
+const isSameWeighInWeight = (a: number, b: number): boolean =>
+  Math.abs(Math.round(a * 100) - Math.round(b * 100)) <= 10;
+
+const SAME_WEIGH_IN_WINDOW_MS = 3 * 60 * 1000;
+
+/**
+ * บันทึก packet จาก BLE listener — บันทึกลง DB เฉพาะการชั่งที่ "ครบ" (มี impedance)
+ * ต่างจาก Session.handle ของ upstream ที่บันทึกตั้งแต่น้ำหนักนิ่งแล้วค่อยเติม impedance:
+ * - นิ่งแต่ยังไม่มี impedance → เก็บเป็น pending ในหน่วยความจำ (หน้าเต็มจอโชว์ชื่อได้)
+ * - ได้ impedance → บันทึกครั้งเดียวพร้อม metrics ครบ แล้ว push LINE ทันที
+ * - ลงจากตาชั่งก่อนได้ impedance → ทิ้ง ไม่บันทึก
+ * packet ที่ตรงกับการชั่งล่าสุด (±0.1 กก. อุปกรณ์เดิม ใน 3 นาที) = ซ้ำ
  */
 export async function ingestScaleReading(
   input: ScaleReadingInput,
@@ -356,9 +341,10 @@ export async function ingestScaleReading(
   if (
     recent &&
     recent.address === input.address &&
-    Math.abs(recent.weightKg - input.weightKg) <= 0.1 &&
-    now.getTime() - recent.measuredAt.getTime() < 3 * 60 * 1000
+    isSameWeighInWeight(recent.weightKg, input.weightKg) &&
+    now.getTime() - recent.measuredAt.getTime() < SAME_WEIGH_IN_WINDOW_MS
   ) {
+    // แถวเก่าก่อนเปลี่ยนเป็น "บันทึกเมื่อครบ" อาจยังไม่มี impedance — เติมให้
     if (input.impedance && !recent.impedance) {
       const profile = recent.profileId
         ? await db.scaleProfile.findUnique({ where: { id: recent.profileId } })
@@ -376,7 +362,6 @@ export async function ingestScaleReading(
           metrics: metrics ?? Prisma.DbNull,
         },
       });
-      flushNotify(recent.id);
       const row = await db.scaleMeasurement.findUnique({
         where: { id: recent.id },
         include: { profile: { select: { name: true } } },
@@ -384,17 +369,53 @@ export async function ingestScaleReading(
       if (!row) {
         return { status: "duplicate" };
       }
-      return { status: "updated", measurement: toMeasurementDto(row) };
+      const dto = toMeasurementDto(row);
+      notifyInBackground(dto, row.profile?.name ?? null);
+      return { status: "updated", measurement: dto };
     }
     // packet เดิมซ้ำ (น้ำหนักเดิม อุปกรณ์เดิม ในกรอบเวลาเดิม)
     return { status: "duplicate" };
   }
-  // packet "คนลงแล้ว" ที่ไม่ตรงกับการชั่งล่าสุด — ผลเก่าถูกส่งซ้ำ ไม่สร้างใหม่
-  if (input.removed) {
+
+  const pending = getPendingWeighIn(now.getTime());
+  const matchesPending =
+    pending !== null &&
+    pending.address === input.address &&
+    isSameWeighInWeight(pending.weightKg, input.weightKg);
+
+  if (!input.impedance) {
+    if (input.removed) {
+      // ลงจากตาชั่งก่อนวัดสัดส่วนร่างกายเสร็จ — การชั่งไม่ครบ ไม่บันทึก
+      if (matchesPending) setPendingWeighIn(null);
+      return { status: "ignored" };
+    }
+    if (!matchesPending) {
+      const profileId = await guessProfileId(input.weightKg);
+      const profile = profileId
+        ? await db.scaleProfile.findUnique({
+            where: { id: profileId },
+            select: { name: true },
+          })
+        : null;
+      setPendingWeighIn({
+        address: input.address,
+        weightKg: input.weightKg,
+        profileId,
+        profileName: profile?.name ?? null,
+        at: now.getTime(),
+      });
+    }
+    return { status: "pending" };
+  }
+
+  // มี impedance แต่เป็น packet "ลงแล้ว" ที่ไม่ตรงกับการชั่งที่รออยู่ — ผลเก่าถูกส่งซ้ำ
+  if (input.removed && !matchesPending) {
     return { status: "ignored" };
   }
 
-  const profileId = await guessProfileId(input.weightKg);
+  const profileId = matchesPending
+    ? pending.profileId
+    : await guessProfileId(input.weightKg);
   const profile = profileId
     ? await db.scaleProfile.findUnique({ where: { id: profileId } })
     : null;
@@ -410,8 +431,65 @@ export async function ingestScaleReading(
     },
     include: { profile: { select: { name: true } } },
   });
-  scheduleNotify(created.id);
-  return { status: "saved", measurement: toMeasurementDto(created) };
+  setPendingWeighIn(null);
+  const dto = toMeasurementDto(created);
+  notifyInBackground(dto, profile?.name ?? null);
+  return { status: "saved", measurement: dto };
+}
+
+export type UpdateMeasurementResult =
+  | { status: "updated"; measurement: ScaleMeasurementDto }
+  | { status: "measurement_not_found" }
+  | { status: "profile_not_found" };
+
+/**
+ * เปลี่ยนเจ้าของการชั่ง (null = ไม่ระบุ) แล้วคำนวณ metrics ใหม่ตามส่วนสูง/วันเกิด/เพศของเจ้าของใหม่
+ */
+export async function updateMeasurementProfile(
+  measurementId: string,
+  profileId: string | null,
+): Promise<UpdateMeasurementResult> {
+  const existing = await db.scaleMeasurement.findUnique({
+    where: { id: measurementId },
+    select: { id: true, weightKg: true, impedance: true, measuredAt: true },
+  });
+  if (!existing) return { status: "measurement_not_found" };
+
+  const profile = profileId
+    ? await db.scaleProfile.findUnique({ where: { id: profileId } })
+    : null;
+  if (profileId && !profile) return { status: "profile_not_found" };
+
+  const metrics = metricsFor(
+    profile,
+    existing.weightKg,
+    existing.impedance,
+    existing.measuredAt,
+  );
+  const updated = await db.scaleMeasurement.update({
+    where: { id: measurementId },
+    data: { profileId, metrics: metrics ?? Prisma.DbNull },
+    include: { profile: { select: { name: true } } },
+  });
+  return { status: "updated", measurement: toMeasurementDto(updated) };
+}
+
+/** ลบการชั่ง — คืน false เมื่อไม่พบ */
+export async function deleteMeasurement(
+  measurementId: string,
+): Promise<boolean> {
+  try {
+    await db.scaleMeasurement.delete({ where: { id: measurementId } });
+    return true;
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      return false;
+    }
+    throw error;
+  }
 }
 
 /** ข้อมูลสำหรับหน้า /body-weight — การชั่งล่าสุด (ใหม่ → เก่า) + โปรไฟล์ทั้งหมด */

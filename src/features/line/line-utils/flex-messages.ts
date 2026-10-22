@@ -252,6 +252,12 @@ const getBodyWeightUrl = (appUrl: string) => {
 };
 
 /**
+ * ม่วง "T3" ของโลโก้ (hsl(280,100%,70%) = #cc66ff) ผสมดำ 75% ให้ตัวอักษรขาว
+ * บนปุ่มผ่าน contrast (5.04:1) — LINE Flex รับเฉพาะ hex
+ */
+const WEIGH_IN_THEME_COLOR = "#994dbf";
+
+/**
  * สร้าง Flex Message แจ้งผลชั่งน้ำหนักใหม่จากตาชั่ง Mi Body Composition Scale 2
  */
 export function createWeighInFlexMessage(
@@ -363,7 +369,7 @@ export function createWeighInFlexMessage(
                   uri: bodyWeightUrl,
                 },
                 style: "primary",
-                color: "#059669",
+                color: WEIGH_IN_THEME_COLOR,
               },
             ]
           : [

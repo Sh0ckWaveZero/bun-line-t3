@@ -15,6 +15,10 @@ import {
   ingestScaleReading,
   ingestScaleWebhook,
 } from "@/features/body-weight/services/body-weight.server";
+import {
+  recordLiveReading,
+  recordMeasurementChange,
+} from "@/features/body-weight/services/live-scale.server";
 
 const measurementEventSchema = z.object({
   event: z.literal("measurement"),
@@ -90,12 +94,19 @@ export async function POST(request: Request) {
     }
 
     const input = webhookSchema.parse(await request.json());
+    // ก่อน ingest — packet ที่ยังไม่นิ่ง (ingest ข้าม) ก็ต้องโชว์ในการ์ดตาชั่งสด
+    if (input.event === "reading") {
+      recordLiveReading(input.reading);
+    }
     const result =
       input.event === "measurement"
         ? await ingestScaleWebhook(input)
         : input.event === "reading"
           ? await ingestScaleReading(input.reading)
-          : { status: "ignored" };
+          : ({ status: "ignored" } as const);
+    if (result.status === "saved" || result.status === "updated") {
+      recordMeasurementChange(result.measurement.id, result.status);
+    }
 
     return Response.json({ success: true, status: result.status });
   } catch (error) {

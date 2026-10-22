@@ -6,9 +6,8 @@
  * วิธีนี้ mock ที่ขอบเขตล่าง (db / env / LINE push) แล้วทดสอบ service จริงผ่าน route จริง
  */
 import { describe, it, expect, mock, beforeEach } from "bun:test";
+import { Prisma } from "@prisma/client";
 
-// ย่อเวลาหน่วงรอ impedance ให้ test ไม่ต้องรอจริง (service อ่านค่าตอนโหลดโมดูล)
-process.env.SCALE_NOTIFY_WAIT_MS = "10";
 
 // --- Mocks ---
 
@@ -44,6 +43,8 @@ let createCalls: Array<Record<string, unknown>> = [];
 let storedMeasurements: Array<Record<string, unknown>> = [];
 let profileFindResult: Record<string, unknown> | null = null;
 let updateCalls: Array<Record<string, unknown>> = [];
+let deleteCalls: string[] = [];
+let isProfileMissing = false;
 
 /** จำลอง DB round-trip: Prisma.DbNull (sentinel) อ่านกลับมาเป็น null เสมอ */
 const dbRoundTrip = (metrics: unknown) => {
@@ -119,9 +120,33 @@ const dbMocks = {
       return row;
     },
     findMany: async () => storedMeasurements,
-    update: async ({ data }: { data: Record<string, unknown> }) => {
+    update: async ({
+      where,
+      data,
+    }: {
+      where: { id: string };
+      data: Record<string, unknown>;
+    }) => {
       updateCalls.push(data);
-      return {};
+      return {
+        id: where.id,
+        profileId: data.profileId ?? null,
+        profile: data.profileId ? { name: "Alex" } : null,
+        weightKg: recentMeasurement?.weightKg ?? 0,
+        impedance: recentMeasurement?.impedance ?? null,
+        measuredAt: recentMeasurement?.measuredAt ?? new Date(0),
+        metrics: dbRoundTrip(data.metrics),
+      };
+    },
+    delete: async ({ where }: { where: { id: string } }) => {
+      if (recentMeasurement?.id !== where.id) {
+        throw new Prisma.PrismaClientKnownRequestError("Record not found", {
+          code: "P2025",
+          clientVersion: "test",
+        });
+      }
+      deleteCalls.push(where.id);
+      return recentMeasurement;
     },
   },
   scaleProfile: {
@@ -141,6 +166,7 @@ const dbMocks = {
     findUnique: async ({ where }: { where: { id: string } }) => {
       const found = profilesList.find((profile) => profile.id === where.id);
       if (found) return found;
+      if (isProfileMissing) return null;
       return (
         profileFindResult ?? {
           id: where.id,
@@ -170,8 +196,16 @@ mock.module("@/lib/database", () => ({ db: dbMocks }));
 mock.module("@/lib/database/db", () => ({ db: dbMocks }));
 
 const { POST } = await import("../../src/routes/api/body-weight/webhook");
-const { ingestScaleReading, ingestScaleWebhook, saveScaleProfile } =
-  await import("@/features/body-weight/services/body-weight.server");
+const {
+  deleteMeasurement,
+  ingestScaleReading,
+  ingestScaleWebhook,
+  saveScaleProfile,
+  updateMeasurementProfile,
+} = await import("@/features/body-weight/services/body-weight.server");
+const { getLiveScaleState, setPendingWeighIn } = await import(
+  "@/features/body-weight/services/live-scale.server"
+);
 
 // --- Fixtures ---
 
@@ -425,6 +459,7 @@ describe("Unit Test: body-weight service (event reading จาก BLE listener)"
     profilesList = [];
     storedMeasurements = [];
     profileFindResult = null;
+    setPendingWeighIn(null);
   });
 
   it("packet ยังไม่นิ่ง (stabilized=false) — ข้าม", async () => {
@@ -433,19 +468,61 @@ describe("Unit Test: body-weight service (event reading จาก BLE listener)"
     expect(createCalls.length).toBe(0);
   });
 
-  it("การชั่งใหม่ — บันทึกพร้อม address และหน่วง push รอ impedance", async () => {
+  it("น้ำหนักนิ่งแต่ยังไม่มี impedance — pending ไม่บันทึก ไม่ push", async () => {
+    profilesList = [{ id: "p-1", name: "Alex", refWeightKg: 75.0, male: true }];
     const result = await ingestScaleReading(reading());
+    expect(result).toEqual({ status: "pending" });
+    expect(createCalls.length).toBe(0);
+    expect(pushCalls.length).toBe(0);
+    // หน้าเต็มจอรู้เจ้าของได้ทั้งที่ยังไม่บันทึก
+    expect(getLiveScaleState().pending).toEqual({
+      weightKg: 75.3,
+      profileId: "p-1",
+      profileName: "Alex",
+    });
+  });
+
+  it("ได้ impedance — บันทึกครั้งเดียวพร้อมค่าครบ เจ้าของจาก pending แล้ว push ทันที", async () => {
+    profilesList = [{ id: "p-1", name: "Alex", refWeightKg: 75.0, male: true }];
+    await ingestScaleReading(reading({ weightKg: 75.3 }));
+    // เจ้าของถูกเดาไว้ตอน pending — ต่อให้โปรไฟล์เปลี่ยนก็ใช้ค่าเดิม
+    profilesList = [];
+    const result = await ingestScaleReading(
+      reading({ weightKg: 75.35, impedance: 501 }),
+    );
     if (result.status !== "saved") {
       throw new Error("expected saved");
     }
     expect(createCalls.length).toBe(1);
     expect(createCalls[0]).toMatchObject({
       address: "AA:BB:CC",
-      weightKg: 75.3,
-      impedance: null,
+      profileId: "p-1",
+      weightKg: 75.35,
+      impedance: 501,
     });
-    // push ยังไม่เกิดทันที — รอ impedance ภายใน NOTIFY_IMPEDANCE_WAIT_MS
-    expect(pushCalls.length).toBe(0);
+    expect(getLiveScaleState().pending).toBeNull();
+    await Bun.sleep(20);
+    expect(pushCalls.length).toBe(1);
+    expect(pushCalls[0].userId).toBe("admin-line-1");
+  });
+
+  it("ลงจากตาชั่งก่อนได้ impedance — ทิ้งการชั่ง ไม่บันทึก", async () => {
+    await ingestScaleReading(reading({ weightKg: 75.3 }));
+    const result = await ingestScaleReading(
+      reading({ weightKg: 75.3, removed: true }),
+    );
+    expect(result).toEqual({ status: "ignored" });
+    expect(createCalls.length).toBe(0);
+    expect(getLiveScaleState().pending).toBeNull();
+  });
+
+  it("packet ลงแล้วพร้อม impedance ของการชั่งที่รออยู่ — ยังบันทึก (listener พลาด packet ก่อนหน้า)", async () => {
+    await ingestScaleReading(reading({ weightKg: 75.3 }));
+    const result = await ingestScaleReading(
+      reading({ weightKg: 75.3, impedance: 499, removed: true }),
+    );
+    expect(result.status).toBe("saved");
+    expect(createCalls.length).toBe(1);
   });
 
   it("packet ซ้ำ (น้ำหนัก/อุปกรณ์เดิมใน 3 นาที) — duplicate ไม่สร้างใหม่", async () => {
@@ -463,17 +540,39 @@ describe("Unit Test: body-weight service (event reading จาก BLE listener)"
     expect(createCalls.length).toBe(0);
   });
 
-  it("impedance ตามมาทีหลัง — อัปเดตของเดิม คำนวณ metrics แล้ว push ทันที", async () => {
-    // flow จริง: saved (schedule รอ impedance) → packet impedance (flush แจ้งทันที)
-    profilesList = [{ id: "p-1", name: "Alex", refWeightKg: 75.0, male: true }];
-    const saved = await ingestScaleReading(
-      reading({ weightKg: 75.3, impedance: null }),
-    );
-    if (saved.status !== "saved") {
-      throw new Error("expected saved");
-    }
-    expect(pushCalls.length).toBe(0);
+  it("น้ำหนักขยับ 0.1 กก. พอดีหลังได้ impedance — ยังเป็นการชั่งเดิม (float 67.9−67.8 > 0.1)", async () => {
+    // เคสจริง 22 ต.ค. 21:11: 67.80 (imp 488) แล้วตาชั่งส่ง 67.90 — เดิมถูกนับเป็นการชั่งใหม่
+    recentMeasurement = {
+      id: "m-recent",
+      address: "AA:BB:CC",
+      profileId: "p-1",
+      weightKg: 67.8,
+      impedance: 488,
+      measuredAt: new Date(),
+      metrics: null,
+    };
+    const result = await ingestScaleReading(reading({ weightKg: 67.9 }));
+    expect(result).toEqual({ status: "duplicate" });
+    expect(createCalls.length).toBe(0);
+  });
 
+  it("น้ำหนักต่างเกิน 0.1 กก. — นับเป็นการชั่งใหม่", async () => {
+    recentMeasurement = {
+      id: "m-recent",
+      address: "AA:BB:CC",
+      profileId: "p-1",
+      weightKg: 67.8,
+      impedance: 488,
+      measuredAt: new Date(),
+      metrics: null,
+    };
+    const result = await ingestScaleReading(
+      reading({ weightKg: 67.95, impedance: 480 }),
+    );
+    expect(result.status).toBe("saved");
+  });
+
+  it("แถวเก่าที่บันทึกไว้โดยยังไม่มี impedance — impedance ตามมาแล้วเติมให้ + push", async () => {
     recentMeasurement = {
       id: "m-1",
       address: "AA:BB:CC",
@@ -491,8 +590,7 @@ describe("Unit Test: body-weight service (event reading จาก BLE listener)"
     }
     expect(updateCalls.length).toBe(1);
     expect(updateCalls[0]).toMatchObject({ impedance: 501 });
-    // flushNotify → notifyMeasurementById → push (SCALE_NOTIFY_WAIT_MS=10ms ใน test)
-    await Bun.sleep(50);
+    await Bun.sleep(20);
     expect(pushCalls.length).toBe(1);
     expect(pushCalls[0].userId).toBe("admin-line-1");
   });
@@ -511,7 +609,7 @@ describe("Unit Test: body-weight service (event reading จาก BLE listener)"
     recentMeasurement = null;
     // โปรไฟล์ Alex มีประวัติ 74.9 → 75.0 ห่าง 0.1 (จับคู่ผ่าน previousWeight mock ที่ใช้ร่วมทุกโปรไฟล์)
     previousWeight = 74.9;
-    const result = await ingestScaleReading(reading({ weightKg: 75.0 }));
+    const result = await ingestScaleReading(reading({ weightKg: 75.0, impedance: 500 }));
     if (result.status !== "saved") {
       throw new Error("expected saved");
     }
@@ -524,7 +622,7 @@ describe("Unit Test: body-weight service (event reading จาก BLE listener)"
       { id: "p-alex", name: "Alex", refWeightKg: 60.0, male: true },
     ];
     previousWeight = null;
-    const result = await ingestScaleReading(reading({ weightKg: 95.0 }));
+    const result = await ingestScaleReading(reading({ weightKg: 95.0, impedance: 500 }));
     if (result.status !== "saved") {
       throw new Error("expected saved");
     }
@@ -536,10 +634,140 @@ describe("Unit Test: body-weight service (event reading จาก BLE listener)"
       { id: "p-only", name: "Alex", refWeightKg: null, male: true },
     ];
     previousWeight = null;
-    const result = await ingestScaleReading(reading({ weightKg: 70.0 }));
+    const result = await ingestScaleReading(reading({ weightKg: 70.0, impedance: 500 }));
     if (result.status !== "saved") {
       throw new Error("expected saved");
     }
     expect(createCalls[0].profileId).toBe("p-only");
+  });
+});
+
+describe("Unit Test: body-weight webhook → สถานะตาชั่งสด", () => {
+  const readingPayload = (overrides: Record<string, unknown> = {}) => ({
+    event: "reading",
+    reading: {
+      address: "AA:BB:CC",
+      weightKg: 64.4,
+      impedance: null,
+      stabilized: false,
+      removed: false,
+      ...overrides,
+    },
+  });
+
+  beforeEach(() => {
+    createCalls = [];
+    recentMeasurement = null;
+    createdRows = [];
+    profilesList = [];
+    previousWeight = null;
+    profileFindResult = null;
+    secretValue = "test-webhook-secret-123";
+    setPendingWeighIn(null);
+  });
+
+  it("packet ยังไม่นิ่ง — ขึ้นการ์ดสดแต่ไม่บันทึก ไม่เพิ่ม version", async () => {
+    const before = getLiveScaleState().version;
+    const response = await postWebhook(readingPayload({ weightKg: 64.4 }));
+    expect(response.status).toBe(200);
+    const state = getLiveScaleState();
+    expect(state.reading?.weightKg).toBe(64.4);
+    expect(state.reading?.stabilized).toBe(false);
+    expect(state.version).toBe(before);
+    expect(createCalls.length).toBe(0);
+  });
+
+  it("ชั่งครบ (มี impedance) — บันทึกแล้วเพิ่ม version พร้อม id ของการชั่ง", async () => {
+    const before = getLiveScaleState().version;
+    await postWebhook(
+      readingPayload({ weightKg: 64.6, stabilized: true, impedance: 470 }),
+    );
+    const state = getLiveScaleState();
+    expect(state.version).toBe(before + 1);
+    expect(state.lastMeasurement).toEqual({
+      id: createdRows.at(-1)?.id as string,
+      status: "saved",
+    });
+  });
+
+  it("secret ผิด — ไม่แตะสถานะตาชั่งสด", async () => {
+    const before = getLiveScaleState();
+    await postWebhook(
+      readingPayload({ weightKg: 99.9 }),
+      "http://localhost:4325/api/body-weight/webhook?secret=wrong-secret",
+    );
+    expect(getLiveScaleState().reading?.weightKg).toBe(
+      before.reading?.weightKg,
+    );
+    expect(getLiveScaleState().version).toBe(before.version);
+  });
+});
+
+describe("Unit Test: body-weight service (แก้เจ้าของ / ลบการชั่ง)", () => {
+  beforeEach(() => {
+    updateCalls = [];
+    deleteCalls = [];
+    profilesList = [];
+    profileFindResult = null;
+    isProfileMissing = false;
+    recentMeasurement = {
+      id: "m-1",
+      profileId: null,
+      weightKg: 75.3,
+      impedance: 501,
+      measuredAt: new Date("2026-10-18T01:00:00.000Z"),
+      metrics: null,
+    };
+  });
+
+  it("เปลี่ยนเจ้าของ — คำนวณ metrics ใหม่ตามโปรไฟล์ใหม่", async () => {
+    profilesList = [
+      {
+        id: "p-alex",
+        name: "Alex",
+        heightCm: 175,
+        birthDate: new Date("1990-01-01T00:00:00.000Z"),
+        male: true,
+        refWeightKg: null,
+      },
+    ];
+    const result = await updateMeasurementProfile("m-1", "p-alex");
+    if (result.status !== "updated") {
+      throw new Error("expected updated");
+    }
+    expect(updateCalls[0]).toMatchObject({ profileId: "p-alex" });
+    expect(result.measurement.profileId).toBe("p-alex");
+    expect(result.measurement.metrics.bodyFat).toBeNumber();
+  });
+
+  it("ย้ายเป็นไม่ระบุ — ล้าง metrics", async () => {
+    const result = await updateMeasurementProfile("m-1", null);
+    if (result.status !== "updated") {
+      throw new Error("expected updated");
+    }
+    expect(updateCalls[0]?.profileId).toBeNull();
+    expect(result.measurement.metrics).toEqual({});
+  });
+
+  it("ไม่พบการชั่ง — measurement_not_found ไม่อัปเดต", async () => {
+    const result = await updateMeasurementProfile("missing", "p-alex");
+    expect(result.status).toBe("measurement_not_found");
+    expect(updateCalls.length).toBe(0);
+  });
+
+  it("ไม่พบโปรไฟล์ — profile_not_found ไม่อัปเดต", async () => {
+    isProfileMissing = true;
+    const result = await updateMeasurementProfile("m-1", "p-ghost");
+    expect(result.status).toBe("profile_not_found");
+    expect(updateCalls.length).toBe(0);
+  });
+
+  it("ลบสำเร็จ", async () => {
+    expect(await deleteMeasurement("m-1")).toBe(true);
+    expect(deleteCalls).toEqual(["m-1"]);
+  });
+
+  it("ลบรายการที่ไม่มีอยู่ — false", async () => {
+    expect(await deleteMeasurement("missing")).toBe(false);
   });
 });
