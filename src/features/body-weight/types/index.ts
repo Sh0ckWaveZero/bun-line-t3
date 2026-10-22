@@ -13,6 +13,9 @@ export interface ScaleProfileDto {
   /** น้ำหนักอ้างอิง (กก.) — ใช้เดาเจ้าของเมื่อยังไม่มีประวัติ */
   refWeightKg: number | null;
   upstreamName: string | null;
+  /** เจ้าของโปรไฟล์ (LINE login) — null = ยังไม่กำหนด เห็นเฉพาะ admin */
+  ownerId: string | null;
+  ownerName: string | null;
 }
 
 export interface ScaleMeasurementDto {
@@ -62,7 +65,22 @@ export interface ScaleListenerOverview {
   listeners: { name: string; lastSeenAgoMs: number }[];
 }
 
+/** ผู้ใช้ที่เลือกเป็นเจ้าของโปรไฟล์ได้ (admin เท่านั้นที่เห็นรายการนี้) */
+export interface ScaleOwnerOption {
+  id: string;
+  name: string;
+}
+
 export interface BodyWeightSnapshot {
   measurements: ScaleMeasurementDto[]; // เรียงใหม่ → เก่า
   profiles: ScaleProfileDto[]; // เรียงตามชื่อ
+  viewer: { isAdmin: boolean };
+  /** ว่างสำหรับผู้ใช้ทั่วไป */
+  owners: ScaleOwnerOption[];
+}
+
+/** ผู้ดูข้อมูล — ใช้บังคับสิทธิ์ที่ชั้น service (admin เห็น/แก้ได้ทั้งหมด) */
+export interface ScaleViewer {
+  userId: string;
+  isAdmin: boolean;
 }

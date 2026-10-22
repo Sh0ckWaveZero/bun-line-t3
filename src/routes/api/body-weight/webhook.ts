@@ -90,7 +90,11 @@ export async function POST(request: Request) {
           ? await ingestScaleReading(input.reading)
           : ({ status: "ignored" } as const);
     if (result.status === "saved" || result.status === "updated") {
-      recordMeasurementChange(result.measurement.id, result.status);
+      recordMeasurementChange(
+        result.measurement.id,
+        result.status,
+        result.ownerUserId,
+      );
     }
 
     return Response.json({ success: true, status: result.status });

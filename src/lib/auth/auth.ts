@@ -185,6 +185,8 @@ const syncLineApprovalRequest = async (account: {
 // 🔍 Validate production domain configuration at startup
 validateProductionDomains();
 
+export const AUTH_COOKIE_PREFIX = "better-auth";
+
 export const auth = betterAuth({
   baseURL: getAuthBaseUrl(),
   // db เป็น extended client ($extends session.create) — structurally compatible กับ
@@ -199,7 +201,7 @@ export const auth = betterAuth({
     },
     // 🔒 Trust X-Forwarded-* headers from reverse proxy
     // Required for HTTPS detection behind load balancers/reverse proxies
-    cookiePrefix: "better-auth",
+    cookiePrefix: AUTH_COOKIE_PREFIX,
   },
   plugins: [tanstackStartCookies()],
   secret: env.AUTH_SECRET,

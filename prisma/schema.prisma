@@ -74,6 +74,7 @@ model User {
   savingsGoals          SavingsGoal[]
   bitkubConnection      BitkubConnection?
   bitkubBtcBuys         BitkubBtcBuy[]
+  scaleProfiles         ScaleProfile[]
 
   @@map("users")
 }
@@ -667,10 +668,13 @@ model ScaleProfile {
   male         Boolean   @default(true)
   refWeightKg  Float?    @map("ref_weight_kg") // น้ำหนักอ้างอิงสำหรับเดาเจ้าของเมื่อยังไม่มีประวัติ
   upstreamName String?   @unique @map("upstream_name") // ชื่อ profile ฝั่ง miscale-dashboard ที่ใช้จับคู่
+  userId       String?   @map("user_id")
+  user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
   measurements ScaleMeasurement[]
 
+  @@index([userId])
   @@map("scale_profiles")
 }
 

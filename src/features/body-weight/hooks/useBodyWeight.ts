@@ -13,6 +13,8 @@ export interface SaveProfileInput {
   male: boolean;
   /** น้ำหนักอ้างอิง (กก.) หรือ null */
   refWeightKg: number | null;
+  /** เจ้าของโปรไฟล์ — admin เท่านั้นที่มีผล; undefined = ไม่เปลี่ยน */
+  ownerId?: string | null;
 }
 
 interface SaveProfileCallbacks {

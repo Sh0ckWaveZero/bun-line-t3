@@ -7,18 +7,24 @@
  */
 
 import { createFileRoute } from "@tanstack/react-router";
-import { getServerAuthSession } from "@/lib/auth/auth";
+import { getBodyWeightReadSession } from "@/features/body-weight/services/read-session.server";
 import { getLiveScaleState } from "@/features/body-weight/services/live-scale.server";
 
 export async function GET(request: Request) {
   try {
-    const session = await getServerAuthSession(request);
+    const session = await getBodyWeightReadSession(request);
     if (!session?.user?.id) {
       return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 });
     }
 
     return Response.json(
-      { success: true, data: getLiveScaleState() },
+      {
+        success: true,
+        data: getLiveScaleState({
+          userId: session.user.id,
+          isAdmin: session.isAdmin,
+        }),
+      },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
