@@ -261,3 +261,29 @@ describe("แยกขั้นตอน deploy เป็นคนละ shell",
     expect(result.output).toContain("ไม่มี image เดิม");
   });
 });
+
+describe("Dockerfile.scale-listener", () => {
+  test("ไฟล์ที่ COPY ไม่ถูก .dockerignore กรองออกจาก build context", () => {
+    const dockerfile = readFileSync(resolve("Dockerfile.scale-listener"), "utf8");
+    const ignored = new Set(
+      readFileSync(resolve(".dockerignore"), "utf8")
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => line && !line.startsWith("#") && !line.startsWith("!"))
+        .map((line) => line.replace(/^\/+|\/+$/g, "")),
+    );
+    const sources = dockerfile
+      .split("\n")
+      .filter((line) => /^COPY\s/.test(line) && !line.includes("--from="))
+      .flatMap((line) => line.replace(/^COPY\s+/, "").split(/\s+/).slice(0, -1))
+      .map((source) => source.replace(/^\.\//, "").replace(/\/+$/, ""));
+    expect(sources.length).toBeGreaterThan(0);
+    for (const source of sources) {
+      // pattern ใน .dockerignore ตรงกับ path จาก root ของ context (เช่น tsconfig.json)
+      // และต้นทางต้องมีอยู่จริงใน repo
+      expect(ignored.has(source)).toBe(false);
+      expect(ignored.has(source.split("/")[0]!)).toBe(false);
+      expect(Bun.file(resolve(source)).size).toBeGreaterThan(-1);
+    }
+  });
+});

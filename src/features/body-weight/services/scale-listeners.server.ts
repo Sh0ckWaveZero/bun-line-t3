@@ -18,21 +18,40 @@ const CACHE_TTL_MS = 5_000;
 interface ListenerStore {
   cache: { active: string; at: number } | null;
   lastSeen: Map<string, number>;
+  tableReady: boolean;
+  tableCheckedAt: number;
+  warnedMissing: boolean;
 }
 
 const g = globalThis as typeof globalThis & {
   __scaleListenerStore?: ListenerStore;
 };
 if (!g.__scaleListenerStore) {
-  g.__scaleListenerStore = { cache: null, lastSeen: new Map() };
+  g.__scaleListenerStore = {
+    cache: null,
+    lastSeen: new Map(),
+    tableReady: false,
+    tableCheckedAt: 0,
+    warnedMissing: false,
+  };
 }
 const store: ListenerStore = g.__scaleListenerStore;
+// store จากก่อน HMR อาจยังไม่มี field ใหม่
+store.tableReady ??= false;
+store.tableCheckedAt ??= 0;
+store.warnedMissing ??= false;
 
 export const getActiveListener = async (
   now: number = Date.now(),
 ): Promise<string> => {
   if (store.cache && now - store.cache.at < CACHE_TTL_MS) {
     return store.cache.active;
+  }
+  // DB ยังไม่ได้รัน migration (เช่น dev ที่ชี้ DB ก่อน deploy) — อย่าให้ตาชั่งหยุดทำงาน รับทุกเครื่อง
+  // เช็กด้วย to_regclass ก่อน: query ตารางที่ไม่มีทำให้ Prisma log error ทุกครั้ง
+  if (!(await isSettingsTableReady(now))) {
+    store.cache = { active: LISTENER_MODE.all, at: now };
+    return LISTENER_MODE.all;
   }
   try {
     const row = await db.scaleSettings.findUnique({
@@ -43,13 +62,37 @@ export const getActiveListener = async (
     store.cache = { active, at: now };
     return active;
   } catch (error) {
-    // เช่น DB ยังไม่ได้รัน migration ของ scale_settings — อย่าให้ตาชั่งหยุดทำงาน รับทุกเครื่อง
     console.error(
       "[body-weight] read scale_settings failed, accepting all listeners:",
       (error as Error)?.message ?? error,
     );
     return LISTENER_MODE.all;
   }
+};
+
+/** ตารางหาย → เช็กใหม่ทุก 60 วิ (migration อาจเพิ่งลง); มีแล้วไม่ต้องเช็กอีก */
+const TABLE_RECHECK_MS = 60_000;
+
+const isSettingsTableReady = async (now: number): Promise<boolean> => {
+  if (store.tableReady) return true;
+  if (store.tableCheckedAt && now - store.tableCheckedAt < TABLE_RECHECK_MS) {
+    return false;
+  }
+  store.tableCheckedAt = now;
+  try {
+    const rows = await db.$queryRaw<{ found: string | null }[]>`
+      SELECT to_regclass('public.scale_settings')::text AS found`;
+    store.tableReady = Boolean(rows[0]?.found);
+  } catch {
+    store.tableReady = false;
+  }
+  if (!store.tableReady && !store.warnedMissing) {
+    store.warnedMissing = true;
+    console.warn(
+      "[body-weight] ตาราง scale_settings ยังไม่มี (รอ migration) — รับสัญญาณจากทุกเครื่องไปก่อน",
+    );
+  }
+  return store.tableReady;
 };
 
 export const setActiveListener = async (active: string): Promise<void> => {

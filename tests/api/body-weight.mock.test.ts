@@ -58,7 +58,14 @@ const dbRoundTrip = (metrics: unknown) => {
   return isNullSentinel ? null : (metrics ?? null);
 };
 
+let settingsTableExists = true;
+let settingsReads = 0;
+
 const dbMocks = {
+  // to_regclass('public.scale_settings') — ตรวจว่ารัน migration แล้วหรือยัง
+  $queryRaw: async () => [
+    { found: settingsTableExists ? "scale_settings" : null },
+  ],
   scaleMeasurement: {
     findUnique: async ({
       where,
@@ -151,7 +158,10 @@ const dbMocks = {
     },
   },
   scaleSettings: {
-    findUnique: async () => activeListenerRow,
+    findUnique: async () => {
+      settingsReads += 1;
+      return activeListenerRow;
+    },
     upsert: async ({ update }: { update: { activeListener: string } }) => {
       activeListenerRow = { activeListener: update.activeListener };
       return activeListenerRow;
@@ -214,7 +224,7 @@ const {
 const { getLiveScaleState, setPendingWeighIn } = await import(
   "@/features/body-weight/services/live-scale.server"
 );
-const { isListenerAccepted, setActiveListener, getListenerOverview } =
+const { isListenerAccepted, setActiveListener, getListenerOverview, getActiveListener } =
   await import("@/features/body-weight/services/scale-listeners.server");
 const { GET: listenerCheckIn } = await import(
   "../../src/routes/api/body-weight/listener"
@@ -856,5 +866,18 @@ describe("Unit Test: เลือกเครื่องที่รับส�
     expect((await checkIn("pi", "wrong-secret")).status).toBe(401);
     expect((await checkIn("off")).status).toBe(400);
     expect((await checkIn("Bad Name!")).status).toBe(400);
+  });
+
+  it("ตาราง scale_settings ยังไม่มี — รับทุกเครื่อง ไม่ query ตาราง (ไม่ให้ Prisma log error)", async () => {
+    settingsTableExists = false;
+    settingsReads = 0;
+    const listenerStore = (globalThis as { __scaleListenerStore?: Record<string, unknown> }).__scaleListenerStore!;
+    Object.assign(listenerStore, { tableReady: false, tableCheckedAt: 0, cache: null });
+    // now ไกลพอให้ cache ที่ beforeEach ตั้งไว้หมดอายุ และพ้นช่วงเช็กตารางครั้งก่อน
+    const active = await getActiveListener(Date.now() + 10 * 60_000);
+    settingsTableExists = true;
+    Object.assign(listenerStore, { tableReady: false, tableCheckedAt: 0, cache: null });
+    expect(active).toBe("all");
+    expect(settingsReads).toBe(0);
   });
 });
