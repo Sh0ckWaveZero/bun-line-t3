@@ -22,7 +22,8 @@ COPY docker/scale-listener/package.json docker/scale-listener/bun.lock ./
 RUN bun install --production --frozen-lockfile
 
 # bundle listener + helper ภายใน (แก้ path alias @/ ตอน build) เหลือ noble เป็น external
-COPY tsconfig.json ./
+# ใช้ tsconfig ของ listener เอง — tsconfig.json ที่ root ถูก .dockerignore กรองออกจาก build context
+COPY docker/scale-listener/tsconfig.json ./tsconfig.json
 COPY src/features/body-weight/listener ./src/features/body-weight/listener
 COPY src/features/body-weight/helpers/ble-packet.ts src/features/body-weight/helpers/body-composition.ts ./src/features/body-weight/helpers/
 RUN bun build src/features/body-weight/listener/scale-listener.ts \
