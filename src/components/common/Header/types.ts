@@ -1,11 +1,12 @@
 import type { AppSession } from "@/lib/auth/session-context";
-import { LucideIcon } from "lucide-react";
+import type { ComponentType, SVGProps } from "react";
 
 export interface NavItem {
   id: string;
   label: string;
   href?: string;
-  icon?: LucideIcon;
+  /** ไอคอนของเมนู — component SVG (รับ className อย่างเดียวก็พอ) ใช้ pixel icons หรือ lucide ก็ได้ */
+  icon?: ComponentType<SVGProps<SVGSVGElement>>;
   requiresAuth?: boolean;
   requiresAdmin?: boolean;
   ariaLabel?: string;

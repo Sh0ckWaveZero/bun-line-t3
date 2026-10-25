@@ -40,6 +40,8 @@ import { Route as ApiLineRouteImport } from './routes/api/line'
 import { Route as ApiLogoutRouteImport } from './routes/api/logout'
 import { Route as ApiWorkModesRouteImport } from './routes/api/work-modes'
 import { Route as CalendarMobileRouteImport } from './routes/calendar.mobile'
+import { Route as PlanningPokerIndexRouteImport } from './routes/planning-poker.index'
+import { Route as PlanningPokerCodeRouteImport } from './routes/planning-poker.$code'
 import { Route as ApiAdminCheckRouteImport } from './routes/api/admin/check'
 import { Route as ApiAdminCronJobsRouteImport } from './routes/api/admin/cron-jobs'
 import { Route as ApiAdminDebugRouteImport } from './routes/api/admin/debug'
@@ -75,6 +77,8 @@ import { Route as ApiHealthEnhancedRouteImport } from './routes/api/health/enhan
 import { Route as ApiLineApprovalsRouteImport } from './routes/api/line/approvals'
 import { Route as ApiLinePermissionsRouteImport } from './routes/api/line/permissions'
 import { Route as ApiMonitoringDashboardRouteImport } from './routes/api/monitoring/dashboard'
+import { Route as ApiPokerRoomsRouteImport } from './routes/api/poker/rooms'
+import { Route as ApiPokerStatsRouteImport } from './routes/api/poker/stats'
 import { Route as ApiSubscriptionsIndexRouteImport } from './routes/api/subscriptions/index'
 import { Route as ApiSubscriptionsSubscriptionIdRouteImport } from './routes/api/subscriptions/$subscriptionId'
 import { Route as ApiSubscriptionsMembersRouteImport } from './routes/api/subscriptions/members'
@@ -89,6 +93,7 @@ import { Route as ApiExchangesBitkubBuysRouteImport } from './routes/api/exchang
 import { Route as ApiExchangesBitkubConnectionRouteImport } from './routes/api/exchanges/bitkub/connection'
 import { Route as ApiExpensesBudgetsIdRouteImport } from './routes/api/expenses/budgets/$id'
 import { Route as ApiExpensesCategoriesIdRouteImport } from './routes/api/expenses/categories/$id'
+import { Route as ApiPokerRoomsCodeRouteImport } from './routes/api/poker/rooms/$code'
 import { Route as ApiUserSettingsNotificationsRouteImport } from './routes/api/user/settings/notifications'
 import { Route as ApiAdminCronJobsJobIdRunRouteImport } from './routes/api/admin/cron-jobs/$jobId/run'
 
@@ -246,6 +251,16 @@ const CalendarMobileRoute = CalendarMobileRouteImport.update({
   id: '/mobile',
   path: '/mobile',
   getParentRoute: () => CalendarRoute,
+} as any)
+const PlanningPokerIndexRoute = PlanningPokerIndexRouteImport.update({
+  id: '/planning-poker/',
+  path: '/planning-poker/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlanningPokerCodeRoute = PlanningPokerCodeRouteImport.update({
+  id: '/planning-poker/$code',
+  path: '/planning-poker/$code',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAdminCheckRoute = ApiAdminCheckRouteImport.update({
   id: '/api/admin/check',
@@ -425,6 +440,16 @@ const ApiMonitoringDashboardRoute = ApiMonitoringDashboardRouteImport.update({
   path: '/api/monitoring/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPokerRoomsRoute = ApiPokerRoomsRouteImport.update({
+  id: '/api/poker/rooms',
+  path: '/api/poker/rooms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPokerStatsRoute = ApiPokerStatsRouteImport.update({
+  id: '/api/poker/stats',
+  path: '/api/poker/stats',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiSubscriptionsIndexRoute = ApiSubscriptionsIndexRouteImport.update({
   id: '/api/subscriptions/',
   path: '/api/subscriptions/',
@@ -499,6 +524,11 @@ const ApiExpensesCategoriesIdRoute = ApiExpensesCategoriesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApiExpensesCategoriesRoute,
 } as any)
+const ApiPokerRoomsCodeRoute = ApiPokerRoomsCodeRouteImport.update({
+  id: '/$code',
+  path: '/$code',
+  getParentRoute: () => ApiPokerRoomsRoute,
+} as any)
 const ApiUserSettingsNotificationsRoute =
   ApiUserSettingsNotificationsRouteImport.update({
     id: '/notifications',
@@ -544,6 +574,8 @@ export interface FileRoutesByFullPath {
   '/api/logout': typeof ApiLogoutRoute
   '/api/work-modes': typeof ApiWorkModesRoute
   '/calendar/mobile': typeof CalendarMobileRoute
+  '/planning-poker/$code': typeof PlanningPokerCodeRoute
+  '/planning-poker/': typeof PlanningPokerIndexRoute
   '/api/admin/check': typeof ApiAdminCheckRoute
   '/api/admin/cron-jobs': typeof ApiAdminCronJobsRouteWithChildren
   '/api/admin/debug': typeof ApiAdminDebugRoute
@@ -576,6 +608,8 @@ export interface FileRoutesByFullPath {
   '/api/line/approvals': typeof ApiLineApprovalsRoute
   '/api/line/permissions': typeof ApiLinePermissionsRoute
   '/api/monitoring/dashboard': typeof ApiMonitoringDashboardRoute
+  '/api/poker/rooms': typeof ApiPokerRoomsRouteWithChildren
+  '/api/poker/stats': typeof ApiPokerStatsRoute
   '/api/subscriptions/$subscriptionId': typeof ApiSubscriptionsSubscriptionIdRoute
   '/api/subscriptions/members': typeof ApiSubscriptionsMembersRoute
   '/api/subscriptions/payments': typeof ApiSubscriptionsPaymentsRoute
@@ -593,6 +627,7 @@ export interface FileRoutesByFullPath {
   '/api/exchanges/bitkub/connection': typeof ApiExchangesBitkubConnectionRoute
   '/api/expenses/budgets/$id': typeof ApiExpensesBudgetsIdRoute
   '/api/expenses/categories/$id': typeof ApiExpensesCategoriesIdRoute
+  '/api/poker/rooms/$code': typeof ApiPokerRoomsCodeRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
   '/api/admin/cron-jobs/$jobId/run': typeof ApiAdminCronJobsJobIdRunRoute
 }
@@ -628,6 +663,8 @@ export interface FileRoutesByTo {
   '/api/logout': typeof ApiLogoutRoute
   '/api/work-modes': typeof ApiWorkModesRoute
   '/calendar/mobile': typeof CalendarMobileRoute
+  '/planning-poker/$code': typeof PlanningPokerCodeRoute
+  '/planning-poker': typeof PlanningPokerIndexRoute
   '/api/admin/check': typeof ApiAdminCheckRoute
   '/api/admin/cron-jobs': typeof ApiAdminCronJobsRouteWithChildren
   '/api/admin/debug': typeof ApiAdminDebugRoute
@@ -660,6 +697,8 @@ export interface FileRoutesByTo {
   '/api/line/approvals': typeof ApiLineApprovalsRoute
   '/api/line/permissions': typeof ApiLinePermissionsRoute
   '/api/monitoring/dashboard': typeof ApiMonitoringDashboardRoute
+  '/api/poker/rooms': typeof ApiPokerRoomsRouteWithChildren
+  '/api/poker/stats': typeof ApiPokerStatsRoute
   '/api/subscriptions/$subscriptionId': typeof ApiSubscriptionsSubscriptionIdRoute
   '/api/subscriptions/members': typeof ApiSubscriptionsMembersRoute
   '/api/subscriptions/payments': typeof ApiSubscriptionsPaymentsRoute
@@ -677,6 +716,7 @@ export interface FileRoutesByTo {
   '/api/exchanges/bitkub/connection': typeof ApiExchangesBitkubConnectionRoute
   '/api/expenses/budgets/$id': typeof ApiExpensesBudgetsIdRoute
   '/api/expenses/categories/$id': typeof ApiExpensesCategoriesIdRoute
+  '/api/poker/rooms/$code': typeof ApiPokerRoomsCodeRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
   '/api/admin/cron-jobs/$jobId/run': typeof ApiAdminCronJobsJobIdRunRoute
 }
@@ -713,6 +753,8 @@ export interface FileRoutesById {
   '/api/logout': typeof ApiLogoutRoute
   '/api/work-modes': typeof ApiWorkModesRoute
   '/calendar/mobile': typeof CalendarMobileRoute
+  '/planning-poker/$code': typeof PlanningPokerCodeRoute
+  '/planning-poker/': typeof PlanningPokerIndexRoute
   '/api/admin/check': typeof ApiAdminCheckRoute
   '/api/admin/cron-jobs': typeof ApiAdminCronJobsRouteWithChildren
   '/api/admin/debug': typeof ApiAdminDebugRoute
@@ -745,6 +787,8 @@ export interface FileRoutesById {
   '/api/line/approvals': typeof ApiLineApprovalsRoute
   '/api/line/permissions': typeof ApiLinePermissionsRoute
   '/api/monitoring/dashboard': typeof ApiMonitoringDashboardRoute
+  '/api/poker/rooms': typeof ApiPokerRoomsRouteWithChildren
+  '/api/poker/stats': typeof ApiPokerStatsRoute
   '/api/subscriptions/$subscriptionId': typeof ApiSubscriptionsSubscriptionIdRoute
   '/api/subscriptions/members': typeof ApiSubscriptionsMembersRoute
   '/api/subscriptions/payments': typeof ApiSubscriptionsPaymentsRoute
@@ -762,6 +806,7 @@ export interface FileRoutesById {
   '/api/exchanges/bitkub/connection': typeof ApiExchangesBitkubConnectionRoute
   '/api/expenses/budgets/$id': typeof ApiExpensesBudgetsIdRoute
   '/api/expenses/categories/$id': typeof ApiExpensesCategoriesIdRoute
+  '/api/poker/rooms/$code': typeof ApiPokerRoomsCodeRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
   '/api/admin/cron-jobs/$jobId/run': typeof ApiAdminCronJobsJobIdRunRoute
 }
@@ -799,6 +844,8 @@ export interface FileRouteTypes {
     | '/api/logout'
     | '/api/work-modes'
     | '/calendar/mobile'
+    | '/planning-poker/$code'
+    | '/planning-poker/'
     | '/api/admin/check'
     | '/api/admin/cron-jobs'
     | '/api/admin/debug'
@@ -831,6 +878,8 @@ export interface FileRouteTypes {
     | '/api/line/approvals'
     | '/api/line/permissions'
     | '/api/monitoring/dashboard'
+    | '/api/poker/rooms'
+    | '/api/poker/stats'
     | '/api/subscriptions/$subscriptionId'
     | '/api/subscriptions/members'
     | '/api/subscriptions/payments'
@@ -848,6 +897,7 @@ export interface FileRouteTypes {
     | '/api/exchanges/bitkub/connection'
     | '/api/expenses/budgets/$id'
     | '/api/expenses/categories/$id'
+    | '/api/poker/rooms/$code'
     | '/api/user/settings/notifications'
     | '/api/admin/cron-jobs/$jobId/run'
   fileRoutesByTo: FileRoutesByTo
@@ -883,6 +933,8 @@ export interface FileRouteTypes {
     | '/api/logout'
     | '/api/work-modes'
     | '/calendar/mobile'
+    | '/planning-poker/$code'
+    | '/planning-poker'
     | '/api/admin/check'
     | '/api/admin/cron-jobs'
     | '/api/admin/debug'
@@ -915,6 +967,8 @@ export interface FileRouteTypes {
     | '/api/line/approvals'
     | '/api/line/permissions'
     | '/api/monitoring/dashboard'
+    | '/api/poker/rooms'
+    | '/api/poker/stats'
     | '/api/subscriptions/$subscriptionId'
     | '/api/subscriptions/members'
     | '/api/subscriptions/payments'
@@ -932,6 +986,7 @@ export interface FileRouteTypes {
     | '/api/exchanges/bitkub/connection'
     | '/api/expenses/budgets/$id'
     | '/api/expenses/categories/$id'
+    | '/api/poker/rooms/$code'
     | '/api/user/settings/notifications'
     | '/api/admin/cron-jobs/$jobId/run'
   id:
@@ -967,6 +1022,8 @@ export interface FileRouteTypes {
     | '/api/logout'
     | '/api/work-modes'
     | '/calendar/mobile'
+    | '/planning-poker/$code'
+    | '/planning-poker/'
     | '/api/admin/check'
     | '/api/admin/cron-jobs'
     | '/api/admin/debug'
@@ -999,6 +1056,8 @@ export interface FileRouteTypes {
     | '/api/line/approvals'
     | '/api/line/permissions'
     | '/api/monitoring/dashboard'
+    | '/api/poker/rooms'
+    | '/api/poker/stats'
     | '/api/subscriptions/$subscriptionId'
     | '/api/subscriptions/members'
     | '/api/subscriptions/payments'
@@ -1016,6 +1075,7 @@ export interface FileRouteTypes {
     | '/api/exchanges/bitkub/connection'
     | '/api/expenses/budgets/$id'
     | '/api/expenses/categories/$id'
+    | '/api/poker/rooms/$code'
     | '/api/user/settings/notifications'
     | '/api/admin/cron-jobs/$jobId/run'
   fileRoutesById: FileRoutesById
@@ -1051,6 +1111,8 @@ export interface RootRouteChildren {
   ApiLineRoute: typeof ApiLineRouteWithChildren
   ApiLogoutRoute: typeof ApiLogoutRoute
   ApiWorkModesRoute: typeof ApiWorkModesRoute
+  PlanningPokerCodeRoute: typeof PlanningPokerCodeRoute
+  PlanningPokerIndexRoute: typeof PlanningPokerIndexRoute
   ApiAdminCheckRoute: typeof ApiAdminCheckRoute
   ApiAdminCronJobsRoute: typeof ApiAdminCronJobsRouteWithChildren
   ApiAdminDebugRoute: typeof ApiAdminDebugRoute
@@ -1080,6 +1142,8 @@ export interface RootRouteChildren {
   ApiExpensesOverviewRoute: typeof ApiExpensesOverviewRoute
   ApiExpensesSummaryRoute: typeof ApiExpensesSummaryRoute
   ApiMonitoringDashboardRoute: typeof ApiMonitoringDashboardRoute
+  ApiPokerRoomsRoute: typeof ApiPokerRoomsRouteWithChildren
+  ApiPokerStatsRoute: typeof ApiPokerStatsRoute
   ApiSubscriptionsSubscriptionIdRoute: typeof ApiSubscriptionsSubscriptionIdRoute
   ApiSubscriptionsMembersRoute: typeof ApiSubscriptionsMembersRoute
   ApiSubscriptionsPaymentsRoute: typeof ApiSubscriptionsPaymentsRoute
@@ -1314,6 +1378,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/calendar/mobile'
       preLoaderRoute: typeof CalendarMobileRouteImport
       parentRoute: typeof CalendarRoute
+    }
+    '/planning-poker/': {
+      id: '/planning-poker/'
+      path: '/planning-poker'
+      fullPath: '/planning-poker/'
+      preLoaderRoute: typeof PlanningPokerIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/planning-poker/$code': {
+      id: '/planning-poker/$code'
+      path: '/planning-poker/$code'
+      fullPath: '/planning-poker/$code'
+      preLoaderRoute: typeof PlanningPokerCodeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/admin/check': {
       id: '/api/admin/check'
@@ -1560,6 +1638,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMonitoringDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/poker/rooms': {
+      id: '/api/poker/rooms'
+      path: '/api/poker/rooms'
+      fullPath: '/api/poker/rooms'
+      preLoaderRoute: typeof ApiPokerRoomsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/poker/stats': {
+      id: '/api/poker/stats'
+      path: '/api/poker/stats'
+      fullPath: '/api/poker/stats'
+      preLoaderRoute: typeof ApiPokerStatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/subscriptions/': {
       id: '/api/subscriptions/'
       path: '/api/subscriptions'
@@ -1657,6 +1749,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/expenses/categories/$id'
       preLoaderRoute: typeof ApiExpensesCategoriesIdRouteImport
       parentRoute: typeof ApiExpensesCategoriesRoute
+    }
+    '/api/poker/rooms/$code': {
+      id: '/api/poker/rooms/$code'
+      path: '/$code'
+      fullPath: '/api/poker/rooms/$code'
+      preLoaderRoute: typeof ApiPokerRoomsCodeRouteImport
+      parentRoute: typeof ApiPokerRoomsRoute
     }
     '/api/user/settings/notifications': {
       id: '/api/user/settings/notifications'
@@ -1760,6 +1859,18 @@ const ApiExpensesCategoriesRouteWithChildren =
     ApiExpensesCategoriesRouteChildren,
   )
 
+interface ApiPokerRoomsRouteChildren {
+  ApiPokerRoomsCodeRoute: typeof ApiPokerRoomsCodeRoute
+}
+
+const ApiPokerRoomsRouteChildren: ApiPokerRoomsRouteChildren = {
+  ApiPokerRoomsCodeRoute: ApiPokerRoomsCodeRoute,
+}
+
+const ApiPokerRoomsRouteWithChildren = ApiPokerRoomsRoute._addFileChildren(
+  ApiPokerRoomsRouteChildren,
+)
+
 interface ApiUserSettingsRouteChildren {
   ApiUserSettingsNotificationsRoute: typeof ApiUserSettingsNotificationsRoute
 }
@@ -1803,6 +1914,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiLineRoute: ApiLineRouteWithChildren,
   ApiLogoutRoute: ApiLogoutRoute,
   ApiWorkModesRoute: ApiWorkModesRoute,
+  PlanningPokerCodeRoute: PlanningPokerCodeRoute,
+  PlanningPokerIndexRoute: PlanningPokerIndexRoute,
   ApiAdminCheckRoute: ApiAdminCheckRoute,
   ApiAdminCronJobsRoute: ApiAdminCronJobsRouteWithChildren,
   ApiAdminDebugRoute: ApiAdminDebugRoute,
@@ -1832,6 +1945,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiExpensesOverviewRoute: ApiExpensesOverviewRoute,
   ApiExpensesSummaryRoute: ApiExpensesSummaryRoute,
   ApiMonitoringDashboardRoute: ApiMonitoringDashboardRoute,
+  ApiPokerRoomsRoute: ApiPokerRoomsRouteWithChildren,
+  ApiPokerStatsRoute: ApiPokerStatsRoute,
   ApiSubscriptionsSubscriptionIdRoute: ApiSubscriptionsSubscriptionIdRoute,
   ApiSubscriptionsMembersRoute: ApiSubscriptionsMembersRoute,
   ApiSubscriptionsPaymentsRoute: ApiSubscriptionsPaymentsRoute,

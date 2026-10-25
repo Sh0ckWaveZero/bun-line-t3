@@ -104,7 +104,8 @@ export function Select({
           className={cn(
             "flex h-10 w-full items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm",
             "border-input bg-background text-foreground",
-            "focus:border-ring focus:outline-none",
+            // โฟกัสชี้ด้วย ring ชัด (เดิมเปลี่ยนสี border อย่างเดียว — จางเกินกว่า WCAG 2.4.7)
+            "focus:border-ring focus:outline-none focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2",
             "disabled:cursor-not-allowed disabled:opacity-50",
             className,
           )}

@@ -15,9 +15,9 @@ import {
   Activity,
   Clock3,
   Scale,
+  Spade,
   Shield,
   CheckCircle2,
-  type LucideIcon,
 } from "lucide-react";
 import type { NavItem } from "./types";
 
@@ -43,33 +43,6 @@ export const NavItemSchema: z.ZodType<NavItem> = z.object({
 export const NavigationConfigSchema = z.object({
   items: z.array(NavItemSchema),
 });
-
-// ========================================================================
-// ICONS MAP (for validation)
-// ========================================================================
-
-/**
- * Map of icon names to Lucide icon components
- * Used for runtime validation that icons exist
- */
-const ICON_MAP: Record<string, LucideIcon> = {
-  home: Home,
-  trendingUp: TrendingUp,
-  package: Package,
-  calculator: Calculator,
-  wallet: Wallet,
-  briefcase: Briefcase,
-  barChart3: BarChart3,
-  calendarDays: CalendarDays,
-  wrench: Wrench,
-  userRound: UserRound,
-  idCard: IdCard,
-  helpCircle: HelpCircle,
-  activity: Activity,
-  scale: Scale,
-  shield: Shield,
-  checkCircle2: CheckCircle2,
-};
 
 // ========================================================================
 // NAVIGATION DATA
@@ -157,6 +130,12 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     icon: Wrench,
     requiresAuth: false,
     children: [
+      {
+        id: "planning-poker",
+        label: "Planning Poker",
+        href: "/planning-poker",
+        icon: Spade,
+      },
       {
         id: "thai-names",
         label: "สุ่มชื่อไทย",
@@ -350,6 +329,7 @@ export const isNavItemActive = (item: NavItem, pathname: string): boolean => {
     }
     if (item.id === "tools") {
       return (
+        pathname.startsWith("/planning-poker") ||
         pathname === "/thai-names-generator" ||
         pathname.startsWith("/thai-id") ||
         pathname === "/help" ||
@@ -378,6 +358,10 @@ export const isChildItemActive = (item: NavItem, pathname: string): boolean => {
     }
     if (child.href?.startsWith("/thai-id")) {
       return pathname.startsWith("/thai-id");
+    }
+    // poker เข้าได้ทั้งหน้า list (/planning-poker) และหน้าห้อง (/planning-poker/CODE)
+    if (child.href === "/planning-poker") {
+      return pathname.startsWith(child.href);
     }
     return pathname === child.href;
   });
