@@ -68,17 +68,23 @@ const RoomMessage = ({ title, detail }: { title: string; detail?: string }) => (
   </main>
 );
 
+/** อีเมลแบบเข้ม: local@domain — ห้าม whitespace และอักขระที่เปลี่ยนความหมายของ mailto (?, &, #, ", <, >)
+ *  กันการแทรกพารามิเตอร์/header เข้า URI ก่อนส่งเข้า window.location (CodeQL: URL injection) */
+const EMAIL_PATTERN = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+$/;
+
 const InvitePanel = ({ code }: { code: string }) => {
   const [emails, setEmails] = useState("");
   const recipients = emails
     .split(/[,;\s]+/)
     .map((email) => email.trim())
-    .filter((email) => email.includes("@"));
+    .filter((email) => EMAIL_PATTERN.test(email));
 
   const getLink = () => `${window.location.origin}/planning-poker/${code}`;
 
   // เปิดโปรแกรมอีเมลของผู้ใช้เอง (mailto) — server ไม่ส่งอีเมลและไม่เก็บอีเมลไว้
+  // recipients ผ่าน regex allowlist แล้วจึงต่อตรง ๆ ได้; subject/body encoded แยก
   const handleInvite = () => {
+    if (recipients.length === 0) return;
     const subject = encodeURIComponent("Join our Planning Poker room");
     const body = encodeURIComponent(
       `Join our story point estimation\nRoom code: ${code}\nLink: ${getLink()}`,
