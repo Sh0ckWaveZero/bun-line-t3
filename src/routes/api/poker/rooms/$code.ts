@@ -13,10 +13,17 @@ import {
 
 const NO_STORE = { "Cache-Control": "no-store" };
 
+/** token จริงยาว 48 hex (generateToken) — นอกรูปแบบนับเป็น anon กัน bucket ถูกสร้างไม่จำกัด */
+const TOKEN_PATTERN = /^[0-9a-f]{48}$/;
+
 export async function GET(request: Request, code: string) {
   const token = getRequestToken(request);
   // poll ทุก 1.5s — จำกัดต่อ token (คนละคนใน IP เดียวกันไม่แชร์ quota)
-  const limited = checkRateLimit(request, "poll", token ?? "anon");
+  const limited = checkRateLimit(
+    request,
+    "poll",
+    token && TOKEN_PATTERN.test(token) ? token : "anon",
+  );
   if (!limited.ok) {
     return Response.json({ error: limited.error }, { status: limited.status, headers: NO_STORE });
   }
@@ -32,11 +39,17 @@ export async function GET(request: Request, code: string) {
 }
 
 export async function POST(request: Request, code: string) {
+  // gate หยาบก่อน parse — กันยิง body ขยะไม่จำกัดโดยไม่แตะ limiter (สอดคล้อง rooms.ts)
+  const gated = checkRateLimit(request, "gate");
+  if (!gated.ok) {
+    return Response.json({ error: gated.error }, { status: gated.status });
+  }
+
   const body = await request.json().catch(() => null);
   const parsed = roomActionSchema.safeParse(body);
   if (!parsed.success) {
     return Response.json(
-      { error: parsed.error.issues[0]?.message ?? "ข้อมูลไม่ถูกต้อง" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid request" },
       { status: 400 },
     );
   }

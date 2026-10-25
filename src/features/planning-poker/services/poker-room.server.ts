@@ -82,6 +82,9 @@ const RATE_LIMITS = {
   poll: 300,
   /** GET stats — lobby poll ทุก 10s = 6/min ต่อคน */
   stats: 60,
+  /** gate หยาบก่อน parse body ของ POST $code — เพดานรวมที่ legal traffic ไม่แตะ
+   *  (mutate 120 + join 20 = 140/min ต่อ client) */
+  gate: 240,
 } as const;
 
 export const getRequestToken = (request: Request): string | null =>

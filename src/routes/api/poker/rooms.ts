@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   const parsed = createRoomSchema.safeParse(body);
   if (!parsed.success) {
     return Response.json(
-      { error: parsed.error.issues[0]?.message ?? "ข้อมูลไม่ถูกต้อง" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid request" },
       { status: 400 },
     );
   }

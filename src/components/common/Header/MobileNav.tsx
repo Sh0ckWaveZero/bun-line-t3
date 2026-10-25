@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { MobileNavProps } from "./types";
-import { isChildItemActive, isNavItemActive } from "./navigation.config";
+import { isChildHrefActive, isNavItemActive } from "./navigation.config";
 
 export function MobileNav({
   items,
@@ -73,12 +73,12 @@ export function MobileNav({
                       id={`mobile-nav-${child.id}`}
                       to={child.href || "#"}
                       className={`hover:text-primary flex items-center space-x-2 transition-colors ${
-                        isChildItemActive(item, pathname)
+                        isChildHrefActive(child, pathname)
                           ? "text-primary font-medium"
                           : "text-muted-foreground"
                       }`}
                       onClick={onClose}
-                      aria-current={isChildItemActive(item, pathname) ? "page" : undefined}
+                      aria-current={isChildHrefActive(child, pathname) ? "page" : undefined}
                     >
                       {child.icon && (
                         <child.icon className="h-4 w-4" aria-hidden="true" />

@@ -283,37 +283,5 @@ export const PIXEL_ARTS = {
 
 export type ArtName = keyof typeof PIXEL_ARTS;
 
-import type { VoteTier } from "./vote-tier";
 
 /** art ประจำ tier — ตามธีม demo (common duck / uncommon plant / rare fox / epic owl / legendary dragon / mythic phoenix) */
-export const TIER_ART: Record<VoteTier, ArtName> = {
-  common: "duck",
-  uncommon: "plant",
-  rare: "fox",
-  epic: "owl",
-  legendary: "dragon",
-  mythic: "phoenix",
-  neutral: "question",
-};
-
-/** art เฉพาะค่า (ทับ tier) */
-const VALUE_ART: Record<string, ArtName> = {
-  "☕": "mug",
-  "?": "question",
-};
-
-/** ไพ่เห็นพ้อง (consensus) ใช้มงกุฎ */
-export const CONSENSUS_ART: ArtName = "crown";
-
-/**
- * art ที่จะวาดบนหน้าไพ่ — ค่าพิเศษมาก่อน ไม่งั้นใช้ตาม tier ของค่า
- * (isConsensus = ทุกคนโหวตเลขเดียวกัน → มงกุฎ)
- */
-export const artForCard = (
-  value: string,
-  tier: VoteTier,
-  isConsensus = false,
-): ArtName => {
-  if (isConsensus) return CONSENSUS_ART;
-  return VALUE_ART[value] ?? TIER_ART[tier] ?? "question";
-};
