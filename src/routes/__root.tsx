@@ -151,7 +151,8 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@100..900&family=Syne:wght@400;600;700;800&display=swap",
+        // Silkscreen = ฟอนต์ pixel (latin/ตัวเลข) ใช้ในหน้า Planning Poker ธีม pixel
+        href: "https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@100..900&family=Silkscreen:wght@400;700&family=Syne:wght@400;600;700;800&display=swap",
       },
       {
         rel: "manifest",

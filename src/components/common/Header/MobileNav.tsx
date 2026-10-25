@@ -1,6 +1,6 @@
-import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import type { MobileNavProps } from "./types";
+import { isChildItemActive, isNavItemActive } from "./navigation.config";
 
 export function MobileNav({
   items,
@@ -9,23 +9,12 @@ export function MobileNav({
   onClose,
   session,
 }: MobileNavProps) {
-  const [expandedSections, setExpandedSections] = useState<string[]>([]);
-
-  const toggleSection = (sectionId: string) => {
-    setExpandedSections((prev) =>
-      prev.includes(sectionId)
-        ? prev.filter((id) => id !== sectionId)
-        : [...prev, sectionId],
-    );
-  };
-
   // Filter items based on auth/admin requirements
   const visibleItems = items.filter((item) => {
     if (item.requiresAuth && !session) return false;
     if (item.requiresAdmin && !session?.isAdmin) return false;
     return true;
   });
-  const expandedSectionIds = new Set(expandedSections);
 
   return (
     <div
@@ -37,7 +26,7 @@ export function MobileNav({
           {visibleItems.map((item) => {
             // Simple link without children
             if (!item.children || item.children.length === 0) {
-              const isActive = pathname === item.href;
+              const isActive = isNavItemActive(item, pathname);
               return (
                 <div key={item.id} className="space-y-2">
                   <Link
@@ -68,8 +57,6 @@ export function MobileNav({
 
             if (visibleChildren.length === 0) return null;
 
-            const isExpanded = expandedSectionIds.has(item.id);
-
             return (
               <div
                 key={item.id}
@@ -80,35 +67,25 @@ export function MobileNav({
                   {item.label}
                 </h3>
                 <div className="flex flex-col space-y-2 pl-2">
-                  {visibleChildren.map((child) => {
-                    const isChildActive =
-                      child.href === "/dca-history"
-                        ? pathname === "/dca-history" ||
-                          pathname.startsWith("/dca-")
-                        : child.href?.startsWith("/thai-id")
-                          ? pathname.startsWith("/thai-id")
-                          : pathname === child.href;
-
-                    return (
-                      <Link
-                        key={child.id}
-                        id={`mobile-nav-${child.id}`}
-                        to={child.href || "#"}
-                        className={`hover:text-primary flex items-center space-x-2 transition-colors ${
-                          isChildActive
-                            ? "text-primary font-medium"
-                            : "text-muted-foreground"
-                        }`}
-                        onClick={onClose}
-                        aria-current={isChildActive ? "page" : undefined}
-                      >
-                        {child.icon && (
-                          <child.icon className="h-4 w-4" aria-hidden="true" />
-                        )}
-                        <span>{child.label}</span>
-                      </Link>
-                    );
-                  })}
+                  {visibleChildren.map((child) => (
+                    <Link
+                      key={child.id}
+                      id={`mobile-nav-${child.id}`}
+                      to={child.href || "#"}
+                      className={`hover:text-primary flex items-center space-x-2 transition-colors ${
+                        isChildItemActive(item, pathname)
+                          ? "text-primary font-medium"
+                          : "text-muted-foreground"
+                      }`}
+                      onClick={onClose}
+                      aria-current={isChildItemActive(item, pathname) ? "page" : undefined}
+                    >
+                      {child.icon && (
+                        <child.icon className="h-4 w-4" aria-hidden="true" />
+                      )}
+                      <span>{child.label}</span>
+                    </Link>
+                  ))}
                 </div>
               </div>
             );

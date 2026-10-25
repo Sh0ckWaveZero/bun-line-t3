@@ -8,7 +8,6 @@ import { NAVIGATION_ITEMS } from "./navigation.config";
 import { DesktopNav } from "./DesktopNav";
 import { MobileNav } from "./MobileNav";
 import { UserSection } from "./UserSection";
-import type { NavItem } from "./types";
 
 export default function Header() {
   const { data: session } = useSession();
