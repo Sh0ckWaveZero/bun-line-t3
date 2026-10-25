@@ -54,6 +54,12 @@ Welcome to the comprehensive documentation for the Bun LINE T3 application. This
 
 ## 🎯 Feature-Specific Documentation
 
+### 🎴 Planning Poker
+
+| Document                                          | Description                                          | Key Features                                    |
+| ------------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------- |
+| **[🎴 Reveal FX Rules](./PLANNING_POKER_FX.md)**  | Reveal animation rules — rarity, combos, testing     | Signature per average, QA hooks, timelines      |
+
 ### 🏢 Attendance System
 
 | Document                                                 | Description                      | Key Features                      |

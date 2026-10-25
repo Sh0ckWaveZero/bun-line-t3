@@ -158,7 +158,10 @@ NEXT_PUBLIC_APP_ENV="development"
 APP_URL="http://localhost:4325"
 FRONTEND_URL="http://localhost:4325"
 LINE_MESSAGING_API="https://api.line.me/v2/bot/message"
-```
+
+# Planning Poker — social meta (OG/Twitter) ใช้ APP_URL นี้สร้าง absolute URL
+# ต้องตั้งเป็น domain จริง (https) ใน production ไม่งั้น Facebook/LINE ไม่เห็นภาพพรีวิว
+
 
 #### 🔧 Optional Services
 
