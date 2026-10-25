@@ -27,7 +27,11 @@ import { RoundHistory } from "../components/RoundHistory";
 import { RoundTimer } from "../components/RoundTimer";
 import { VoteDeck } from "../components/VoteDeck";
 import { countGoodStreak } from "../helpers/fx-rarity";
-import { ACCESSIBLE_PRIMARY_CLASS, POKER_LIMITS } from "../constants";
+import {
+  ACCESSIBLE_PRIMARY_CLASS,
+  POKER_LIMITS,
+} from "../constants";
+import { inviteRecipientsSchema } from "../lib/schemas";
 import { usePokerRoom } from "../hooks/usePokerRoom";
 import type { PublicRoom } from "../types";
 
@@ -68,28 +72,33 @@ const RoomMessage = ({ title, detail }: { title: string; detail?: string }) => (
   </main>
 );
 
-/** อีเมลแบบเข้ม: local@domain — ห้าม whitespace และอักขระที่เปลี่ยนความหมายของ mailto (?, &, #, ", <, >)
- *  กันการแทรกพารามิเตอร์/header เข้า URI ก่อนส่งเข้า window.location (CodeQL: URL injection) */
-const EMAIL_PATTERN = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+$/;
-
 const InvitePanel = ({ code }: { code: string }) => {
   const [emails, setEmails] = useState("");
-  const recipients = emails
-    .split(/[,;\s]+/)
-    .map((email) => email.trim())
-    .filter((email) => EMAIL_PATTERN.test(email));
+  // zod validate ก่อนใช้เสมอ — อีเมลไหนไม่ผ่าน format ทั้งชุดถือว่ายังไม่พร้อมส่ง
+  const recipients = inviteRecipientsSchema
+    .catch([])
+    .parse(
+      emails
+        .split(/[,;\s]+/)
+        .map((email) => email.trim())
+        .filter((email) => email.length > 0),
+    );
 
   const getLink = () => `${window.location.origin}/planning-poker/${code}`;
 
   // เปิดโปรแกรมอีเมลของผู้ใช้เอง (mailto) — server ไม่ส่งอีเมลและไม่เก็บอีเมลไว้
-  // recipients ผ่าน regex allowlist แล้วจึงต่อตรง ๆ ได้; subject/body encoded แยก
+  // URL API + URLSearchParams จะ encode ทุก taint ให้เป็น safe percent-encoding
+  // (เปลี่ยน '+' กลับเป็น %20 ตาม RFC 6068 — บาง mail client ไม่ decode '+')
   const handleInvite = () => {
     if (recipients.length === 0) return;
-    const subject = encodeURIComponent("Join our Planning Poker room");
-    const body = encodeURIComponent(
-      `Join our story point estimation\nRoom code: ${code}\nLink: ${getLink()}`,
-    );
-    window.location.href = `mailto:${recipients.join(",")}?subject=${subject}&body=${body}`;
+    const url = new URL(`mailto:${recipients.join(",")}`);
+    url.search = new URLSearchParams({
+      subject: "Join our Planning Poker room",
+      body: `Join our story point estimation\nRoom code: ${code}\nLink: ${getLink()}`,
+    })
+      .toString()
+      .replace(/\+/g, "%20");
+    window.location.href = url.href;
   };
 
   return (

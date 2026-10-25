@@ -63,6 +63,13 @@ export const createRoomSchema = z
     path: ["customDeck"],
   });
 
+
+/** ผู้รับเชิญ (client) — อีเมลเข้ม ห้าม whitespace/URI metachar กันแทรกพารามิเตอร์ mailto */
+export const inviteRecipientsSchema = z
+  .array(z.string().trim().email().max(254))
+  .min(1)
+  .max(20);
+
 export const roomActionSchema = z.discriminatedUnion("type", [
   z
     .object({
