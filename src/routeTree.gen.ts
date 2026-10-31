@@ -49,6 +49,8 @@ import { Route as ApiAttendanceUpdateRouteImport } from './routes/api/attendance
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiAuthCheckLineApprovalRouteImport } from './routes/api/auth/check-line-approval'
 import { Route as ApiBodyWeightIndexRouteImport } from './routes/api/body-weight/index'
+import { Route as ApiBodyWeightListenerRouteImport } from './routes/api/body-weight/listener'
+import { Route as ApiBodyWeightListenersRouteImport } from './routes/api/body-weight/listeners'
 import { Route as ApiBodyWeightLiveRouteImport } from './routes/api/body-weight/live'
 import { Route as ApiBodyWeightProfilesRouteImport } from './routes/api/body-weight/profiles'
 import { Route as ApiBodyWeightWebhookRouteImport } from './routes/api/body-weight/webhook'
@@ -296,6 +298,16 @@ const ApiAuthCheckLineApprovalRoute =
 const ApiBodyWeightIndexRoute = ApiBodyWeightIndexRouteImport.update({
   id: '/api/body-weight/',
   path: '/api/body-weight/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBodyWeightListenerRoute = ApiBodyWeightListenerRouteImport.update({
+  id: '/api/body-weight/listener',
+  path: '/api/body-weight/listener',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBodyWeightListenersRoute = ApiBodyWeightListenersRouteImport.update({
+  id: '/api/body-weight/listeners',
+  path: '/api/body-weight/listeners',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiBodyWeightLiveRoute = ApiBodyWeightLiveRouteImport.update({
@@ -582,6 +594,8 @@ export interface FileRoutesByFullPath {
   '/api/attendance/update': typeof ApiAttendanceUpdateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/auth/check-line-approval': typeof ApiAuthCheckLineApprovalRoute
+  '/api/body-weight/listener': typeof ApiBodyWeightListenerRoute
+  '/api/body-weight/listeners': typeof ApiBodyWeightListenersRoute
   '/api/body-weight/live': typeof ApiBodyWeightLiveRoute
   '/api/body-weight/profiles': typeof ApiBodyWeightProfilesRoute
   '/api/body-weight/webhook': typeof ApiBodyWeightWebhookRoute
@@ -671,6 +685,8 @@ export interface FileRoutesByTo {
   '/api/attendance/update': typeof ApiAttendanceUpdateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/auth/check-line-approval': typeof ApiAuthCheckLineApprovalRoute
+  '/api/body-weight/listener': typeof ApiBodyWeightListenerRoute
+  '/api/body-weight/listeners': typeof ApiBodyWeightListenersRoute
   '/api/body-weight/live': typeof ApiBodyWeightLiveRoute
   '/api/body-weight/profiles': typeof ApiBodyWeightProfilesRoute
   '/api/body-weight/webhook': typeof ApiBodyWeightWebhookRoute
@@ -761,6 +777,8 @@ export interface FileRoutesById {
   '/api/attendance/update': typeof ApiAttendanceUpdateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/auth/check-line-approval': typeof ApiAuthCheckLineApprovalRoute
+  '/api/body-weight/listener': typeof ApiBodyWeightListenerRoute
+  '/api/body-weight/listeners': typeof ApiBodyWeightListenersRoute
   '/api/body-weight/live': typeof ApiBodyWeightLiveRoute
   '/api/body-weight/profiles': typeof ApiBodyWeightProfilesRoute
   '/api/body-weight/webhook': typeof ApiBodyWeightWebhookRoute
@@ -852,6 +870,8 @@ export interface FileRouteTypes {
     | '/api/attendance/update'
     | '/api/auth/$'
     | '/api/auth/check-line-approval'
+    | '/api/body-weight/listener'
+    | '/api/body-weight/listeners'
     | '/api/body-weight/live'
     | '/api/body-weight/profiles'
     | '/api/body-weight/webhook'
@@ -941,6 +961,8 @@ export interface FileRouteTypes {
     | '/api/attendance/update'
     | '/api/auth/$'
     | '/api/auth/check-line-approval'
+    | '/api/body-weight/listener'
+    | '/api/body-weight/listeners'
     | '/api/body-weight/live'
     | '/api/body-weight/profiles'
     | '/api/body-weight/webhook'
@@ -1030,6 +1052,8 @@ export interface FileRouteTypes {
     | '/api/attendance/update'
     | '/api/auth/$'
     | '/api/auth/check-line-approval'
+    | '/api/body-weight/listener'
+    | '/api/body-weight/listeners'
     | '/api/body-weight/live'
     | '/api/body-weight/profiles'
     | '/api/body-weight/webhook'
@@ -1119,6 +1143,8 @@ export interface RootRouteChildren {
   ApiAttendanceUpdateRoute: typeof ApiAttendanceUpdateRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiAuthCheckLineApprovalRoute: typeof ApiAuthCheckLineApprovalRoute
+  ApiBodyWeightListenerRoute: typeof ApiBodyWeightListenerRoute
+  ApiBodyWeightListenersRoute: typeof ApiBodyWeightListenersRoute
   ApiBodyWeightLiveRoute: typeof ApiBodyWeightLiveRoute
   ApiBodyWeightProfilesRoute: typeof ApiBodyWeightProfilesRoute
   ApiBodyWeightWebhookRoute: typeof ApiBodyWeightWebhookRoute
@@ -1440,6 +1466,20 @@ declare module '@tanstack/react-router' {
       path: '/api/body-weight'
       fullPath: '/api/body-weight/'
       preLoaderRoute: typeof ApiBodyWeightIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/body-weight/listener': {
+      id: '/api/body-weight/listener'
+      path: '/api/body-weight/listener'
+      fullPath: '/api/body-weight/listener'
+      preLoaderRoute: typeof ApiBodyWeightListenerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/body-weight/listeners': {
+      id: '/api/body-weight/listeners'
+      path: '/api/body-weight/listeners'
+      fullPath: '/api/body-weight/listeners'
+      preLoaderRoute: typeof ApiBodyWeightListenersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/body-weight/live': {
@@ -1922,6 +1962,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAttendanceUpdateRoute: ApiAttendanceUpdateRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiAuthCheckLineApprovalRoute: ApiAuthCheckLineApprovalRoute,
+  ApiBodyWeightListenerRoute: ApiBodyWeightListenerRoute,
+  ApiBodyWeightListenersRoute: ApiBodyWeightListenersRoute,
   ApiBodyWeightLiveRoute: ApiBodyWeightLiveRoute,
   ApiBodyWeightProfilesRoute: ApiBodyWeightProfilesRoute,
   ApiBodyWeightWebhookRoute: ApiBodyWeightWebhookRoute,

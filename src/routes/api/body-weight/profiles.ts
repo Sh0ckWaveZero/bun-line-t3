@@ -26,6 +26,7 @@ const saveProfileSchema = z.object({
     .min(1, "น้ำหนักอ้างอิงไม่ถูกต้อง")
     .max(300, "น้ำหนักอ้างอิงไม่ถูกต้อง")
     .nullable(),
+  ownerId: z.string().min(1).nullable().optional(),
 });
 
 export async function PUT(request: Request) {
@@ -36,10 +37,22 @@ export async function PUT(request: Request) {
     }
 
     const input = saveProfileSchema.parse(await request.json());
-    const profile = await saveScaleProfile(input);
+    const result = await saveScaleProfile(
+      { userId: session.user.id, isAdmin: session.isAdmin },
+      input,
+    );
+    if (result.status === "not_found") {
+      return Response.json({ error: "ไม่พบโปรไฟล์" }, { status: 404 });
+    }
+    if (result.status === "owner_not_found") {
+      return Response.json(
+        { error: "ไม่พบผู้ใช้ที่เลือกเป็นเจ้าของ" },
+        { status: 400 },
+      );
+    }
 
     return Response.json(
-      { success: true, data: profile, message: "บันทึกโปรไฟล์สำเร็จ" },
+      { success: true, data: result.profile, message: "บันทึกโปรไฟล์สำเร็จ" },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {

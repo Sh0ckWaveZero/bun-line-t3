@@ -25,6 +25,7 @@ export async function PATCH(request: Request, measurementId: string) {
 
     const input = updateMeasurementSchema.parse(await request.json());
     const result = await updateMeasurementProfile(
+      { userId: session.user.id, isAdmin: session.isAdmin },
       measurementId,
       input.profileId,
     );
@@ -68,7 +69,10 @@ export async function DELETE(request: Request, measurementId: string) {
       return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 });
     }
 
-    const isDeleted = await deleteMeasurement(measurementId);
+    const isDeleted = await deleteMeasurement(
+      { userId: session.user.id, isAdmin: session.isAdmin },
+      measurementId,
+    );
     if (!isDeleted) {
       return Response.json({ error: "ไม่พบการชั่งนี้" }, { status: 404 });
     }

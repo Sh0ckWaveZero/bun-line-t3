@@ -8,6 +8,7 @@ function deploy(
   hasPrevious = true,
   staged = false,
   forceRebuild = false,
+  scaleWebhookSecret = "",
 ) {
   const directory = mkdtempSync(join(tmpdir(), "deployment-test-"));
   const calls = join(directory, "calls");
@@ -24,6 +25,8 @@ case "$*" in
     [[ "$SCENARIO" != build-failure ]] || exit 1
     if [[ "$SCENARIO" == cron-build-failure && "$*" == *" cron" ]]; then exit 1; fi ;;
   *"run --rm"*) [[ "$SCENARIO" != migration-failure ]] || exit 1 ;;
+  *"up -d --no-build scale-listener")
+    [[ "$SCENARIO" != listener-failure ]] || exit 1 ;;
   *"up -d"*)
     if [[ "$APP_IMAGE_TAG" != rollback-* && "$SCENARIO" == health-failure ]]; then exit 1; fi
     if [[ "$APP_IMAGE_TAG" == rollback-* && "$SCENARIO" == rollback-failure ]]; then exit 1; fi ;;
@@ -51,6 +54,9 @@ printf '%s\n' "curl $*" >> "$CALLS"
     GITHUB_OUTPUT: join(directory, "outputs"),
     PREVIOUS_APP_IMAGE: "",
     PREVIOUS_CRON_IMAGE: "",
+    // ตั้งเองทุกเคส — bun test โหลด .env.local ที่อาจมี SCALE_WEBHOOK_SECRET อยู่
+    SCALE_WEBHOOK_SECRET: scaleWebhookSecret,
+    SCALE_LISTENER_LOG_DELAY: "0",
   };
   for (const key of [
     "DATABASE_URL",
@@ -161,6 +167,28 @@ describe("ขั้นตอน deploy", () => {
     expect(result.exitCode).not.toBe(0);
     expect(result.output).toContain("กู้บริการไม่สำเร็จ");
   });
+  test("scale-listener สตาร์ทแยกหลัง app/cron ผ่าน health check", () => {
+    const result = deploy("success", true, false, false, "scale-secret");
+    expect(result.exitCode).toBe(0);
+    expect(result.commands.indexOf("app cron")).toBeLessThan(
+      result.commands.indexOf("up -d --no-build scale-listener"),
+    );
+    // ไม่อยู่ใน --wait ของ app/cron — พังเองไม่ทำให้ rollback แอป
+    expect(result.commands).not.toContain("app cron scale-listener");
+    expect(result.commands).toContain("logs --tail 30 bun-line-t3-scale-listener");
+  });
+  test("ไม่มี SCALE_WEBHOOK_SECRET ไม่สตาร์ท scale-listener", () => {
+    const result = deploy("success");
+    expect(result.exitCode).toBe(0);
+    expect(result.commands).not.toContain("up -d --no-build scale-listener");
+    expect(result.output).toContain("ข้าม scale-listener");
+  });
+  test("scale-listener สตาร์ทไม่ได้ deploy ยังสำเร็จและไม่ rollback", () => {
+    const result = deploy("listener-failure", true, false, false, "scale-secret");
+    expect(result.exitCode).toBe(0);
+    expect(result.output).toContain("สตาร์ท scale-listener ไม่สำเร็จ");
+    expect(result.output).not.toContain("กู้ image เดิมแล้ว");
+  });
   test("deploy ครั้งแรกไม่มี image เดิมไม่อ้างว่ากู้คืนแล้ว", () => {
     const result = deploy("health-failure", false);
     expect(result.exitCode).not.toBe(0);
@@ -180,6 +208,7 @@ describe("แยกขั้นตอน deploy เป็นคนละ shell",
       "app",
       "cron",
       "migrate",
+      "scale-listener",
     ]);
     expect(result.commands.indexOf("build migrate")).toBeLessThan(
       result.commands.indexOf("run --rm"),
@@ -191,7 +220,7 @@ describe("แยกขั้นตอน deploy เป็นคนละ shell",
   test("force rebuild ส่ง --pull --no-cache ให้ทุก service", () => {
     const result = deploy("success", true, true, true);
     expect(result.exitCode).toBe(0);
-    for (const service of ["app", "cron", "migrate"]) {
+    for (const service of ["app", "cron", "migrate", "scale-listener"]) {
       expect(result.commands).toContain(`build --pull --no-cache ${service}`);
     }
   });
@@ -230,5 +259,31 @@ describe("แยกขั้นตอน deploy เป็นคนละ shell",
     expect(result.exitCode).not.toBe(0);
     expect(result.commands.match(/up -d/g)?.length).toBe(1);
     expect(result.output).toContain("ไม่มี image เดิม");
+  });
+});
+
+describe("Dockerfile.scale-listener", () => {
+  test("ไฟล์ที่ COPY ไม่ถูก .dockerignore กรองออกจาก build context", () => {
+    const dockerfile = readFileSync(resolve("Dockerfile.scale-listener"), "utf8");
+    const ignored = new Set(
+      readFileSync(resolve(".dockerignore"), "utf8")
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => line && !line.startsWith("#") && !line.startsWith("!"))
+        .map((line) => line.replace(/^\/+|\/+$/g, "")),
+    );
+    const sources = dockerfile
+      .split("\n")
+      .filter((line) => /^COPY\s/.test(line) && !line.includes("--from="))
+      .flatMap((line) => line.replace(/^COPY\s+/, "").split(/\s+/).slice(0, -1))
+      .map((source) => source.replace(/^\.\//, "").replace(/\/+$/, ""));
+    expect(sources.length).toBeGreaterThan(0);
+    for (const source of sources) {
+      // pattern ใน .dockerignore ตรงกับ path จาก root ของ context (เช่น tsconfig.json)
+      // และต้นทางต้องมีอยู่จริงใน repo
+      expect(ignored.has(source)).toBe(false);
+      expect(ignored.has(source.split("/")[0]!)).toBe(false);
+      expect(Bun.file(resolve(source)).size).toBeGreaterThan(-1);
+    }
   });
 });

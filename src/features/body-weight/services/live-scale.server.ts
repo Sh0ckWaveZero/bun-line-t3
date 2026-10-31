@@ -18,6 +18,7 @@ interface LiveScaleStore {
   lastMeasurement: {
     id: string;
     status: "saved" | "updated";
+    ownerUserId: string | null;
   } | null;
   /** เพิ่มทุกครั้งที่มีการชั่งถูกบันทึก/อัปเดต — client ใช้รู้ว่าต้องโหลดข้อมูลใหม่ */
   version: number;
@@ -30,6 +31,7 @@ export interface PendingWeighIn {
   weightKg: number;
   profileId: string | null;
   profileName: string | null;
+  ownerUserId: string | null;
   at: number;
 }
 
@@ -81,32 +83,43 @@ export const recordLiveReading = (reading: {
 export const recordMeasurementChange = (
   measurementId: string,
   status: "saved" | "updated",
+  ownerUserId: string | null,
 ): void => {
-  store.lastMeasurement = { id: measurementId, status };
+  store.lastMeasurement = { id: measurementId, status, ownerUserId };
   store.version += 1;
 };
 
-/** สถานะสำหรับ client — ส่งอายุของ packet (ms) แทน timestamp กันนาฬิกาเครื่อง client เพี้ยน */
-export const getLiveScaleState = (now: number = Date.now()): LiveScaleState => ({
-  reading: store.reading
-    ? {
-        weightKg: store.reading.weightKg,
-        impedance: store.reading.impedance,
-        stabilized: store.reading.stabilized,
-        removed: store.reading.removed,
-        ageMs: Math.max(0, now - store.reading.at),
-      }
-    : null,
-  lastMeasurement: store.lastMeasurement,
-  version: store.version,
-  pending: (() => {
-    const pending = getPendingWeighIn(now);
-    return pending
+export const getLiveScaleState = (
+  viewer: { userId: string; isAdmin: boolean } | null = null,
+  now: number = Date.now(),
+): LiveScaleState => {
+  const canSee = (ownerUserId: string | null) =>
+    viewer === null ||
+    viewer.isAdmin ||
+    (ownerUserId !== null && ownerUserId === viewer.userId);
+  const pending = getPendingWeighIn(now);
+  const last = store.lastMeasurement;
+  return {
+    reading: store.reading
+      ? {
+          weightKg: store.reading.weightKg,
+          impedance: store.reading.impedance,
+          stabilized: store.reading.stabilized,
+          removed: store.reading.removed,
+          ageMs: Math.max(0, now - store.reading.at),
+        }
+      : null,
+    lastMeasurement:
+      last && canSee(last.ownerUserId)
+        ? { id: last.id, status: last.status }
+        : null,
+    version: store.version,
+    pending: pending
       ? {
           weightKg: pending.weightKg,
-          profileId: pending.profileId,
-          profileName: pending.profileName,
+          profileId: canSee(pending.ownerUserId) ? pending.profileId : null,
+          profileName: canSee(pending.ownerUserId) ? pending.profileName : null,
         }
-      : null;
-  })(),
-});
+      : null,
+  };
+};

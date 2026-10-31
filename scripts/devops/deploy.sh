@@ -30,6 +30,7 @@ validate_environment
 # Pi 4 RAM 4 GB: เรียก build ทีละ service และจำกัด Compose parallelism
 export COMPOSE_PARALLEL_LIMIT=1
 export APP_IMAGE_TAG="$RELEASE_TAG" CRON_IMAGE_TAG="$RELEASE_TAG" RUN_MIGRATIONS=false
+export SCALE_LISTENER_IMAGE_TAG="$RELEASE_TAG"
 compose=(docker compose --env-file /dev/null -f docker-compose.yml)
 previous_app="${PREVIOUS_APP_IMAGE:-}"
 previous_cron="${PREVIOUS_CRON_IMAGE:-}"
@@ -63,7 +64,7 @@ build() {
   local service
   local build_args
   # บริการเดิมยังทำงานระหว่าง build; BuildKit อาจขนานภายใน service เดียว
-  for service in app cron migrate; do
+  for service in app cron migrate scale-listener; do
     build_args=("$service")
     if [[ "${FORCE_REBUILD:-false}" == true ]]; then
       build_args=(--pull --no-cache "$service")
@@ -102,6 +103,23 @@ release() {
   curl --fail --silent --show-error --max-time 10 "http://127.0.0.1:${PORT:-12914}/api/health" >/dev/null
   trap - EXIT
   echo "✅ Deploy และ health check ผ่าน"
+  start_scale_listener
+}
+
+# ตาชั่งเป็นฟีเจอร์เสริม: แยกจาก release/rollback ของแอป พังก็ไม่ทำให้ deploy ล้มเหลว
+start_scale_listener() {
+  if [[ -z "${SCALE_WEBHOOK_SECRET:-}" ]]; then
+    # ไม่มี secret listener จะ exit ทันทีแล้ว restart วน — ไม่สตาร์ท
+    echo "⚠️ ข้าม scale-listener: ยังไม่ได้ตั้ง SCALE_WEBHOOK_SECRET"
+    return 0
+  fi
+  if ! "${compose[@]}" up -d --no-build scale-listener; then
+    echo "⚠️ สตาร์ท scale-listener ไม่สำเร็จ (แอปทำงานปกติ)"
+    return 0
+  fi
+  # ให้ log ใน CI บอกว่าเข้าถึง Bluetooth ได้ ("listening for…") หรือพัง
+  sleep "${SCALE_LISTENER_LOG_DELAY:-10}"
+  docker logs --tail 30 bun-line-t3-scale-listener 2>&1 || true
 }
 
 if [[ "$command" == all ]]; then

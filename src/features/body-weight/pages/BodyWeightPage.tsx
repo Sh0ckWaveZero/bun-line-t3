@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { RefreshCw, Weight } from "lucide-react";
+import { ListenerSourceSelect } from "@/features/body-weight/components/ListenerSourceSelect";
 import { LiveScaleCard } from "@/features/body-weight/components/LiveScaleCard";
 import { ProfileEditor } from "@/features/body-weight/components/ProfileEditor";
 import { WeighInOverlay } from "@/features/body-weight/components/WeighInOverlay";
@@ -45,17 +46,14 @@ function BodyWeightPageContent() {
 
   const [pickedProfileId, setPickedProfileId] = useState<string | null>(null);
   const [compareDays, setCompareDays] = useState(0);
-  const [rangeDays, setRangeDays] = useState<number | null>(
-    DEFAULT_RANGE_DAYS,
-  );
+  const [rangeDays, setRangeDays] = useState<number | null>(DEFAULT_RANGE_DAYS);
   const [showEveryone, setShowEveryone] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const measurements = useMemo(
-    () => snapshot?.measurements ?? [],
-    [snapshot],
-  );
+  const measurements = useMemo(() => snapshot?.measurements ?? [], [snapshot]);
   const profiles = useMemo(() => snapshot?.profiles ?? [], [snapshot]);
+  const owners = useMemo(() => snapshot?.owners ?? [], [snapshot]);
+  const isAdmin = snapshot?.viewer.isAdmin ?? false;
 
   // ยังไม่ได้เลือก (หรือโปรไฟล์ที่เลือกถูกลบ) — ใช้เจ้าของการชั่งล่าสุด หรือโปรไฟล์แรก
   const selectedProfileId = useMemo(() => {
@@ -129,12 +127,13 @@ function BodyWeightPageContent() {
           </button>
         </div>
 
-        <div className="mt-4">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           <ProfileSwitcher
             profiles={profiles}
             selectedId={selectedProfileId}
             onSelect={setPickedProfileId}
           />
+          {isAdmin && <ListenerSourceSelect onError={setActionError} />}
         </div>
 
         {/* Error banner */}
@@ -215,6 +214,8 @@ function BodyWeightPageContent() {
           >
             <ProfileEditor
               profiles={profiles}
+              owners={owners}
+              isAdmin={isAdmin}
               isSaving={isSaving}
               onSave={saveProfile}
             />

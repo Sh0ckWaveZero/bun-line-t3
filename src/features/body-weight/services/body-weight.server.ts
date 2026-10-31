@@ -27,6 +27,7 @@ import type {
   ScaleMeasurementDto,
   ScaleMetricValues,
   ScaleProfileDto,
+  ScaleViewer,
 } from "@/features/body-weight/types";
 
 const MAX_MEASUREMENTS = 500;
@@ -44,7 +45,12 @@ export interface ScaleWebhookPayload {
 }
 
 export type IngestResult =
-  | { status: "saved" | "updated"; measurement: ScaleMeasurementDto }
+  | {
+      status: "saved" | "updated";
+      measurement: ScaleMeasurementDto;
+      /** เจ้าของโปรไฟล์ของการชั่งนี้ — ใช้ตัดสินว่าใครเห็นสถานะสดได้ */
+      ownerUserId: string | null;
+    }
   | { status: "duplicate" }
   /** น้ำหนักนิ่งแล้ว รอ impedance — ยังไม่บันทึก */
   | { status: "pending" }
@@ -71,6 +77,7 @@ export interface SaveScaleProfileInput {
   male: boolean;
   /** น้ำหนักอ้างอิง — ช่วยการเดาเจ้าของเมื่อโปรไฟล์ยังไม่มีประวัติการชั่ง */
   refWeightKg: number | null;
+  ownerId?: string | null;
 }
 
 interface MeasurementRow {
@@ -91,6 +98,8 @@ interface ProfileRow {
   male: boolean;
   refWeightKg: number | null;
   upstreamName: string | null;
+  userId?: string | null;
+  user?: { name: string } | null;
 }
 
 const toDatePartsUtc = (date: Date) => ({
@@ -117,6 +126,8 @@ const toProfileDto = (row: ProfileRow): ScaleProfileDto => ({
   male: row.male,
   refWeightKg: row.refWeightKg,
   upstreamName: row.upstreamName,
+  ownerId: row.userId ?? null,
+  ownerName: row.user?.name ?? null,
 });
 
 /** คำนวณ metrics — ต้องมีทั้งส่วนสูงและวันเกิดถึงจะได้ผล (เหมือน metrics_for ของ upstream) */
@@ -144,7 +155,27 @@ const metricsFor = (
   });
 };
 
-/** push LINE แจ้งการชั่งใหม่ให้ admin — พลาดแล้วไม่กระทบ webhook (log แล้วจบ) */
+/**
+ * ผู้รับ push การชั่ง: เจ้าของโปรไฟล์ (LINE account ของ user ที่ผูกไว้)
+ * ไม่มีเจ้าของหรือเจ้าของไม่มี LINE account → admin ใน ADMIN_LINE_USER_IDS (พฤติกรรมเดิม)
+ */
+const resolveNotifyRecipients = async (
+  profileId: string,
+): Promise<string[]> => {
+  const profile = await db.scaleProfile.findUnique({
+    where: { id: profileId },
+    select: { userId: true },
+  });
+  if (profile?.userId) {
+    const account = await db.account.findFirst({
+      where: { userId: profile.userId, providerId: "line" },
+      select: { accountId: true },
+    });
+    if (account?.accountId) return [account.accountId];
+  }
+  return getEnvAdminLineUserIds();
+};
+
 const notifyWeighIn = async (
   measurement: ScaleMeasurementDto,
   profileName: string | null,
@@ -152,8 +183,8 @@ const notifyWeighIn = async (
   try {
     // น้ำหนักที่จับคู่ไม่เจอเจ้าของ ไม่ต้องแจ้งเตือน (เหมือนพฤติกรรมของ upstream)
     if (!measurement.profileId) return;
-    const adminIds = getEnvAdminLineUserIds();
-    if (adminIds.length === 0) return;
+    const recipients = await resolveNotifyRecipients(measurement.profileId);
+    if (recipients.length === 0) return;
 
     const previous = await db.scaleMeasurement.findFirst({
       where: {
@@ -175,9 +206,9 @@ const notifyWeighIn = async (
       env.APP_URL,
     );
     await Promise.all(
-      adminIds.map(async (adminId) => {
+      recipients.map(async (lineUserId) => {
         try {
-          await sendPushMessage(adminId, [flex]);
+          await sendPushMessage(lineUserId, [flex]);
         } catch (error) {
           console.error(
             "[body-weight] push failed:",
@@ -238,6 +269,7 @@ export async function ingestScaleWebhook(
           heightCm: true,
           birthDate: true,
           male: true,
+          userId: true,
         },
       })
     : null;
@@ -262,7 +294,11 @@ export async function ingestScaleWebhook(
     });
     const dto = toMeasurementDto(created);
     await notifyWeighIn(dto, profile?.name ?? null);
-    return { status: "saved", measurement: dto };
+    return {
+      status: "saved",
+      measurement: dto,
+      ownerUserId: profile?.userId ?? null,
+    };
   } catch (error) {
     // สอง webhook พร้อมกัน — unique index บน upstream_id เป็นเส้นตายสุดท้าย
     if (
@@ -371,7 +407,11 @@ export async function ingestScaleReading(
       }
       const dto = toMeasurementDto(row);
       notifyInBackground(dto, row.profile?.name ?? null);
-      return { status: "updated", measurement: dto };
+      return {
+        status: "updated",
+        measurement: dto,
+        ownerUserId: profile?.userId ?? null,
+      };
     }
     // packet เดิมซ้ำ (น้ำหนักเดิม อุปกรณ์เดิม ในกรอบเวลาเดิม)
     return { status: "duplicate" };
@@ -394,7 +434,7 @@ export async function ingestScaleReading(
       const profile = profileId
         ? await db.scaleProfile.findUnique({
             where: { id: profileId },
-            select: { name: true },
+            select: { name: true, userId: true },
           })
         : null;
       setPendingWeighIn({
@@ -402,6 +442,7 @@ export async function ingestScaleReading(
         weightKg: input.weightKg,
         profileId,
         profileName: profile?.name ?? null,
+        ownerUserId: profile?.userId ?? null,
         at: now.getTime(),
       });
     }
@@ -434,7 +475,11 @@ export async function ingestScaleReading(
   setPendingWeighIn(null);
   const dto = toMeasurementDto(created);
   notifyInBackground(dto, profile?.name ?? null);
-  return { status: "saved", measurement: dto };
+  return {
+    status: "saved",
+    measurement: dto,
+    ownerUserId: profile?.userId ?? null,
+  };
 }
 
 export type UpdateMeasurementResult =
@@ -442,21 +487,32 @@ export type UpdateMeasurementResult =
   | { status: "measurement_not_found" }
   | { status: "profile_not_found" };
 
+const measurementScope = (viewer: ScaleViewer) =>
+  viewer.isAdmin ? {} : { profile: { userId: viewer.userId } };
+
 /**
  * เปลี่ยนเจ้าของการชั่ง (null = ไม่ระบุ) แล้วคำนวณ metrics ใหม่ตามส่วนสูง/วันเกิด/เพศของเจ้าของใหม่
+ * ผู้ใช้ทั่วไป: แก้ได้เฉพาะการชั่งของตัวเอง และย้ายไปได้เฉพาะโปรไฟล์ของตัวเอง (หรือ "ไม่ระบุ")
+ * — การชั่งของคนอื่นตอบ measurement_not_found เหมือนไม่มีอยู่ ไม่ยืนยันว่ามีแถวนั้น
  */
 export async function updateMeasurementProfile(
+  viewer: ScaleViewer,
   measurementId: string,
   profileId: string | null,
 ): Promise<UpdateMeasurementResult> {
-  const existing = await db.scaleMeasurement.findUnique({
-    where: { id: measurementId },
+  const existing = await db.scaleMeasurement.findFirst({
+    where: { id: measurementId, ...measurementScope(viewer) },
     select: { id: true, weightKg: true, impedance: true, measuredAt: true },
   });
   if (!existing) return { status: "measurement_not_found" };
 
   const profile = profileId
-    ? await db.scaleProfile.findUnique({ where: { id: profileId } })
+    ? await db.scaleProfile.findFirst({
+        where: {
+          id: profileId,
+          ...(viewer.isAdmin ? {} : { userId: viewer.userId }),
+        },
+      })
     : null;
   if (profileId && !profile) return { status: "profile_not_found" };
 
@@ -474,46 +530,65 @@ export async function updateMeasurementProfile(
   return { status: "updated", measurement: toMeasurementDto(updated) };
 }
 
-/** ลบการชั่ง — คืน false เมื่อไม่พบ */
 export async function deleteMeasurement(
+  viewer: ScaleViewer,
   measurementId: string,
 ): Promise<boolean> {
-  try {
-    await db.scaleMeasurement.delete({ where: { id: measurementId } });
-    return true;
-  } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2025"
-    ) {
-      return false;
-    }
-    throw error;
-  }
+  const result = await db.scaleMeasurement.deleteMany({
+    where: { id: measurementId, ...measurementScope(viewer) },
+  });
+  return result.count > 0;
 }
 
-/** ข้อมูลสำหรับหน้า /body-weight — การชั่งล่าสุด (ใหม่ → เก่า) + โปรไฟล์ทั้งหมด */
-export async function getBodyWeightSnapshot(): Promise<BodyWeightSnapshot> {
-  const [measurements, profiles] = await Promise.all([
+/**
+ * ข้อมูลสำหรับหน้า /body-weight — การชั่งล่าสุด (ใหม่ → เก่า) + โปรไฟล์
+ * ผู้ใช้ทั่วไปเห็นเฉพาะของโปรไฟล์ที่ตัวเองเป็นเจ้าของ; admin เห็นทั้งหมด รวมการชั่งที่ยังไม่มีเจ้าของ
+ */
+export async function getBodyWeightSnapshot(
+  viewer: ScaleViewer,
+): Promise<BodyWeightSnapshot> {
+  const profileScope = viewer.isAdmin ? {} : { userId: viewer.userId };
+  const [measurements, profiles, owners] = await Promise.all([
     db.scaleMeasurement.findMany({
+      where: measurementScope(viewer),
       orderBy: { measuredAt: "desc" },
       take: MAX_MEASUREMENTS,
       include: { profile: { select: { name: true } } },
     }),
-    db.scaleProfile.findMany({ orderBy: { name: "asc" } }),
+    db.scaleProfile.findMany({
+      where: profileScope,
+      orderBy: { name: "asc" },
+      include: { user: { select: { name: true } } },
+    }),
+    viewer.isAdmin
+      ? db.user.findMany({
+          select: { id: true, name: true },
+          orderBy: { name: "asc" },
+        })
+      : Promise.resolve([]),
   ]);
   return {
     measurements: measurements.map(toMeasurementDto),
     profiles: profiles.map(toProfileDto),
+    viewer: { isAdmin: viewer.isAdmin },
+    owners,
   };
 }
 
+export type SaveProfileResult =
+  | { status: "saved"; profile: ScaleProfileDto }
+  | { status: "not_found" }
+  | { status: "owner_not_found" };
+
 /**
  * บันทึกโปรไฟล์ (สร้างใหม่หรือแก้ที่มีอยู่) แล้วคำนวณ metrics ใหม่ทั้งประวัติของโปรไฟล์นั้น
+ * - ผู้ใช้ทั่วไป: สร้างได้ (เจ้าของ = ตัวเอง) และแก้ได้เฉพาะของตัวเอง; ไม่มีสิทธิ์เปลี่ยนเจ้าของ
+ * - admin: แก้ได้ทุกโปรไฟล์ และกำหนด/ย้ายเจ้าของได้ (ownerId)
  */
 export async function saveScaleProfile(
+  viewer: ScaleViewer,
   input: SaveScaleProfileInput,
-): Promise<ScaleProfileDto> {
+): Promise<SaveProfileResult> {
   const birthDate = input.birthDate
     ? new Date(`${input.birthDate}T00:00:00.000Z`)
     : null;
@@ -524,9 +599,43 @@ export async function saveScaleProfile(
     male: input.male,
     refWeightKg: input.refWeightKg,
   };
-  const profile: ProfileRow = input.id
-    ? await db.scaleProfile.update({ where: { id: input.id }, data })
-    : await db.scaleProfile.create({ data });
+
+  const ownerIdUpdate = viewer.isAdmin ? input.ownerId : undefined;
+  if (ownerIdUpdate !== undefined && ownerIdUpdate !== null) {
+    const owner = await db.user.findUnique({
+      where: { id: ownerIdUpdate },
+      select: { id: true },
+    });
+    if (!owner) return { status: "owner_not_found" };
+  }
+
+  let profile: ProfileRow;
+  if (input.id) {
+    const editable = await db.scaleProfile.findFirst({
+      where: {
+        id: input.id,
+        ...(viewer.isAdmin ? {} : { userId: viewer.userId }),
+      },
+      select: { id: true },
+    });
+    if (!editable) return { status: "not_found" };
+    profile = await db.scaleProfile.update({
+      where: { id: input.id },
+      data: {
+        ...data,
+        ...(ownerIdUpdate === undefined ? {} : { userId: ownerIdUpdate }),
+      },
+      include: { user: { select: { name: true } } },
+    });
+  } else {
+    profile = await db.scaleProfile.create({
+      data: {
+        ...data,
+        userId: ownerIdUpdate === undefined ? viewer.userId : ownerIdUpdate,
+      },
+      include: { user: { select: { name: true } } },
+    });
+  }
 
   const rows = await db.scaleMeasurement.findMany({
     where: { profileId: profile.id },
@@ -547,5 +656,5 @@ export async function saveScaleProfile(
       });
     }),
   );
-  return toProfileDto(profile);
+  return { status: "saved", profile: toProfileDto(profile) };
 }
