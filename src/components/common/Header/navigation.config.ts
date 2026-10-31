@@ -347,22 +347,28 @@ export const isNavItemActive = (item: NavItem, pathname: string): boolean => {
 };
 
 /**
+ * Helper function to check if a single child link is active — ใช้ทั้ง dropdown และเมนูมือถือ
+ * (ต้องเรียกต่อ child แต่ละตัว ไม่ใช่ parent — ไม่งั้นทุกลิงก์ในเซกชันขึ้น active พร้อมกัน)
+ */
+export const isChildHrefActive = (child: NavItem, pathname: string): boolean => {
+  if (child.href === "/dca-history") {
+    return pathname === "/dca-history" || pathname.startsWith("/dca-");
+  }
+  if (child.href?.startsWith("/thai-id")) {
+    return pathname.startsWith("/thai-id");
+  }
+  // poker เข้าได้ทั้งหน้า list (/planning-poker) และหน้าห้อง (/planning-poker/CODE)
+  if (child.href === "/planning-poker") {
+    return pathname.startsWith(child.href);
+  }
+  return pathname === child.href;
+};
+
+/**
  * Helper function to check if a child item is active
  */
 export const isChildItemActive = (item: NavItem, pathname: string): boolean => {
   if (!item.children) return false;
 
-  return item.children.some((child) => {
-    if (child.href === "/dca-history") {
-      return pathname === "/dca-history" || pathname.startsWith("/dca-");
-    }
-    if (child.href?.startsWith("/thai-id")) {
-      return pathname.startsWith("/thai-id");
-    }
-    // poker เข้าได้ทั้งหน้า list (/planning-poker) และหน้าห้อง (/planning-poker/CODE)
-    if (child.href === "/planning-poker") {
-      return pathname.startsWith(child.href);
-    }
-    return pathname === child.href;
-  });
+  return item.children.some((child) => isChildHrefActive(child, pathname));
 };

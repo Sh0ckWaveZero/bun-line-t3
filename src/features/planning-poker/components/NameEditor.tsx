@@ -33,9 +33,10 @@ export const NameEditor = ({
     return (
       <Button
         type="button"
-        variant="outline"
+        variant="ghost"
         size="sm"
         id="poker-rename-toggle"
+        className="w-full justify-start"
         onClick={() => {
           setDraft(currentName);
           setIsEditing(true);
@@ -48,7 +49,8 @@ export const NameEditor = ({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-center gap-2">
+    // อยู่ในแผงเมนู ⋯ (แคบ ~212px) — เรียงแนวตั้งกันล้น: input เต็มแถว, Save/Cancel แถวล่างครึ่ง ๆ กัน
+    <form id="poker-rename-form" onSubmit={handleSubmit} className="flex flex-col gap-1.5">
       <Label htmlFor="poker-rename" className="sr-only">
         Display name
       </Label>
@@ -59,20 +61,29 @@ export const NameEditor = ({
         maxLength={POKER_LIMITS.nameMaxLength}
         autoComplete="nickname"
         autoFocus
-        className="h-9 w-40"
+        className="h-9 w-full"
       />
-      <Button type="submit" size="sm" id="poker-rename-save" disabled={isBusy || !draft.trim()}>
-        Save
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        id="poker-rename-cancel"
-        onClick={() => setIsEditing(false)}
-      >
-        Cancel
-      </Button>
+      <div className="flex items-center gap-1.5">
+        <Button
+          type="submit"
+          size="sm"
+          id="poker-rename-save"
+          className="flex-1"
+          disabled={isBusy || !draft.trim()}
+        >
+          Save
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          id="poker-rename-cancel"
+          className="flex-1"
+          onClick={() => setIsEditing(false)}
+        >
+          Cancel
+        </Button>
+      </div>
     </form>
   );
 };

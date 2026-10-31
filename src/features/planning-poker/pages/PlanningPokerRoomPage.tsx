@@ -3,6 +3,7 @@ import { Link, useParams } from "@tanstack/react-router";
 import {
   PixelChevronDown,
   PixelCode,
+  PixelList,
   PixelLogout,
   PixelMail,
   PixelMinus,
@@ -15,6 +16,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { CopyButton } from "../components/CopyButton";
 import { JoinRoomForm } from "../components/JoinRoomForm";
@@ -55,8 +67,100 @@ const NEXT_CARD_SIZE: Record<CardSize, CardSize> = {
   large: "large",
 };
 
+/**
+ * เมนู "⋯" ของหัวห้อง — ยุบ actions รอง (เปลี่ยนชื่อ/สลับบทบาท/ออกจากห้อง) ไว้ที่เดียว
+ * ตาม pattern แถว actions ของโปรเจกต์: ไม่กองปุ่มเรียงแถว ลดความรกของหัวห้องบนจอทุกขนาด
+ * แผงเป็น Radix portal อยู่นอก main.poker-pixel จึงต้องใส่คลาสธีม pixel เอง (เหมือน poker-select-pixel)
+ */
+const RoomActionsMenu = ({
+  isJoined,
+  me,
+  isRevealed,
+  isBusy,
+  onRename,
+  onSwitchRole,
+  onLeave,
+}: {
+  isJoined: boolean;
+  me: { name: string; role: "voter" | "spectator" } | null;
+  isRevealed: boolean;
+  isBusy: boolean;
+  onRename: (name: string) => Promise<unknown>;
+  onSwitchRole: (role: "voter" | "spectator") => void;
+  onLeave: () => void;
+}) => (
+  <Popover>
+    {/* Tooltip ครอบนอก — trigger ทั้งสอง (tooltip + popover) ต้อง asChild chain ลงปุ่มเดียวกัน
+        ห้ามให้ asChild ครอบ <Tooltip> เพราะเป็น context ไม่มี DOM node (ref/handler ผูกไม่ได้ = กดไม่ได้) */}
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            id="poker-more-actions"
+            aria-label="More actions"
+            aria-haspopup="menu"
+            className="w-9 px-0"
+          >
+            <PixelList aria-hidden="true" />
+          </Button>
+        </PopoverTrigger>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="poker-tooltip-soft">
+        More actions
+      </TooltipContent>
+    </Tooltip>
+    <PopoverContent
+      id="poker-more-panel"
+      align="end"
+      className="poker-menu-pixel w-56 p-1"
+    >
+      <div className="flex flex-col gap-1">
+        {isJoined && me ? (
+          <NameEditor
+            currentName={me.name}
+            isBusy={isBusy}
+            onSave={onRename}
+          />
+        ) : null}
+        {isJoined && me ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            id="poker-switch-role"
+            disabled={isRevealed}
+            aria-describedby={isRevealed ? "poker-role-hint" : undefined}
+            className="w-full justify-start"
+            onClick={() => onSwitchRole(me.role === "voter" ? "spectator" : "voter")}
+          >
+            <PixelSwap aria-hidden="true" />
+            {me.role === "voter" ? "Become spectator" : "Become voter"}
+          </Button>
+        ) : null}
+        {isJoined ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            id="poker-leave-room"
+            className="w-full justify-start"
+            onClick={onLeave}
+          >
+            <PixelLogout aria-hidden="true" />
+            Leave room
+          </Button>
+        ) : null}
+      </div>
+    </PopoverContent>
+  </Popover>
+);
+
 const RoomMessage = ({ title, detail }: { title: string; detail?: string }) => (
   <main
+    id="poker-room-message"
     className={cn(
       "poker-pixel mx-auto max-w-md px-4 py-16 text-center",
       ACCESSIBLE_PRIMARY_CLASS,
@@ -67,7 +171,9 @@ const RoomMessage = ({ title, detail }: { title: string; detail?: string }) => (
       <p className="text-muted-foreground mt-2 text-sm">{detail}</p>
     ) : null}
     <Button asChild className="mt-6">
-      <Link to="/planning-poker">Back to Planning Poker</Link>
+      <Link to="/planning-poker" id="poker-room-back">
+        Back to Planning Poker
+      </Link>
     </Button>
   </main>
 );
@@ -291,51 +397,56 @@ export const PlanningPokerRoomPage = () => {
     }
   }
 
-  // ตัวปรับขนาดการ์ด — ใช้ซ้ำได้ทั้งก่อน (อยู่คู่กล่องเปิดไพ่) และหลังเปิด (แถวขวาเหนือพัด)
+  // ตัวปรับขนาดการ์ด — ท้ายแถวปุ่มหัวห้อง (poker-room-header) เหลือแค่ปุ่ม [−][+] ทุกจอ
+  // (ชื่อ group/ค่าปัจจุบันเป็น sr-only — screen reader ยังอ่านและประกาศได้ครบ)
   const cardSizeControls = (
-    <div className="flex items-center gap-2">
-      <span
-        id="poker-card-size-label"
-        className="text-muted-foreground text-xs font-medium"
-      >
+    <div className="flex items-center gap-1">
+      <span id="poker-card-size-label" className="sr-only">
         Card size
       </span>
-      <div
-        role="group"
-        aria-labelledby="poker-card-size-label"
-        className="flex items-center gap-1"
-      >
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          id="poker-decrease-card-size"
-          aria-label="Decrease card size"
-          aria-controls="poker-player-cards"
-          disabled={cardSize === "small"}
-          onClick={() => setCardSize((current) => PREVIOUS_CARD_SIZE[current])}
-        >
-          <PixelMinus aria-hidden="true" />
-        </Button>
-        <span
-          className="text-muted-foreground min-w-14 text-center text-xs"
-          aria-live="polite"
-        >
-          {CARD_SIZE_LABELS[cardSize]}
-        </span>
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          id="poker-increase-card-size"
-          aria-label="Increase card size"
-          aria-controls="poker-player-cards"
-          disabled={cardSize === "large"}
-          onClick={() => setCardSize((current) => NEXT_CARD_SIZE[current])}
-        >
-          <PixelPlus aria-hidden="true" />
-        </Button>
-      </div>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            id="poker-decrease-card-size"
+            aria-label="Decrease card size"
+            aria-controls="poker-player-cards"
+            className="h-9 w-9"
+            disabled={cardSize === "small"}
+            onClick={() => setCardSize((current) => PREVIOUS_CARD_SIZE[current])}
+          >
+            <PixelMinus aria-hidden="true" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="poker-tooltip-soft">
+          Decrease card size
+        </TooltipContent>
+      </Tooltip>
+      <span className="sr-only" aria-live="polite">
+        {CARD_SIZE_LABELS[cardSize]}
+      </span>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            id="poker-increase-card-size"
+            aria-label="Increase card size"
+            aria-controls="poker-player-cards"
+            className="h-9 w-9"
+            disabled={cardSize === "large"}
+            onClick={() => setCardSize((current) => NEXT_CARD_SIZE[current])}
+          >
+            <PixelPlus aria-hidden="true" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="poker-tooltip-soft">
+          Increase card size
+        </TooltipContent>
+      </Tooltip>
     </div>
   );
 
@@ -353,67 +464,49 @@ export const PlanningPokerRoomPage = () => {
         {getAnnouncement(room, votedCount, voters.length)}
       </p>
 
-      <header className="space-y-2">
-        <div className="flex flex-wrap items-start justify-between gap-3">
+      <header id="poker-room-header" className="space-y-2">
+        {/* < lg: ปุ่มทั้งหมด icon-only แถวเดียวข้าง room code (minimal บน mobile/tablet) — ≥ lg ปุ่มเต็มเหมือนเดิม */}
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
           <div>
             <p className="text-muted-foreground text-xs">
               Planning Poker · Room code
             </p>
             <h1
-              className="font-mono text-3xl font-bold tracking-widest"
+              className="font-mono text-2xl font-bold tracking-widest sm:text-3xl"
               aria-label={`Planning Poker room code ${room.code.split("").join(" ")}`}
             >
               {room.code}
             </h1>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <TooltipProvider delayDuration={180}>
+          <div className="ml-auto flex flex-wrap items-center gap-1.5 lg:gap-2">
             <CopyButton id="poker-copy-code" label="Copy code" getText={() => room.code} />
             <CopyButton
               id="poker-copy-link"
               label="Copy link"
+              icon={PixelShare}
               getText={() =>
                 `${window.location.origin}/planning-poker/${room.code}`
               }
             />
-            {isJoined && me ? (
-              <NameEditor
-                currentName={me.name}
-                isBusy={poker.isBusy}
-                onSave={poker.rename}
-              />
-            ) : null}
-            {isJoined && me ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                id="poker-switch-role"
-                disabled={room.revealed}
-                aria-describedby={room.revealed ? "poker-role-hint" : undefined}
-                onClick={() =>
-                  void poker.setRole(
-                    me.role === "voter" ? "spectator" : "voter",
-                  )
-                }
-              >
-                <PixelSwap aria-hidden="true" />
-                {me.role === "voter" ? "Become spectator" : "Become voter"}
-              </Button>
-            ) : null}
-            {isJoined ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                id="poker-leave-room"
-                onClick={() => void poker.leave()}
-              >
-                <PixelLogout aria-hidden="true" />
-                Leave room
-              </Button>
-            ) : null}
+            {cardSizeControls}
+            <RoomActionsMenu
+              isJoined={isJoined}
+              me={me ? { name: me.name, role: me.role } : null}
+              isRevealed={room.revealed}
+              isBusy={poker.isBusy}
+              onRename={poker.rename}
+              onSwitchRole={(role) => void poker.setRole(role)}
+              onLeave={() => void poker.leave()}
+            />
           </div>
+          </TooltipProvider>
         </div>
+        <StoryField
+          room={room}
+          canEdit={isJoined}
+          onSave={(story) => void poker.setStory(story)}
+        />
         {isJoined && room.revealed ? (
           <p
             id="poker-role-hint"
@@ -448,7 +541,7 @@ export const PlanningPokerRoomPage = () => {
 
       <Card className="relative">
         {/* ป้ายเวลา+ผลโหวต พับมุมบนซ้ายของการ์ด (สไตล์ tag เกม pixel) — เด่นเป็นจุดแรกที่ตาเจอ */}
-        <div className="poker-timer-badge">
+        <div id="poker-timer-badge" className="poker-timer-badge">
           <RoundTimer
             roundStartedAt={room.roundStartedAt}
             revealedAt={room.revealedAt}
@@ -462,16 +555,11 @@ export const PlanningPokerRoomPage = () => {
           </span>
         </div>
         <CardContent className="space-y-6 pt-8">
-          <StoryField
-            room={room}
-            canEdit={isJoined}
-            onSave={(story) => void poker.setStory(story)}
-          />
-
           {/* กล่องไพ่สไตล์ CardCase — จำนวนใบ = จำนวนผู้โหวต, กล่องคือปุ่มเปิดไพ่
-              ก่อนเปิด: กล่องซ้าย + ตัวปรับขนาดการ์ดขวา ในแถวเดียว
-              หลังเปิด: กล่องหาย เหลือตัวปรับขนาดชิดขวาเหนือพัดไพ่ */}
+              ก่อนเปิด: เคสอยู่กลางใต้พัดไพ่ (primary action)
+              หลังเปิด: เคสหาย เหลือพัดไพ่ (ตัวปรับขนาดการ์ดอยู่ท้ายแถวปุ่มหัวห้อง) */}
           <section
+            id="poker-players-section"
             aria-labelledby="poker-players-heading"
             className="space-y-4 sm:space-y-5"
           >
@@ -479,27 +567,12 @@ export const PlanningPokerRoomPage = () => {
               {voters.length} {voters.length === 1 ? "card is" : "cards are"} in
               this case
             </h2>
-            {!room.revealed ? (
-              /* แกนกลางเดียวกับพัดไพ่: กล่อง + ตัวปรับขนาดการ์ด กึ่งกลางเหนือกอง — โต๊ะเกมอ่านเป็นแนวตั้งเดียว */
-              <div className="flex items-center justify-center gap-8">
-                <RevealCaseButton
-                  id="poker-reveal-case"
-                  onClick={() => void poker.reveal()}
-                  disabled={!room.canControl}
-                />
-                {room.participants.length > 0 ? cardSizeControls : null}
-              </div>
-            ) : null}
             {room.participants.length === 0 ? (
               <p className="text-muted-foreground text-center text-sm">
                 No players yet
               </p>
             ) : (
               <>
-                {room.revealed ? (
-                  /* หลังเปิดไพ่ กล่องหายไป — ตัวปรับขนาดการ์ดคงแกนกลางเหนือพัด */
-                  <div className="flex justify-center">{cardSizeControls}</div>
-                ) : null}
                 <div
                   id="poker-fan-scroll"
                   className="poker-player-fan-scroll"
@@ -508,22 +581,40 @@ export const PlanningPokerRoomPage = () => {
                   tabIndex={0}
                 >
                   <ul id="poker-player-cards" className="poker-player-fan">
-                    {room.participants.map((participant, index) => (
-                      <PlayerCard
-                        key={participant.id}
-                        participant={participant}
-                        isRevealed={room.revealed}
-                        staggerIndex={revealStagger.get(participant.id)}
-                        position={{
-                          index,
-                          count: room.participants.length,
-                        }}
-                      />
-                    ))}
+                    {/* ผู้โหวตมาก่อน spectator ท้ายสุดเสมอ (คงลำดับเข้าห้องภายในกลุ่ม) — แถวอ่านเป็น
+                        "คนโหวต" แล้วตามด้วย "คนดู" ตรงกับ Voted x/y ที่นับเฉพาะ voter */}
+                    {[...room.participants]
+                      .sort(
+                        (a, b) =>
+                          (a.role === "voter" ? 0 : 1) -
+                          (b.role === "voter" ? 0 : 1),
+                      )
+                      .map((participant, index) => (
+                        <PlayerCard
+                          key={participant.id}
+                          participant={participant}
+                          isRevealed={room.revealed}
+                          staggerIndex={revealStagger.get(participant.id)}
+                          position={{
+                            index,
+                            count: room.participants.length,
+                          }}
+                        />
+                      ))}
                   </ul>
                 </div>
               </>
             )}
+            {!room.revealed ? (
+              /* เคสเปิดไพ่ = primary action กลางใต้พัดไพ่ — กดเปิดจากการ์ดที่เห็น */
+              <div className="flex justify-center">
+                <RevealCaseButton
+                  id="poker-reveal-case"
+                  onClick={() => void poker.reveal()}
+                  disabled={!room.canControl}
+                />
+              </div>
+            ) : null}
           </section>
 
           {room.canControl && room.revealed ? (

@@ -21,7 +21,7 @@ export const ResultsPanel = ({ summary }: { summary: RoundSummary }) => {
 
   return (
     <Card>
-      <section aria-labelledby="poker-results-heading">
+      <section id="poker-results" aria-labelledby="poker-results-heading">
         <CardHeader className="flex flex-row items-center justify-between gap-2">
           <h2 id="poker-results-heading" className="text-base font-semibold">
             Vote results

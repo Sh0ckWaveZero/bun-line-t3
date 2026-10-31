@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ChevronDown } from "lucide-react";
 import type { NavDropdownProps } from "./types";
-import { isChildItemActive } from "./navigation.config";
+import { isChildHrefActive, isChildItemActive } from "./navigation.config";
 
 const dropdownBtnClass = (active: boolean) =>
   `flex items-center space-x-2 rounded-md px-3 py-2 transition-colors hover:bg-primary/10 hover:text-primary ${
@@ -51,12 +51,7 @@ export function NavDropdown({
           suppressHydrationWarning
         >
           {visibleChildren.map((child, index) => {
-            const isChildActive =
-              child.href === "/dca-history"
-                ? pathname === "/dca-history" || pathname.startsWith("/dca-")
-                : child.href?.startsWith("/thai-id")
-                  ? pathname.startsWith("/thai-id")
-                  : pathname === child.href;
+            const isChildActive = isChildHrefActive(child, pathname);
 
             // Add section divider for finance
             if (item.id === "finance" && index === 2) {

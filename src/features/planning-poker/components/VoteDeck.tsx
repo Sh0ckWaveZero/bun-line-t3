@@ -19,6 +19,7 @@ export const VoteDeck = ({
   onSelect,
 }: VoteDeckProps) => (
   <div
+    id="poker-vote-deck"
     role="group"
     aria-labelledby={labelledBy}
     className="flex flex-wrap justify-center gap-2 sm:gap-3"
@@ -34,7 +35,7 @@ export const VoteDeck = ({
           disabled={disabled}
           onClick={() => onSelect(isSelected ? null : value)}
           className={cn(
-            "focus-visible:ring-ring flex h-20 w-14 cursor-pointer items-center justify-center rounded-lg border-2 text-xl font-bold transition-all focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transform-none motion-reduce:transition-none sm:h-24 sm:w-16",
+            "focus-visible:ring-ring flex h-20 w-14 cursor-pointer items-center justify-center rounded-lg border-2 text-xl font-bold transition-all duration-200 ease-out focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transform-none motion-reduce:transition-none sm:h-24 sm:w-16",
             isSelected
               ? "border-primary bg-primary text-primary-foreground -translate-y-2 shadow-md"
               : "bg-card hover:border-primary hover:-translate-y-1",

@@ -27,6 +27,7 @@ export const LiveStats = () => {
 
   return (
     <section
+      id="poker-live-stats"
       aria-label="Live usage stats"
       className="bg-muted/40 rounded-lg border p-4"
     >
