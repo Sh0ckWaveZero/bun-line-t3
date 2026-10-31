@@ -2840,7 +2840,10 @@
 /* วงเวท — materialize → pulse → จางหาย (เล่นรวม ~2.2s)
    --arcane-line อยู่ที่ wrapper ให้ทั้ง disc และ fx ลูก ๆ ใช้ร่วมกันได้ */
 .poker-arcane {
-  --arcane-line: color-mix(in oklab, var(--primary) 80%, transparent);
+  /* --arcane-tone = สีหลักของจังหวะฉลอง (วงเวท + flash + glow) — override ตามชั้นด้านล่าง
+     --arcane-line อยู่ที่ wrapper ให้ทั้ง disc และ fx ลูก ๆ ใช้ร่วมกันได้ */
+  --arcane-tone: var(--primary);
+  --arcane-line: color-mix(in oklab, var(--arcane-tone) 80%, transparent);
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -2976,11 +2979,32 @@
   border-radius: 24px;
   background: radial-gradient(
     closest-side,
-    color-mix(in oklab, var(--primary) 38%, transparent),
+    color-mix(in oklab, var(--arcane-tone) 38%, transparent),
     transparent 72%
   );
   opacity: 0;
   animation: poker-arcane-flash 900ms ease-out 120ms both;
+}
+
+/* สีต่อชั้นความหายาก — เฉดเดียวกับ FX_TONES ใน ArcaneReveal.tsx (เฉด dark ของ .poker-tier--*)
+   เพราะ overlay เล่นบน scrim มืดทั้งสองธีม เฉดสว่างจึงเรืองได้จริง */
+.poker-arcane[data-fx-rarity="common"] {
+  --arcane-tone: #94a3b8;
+}
+.poker-arcane[data-fx-rarity="uncommon"] {
+  --arcane-tone: #4ade80;
+}
+.poker-arcane[data-fx-rarity="rare"] {
+  --arcane-tone: #60a5fa;
+}
+.poker-arcane[data-fx-rarity="epic"] {
+  --arcane-tone: #c084fc;
+}
+.poker-arcane[data-fx-rarity="legendary"] {
+  --arcane-tone: #fbbf24;
+}
+.poker-arcane[data-fx-rarity="mythic"] {
+  --arcane-tone: #f87171;
 }
 
 @keyframes poker-arcane-flash {
@@ -3193,9 +3217,39 @@
    main.poker-pixel จึงต้องใส่ class นี้ผ่าน contentClassName เอง (stack เดียวกับธีม)
    font-size-adjust: TA 8 Bit x-height 0.368em vs Silkscreen 0.5em — ขยายไทย 1.36× ให้เท่าตาอังกฤษ */
 .poker-select-pixel,
-.poker-select-pixel * {
+.poker-select-pixel *,
+.poker-menu-pixel,
+.poker-menu-pixel * {
   font-family: "Silkscreen", "TA 8 Bit", var(--font-noto-sans-thai);
   font-size-adjust: 0.5;
+}
+
+/* แผงเมนู "⋯" ของหัวห้อง — Radix portal อยู่นอก main.poker-pixel จึงต้องจัดธีมเอง
+   (มุมตรง + เงา pixel แข็ง ตามธีม; ตัว PopoverContent เองปรับ w-56 p-1 ผ่าน className) */
+.poker-menu-pixel {
+  border-radius: 0;
+  border: 2px solid var(--border);
+  box-shadow: 4px 4px 0 0 color-mix(in oklab, var(--primary) 28%, transparent);
+}
+
+/* Tooltip หัวห้อง — หน้าตาตาม recipe "tooltip open/close" ของ transitions.dev
+   (โค้งมน 8px, padding 8/12, เงา layered นุ่ม 3 ชั้น) แต่ใช้สีธีมแทน --tt-bg/--tt-fg
+   motion = ส่วน .ui-tooltip-content ที่พอร์ตไว้แล้ว (fade+scale 150/50, delay 80 เฉพาะตอนเปิด) */
+.poker-tooltip-soft,
+.poker-tooltip-soft * {
+  font-family: "Silkscreen", "TA 8 Bit", var(--font-noto-sans-thai);
+  font-size-adjust: 0.5;
+}
+.poker-tooltip-soft {
+  border-radius: 8px;
+  border: 0;
+  padding: 8px 12px;
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--border) 60%, transparent),
+    0 2px 6px 0 rgba(0, 0, 0, 0.05),
+    0 4px 42px 0 rgba(0, 0, 0, 0.06);
 }
 
 /* คำโปรยใต้ไพ่ hero — label + tier (อยู่นอก flip เพื่อไม่ล้นแถบตัวเลข) */

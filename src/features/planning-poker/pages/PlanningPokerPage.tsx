@@ -100,13 +100,13 @@ const CreateRoomCard = () => {
   return (
     <Card>
       <CardHeader>
-        <h2 className="flex items-center gap-2 text-lg leading-none font-semibold tracking-tight">
+        <h2 id="poker-create-heading" className="flex items-center gap-2 text-lg leading-none font-semibold tracking-tight">
           <PixelPlus className="h-5 w-5" aria-hidden="true" />
           Create a new room
         </h2>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form id="poker-create-form" onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="poker-create-name">Display name</Label>
             <Input

@@ -31,12 +31,12 @@ export const JoinRoomForm = ({ isBusy, onJoin }: JoinRoomFormProps) => {
   return (
     <Card>
       <CardHeader>
-        <h2 className="text-base leading-none font-semibold tracking-tight">
+        <h2 id="poker-join-heading" className="text-base leading-none font-semibold tracking-tight">
           Join the room to vote
         </h2>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form id="poker-join-form" onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="poker-join-name">Display name</Label>
             <Input

@@ -22,6 +22,24 @@ type RoomActionInput = Exclude<RoomAction, { type: "join" }>;
 const toMessage = (error: unknown): string =>
   error instanceof Error ? error.message : "Something went wrong — please try again";
 
+/**
+ * optimistic vote — แก้ myVote + การ์ดของตัวเองใน cache ทันทีที่กด ให้เดค/พัดตอบสนองสมูฟ
+ * (votedCount หน้า derive จาก voters เอง จึงไม่ต้องแตะ) — server ตอบกลับมาทับด้วยค่าจริงเสมอ
+ * server ปัดทิ้ง (เช่น revealed) → act ย้อน snapshot ให้
+ */
+const applyOptimisticVote = (
+  room: PublicRoom,
+  value: string | null,
+): PublicRoom => ({
+  ...room,
+  myVote: value,
+  participants: room.participants.map((participant) =>
+    participant.isYou
+      ? { ...participant, vote: value, hasVoted: value !== null }
+      : participant,
+  ),
+});
+
 export const usePokerRoom = (code: string) => {
   const queryClient = useQueryClient();
   const [token, setToken] = useState<string | null>(null);
@@ -44,7 +62,9 @@ export const usePokerRoom = (code: string) => {
     queryKey,
     queryFn: () => fetchRoomState(code, token),
     enabled: isTokenLoaded,
-    refetchInterval: POLL_INTERVAL_MS,
+    // หยุด poll ระหว่างมี action ค้าง — กันผล poll ที่คำนวณก่อน vote ถึง server
+    // ทับ optimistic state กลับไปก่อนแล้วเด้งกลับอีกที (กะพริบ)
+    refetchInterval: isBusy ? false : POLL_INTERVAL_MS,
     refetchIntervalInBackground: true,
     retry: (failureCount, error) =>
       !(error instanceof PokerApiError && error.status === 404) &&
@@ -103,15 +123,26 @@ export const usePokerRoom = (code: string) => {
   );
 
   const act = useCallback(
-    (action: RoomActionInput) =>
+    (
+      action: RoomActionInput,
+      optimistic?: (room: PublicRoom) => PublicRoom,
+    ) =>
       run(async () => {
-        const next = await sendRoomAction(code, token, action);
-        if (next)
-          queryClient.setQueryData<PublicRoom>(
-            ["poker-room", code, token],
-            next,
-          );
-        return next;
+        const key = ["poker-room", code, token] as const;
+        const snapshot = queryClient.getQueryData<PublicRoom>(key);
+        // optimistic: แก้ cache ทันทีที่กด ให้ UI ตอบสนองสมูฟ ไม่ต้องรอ round trip
+        if (optimistic && snapshot)
+          queryClient.setQueryData<PublicRoom>(key, optimistic(snapshot));
+        try {
+          const next = await sendRoomAction(code, token, action);
+          if (next) queryClient.setQueryData<PublicRoom>(key, next);
+          return next;
+        } catch (error) {
+          // server ปัดทิ้ง → ย้อน optimistic ทันที (รอ poll แก้จะกะพริบกลับช้า 1.5s)
+          if (optimistic && snapshot)
+            queryClient.setQueryData<PublicRoom>(key, snapshot);
+          throw error;
+        }
       }),
     [code, token, queryClient, run],
   );
@@ -131,7 +162,8 @@ export const usePokerRoom = (code: string) => {
     actionError,
     isBusy,
     join,
-    vote: (value: string | null) => act({ type: "vote", value }),
+    vote: (value: string | null) =>
+      act({ type: "vote", value }, (room) => applyOptimisticVote(room, value)),
     reveal: () => act({ type: "reveal" }),
     reset: () => act({ type: "reset" }),
     setStory: (story: string) => act({ type: "story", story }),

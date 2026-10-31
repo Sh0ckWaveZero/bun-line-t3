@@ -47,31 +47,40 @@
 
 ## 3. โชว์ในโซน (Shows) — หลายแบบต่อชั้น หมุนตามรอบ
 
-แต่ละชั้นมี **หลายโชว์** (โชว์แรก = signature ของ demo "Six signature shows") เลือกด้วย
+แต่ละชั้นมี **หลายโชว์** (โชว์แรก = จังหวะเปิดของ signature ตาม demo "Six signature shows") เลือกด้วย
 `hashValue("ค่าเฉลี่ย:เลขรอบ") % จำนวนโชว์` — ทีมที่ประมาณใกล้เคียงกันทุกรอบจะเห็นโชว์หมุนวนในโซน
 finale burst ตอนไพ่พลิกจะเล่น**โชว์ถัดไป**ของชั้น (ไม่ใช่โชว์ซ้ำเดิม)
 
-| ชั้น | โชว์ (แต่ละโชว์เล่นพร้อมกันทั้งชุด) | bursts |
-| --- | --- | --- |
-| common | slam+dust · pixels+dust | 0 |
-| uncommon | ripples+leaves+fireflies · bubbles+petals · rain+fireflies | 0 |
-| rare | converge+frost+hex+shards+rim+glitter · comets+stardust+glitter · hex+frost+ring-of-pixels | 1 |
-| epic | implosion+sigil+diamond+starburst+punch+spiral+orbit · nova+shockwave+stardust · aurora+fountain+spiral | 1 |
-| legendary | halo+flash+sunburst+pillar+shake+starburst+coins+beams+embers · fireworks+confetti+flash · nova+shockwave+lightning+stardust | 2 |
-| mythic | 13 ตัวเต็ม (flicker→smoke) · 10 ตัว · 10 ตัว — **ใหญ่สุดของ ladder** | 2 |
+**โชว์ = wave ละ 3-6 เอฟเฟกต์** ไม่ใช่ยัดทุกตัวพร้อมกัน — burst เว้นจังหวะ 500ms ให้แต่ละ wave อ่านออก
+(เคยยิงทุกโชว์ซ้อนกันจบใน ~1s — mythic 33 ตัวพร้อมกัน — nova ล้างจอแล้วกลืนตัวเบาจนมองไม่เห็น)
 
-ขนาดโชว์ไต่ขึ้นตามชั้นเสมอ (2 → 3 → 6 → 7 → 9 → 10-13) — ชั้นสูงสุดต้องอลังสุด
+| ชั้น | โชว์ (แต่ละโชว์ = wave หนึ่งจังหวะ, ทุกโชว์เล่นครบต่อ reveal ตามลำดับ) | bursts | รวม |
+| --- | --- | --- | --- |
+| common | slam+sparks+dust · pixels+pulse+dust | 0 | 3 |
+| uncommon | ripples+leaves+fireflies+pulse · bubbles+petals+echo+fireflies · rain+leaves+pulse+echo | 0 | 4 |
+| rare | converge+frost+shards+rim+glitter · hex+comets+stardust+ring-of-pixels | 1 | 9 |
+| epic | implosion+sigil+diamond+starburst+punch+spiral · nova+shockwave+orbit+aurora+fountain+stardust | 1 | 12 |
+| legendary | halo+pillar+sunburst+coins+beams · fireworks+confetti+flash+shake+embers · nova+shockwave+lightning+starburst+stardust | 2 | 15 |
+| mythic | converge+implosion+comets+negative+glitch · nova+cracks+lightning+chroma+quake · flames+smoke+flicker+tint+speedlines+vignette — **ใหญ่สุดของ ladder** | 2 | 16 |
+
+ขนาดรวมต่อ reveal ไต่ขึ้นตามชั้นเสมอ (3 → 4 → 9 → 12 → 15 → 16) — ชั้นสูงสุดต้องอลังสุด
+mythic ยังครบ 13 ตัวเดิม เติม glitch/tint (แทนตัวที่อ่านไม่ออก) + speedlines — แบ่งเป็น 3 จังหวะ
+เปิด (charge) → พีค (ระเบิด) → ลุกไหม้/afterglow, flicker/vignette วางไว้ wave ท้ายที่ไม่มี nova ทับ
+
+**สีต่อชั้น** — เอฟเฟกต์ + วงเวท + flash ใช้สีของชั้นความหายาก (`FX_TONES` ใน `ArcaneReveal.tsx`,
+พาเลตต์เดียวกับหน้าไพ่แต่เป็นเฉด dark เพราะ scrim มืดเสมอ): common เทา · uncommon เขียว · rare ฟ้า ·
+epic ม่วง · legendary ทอง · mythic แดง — สีการ์ด = tier ของค่า (คนละระบบกับชั้น FX จึงอาจต่างกัน เช่น
+ค่าเฉลี่ย 3 = การ์ดเขียวแต่โซน FX epic → เอฟเฟกต์ม่วง); accent ของเอฟเฟกต์สองสี lib ไล่อ่อนให้เอง
 เอฟเฟกต์ทุกชื่อมาจากคลัง 64 ของ `@react-cards-opening/effects` (typed `EffectName`)
 วงเวทเร่งตามชั้นผ่าน `data-fx-rarity` ใน `input.css` (epic 14s / legendary 7s+18s / mythic 4s+10s + glow 40px)
 
 ### ตัวอย่างจริง: ทีมประมาณ 3 ต่อเนื่อง 6 รอบ
 
-| รอบ | ชั้น | โชว์ |
+| รอบ | ชั้น | ลำดับโชว์ (wave เว้น 500ms) |
 | --- | --- | --- |
-| 1 | epic | implosion + sigil + diamond + starburst + punch + spiral + orbit |
-| 2 | epic | aurora + fountain + spiral |
-| 3 | epic | nova + shockwave + stardust |
-| 4 | epic | (วนกลับโชว์แรก) |
+| 1 | epic | implosion+sigil+diamond+starburst+punch+spiral → nova+shockwave+orbit+aurora+fountain+stardust |
+| 2 | epic | nova+shockwave+orbit+aurora+fountain+stardust → implosion+sigil+diamond+starburst+punch+spiral |
+| 3 | epic | implosion+… → nova+… (วนกลับโชว์แรก) |
 
 ---
 
@@ -85,10 +94,16 @@ finale burst ตอนไพ่พลิกจะเล่น**โชว์ถ�
 | 480 | โชว์ของรอบเล่นครั้งแรก (รอ backdrop ทึบ + วงเวทพีค) |
 | 580 (deal+120 → lift) | hero ยกตัวจากกอง |
 | 700 | hero พลิก → shine (พลิก+620ms) |
-| 800, 940, 1080… | โชว์ถัดไปของชั้นยิงตาม bursts (เว้น 140ms) |
-| 3900 | ปิดเอง (close 400ms) — คลิกข้ามได้ตลอด |
+| 800, 1300… | โชว์ถัดไปของชั้นยิงตาม bursts (เว้น 500ms — wave อ่านออกทีละจังหวะ) |
+| 6500 | ปิดเอง (พลิก 700 + tail 5800, fade 400ms) — คลิกข้ามได้ตลอด |
 
 จอแคบ (< 640px): กล่อง/การ์ด/พัดย่อตาม media queries ใน `input.css`
+
+**Responsive fx (มือถือเต็มจอ)** — ขนาด/สัดส่วนของเอฟเฟกต์ยึดจอตอน overlay mount:
+หน่วยขนาด = แกนสั้นของจอ × 0.92 (เพดาน 360, พื้น 280 — desktop 800 ได้ 360 เท่าเดิม,
+มือถือ 390 ได้ ~359 = เต็มความกว้าง) และจอ**แนวตั้ง**ใช้สัดส่วนจอจริงเป็นกล่อง spawn
+(390×844 → 359×777 สูงเต็มจอ แทน 4/3 แนวนอนที่ขอบบน-ล่างโล่ง), จอแนวนอนคง 4/3 —
+ดู `readFxSize`/`readFxRatio` ใน `RevealOverlay.tsx`
 
 ---
 

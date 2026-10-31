@@ -6,7 +6,7 @@ import {
   type EffectLayerHandle,
 } from "@react-cards-opening/effects";
 import "@react-cards-opening/effects/styles.css";
-import { ArcaneReveal, FX_RARITY_PROFILES } from "./ArcaneReveal";
+import { ArcaneReveal, FX_RARITY_PROFILES, FX_TONES } from "./ArcaneReveal";
 import {
   resolveFxRarity,
   hashValue,
@@ -50,14 +50,44 @@ const toHeroCard = (summary: RoundSummary | null): HeroCard | null => {
 const HERO_DEAL_DELAY_MS = 120;
 const HERO_FLIP_DELAY_MS = 700;
 const FINALE_FX_OFFSET_MS = 100;
-/** burst ตอนพลิกมีได้หลายชุดตามความหายาก — เว้นห่างกันพอให้แต่ละชุดอ่านออก ไม่ซ้อนเป็นก้อนเดียว */
-const FINALE_BURST_GAP_MS = 140;
+/** burst ตอนพลิกมีได้หลายชุดตามความหายาก — เว้นห่างกันพอให้แต่ละชุดอ่านออก ไม่ซ้อนเป็นก้อนเดียว
+ *  เคย 140ms: ทุกโชว์ของชั้นยิงซ้อนกันจบใน ~1s (mythic = 33 ตัวพร้อมกัน) nova กลืนตัวเบาหมด
+ *  500ms = โชว์ถัดไปเริ่มเมื่อโชว์ก่อนเข้าจังหวะแล้ว อ่านออกทีละ wave และโชว์สุดท้าย (1300ms)
+ *  + เอฟเฟกต์ยาวสุด 3-4s ยังจบก่อน overlay ปิดที่ ~6.5s */
+const FINALE_BURST_GAP_MS = 500;
 /** fx ชุดแรกต้องรอให้ backdrop ทึบ (300ms) และวงเวทขึ้นถึงพีค (~430ms) ก่อน ไม่งั้นช่วงสว่างสุดโดนกลบ */
 const BASE_FX_DELAY_MS = 480;
 /** lib ตั้งหน่วยขนาด fx จากความกว้างของ element ที่ส่งเข้า `at` — stage เต็มจอแล้วจึง pin ไว้เอง
  *  360 ไม่ใช่ 480: beams/nova กว้าง 3-5 เท่าของหน่วยนี้ ตอนเต็มจอไม่มี overflow ของแผงตัดแล้ว
- *  texture เลเยอร์แสงใหญ่ตาม และวาดคู่กับ canvas particle เต็มจอทุกเฟรม — หน่วยใหญ่เกิน = กระตุก */
+ *  texture เลเยอร์แสงใหญ่ตาม และวาดคู่กับ canvas particle เต็มจอทุกเฟรม — หน่วยใหญ่เกิน = กระตุก
+ *  (ค่านี้เป็นเพดาน + ค่า fallback ตอน SSR — ค่าจริงปรับตามจอผ่าน readFxSize) */
 const FX_UNIT_PX = 360;
+
+/**
+ * หน่วยขนาด fx แบบ responsive — ยึดแกนสั้นของจอ × 0.92 โดยมี FX_UNIT_PX เป็นเพดาน
+ * desktop (แกนสั้น 800) ได้ 360 เท่าเดิมพอดี, มือถือ 390 ได้ ~359 = เต็มความกว้างจอ,
+ * จอเล็กมาก (< 305) ลดตามจอแต่ไม่ต่ำกว่า 280 กันเอฟเฟกต์เล็กจนไม่มีพลัง
+ */
+const readFxSize = (): number => {
+  if (typeof window === "undefined") return FX_UNIT_PX;
+  const short = Math.min(window.innerWidth, window.innerHeight);
+  return Math.round(Math.max(280, Math.min(FX_UNIT_PX, short * 0.92)));
+};
+
+/**
+ * สัดส่วนกล่อง spawn ของเอฟเฟกต์ (สูง/กว้าง) — **จอแนวตั้งใช้สัดส่วนจอจริง**
+ * เดิม 4/3 ตายตัว = กล่อง 360×480 แนวนอนบนจอมือถือ 390×844 → ขอบบน-ล่างโล่ง
+ * (particle โผล่ที่ "ขอบของสิ่งที่ฉลอง" — กล่องเตี้ย = ทั้งจอไม่มีของเล่น) ตอนนี้
+ * 390×844 ได้กล่อง ~359×776 สูงเต็มจอ — ฝน/ประกาย/comet กินพื้นที่เท่าจอจริง
+ * จอแนวนอนคง 4/3 เดิม (desktop ไม่เปลี่ยน), cap 2.4 กันจอผอมพิเศษเวิ่นเว้อ
+ */
+const readFxRatio = (): number => {
+  if (typeof window === "undefined") return 4 / 3;
+  const { innerWidth, innerHeight } = window;
+  return innerHeight > innerWidth
+    ? Math.min(2.4, innerHeight / innerWidth)
+    : 4 / 3;
+};
 const PLAY_TAIL_MS = 5800;
 const CLOSE_MS = 400;
 /** กองไพ่หลังคว่ำใต้ hero = จำนวนคนโหวต (hero นับเป็นใบบนสุด) — เกิน 6 ใบกองหนาเกิน จึง cap ใบล่างที่ 5 */
@@ -73,14 +103,7 @@ const TIER_LABELS: Record<VoteTier, string> = {
   neutral: "",
 };
 
-/** โทนสีเอฟเฟกต์ = --primary ของธีมปัจจุบัน (canvas วาด oklch ได้ใน browser ยุคใหม่) */
-const readPrimaryTone = (): string => {
-  if (typeof window === "undefined") return "#8a79ab";
-  const value = getComputedStyle(document.documentElement)
-    .getPropertyValue("--primary")
-    .trim();
-  return value || "#8a79ab";
-};
+/** โทนสีเอฟเฟกต์ต่อชั้น — FX_TONES ใน ArcaneReveal (เฉด dark ของพาเลตต์ tier เพราะ scrim มืดเสมอ) */
 
 /**
  * Overlay เปิดไพ่แบบ demo hero: scrim หรี่+เบลอเต็มจอ (เห็นไพ่รายคนใน roster พลิกจาง ๆ ข้างหลัง),
@@ -143,13 +166,17 @@ export const RevealOverlay = ({
   useEffect(() => {
     if (phase !== "play") return;
     const { combos, finaleBursts } = FX_RARITY_PROFILES[fxRarity];
-    const tone = readPrimaryTone();
+    const tone = FX_TONES[fxRarity];
+    // ขนาด/สัดส่วนยึดจอตอนเริ่มเล่น (mount) — resize กลางเล่นไม่คำนวณใหม่ (เล่นจบใน ~6.5s)
+    const size = readFxSize();
+    const ratio = readFxRatio();
     const playCombo = (comboIndex: number, delayMs: number) => {
       const combo = combos[comboIndex % combos.length];
       if (!combo) return;
       layerRef.current?.play([...combo], {
         at: stageRef.current ?? undefined,
-        size: FX_UNIT_PX,
+        size,
+        ratio,
         tone,
         delay: delayMs / 1000,
       });
@@ -223,7 +250,7 @@ export const RevealOverlay = ({
             bg โปร่งใสเพื่อไม่ให้เห็นขอบสี่เหลี่ยมของ canvas บน backdrop โปร่งของเรา */}
         <EffectLayer
           handle={layerRef}
-          tone={readPrimaryTone()}
+          tone={FX_TONES[fxRarity]}
           theme={{ bg: "transparent" }}
         />
         <div className="poker-hero-group">
