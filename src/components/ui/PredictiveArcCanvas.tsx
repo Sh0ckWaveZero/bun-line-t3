@@ -217,8 +217,12 @@ export function PredictiveArcCanvas({
 
     const loop = () => {
       renderer.render();
-      frameId =
-        isOnScreen && !document.hidden ? requestAnimationFrame(loop) : 0;
+      // พักลูปเมื่อหลุดจอ/แท็บซ่อน — เคลียร์ handle เพื่อให้ resume จาก observer ได้
+      if (!isOnScreen || document.hidden) {
+        frameId = 0;
+        return;
+      }
+      frameId = requestAnimationFrame(loop);
     };
 
     const resizeObserver = new ResizeObserver(syncSize);
@@ -269,7 +273,17 @@ export function PredictiveArcCanvas({
       saturation,
     };
     rendererRef.current?.render();
-  }, [mode, speed, spacing, dotSize, archHeight, thickness, brightness, hue, saturation]);
+  }, [
+    mode,
+    speed,
+    spacing,
+    dotSize,
+    archHeight,
+    thickness,
+    brightness,
+    hue,
+    saturation,
+  ]);
 
   return (
     <div
