@@ -23,12 +23,14 @@ import { Route as LineApprovalRouteImport } from './routes/line-approval'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as MonitoringRouteImport } from './routes/monitoring'
+import { Route as OnsiteReportRouteImport } from './routes/onsite-report'
 import { Route as PendingApprovalRouteImport } from './routes/pending-approval'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SubscriptionsRouteImport } from './routes/subscriptions'
 import { Route as ThaiIdRouteImport } from './routes/thai-id'
 import { Route as ThaiNamesGeneratorRouteImport } from './routes/thai-names-generator'
 import { Route as AdminLinePermissionsRouteImport } from './routes/admin/line-permissions'
+import { Route as AdminOnsiteReportCompaniesRouteImport } from './routes/admin/onsite-report-companies'
 import { Route as ApiAttendancePushRouteImport } from './routes/api/attendance-push'
 import { Route as ApiAttendanceReportRouteImport } from './routes/api/attendance-report'
 import { Route as ApiCalendarRouteImport } from './routes/api/calendar'
@@ -40,6 +42,8 @@ import { Route as ApiLineRouteImport } from './routes/api/line'
 import { Route as ApiLogoutRouteImport } from './routes/api/logout'
 import { Route as ApiWorkModesRouteImport } from './routes/api/work-modes'
 import { Route as CalendarMobileRouteImport } from './routes/calendar.mobile'
+import { Route as OnsiteReportIndexRouteImport } from './routes/onsite-report.index'
+import { Route as OnsiteReportNewRouteImport } from './routes/onsite-report.new'
 import { Route as PlanningPokerIndexRouteImport } from './routes/planning-poker.index'
 import { Route as PlanningPokerCodeRouteImport } from './routes/planning-poker.$code'
 import { Route as ApiAdminCheckRouteImport } from './routes/api/admin/check'
@@ -79,6 +83,10 @@ import { Route as ApiHealthEnhancedRouteImport } from './routes/api/health/enhan
 import { Route as ApiLineApprovalsRouteImport } from './routes/api/line/approvals'
 import { Route as ApiLinePermissionsRouteImport } from './routes/api/line/permissions'
 import { Route as ApiMonitoringDashboardRouteImport } from './routes/api/monitoring/dashboard'
+import { Route as ApiOnsiteReportsIndexRouteImport } from './routes/api/onsite-reports/index'
+import { Route as ApiOnsiteReportsIdRouteImport } from './routes/api/onsite-reports/$id'
+import { Route as ApiOnsiteReportsCompaniesRouteImport } from './routes/api/onsite-reports/companies'
+import { Route as ApiOnsiteReportsPreviewPdfRouteImport } from './routes/api/onsite-reports/preview-pdf'
 import { Route as ApiPokerRoomsRouteImport } from './routes/api/poker/rooms'
 import { Route as ApiPokerStatsRouteImport } from './routes/api/poker/stats'
 import { Route as ApiSubscriptionsIndexRouteImport } from './routes/api/subscriptions/index'
@@ -89,15 +97,20 @@ import { Route as ApiTempChartsFilenameRouteImport } from './routes/api/temp-cha
 import { Route as ApiThaiIdGenerateRouteImport } from './routes/api/thai-id/generate'
 import { Route as ApiThaiIdValidateRouteImport } from './routes/api/thai-id/validate'
 import { Route as ApiUserSettingsRouteImport } from './routes/api/user/settings'
+import { Route as OnsiteReportIdEditRouteImport } from './routes/onsite-report.$id.edit'
 import { Route as ApiAdminCronJobsJobIdRouteImport } from './routes/api/admin/cron-jobs/$jobId'
 import { Route as ApiBodyWeightMeasurementsIdRouteImport } from './routes/api/body-weight/measurements/$id'
 import { Route as ApiExchangesBitkubBuysRouteImport } from './routes/api/exchanges/bitkub/buys'
 import { Route as ApiExchangesBitkubConnectionRouteImport } from './routes/api/exchanges/bitkub/connection'
 import { Route as ApiExpensesBudgetsIdRouteImport } from './routes/api/expenses/budgets/$id'
 import { Route as ApiExpensesCategoriesIdRouteImport } from './routes/api/expenses/categories/$id'
+import { Route as ApiOnsiteReportsIdPdfRouteImport } from './routes/api/onsite-reports/$id.pdf'
+import { Route as ApiOnsiteReportsCompaniesCodeRouteImport } from './routes/api/onsite-reports/companies.$code'
 import { Route as ApiPokerRoomsCodeRouteImport } from './routes/api/poker/rooms/$code'
 import { Route as ApiUserSettingsNotificationsRouteImport } from './routes/api/user/settings/notifications'
 import { Route as ApiAdminCronJobsJobIdRunRouteImport } from './routes/api/admin/cron-jobs/$jobId/run'
+import { Route as ApiOnsiteReportsIdSignaturesPartyRouteImport } from './routes/api/onsite-reports/$id.signatures.$party'
+import { Route as ApiOnsiteReportsCompaniesCodeLogoRouteImport } from './routes/api/onsite-reports/companies.$code.logo'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -169,6 +182,11 @@ const MonitoringRoute = MonitoringRouteImport.update({
   path: '/monitoring',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OnsiteReportRoute = OnsiteReportRouteImport.update({
+  id: '/onsite-report',
+  path: '/onsite-report',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PendingApprovalRoute = PendingApprovalRouteImport.update({
   id: '/pending-approval',
   path: '/pending-approval',
@@ -199,6 +217,12 @@ const AdminLinePermissionsRoute = AdminLinePermissionsRouteImport.update({
   path: '/admin/line-permissions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminOnsiteReportCompaniesRoute =
+  AdminOnsiteReportCompaniesRouteImport.update({
+    id: '/admin/onsite-report-companies',
+    path: '/admin/onsite-report-companies',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiAttendancePushRoute = ApiAttendancePushRouteImport.update({
   id: '/api/attendance-push',
   path: '/api/attendance-push',
@@ -253,6 +277,16 @@ const CalendarMobileRoute = CalendarMobileRouteImport.update({
   id: '/mobile',
   path: '/mobile',
   getParentRoute: () => CalendarRoute,
+} as any)
+const OnsiteReportIndexRoute = OnsiteReportIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => OnsiteReportRoute,
+} as any)
+const OnsiteReportNewRoute = OnsiteReportNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => OnsiteReportRoute,
 } as any)
 const PlanningPokerIndexRoute = PlanningPokerIndexRouteImport.update({
   id: '/planning-poker/',
@@ -452,6 +486,28 @@ const ApiMonitoringDashboardRoute = ApiMonitoringDashboardRouteImport.update({
   path: '/api/monitoring/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiOnsiteReportsIndexRoute = ApiOnsiteReportsIndexRouteImport.update({
+  id: '/api/onsite-reports/',
+  path: '/api/onsite-reports/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOnsiteReportsIdRoute = ApiOnsiteReportsIdRouteImport.update({
+  id: '/api/onsite-reports/$id',
+  path: '/api/onsite-reports/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOnsiteReportsCompaniesRoute =
+  ApiOnsiteReportsCompaniesRouteImport.update({
+    id: '/api/onsite-reports/companies',
+    path: '/api/onsite-reports/companies',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiOnsiteReportsPreviewPdfRoute =
+  ApiOnsiteReportsPreviewPdfRouteImport.update({
+    id: '/api/onsite-reports/preview-pdf',
+    path: '/api/onsite-reports/preview-pdf',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPokerRoomsRoute = ApiPokerRoomsRouteImport.update({
   id: '/api/poker/rooms',
   path: '/api/poker/rooms',
@@ -504,6 +560,11 @@ const ApiUserSettingsRoute = ApiUserSettingsRouteImport.update({
   path: '/api/user/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OnsiteReportIdEditRoute = OnsiteReportIdEditRouteImport.update({
+  id: '/$id/edit',
+  path: '/$id/edit',
+  getParentRoute: () => OnsiteReportRoute,
+} as any)
 const ApiAdminCronJobsJobIdRoute = ApiAdminCronJobsJobIdRouteImport.update({
   id: '/$jobId',
   path: '/$jobId',
@@ -536,6 +597,17 @@ const ApiExpensesCategoriesIdRoute = ApiExpensesCategoriesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApiExpensesCategoriesRoute,
 } as any)
+const ApiOnsiteReportsIdPdfRoute = ApiOnsiteReportsIdPdfRouteImport.update({
+  id: '/pdf',
+  path: '/pdf',
+  getParentRoute: () => ApiOnsiteReportsIdRoute,
+} as any)
+const ApiOnsiteReportsCompaniesCodeRoute =
+  ApiOnsiteReportsCompaniesCodeRouteImport.update({
+    id: '/$code',
+    path: '/$code',
+    getParentRoute: () => ApiOnsiteReportsCompaniesRoute,
+  } as any)
 const ApiPokerRoomsCodeRoute = ApiPokerRoomsCodeRouteImport.update({
   id: '/$code',
   path: '/$code',
@@ -553,6 +625,18 @@ const ApiAdminCronJobsJobIdRunRoute =
     path: '/run',
     getParentRoute: () => ApiAdminCronJobsJobIdRoute,
   } as any)
+const ApiOnsiteReportsIdSignaturesPartyRoute =
+  ApiOnsiteReportsIdSignaturesPartyRouteImport.update({
+    id: '/signatures/$party',
+    path: '/signatures/$party',
+    getParentRoute: () => ApiOnsiteReportsIdRoute,
+  } as any)
+const ApiOnsiteReportsCompaniesCodeLogoRoute =
+  ApiOnsiteReportsCompaniesCodeLogoRouteImport.update({
+    id: '/logo',
+    path: '/logo',
+    getParentRoute: () => ApiOnsiteReportsCompaniesCodeRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -569,12 +653,14 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/monitoring': typeof MonitoringRoute
+  '/onsite-report': typeof OnsiteReportRouteWithChildren
   '/pending-approval': typeof PendingApprovalRoute
   '/settings': typeof SettingsRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/thai-id': typeof ThaiIdRoute
   '/thai-names-generator': typeof ThaiNamesGeneratorRoute
   '/admin/line-permissions': typeof AdminLinePermissionsRoute
+  '/admin/onsite-report-companies': typeof AdminOnsiteReportCompaniesRoute
   '/api/attendance-push': typeof ApiAttendancePushRoute
   '/api/attendance-report': typeof ApiAttendanceReportRoute
   '/api/calendar': typeof ApiCalendarRoute
@@ -586,7 +672,9 @@ export interface FileRoutesByFullPath {
   '/api/logout': typeof ApiLogoutRoute
   '/api/work-modes': typeof ApiWorkModesRoute
   '/calendar/mobile': typeof CalendarMobileRoute
+  '/onsite-report/new': typeof OnsiteReportNewRoute
   '/planning-poker/$code': typeof PlanningPokerCodeRoute
+  '/onsite-report/': typeof OnsiteReportIndexRoute
   '/planning-poker/': typeof PlanningPokerIndexRoute
   '/api/admin/check': typeof ApiAdminCheckRoute
   '/api/admin/cron-jobs': typeof ApiAdminCronJobsRouteWithChildren
@@ -622,6 +710,9 @@ export interface FileRoutesByFullPath {
   '/api/line/approvals': typeof ApiLineApprovalsRoute
   '/api/line/permissions': typeof ApiLinePermissionsRoute
   '/api/monitoring/dashboard': typeof ApiMonitoringDashboardRoute
+  '/api/onsite-reports/$id': typeof ApiOnsiteReportsIdRouteWithChildren
+  '/api/onsite-reports/companies': typeof ApiOnsiteReportsCompaniesRouteWithChildren
+  '/api/onsite-reports/preview-pdf': typeof ApiOnsiteReportsPreviewPdfRoute
   '/api/poker/rooms': typeof ApiPokerRoomsRouteWithChildren
   '/api/poker/stats': typeof ApiPokerStatsRoute
   '/api/subscriptions/$subscriptionId': typeof ApiSubscriptionsSubscriptionIdRoute
@@ -631,9 +722,11 @@ export interface FileRoutesByFullPath {
   '/api/thai-id/generate': typeof ApiThaiIdGenerateRoute
   '/api/thai-id/validate': typeof ApiThaiIdValidateRoute
   '/api/user/settings': typeof ApiUserSettingsRouteWithChildren
+  '/onsite-report/$id/edit': typeof OnsiteReportIdEditRoute
   '/api/body-weight/': typeof ApiBodyWeightIndexRoute
   '/api/dca/': typeof ApiDcaIndexRoute
   '/api/expenses/': typeof ApiExpensesIndexRoute
+  '/api/onsite-reports/': typeof ApiOnsiteReportsIndexRoute
   '/api/subscriptions/': typeof ApiSubscriptionsIndexRoute
   '/api/admin/cron-jobs/$jobId': typeof ApiAdminCronJobsJobIdRouteWithChildren
   '/api/body-weight/measurements/$id': typeof ApiBodyWeightMeasurementsIdRoute
@@ -641,9 +734,13 @@ export interface FileRoutesByFullPath {
   '/api/exchanges/bitkub/connection': typeof ApiExchangesBitkubConnectionRoute
   '/api/expenses/budgets/$id': typeof ApiExpensesBudgetsIdRoute
   '/api/expenses/categories/$id': typeof ApiExpensesCategoriesIdRoute
+  '/api/onsite-reports/$id/pdf': typeof ApiOnsiteReportsIdPdfRoute
+  '/api/onsite-reports/companies/$code': typeof ApiOnsiteReportsCompaniesCodeRouteWithChildren
   '/api/poker/rooms/$code': typeof ApiPokerRoomsCodeRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
   '/api/admin/cron-jobs/$jobId/run': typeof ApiAdminCronJobsJobIdRunRoute
+  '/api/onsite-reports/$id/signatures/$party': typeof ApiOnsiteReportsIdSignaturesPartyRoute
+  '/api/onsite-reports/companies/$code/logo': typeof ApiOnsiteReportsCompaniesCodeLogoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -666,6 +763,7 @@ export interface FileRoutesByTo {
   '/thai-id': typeof ThaiIdRoute
   '/thai-names-generator': typeof ThaiNamesGeneratorRoute
   '/admin/line-permissions': typeof AdminLinePermissionsRoute
+  '/admin/onsite-report-companies': typeof AdminOnsiteReportCompaniesRoute
   '/api/attendance-push': typeof ApiAttendancePushRoute
   '/api/attendance-report': typeof ApiAttendanceReportRoute
   '/api/calendar': typeof ApiCalendarRoute
@@ -677,7 +775,9 @@ export interface FileRoutesByTo {
   '/api/logout': typeof ApiLogoutRoute
   '/api/work-modes': typeof ApiWorkModesRoute
   '/calendar/mobile': typeof CalendarMobileRoute
+  '/onsite-report/new': typeof OnsiteReportNewRoute
   '/planning-poker/$code': typeof PlanningPokerCodeRoute
+  '/onsite-report': typeof OnsiteReportIndexRoute
   '/planning-poker': typeof PlanningPokerIndexRoute
   '/api/admin/check': typeof ApiAdminCheckRoute
   '/api/admin/cron-jobs': typeof ApiAdminCronJobsRouteWithChildren
@@ -713,6 +813,9 @@ export interface FileRoutesByTo {
   '/api/line/approvals': typeof ApiLineApprovalsRoute
   '/api/line/permissions': typeof ApiLinePermissionsRoute
   '/api/monitoring/dashboard': typeof ApiMonitoringDashboardRoute
+  '/api/onsite-reports/$id': typeof ApiOnsiteReportsIdRouteWithChildren
+  '/api/onsite-reports/companies': typeof ApiOnsiteReportsCompaniesRouteWithChildren
+  '/api/onsite-reports/preview-pdf': typeof ApiOnsiteReportsPreviewPdfRoute
   '/api/poker/rooms': typeof ApiPokerRoomsRouteWithChildren
   '/api/poker/stats': typeof ApiPokerStatsRoute
   '/api/subscriptions/$subscriptionId': typeof ApiSubscriptionsSubscriptionIdRoute
@@ -722,9 +825,11 @@ export interface FileRoutesByTo {
   '/api/thai-id/generate': typeof ApiThaiIdGenerateRoute
   '/api/thai-id/validate': typeof ApiThaiIdValidateRoute
   '/api/user/settings': typeof ApiUserSettingsRouteWithChildren
+  '/onsite-report/$id/edit': typeof OnsiteReportIdEditRoute
   '/api/body-weight': typeof ApiBodyWeightIndexRoute
   '/api/dca': typeof ApiDcaIndexRoute
   '/api/expenses': typeof ApiExpensesIndexRoute
+  '/api/onsite-reports': typeof ApiOnsiteReportsIndexRoute
   '/api/subscriptions': typeof ApiSubscriptionsIndexRoute
   '/api/admin/cron-jobs/$jobId': typeof ApiAdminCronJobsJobIdRouteWithChildren
   '/api/body-weight/measurements/$id': typeof ApiBodyWeightMeasurementsIdRoute
@@ -732,9 +837,13 @@ export interface FileRoutesByTo {
   '/api/exchanges/bitkub/connection': typeof ApiExchangesBitkubConnectionRoute
   '/api/expenses/budgets/$id': typeof ApiExpensesBudgetsIdRoute
   '/api/expenses/categories/$id': typeof ApiExpensesCategoriesIdRoute
+  '/api/onsite-reports/$id/pdf': typeof ApiOnsiteReportsIdPdfRoute
+  '/api/onsite-reports/companies/$code': typeof ApiOnsiteReportsCompaniesCodeRouteWithChildren
   '/api/poker/rooms/$code': typeof ApiPokerRoomsCodeRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
   '/api/admin/cron-jobs/$jobId/run': typeof ApiAdminCronJobsJobIdRunRoute
+  '/api/onsite-reports/$id/signatures/$party': typeof ApiOnsiteReportsIdSignaturesPartyRoute
+  '/api/onsite-reports/companies/$code/logo': typeof ApiOnsiteReportsCompaniesCodeLogoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -752,12 +861,14 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/monitoring': typeof MonitoringRoute
+  '/onsite-report': typeof OnsiteReportRouteWithChildren
   '/pending-approval': typeof PendingApprovalRoute
   '/settings': typeof SettingsRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/thai-id': typeof ThaiIdRoute
   '/thai-names-generator': typeof ThaiNamesGeneratorRoute
   '/admin/line-permissions': typeof AdminLinePermissionsRoute
+  '/admin/onsite-report-companies': typeof AdminOnsiteReportCompaniesRoute
   '/api/attendance-push': typeof ApiAttendancePushRoute
   '/api/attendance-report': typeof ApiAttendanceReportRoute
   '/api/calendar': typeof ApiCalendarRoute
@@ -769,7 +880,9 @@ export interface FileRoutesById {
   '/api/logout': typeof ApiLogoutRoute
   '/api/work-modes': typeof ApiWorkModesRoute
   '/calendar/mobile': typeof CalendarMobileRoute
+  '/onsite-report/new': typeof OnsiteReportNewRoute
   '/planning-poker/$code': typeof PlanningPokerCodeRoute
+  '/onsite-report/': typeof OnsiteReportIndexRoute
   '/planning-poker/': typeof PlanningPokerIndexRoute
   '/api/admin/check': typeof ApiAdminCheckRoute
   '/api/admin/cron-jobs': typeof ApiAdminCronJobsRouteWithChildren
@@ -805,6 +918,9 @@ export interface FileRoutesById {
   '/api/line/approvals': typeof ApiLineApprovalsRoute
   '/api/line/permissions': typeof ApiLinePermissionsRoute
   '/api/monitoring/dashboard': typeof ApiMonitoringDashboardRoute
+  '/api/onsite-reports/$id': typeof ApiOnsiteReportsIdRouteWithChildren
+  '/api/onsite-reports/companies': typeof ApiOnsiteReportsCompaniesRouteWithChildren
+  '/api/onsite-reports/preview-pdf': typeof ApiOnsiteReportsPreviewPdfRoute
   '/api/poker/rooms': typeof ApiPokerRoomsRouteWithChildren
   '/api/poker/stats': typeof ApiPokerStatsRoute
   '/api/subscriptions/$subscriptionId': typeof ApiSubscriptionsSubscriptionIdRoute
@@ -814,9 +930,11 @@ export interface FileRoutesById {
   '/api/thai-id/generate': typeof ApiThaiIdGenerateRoute
   '/api/thai-id/validate': typeof ApiThaiIdValidateRoute
   '/api/user/settings': typeof ApiUserSettingsRouteWithChildren
+  '/onsite-report/$id/edit': typeof OnsiteReportIdEditRoute
   '/api/body-weight/': typeof ApiBodyWeightIndexRoute
   '/api/dca/': typeof ApiDcaIndexRoute
   '/api/expenses/': typeof ApiExpensesIndexRoute
+  '/api/onsite-reports/': typeof ApiOnsiteReportsIndexRoute
   '/api/subscriptions/': typeof ApiSubscriptionsIndexRoute
   '/api/admin/cron-jobs/$jobId': typeof ApiAdminCronJobsJobIdRouteWithChildren
   '/api/body-weight/measurements/$id': typeof ApiBodyWeightMeasurementsIdRoute
@@ -824,9 +942,13 @@ export interface FileRoutesById {
   '/api/exchanges/bitkub/connection': typeof ApiExchangesBitkubConnectionRoute
   '/api/expenses/budgets/$id': typeof ApiExpensesBudgetsIdRoute
   '/api/expenses/categories/$id': typeof ApiExpensesCategoriesIdRoute
+  '/api/onsite-reports/$id/pdf': typeof ApiOnsiteReportsIdPdfRoute
+  '/api/onsite-reports/companies/$code': typeof ApiOnsiteReportsCompaniesCodeRouteWithChildren
   '/api/poker/rooms/$code': typeof ApiPokerRoomsCodeRoute
   '/api/user/settings/notifications': typeof ApiUserSettingsNotificationsRoute
   '/api/admin/cron-jobs/$jobId/run': typeof ApiAdminCronJobsJobIdRunRoute
+  '/api/onsite-reports/$id/signatures/$party': typeof ApiOnsiteReportsIdSignaturesPartyRoute
+  '/api/onsite-reports/companies/$code/logo': typeof ApiOnsiteReportsCompaniesCodeLogoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -845,12 +967,14 @@ export interface FileRouteTypes {
     | '/login'
     | '/logout'
     | '/monitoring'
+    | '/onsite-report'
     | '/pending-approval'
     | '/settings'
     | '/subscriptions'
     | '/thai-id'
     | '/thai-names-generator'
     | '/admin/line-permissions'
+    | '/admin/onsite-report-companies'
     | '/api/attendance-push'
     | '/api/attendance-report'
     | '/api/calendar'
@@ -862,7 +986,9 @@ export interface FileRouteTypes {
     | '/api/logout'
     | '/api/work-modes'
     | '/calendar/mobile'
+    | '/onsite-report/new'
     | '/planning-poker/$code'
+    | '/onsite-report/'
     | '/planning-poker/'
     | '/api/admin/check'
     | '/api/admin/cron-jobs'
@@ -898,6 +1024,9 @@ export interface FileRouteTypes {
     | '/api/line/approvals'
     | '/api/line/permissions'
     | '/api/monitoring/dashboard'
+    | '/api/onsite-reports/$id'
+    | '/api/onsite-reports/companies'
+    | '/api/onsite-reports/preview-pdf'
     | '/api/poker/rooms'
     | '/api/poker/stats'
     | '/api/subscriptions/$subscriptionId'
@@ -907,9 +1036,11 @@ export interface FileRouteTypes {
     | '/api/thai-id/generate'
     | '/api/thai-id/validate'
     | '/api/user/settings'
+    | '/onsite-report/$id/edit'
     | '/api/body-weight/'
     | '/api/dca/'
     | '/api/expenses/'
+    | '/api/onsite-reports/'
     | '/api/subscriptions/'
     | '/api/admin/cron-jobs/$jobId'
     | '/api/body-weight/measurements/$id'
@@ -917,9 +1048,13 @@ export interface FileRouteTypes {
     | '/api/exchanges/bitkub/connection'
     | '/api/expenses/budgets/$id'
     | '/api/expenses/categories/$id'
+    | '/api/onsite-reports/$id/pdf'
+    | '/api/onsite-reports/companies/$code'
     | '/api/poker/rooms/$code'
     | '/api/user/settings/notifications'
     | '/api/admin/cron-jobs/$jobId/run'
+    | '/api/onsite-reports/$id/signatures/$party'
+    | '/api/onsite-reports/companies/$code/logo'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -942,6 +1077,7 @@ export interface FileRouteTypes {
     | '/thai-id'
     | '/thai-names-generator'
     | '/admin/line-permissions'
+    | '/admin/onsite-report-companies'
     | '/api/attendance-push'
     | '/api/attendance-report'
     | '/api/calendar'
@@ -953,7 +1089,9 @@ export interface FileRouteTypes {
     | '/api/logout'
     | '/api/work-modes'
     | '/calendar/mobile'
+    | '/onsite-report/new'
     | '/planning-poker/$code'
+    | '/onsite-report'
     | '/planning-poker'
     | '/api/admin/check'
     | '/api/admin/cron-jobs'
@@ -989,6 +1127,9 @@ export interface FileRouteTypes {
     | '/api/line/approvals'
     | '/api/line/permissions'
     | '/api/monitoring/dashboard'
+    | '/api/onsite-reports/$id'
+    | '/api/onsite-reports/companies'
+    | '/api/onsite-reports/preview-pdf'
     | '/api/poker/rooms'
     | '/api/poker/stats'
     | '/api/subscriptions/$subscriptionId'
@@ -998,9 +1139,11 @@ export interface FileRouteTypes {
     | '/api/thai-id/generate'
     | '/api/thai-id/validate'
     | '/api/user/settings'
+    | '/onsite-report/$id/edit'
     | '/api/body-weight'
     | '/api/dca'
     | '/api/expenses'
+    | '/api/onsite-reports'
     | '/api/subscriptions'
     | '/api/admin/cron-jobs/$jobId'
     | '/api/body-weight/measurements/$id'
@@ -1008,9 +1151,13 @@ export interface FileRouteTypes {
     | '/api/exchanges/bitkub/connection'
     | '/api/expenses/budgets/$id'
     | '/api/expenses/categories/$id'
+    | '/api/onsite-reports/$id/pdf'
+    | '/api/onsite-reports/companies/$code'
     | '/api/poker/rooms/$code'
     | '/api/user/settings/notifications'
     | '/api/admin/cron-jobs/$jobId/run'
+    | '/api/onsite-reports/$id/signatures/$party'
+    | '/api/onsite-reports/companies/$code/logo'
   id:
     | '__root__'
     | '/'
@@ -1027,12 +1174,14 @@ export interface FileRouteTypes {
     | '/login'
     | '/logout'
     | '/monitoring'
+    | '/onsite-report'
     | '/pending-approval'
     | '/settings'
     | '/subscriptions'
     | '/thai-id'
     | '/thai-names-generator'
     | '/admin/line-permissions'
+    | '/admin/onsite-report-companies'
     | '/api/attendance-push'
     | '/api/attendance-report'
     | '/api/calendar'
@@ -1044,7 +1193,9 @@ export interface FileRouteTypes {
     | '/api/logout'
     | '/api/work-modes'
     | '/calendar/mobile'
+    | '/onsite-report/new'
     | '/planning-poker/$code'
+    | '/onsite-report/'
     | '/planning-poker/'
     | '/api/admin/check'
     | '/api/admin/cron-jobs'
@@ -1080,6 +1231,9 @@ export interface FileRouteTypes {
     | '/api/line/approvals'
     | '/api/line/permissions'
     | '/api/monitoring/dashboard'
+    | '/api/onsite-reports/$id'
+    | '/api/onsite-reports/companies'
+    | '/api/onsite-reports/preview-pdf'
     | '/api/poker/rooms'
     | '/api/poker/stats'
     | '/api/subscriptions/$subscriptionId'
@@ -1089,9 +1243,11 @@ export interface FileRouteTypes {
     | '/api/thai-id/generate'
     | '/api/thai-id/validate'
     | '/api/user/settings'
+    | '/onsite-report/$id/edit'
     | '/api/body-weight/'
     | '/api/dca/'
     | '/api/expenses/'
+    | '/api/onsite-reports/'
     | '/api/subscriptions/'
     | '/api/admin/cron-jobs/$jobId'
     | '/api/body-weight/measurements/$id'
@@ -1099,9 +1255,13 @@ export interface FileRouteTypes {
     | '/api/exchanges/bitkub/connection'
     | '/api/expenses/budgets/$id'
     | '/api/expenses/categories/$id'
+    | '/api/onsite-reports/$id/pdf'
+    | '/api/onsite-reports/companies/$code'
     | '/api/poker/rooms/$code'
     | '/api/user/settings/notifications'
     | '/api/admin/cron-jobs/$jobId/run'
+    | '/api/onsite-reports/$id/signatures/$party'
+    | '/api/onsite-reports/companies/$code/logo'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1119,12 +1279,14 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
   MonitoringRoute: typeof MonitoringRoute
+  OnsiteReportRoute: typeof OnsiteReportRouteWithChildren
   PendingApprovalRoute: typeof PendingApprovalRoute
   SettingsRoute: typeof SettingsRoute
   SubscriptionsRoute: typeof SubscriptionsRoute
   ThaiIdRoute: typeof ThaiIdRoute
   ThaiNamesGeneratorRoute: typeof ThaiNamesGeneratorRoute
   AdminLinePermissionsRoute: typeof AdminLinePermissionsRoute
+  AdminOnsiteReportCompaniesRoute: typeof AdminOnsiteReportCompaniesRoute
   ApiAttendancePushRoute: typeof ApiAttendancePushRoute
   ApiAttendanceReportRoute: typeof ApiAttendanceReportRoute
   ApiCalendarRoute: typeof ApiCalendarRoute
@@ -1168,6 +1330,9 @@ export interface RootRouteChildren {
   ApiExpensesOverviewRoute: typeof ApiExpensesOverviewRoute
   ApiExpensesSummaryRoute: typeof ApiExpensesSummaryRoute
   ApiMonitoringDashboardRoute: typeof ApiMonitoringDashboardRoute
+  ApiOnsiteReportsIdRoute: typeof ApiOnsiteReportsIdRouteWithChildren
+  ApiOnsiteReportsCompaniesRoute: typeof ApiOnsiteReportsCompaniesRouteWithChildren
+  ApiOnsiteReportsPreviewPdfRoute: typeof ApiOnsiteReportsPreviewPdfRoute
   ApiPokerRoomsRoute: typeof ApiPokerRoomsRouteWithChildren
   ApiPokerStatsRoute: typeof ApiPokerStatsRoute
   ApiSubscriptionsSubscriptionIdRoute: typeof ApiSubscriptionsSubscriptionIdRoute
@@ -1180,6 +1345,7 @@ export interface RootRouteChildren {
   ApiBodyWeightIndexRoute: typeof ApiBodyWeightIndexRoute
   ApiDcaIndexRoute: typeof ApiDcaIndexRoute
   ApiExpensesIndexRoute: typeof ApiExpensesIndexRoute
+  ApiOnsiteReportsIndexRoute: typeof ApiOnsiteReportsIndexRoute
   ApiSubscriptionsIndexRoute: typeof ApiSubscriptionsIndexRoute
   ApiBodyWeightMeasurementsIdRoute: typeof ApiBodyWeightMeasurementsIdRoute
   ApiExchangesBitkubBuysRoute: typeof ApiExchangesBitkubBuysRoute
@@ -1286,6 +1452,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MonitoringRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/onsite-report': {
+      id: '/onsite-report'
+      path: '/onsite-report'
+      fullPath: '/onsite-report'
+      preLoaderRoute: typeof OnsiteReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pending-approval': {
       id: '/pending-approval'
       path: '/pending-approval'
@@ -1326,6 +1499,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/line-permissions'
       fullPath: '/admin/line-permissions'
       preLoaderRoute: typeof AdminLinePermissionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/onsite-report-companies': {
+      id: '/admin/onsite-report-companies'
+      path: '/admin/onsite-report-companies'
+      fullPath: '/admin/onsite-report-companies'
+      preLoaderRoute: typeof AdminOnsiteReportCompaniesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/attendance-push': {
@@ -1404,6 +1584,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/calendar/mobile'
       preLoaderRoute: typeof CalendarMobileRouteImport
       parentRoute: typeof CalendarRoute
+    }
+    '/onsite-report/': {
+      id: '/onsite-report/'
+      path: '/'
+      fullPath: '/onsite-report/'
+      preLoaderRoute: typeof OnsiteReportIndexRouteImport
+      parentRoute: typeof OnsiteReportRoute
+    }
+    '/onsite-report/new': {
+      id: '/onsite-report/new'
+      path: '/new'
+      fullPath: '/onsite-report/new'
+      preLoaderRoute: typeof OnsiteReportNewRouteImport
+      parentRoute: typeof OnsiteReportRoute
     }
     '/planning-poker/': {
       id: '/planning-poker/'
@@ -1678,6 +1872,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMonitoringDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/onsite-reports/': {
+      id: '/api/onsite-reports/'
+      path: '/api/onsite-reports'
+      fullPath: '/api/onsite-reports/'
+      preLoaderRoute: typeof ApiOnsiteReportsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/onsite-reports/$id': {
+      id: '/api/onsite-reports/$id'
+      path: '/api/onsite-reports/$id'
+      fullPath: '/api/onsite-reports/$id'
+      preLoaderRoute: typeof ApiOnsiteReportsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/onsite-reports/companies': {
+      id: '/api/onsite-reports/companies'
+      path: '/api/onsite-reports/companies'
+      fullPath: '/api/onsite-reports/companies'
+      preLoaderRoute: typeof ApiOnsiteReportsCompaniesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/onsite-reports/preview-pdf': {
+      id: '/api/onsite-reports/preview-pdf'
+      path: '/api/onsite-reports/preview-pdf'
+      fullPath: '/api/onsite-reports/preview-pdf'
+      preLoaderRoute: typeof ApiOnsiteReportsPreviewPdfRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/poker/rooms': {
       id: '/api/poker/rooms'
       path: '/api/poker/rooms'
@@ -1748,6 +1970,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiUserSettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/onsite-report/$id/edit': {
+      id: '/onsite-report/$id/edit'
+      path: '/$id/edit'
+      fullPath: '/onsite-report/$id/edit'
+      preLoaderRoute: typeof OnsiteReportIdEditRouteImport
+      parentRoute: typeof OnsiteReportRoute
+    }
     '/api/admin/cron-jobs/$jobId': {
       id: '/api/admin/cron-jobs/$jobId'
       path: '/$jobId'
@@ -1790,6 +2019,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiExpensesCategoriesIdRouteImport
       parentRoute: typeof ApiExpensesCategoriesRoute
     }
+    '/api/onsite-reports/$id/pdf': {
+      id: '/api/onsite-reports/$id/pdf'
+      path: '/pdf'
+      fullPath: '/api/onsite-reports/$id/pdf'
+      preLoaderRoute: typeof ApiOnsiteReportsIdPdfRouteImport
+      parentRoute: typeof ApiOnsiteReportsIdRoute
+    }
+    '/api/onsite-reports/companies/$code': {
+      id: '/api/onsite-reports/companies/$code'
+      path: '/$code'
+      fullPath: '/api/onsite-reports/companies/$code'
+      preLoaderRoute: typeof ApiOnsiteReportsCompaniesCodeRouteImport
+      parentRoute: typeof ApiOnsiteReportsCompaniesRoute
+    }
     '/api/poker/rooms/$code': {
       id: '/api/poker/rooms/$code'
       path: '/$code'
@@ -1811,6 +2054,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminCronJobsJobIdRunRouteImport
       parentRoute: typeof ApiAdminCronJobsJobIdRoute
     }
+    '/api/onsite-reports/$id/signatures/$party': {
+      id: '/api/onsite-reports/$id/signatures/$party'
+      path: '/signatures/$party'
+      fullPath: '/api/onsite-reports/$id/signatures/$party'
+      preLoaderRoute: typeof ApiOnsiteReportsIdSignaturesPartyRouteImport
+      parentRoute: typeof ApiOnsiteReportsIdRoute
+    }
+    '/api/onsite-reports/companies/$code/logo': {
+      id: '/api/onsite-reports/companies/$code/logo'
+      path: '/logo'
+      fullPath: '/api/onsite-reports/companies/$code/logo'
+      preLoaderRoute: typeof ApiOnsiteReportsCompaniesCodeLogoRouteImport
+      parentRoute: typeof ApiOnsiteReportsCompaniesCodeRoute
+    }
   }
 }
 
@@ -1824,6 +2081,22 @@ const CalendarRouteChildren: CalendarRouteChildren = {
 
 const CalendarRouteWithChildren = CalendarRoute._addFileChildren(
   CalendarRouteChildren,
+)
+
+interface OnsiteReportRouteChildren {
+  OnsiteReportNewRoute: typeof OnsiteReportNewRoute
+  OnsiteReportIndexRoute: typeof OnsiteReportIndexRoute
+  OnsiteReportIdEditRoute: typeof OnsiteReportIdEditRoute
+}
+
+const OnsiteReportRouteChildren: OnsiteReportRouteChildren = {
+  OnsiteReportNewRoute: OnsiteReportNewRoute,
+  OnsiteReportIndexRoute: OnsiteReportIndexRoute,
+  OnsiteReportIdEditRoute: OnsiteReportIdEditRoute,
+}
+
+const OnsiteReportRouteWithChildren = OnsiteReportRoute._addFileChildren(
+  OnsiteReportRouteChildren,
 )
 
 interface ApiHealthRouteChildren {
@@ -1899,6 +2172,50 @@ const ApiExpensesCategoriesRouteWithChildren =
     ApiExpensesCategoriesRouteChildren,
   )
 
+interface ApiOnsiteReportsIdRouteChildren {
+  ApiOnsiteReportsIdPdfRoute: typeof ApiOnsiteReportsIdPdfRoute
+  ApiOnsiteReportsIdSignaturesPartyRoute: typeof ApiOnsiteReportsIdSignaturesPartyRoute
+}
+
+const ApiOnsiteReportsIdRouteChildren: ApiOnsiteReportsIdRouteChildren = {
+  ApiOnsiteReportsIdPdfRoute: ApiOnsiteReportsIdPdfRoute,
+  ApiOnsiteReportsIdSignaturesPartyRoute:
+    ApiOnsiteReportsIdSignaturesPartyRoute,
+}
+
+const ApiOnsiteReportsIdRouteWithChildren =
+  ApiOnsiteReportsIdRoute._addFileChildren(ApiOnsiteReportsIdRouteChildren)
+
+interface ApiOnsiteReportsCompaniesCodeRouteChildren {
+  ApiOnsiteReportsCompaniesCodeLogoRoute: typeof ApiOnsiteReportsCompaniesCodeLogoRoute
+}
+
+const ApiOnsiteReportsCompaniesCodeRouteChildren: ApiOnsiteReportsCompaniesCodeRouteChildren =
+  {
+    ApiOnsiteReportsCompaniesCodeLogoRoute:
+      ApiOnsiteReportsCompaniesCodeLogoRoute,
+  }
+
+const ApiOnsiteReportsCompaniesCodeRouteWithChildren =
+  ApiOnsiteReportsCompaniesCodeRoute._addFileChildren(
+    ApiOnsiteReportsCompaniesCodeRouteChildren,
+  )
+
+interface ApiOnsiteReportsCompaniesRouteChildren {
+  ApiOnsiteReportsCompaniesCodeRoute: typeof ApiOnsiteReportsCompaniesCodeRouteWithChildren
+}
+
+const ApiOnsiteReportsCompaniesRouteChildren: ApiOnsiteReportsCompaniesRouteChildren =
+  {
+    ApiOnsiteReportsCompaniesCodeRoute:
+      ApiOnsiteReportsCompaniesCodeRouteWithChildren,
+  }
+
+const ApiOnsiteReportsCompaniesRouteWithChildren =
+  ApiOnsiteReportsCompaniesRoute._addFileChildren(
+    ApiOnsiteReportsCompaniesRouteChildren,
+  )
+
 interface ApiPokerRoomsRouteChildren {
   ApiPokerRoomsCodeRoute: typeof ApiPokerRoomsCodeRoute
 }
@@ -1938,12 +2255,14 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,
   MonitoringRoute: MonitoringRoute,
+  OnsiteReportRoute: OnsiteReportRouteWithChildren,
   PendingApprovalRoute: PendingApprovalRoute,
   SettingsRoute: SettingsRoute,
   SubscriptionsRoute: SubscriptionsRoute,
   ThaiIdRoute: ThaiIdRoute,
   ThaiNamesGeneratorRoute: ThaiNamesGeneratorRoute,
   AdminLinePermissionsRoute: AdminLinePermissionsRoute,
+  AdminOnsiteReportCompaniesRoute: AdminOnsiteReportCompaniesRoute,
   ApiAttendancePushRoute: ApiAttendancePushRoute,
   ApiAttendanceReportRoute: ApiAttendanceReportRoute,
   ApiCalendarRoute: ApiCalendarRoute,
@@ -1987,6 +2306,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiExpensesOverviewRoute: ApiExpensesOverviewRoute,
   ApiExpensesSummaryRoute: ApiExpensesSummaryRoute,
   ApiMonitoringDashboardRoute: ApiMonitoringDashboardRoute,
+  ApiOnsiteReportsIdRoute: ApiOnsiteReportsIdRouteWithChildren,
+  ApiOnsiteReportsCompaniesRoute: ApiOnsiteReportsCompaniesRouteWithChildren,
+  ApiOnsiteReportsPreviewPdfRoute: ApiOnsiteReportsPreviewPdfRoute,
   ApiPokerRoomsRoute: ApiPokerRoomsRouteWithChildren,
   ApiPokerStatsRoute: ApiPokerStatsRoute,
   ApiSubscriptionsSubscriptionIdRoute: ApiSubscriptionsSubscriptionIdRoute,
@@ -1999,6 +2321,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiBodyWeightIndexRoute: ApiBodyWeightIndexRoute,
   ApiDcaIndexRoute: ApiDcaIndexRoute,
   ApiExpensesIndexRoute: ApiExpensesIndexRoute,
+  ApiOnsiteReportsIndexRoute: ApiOnsiteReportsIndexRoute,
   ApiSubscriptionsIndexRoute: ApiSubscriptionsIndexRoute,
   ApiBodyWeightMeasurementsIdRoute: ApiBodyWeightMeasurementsIdRoute,
   ApiExchangesBitkubBuysRoute: ApiExchangesBitkubBuysRoute,

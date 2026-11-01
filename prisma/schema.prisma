@@ -75,6 +75,7 @@ model User {
   bitkubConnection      BitkubConnection?
   bitkubBtcBuys         BitkubBtcBuy[]
   scaleProfiles         ScaleProfile[]
+  onsiteServiceReports  OnsiteServiceReport[]
 
   @@map("users")
 }
@@ -704,4 +705,72 @@ model ScaleSettings {
   updatedAt      DateTime @updatedAt @map("updated_at")
 
   @@map("scale_settings")
+}
+
+// ===========================
+// Onsite Service Report (FM-PM-01 — รายงานเข้าบริการหน้างาน)
+// ===========================
+
+model OnsiteServiceReport {
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  company       String   // code ของบริษัทผู้ออกเอกสาร (FK → OnsiteReportCompany.code)
+  docNo         String   @map("doc_no") // เช่น PRJ-ABC-24-01-1002
+  revision      String   @default("-1") // "-1" .. "-9"
+  clientName    String   @map("client_name")
+  projectCode   String   @map("project_code")
+  onsiteDate    String   @map("onsite_date") // YYYY-MM-DD
+  timeStart     Float?   @map("time_start") // เวลาเริ่ม เช่น 9.0 = 09:00
+  timeEnd       Float?   @map("time_end") // เวลาจบ เช่น 12.0 = 12:00
+  phase         String?  // จาก PHASE_OPTIONS ใน LIST sheet
+  mainContact   String   @map("main_contact")
+  executionTeam String   @map("execution_team")
+  objective     String   // 1. วัตถุประสงค์การเข้าบริการ (Objective)
+  actionItem    String   @map("action_item") // 2. รายละเอียดงาน (Action Item)
+  pendingNote   String?  @map("pending_note") // 3. งานคงค้าง / ข้อแนะนำเพิ่มเติม
+  nextActions   Json?    @map("next_actions") // 4. การดำเนินการต่อไป — [{ date, milestone, description }]
+  attendees     Json?    // 5. ผู้เข้าร่วม — [{ name, position }] สูงสุด 10 คน
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyRef    OnsiteReportCompany @relation(fields: [company], references: [code], onDelete: Restrict, onUpdate: Cascade)
+  signatures    OnsiteReportSignature[]
+
+  @@index([userId, onsiteDate])
+  @@map("onsite_service_reports")
+}
+
+/// บริษัทผู้ออกเอกสาร (ชื่อบนหัว PDF/ช่องเซ็น + โลโก้) — แอดมินจัดการผ่านเว็บ, รูปเก็บใน DB ไม่ขึ้น git
+model OnsiteReportCompany {
+  code            String   @id // slug คงที่ เช่น ACME — ห้ามแก้หลังสร้าง (รายงานอ้างอิงด้วยค่านี้)
+  name            String // ชื่อที่แสดงบนหัว PDF และช่องเซ็นฝั่งบริษัท
+  logoData        Bytes?   @map("logo_data")
+  logoMimeType    String?  @map("logo_mime_type") // image/png | image/jpeg
+  logoWidth       Int?     @map("logo_width") // px ของรูปจริง — ใช้คำนวณสัดส่วนใน PDF
+  logoHeight      Int?     @map("logo_height")
+  logoUpdatedAt   DateTime? @map("logo_updated_at")
+  logoUpdatedById String?  @map("logo_updated_by_id")
+  sortOrder       Int      @default(0) @map("sort_order")
+  isActive        Boolean  @default(true) @map("is_active") // ปิดใช้งาน = ไม่โผล่ใน dropdown แต่รายงานเก่ายัง export ได้
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  reports         OnsiteServiceReport[]
+
+  @@map("onsite_report_companies")
+}
+
+/// ลายเซ็นบนรายงาน (รูปภาพ) ฝั่งบริษัท/ลูกค้า — เก็บใน DB, แสดงเหนือเส้นเซ็นใน PDF
+model OnsiteReportSignature {
+  reportId   String   @map("report_id")
+  party      String // COMPANY | CLIENT
+  mimeType   String   @map("mime_type") // image/png | image/jpeg
+  data       Bytes
+  width      Int
+  height     Int
+  signedById String?  @map("signed_by_id")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  report     OnsiteServiceReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@id([reportId, party])
+  @@map("onsite_report_signatures")
 }
