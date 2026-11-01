@@ -1,110 +1,16 @@
-# AI-Powered Check-in Messages
+# AI check-in reminder messages
 
-## Overview
+The morning attendance reminder chooses one message for the reminder run and sends it to the eligible LINE users. When `OPENAI_API_KEY` is configured, the message generator asks the model selected by `MCP_AI_MODEL` to write one Thai sentence using the Bangkok time of day, Thai weekday, and current Bangkok weather when available. It does not personalize a separate message for each user.
 
-The check-in reminder system now supports AI-generated messages using the AI SDK with OpenAI models, while maintaining backward compatibility with static messages.
+If the key is missing, the request fails, or the provider returns empty text, the generator selects one of the static Thai fallback messages. The reminder still uses the existing LINE template with the check-in button.
 
-## Features
+The cron sender opts into AI only when `OPENAI_API_KEY` is truthy. Weather lookup is also done only in that case. The generated message uses a constrained prompt, but no message is guaranteed to be factually accurate; the prompt only includes contextual data the sender has collected.
 
-### 🤖 AI-Generated Messages
+## Source map
 
-- Dynamic, context-aware messages in Thai
-- Personalized based on user name, time of day, weather, and day of week
-- Uses OpenAI GPT-5.6 Luna model
+- [`cron-reminder-sender.ts`](../src/lib/utils/cron-reminder-sender.ts) — collects context, generates one message, and sends reminder batches
+- [`ai-message-generator.ts`](../src/lib/utils/ai-message-generator.ts) — provider call, model choice, and fallback messages
+- [`checkin-reminder-messages.ts`](../src/lib/constants/checkin-reminder-messages.ts) — compatibility exports for reminder code
+- [`prompts.ts`](../src/lib/ai/prompts.ts) — context formatting
 
-### 🔄 Fallback System
-
-- Automatically falls back to static messages if:
-  - No OpenAI API key is provided
-  - API quota exceeded
-  - Network errors occur
-  - Any other AI generation errors
-
-### 📱 Seamless Integration
-
-- Works with existing cron reminder system
-- No breaking changes to current functionality
-- Automatic context detection (time of day, day of week)
-
-## Usage
-
-### Basic Usage
-
-```typescript
-import { getCheckInMessage } from "@/lib/constants/checkin-reminder-messages";
-
-// Get AI message (if available) or fallback
-const message = await getCheckInMessage({
-  useAI: true,
-  userName: "สมชาย",
-  context: {
-    timeOfDay: "morning",
-    weather: "แดดใส",
-    dayOfWeek: "วันจันทร์",
-  },
-});
-```
-
-### Static Messages Only
-
-```typescript
-// Force static messages
-const staticMessage = await getCheckInMessage({ useAI: false });
-```
-
-### Direct AI Generation
-
-```typescript
-import { generateCheckInMessage } from "@/lib/constants/checkin-reminder-messages";
-
-const aiMessage = await generateCheckInMessage({
-  userName: "นางสาวใจดี",
-  timeOfDay: "morning",
-  weather: "ฝนตก",
-  dayOfWeek: "วันศุกร์",
-});
-```
-
-## Configuration
-
-### Environment Variables
-
-Add your OpenAI API key to `.env`:
-
-```
-OPENAI_API_KEY=your_api_key_here
-```
-
-### Automatic Behavior
-
-- **With API key**: Uses AI generation with fallback to static messages
-- **Without API key**: Uses static messages only
-- **API errors**: Automatically falls back to static messages
-
-## Integration with Cron System
-
-The cron reminder sender (`src/lib/utils/cron-reminder-sender.ts`) automatically:
-
-1. Detects current time of day
-2. Gets current day of week in Thai
-3. Attempts AI generation if API key is available
-4. Falls back to static messages on any error
-5. Logs the message type used
-
-## Error Handling
-
-All AI errors are:
-
-- Caught and logged for debugging
-- Gracefully handled with fallback messages
-- Transparent to end users
-- Non-breaking to the application flow
-
-## Static Messages
-
-8 high-quality Thai check-in messages are available as fallbacks:
-
-- Morning greetings with emojis
-- Encouraging and friendly tone
-- Consistent with company culture
-- Tested and proven effective
+The model defaults to `gpt-5.6-luna` through the current environment schema; check provider availability before relying on this default.

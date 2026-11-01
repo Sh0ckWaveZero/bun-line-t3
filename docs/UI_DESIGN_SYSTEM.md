@@ -1,6 +1,6 @@
 # UI Design System & Style Patterns
 
-The project follows a consistent design pattern for tool pages (Thai Names Generator, Thai ID Generator, etc.).
+This guide collects reusable UI patterns from the application. The examples are conventions for new UI work, not a guarantee that every existing page uses the same layout.
 
 ## Layout Architecture
 
@@ -24,14 +24,11 @@ The project follows a consistent design pattern for tool pages (Thai Names Gener
 ## Design Tokens (Auto Dark Mode)
 
 ```tsx
-// Use Design System Tokens for automatic dark mode support
-bg - card; // Card background (auto adapts)
-border; // Border color (auto adapts)
-text - muted - foreground; // Muted text (auto adapts)
-bg - primary / 10; // Primary color with 10% opacity
-text - primary; // Primary color text
-bg - accent; // Accent background for hover states
-ring - ring; // Focus ring color
+// Use the project's Tailwind/CSS-variable tokens for light and dark themes
+className="bg-card text-card-foreground border-border";
+className="text-muted-foreground";
+className="bg-primary/10 text-primary";
+className="hover:bg-accent focus-visible:ring-ring";
 ```
 
 ## Card Structure Pattern
@@ -93,13 +90,13 @@ className="border-blue-200 bg-blue-50 text-blue-700
 ## Spacing System
 
 ```tsx
-space - y - 6; // Between major sections
-space - y - 4; // Between cards/items
-space - y - 3; // Between form elements
-space - y - 2; // Between list items
-gap - 6; // Grid gap
-gap - 3; // Small gaps
-gap - 2; // Minimal gaps
+space-y-6; // Between major sections
+space-y-4; // Between cards/items
+space-y-3; // Between form elements
+space-y-2; // Between list items
+gap-6; // Grid gap
+gap-3; // Small gaps
+gap-2; // Minimal gaps
 ```
 
 ## Interactive States

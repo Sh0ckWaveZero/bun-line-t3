@@ -29,14 +29,26 @@ registry.
 
 ### Shared Utilities
 
-Our cron jobs use shared utilities for consistent behavior:
+Cron handlers use shared utilities for consistent behavior:
 
-- **cron-auth.ts**: Authentication validation
-- **line-messaging.ts**: LINE message sending utilities
-- **datetime.ts**: UTC/Bangkok timezone conversion
-- **cron-response.ts**: Standardized API responses
+- [`cron-auth.ts`](../src/lib/utils/cron-auth.ts): Authentication validation
+- [`line-messaging.ts`](../src/lib/utils/line-messaging.ts): LINE message sending utilities
+- [`datetime.ts`](../src/lib/utils/datetime.ts): Date/time helpers
+- [`cron-response.ts`](../src/lib/utils/cron-response.ts): Standardized API responses
 
 ## Cron Jobs
+
+The registry's initial/default jobs use `Asia/Bangkok`. Runtime schedules can
+change in the admin page because PostgreSQL is the source of truth after the
+initial migration.
+
+| Job | Endpoint | Initial schedule |
+| --- | --- | --- |
+| Check-in reminder | `GET /api/cron/check-in-reminder` | 08:00, Monday–Friday |
+| Enhanced checkout reminder | `GET /api/cron/enhanced-checkout-reminder` | Every 5 minutes, 16:00–20:59, Monday–Friday |
+| DCA balance alert | `GET /api/cron/dca-balance-alert` | 08:05 daily |
+| Automatic checkout | `GET /api/cron/auto-checkout` | Midnight daily |
+| Temporary image cleanup | `POST /api/cron/image-cleanup` | Every 2 hours |
 
 ### 1. Check-in Reminder (`/api/cron/check-in-reminder`)
 
@@ -116,6 +128,7 @@ initial migration, not runtime source of truth:
 
 - `check-in-reminder`
 - `enhanced-checkout-reminder`
+- `dca-balance-alert`
 - `auto-checkout`
 - `image-cleanup`
 
@@ -314,9 +327,9 @@ function formatUTCTimeAsThaiTime(utcDate: Date): string;
 
 ### Rate Limiting
 
-- Implemented via `RateLimiter.checkCronRateLimit()`
-- Prevents abuse and ensures system stability
-- Configurable limits per endpoint
+Handlers that use `RateLimiter.checkCronRateLimit()` have an additional request
+limit. This is not a replacement for the `CRON_SECRET` check; inspect each
+endpoint before assuming its rate-limit behavior.
 
 ### Input Validation
 
@@ -464,26 +477,14 @@ bun test timezone
 # Run all tests
 bun test
 
-# Lint code
-bun run lint
+# Check types
+bun check
 ```
 
-## Recent Changes
+## Schedule source of truth
 
-### v2.0.1 - UTC Timezone Fix & Refactoring (Latest)
-
-- ✅ **Fixed**: `getCurrentUTCTime()` now returns actual UTC instead of local time
-- ✅ **Refactored**: Extracted shared utilities for better code reusability
-- ✅ **Enhanced**: Improved error handling and response standardization
-- ✅ **Added**: Comprehensive logging and monitoring capabilities
-
-### Migration Notes
-
-- **Breaking**: `getCurrentUTCTime()` behavior changed - now returns true UTC
-- **Improved**: All timezone calculations use proper APIs instead of manual offsets
-- **New**: Shared utilities available for other cron jobs
-
----
-
-_Last updated: January 7, 2025_  
-_Version: 2.0.1_
+[`registry.ts`](../src/features/cron-jobs/constants/registry.ts) supplies initial
+definitions for an empty environment. Once created, schedules and enabled
+state are read from and written to PostgreSQL through `/cron-jobs`. The
+one-minute crontab entry only wakes the dispatcher; do not add one crontab line
+per job.

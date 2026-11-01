@@ -1,36 +1,9 @@
-# 🎭 End-to-End Tests
+# End-to-end tests
 
-ทดสอบ user journeys แบบครบวงจร
+This directory currently has no automated test files. The project does not
+configure Playwright or Puppeteer here, so commands such as
+`bun test tests/e2e --browser=chromium` do not run a browser suite.
 
-## 📁 โครงสร้าง
-
-E2E tests สำหรับทดสอบ:
-
-- Complete user workflows
-- Cross-browser compatibility
-- Mobile responsiveness
-- Real-world scenarios
-
-## 🧪 การรัน Test
-
-```bash
-# รัน E2E tests ทั้งหมด
-bun test tests/e2e
-
-# รัน test บน browser เฉพาะ
-bun test tests/e2e --browser=chromium
-```
-
-## 🎯 Testing Scenarios
-
-- **Attendance Workflow**: ลงเวลาเข้า-ออกงานผ่าน LINE Bot
-- **Report Generation**: สร้างและดูรายงานการทำงาน
-- **Admin Operations**: การจัดการผู้ใช้และข้อมูล
-- **Error Scenarios**: การจัดการ error และ edge cases
-- **Security Flows**: ทดสอบ authentication และ authorization
-
-## 🛠️ Tools
-
-- **Playwright**: สำหรับ browser automation
-- **Puppeteer**: สำหรับ advanced scenarios
-- **Accessibility**: ทดสอบ WCAG compliance
+When a change needs browser verification, exercise the relevant user journey
+in a suitable test environment and report what was checked. API and component
+tests elsewhere in the repository do not replace browser E2E verification.
