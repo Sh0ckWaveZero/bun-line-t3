@@ -2,15 +2,7 @@
 
 GitHub Actions รันบน self-hosted runner ที่มี labels `linux` และ `ARM64` เมื่อ push เข้า `main` หรือ `production` และเรียกด้วยมือได้ผ่าน `workflow_dispatch` โดยทุกการ deploy รอคิวเดียวกัน
 
-## แยก runner สำหรับ lint
-
-Workflow `.github/workflows/lint.yml` ตรวจ PR จาก repository เดียวกันและสั่งด้วยมือได้ โดยเลือก runner ที่มี labels `self-hosted`, `linux`, `ARM64` และ `lint-isolated` ส่วน PR จาก fork จะถูกข้าม การข้ามไม่ได้หมายความว่าผ่าน lint และควรตรวจพฤติกรรม required check ของ branch protection ให้ตรงกับนโยบายของ repository
-
-ต้องจัดเตรียม runner แยกจากเครื่อง production ก่อนใช้งาน โดยไม่ให้เข้าถึง production secrets, Docker socket หรือเครือข่าย production และจำกัดผู้ที่แก้ workflow หรือใช้ runner ได้ เงื่อนไขข้าม fork ใน workflow เพียงอย่างเดียวไม่ใช่ขอบเขตความปลอดภัย ห้ามเพิ่ม label `lint-isolated` ให้ runner production เดิม หากไม่มี runner ที่มี label นี้ งาน lint จะรอในคิว
-
-Workflow ใช้ `actions/checkout` และ `oven-sh/setup-bun` ที่ตรึง commit SHA, ตั้ง token เป็น `contents: read` และไม่เก็บ checkout credentials จากนั้นติดตั้ง Bun 1.4.4 สำหรับเรียก Bun linter canary ที่ระบุเวอร์ชันเดียวกับ `lefthook.yml` runner จึงต้องเข้าถึงแหล่งดาวน์โหลด Bun และ package registry ได้ Lint errors ทำให้งานล้มเหลว ส่วน warnings แสดงเป็น annotations โดยไม่ทำให้งานล้มเหลว Workflow นี้ไม่บล็อก deployment โดยตรงและไม่ได้รัน lint ซ้ำหลัง merge
-
-หลังจัดเตรียม runner ให้เปิด PR จาก repository เดียวกันหรือเรียก `workflow_dispatch` แล้วตรวจใน GitHub Actions ว่า job ถูกส่งไป runner ที่แยกไว้และแสดงผล lint ได้จริง การตรวจในเครื่องอย่างเดียวไม่ยืนยัน runner หรือ branch protection
+Lint ไม่รันใน CI — ตรวจผ่าน lefthook pre-commit (`bun lint --staged`) ในเครื่องผู้พัฒนาเท่านั้น
 
 ## สิ่งที่ runner ต้องมี
 

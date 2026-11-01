@@ -194,7 +194,7 @@ export function requireAdmin({ context, location }: GuardArgs) {
 
 - Run TypeScript scripts with Bun; inspect scripts that mutate data or deploy before running them
 - GitHub Actions workflows live in `.github/workflows/`; `deploy.yml` deploys to production
-- The lint workflow targets a separate `lint-isolated` self-hosted runner; consult `docs/DEPLOYMENT.md` for setup and limitations
+- Lint runs locally only — lefthook pre-commit runs `bun lint --staged`; there is no CI lint workflow
 
 ### Feature-Based Architecture Best Practices
 

@@ -73,7 +73,7 @@ bunx --package bun@1.4.4-canary.20261031.1 bun lint
 
 Lefthook ติดตั้ง pre-commit hook ระหว่าง `bun install`; หากข้ามการติดตั้ง ให้ใช้ `bunx lefthook install`. Hook lint เฉพาะไฟล์ JS/TS ที่ staged ด้วย canary เวอร์ชันเดียวกัน
 
-GitHub Actions มี workflow lint แยกจาก runner production และข้าม PR จาก fork. Workflow เลือก runner labels `self-hosted`, `linux`, `ARM64`, `lint-isolated`; ยังต้อง provision runner ที่มี label นี้ก่อน งานจึงจะถูกรัน และงานที่ถูก skip ไม่ได้ยืนยันว่า lint ผ่าน ดูข้อกำหนดใน [คู่มือ deploy](./docs/DEPLOYMENT.md#แยก-runner-สำหรับ-lint)
+Lint รันเฉพาะเครื่องผู้พัฒนาผ่าน lefthook pre-commit — ไม่มี workflow lint ใน CI
 
 ## เอกสาร
 

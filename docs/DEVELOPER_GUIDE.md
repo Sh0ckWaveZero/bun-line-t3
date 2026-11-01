@@ -29,7 +29,7 @@ Lefthook installs a pre-commit hook during `bun install`; the hook runs this pin
 bunx lefthook install
 ```
 
-Lint rules are configured in [`bunfig.toml`](../bunfig.toml). Lint errors fail the hook/workflow; warnings are emitted as annotations. GitHub lint runs on a dedicated self-hosted runner with labels `self-hosted`, `linux`, `ARM64`, and `lint-isolated`; that runner still needs to be provisioned. Fork PRs skip the lint workflow, so a skipped job is not evidence of a lint pass. See [deployment and CI](./DEPLOYMENT.md).
+Lint rules are configured in [`bunfig.toml`](../bunfig.toml). Lint errors fail the hook; warnings are reported in the terminal. Lint runs locally only through the lefthook pre-commit hook — there is no CI lint workflow, so run it yourself before pushing.
 
 ## Code organization
 

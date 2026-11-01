@@ -77,7 +77,7 @@ Not every endpoint uses the same access model: Planning Poker is intentionally p
 - Bun is the application runtime and package manager. Production containers currently use Bun 1.4.4 stable.
 - Type checking uses `bun check`; tests use `bun test`.
 - The Bun linter rules live in `bunfig.toml`. The stable application runtime does not provide `bun lint`, so local hook and GitHub lint steps use the repository's pinned Bun 1.4.4 canary.
-- `lefthook.yml` runs lint on staged JavaScript and TypeScript files. `.github/workflows/lint.yml` targets a separate `lint-isolated` runner and skips fork PRs. That runner must be provisioned; the workflow's existence does not prove CI ran.
+- `lefthook.yml` runs lint on staged JavaScript and TypeScript files. Lint is a local pre-commit check only — there is no CI lint workflow.
 - Prettier formats source and documentation.
 
 See [developer guide](./DEVELOPER_GUIDE.md) for commands and [deployment guide](./DEPLOYMENT.md) for runner constraints.

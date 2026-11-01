@@ -39,7 +39,7 @@ The runtime environment schema is [`src/env.mjs`](../src/env.mjs). Review it tog
 - App build secrets use Docker BuildKit secret mounts in the Dockerfile; do not move credentials into Docker build arguments, source files, or image labels.
 - Docker Compose gives the BLE listener only the network mode and Linux capabilities it needs for Bluetooth, and does not pass the database or LINE credentials to it.
 - The production deployment runs on a self-hosted Linux ARM64 runner with production access. Restrict repository administrators, workflow changes, runner access, and secrets accordingly.
-- The lint workflow is designed for a separate runner labelled `lint-isolated`, but that runner has not been provisioned/confirmed. Fork PRs skip lint; do not treat a skipped job as a successful lint result.
+- Lint is a local pre-commit check only (lefthook); CI does not lint. Do not rely on CI as a code-quality gate — review and tests in `deploy.yml` are the enforcement points.
 - Deployment rollback restores application/cron images but does not reverse database migrations. Verify migration compatibility and backups before release.
 
 See [deployment guide](./DEPLOYMENT.md) for runner and release behavior.
