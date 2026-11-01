@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "sarabun",
+        "createdAt": "2026-10-31T17:16:15.512Z",
+        "reason": "user confirmed: asked to add Sarabun so the onsite-report PDF matches the company's FM-PM-01 template; PDF-only font, not part of the web UI type system"
+      }
+    ]
+  }
+}
