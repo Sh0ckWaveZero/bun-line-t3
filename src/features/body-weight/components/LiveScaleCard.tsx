@@ -28,6 +28,32 @@ const bangkokDateTimeFormatter = new Intl.DateTimeFormat("th-TH", {
   timeZone: "Asia/Bangkok",
 });
 
+/** สีเลขน้ำหนัก — ยังไม่มีค่า/กำลังวัด = สีรอง, มีค่า = สีแบรนด์ */
+const getWeightToneClass = (
+  weightKg: number | null,
+  isMeasuring: boolean,
+): string =>
+  weightKg === null || isMeasuring
+    ? "text-muted-foreground"
+    : "text-(--brand)";
+
+/** ข้อความสถานะใต้เลข — ยืนอยู่ใช้ข้อความสด ลงแล้วใช้ผลล่าสุด */
+const getLiveCaption = ({
+  status,
+  isLive,
+  latest,
+}: {
+  status: LiveStatus;
+  isLive: boolean;
+  latest: ScaleMeasurementDto | undefined;
+}): string => {
+  if (isLive) return STATUS_TEXT[status];
+  if (!latest) return STATUS_TEXT.idle;
+  return latest.impedance
+    ? "ชั่งเสร็จแล้ว"
+    : "ชั่งล่าสุด (ไม่มีค่า impedance)";
+};
+
 /** ข้อความใต้ผลล่าสุด เช่น "SAM · −0.03 กก. จาก 21 ต.ค. 69 07:15" */
 const describeLatest = (
   latest: ScaleMeasurementDto,
@@ -60,13 +86,7 @@ export function LiveScaleCard({
   const latest = measurements[0];
 
   const weightKg = isLive ? reading.weightKg : (latest?.weightKg ?? null);
-  const caption = isLive
-    ? STATUS_TEXT[status]
-    : latest
-      ? latest.impedance
-        ? "ชั่งเสร็จแล้ว"
-        : "ชั่งล่าสุด (ไม่มีค่า impedance)"
-      : STATUS_TEXT.idle;
+  const caption = getLiveCaption({ status, isLive, latest });
 
   return (
     <div className="bg-card border-border flex h-full min-h-[200px] flex-col items-center justify-center rounded-lg border p-6 text-center">
@@ -75,13 +95,7 @@ export function LiveScaleCard({
       </p>
       <p
         aria-live="polite"
-        className={`mt-4 font-mono text-5xl font-semibold tracking-tight tabular-nums transition-colors ${
-          weightKg === null
-            ? "text-muted-foreground"
-            : isMeasuring
-              ? "text-muted-foreground"
-              : "text-(--brand)"
-        }`}
+        className={`mt-4 font-mono text-5xl font-semibold tracking-tight tabular-nums transition-colors ${getWeightToneClass(weightKg, isMeasuring)}`}
       >
         {weightKg === null ? "--.--" : weightKg.toFixed(2)}
         <span className="text-muted-foreground ml-1 text-xl font-normal">

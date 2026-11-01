@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import type { ChangeEvent, DragEvent, RefObject } from "react";
 import {
   AlertCircle,
   CheckCircle2,
@@ -159,203 +160,244 @@ export const DcaImportModal = ({ onClose, onSuccess }: DcaImportModalProps) => {
 
         <CardContent id="dca-import-modal-body" className="p-5">
           {step === "select" && (
-            <div id="dca-import-step-select" className="space-y-4">
-              {/* Dropzone */}
-              <div
-                id="dca-import-dropzone"
-                onClick={() => inputRef.current?.click()}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    inputRef.current?.click();
-                  }
-                }}
-                role="button"
-                tabIndex={0}
-                aria-label="เลือกไฟล์สำหรับนำเข้าประวัติ Auto DCA"
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-6 py-10 transition-colors ${
-                  dragOver
-                    ? "border-yellow-400 bg-yellow-400/10"
-                    : "border-border hover:bg-muted/30 hover:border-yellow-400/50"
-                }`}
-              >
-                <Upload
-                  className={`mb-3 h-8 w-8 ${dragOver ? "text-yellow-400" : "text-muted-foreground"}`}
-                />
-                <p className="text-sm font-medium">
-                  วาง หรือคลิกเพื่อเลือกไฟล์
-                </p>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  รองรับ .csv, .json, .xlsx
-                </p>
-                <input
-                  ref={inputRef}
-                  id="dca-import-file-input"
-                  type="file"
-                  accept={ACCEPTED_MIME}
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
-              </div>
-
-              {/* Selected file */}
-              {file && (
-                <div
-                  id="dca-import-selected-file"
-                  className="bg-muted/40 flex items-center gap-3 rounded-lg px-4 py-3"
-                >
-                  <FileIcon name={file.name} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{file.name}</p>
-                    <p className="text-muted-foreground text-xs">
-                      {(file.size / 1024).toFixed(1)} KB
-                    </p>
-                  </div>
-                  <Button
-                    id="dca-import-remove-file"
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 w-7 shrink-0 p-0"
-                    onClick={() => setFile(null)}
-                    aria-label="ลบไฟล์ที่เลือก"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              )}
-
-              {/* Error */}
-              {error && (
-                <div
-                  id="dca-import-select-error"
-                  className="flex items-center gap-2 rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-400"
-                >
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  {error}
-                </div>
-              )}
-
-              {/* Format hint */}
-              <div
-                id="dca-import-format-hint"
-                className="bg-muted/30 text-muted-foreground space-y-1 rounded-lg px-4 py-3 text-xs"
-              >
-                <p className="text-foreground font-medium">คอลัมน์ที่จำเป็น:</p>
-                <p>
-                  <span className="font-mono text-yellow-400">executedAt</span>,{" "}
-                  <span className="font-mono text-yellow-400">coin</span>,{" "}
-                  <span className="font-mono text-yellow-400">amountTHB</span>,{" "}
-                  <span className="font-mono text-yellow-400">
-                    coinReceived
-                  </span>
-                  ,{" "}
-                  <span className="font-mono text-yellow-400">
-                    pricePerCoin
-                  </span>
-                </p>
-                <p>
-                  คอลัมน์เสริม: <span className="font-mono">status</span>,{" "}
-                  <span className="font-mono">note</span>
-                </p>
-              </div>
-
-              {/* Actions */}
-              <div className="flex justify-end gap-2 pt-1">
-                <Button variant="outline" size="sm" onClick={onClose}>
-                  ยกเลิก
-                </Button>
-                <Button
-                  id="dca-import-submit-button"
-                  size="sm"
-                  disabled={!file}
-                  onClick={() => void handleUpload()}
-                  className="gap-2 bg-yellow-500 text-black hover:bg-yellow-400 disabled:opacity-50"
-                >
-                  <Upload className="h-4 w-4" />
-                  นำเข้า
-                </Button>
-              </div>
-            </div>
+            <DcaImportSelectStep
+              inputRef={inputRef}
+              file={file}
+              error={error}
+              dragOver={dragOver}
+              onFileChange={handleFileChange}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onRemoveFile={() => setFile(null)}
+              onClose={onClose}
+              onUpload={() => void handleUpload()}
+            />
           )}
 
-          {step === "uploading" && (
-            <div
-              id="dca-import-step-uploading"
-              className="flex flex-col items-center justify-center gap-4 py-12"
-            >
-              <span className="h-10 w-10 animate-spin rounded-full border-4 border-yellow-400 border-t-transparent" />
-              <p className="text-muted-foreground text-sm">
-                กำลังนำเข้าข้อมูล…
-              </p>
-            </div>
-          )}
+          {step === "uploading" && <DcaImportUploadingStep />}
 
           {step === "result" && result && (
-            <div id="dca-import-step-result" className="space-y-4">
-              {/* Summary */}
-              <div
-                id="dca-import-result-summary"
-                className={`flex items-start gap-3 rounded-lg px-4 py-4 ${
-                  result.imported > 0 ? "bg-green-500/10" : "bg-muted/40"
-                }`}
-              >
-                {result.imported > 0 ? (
-                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-400" />
-                ) : (
-                  <AlertCircle className="text-muted-foreground mt-0.5 h-5 w-5 shrink-0" />
-                )}
-                <div className="space-y-0.5">
-                  <p className="text-sm font-medium">
-                    นำเข้าสำเร็จ{" "}
-                    <span className="text-green-400">{result.imported}</span>{" "}
-                    รายการ
-                    {result.skipped > 0 && (
-                      <>
-                        {" "}
-                        · ข้าม{" "}
-                        <span className="text-red-400">
-                          {result.skipped}
-                        </span>{" "}
-                        รายการ
-                      </>
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              {/* Error list */}
-              {result.errors.length > 0 && (
-                <div id="dca-import-result-errors" className="space-y-2">
-                  <p className="text-xs font-medium text-red-400">
-                    รายการที่ข้าม ({result.errors.length}):
-                  </p>
-                  <ul className="max-h-40 space-y-1 overflow-y-auto rounded-lg bg-red-500/10 px-4 py-3">
-                    {result.errors.map((error) => (
-                      <li key={error} className="text-xs text-red-300">
-                        • {error}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              <div className="flex justify-end pt-1">
-                <Button
-                  id="dca-import-done-button"
-                  size="sm"
-                  onClick={onClose}
-                  className="bg-yellow-500 text-black hover:bg-yellow-400"
-                >
-                  เสร็จสิ้น
-                </Button>
-              </div>
-            </div>
+            <DcaImportResultStep result={result} onClose={onClose} />
           )}
         </CardContent>
       </Card>
     </div>
   );
 };
+
+interface DcaImportSelectStepProps {
+  inputRef: RefObject<HTMLInputElement | null>;
+  file: File | null;
+  error: string | null;
+  dragOver: boolean;
+  onFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  onDrop: (event: DragEvent<HTMLDivElement>) => void;
+  onDragOver: (event: DragEvent<HTMLDivElement>) => void;
+  onDragLeave: () => void;
+  onRemoveFile: () => void;
+  onClose: () => void;
+  onUpload: () => void;
+}
+
+function DcaImportSelectStep({
+  inputRef,
+  file,
+  error,
+  dragOver,
+  onFileChange,
+  onDrop,
+  onDragOver,
+  onDragLeave,
+  onRemoveFile,
+  onClose,
+  onUpload,
+}: DcaImportSelectStepProps) {
+  return (
+    <div id="dca-import-step-select" className="space-y-4">
+      <div
+        id="dca-import-dropzone"
+        onClick={() => inputRef.current?.click()}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            inputRef.current?.click();
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-label="เลือกไฟล์สำหรับนำเข้าประวัติ Auto DCA"
+        onDrop={onDrop}
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+        className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-6 py-10 transition-colors ${
+          dragOver
+            ? "border-yellow-400 bg-yellow-400/10"
+            : "border-border hover:bg-muted/30 hover:border-yellow-400/50"
+        }`}
+      >
+        <Upload
+          className={`mb-3 h-8 w-8 ${dragOver ? "text-yellow-400" : "text-muted-foreground"}`}
+        />
+        <p className="text-sm font-medium">วาง หรือคลิกเพื่อเลือกไฟล์</p>
+        <p className="text-muted-foreground mt-1 text-xs">
+          รองรับ .csv, .json, .xlsx
+        </p>
+        <input
+          ref={inputRef}
+          id="dca-import-file-input"
+          type="file"
+          accept={ACCEPTED_MIME}
+          className="hidden"
+          onChange={onFileChange}
+        />
+      </div>
+
+      {file && (
+        <div
+          id="dca-import-selected-file"
+          className="bg-muted/40 flex items-center gap-3 rounded-lg px-4 py-3"
+        >
+          <FileIcon name={file.name} />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium">{file.name}</p>
+            <p className="text-muted-foreground text-xs">
+              {(file.size / 1024).toFixed(1)} KB
+            </p>
+          </div>
+          <Button
+            id="dca-import-remove-file"
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 shrink-0 p-0"
+            onClick={onRemoveFile}
+            aria-label="ลบไฟล์ที่เลือก"
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      )}
+
+      {error && (
+        <div
+          id="dca-import-select-error"
+          className="flex items-center gap-2 rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-400"
+        >
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          {error}
+        </div>
+      )}
+
+      <div
+        id="dca-import-format-hint"
+        className="bg-muted/30 text-muted-foreground space-y-1 rounded-lg px-4 py-3 text-xs"
+      >
+        <p className="text-foreground font-medium">คอลัมน์ที่จำเป็น:</p>
+        <p>
+          <span className="font-mono text-yellow-400">executedAt</span>,{" "}
+          <span className="font-mono text-yellow-400">coin</span>,{" "}
+          <span className="font-mono text-yellow-400">amountTHB</span>,{" "}
+          <span className="font-mono text-yellow-400">coinReceived</span>,{" "}
+          <span className="font-mono text-yellow-400">pricePerCoin</span>
+        </p>
+        <p>
+          คอลัมน์เสริม: <span className="font-mono">status</span>,{" "}
+          <span className="font-mono">note</span>
+        </p>
+      </div>
+
+      <div className="flex justify-end gap-2 pt-1">
+        <Button variant="outline" size="sm" onClick={onClose}>
+          ยกเลิก
+        </Button>
+        <Button
+          id="dca-import-submit-button"
+          size="sm"
+          disabled={!file}
+          onClick={onUpload}
+          className="gap-2 bg-yellow-500 text-black hover:bg-yellow-400 disabled:opacity-50"
+        >
+          <Upload className="h-4 w-4" />
+          นำเข้า
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function DcaImportUploadingStep() {
+  return (
+    <div
+      id="dca-import-step-uploading"
+      className="flex flex-col items-center justify-center gap-4 py-12"
+    >
+      <span className="h-10 w-10 animate-spin rounded-full border-4 border-yellow-400 border-t-transparent" />
+      <p className="text-muted-foreground text-sm">กำลังนำเข้าข้อมูล…</p>
+    </div>
+  );
+}
+
+interface DcaImportResultStepProps {
+  result: ImportResult;
+  onClose: () => void;
+}
+
+function DcaImportResultStep({ result, onClose }: DcaImportResultStepProps) {
+  return (
+    <div id="dca-import-step-result" className="space-y-4">
+      <div
+        id="dca-import-result-summary"
+        className={`flex items-start gap-3 rounded-lg px-4 py-4 ${
+          result.imported > 0 ? "bg-green-500/10" : "bg-muted/40"
+        }`}
+      >
+        {result.imported > 0 ? (
+          <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-400" />
+        ) : (
+          <AlertCircle className="text-muted-foreground mt-0.5 h-5 w-5 shrink-0" />
+        )}
+        <div className="space-y-0.5">
+          <p className="text-sm font-medium">
+            นำเข้าสำเร็จ{" "}
+            <span className="text-green-400">{result.imported}</span> รายการ
+            {result.skipped > 0 && (
+              <>
+                {" "}
+                · ข้าม <span className="text-red-400">
+                  {result.skipped}
+                </span>{" "}
+                รายการ
+              </>
+            )}
+          </p>
+        </div>
+      </div>
+
+      {result.errors.length > 0 && (
+        <div id="dca-import-result-errors" className="space-y-2">
+          <p className="text-xs font-medium text-red-400">
+            รายการที่ข้าม ({result.errors.length}):
+          </p>
+          <ul className="max-h-40 space-y-1 overflow-y-auto rounded-lg bg-red-500/10 px-4 py-3">
+            {result.errors.map((error) => (
+              <li key={error} className="text-xs text-red-300">
+                • {error}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="flex justify-end pt-1">
+        <Button
+          id="dca-import-done-button"
+          size="sm"
+          onClick={onClose}
+          className="bg-yellow-500 text-black hover:bg-yellow-400"
+        >
+          เสร็จสิ้น
+        </Button>
+      </div>
+    </div>
+  );
+}

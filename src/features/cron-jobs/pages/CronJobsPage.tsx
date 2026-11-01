@@ -60,6 +60,9 @@ import type {
 type JobFilter = "all" | "healthy" | "failing" | "paused";
 type EnvironmentFilter = "all" | JobEnvironment;
 type DisplayMode = "comfortable" | "compact";
+type CronJobNotice = { type: "success" | "error"; message: string };
+type CronJobsSource = ReturnType<typeof useCronJobs>["source"];
+type CronJobStatusCounts = ReturnType<typeof getCronJobStatusCounts>;
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
 
@@ -1239,6 +1242,44 @@ function CronJobLastRunDetails({ lastRun }: { lastRun: CronJob["lastRun"] }) {
   );
 }
 
+function getCronJobMetrics(jobs: CronJob[], generatedAt?: string) {
+  const executionHistory = jobs.flatMap((job) => job.runHistory);
+  const successfulRuns = executionHistory.filter(
+    (status) => status === "succeeded",
+  ).length;
+  const failedRuns = executionHistory.filter(
+    (status) => status === "failed",
+  ).length;
+  const timedOutRuns = executionHistory.filter(
+    (status) => status === "timed-out",
+  ).length;
+  const recordedRuns = executionHistory.filter(
+    (status) =>
+      status === "succeeded" || status === "failed" || status === "timed-out",
+  ).length;
+  const now = generatedAt ? new Date(generatedAt).getTime() : 0;
+
+  return {
+    activeJobs: jobs.filter((job) => job.enabled).length,
+    failingJobs: getCronJobStatusCounts(jobs).failing,
+    executionHistory,
+    successfulRuns,
+    failedRuns,
+    timedOutRuns,
+    recordedRuns,
+    successRate:
+      recordedRuns > 0
+        ? `${((successfulRuns / recordedRuns) * 100).toFixed(1)}%`
+        : "—",
+    nextHourRunCount: jobs.filter((job) => {
+      if (!job.enabled || !job.nextRun.iso) return false;
+      const nextRunAt = new Date(job.nextRun.iso).getTime();
+      return nextRunAt <= now + 60 * 60 * 1000;
+    }).length,
+    worstJob: jobs.find((job) => getCronJobStatus(job) === "failing"),
+  };
+}
+
 export function CronJobsPage() {
   const { showToast } = useToast();
   const {
@@ -1259,9 +1300,6 @@ export function CronJobsPage() {
     useState<EnvironmentFilter>("all");
   const [targetFilter, setTargetFilter] = useState<"all" | TargetKind>("all");
   const [query, setQuery] = useState("");
-  const [filterOpen, setFilterOpen] = useState(false);
-  const filterButtonRef = useRef<HTMLButtonElement>(null);
-  const filterTargetRef = useRef<HTMLSelectElement>(null);
   const [displayMode, setDisplayMode] = useState<DisplayMode>("comfortable");
   const [pageSize, setPageSize] = useState<number>(10);
   const [page, setPage] = useState(1);
@@ -1308,35 +1346,11 @@ export function CronJobsPage() {
     filteredJobs.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const lastVisibleRow = Math.min(currentPage * pageSize, filteredJobs.length);
 
-  const activeJobs = jobs.filter((job) => job.enabled).length;
-  const failingJobs = statusCounts.failing;
-  const executionHistory = jobs.flatMap((job) => job.runHistory);
-  const successfulRuns = executionHistory.filter(
-    (status) => status === "succeeded",
-  ).length;
-  const failedRuns = executionHistory.filter(
-    (status) => status === "failed",
-  ).length;
-  const timedOutRuns = executionHistory.filter(
-    (status) => status === "timed-out",
-  ).length;
-  const recordedRuns = executionHistory.filter(
-    (status) =>
-      status === "succeeded" || status === "failed" || status === "timed-out",
-  ).length;
-  const successRate =
-    recordedRuns > 0
-      ? `${((successfulRuns / recordedRuns) * 100).toFixed(1)}%`
-      : "—";
-  const nextHourRunCount = jobs.filter((job) => {
-    if (!job.enabled || !job.nextRun.iso) return false;
-    const nextRunAt = new Date(job.nextRun.iso).getTime();
-    const now = source?.generatedAt
-      ? new Date(source.generatedAt).getTime()
-      : 0;
-    return nextRunAt <= now + 60 * 60 * 1000;
-  }).length;
-  const worstJob = jobs.find((job) => getCronJobStatus(job) === "failing");
+  const metrics = useMemo(
+    () => getCronJobMetrics(jobs, source?.generatedAt),
+    [jobs, source?.generatedAt],
+  );
+  const { failingJobs, ...jobMetrics } = metrics;
 
   const handleResetFilters = () => {
     setActiveFilter("all");
@@ -1345,17 +1359,6 @@ export function CronJobsPage() {
     setQuery("");
     setPage(1);
   };
-
-  const handleCloseFilter = () => {
-    setFilterOpen(false);
-    requestAnimationFrame(() => filterButtonRef.current?.focus());
-  };
-
-  useEffect(() => {
-    if (!filterOpen) return;
-
-    requestAnimationFrame(() => filterTargetRef.current?.focus());
-  }, [filterOpen]);
 
   const handleOpenCreate = () => {
     setNotice(null);
@@ -1446,513 +1449,855 @@ export function CronJobsPage() {
   return (
     <main className="min-h-[calc(100vh-3.5rem)] bg-[#f5f7f8] px-4 py-7 text-slate-900 sm:px-6 lg:px-8 dark:bg-[#0d0f11] dark:text-slate-100">
       <div className="mx-auto max-w-[1640px]">
-        <header className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-[28px] leading-none font-semibold tracking-[-0.04em] text-slate-950 dark:text-white">
-                Cron Jobs
-              </h1>
-              <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-400/25 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                <Database className="size-3.5" aria-hidden="true" />
-                {failingJobs > 0 ? `${failingJobs} ล้มเหลว` : "PostgreSQL"}
-              </span>
-            </div>
-            <p className="mt-2 text-sm text-slate-500">
-              {jobs.length} งานจาก container cron · เวลา{" "}
-              {source?.timezone ?? "Asia/Bangkok"}
-            </p>
-          </div>
+        <CronJobsHeader
+          jobsCount={jobs.length}
+          timezone={source?.timezone ?? "Asia/Bangkok"}
+          failingJobs={failingJobs}
+          environmentFilter={environmentFilter}
+          onEnvironmentFilterChange={(value) => {
+            setEnvironmentFilter(value);
+            setPage(1);
+          }}
+          onCreate={handleOpenCreate}
+        />
 
-          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
-            <div className="relative">
-              <label htmlFor="environment-filter" className="sr-only">
-                เลือกสภาพแวดล้อม
-              </label>
-              <select
-                id="environment-filter"
-                value={environmentFilter}
-                onChange={(event) => {
-                  setEnvironmentFilter(event.target.value as EnvironmentFilter);
-                  setPage(1);
-                }}
-                className="h-11 w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white px-4 pr-10 text-sm font-medium text-slate-700 shadow-sm transition-colors outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 sm:w-48 dark:border-white/[0.1] dark:bg-[#151719] dark:text-slate-200"
-              >
-                <option value="all">ทุกสภาพแวดล้อม</option>
-                <option value="production">Production</option>
-                <option value="staging">Staging</option>
-                <option value="development">Development</option>
-              </select>
-              <ChevronDown
-                className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-slate-400"
-                aria-hidden="true"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={handleOpenCreate}
-              className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-700 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
-            >
-              <Plus className="size-4" aria-hidden="true" />
-              งานใหม่
-            </button>
-          </div>
-        </header>
+        <CronJobStatusMessages
+          isLoading={isLoading}
+          isRefreshing={isRefreshing}
+          error={error}
+          onRefresh={refresh}
+          source={source}
+          notice={notice}
+          onDismissNotice={() => setNotice(null)}
+        />
 
-        {isLoading && (
-          <div
-            className="mt-5 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 dark:border-white/[0.08] dark:bg-[#151719] dark:text-slate-300"
-            role="status"
-            aria-live="polite"
-          >
-            <LoaderCircle
-              className="size-4 animate-spin text-emerald-500"
-              aria-hidden="true"
-            />
-            กำลังอ่านสถานะจากระบบ Cron จริง…
-          </div>
-        )}
-        {error && (
-          <div
-            className="mt-5 flex flex-col gap-3 rounded-xl border border-rose-400/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-800 sm:flex-row sm:items-center sm:justify-between dark:text-rose-200"
-            role="alert"
-          >
-            <span className="flex items-center gap-2">
-              <AlertTriangle className="size-4 shrink-0" aria-hidden="true" />
-              {error}
-            </span>
-            <button
-              type="button"
-              onClick={() => void refresh()}
-              disabled={isRefreshing}
-              className="inline-flex h-8 cursor-pointer items-center justify-center gap-2 rounded-lg border border-rose-400/30 px-3 text-xs font-semibold transition-colors hover:bg-rose-500/10 focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <RefreshCw
-                className={cn("size-3.5", isRefreshing && "animate-spin")}
-                aria-hidden="true"
-              />
-              ลองใหม่
-            </button>
-          </div>
-        )}
-        {source && !source.readOnly && !error && (
-          <div className="mt-5 flex items-center gap-2 rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-800 dark:text-emerald-200">
-            <Check className="size-4 shrink-0" aria-hidden="true" />
-            ตารางเวลาและ execution history อ่านจาก PostgreSQL; container cron
-            ทำหน้าที่ปลุก dispatcher ทุกนาที
-          </div>
-        )}
-        {notice && (
-          <div
-            className={cn(
-              "mt-4 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm",
-              notice.type === "success"
-                ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-800 dark:text-emerald-200"
-                : "border-rose-400/25 bg-rose-500/10 text-rose-800 dark:text-rose-200",
-            )}
-            role={notice.type === "error" ? "alert" : "status"}
-            aria-live={notice.type === "error" ? "assertive" : "polite"}
-          >
-            {notice.type === "success" ? (
-              <Check className="size-4 shrink-0" aria-hidden="true" />
-            ) : (
-              <AlertTriangle className="size-4 shrink-0" aria-hidden="true" />
-            )}
-            <span>{notice.message}</span>
-            <button
-              type="button"
-              onClick={() => setNotice(null)}
-              aria-label="ปิดข้อความแจ้งเตือน"
-              className="ml-auto flex min-h-6 min-w-6 cursor-pointer items-center justify-center rounded-md p-1 opacity-70 hover:bg-black/5 hover:opacity-100 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none dark:hover:bg-white/[0.08]"
-            >
-              <X className="size-3.5" aria-hidden="true" />
-            </button>
-          </div>
-        )}
+        <CronJobsMetrics
+          jobs={jobs}
+          statusCounts={statusCounts}
+          {...jobMetrics}
+        />
 
-        <section
-          className="mt-7 grid gap-4 md:grid-cols-2 xl:grid-cols-4"
-          aria-label="สรุปสถานะ Cron Jobs"
-        >
-          <MetricCard
-            icon={Activity}
-            label="งานที่เปิดใช้งาน"
-            value={`${activeJobs} จาก ${jobs.length}`}
-            detail="อ่านจากตาราง cron_jobs ใน PostgreSQL"
-          >
-            <StatusSegments
-              healthy={statusCounts.healthy}
-              failing={statusCounts.failing}
-              paused={statusCounts.paused}
-            />
-            <div className="mt-2 flex items-center gap-4 text-[11px] text-slate-500">
-              <span className="flex items-center gap-1.5">
-                <span className="size-1.5 rounded-full bg-emerald-500" />
-                {statusCounts.healthy} ปกติ
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="size-1.5 rounded-full bg-rose-500" />
-                {statusCounts.failing} ล้มเหลว
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="size-1.5 rounded-full bg-violet-500" />
-                {statusCounts.paused} หยุด
-              </span>
-            </div>
-          </MetricCard>
-
-          <MetricCard
-            icon={Activity}
-            label="อัตราสำเร็จ"
-            value={successRate}
-            detail={
-              recordedRuns > 0
-                ? `${successfulRuns} จาก ${recordedRuns} รอบ`
-                : "ยังไม่ได้เปิด execution history"
-            }
-          >
-            {recordedRuns > 0 && (
-              <div className="mt-1 inline-flex items-center rounded-md border border-slate-400/25 bg-slate-500/10 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:text-slate-300">
-                คำนวณจาก telemetry จริง
-              </div>
-            )}
-            <SuccessRateChart history={executionHistory} />
-          </MetricCard>
-
-          <MetricCard
-            icon={CircleX}
-            label="รอบที่ล้มเหลว"
-            value={
-              executionHistory.length > 0 ? `${failedRuns + timedOutRuns}` : "—"
-            }
-            detail={
-              executionHistory.length > 0
-                ? `จาก ${jobs.filter((job) => job.runHistory.some((status) => status === "failed" || status === "timed-out")).length} งาน`
-                : "ยังไม่มี execution history"
-            }
-          >
-            <div className="mt-4 flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-              <span className="text-xs text-slate-500">หนักสุด</span>
-              <Database className="size-4 text-slate-500" aria-hidden="true" />
-              <span className="truncate">
-                {worstJob?.name ?? "ยังไม่มีรอบที่ล้มเหลว"}
-              </span>
-              <span className="ml-auto shrink-0 text-xs text-slate-500">
-                {worstJob?.lastRun.relative ?? "—"}
-              </span>
-            </div>
-            <FailedRunsChart failed={failedRuns} timedOut={timedOutRuns} />
-          </MetricCard>
-
-          <MetricCard
-            icon={CalendarClock}
-            label="รอบถัดไป"
-            value={
-              jobs.find((job) => job.enabled && job.nextRun.iso)?.nextRun
-                .relative ?? "—"
-            }
-            detail={`${nextHourRunCount} งานในชั่วโมงถัดไป`}
-          >
-            <NextRunPreview jobs={jobs} />
-          </MetricCard>
-        </section>
-
-        <section className="mt-6 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_10px_34px_rgba(16,24,40,0.05)] dark:border-white/[0.08] dark:bg-[#151719] dark:shadow-none">
-          <div className="flex flex-col gap-4 border-b border-slate-200 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6 dark:border-white/[0.08]">
-            <div>
-              <h2 className="text-base font-semibold text-slate-900 dark:text-white">
-                งานทั้งหมด
-              </h2>
-              <p className="mt-1 text-xs text-slate-500">
-                {jobs.length} งาน · {failingJobs} ล้มเหลว
-              </p>
-            </div>
-            <button
-              type="button"
-              aria-pressed={displayMode === "compact"}
-              onClick={() =>
-                setDisplayMode((current) =>
-                  current === "compact" ? "comfortable" : "compact",
-                )
-              }
-              aria-label={`แสดงผล: ${displayMode === "compact" ? "โหมดกระชับ" : "โหมดสบาย"}`}
-              className="inline-flex h-9 cursor-pointer items-center justify-center gap-2 self-start rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none sm:self-auto dark:border-white/[0.1] dark:bg-white/[0.03] dark:text-slate-300 dark:hover:bg-white/[0.08]"
-            >
-              <SlidersHorizontal className="size-4" aria-hidden="true" />
-              แสดงผล
-            </button>
-          </div>
-
-          <div
-            className="flex gap-6 overflow-x-auto border-b border-slate-200 px-5 sm:px-6 dark:border-white/[0.08]"
-            role="group"
-            aria-label="กรองตามสถานะ"
-          >
-            {(
-              [
-                ["all", "ทั้งหมด"],
-                ["healthy", "ปกติ"],
-                ["failing", "ล้มเหลว"],
-                ["paused", "หยุดชั่วคราว"],
-              ] as const
-            ).map(([filter, label]) => {
-              const count = statusCounts[filter];
-              const isActive = activeFilter === filter;
-
-              return (
-                <button
-                  key={filter}
-                  type="button"
-                  aria-pressed={isActive}
-                  onClick={() => {
-                    setActiveFilter(filter);
-                    setPage(1);
-                  }}
-                  className={cn(
-                    "relative flex shrink-0 cursor-pointer items-center gap-2 py-3.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none",
-                    isActive
-                      ? "text-slate-900 dark:text-white"
-                      : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200",
-                  )}
-                >
-                  {label}
-                  <span
-                    className={cn(
-                      "rounded-full px-1.5 py-0.5 text-[10px]",
-                      isActive
-                        ? "bg-slate-100 text-slate-700 dark:bg-white/[0.1] dark:text-slate-200"
-                        : "bg-slate-100/70 text-slate-500 dark:bg-white/[0.06]",
-                    )}
-                  >
-                    {count}
-                  </span>
-                  {isActive && (
-                    <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-slate-900 dark:bg-white" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 dark:border-white/[0.08]">
-            <div className="relative w-full sm:max-w-[340px]">
-              <Search
-                className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-slate-400"
-                aria-hidden="true"
-              />
-              <label htmlFor="job-search" className="sr-only">
-                ค้นหางาน
-              </label>
-              <input
-                id="job-search"
-                value={query}
-                onChange={(event) => {
-                  setQuery(event.target.value);
-                  setPage(1);
-                }}
-                placeholder="ค้นหาชื่องานหรือคำสั่ง…"
-                className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pr-3 pl-10 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-slate-100 dark:placeholder:text-slate-600"
-              />
-            </div>
-            <div className="relative flex items-center gap-2 self-end sm:self-auto">
-              {filterOpen && (
-                <dialog
-                  open
-                  id="cron-filter-panel"
-                  aria-labelledby="cron-filter-title"
-                  onKeyDown={(event) => {
-                    if (event.key === "Escape") {
-                      event.preventDefault();
-                      handleCloseFilter();
-                    }
-                  }}
-                  className="absolute top-11 right-0 z-20 m-0 w-64 max-w-none rounded-xl border border-slate-200 bg-white p-4 text-inherit shadow-xl dark:border-white/[0.1] dark:bg-[#1b1e22]"
-                >
-                  <div className="flex items-center justify-between">
-                    <p
-                      id="cron-filter-title"
-                      className="text-sm font-semibold text-slate-800 dark:text-slate-100"
-                    >
-                      ตัวกรองเพิ่มเติม
-                    </p>
-                    <button
-                      type="button"
-                      onClick={handleCloseFilter}
-                      aria-label="ปิดตัวกรอง"
-                      className="cursor-pointer rounded-md p-1 text-slate-400 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none dark:hover:bg-white/[0.08]"
-                    >
-                      <X className="size-4" aria-hidden="true" />
-                    </button>
-                  </div>
-                  <label
-                    htmlFor="target-filter"
-                    className="mt-4 block text-xs font-medium text-slate-500"
-                  >
-                    เป้าหมาย
-                  </label>
-                  <div className="relative mt-1.5">
-                    <select
-                      id="target-filter"
-                      ref={filterTargetRef}
-                      value={targetFilter}
-                      onChange={(event) => {
-                        setTargetFilter(
-                          event.target.value as "all" | TargetKind,
-                        );
-                        setPage(1);
-                      }}
-                      className="h-9 w-full cursor-pointer appearance-none rounded-lg border border-slate-200 bg-slate-50 px-3 pr-8 text-sm text-slate-700 outline-none focus:border-emerald-500 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-slate-200"
-                    >
-                      {TARGET_FILTER_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown
-                      className="pointer-events-none absolute top-1/2 right-2.5 size-4 -translate-y-1/2 text-slate-400"
-                      aria-hidden="true"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleResetFilters}
-                    className="mt-3 cursor-pointer rounded-sm text-xs font-medium text-emerald-600 hover:text-emerald-700 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none dark:text-emerald-400 dark:hover:text-emerald-300"
-                  >
-                    ล้างตัวกรองทั้งหมด
-                  </button>
-                </dialog>
-              )}
-              <button
-                type="button"
-                aria-expanded={filterOpen}
-                aria-haspopup="dialog"
-                aria-controls="cron-filter-panel"
-                ref={filterButtonRef}
-                onClick={() => setFilterOpen((open) => !open)}
-                className={cn(
-                  "inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none",
-                  filterOpen || targetFilter !== "all"
-                    ? "border-emerald-400/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-white/[0.1] dark:bg-white/[0.03] dark:text-slate-300 dark:hover:bg-white/[0.08]",
-                )}
-              >
-                <ListFilter className="size-4" aria-hidden="true" />
-                ตัวกรอง
-                {targetFilter !== "all" && (
-                  <span className="size-1.5 rounded-full bg-emerald-500" />
-                )}
-              </button>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1430px] border-collapse text-left">
-              <caption className="sr-only">
-                รายการ Cron Jobs และสถานะการทำงาน
-              </caption>
-              <thead className="bg-slate-50/80 dark:bg-white/[0.02]">
-                <tr className="text-[11px] font-semibold tracking-wide text-slate-500">
-                  {[
-                    ["งาน", "min-w-[280px]"],
-                    ["ตารางเวลา", "min-w-[165px]"],
-                    ["เปิดใช้งาน", "w-24 text-center"],
-                    ["รอบล่าสุด", "min-w-[150px]"],
-                    ["20 รอบล่าสุด", "min-w-[150px]"],
-                    ["รอบถัดไป", "min-w-[130px]"],
-                    ["เป้าหมาย", "min-w-[195px]"],
-                    ["เจ้าของ", "min-w-[155px]"],
-                    ["", "w-12"],
-                  ].map(([label, className]) => (
-                    <th key={label} className={cn("px-3 py-3", className)}>
-                      <span className="inline-flex items-center gap-1.5">
-                        {label}
-                        <ArrowDownUp
-                          className="size-3 text-slate-400"
-                          aria-hidden="true"
-                        />
-                      </span>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {visibleJobs.map((job) => (
-                  <JobRow
-                    key={job.id}
-                    job={job}
-                    compact={displayMode === "compact"}
-                    onToggle={(selected) => void handleToggleJob(selected)}
-                    onMenu={setSelectedJob}
-                    toggleDisabled={isMutating}
-                  />
-                ))}
-              </tbody>
-            </table>
-            {visibleJobs.length === 0 && (
-              <EmptyJobsState
-                hasFilters={Boolean(
-                  query ||
-                  activeFilter !== "all" ||
-                  environmentFilter !== "all" ||
-                  targetFilter !== "all",
-                )}
-                isLoading={isLoading}
-              />
-            )}
-          </div>
-
-          <footer className="flex flex-col gap-4 border-t border-slate-200 px-5 py-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 dark:border-white/[0.08]">
-            <TablePageSizeSelect
-  value={pageSize}
-  options={PAGE_SIZE_OPTIONS}
-  onChange={(next) => {
-    setPageSize(next);
-    setPage(1);
-  }} 
-/>
-            <TablePagination
-  firstVisibleRow={firstVisibleRow}
-  lastVisibleRow={lastVisibleRow}
-  total={filteredJobs.length}
-  unit="งาน"
-  currentPage={currentPage}
-  pageCount={pageCount}
-  onPageChange={setPage}
-/>
-          </footer>
-        </section>
+        <CronJobsTableSection
+          jobsCount={jobs.length}
+          failingJobs={failingJobs}
+          displayMode={displayMode}
+          onDisplayModeChange={setDisplayMode}
+          statusCounts={statusCounts}
+          activeFilter={activeFilter}
+          onActiveFilterChange={(filter) => {
+            setActiveFilter(filter);
+            setPage(1);
+          }}
+          query={query}
+          onQueryChange={(value) => {
+            setQuery(value);
+            setPage(1);
+          }}
+          targetFilter={targetFilter}
+          onTargetFilterChange={(value) => {
+            setTargetFilter(value);
+            setPage(1);
+          }}
+          onResetFilters={handleResetFilters}
+          visibleJobs={visibleJobs}
+          onToggleJob={(job) => void handleToggleJob(job)}
+          onSelectJob={setSelectedJob}
+          isMutating={isMutating}
+          hasFilters={Boolean(
+            query ||
+            activeFilter !== "all" ||
+            environmentFilter !== "all" ||
+            targetFilter !== "all",
+          )}
+          isLoading={isLoading}
+          pageSize={pageSize}
+          onPageSizeChange={(next) => {
+            setPageSize(next);
+            setPage(1);
+          }}
+          firstVisibleRow={firstVisibleRow}
+          lastVisibleRow={lastVisibleRow}
+          total={filteredJobs.length}
+          currentPage={currentPage}
+          pageCount={pageCount}
+          onPageChange={setPage}
+        />
       </div>
-      <CronJobFormDialog
-        key={`form-${formOpen ? (editingJob?.id ?? "new") : "closed"}`}
-        open={formOpen}
-        job={editingJob}
-        isSaving={isMutating}
-        onClose={() => {
+      <CronJobDialogLayer
+        formOpen={formOpen}
+        editingJob={editingJob}
+        selectedJob={selectedJob}
+        isMutating={isMutating}
+        onCloseForm={() => {
           if (!isMutating) {
             setFormOpen(false);
             setEditingJob(null);
           }
         }}
-        onSubmit={handleSaveJob}
+        onSave={handleSaveJob}
+        onCloseActions={() => setSelectedJob(null)}
+        onEditActions={() => {
+          if (selectedJob) handleOpenEdit(selectedJob);
+        }}
+        onRunAction={() =>
+          selectedJob ? handleRunJob(selectedJob) : Promise.resolve()
+        }
+        onToggleAction={() =>
+          selectedJob ? handleToggleJob(selectedJob) : Promise.resolve()
+        }
+        onDeleteAction={() =>
+          selectedJob ? handleDeleteJob(selectedJob) : Promise.resolve()
+        }
+      />
+    </main>
+  );
+}
+
+interface CronJobsHeaderProps {
+  jobsCount: number;
+  timezone: string;
+  failingJobs: number;
+  environmentFilter: EnvironmentFilter;
+  onEnvironmentFilterChange: (value: EnvironmentFilter) => void;
+  onCreate: () => void;
+}
+
+function CronJobsHeader({
+  jobsCount,
+  timezone,
+  failingJobs,
+  environmentFilter,
+  onEnvironmentFilterChange,
+  onCreate,
+}: CronJobsHeaderProps) {
+  return (
+    <header className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+      <div>
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-[28px] leading-none font-semibold tracking-[-0.04em] text-slate-950 dark:text-white">
+            Cron Jobs
+          </h1>
+          <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-400/25 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+            <Database className="size-3.5" aria-hidden="true" />
+            {failingJobs > 0 ? `${failingJobs} ล้มเหลว` : "PostgreSQL"}
+          </span>
+        </div>
+        <p className="mt-2 text-sm text-slate-500">
+          {jobsCount} งานจาก container cron · เวลา {timezone}
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
+        <div className="relative">
+          <label htmlFor="environment-filter" className="sr-only">
+            เลือกสภาพแวดล้อม
+          </label>
+          <select
+            id="environment-filter"
+            value={environmentFilter}
+            onChange={(event) =>
+              onEnvironmentFilterChange(event.target.value as EnvironmentFilter)
+            }
+            className="h-11 w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white px-4 pr-10 text-sm font-medium text-slate-700 shadow-sm transition-colors outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 sm:w-48 dark:border-white/[0.1] dark:bg-[#151719] dark:text-slate-200"
+          >
+            <option value="all">ทุกสภาพแวดล้อม</option>
+            <option value="production">Production</option>
+            <option value="staging">Staging</option>
+            <option value="development">Development</option>
+          </select>
+          <ChevronDown
+            className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-slate-400"
+            aria-hidden="true"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={onCreate}
+          className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-700 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+        >
+          <Plus className="size-4" aria-hidden="true" />
+          งานใหม่
+        </button>
+      </div>
+    </header>
+  );
+}
+
+interface CronJobStatusMessagesProps {
+  isLoading: boolean;
+  isRefreshing: boolean;
+  error: string | null;
+  onRefresh: () => Promise<void>;
+  source: CronJobsSource;
+  notice: CronJobNotice | null;
+  onDismissNotice: () => void;
+}
+
+function CronJobStatusMessages({
+  isLoading,
+  isRefreshing,
+  error,
+  onRefresh,
+  source,
+  notice,
+  onDismissNotice,
+}: CronJobStatusMessagesProps) {
+  return (
+    <>
+      {isLoading && (
+        <div
+          className="mt-5 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 dark:border-white/[0.08] dark:bg-[#151719] dark:text-slate-300"
+          role="status"
+          aria-live="polite"
+        >
+          <LoaderCircle
+            className="size-4 animate-spin text-emerald-500"
+            aria-hidden="true"
+          />
+          กำลังอ่านสถานะจากระบบ Cron จริง…
+        </div>
+      )}
+      {error && (
+        <div
+          className="mt-5 flex flex-col gap-3 rounded-xl border border-rose-400/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-800 sm:flex-row sm:items-center sm:justify-between dark:text-rose-200"
+          role="alert"
+        >
+          <span className="flex items-center gap-2">
+            <AlertTriangle className="size-4 shrink-0" aria-hidden="true" />
+            {error}
+          </span>
+          <button
+            type="button"
+            onClick={() => void onRefresh()}
+            disabled={isRefreshing}
+            className="inline-flex h-8 cursor-pointer items-center justify-center gap-2 rounded-lg border border-rose-400/30 px-3 text-xs font-semibold transition-colors hover:bg-rose-500/10 focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <RefreshCw
+              className={cn("size-3.5", isRefreshing && "animate-spin")}
+              aria-hidden="true"
+            />
+            ลองใหม่
+          </button>
+        </div>
+      )}
+      {source && !source.readOnly && !error && (
+        <div className="mt-5 flex items-center gap-2 rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-800 dark:text-emerald-200">
+          <Check className="size-4 shrink-0" aria-hidden="true" />
+          ตารางเวลาและ execution history อ่านจาก PostgreSQL; container cron
+          ทำหน้าที่ปลุก dispatcher ทุกนาที
+        </div>
+      )}
+      {notice && (
+        <div
+          className={cn(
+            "mt-4 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm",
+            notice.type === "success"
+              ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-800 dark:text-emerald-200"
+              : "border-rose-400/25 bg-rose-500/10 text-rose-800 dark:text-rose-200",
+          )}
+          role={notice.type === "error" ? "alert" : "status"}
+          aria-live={notice.type === "error" ? "assertive" : "polite"}
+        >
+          {notice.type === "success" ? (
+            <Check className="size-4 shrink-0" aria-hidden="true" />
+          ) : (
+            <AlertTriangle className="size-4 shrink-0" aria-hidden="true" />
+          )}
+          <span>{notice.message}</span>
+          <button
+            type="button"
+            onClick={onDismissNotice}
+            aria-label="ปิดข้อความแจ้งเตือน"
+            className="ml-auto flex min-h-6 min-w-6 cursor-pointer items-center justify-center rounded-md p-1 opacity-70 hover:bg-black/5 hover:opacity-100 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none dark:hover:bg-white/[0.08]"
+          >
+            <X className="size-3.5" aria-hidden="true" />
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
+interface CronJobsMetricsProps {
+  jobs: CronJob[];
+  statusCounts: CronJobStatusCounts;
+  activeJobs: number;
+  successRate: string;
+  recordedRuns: number;
+  successfulRuns: number;
+  executionHistory: RunStatus[];
+  failedRuns: number;
+  timedOutRuns: number;
+  worstJob: CronJob | undefined;
+  nextHourRunCount: number;
+}
+
+function CronJobsMetrics({
+  jobs,
+  statusCounts,
+  activeJobs,
+  successRate,
+  recordedRuns,
+  successfulRuns,
+  executionHistory,
+  failedRuns,
+  timedOutRuns,
+  worstJob,
+  nextHourRunCount,
+}: CronJobsMetricsProps) {
+  return (
+    <section
+      className="mt-7 grid gap-4 md:grid-cols-2 xl:grid-cols-4"
+      aria-label="สรุปสถานะ Cron Jobs"
+    >
+      <MetricCard
+        icon={Activity}
+        label="งานที่เปิดใช้งาน"
+        value={`${activeJobs} จาก ${jobs.length}`}
+        detail="อ่านจากตาราง cron_jobs ใน PostgreSQL"
+      >
+        <StatusSegments
+          healthy={statusCounts.healthy}
+          failing={statusCounts.failing}
+          paused={statusCounts.paused}
+        />
+        <div className="mt-2 flex items-center gap-4 text-[11px] text-slate-500">
+          <span className="flex items-center gap-1.5">
+            <span className="size-1.5 rounded-full bg-emerald-500" />
+            {statusCounts.healthy} ปกติ
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="size-1.5 rounded-full bg-rose-500" />
+            {statusCounts.failing} ล้มเหลว
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="size-1.5 rounded-full bg-violet-500" />
+            {statusCounts.paused} หยุด
+          </span>
+        </div>
+      </MetricCard>
+
+      <MetricCard
+        icon={Activity}
+        label="อัตราสำเร็จ"
+        value={successRate}
+        detail={
+          recordedRuns > 0
+            ? `${successfulRuns} จาก ${recordedRuns} รอบ`
+            : "ยังไม่ได้เปิด execution history"
+        }
+      >
+        {recordedRuns > 0 && (
+          <div className="mt-1 inline-flex items-center rounded-md border border-slate-400/25 bg-slate-500/10 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:text-slate-300">
+            คำนวณจาก telemetry จริง
+          </div>
+        )}
+        <SuccessRateChart history={executionHistory} />
+      </MetricCard>
+
+      <MetricCard
+        icon={CircleX}
+        label="รอบที่ล้มเหลว"
+        value={
+          executionHistory.length > 0 ? `${failedRuns + timedOutRuns}` : "—"
+        }
+        detail={
+          executionHistory.length > 0
+            ? `จาก ${jobs.filter((job) => job.runHistory.some((status) => status === "failed" || status === "timed-out")).length} งาน`
+            : "ยังไม่มี execution history"
+        }
+      >
+        <div className="mt-4 flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+          <span className="text-xs text-slate-500">หนักสุด</span>
+          <Database className="size-4 text-slate-500" aria-hidden="true" />
+          <span className="truncate">
+            {worstJob?.name ?? "ยังไม่มีรอบที่ล้มเหลว"}
+          </span>
+          <span className="ml-auto shrink-0 text-xs text-slate-500">
+            {worstJob?.lastRun.relative ?? "—"}
+          </span>
+        </div>
+        <FailedRunsChart failed={failedRuns} timedOut={timedOutRuns} />
+      </MetricCard>
+
+      <MetricCard
+        icon={CalendarClock}
+        label="รอบถัดไป"
+        value={
+          jobs.find((job) => job.enabled && job.nextRun.iso)?.nextRun
+            .relative ?? "—"
+        }
+        detail={`${nextHourRunCount} งานในชั่วโมงถัดไป`}
+      >
+        <NextRunPreview jobs={jobs} />
+      </MetricCard>
+    </section>
+  );
+}
+
+interface CronJobsTableSectionProps {
+  jobsCount: number;
+  failingJobs: number;
+  displayMode: DisplayMode;
+  onDisplayModeChange: (mode: DisplayMode) => void;
+  statusCounts: CronJobStatusCounts;
+  activeFilter: JobFilter;
+  onActiveFilterChange: (filter: JobFilter) => void;
+  query: string;
+  onQueryChange: (value: string) => void;
+  targetFilter: "all" | TargetKind;
+  onTargetFilterChange: (value: "all" | TargetKind) => void;
+  onResetFilters: () => void;
+  visibleJobs: CronJob[];
+  onToggleJob: (job: CronJob) => void;
+  onSelectJob: (job: CronJob) => void;
+  isMutating: boolean;
+  hasFilters: boolean;
+  isLoading: boolean;
+  pageSize: number;
+  onPageSizeChange: (pageSize: number) => void;
+  firstVisibleRow: number;
+  lastVisibleRow: number;
+  total: number;
+  currentPage: number;
+  pageCount: number;
+  onPageChange: (page: number) => void;
+}
+
+function CronJobsTableSection(props: CronJobsTableSectionProps) {
+  return (
+    <section className="mt-6 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_10px_34px_rgba(16,24,40,0.05)] dark:border-white/[0.08] dark:bg-[#151719] dark:shadow-none">
+      <CronJobsTableHeading
+        jobsCount={props.jobsCount}
+        failingJobs={props.failingJobs}
+        displayMode={props.displayMode}
+        onDisplayModeChange={props.onDisplayModeChange}
+      />
+      <CronJobsTableFilters
+        statusCounts={props.statusCounts}
+        activeFilter={props.activeFilter}
+        onActiveFilterChange={props.onActiveFilterChange}
+        query={props.query}
+        onQueryChange={props.onQueryChange}
+        targetFilter={props.targetFilter}
+        onTargetFilterChange={props.onTargetFilterChange}
+        onResetFilters={props.onResetFilters}
+      />
+      <CronJobsTableRows
+        visibleJobs={props.visibleJobs}
+        displayMode={props.displayMode}
+        onToggleJob={props.onToggleJob}
+        onSelectJob={props.onSelectJob}
+        isMutating={props.isMutating}
+        hasFilters={props.hasFilters}
+        isLoading={props.isLoading}
+      />
+      <CronJobsTableFooter
+        pageSize={props.pageSize}
+        onPageSizeChange={props.onPageSizeChange}
+        firstVisibleRow={props.firstVisibleRow}
+        lastVisibleRow={props.lastVisibleRow}
+        total={props.total}
+        currentPage={props.currentPage}
+        pageCount={props.pageCount}
+        onPageChange={props.onPageChange}
+      />
+    </section>
+  );
+}
+
+interface CronJobsTableHeadingProps {
+  jobsCount: number;
+  failingJobs: number;
+  displayMode: DisplayMode;
+  onDisplayModeChange: (mode: DisplayMode) => void;
+}
+
+function CronJobsTableHeading({
+  jobsCount,
+  failingJobs,
+  displayMode,
+  onDisplayModeChange,
+}: CronJobsTableHeadingProps) {
+  return (
+    <div className="flex flex-col gap-4 border-b border-slate-200 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6 dark:border-white/[0.08]">
+      <div>
+        <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+          งานทั้งหมด
+        </h2>
+        <p className="mt-1 text-xs text-slate-500">
+          {jobsCount} งาน · {failingJobs} ล้มเหลว
+        </p>
+      </div>
+      <button
+        type="button"
+        aria-pressed={displayMode === "compact"}
+        onClick={() =>
+          onDisplayModeChange(
+            displayMode === "compact" ? "comfortable" : "compact",
+          )
+        }
+        aria-label={`แสดงผล: ${displayMode === "compact" ? "โหมดกระชับ" : "โหมดสบาย"}`}
+        className="inline-flex h-9 cursor-pointer items-center justify-center gap-2 self-start rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none sm:self-auto dark:border-white/[0.1] dark:bg-white/[0.03] dark:text-slate-300 dark:hover:bg-white/[0.08]"
+      >
+        <SlidersHorizontal className="size-4" aria-hidden="true" />
+        แสดงผล
+      </button>
+    </div>
+  );
+}
+
+interface CronJobsTableFiltersProps {
+  statusCounts: CronJobStatusCounts;
+  activeFilter: JobFilter;
+  onActiveFilterChange: (filter: JobFilter) => void;
+  query: string;
+  onQueryChange: (value: string) => void;
+  targetFilter: "all" | TargetKind;
+  onTargetFilterChange: (value: "all" | TargetKind) => void;
+  onResetFilters: () => void;
+}
+
+function CronJobsTableFilters({
+  statusCounts,
+  activeFilter,
+  onActiveFilterChange,
+  query,
+  onQueryChange,
+  targetFilter,
+  onTargetFilterChange,
+  onResetFilters,
+}: CronJobsTableFiltersProps) {
+  const [filterOpen, setFilterOpen] = useState(false);
+  const filterButtonRef = useRef<HTMLButtonElement>(null);
+  const filterTargetRef = useRef<HTMLSelectElement>(null);
+
+  const handleCloseFilter = () => {
+    setFilterOpen(false);
+    requestAnimationFrame(() => filterButtonRef.current?.focus());
+  };
+
+  useEffect(() => {
+    if (!filterOpen) return;
+    requestAnimationFrame(() => filterTargetRef.current?.focus());
+  }, [filterOpen]);
+
+  return (
+    <>
+      <div
+        className="flex gap-6 overflow-x-auto border-b border-slate-200 px-5 sm:px-6 dark:border-white/[0.08]"
+        role="group"
+        aria-label="กรองตามสถานะ"
+      >
+        {(
+          [
+            ["all", "ทั้งหมด"],
+            ["healthy", "ปกติ"],
+            ["failing", "ล้มเหลว"],
+            ["paused", "หยุดชั่วคราว"],
+          ] as const
+        ).map(([filter, label]) => {
+          const count = statusCounts[filter];
+          const isActive = activeFilter === filter;
+          return (
+            <button
+              key={filter}
+              type="button"
+              aria-pressed={isActive}
+              onClick={() => onActiveFilterChange(filter)}
+              className={cn(
+                "relative flex shrink-0 cursor-pointer items-center gap-2 py-3.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none",
+                isActive
+                  ? "text-slate-900 dark:text-white"
+                  : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200",
+              )}
+            >
+              {label}
+              <span
+                className={cn(
+                  "rounded-full px-1.5 py-0.5 text-[10px]",
+                  isActive
+                    ? "bg-slate-100 text-slate-700 dark:bg-white/[0.1] dark:text-slate-200"
+                    : "bg-slate-100/70 text-slate-500 dark:bg-white/[0.06]",
+                )}
+              >
+                {count}
+              </span>
+              {isActive && (
+                <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-slate-900 dark:bg-white" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 dark:border-white/[0.08]">
+        <div className="relative w-full sm:max-w-[340px]">
+          <Search
+            className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-slate-400"
+            aria-hidden="true"
+          />
+          <label htmlFor="job-search" className="sr-only">
+            ค้นหางาน
+          </label>
+          <input
+            id="job-search"
+            value={query}
+            onChange={(event) => onQueryChange(event.target.value)}
+            placeholder="ค้นหาชื่องานหรือคำสั่ง…"
+            className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pr-3 pl-10 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-slate-100 dark:placeholder:text-slate-600"
+          />
+        </div>
+        <div className="relative flex items-center gap-2 self-end sm:self-auto">
+          {filterOpen && (
+            <dialog
+              open
+              id="cron-filter-panel"
+              aria-labelledby="cron-filter-title"
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  event.preventDefault();
+                  handleCloseFilter();
+                }
+              }}
+              className="absolute top-11 right-0 z-20 m-0 w-64 max-w-none rounded-xl border border-slate-200 bg-white p-4 text-inherit shadow-xl dark:border-white/[0.1] dark:bg-[#1b1e22]"
+            >
+              <div className="flex items-center justify-between">
+                <p
+                  id="cron-filter-title"
+                  className="text-sm font-semibold text-slate-800 dark:text-slate-100"
+                >
+                  ตัวกรองเพิ่มเติม
+                </p>
+                <button
+                  type="button"
+                  onClick={handleCloseFilter}
+                  aria-label="ปิดตัวกรอง"
+                  className="cursor-pointer rounded-md p-1 text-slate-400 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none dark:hover:bg-white/[0.08]"
+                >
+                  <X className="size-4" aria-hidden="true" />
+                </button>
+              </div>
+              <label
+                htmlFor="target-filter"
+                className="mt-4 block text-xs font-medium text-slate-500"
+              >
+                เป้าหมาย
+              </label>
+              <div className="relative mt-1.5">
+                <select
+                  id="target-filter"
+                  ref={filterTargetRef}
+                  value={targetFilter}
+                  onChange={(event) =>
+                    onTargetFilterChange(
+                      event.target.value as "all" | TargetKind,
+                    )
+                  }
+                  className="h-9 w-full cursor-pointer appearance-none rounded-lg border border-slate-200 bg-slate-50 px-3 pr-8 text-sm text-slate-700 outline-none focus:border-emerald-500 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-slate-200"
+                >
+                  {TARGET_FILTER_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  className="pointer-events-none absolute top-1/2 right-2.5 size-4 -translate-y-1/2 text-slate-400"
+                  aria-hidden="true"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={onResetFilters}
+                className="mt-3 cursor-pointer rounded-sm text-xs font-medium text-emerald-600 hover:text-emerald-700 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none dark:text-emerald-400 dark:hover:text-emerald-300"
+              >
+                ล้างตัวกรองทั้งหมด
+              </button>
+            </dialog>
+          )}
+          <button
+            type="button"
+            aria-expanded={filterOpen}
+            aria-haspopup="dialog"
+            aria-controls="cron-filter-panel"
+            ref={filterButtonRef}
+            onClick={() => setFilterOpen((open) => !open)}
+            className={cn(
+              "inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none",
+              filterOpen || targetFilter !== "all"
+                ? "border-emerald-400/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-white/[0.1] dark:bg-white/[0.03] dark:text-slate-300 dark:hover:bg-white/[0.08]",
+            )}
+          >
+            <ListFilter className="size-4" aria-hidden="true" />
+            ตัวกรอง
+            {targetFilter !== "all" && (
+              <span className="size-1.5 rounded-full bg-emerald-500" />
+            )}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+interface CronJobsTableRowsProps {
+  visibleJobs: CronJob[];
+  displayMode: DisplayMode;
+  onToggleJob: (job: CronJob) => void;
+  onSelectJob: (job: CronJob) => void;
+  isMutating: boolean;
+  hasFilters: boolean;
+  isLoading: boolean;
+}
+
+function CronJobsTableRows({
+  visibleJobs,
+  displayMode,
+  onToggleJob,
+  onSelectJob,
+  isMutating,
+  hasFilters,
+  isLoading,
+}: CronJobsTableRowsProps) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[1430px] border-collapse text-left">
+        <caption className="sr-only">รายการ Cron Jobs และสถานะการทำงาน</caption>
+        <thead className="bg-slate-50/80 dark:bg-white/[0.02]">
+          <tr className="text-[11px] font-semibold tracking-wide text-slate-500">
+            {[
+              ["งาน", "min-w-[280px]"],
+              ["ตารางเวลา", "min-w-[165px]"],
+              ["เปิดใช้งาน", "w-24 text-center"],
+              ["รอบล่าสุด", "min-w-[150px]"],
+              ["20 รอบล่าสุด", "min-w-[150px]"],
+              ["รอบถัดไป", "min-w-[130px]"],
+              ["เป้าหมาย", "min-w-[195px]"],
+              ["เจ้าของ", "min-w-[155px]"],
+              ["", "w-12"],
+            ].map(([label, className]) => (
+              <th key={label} className={cn("px-3 py-3", className)}>
+                <span className="inline-flex items-center gap-1.5">
+                  {label}
+                  <ArrowDownUp
+                    className="size-3 text-slate-400"
+                    aria-hidden="true"
+                  />
+                </span>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {visibleJobs.map((job) => (
+            <JobRow
+              key={job.id}
+              job={job}
+              compact={displayMode === "compact"}
+              onToggle={onToggleJob}
+              onMenu={onSelectJob}
+              toggleDisabled={isMutating}
+            />
+          ))}
+        </tbody>
+      </table>
+      {visibleJobs.length === 0 && (
+        <EmptyJobsState hasFilters={hasFilters} isLoading={isLoading} />
+      )}
+    </div>
+  );
+}
+
+interface CronJobsTableFooterProps {
+  pageSize: number;
+  onPageSizeChange: (pageSize: number) => void;
+  firstVisibleRow: number;
+  lastVisibleRow: number;
+  total: number;
+  currentPage: number;
+  pageCount: number;
+  onPageChange: (page: number) => void;
+}
+
+function CronJobsTableFooter({
+  pageSize,
+  onPageSizeChange,
+  firstVisibleRow,
+  lastVisibleRow,
+  total,
+  currentPage,
+  pageCount,
+  onPageChange,
+}: CronJobsTableFooterProps) {
+  return (
+    <footer className="flex flex-col gap-4 border-t border-slate-200 px-5 py-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 dark:border-white/[0.08]">
+      <TablePageSizeSelect
+        value={pageSize}
+        options={PAGE_SIZE_OPTIONS}
+        onChange={onPageSizeChange}
+      />
+      <TablePagination
+        firstVisibleRow={firstVisibleRow}
+        lastVisibleRow={lastVisibleRow}
+        total={total}
+        unit="งาน"
+        currentPage={currentPage}
+        pageCount={pageCount}
+        onPageChange={onPageChange}
+      />
+    </footer>
+  );
+}
+
+interface CronJobDialogLayerProps {
+  formOpen: boolean;
+  editingJob: CronJob | null;
+  selectedJob: CronJob | null;
+  isMutating: boolean;
+  onCloseForm: () => void;
+  onSave: (input: CronJobMutationInput) => Promise<void>;
+  onCloseActions: () => void;
+  onEditActions: () => void;
+  onRunAction: () => Promise<void>;
+  onToggleAction: () => Promise<void>;
+  onDeleteAction: () => Promise<void>;
+}
+
+function CronJobDialogLayer({
+  formOpen,
+  editingJob,
+  selectedJob,
+  isMutating,
+  onCloseForm,
+  onSave,
+  onCloseActions,
+  onEditActions,
+  onRunAction,
+  onToggleAction,
+  onDeleteAction,
+}: CronJobDialogLayerProps) {
+  return (
+    <>
+      <CronJobFormDialog
+        key={`form-${formOpen ? (editingJob?.id ?? "new") : "closed"}`}
+        open={formOpen}
+        job={editingJob}
+        isSaving={isMutating}
+        onClose={onCloseForm}
+        onSubmit={onSave}
       />
       <CronJobActionsDialog
         key={`actions-${selectedJob?.id ?? "closed"}`}
         job={selectedJob}
         isBusy={isMutating}
-        onClose={() => setSelectedJob(null)}
-        onEdit={() => {
-          if (selectedJob) handleOpenEdit(selectedJob);
-        }}
-        onRun={() =>
-          selectedJob ? handleRunJob(selectedJob) : Promise.resolve()
-        }
-        onToggle={() =>
-          selectedJob ? handleToggleJob(selectedJob) : Promise.resolve()
-        }
-        onDelete={() =>
-          selectedJob ? handleDeleteJob(selectedJob) : Promise.resolve()
-        }
+        onClose={onCloseActions}
+        onEdit={onEditActions}
+        onRun={onRunAction}
+        onToggle={onToggleAction}
+        onDelete={onDeleteAction}
       />
-    </main>
+    </>
   );
 }

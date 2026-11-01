@@ -1,19 +1,17 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format, isValid, parse as parseDateString } from "date-fns";
-import {
-  X,
-  Clock,
-  Home,
-  MapPin,
-  CalendarPlus,
-  Calendar as CalendarIcon,
-} from "lucide-react";
+import { X, Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PopoverDatePicker } from "@/components/ui/date-picker";
-import { Select } from "@/components/ui/select";
+import {
+  DayEventHolidayPanel,
+  DayEventLeavePanel,
+  DayEventOnsitePanel,
+  DayEventWfhPanel,
+} from "@/features/calendar/components/day-event-modal-panels";
+import { DayEventModalTabs } from "@/features/calendar/components/day-event-modal-tabs";
 import { useDialogExit } from "@/features/calendar/hooks/useDialogExit";
 import {
   dayEventFormSchema,
@@ -21,31 +19,17 @@ import {
   type DayEventSubmit,
   type DayEventType,
 } from "@/features/calendar/lib/day-event-form";
+import {
+  buildDayEventPayload,
+  formatDateToStr,
+  parseDateStr,
+} from "@/features/calendar/lib/day-event-modal";
 import { cn } from "@/lib/utils";
 
 export type {
   DayEventSubmit,
   DayEventType,
 } from "@/features/calendar/lib/day-event-form";
-
-interface DayEventModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: DayEventSubmit) => void;
-  selectedDate?: string;
-  initialType?: DayEventType;
-}
-
-const EVENT_TYPES: {
-  value: DayEventType;
-  label: string;
-  icon: typeof Clock;
-}[] = [
-  { value: "leave", label: "ลางาน", icon: Clock },
-  { value: "wfh", label: "WFH", icon: Home },
-  { value: "onsite", label: "On Site", icon: MapPin },
-  { value: "holiday", label: "วันหยุด", icon: CalendarPlus },
-];
 
 const TITLES: Record<DayEventType, string> = {
   leave: "แจ้งลางาน",
@@ -62,27 +46,12 @@ const HELP_TEXTS: Record<DayEventType, string> = {
   holiday: "วันหยุดจะแสดงในปฏิทินของทุกคน",
 };
 
-const LEAVE_TYPE_OPTIONS = [
-  { value: "personal", label: "ลากิจ" },
-  { value: "sick", label: "ลาป่วย" },
-  { value: "vacation", label: "ลาพักผ่อน" },
-];
-
-const HOLIDAY_TYPE_OPTIONS = [
-  { value: "national", label: "วันหยุดราชการ" },
-  { value: "royal", label: "วันหยุดเกี่ยวกับราชวงศ์" },
-  { value: "religious", label: "วันหยุดศาสนาจาร" },
-  { value: "special", label: "วันหยุดพิเศษ" },
-];
-
-function parseDateStr(str: string): Date | undefined {
-  if (!str) return undefined;
-  const parsed = parseDateString(str, "yyyy-MM-dd", new Date());
-  return isValid(parsed) ? parsed : undefined;
-}
-
-function formatDateToStr(date: Date): string {
-  return format(date, "yyyy-MM-dd");
+interface DayEventModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (data: DayEventSubmit) => void;
+  selectedDate?: string;
+  initialType?: DayEventType;
 }
 
 export function DayEventModal({
@@ -195,37 +164,7 @@ export function DayEventModal({
     if (!values.date) return;
 
     const dateStr = formatDateToStr(values.date);
-    let payload: DayEventSubmit;
-    if (values.eventType === "leave") {
-      payload = {
-        kind: "leave",
-        date: dateStr,
-        leaveType: values.leaveType,
-        reason: values.reason || undefined,
-      };
-    } else if (values.eventType === "wfh") {
-      payload = {
-        kind: "wfh",
-        date: dateStr,
-        note: values.noteWfh || undefined,
-      };
-    } else if (values.eventType === "onsite") {
-      payload = {
-        kind: "onsite",
-        date: dateStr,
-        note: values.noteOnsite || undefined,
-      };
-    } else {
-      payload = {
-        kind: "holiday",
-        date: dateStr,
-        nameThai: values.nameThai.trim(),
-        nameEnglish: values.nameEnglish.trim(),
-        holidayType: values.holidayType,
-        year: Number(values.year),
-        description: values.description || undefined,
-      };
-    }
+    const payload = buildDayEventPayload(values, dateStr);
 
     try {
       await onSubmit(payload);
@@ -240,14 +179,6 @@ export function DayEventModal({
   });
 
   if (!isOpen) return null;
-
-  const inputClass = cn(
-    "w-full rounded-md border px-3 py-2",
-    "border-input bg-background text-foreground",
-    // focus = เปลี่ยนสีขอบเป็นสี ring เท่านั้น ไม่ใส่ ring เพื่อไม่ให้ขอบดูหนาทึบ
-    // (input/textarea เป็น text-entry — :focus-visible match ตั้งแต่คลิกเมาส์ ใช้แยกเมาส์/คีย์บอร์ดไม่ได้)
-    "focus:border-ring focus:outline-none",
-  );
 
   return (
     <dialog
@@ -283,42 +214,13 @@ export function DayEventModal({
           </Button>
         </div>
 
-        {/* Type Switcher — pill เลื่อนตามแท็บ (transitions.dev tabs sliding) */}
-        <Controller
+        <DayEventModalTabs
           control={control}
-          name="eventType"
-          render={({ field }) => (
-            <div
-              ref={tabsBarRef}
-              className="t-tabs mb-4"
-              role="tablist"
-              aria-label="เลือกประเภทกิจกรรม"
-            >
-              <span ref={pillRef} className="t-tabs-pill" aria-hidden="true" />
-              {EVENT_TYPES.map((type) => {
-                const Icon = type.icon;
-                const isActive = field.value === type.value;
-                return (
-                  <button
-                    key={type.value}
-                    type="button"
-                    role="tab"
-                    aria-selected={isActive}
-                    onClick={(e) => {
-                      field.onChange(type.value);
-                      clearErrors(["year", "nameThai", "nameEnglish"]);
-                      movePillTo(e.currentTarget, true);
-                      snapPanelHeight(type.value);
-                    }}
-                    className="t-tab"
-                  >
-                    <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                    {type.label}
-                  </button>
-                );
-              })}
-            </div>
-          )}
+          clearErrors={clearErrors}
+          movePillTo={movePillTo}
+          snapPanelHeight={snapPanelHeight}
+          tabsBarRef={tabsBarRef}
+          pillRef={pillRef}
         />
 
         {/* noValidate — validate ด้วย zod ผ่าน RHF resolver แทน native constraint validation
@@ -357,226 +259,26 @@ export function DayEventModal({
 
           {/* Panel content — ทุกแท็บ mounted ค้างไว้ สลับแบบ crossfade + animate ความสูง */}
           <div ref={panelsRef} className="t-tabs-panels">
-            <div
-              className="t-tabs-panel space-y-4"
-              data-type="leave"
-              data-active={eventType === "leave"}
-              inert={eventType !== "leave"}
-            >
-              {/* Leave Type */}
-              <div>
-                <label
-                  htmlFor="day-event-leave-type"
-                  className="mb-1 block text-sm font-medium"
-                >
-                  ประเภทวันลา <span className="text-destructive">*</span>
-                </label>
-                <Controller
-                  control={control}
-                  name="leaveType"
-                  render={({ field }) => (
-                    <Select
-                      id="day-event-leave-type"
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      options={LEAVE_TYPE_OPTIONS}
-                    />
-                  )}
-                />
-              </div>
+            <DayEventLeavePanel
+              control={control}
+              register={register}
+              active={eventType === "leave"}
+            />
 
-              {/* Reason */}
-              <div>
-                <label
-                  htmlFor="day-event-leave-reason"
-                  className="mb-1 block text-sm font-medium"
-                >
-                  เหตุผล (ถ้ามี)
-                </label>
-                <textarea
-                  id="day-event-leave-reason"
-                  placeholder="ระบุเหตุผลการลางาน..."
-                  rows={3}
-                  {...register("reason")}
-                  className={cn(inputClass, "min-h-24 resize-none")}
-                />
-              </div>
-            </div>
+            <DayEventWfhPanel register={register} active={eventType === "wfh"} />
 
-            <div
-              className="t-tabs-panel"
-              data-type="wfh"
-              data-active={eventType === "wfh"}
-              inert={eventType !== "wfh"}
-            >
-              <label
-                htmlFor="day-event-note-wfh"
-                className="mb-1 block text-sm font-medium"
-              >
-                หมายเหตุ (ถ้ามี)
-              </label>
-              <textarea
-                id="day-event-note-wfh"
-                placeholder="ระบุหมายเหตุ เช่น ทำงานจากบ้าน..."
-                rows={2}
-                {...register("noteWfh")}
-                className={cn(inputClass, "min-h-20 resize-none")}
-              />
-            </div>
+            <DayEventOnsitePanel
+              register={register}
+              active={eventType === "onsite"}
+            />
 
-            <div
-              className="t-tabs-panel"
-              data-type="onsite"
-              data-active={eventType === "onsite"}
-              inert={eventType !== "onsite"}
-            >
-              <label
-                htmlFor="day-event-note-onsite"
-                className="mb-1 block text-sm font-medium"
-              >
-                หมายเหตุ (ถ้ามี)
-              </label>
-              <textarea
-                id="day-event-note-onsite"
-                placeholder="ระบุหมายเหตุ เช่น ทำงานที่ออฟฟิศ/ไซต์ลูกค้า..."
-                rows={2}
-                {...register("noteOnsite")}
-                className={cn(inputClass, "min-h-20 resize-none")}
-              />
-            </div>
-
-            <div
-              className="t-tabs-panel space-y-4"
-              data-type="holiday"
-              data-active={eventType === "holiday"}
-              inert={eventType !== "holiday"}
-            >
-              {/* Year */}
-              <div>
-                <label
-                  htmlFor="day-event-holiday-year"
-                  className="mb-1 block text-sm font-medium"
-                >
-                  ปี ค.ศ. <span className="text-destructive">*</span>
-                </label>
-                <input
-                  id="day-event-holiday-year"
-                  type="number"
-                  inputMode="numeric"
-                  aria-invalid={Boolean(errors.year)}
-                  aria-describedby={
-                    errors.year ? "day-event-holiday-year-error" : undefined
-                  }
-                  className={cn(
-                    inputClass,
-                    "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
-                  )}
-                  {...register("year")}
-                />
-                {errors.year && (
-                  <p
-                    id="day-event-holiday-year-error"
-                    role="alert"
-                    className="text-destructive mt-1 text-xs"
-                  >
-                    {errors.year.message}
-                  </p>
-                )}
-                <p className="text-muted-foreground mt-1 text-xs">
-                  ปี พ.ศ.{" "}
-                  {yearValue && !Number.isNaN(Number(yearValue))
-                    ? Number(yearValue) + 543
-                    : "—"}{" "}
-                  — ตั้งค่าจากวันที่ที่เลือกโดยอัตโนมัติ
-                </p>
-              </div>
-
-              {/* Name Thai */}
-              <div>
-                <label
-                  htmlFor="day-event-holiday-name-thai"
-                  className="mb-1 block text-sm font-medium"
-                >
-                  ชื่อวันหยุด (ไทย) <span className="text-destructive">*</span>
-                </label>
-                <input
-                  id="day-event-holiday-name-thai"
-                  type="text"
-                  placeholder="เช่น: วันขึ้นปีใหม่"
-                  aria-invalid={Boolean(errors.nameThai)}
-                  {...register("nameThai")}
-                  className={inputClass}
-                />
-                {errors.nameThai && (
-                  <p role="alert" className="text-destructive mt-1 text-xs">
-                    {errors.nameThai.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Name English */}
-              <div>
-                <label
-                  htmlFor="day-event-holiday-name-english"
-                  className="mb-1 block text-sm font-medium"
-                >
-                  ชื่อวันหยุด (อังกฤษ){" "}
-                  <span className="text-destructive">*</span>
-                </label>
-                <input
-                  id="day-event-holiday-name-english"
-                  type="text"
-                  placeholder="E.g.: New Year's Day"
-                  aria-invalid={Boolean(errors.nameEnglish)}
-                  {...register("nameEnglish")}
-                  className={inputClass}
-                />
-                {errors.nameEnglish && (
-                  <p role="alert" className="text-destructive mt-1 text-xs">
-                    {errors.nameEnglish.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Holiday Type */}
-              <div>
-                <label
-                  htmlFor="day-event-holiday-type"
-                  className="mb-1 block text-sm font-medium"
-                >
-                  ประเภท <span className="text-destructive">*</span>
-                </label>
-                <Controller
-                  control={control}
-                  name="holidayType"
-                  render={({ field }) => (
-                    <Select
-                      id="day-event-holiday-type"
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      options={HOLIDAY_TYPE_OPTIONS}
-                    />
-                  )}
-                />
-              </div>
-
-              {/* Description */}
-              <div>
-                <label
-                  htmlFor="day-event-holiday-description"
-                  className="mb-1 block text-sm font-medium"
-                >
-                  รายละเอียด (ถ้ามี)
-                </label>
-                <textarea
-                  id="day-event-holiday-description"
-                  placeholder="ระบุรายละเอียดเพิ่มเติม..."
-                  rows={2}
-                  {...register("description")}
-                  className={cn(inputClass, "min-h-20 resize-none")}
-                />
-              </div>
-            </div>
+            <DayEventHolidayPanel
+              control={control}
+              register={register}
+              errors={errors}
+              yearValue={yearValue}
+              active={eventType === "holiday"}
+            />
           </div>
 
           {/* Server error */}

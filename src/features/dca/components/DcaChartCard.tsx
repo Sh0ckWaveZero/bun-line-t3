@@ -9,10 +9,15 @@ import {
   useRef,
   useState,
 } from "react";
+import type { RefObject } from "react";
 import { areaY, defineChart, lineY } from "@tanstack/charts";
 import { scaleLinear } from "@tanstack/charts/scales/linear";
 import { scalePoint } from "@tanstack/charts/scales/point";
-import { Chart } from "@tanstack/charts/react/tooltip";
+import {
+  Chart,
+  type ChartProps,
+  type ChartTooltipBodyRenderContext,
+} from "@tanstack/charts/react/tooltip";
 import { tooltip } from "@tanstack/charts/tooltip";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import type { DcaOrder } from "@/features/dca/types";
@@ -50,6 +55,13 @@ interface ChartPoint extends EnrichedPoint {
   index: number;
   value: number;
 }
+
+type DcaChartPropsForPoint = ChartProps<ChartPoint, number, number>;
+type DcaTooltipRenderContext = ChartTooltipBodyRenderContext<
+  ChartPoint,
+  number,
+  number
+>;
 
 interface SeriesItem {
   key: string;
@@ -309,200 +321,22 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
     ];
   }, [chartTheme, data, mode, t]);
 
-  const definition = useMemo(() => {
-    if (data.length === 0) return null;
+  const definition = useMemo(
+    () =>
+      createDcaChartDefinition({
+        chartInstanceId,
+        chartTheme,
+        data,
+        mode,
+        series,
+      }),
+    [chartInstanceId, chartTheme, data, mode, series],
+  );
 
-    const values = series
-      .flatMap((item) => item.values)
-      .filter(Number.isFinite);
-    let yMin = values.length ? Math.min(...values) : 0;
-    let yMax = values.length ? Math.max(...values) : 1;
-    const range = yMax - yMin || Math.abs(yMax) * 0.02 || 1;
-    const hasZeroBaseline = series.some((item) => item.baseline === "zero");
-    if (hasZeroBaseline) {
-      yMin = Math.min(0, yMin) - range * 0.06;
-      yMax = Math.max(0, yMax) + range * 0.06;
-    } else {
-      yMin = Math.max(0, yMin - range * 0.02);
-      yMax += range * 0.04;
-    }
-
-    const tickCount = Math.min(6, data.length);
-    const tickIndices = Array.from({ length: tickCount }, (_, index) =>
-      Math.round((index / Math.max(1, tickCount - 1)) * (data.length - 1)),
-    );
-    const formatValue = (value: number) =>
-      mode === "sats" ? formatSatoshi(value) : formatThb(value);
-    const chartPoints = series.map((item) =>
-      data.map((point, index): ChartPoint => ({
-        ...point,
-        index,
-        value: item.values[index] ?? 0,
-      })),
-    );
-
-    const marks = series.flatMap((item, index) => {
-      const points = chartPoints[index];
-      if (!points) return [];
-      return [
-        ...(item.fill
-          ? [
-              areaY(points, {
-                x: "index",
-                y: "value",
-                y1: item.baseline === "zero" ? 0 : yMin,
-                y2: "value",
-                fill: `url(#dca-area-${chartInstanceId}-${item.key})`,
-              }),
-            ]
-          : []),
-        lineY(points, {
-          x: "index",
-          y: "value",
-          stroke: item.color,
-          strokeWidth: 1.75,
-          strokeDasharray: item.dash,
-          points: mode === "entries",
-        }),
-      ];
-    });
-
-    return defineChart({
-      theme: chartTheme,
-      margin: { top: 12, right: 12, bottom: 30, left: 56 },
-      marks,
-      scales: {
-        x: {
-          scale: scalePoint<number>().domain(data.map((_, index) => index)),
-          axis: {
-            line: false,
-            ticks: {
-              values: tickIndices,
-              line: false,
-              format: (index) => {
-                const date = data[index]?.date;
-                return date ? formatShortDate(date) : "";
-              },
-            },
-            tickLabels: { fontSize: 10, thin: false },
-          },
-        },
-        y: {
-          scale: scaleLinear().domain([yMin, yMax]),
-          grid: true,
-          axis: {
-            line: false,
-            ticks: { count: 5, line: false, format: formatValue },
-            tickLabels: { fontSize: 10 },
-          },
-        },
-      },
-      focus: "group-x",
-      tooltip: {
-        use: tooltip,
-        format: (point) => formatDate(point.datum.date),
-      },
-      gradients: series
-        .filter((item) => item.fill)
-        .map((item) => ({
-          id: `dca-area-${chartInstanceId}-${item.key}`,
-          x1: 0,
-          y1: 1,
-          x2: 0,
-          y2: 0,
-          stops: [
-            { offset: 0, color: item.color, opacity: 0.14 },
-            { offset: 0.52, color: item.color, opacity: 0.4 },
-            { offset: 1, color: item.color, opacity: 0.68 },
-          ],
-        })),
-    });
-  }, [chartInstanceId, chartTheme, data, mode, series]);
-
-  const renderTooltip = ({
-    points,
-  }: {
-    points: readonly { datum: ChartPoint }[];
-  }) => {
-    const point = points[0]?.datum;
-    if (!point) return null;
-
-    const rows: { label: string; value: string }[] = [];
-    if (mode === "portfolio") {
-      rows.push(
-        {
-          label: t.chart.tooltipPortfolio,
-          value: `${formatThbFull(point.portfolioValue)} ฿`,
-        },
-        {
-          label: t.chart.tooltipInvested,
-          value: `${formatThbFull(point.invested)} ฿`,
-        },
-        {
-          label: t.chart.tooltipUnrealized,
-          value: `${point.unrealized >= 0 ? "+" : ""}${formatThbFull(point.unrealized)} ฿`,
-        },
-      );
-    } else if (mode === "pnl") {
-      rows.push(
-        {
-          label: t.chart.tooltipUnrealized,
-          value: `${point.unrealized >= 0 ? "+" : ""}${formatThbFull(point.unrealized)} ฿`,
-        },
-        {
-          label: t.chart.tooltipPercent,
-          value: `${point.pctUnrealized.toFixed(2)}%`,
-        },
-      );
-    } else if (mode === "sats") {
-      rows.push(
-        {
-          label: t.chart.tooltipCumulative,
-          value: `${point.cumSat.toLocaleString("en-US")} sat`,
-        },
-        {
-          label: t.chart.tooltipTodaysBuy,
-          value: `${point.satoshi.toLocaleString("en-US")} sat`,
-        },
-      );
-    } else if (mode === "entries") {
-      rows.push(
-        {
-          label: t.chart.tooltipBtcPrice,
-          value: `${formatThbFull(point.price)} ฿`,
-        },
-        {
-          label: t.chart.tooltipBought,
-          value: `${point.satoshi.toLocaleString("en-US")} sat`,
-        },
-      );
-    } else {
-      rows.push(
-        {
-          label: t.chart.tooltipMarket,
-          value: `${formatThbFull(point.price)} ฿`,
-        },
-        {
-          label: t.chart.tooltipAvgCost,
-          value: `${formatThbFull(point.cumFiat / (point.cumSat / 1e8))} ฿`,
-        },
-      );
-    }
-
-    return (
-      <div className="bg-card border-border text-foreground min-w-40 rounded-md border px-2.5 py-2 text-xs shadow-lg">
-        <div className="border-border mb-1 border-b pb-1 font-medium">
-          {formatDate(point.date)}
-        </div>
-        {rows.map((row) => (
-          <div className="flex justify-between gap-4" key={row.label}>
-            <span className="text-muted-foreground">{row.label}</span>
-            <span className="font-mono tabular-nums">{row.value}</span>
-          </div>
-        ))}
-      </div>
-    );
-  };
+  const renderTooltip = useCallback(
+    (props: DcaTooltipRenderContext) => renderDcaChartTooltip(props, mode, t),
+    [mode, t],
+  );
 
   return (
     <TabsPrimitive.Root
@@ -515,111 +349,381 @@ export const DcaChartCard = ({ orders, currentPrice }: DcaChartCardProps) => {
       }}
       className="bg-card border-border flex h-full w-full flex-col overflow-hidden rounded-lg border"
     >
-      <div className="border-border relative z-10 flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2.5 sm:px-5 sm:py-3.5">
-        <TabsPrimitive.List
-          ref={tabsListRef}
-          aria-label="มุมมองกราฟ DCA"
-          className="t-tabs dca-chart-tabs"
-        >
-          <span
-            ref={tabsPillRef}
-            className="t-tabs-pill"
-            aria-hidden="true"
-          />
-          {tabs.map((tab) => (
-            <TabsPrimitive.Trigger
-              key={tab.key}
-              value={tab.key}
-              className="t-tab focus-visible:ring-ring focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-            >
-              <span className="sm:hidden">{tab.shortLabel}</span>
-              <span className="hidden sm:inline">{tab.label}</span>
-            </TabsPrimitive.Trigger>
-          ))}
-        </TabsPrimitive.List>
-        <Popover open={timeframeOpen} onOpenChange={setTimeframeOpen}>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              className="bg-card border-border text-foreground min-w-[72px] cursor-pointer rounded border px-2 py-1 text-xs"
-              aria-label="Chart timeframe"
-            >
-              {timeframe}
-            </button>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-[88px] p-1">
-            <div className="flex flex-col gap-0.5">
-              {TIMEFRAMES.map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  aria-pressed={timeframe === value}
-                  onClick={() => {
-                    setTimeframe(value);
-                    setTimeframeOpen(false);
-                  }}
-                  className={`cursor-pointer rounded px-2 py-1.5 text-left text-xs ${
-                    timeframe === value
-                      ? "bg-foreground text-background"
-                      : "text-foreground hover:bg-muted"
-                  }`}
-                >
-                  {value}
-                </button>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
-      </div>
-
-      <TabsPrimitive.Content
-        value={mode}
-        className="flex min-h-0 flex-1 flex-col outline-none"
-      >
-        {data.length === 0 ? (
-          <div className="text-muted-foreground flex h-[200px] items-center justify-center text-sm sm:h-[300px]">
-            {t.chart.addFirstBuy}
-          </div>
-        ) : (
-          <>
-            <div className="text-muted-foreground flex gap-4 px-5 pt-2 text-[11px]">
-              {series.map((item) => (
-                <span
-                  key={item.key}
-                  className="inline-flex items-center gap-1.5"
-                >
-                  <span
-                    className="inline-block h-2.5 w-2.5 rounded-sm"
-                    aria-hidden="true"
-                    style={{
-                      background: item.dash ? "transparent" : item.color,
-                      border: item.dash ? `2px dashed ${item.color}` : "none",
-                      height: item.dash ? 0 : 10,
-                    }}
-                  />
-                  {item.label}
-                </span>
-              ))}
-            </div>
-
-            <div className="relative z-0 min-h-[220px] flex-1 overflow-hidden px-2 pb-2 sm:min-h-[320px] sm:px-3 sm:pb-3">
-              <div className="relative h-full min-h-[220px] w-full sm:min-h-[320px]">
-                {definition && (
-                  <Chart
-                    definition={definition}
-                    idPrefix={`dca-chart-${chartInstanceId}`}
-                    ariaLabel={`${tabs.find((tab) => tab.key === mode)?.label ?? mode} BTC DCA chart`}
-                    ariaDescription="Use the arrow keys to inspect chart values."
-                    className="absolute inset-0"
-                    style={{ width: "100%", height: "100%" }}
-                    renderTooltipBody={renderTooltip}
-                  />
-                )}
-              </div>
-            </div>
-          </>
-        )}
-      </TabsPrimitive.Content>
+      <DcaChartControls
+        tabs={tabs}
+        timeframe={timeframe}
+        timeframeOpen={timeframeOpen}
+        tabsListRef={tabsListRef}
+        tabsPillRef={tabsPillRef}
+        onTimeframeChange={setTimeframe}
+        onTimeframeOpenChange={setTimeframeOpen}
+      />
+      <DcaChartVisualization
+        mode={mode}
+        data={data}
+        series={series}
+        definition={definition}
+        chartInstanceId={chartInstanceId}
+        tabs={tabs}
+        emptyMessage={t.chart.addFirstBuy}
+        renderTooltip={renderTooltip}
+      />
     </TabsPrimitive.Root>
   );
 };
+
+function createDcaChartDefinition({
+  chartInstanceId,
+  chartTheme,
+  data,
+  mode,
+  series,
+}: {
+  chartInstanceId: string;
+  chartTheme: ReturnType<typeof useChartTheme>["chartTheme"];
+  data: EnrichedPoint[];
+  mode: ChartMode;
+  series: SeriesItem[];
+}) {
+  if (data.length === 0) return null;
+
+  const values = series.flatMap((item) => item.values).filter(Number.isFinite);
+  let yMin = values.length ? Math.min(...values) : 0;
+  let yMax = values.length ? Math.max(...values) : 1;
+  const range = yMax - yMin || Math.abs(yMax) * 0.02 || 1;
+  const hasZeroBaseline = series.some((item) => item.baseline === "zero");
+  if (hasZeroBaseline) {
+    yMin = Math.min(0, yMin) - range * 0.06;
+    yMax = Math.max(0, yMax) + range * 0.06;
+  } else {
+    yMin = Math.max(0, yMin - range * 0.02);
+    yMax += range * 0.04;
+  }
+
+  const tickCount = Math.min(6, data.length);
+  const tickIndices = Array.from({ length: tickCount }, (_, index) =>
+    Math.round((index / Math.max(1, tickCount - 1)) * (data.length - 1)),
+  );
+  const formatValue = (value: number) =>
+    mode === "sats" ? formatSatoshi(value) : formatThb(value);
+  const chartPoints = series.map((item) =>
+    data.map((point, index): ChartPoint => ({
+      ...point,
+      index,
+      value: item.values[index] ?? 0,
+    })),
+  );
+
+  const marks = series.flatMap((item, index) => {
+    const points = chartPoints[index];
+    if (!points) return [];
+    return [
+      ...(item.fill
+        ? [
+            areaY(points, {
+              x: "index",
+              y: "value",
+              y1: item.baseline === "zero" ? 0 : yMin,
+              y2: "value",
+              fill: `url(#dca-area-${chartInstanceId}-${item.key})`,
+            }),
+          ]
+        : []),
+      lineY(points, {
+        x: "index",
+        y: "value",
+        stroke: item.color,
+        strokeWidth: 1.75,
+        strokeDasharray: item.dash,
+        points: mode === "entries",
+      }),
+    ];
+  });
+
+  return defineChart({
+    theme: chartTheme,
+    margin: { top: 12, right: 12, bottom: 30, left: 56 },
+    marks,
+    scales: {
+      x: {
+        scale: scalePoint<number>().domain(data.map((_, index) => index)),
+        axis: {
+          line: false,
+          ticks: {
+            values: tickIndices,
+            line: false,
+            format: (index) => {
+              const date = data[index]?.date;
+              return date ? formatShortDate(date) : "";
+            },
+          },
+          tickLabels: { fontSize: 10, thin: false },
+        },
+      },
+      y: {
+        scale: scaleLinear().domain([yMin, yMax]),
+        grid: true,
+        axis: {
+          line: false,
+          ticks: { count: 5, line: false, format: formatValue },
+          tickLabels: { fontSize: 10 },
+        },
+      },
+    },
+    focus: "group-x",
+    tooltip: {
+      use: tooltip,
+      format: (point) => formatDate(point.datum.date),
+    },
+    gradients: series
+      .filter((item) => item.fill)
+      .map((item) => ({
+        id: `dca-area-${chartInstanceId}-${item.key}`,
+        x1: 0,
+        y1: 1,
+        x2: 0,
+        y2: 0,
+        stops: [
+          { offset: 0, color: item.color, opacity: 0.14 },
+          { offset: 0.52, color: item.color, opacity: 0.4 },
+          { offset: 1, color: item.color, opacity: 0.68 },
+        ],
+      })),
+  });
+}
+
+interface ChartTab {
+  key: ChartMode;
+  label: string;
+  shortLabel: string;
+}
+
+interface DcaChartControlsProps {
+  tabs: ChartTab[];
+  timeframe: Timeframe;
+  timeframeOpen: boolean;
+  tabsListRef: RefObject<HTMLDivElement | null>;
+  tabsPillRef: RefObject<HTMLSpanElement | null>;
+  onTimeframeChange: (timeframe: Timeframe) => void;
+  onTimeframeOpenChange: (open: boolean) => void;
+}
+
+function DcaChartControls({
+  tabs,
+  timeframe,
+  timeframeOpen,
+  tabsListRef,
+  tabsPillRef,
+  onTimeframeChange,
+  onTimeframeOpenChange,
+}: DcaChartControlsProps) {
+  return (
+    <div className="border-border relative z-10 flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2.5 sm:px-5 sm:py-3.5">
+      <TabsPrimitive.List
+        ref={tabsListRef}
+        aria-label="มุมมองกราฟ DCA"
+        className="t-tabs dca-chart-tabs"
+      >
+        <span ref={tabsPillRef} className="t-tabs-pill" aria-hidden="true" />
+        {tabs.map((tab) => (
+          <TabsPrimitive.Trigger
+            key={tab.key}
+            value={tab.key}
+            className="t-tab focus-visible:ring-ring focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+          >
+            <span className="sm:hidden">{tab.shortLabel}</span>
+            <span className="hidden sm:inline">{tab.label}</span>
+          </TabsPrimitive.Trigger>
+        ))}
+      </TabsPrimitive.List>
+      <Popover open={timeframeOpen} onOpenChange={onTimeframeOpenChange}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className="bg-card border-border text-foreground min-w-[72px] cursor-pointer rounded border px-2 py-1 text-xs"
+            aria-label="Chart timeframe"
+          >
+            {timeframe}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="w-[88px] p-1">
+          <div className="flex flex-col gap-0.5">
+            {TIMEFRAMES.map((value) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={timeframe === value}
+                onClick={() => {
+                  onTimeframeChange(value);
+                  onTimeframeOpenChange(false);
+                }}
+                className={`cursor-pointer rounded px-2 py-1.5 text-left text-xs ${
+                  timeframe === value
+                    ? "bg-foreground text-background"
+                    : "text-foreground hover:bg-muted"
+                }`}
+              >
+                {value}
+              </button>
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
+
+interface DcaChartVisualizationProps {
+  mode: ChartMode;
+  data: EnrichedPoint[];
+  series: SeriesItem[];
+  definition: DcaChartPropsForPoint["definition"] | null;
+  chartInstanceId: string;
+  tabs: ChartTab[];
+  emptyMessage: string;
+  renderTooltip: DcaChartPropsForPoint["renderTooltipBody"];
+}
+
+function DcaChartVisualization({
+  mode,
+  data,
+  series,
+  definition,
+  chartInstanceId,
+  tabs,
+  emptyMessage,
+  renderTooltip,
+}: DcaChartVisualizationProps) {
+  return (
+    <TabsPrimitive.Content
+      value={mode}
+      className="flex min-h-0 flex-1 flex-col outline-none"
+    >
+      {data.length === 0 ? (
+        <div className="text-muted-foreground flex h-[200px] items-center justify-center text-sm sm:h-[300px]">
+          {emptyMessage}
+        </div>
+      ) : (
+        <>
+          <div className="text-muted-foreground flex gap-4 px-5 pt-2 text-[11px]">
+            {series.map((item) => (
+              <span key={item.key} className="inline-flex items-center gap-1.5">
+                <span
+                  className="inline-block h-2.5 w-2.5 rounded-sm"
+                  aria-hidden="true"
+                  style={{
+                    background: item.dash ? "transparent" : item.color,
+                    border: item.dash ? `2px dashed ${item.color}` : "none",
+                    height: item.dash ? 0 : 10,
+                  }}
+                />
+                {item.label}
+              </span>
+            ))}
+          </div>
+
+          <div className="relative z-0 min-h-[220px] flex-1 overflow-hidden px-2 pb-2 sm:min-h-[320px] sm:px-3 sm:pb-3">
+            <div className="relative h-full min-h-[220px] w-full sm:min-h-[320px]">
+              {definition && (
+                <Chart<ChartPoint, number, number>
+                  definition={definition}
+                  idPrefix={`dca-chart-${chartInstanceId}`}
+                  ariaLabel={`${tabs.find((tab) => tab.key === mode)?.label ?? mode} BTC DCA chart`}
+                  ariaDescription="Use the arrow keys to inspect chart values."
+                  className="absolute inset-0"
+                  style={{ width: "100%", height: "100%" }}
+                  renderTooltipBody={renderTooltip}
+                />
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </TabsPrimitive.Content>
+  );
+}
+
+function renderDcaChartTooltip(
+  { points }: DcaTooltipRenderContext,
+  mode: ChartMode,
+  t: ReturnType<typeof useDcaLocale>["t"],
+) {
+  const point = points[0]?.datum;
+  if (!point) return null;
+
+  const rows: { label: string; value: string }[] = [];
+  if (mode === "portfolio") {
+    rows.push(
+      {
+        label: t.chart.tooltipPortfolio,
+        value: `${formatThbFull(point.portfolioValue)} ฿`,
+      },
+      {
+        label: t.chart.tooltipInvested,
+        value: `${formatThbFull(point.invested)} ฿`,
+      },
+      {
+        label: t.chart.tooltipUnrealized,
+        value: `${point.unrealized >= 0 ? "+" : ""}${formatThbFull(point.unrealized)} ฿`,
+      },
+    );
+  } else if (mode === "pnl") {
+    rows.push(
+      {
+        label: t.chart.tooltipUnrealized,
+        value: `${point.unrealized >= 0 ? "+" : ""}${formatThbFull(point.unrealized)} ฿`,
+      },
+      {
+        label: t.chart.tooltipPercent,
+        value: `${point.pctUnrealized.toFixed(2)}%`,
+      },
+    );
+  } else if (mode === "sats") {
+    rows.push(
+      {
+        label: t.chart.tooltipCumulative,
+        value: `${point.cumSat.toLocaleString("en-US")} sat`,
+      },
+      {
+        label: t.chart.tooltipTodaysBuy,
+        value: `${point.satoshi.toLocaleString("en-US")} sat`,
+      },
+    );
+  } else if (mode === "entries") {
+    rows.push(
+      {
+        label: t.chart.tooltipBtcPrice,
+        value: `${formatThbFull(point.price)} ฿`,
+      },
+      {
+        label: t.chart.tooltipBought,
+        value: `${point.satoshi.toLocaleString("en-US")} sat`,
+      },
+    );
+  } else {
+    rows.push(
+      {
+        label: t.chart.tooltipMarket,
+        value: `${formatThbFull(point.price)} ฿`,
+      },
+      {
+        label: t.chart.tooltipAvgCost,
+        value: `${formatThbFull(point.cumFiat / (point.cumSat / 1e8))} ฿`,
+      },
+    );
+  }
+
+  return (
+    <div className="bg-card border-border text-foreground min-w-40 rounded-md border px-2.5 py-2 text-xs shadow-lg">
+      <div className="border-border mb-1 border-b pb-1 font-medium">
+        {formatDate(point.date)}
+      </div>
+      {rows.map((row) => (
+        <div className="flex justify-between gap-4" key={row.label}>
+          <span className="text-muted-foreground">{row.label}</span>
+          <span className="font-mono tabular-nums">{row.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}

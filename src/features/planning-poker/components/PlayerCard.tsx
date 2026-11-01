@@ -33,6 +33,23 @@ const getStatusCaption = (
   return participant.hasVoted ? "Voted" : "Not voted";
 };
 
+const PlayerStatus = ({
+  caption,
+  isOnline,
+}: {
+  caption: string | null;
+  isOnline: boolean;
+}) => {
+  if (!caption && isOnline) return null;
+  return (
+    <span className="poker-player-card__status text-muted-foreground text-xs">
+      {caption && <span>{caption}</span>}
+      {caption && !isOnline && <span aria-hidden="true"> · </span>}
+      {!isOnline && <span>Offline</span>}
+    </span>
+  );
+};
+
 const getFanStyle = ({ index, count }: FanPosition): CSSProperties => {
   const fanPosition = count > 1 ? (index / (count - 1)) * 2 - 1 : 0;
   const lift = count > 1 ? (1 - Math.abs(fanPosition)) * 14 : 0;
@@ -42,6 +59,109 @@ const getFanStyle = ({ index, count }: FanPosition): CSSProperties => {
     "--poker-fan-lift": `${-lift}px`,
     "--poker-fan-index": index,
   } as CSSProperties;
+};
+
+/** เลือกภาพหน้าไพ่ตามสถานะ (helper นอก component — กัน complexity ของตัว PlayerCard) */
+const getCardVisual = ({
+  participant,
+  isSpectator,
+  revealedVote,
+  showValue,
+  isRevealed,
+  tier,
+  offlineClass,
+  flipStyle,
+}: {
+  participant: PublicParticipant;
+  isSpectator: boolean;
+  revealedVote: string | null;
+  showValue: boolean;
+  isRevealed: boolean;
+  tier: string | null;
+  offlineClass: string | null;
+  flipStyle: CSSProperties;
+}) => {
+  if (isSpectator) {
+    return (
+      <div
+        aria-hidden="true"
+        className={cn(
+          "text-muted-foreground flex items-center justify-center rounded-lg border-2 border-dashed",
+          "poker-player-card__visual poker-player-card__visual--placeholder aspect-square w-full",
+          offlineClass,
+        )}
+      >
+        <PixelEye className="h-5 w-5" />
+      </div>
+    );
+  }
+  if (showValue && revealedVote !== null) {
+    // ไพ่พลิกจากหลัง (check โหวตแล้ว) ไปหน้า (art ตาม tier + ตัวเลข pixel) — เวที + ด้านไพ่จัดโครงใน input.css
+    return (
+      <div
+        aria-hidden="true"
+        className={cn(
+          "poker-flip-scene poker-player-card__visual aspect-square w-full",
+          offlineClass,
+        )}
+      >
+        <div className="poker-flip poker-flip--revealed" style={flipStyle}>
+          <div className="poker-flip-face poker-flip-face--back border-primary bg-primary text-primary-foreground">
+            <PixelArtGlyph name="check" cell={14} />
+          </div>
+          <div
+            className={cn(
+              "poker-flip-face poker-flip-face--front",
+              tier && `poker-tier--${tier}`,
+            )}
+          >
+            {/* dot-matrix ช่อง 9×9 — plot ตัวเลขลงบนช่องของกริดเดิม */}
+            <PixelMatrixCard value={revealedVote} cell={210 / 9} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+  if (participant.hasVoted) {
+    return (
+      <div
+        aria-hidden="true"
+        className={cn(
+          "border-primary bg-primary text-primary-foreground flex items-center justify-center rounded-lg border-2",
+          "poker-player-card__visual aspect-square w-full",
+          offlineClass,
+        )}
+      >
+        <PixelArtGlyph name="check" cell={14} />
+      </div>
+    );
+  }
+  if (isRevealed) {
+    return (
+      <div
+        aria-hidden="true"
+        className={cn(
+          "border-border text-muted-foreground flex items-center justify-center rounded-lg border-2 border-dashed",
+          "poker-player-card__visual poker-player-card__visual--placeholder aspect-square w-full",
+          offlineClass,
+        )}
+      >
+        <PixelGlyph value="—" />
+      </div>
+    );
+  }
+  // ไพ่คว่ำในกล่อง (สไตล์ CardCase) — art "question" หรี่ ๆ — เปิดไพ่แล้วถ้าไม่ได้โหวตจะกลายเป็น "—" ข้างบน
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(
+        "poker-slot poker-player-card__visual poker-player-card__visual--back aspect-square w-full",
+        offlineClass,
+      )}
+    >
+      <PixelArtGlyph name="question" cell={23} />
+    </div>
+  );
 };
 
 export const PlayerCard = ({
@@ -59,76 +179,16 @@ export const PlayerCard = ({
   const flipStyle = { "--flip-index": staggerIndex ?? 0 } as CSSProperties;
 
   // ไพ่เป็นภาพประกอบ — ข้อมูลจริงอยู่ในข้อความด้านล่าง (ซ่อนจาก screen reader กันอ่านซ้ำ)
-  // ทุกหน้าไพ่วาดด้วย PixelGlyph ("—" ยังไม่โหวต, "✓" โหวตแล้ว, ค่าโหวตตอนเปิด)
-  const cardVisual = isSpectator ? (
-    <div
-      aria-hidden="true"
-      className={cn(
-        "flex items-center justify-center rounded-lg border-2 border-dashed text-muted-foreground",
-        "aspect-square w-full poker-player-card__visual poker-player-card__visual--placeholder",
-        offlineClass,
-      )}
-    >
-      <PixelEye className="h-5 w-5" />
-    </div>
-  ) : showValue ? (
-    // ไพ่พลิกจากหลัง (check โหวตแล้ว) ไปหน้า (art ตาม tier + ตัวเลข pixel) — เวที + ด้านไพ่จัดโครงใน input.css
-    <div
-      aria-hidden="true"
-      className={cn(
-        "poker-flip-scene aspect-square w-full poker-player-card__visual",
-        offlineClass,
-      )}
-    >
-      <div className="poker-flip poker-flip--revealed" style={flipStyle}>
-        <div className="poker-flip-face poker-flip-face--back border-primary bg-primary text-primary-foreground">
-          <PixelArtGlyph name="check" cell={14} />
-        </div>
-        <div
-          className={cn(
-            "poker-flip-face poker-flip-face--front",
-            tier && `poker-tier--${tier}`,
-          )}
-        >
-          {/* dot-matrix ช่อง 9×9 — plot ตัวเลขลงบนช่องของกริดเดิม */}
-          <PixelMatrixCard value={revealedVote} cell={210 / 9} />
-        </div>
-      </div>
-    </div>
-  ) : participant.hasVoted ? (
-    <div
-      aria-hidden="true"
-      className={cn(
-        "flex items-center justify-center rounded-lg border-2 border-primary bg-primary text-primary-foreground",
-        "aspect-square w-full poker-player-card__visual",
-        offlineClass,
-      )}
-    >
-      <PixelArtGlyph name="check" cell={14} />
-    </div>
-  ) : isRevealed ? (
-    <div
-      aria-hidden="true"
-      className={cn(
-        "flex items-center justify-center rounded-lg border-2 border-dashed border-border text-muted-foreground",
-        "aspect-square w-full poker-player-card__visual poker-player-card__visual--placeholder",
-        offlineClass,
-      )}
-    >
-      <PixelGlyph value="—" />
-    </div>
-  ) : (
-    // ไพ่คว่ำในกล่อง (สไตล์ CardCase) — art "question" หรี่ ๆ — เปิดไพ่แล้วถ้าไม่ได้โหวตจะกลายเป็น "—" ข้างบน
-    <div
-      aria-hidden="true"
-      className={cn(
-        "poker-slot aspect-square w-full poker-player-card__visual poker-player-card__visual--back",
-        offlineClass,
-      )}
-    >
-      <PixelArtGlyph name="question" cell={23} />
-    </div>
-  );
+  const cardVisual = getCardVisual({
+    participant,
+    isSpectator,
+    revealedVote,
+    showValue,
+    isRevealed,
+    tier,
+    offlineClass,
+    flipStyle,
+  });
 
   return (
     <li
@@ -152,15 +212,7 @@ export const PlayerCard = ({
             Voted {revealedVote}
           </span>
         ) : null}
-        {caption || !participant.isOnline ? (
-          <span className="poker-player-card__status text-muted-foreground text-xs">
-            {caption ? <span>{caption}</span> : null}
-            {caption && !participant.isOnline ? (
-              <span aria-hidden="true"> · </span>
-            ) : null}
-            {!participant.isOnline ? <span>Offline</span> : null}
-          </span>
-        ) : null}
+        <PlayerStatus caption={caption} isOnline={participant.isOnline} />
       </div>
     </li>
   );

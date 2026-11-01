@@ -1,6 +1,8 @@
+"use client";
+
 import { useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useBitkubConnection } from "@/features/exchanges/hooks/useBitkubConnection";
@@ -10,6 +12,165 @@ import {
 } from "@/features/exchanges/lib/bitkub-credentials";
 import { useBitkubCredentialDraft } from "@/features/settings/lib/bitkub-credential-draft-context";
 import { SettingsSection } from "./SettingsSection";
+
+/** ข้อความสถานะการเชื่อมต่อ (ดึง ternary ซ้อนออกจาก JSX) */
+const getStatusText = ({
+  isLoading,
+  isConnectionUnknown,
+  isConnected,
+  keyHint,
+}: {
+  isLoading: boolean;
+  isConnectionUnknown: boolean;
+  isConnected: boolean;
+  keyHint: string | null | undefined;
+}): string => {
+  if (isLoading) return "กำลังตรวจสอบการเชื่อมต่อ";
+  if (isConnectionUnknown) return "ตรวจสอบไม่ได้";
+  if (isConnected) return `เชื่อมต่อแล้ว ${keyHint ?? ""}`;
+  return "ยังไม่ได้เชื่อมต่อ";
+};
+
+interface KeyEntryToggleProps {
+  isKeyEntryOpen: boolean;
+  isFormBusy: boolean;
+  onToggle: () => void;
+  /** ปุ่มในบล็อก "ตรวจสอบไม่ได้" กับบล็อก "เชื่อมต่อแล้ว" ต่างป้ายกัน */
+  openLabel: string;
+}
+
+/** ปุ่มกัก/เปิดฟอร์มกรอก key — ใช้ร่วมสองบล็อก */
+const KeyEntryToggle = ({
+  isKeyEntryOpen,
+  isFormBusy,
+  onToggle,
+  openLabel,
+}: KeyEntryToggleProps) => (
+  <Button
+    type="button"
+    variant="outline"
+    disabled={isFormBusy}
+    aria-expanded={isKeyEntryOpen}
+    aria-controls="settings-bitkub-key-form"
+    onClick={onToggle}
+  >
+    {isKeyEntryOpen ? "ซ่อนช่องกรอก API Key" : openLabel}
+  </Button>
+);
+
+interface KeyFormProps {
+  isConnected: boolean;
+  isFormBusy: boolean;
+  register: ReturnType<
+    typeof useForm<BitkubCredentials, undefined, BitkubCredentials>
+  >["register"];
+  fieldErrors: {
+    apiKey?: { message?: string };
+    apiSecret?: { message?: string };
+  };
+  onSubmit: (event?: React.BaseSyntheticEvent) => void | Promise<void>;
+  onCredentialChange: (patch: Partial<BitkubCredentials>) => void;
+}
+
+/** ฟอร์มกรอก API key/secret — แยกออกจากการ์ดสถานะเพื่อลดขนาด/complexity */
+const KeyForm = ({
+  isConnected,
+  isFormBusy,
+  register,
+  fieldErrors,
+  onSubmit,
+  onCredentialChange,
+}: KeyFormProps) => {
+  const apiKeyField = register("apiKey");
+  const apiSecretField = register("apiSecret");
+
+  return (
+    <form id="settings-bitkub-key-form" onSubmit={onSubmit} noValidate>
+      {isConnected && (
+        <p className="text-muted-foreground mb-3 text-sm">
+          API Key ใหม่จะแทนที่ข้อมูลรับรองเดิม
+        </p>
+      )}
+      <fieldset disabled={isFormBusy} className="space-y-3">
+        <legend className="sr-only">ข้อมูลรับรอง Bitkub</legend>
+        <div>
+          <label htmlFor="settings-bitkub-api-key" className="mb-1 block text-sm">
+            API key
+          </label>
+          <Input
+            id="settings-bitkub-api-key"
+            type="password"
+            autoComplete="off"
+            spellCheck={false}
+            required
+            {...apiKeyField}
+            onChange={(event) => {
+              const value = event.currentTarget.value;
+              void apiKeyField.onChange(event);
+              onCredentialChange({ apiKey: value });
+            }}
+            aria-invalid={Boolean(fieldErrors.apiKey)}
+            aria-describedby={
+              fieldErrors.apiKey ? "settings-bitkub-api-key-error" : undefined
+            }
+          />
+          {fieldErrors.apiKey && (
+            <p
+              id="settings-bitkub-api-key-error"
+              role="alert"
+              className="text-destructive mt-1 text-sm"
+            >
+              {fieldErrors.apiKey.message}
+            </p>
+          )}
+        </div>
+        <div>
+          <label
+            htmlFor="settings-bitkub-api-secret"
+            className="mb-1 block text-sm"
+          >
+            API secret
+          </label>
+          <Input
+            id="settings-bitkub-api-secret"
+            type="password"
+            autoComplete="off"
+            spellCheck={false}
+            required
+            {...apiSecretField}
+            onChange={(event) => {
+              const value = event.currentTarget.value;
+              void apiSecretField.onChange(event);
+              onCredentialChange({ apiSecret: value });
+            }}
+            aria-invalid={Boolean(fieldErrors.apiSecret)}
+            aria-describedby={
+              fieldErrors.apiSecret
+                ? "settings-bitkub-api-secret-error"
+                : undefined
+            }
+          />
+          {fieldErrors.apiSecret && (
+            <p
+              id="settings-bitkub-api-secret-error"
+              role="alert"
+              className="text-destructive mt-1 text-sm"
+            >
+              {fieldErrors.apiSecret.message}
+            </p>
+          )}
+        </div>
+        <Button type="submit" disabled={isFormBusy}>
+          {isFormBusy
+            ? "กำลังเชื่อมต่อ…"
+            : isConnected
+              ? "บันทึก API Key ใหม่"
+              : "เชื่อมต่อ Bitkub"}
+        </Button>
+      </fieldset>
+    </form>
+  );
+};
 
 export function BitkubConnectionSettings() {
   const {
@@ -36,7 +197,7 @@ export function BitkubConnectionSettings() {
   });
   const hasConnectionStatus = Boolean(connection.data) && !connection.isError;
   const isConnectionUnknown = connection.isError;
-  const isConnected = hasConnectionStatus && connection.data?.connected;
+  const isConnected = hasConnectionStatus && (connection.data?.connected ?? false);
   const isConfigured = hasConnectionStatus && connection.data?.configured;
   const isFormBusy = isBusy || isSubmitting;
   const canShowKeyForm = isConnected
@@ -51,8 +212,6 @@ export function BitkubConnectionSettings() {
       setIsKeyEntryOpen(false);
     }
   });
-  const apiKeyField = register("apiKey");
-  const apiSecretField = register("apiSecret");
 
   return (
     <SettingsSection
@@ -62,13 +221,12 @@ export function BitkubConnectionSettings() {
       <div className="text-sm">
         <p>
           สถานะ:{" "}
-          {connection.isLoading
-            ? "กำลังตรวจสอบการเชื่อมต่อ"
-            : isConnectionUnknown
-              ? "ตรวจสอบไม่ได้"
-              : isConnected
-                ? `เชื่อมต่อแล้ว ${connection.data?.keyHint ?? ""}`
-                : "ยังไม่ได้เชื่อมต่อ"}
+          {getStatusText({
+            isLoading: connection.isLoading,
+            isConnectionUnknown,
+            isConnected,
+            keyHint: connection.data?.keyHint,
+          })}
         </p>
       </div>
 
@@ -101,16 +259,12 @@ export function BitkubConnectionSettings() {
             >
               ลองตรวจสอบสถานะอีกครั้ง
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={isFormBusy}
-              aria-expanded={isKeyEntryOpen}
-              aria-controls="settings-bitkub-key-form"
-              onClick={() => setIsKeyEntryOpen((isOpen) => !isOpen)}
-            >
-              {isKeyEntryOpen ? "ซ่อนช่องกรอก API Key" : "กรอก API Key"}
-            </Button>
+            <KeyEntryToggle
+              isKeyEntryOpen={isKeyEntryOpen}
+              isFormBusy={isFormBusy}
+              onToggle={() => setIsKeyEntryOpen((isOpen) => !isOpen)}
+              openLabel="กรอก API Key"
+            />
           </div>
         </div>
       )}
@@ -123,16 +277,12 @@ export function BitkubConnectionSettings() {
 
       {isConnected && (
         <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={isFormBusy}
-            aria-expanded={isKeyEntryOpen}
-            aria-controls="settings-bitkub-key-form"
-            onClick={() => setIsKeyEntryOpen((isOpen) => !isOpen)}
-          >
-            {isKeyEntryOpen ? "ซ่อนช่องกรอก API Key" : "เปลี่ยน API Key"}
-          </Button>
+          <KeyEntryToggle
+            isKeyEntryOpen={isKeyEntryOpen}
+            isFormBusy={isFormBusy}
+            onToggle={() => setIsKeyEntryOpen((isOpen) => !isOpen)}
+            openLabel="เปลี่ยน API Key"
+          />
           <Button
             type="button"
             variant="outline"
@@ -145,95 +295,14 @@ export function BitkubConnectionSettings() {
       )}
 
       {canShowKeyForm && (
-        <form id="settings-bitkub-key-form" onSubmit={onSubmit} noValidate>
-          {isConnected && (
-            <p className="text-muted-foreground mb-3 text-sm">
-              API Key ใหม่จะแทนที่ข้อมูลรับรองเดิม
-            </p>
-          )}
-          <fieldset disabled={isFormBusy} className="space-y-3">
-            <legend className="sr-only">ข้อมูลรับรอง Bitkub</legend>
-            <div>
-              <label
-                htmlFor="settings-bitkub-api-key"
-                className="mb-1 block text-sm"
-              >
-                API key
-              </label>
-              <Input
-                id="settings-bitkub-api-key"
-                type="password"
-                autoComplete="off"
-                spellCheck={false}
-                required
-                {...apiKeyField}
-                onChange={(event) => {
-                  const value = event.currentTarget.value;
-                  void apiKeyField.onChange(event);
-                  updateCredentials({ apiKey: value });
-                }}
-                aria-invalid={Boolean(fieldErrors.apiKey)}
-                aria-describedby={
-                  fieldErrors.apiKey
-                    ? "settings-bitkub-api-key-error"
-                    : undefined
-                }
-              />
-              {fieldErrors.apiKey && (
-                <p
-                  id="settings-bitkub-api-key-error"
-                  role="alert"
-                  className="text-destructive mt-1 text-sm"
-                >
-                  {fieldErrors.apiKey.message}
-                </p>
-              )}
-            </div>
-            <div>
-              <label
-                htmlFor="settings-bitkub-api-secret"
-                className="mb-1 block text-sm"
-              >
-                API secret
-              </label>
-              <Input
-                id="settings-bitkub-api-secret"
-                type="password"
-                autoComplete="off"
-                spellCheck={false}
-                required
-                {...apiSecretField}
-                onChange={(event) => {
-                  const value = event.currentTarget.value;
-                  void apiSecretField.onChange(event);
-                  updateCredentials({ apiSecret: value });
-                }}
-                aria-invalid={Boolean(fieldErrors.apiSecret)}
-                aria-describedby={
-                  fieldErrors.apiSecret
-                    ? "settings-bitkub-api-secret-error"
-                    : undefined
-                }
-              />
-              {fieldErrors.apiSecret && (
-                <p
-                  id="settings-bitkub-api-secret-error"
-                  role="alert"
-                  className="text-destructive mt-1 text-sm"
-                >
-                  {fieldErrors.apiSecret.message}
-                </p>
-              )}
-            </div>
-            <Button type="submit" disabled={isFormBusy}>
-              {isFormBusy
-                ? "กำลังเชื่อมต่อ…"
-                : isConnected
-                  ? "บันทึก API Key ใหม่"
-                  : "เชื่อมต่อ Bitkub"}
-            </Button>
-          </fieldset>
-        </form>
+        <KeyForm
+          isConnected={isConnected}
+          isFormBusy={isFormBusy}
+          register={register}
+          fieldErrors={fieldErrors}
+          onSubmit={onSubmit}
+          onCredentialChange={updateCredentials}
+        />
       )}
 
       {error && (

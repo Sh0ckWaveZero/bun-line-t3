@@ -26,6 +26,12 @@ const MONITORING_TIMESTAMP_FORMATTER = new Intl.DateTimeFormat("th-TH", {
   timeStyle: "short",
   timeZone: "Asia/Bangkok",
 });
+const MONITORING_TIME_FORMATTER = new Intl.DateTimeFormat("th-TH", {
+  hour: "numeric",
+  minute: "2-digit",
+  second: "2-digit",
+  timeZone: "Asia/Bangkok",
+});
 
 interface MonitoringData {
   timestamp: string;
@@ -453,8 +459,8 @@ export function MonitoringDashboardPage() {
       ? dashboardQuery.error.message
       : "เกิดข้อผิดพลาด"
     : null;
-  const lastUpdate = dashboardQuery.dataUpdatedAt
-    ? new Date(dashboardQuery.dataUpdatedAt)
+  const lastUpdateText = dashboardQuery.dataUpdatedAt
+    ? MONITORING_TIME_FORMATTER.format(dashboardQuery.dataUpdatedAt)
     : null;
 
   const fetchMonitoringData = () => void dashboardQuery.refetch();
@@ -495,9 +501,9 @@ export function MonitoringDashboardPage() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              {lastUpdate && (
+              {lastUpdateText && (
                 <span className="text-muted-foreground hidden text-xs sm:inline">
-                  {lastUpdate.toLocaleTimeString("th-TH")}
+                  {lastUpdateText}
                 </span>
               )}
               <button
