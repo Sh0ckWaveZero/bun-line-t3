@@ -268,6 +268,8 @@ export const LeaveForm = ({ onSubmit }: LeaveFormProps) => {
   );
 
   useEffect(() => {
+    // data fetch ตามเดือน — flip loading ทันทีเป็น data-fetch pattern ที่ตั้งใจ
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchLeaves(historyMonth);
   }, [historyMonth, fetchLeaves]);
 
@@ -283,8 +285,7 @@ export const LeaveForm = ({ onSubmit }: LeaveFormProps) => {
 
       return () => clearTimeout(redirectTimeout);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+  }, [status, showToast]);
 
   // ─── Submit ───────────────────────────────────────────────────────────────
 

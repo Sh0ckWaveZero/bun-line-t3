@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import {
@@ -273,16 +273,16 @@ const StoryField = ({
   const [isEditing, setIsEditing] = useState(false);
 
   // รับค่าใหม่จาก server เฉพาะตอนที่ไม่ได้พิมพ์อยู่ ไม่งั้น polling จะทับสิ่งที่กำลังพิมพ์
-  useEffect(() => {
-    if (!isEditing) setDraft(room.story);
-  }, [room.story, isEditing]);
+  // (adjust state during render — React render ซ้ำทันทีก่อน commit ไม่มี cascade แบบ effect)
+  if (!isEditing && draft !== room.story) {
+    setDraft(room.story);
+  }
 
   useEffect(() => {
     if (!isEditing || draft === room.story) return;
     const timer = window.setTimeout(() => onSave(draft), STORY_SAVE_DELAY_MS);
     return () => window.clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft, isEditing]);
+  }, [draft, isEditing, onSave, room.story]);
 
   if (!canEdit) {
     return room.story ? (
@@ -461,7 +461,12 @@ export const PlanningPokerRoomPage = () => {
   const { code: rawCode } = useParams({ strict: false }) as { code?: string };
   const code = (rawCode ?? "").toUpperCase();
   const poker = usePokerRoom(code);
-  const { room } = poker;
+  const { room, setStory } = poker;
+  // identity ต้องนิ่ง — StoryField ใช้ onSave ใน effect deps ของ debounced autosave
+  const handleSaveStory = useCallback(
+    (story: string) => void setStory(story),
+    [setStory],
+  );
   const [cardSize, setCardSize] = useState<CardSize>("medium");
 
   // overlay ฉลองค่าเฉลี่ยเล่นเฉพาะคนที่ "เห็นจังหวะเปิดไพ่เกิดขึ้นจริง" —
@@ -547,7 +552,7 @@ export const PlanningPokerRoomPage = () => {
         onRename={poker.rename}
         onSwitchRole={(role) => void poker.setRole(role)}
         onLeave={() => void poker.leave()}
-        onSaveStory={(story) => void poker.setStory(story)}
+        onSaveStory={handleSaveStory}
       />
 
       {poker.actionError ? (
