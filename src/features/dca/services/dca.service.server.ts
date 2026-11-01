@@ -77,6 +77,98 @@ const createOrder = async (input: CreateDcaOrderInput) => {
   throw new Error("DCA order already exists");
 };
 
+/** write-conflict ของ Serializable transaction (Prisma P2034 / PG 40001 / deadlock 40P01) — retry ได้ */
+const isTransactionWriteConflict = (error: unknown): boolean => {
+  if (typeof error !== "object" || error === null) return false;
+  if ("code" in error && error.code === "P2034") return true;
+  const cause = "cause" in error ? error.cause : null;
+  return (
+    typeof cause === "object" &&
+    cause !== null &&
+    "kind" in cause &&
+    cause.kind === "TransactionWriteConflict" &&
+    "originalCode" in cause &&
+    (cause.originalCode === "40001" || cause.originalCode === "40P01")
+  );
+};
+
+const BATCH_CREATE_MAX_ATTEMPTS = 5;
+
+/**
+ * สร้าง DCA orders หลายแถวใน transaction เดียว (ใช้โดย import)
+ *
+ * ล็อก per-user ด้วย advisory lock เดียวกับ createLineOrder แล้วอ่าน latest round
+ * ต่อเหรียญครั้งเดียว เลขต่อใน memory ตามลำดับ executedAt (caller sort มาแล้ว) —
+ * ผล round เหมือน insert ทีละแถวเป๊ะ (writer ทุกเส้นทางผ่าน lock เดียวกัน จึงไม่มี
+ * concurrent webhook แซงได้) แต่เร็วกว่ามากเพราะเป็น 1 transaction ไม่ใช่ N รอบ
+ *
+ * ทั้งชุดเป็น atomic: caller ต้อง validate + ตรวจซ้ำมาแล้วทั้งหมดก่อนเรียก
+ * ถ้า dedup key ชนกับ order ที่เข้ามาระหว่าง import (P2002) ทั้งชุด throw
+ * ให้ผู้ใช้ลอง import ใหม่
+ */
+const createOrdersBatch = async (
+  lineUserId: string,
+  rows: Array<CreateDcaOrderInput>,
+): Promise<number> => {
+  if (rows.length === 0) return 0;
+  // validate ทุกแถวด้วย schema เดียวกับ single create (defense in depth)
+  const normalized = rows.map((row) => {
+    parsedDcaSchema.parse(row);
+    z.string().trim().min(1).parse(row.lineUserId);
+    if (row.lineUserId !== lineUserId) {
+      throw new Error("DCA batch create: lineUserId mismatch");
+    }
+    return { ...row, coin: row.coin.toUpperCase() };
+  });
+
+  for (let attempt = 0; attempt < BATCH_CREATE_MAX_ATTEMPTS; attempt++) {
+    try {
+      return await db.$transaction(
+        async (tx) => {
+          await lockDcaOwner(tx, lineUserId);
+          // อ่าน latest round ต่อเหรียญครั้งเดียว (read ล้วนใน tx เดียว ขนานกันได้)
+          const latestByCoin = new Map<string, number>();
+          await Promise.all(
+            [...new Set(normalized.map((row) => row.coin))].map(
+              async (coin) => {
+                const latest = await tx.dcaOrder.findFirst({
+                  where: { lineUserId, coin },
+                  orderBy: { round: "desc" },
+                  select: { round: true },
+                });
+                latestByCoin.set(coin, latest?.round ?? 0);
+              },
+            ),
+          );
+          const nextRoundByCoin = new Map(latestByCoin);
+          const data = normalized.map((row) => {
+            const round = (nextRoundByCoin.get(row.coin) ?? 0) + 1;
+            nextRoundByCoin.set(row.coin, round);
+            return {
+              ...row,
+              deduplicationKey: `legacy:${row.coin}:${row.executedAt.toISOString()}`,
+              round,
+              orderId: generateOrderId(row.coin, round),
+            };
+          });
+          await tx.dcaOrder.createMany({ data });
+          return data.length;
+        },
+        { isolationLevel: "Serializable" },
+      );
+    } catch (error) {
+      if (
+        isTransactionWriteConflict(error) &&
+        attempt < BATCH_CREATE_MAX_ATTEMPTS - 1
+      ) {
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw new Error("DCA batch create retry exhausted");
+};
+
 const createLineOrder = async (
   input: CreateDcaOrderInput,
   webhookEventId?: string,
@@ -135,21 +227,7 @@ const createLineOrder = async (
         { isolationLevel: "Serializable" },
       );
     } catch (error) {
-      if (
-        typeof error === "object" &&
-        error !== null &&
-        (("code" in error && error.code === "P2034") ||
-          ("cause" in error &&
-            typeof error.cause === "object" &&
-            error.cause !== null &&
-            "kind" in error.cause &&
-            error.cause.kind === "TransactionWriteConflict" &&
-            "originalCode" in error.cause &&
-            (error.cause.originalCode === "40001" ||
-              error.cause.originalCode === "40P01"))) &&
-        attempt < 4
-      )
-        continue;
+      if (isTransactionWriteConflict(error) && attempt < 4) continue;
       if (!(
         typeof error === "object" &&
         error !== null &&
@@ -337,6 +415,7 @@ const getSummary = async (lineUserIds: string | string[]) => {
 export const dcaService = {
   createOrder,
   createLineOrder,
+  createOrdersBatch,
   listOrders,
   listAllOrders,
   getOrderById,

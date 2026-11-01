@@ -63,6 +63,9 @@ const handleEvent = async (
   const events = req.body?.events;
   if (!Array.isArray(events) || events.length === 0)
     return res.status(400).json({ error: "No events to process" });
+  // ประมวลผล event ตามลำดับเท่านั้น (ห้าม Promise.all): แต่ละ handler ตอบกลับผู้ใช้ผ่าน
+  // LINE Messaging API (rate-limited) และลำดับ reply ต้องตรงกับลำดับข้อความที่ผู้ใช้ส่ง —
+  // ขนานจะทำให้ reply สลับลำดับในแชท (react-doctor/async-await-in-loop = intentional)
   for (const event of events) {
     const action = getAction(event);
     if (!action) continue;

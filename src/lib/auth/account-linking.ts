@@ -55,68 +55,84 @@ export const findAndMergeDuplicateLineAccounts = async (
   const primaryUserId = primaryAccount.userId;
 
   // Merge accounts: ย้าย sessions และข้อมูลอื่นๆ ไปยัง primary user
-  for (let i = 1; i < accounts.length; i++) {
-    const duplicateAccount = accounts[i];
-    if (!duplicateAccount) continue;
-    const duplicateUserId = duplicateAccount.userId;
+  // group ตาม duplicate userId ก่อน (user เดียวอาจมีหลาย account row) แล้ว merge
+  // ทีละ group แบบขนานได้ปลอดภัย — แต่ละ group แตะเฉพาะ row ของ duplicate user
+  // ตัวเอง (disjoint กันทุก group) และการลบ duplicate user เงื่อนไข count=0
+  // พึ่ง delete เฉพาะใน group ตัวเอง ไม่ข้าม group
+  // (react-doctor/async-await-in-loop = ขนานระดับ group ตาม recipe)
+  const duplicateAccountsByUserId = new Map<string, typeof accounts>();
+  for (const account of accounts.slice(1)) {
+    const group = duplicateAccountsByUserId.get(account.userId) ?? [];
+    group.push(account);
+    duplicateAccountsByUserId.set(account.userId, group);
+  }
 
-    console.log(
-      `[Account Linking] Merging user ${duplicateUserId} → ${primaryUserId}`,
-    );
-
-    try {
-      // ย้าย sessions ไปยัง primary user
-      await db.session.updateMany({
-        where: { userId: duplicateUserId },
-        data: { userId: primaryUserId },
-      });
-
-      // อัปเดตข้อมูลอื่นๆ ที่อ้างอิงถึง duplicate user
-      // (เช่น WorkAttendance, Leave, etc.)
-      await db.workAttendance.updateMany({
-        where: { userId: duplicateUserId },
-        data: { userId: primaryUserId },
-      });
-
-      await db.leave.updateMany({
-        where: { userId: duplicateUserId },
-        data: { userId: primaryUserId },
-      });
-
-      await db.userSettings.update({
-        where: { userId: duplicateUserId },
-        data: { userId: primaryUserId },
-      });
-
-      // ลบ duplicate account
-      await db.account.delete({
-        where: { id: duplicateAccount.id },
-      });
-
-      // ลบ duplicate user (ถ้าไม่มี account อื่นๆ เหลือ)
-      const remainingAccounts = await db.account.count({
-        where: { userId: duplicateUserId },
-      });
-
-      if (remainingAccounts === 0) {
-        await db.user.delete({
-          where: { id: duplicateUserId },
-        });
-        console.log(
-          `[Account Linking] Deleted duplicate user: ${duplicateUserId}`,
-        );
-      }
+  await Promise.all(
+    [...duplicateAccountsByUserId.values()].map(async (duplicateAccounts) => {
+      const primary = duplicateAccounts[0];
+      if (!primary) return;
+      const duplicateUserId = primary.userId;
 
       console.log(
-        `[Account Linking] ✅ Successfully merged user ${duplicateUserId} → ${primaryUserId}`,
+        `[Account Linking] Merging user ${duplicateUserId} → ${primaryUserId}`,
       );
-    } catch (error) {
-      console.error(
-        `[Account Linking] ❌ Failed to merge user ${duplicateUserId} → ${primaryUserId}:`,
-        error,
-      );
-    }
-  }
+
+      try {
+        // ย้าย sessions ไปยัง primary user
+        await db.session.updateMany({
+          where: { userId: duplicateUserId },
+          data: { userId: primaryUserId },
+        });
+
+        // อัปเดตข้อมูลอื่นๆ ที่อ้างอิงถึง duplicate user
+        // (เช่น WorkAttendance, Leave, etc.)
+        await db.workAttendance.updateMany({
+          where: { userId: duplicateUserId },
+          data: { userId: primaryUserId },
+        });
+
+        await db.leave.updateMany({
+          where: { userId: duplicateUserId },
+          data: { userId: primaryUserId },
+        });
+
+        await db.userSettings.update({
+          where: { userId: duplicateUserId },
+          data: { userId: primaryUserId },
+        });
+
+        // ลบ duplicate account ทั้งหมดของ user นี้ในครั้งเดียว
+        await db.account.deleteMany({
+          where: {
+            id: { in: duplicateAccounts.map((account) => account.id) },
+          },
+        });
+
+        // ลบ duplicate user (ถ้าไม่มี account อื่นๆ เหลือ)
+        const remainingAccounts = await db.account.count({
+          where: { userId: duplicateUserId },
+        });
+
+        if (remainingAccounts === 0) {
+          await db.user.delete({
+            where: { id: duplicateUserId },
+          });
+          console.log(
+            `[Account Linking] Deleted duplicate user: ${duplicateUserId}`,
+          );
+        }
+
+        console.log(
+          `[Account Linking] ✅ Successfully merged user ${duplicateUserId} → ${primaryUserId}`,
+        );
+      } catch (error) {
+        console.error(
+          `[Account Linking] ❌ Failed to merge user ${duplicateUserId} → ${primaryUserId}:`,
+          error,
+        );
+      }
+    }),
+  );
 
   return primaryAccount;
 };
