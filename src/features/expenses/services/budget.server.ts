@@ -6,7 +6,7 @@
  */
 
 import { db } from "@/lib/database/index";
-import type { Budget, ExpenseCategory } from "@prisma/client";
+import type { ExpenseCategory } from "@prisma/client";
 import { toNum } from "./decimal";
 
 /**

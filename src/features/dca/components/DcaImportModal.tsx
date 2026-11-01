@@ -45,7 +45,7 @@ export const DcaImportModal = ({ onClose, onSuccess }: DcaImportModalProps) => {
 
   // ─── File handling ────────────────────────────────────────────────────────
 
-  const acceptFile = (f: File) => {
+  const acceptFile = useCallback((f: File) => {
     const ext = f.name.split(".").pop()?.toLowerCase();
     if (!ACCEPTED_EXTS.includes(`.${ext}` as (typeof ACCEPTED_EXTS)[number])) {
       setError("รองรับเฉพาะไฟล์ .csv, .json, .xlsx เท่านั้น");
@@ -53,19 +53,22 @@ export const DcaImportModal = ({ onClose, onSuccess }: DcaImportModalProps) => {
     }
     setError(null);
     setFile(f);
-  };
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (f) acceptFile(f);
   };
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    const f = e.dataTransfer.files?.[0];
-    if (f) acceptFile(f);
-  }, []);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setDragOver(false);
+      const f = e.dataTransfer.files?.[0];
+      if (f) acceptFile(f);
+    },
+    [acceptFile],
+  );
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();

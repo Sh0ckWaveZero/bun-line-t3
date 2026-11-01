@@ -44,7 +44,6 @@ import {
   formatAmount,
   getCurrentMonth,
   toTransDate,
-  toTransMonth,
   formatDateShortThai,
 } from "@/features/expenses/helpers";
 import type {

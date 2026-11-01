@@ -89,7 +89,9 @@ export default function ThaiIdGenerate() {
       setTimeout(() => {
         setCopiedStates((prev) => ({ ...prev, [key]: false }));
       }, 2000);
-    } catch {}
+    } catch {
+      // clipboard ไม่พร้อมใช้งาน: ไม่แสดงสถานะคัดลอก
+    }
   }, []);
 
   const handleValidation = useCallback(() => {

@@ -57,7 +57,7 @@ export const ResultsPanel = ({ summary }: { summary: RoundSummary }) => {
                         className="bg-muted h-3 flex-1 overflow-hidden rounded-full"
                       >
                         <div
-                          className="bg-primary h-full rounded-full transition-all motion-reduce:transition-none"
+                          className="bg-primary h-full rounded-full transition-[width] motion-reduce:transition-none"
                           style={{ width: `${(item.count / maxCount) * 100}%` }}
                         />
                       </div>

@@ -72,24 +72,26 @@ const formatDateParts = (value: string) => {
   return date;
 };
 
+// hoist ไว้ระดับโมดูล — สร้าง formatter ราย call แพงและถูกเรียกทุก render
+const enShortDateFormatter = new Intl.DateTimeFormat("en", {
+  day: "numeric",
+  month: "short",
+});
+
+const enMediumDateFormatter = new Intl.DateTimeFormat("en", {
+  day: "numeric",
+  month: "short",
+  year: "2-digit",
+});
+
 const formatShortDate = (value: string): string => {
   const date = formatDateParts(value);
-  return date
-    ? new Intl.DateTimeFormat("en", { day: "numeric", month: "short" }).format(
-        date,
-      )
-    : "—";
+  return date ? enShortDateFormatter.format(date) : "—";
 };
 
 const formatDate = (value: string): string => {
   const date = formatDateParts(value);
-  return date
-    ? new Intl.DateTimeFormat("en", {
-        day: "numeric",
-        month: "short",
-        year: "2-digit",
-      }).format(date)
-    : "—";
+  return date ? enMediumDateFormatter.format(date) : "—";
 };
 
 const formatThb = (value: number, decimals = 0): string => {

@@ -52,8 +52,8 @@ let createCalls: Array<Record<string, unknown>> = [];
 let storedMeasurements: Array<Record<string, unknown>> = [];
 let profileFindResult: Record<string, unknown> | null = null;
 let updateCalls: Array<Record<string, unknown>> = [];
-let deleteCalls: string[] = [];
-let isProfileMissing = false;
+const deleteCalls: string[] = [];
+const isProfileMissing = false;
 let activeListenerRow: { activeListener: string } | null = null;
 
 /** จำลอง DB round-trip: Prisma.DbNull (sentinel) อ่านกลับมาเป็น null เสมอ */

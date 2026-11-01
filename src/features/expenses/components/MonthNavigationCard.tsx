@@ -3,12 +3,11 @@ import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { formatMonthThai, getCurrentMonth } from "@/features/expenses/helpers";
-import { forwardRef, CSSProperties, RefObject } from "react";
+import { forwardRef, CSSProperties } from "react";
 
 interface MonthNavigationCardProps {
   currentMonth: string;
@@ -50,7 +49,6 @@ export const MonthNavigationCard = forwardRef<
       onNextMonth,
       swipeTransform = 0,
       isSwiping = false,
-      className,
     },
     forwardedRef,
   ) => {

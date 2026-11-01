@@ -6,11 +6,7 @@
  */
 
 import { db } from "@/lib/database/index";
-import type {
-  RecurringTransaction,
-  RecurringFrequency,
-  ExpenseCategory,
-} from "@prisma/client";
+import type { RecurringFrequency, ExpenseCategory } from "@prisma/client";
 import { toTransDate, toTransMonth } from "../helpers";
 import type { TransactionWithCategory } from "../types";
 import { toNum } from "./decimal";
@@ -364,7 +360,7 @@ function calculateNextRunDate(
   fromDate?: string,
 ): string {
   const from = fromDate ? new Date(fromDate) : new Date();
-  let next = new Date(from);
+  const next = new Date(from);
 
   switch (frequency) {
     case "DAILY":

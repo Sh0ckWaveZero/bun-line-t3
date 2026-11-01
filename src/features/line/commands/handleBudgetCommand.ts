@@ -25,9 +25,7 @@ import {
   seedDefaultCategories,
 } from "@/features/expenses/services/category.server";
 import { getCurrentMonth, formatMonthThai } from "@/features/expenses/helpers";
-import type { BudgetUsage } from "@/features/expenses/services/budget.server";
 import type { ExpenseCategory } from "@/features/expenses/types";
-import { env } from "@/env.mjs";
 
 // ---------------------------------------------------------------------------
 // Lazy import sendMessage

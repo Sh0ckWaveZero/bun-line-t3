@@ -542,6 +542,8 @@ interface OpenApprovalMenu {
   item: ApprovalItem;
   trigger: HTMLElement;
   rect: DOMRect;
+  /** ขนาด viewport ณ ตอนเปิดเมนู — จับจาก event handler เพื่อไม่อ่าน window ตอน render */
+  viewport: { width: number; height: number };
 }
 
 const MORPH_TRIGGER_SIZE = 32;
@@ -577,13 +579,11 @@ function ApprovalActionsMenu({
   const contentRef = useRef<HTMLDivElement>(null);
   const closeTimerRef = useRef<number | null>(null);
   const closedRef = useRef(false);
-  const { item, trigger, rect } = menu;
+  const { item, trigger, rect, viewport } = menu;
 
   // พื้นที่ข้างล่างไม่พอ (แถวล่าง ๆ ของตาราง) → เปิดขึ้นบนแทน
-  const flipUp = rect.bottom + 240 > window.innerHeight;
-  const maxHeight = flipUp
-    ? rect.top - 8
-    : window.innerHeight - rect.bottom - 8;
+  const flipUp = rect.bottom + 240 > viewport.height;
+  const maxHeight = flipUp ? rect.top - 8 : viewport.height - rect.bottom - 8;
 
   // เมานต์แบบปิด (32px) → เฟรมถัดไปค่อยเปิด เพื่อให้ browser เห็นสถานะเริ่มต้นแล้ว transition ยิง
   useEffect(() => {
@@ -670,19 +670,19 @@ function ApprovalActionsMenu({
   // ที่เกิดจากการ focus รายการแรกทำให้เมนูปิดทันที)
   useEffect(() => {
     if (!isOpen) return;
-    let detachViewportListeners = () => {};
+    let isArmed = false;
     const timer = window.setTimeout(() => {
-      const handleViewportChange = () => startClose();
-      window.addEventListener("resize", handleViewportChange);
-      window.addEventListener("scroll", handleViewportChange, true);
-      detachViewportListeners = () => {
-        window.removeEventListener("resize", handleViewportChange);
-        window.removeEventListener("scroll", handleViewportChange, true);
-      };
+      isArmed = true;
     }, 400);
+    const handleViewportChange = () => {
+      if (isArmed) startClose();
+    };
+    window.addEventListener("resize", handleViewportChange);
+    window.addEventListener("scroll", handleViewportChange, true);
     return () => {
       window.clearTimeout(timer);
-      detachViewportListeners();
+      window.removeEventListener("resize", handleViewportChange);
+      window.removeEventListener("scroll", handleViewportChange, true);
     };
   }, [isOpen, startClose]);
 
@@ -729,8 +729,8 @@ function ApprovalActionsMenu({
         className="t-morph"
         style={{
           top: flipUp ? undefined : rect.top,
-          bottom: flipUp ? window.innerHeight - rect.bottom : undefined,
-          right: window.innerWidth - rect.right,
+          bottom: flipUp ? viewport.height - rect.bottom : undefined,
+          right: viewport.width - rect.right,
           maxHeight,
         }}
         onTransitionEnd={(event) => {
@@ -1428,6 +1428,10 @@ export function LineApprovalPage() {
                               item: rowItem,
                               trigger,
                               rect: trigger.getBoundingClientRect(),
+                              viewport: {
+                                width: window.innerWidth,
+                                height: window.innerHeight,
+                              },
                             })
                           }
                         />

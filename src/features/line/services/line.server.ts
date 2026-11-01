@@ -66,7 +66,8 @@ const handleEvent = async (
   for (const event of events) {
     const action = getAction(event);
     if (!action) continue;
-    const eventReq = { ...req, body: { ...req.body, events: [event] } };
+    // สร้าง object ตรง ๆ (allowlist) — downstream อ่านแค่ body.events เสมอ
+    const eventReq: LineApiRequest = { body: { events: [event] } };
     if (action.kind === "auto-dca") {
       if (await canAutoRecordDca(event.source!.userId!))
         await handleParsedDcaAdd(eventReq, action.parsed);

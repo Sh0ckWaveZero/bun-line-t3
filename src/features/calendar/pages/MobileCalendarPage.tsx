@@ -84,7 +84,9 @@ export function MobileCalendarPage() {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       }
-    } catch {}
+    } catch {
+      // ส่งออกไม่สำเร็จ: ไม่ต้องทำอะไรเพิ่ม
+    }
   };
 
   const buddhistYear = getYear(currentDate) + 543;

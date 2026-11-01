@@ -53,33 +53,34 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
   </div>
 );
 
+/** pure helpers — hoist ขึ้นโมดูลเพื่อให้ deps ของ effect สมบูรณ์ */
+const parseMonthString = (monthStr: string): Date => {
+  const parts = monthStr.split("-");
+  if (parts.length !== 2) {
+    return new Date();
+  }
+
+  const [yearStr, monthStr2] = parts;
+  const year = parseInt(yearStr || "", 10);
+  const month = parseInt(monthStr2 || "", 10);
+
+  if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
+    return new Date();
+  }
+
+  return new Date(year, month - 1);
+};
+
+const formatToMonthString = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  return `${year}-${month}`;
+};
+
 export const MonthSelector: React.FC<MonthSelectorProps> = ({
   selectedMonth,
   onMonthChange,
 }) => {
-  const parseMonthString = (monthStr: string): Date => {
-    const parts = monthStr.split("-");
-    if (parts.length !== 2) {
-      return new Date();
-    }
-
-    const [yearStr, monthStr2] = parts;
-    const year = parseInt(yearStr || "", 10);
-    const month = parseInt(monthStr2 || "", 10);
-
-    if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
-      return new Date();
-    }
-
-    return new Date(year, month - 1);
-  };
-
-  const formatToMonthString = (date: Date): string => {
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    return `${year}-${month}`;
-  };
-
   const formatBuddhistDate = (date: Date) => {
     const gregorianYear = date.getFullYear();
     const buddhistYear = gregorianYear + 543;

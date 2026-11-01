@@ -8,16 +8,14 @@ import { dcaEventManager } from "@/features/dca/lib/event-manager";
 import { getAuthorizedLineUserId } from "@/lib/auth";
 import { z } from "zod";
 
-const updateDcaOrderSchema = z
-  .object({
-    lineUserId: z.string().trim().min(1).optional(),
-    amountTHB: z.number().finite().positive(),
-    coinReceived: z.number().finite().positive(),
-    pricePerCoin: z.number().finite().positive(),
-    executedAt: z.string().datetime({ offset: true }),
-    note: z.string().max(500).optional(),
-  })
-  .strict();
+const updateDcaOrderSchema = z.strictObject({
+  lineUserId: z.string().trim().min(1).optional(),
+  amountTHB: z.number().finite().positive(),
+  coinReceived: z.number().finite().positive(),
+  pricePerCoin: z.number().finite().positive(),
+  executedAt: z.iso.datetime({ offset: true }),
+  note: z.string().max(500).optional(),
+});
 
 /**
  * PATCH /api/dca/$id
