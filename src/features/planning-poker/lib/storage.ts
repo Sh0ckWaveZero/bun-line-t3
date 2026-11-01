@@ -15,6 +15,10 @@ const readStorage = (kind: StorageKind, key: string): string | null => {
   }
 };
 
+// ผู้ฟังที่ subscribePokerStorage เก็บไว้ — เขียนจากแท็บนี้ก็แจ้งด้วย
+// (native "storage" event ยิงเฉพาะแท็บอื่น) เพื่อให้ useSyncExternalStore เห็นการเปลี่ยนทันที
+const listeners = new Set<() => void>();
+
 const writeStorage = (
   kind: StorageKind,
   key: string,
@@ -26,6 +30,17 @@ const writeStorage = (
   } catch {
     // ignore
   }
+  for (const listener of listeners) listener();
+};
+
+/** subscribe สำหรับ useSyncExternalStore — ครอบคลุมทั้งเขียนจากแท็บนี้และแท็บอื่น */
+export const subscribePokerStorage = (onChange: () => void): (() => void) => {
+  listeners.add(onChange);
+  window.addEventListener("storage", onChange);
+  return () => {
+    listeners.delete(onChange);
+    window.removeEventListener("storage", onChange);
+  };
 };
 
 // token เก็บใน sessionStorage = ตัวตนแยกตามแท็บ

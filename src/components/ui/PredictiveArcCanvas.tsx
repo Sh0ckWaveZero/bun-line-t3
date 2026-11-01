@@ -180,21 +180,6 @@ export function PredictiveArcCanvas({
     saturation,
   });
 
-  // Keep the latest options readable by the render loop each frame
-  useEffect(() => {
-    optionsRef.current = {
-      mode,
-      speed,
-      spacing,
-      dotSize,
-      archHeight,
-      thickness,
-      brightness,
-      hue,
-      saturation,
-    };
-  });
-
   useEffect(() => {
     const host = hostRef.current;
     const canvas = canvasRef.current;
@@ -261,7 +246,7 @@ export function PredictiveArcCanvas({
     frameId = requestAnimationFrame(loop);
 
     return () => {
-      if (frameId) cancelAnimationFrame(frameId);
+      cancelAnimationFrame(frameId);
       resizeObserver.disconnect();
       intersectionObserver.disconnect();
       document.removeEventListener("visibilitychange", handleVisibility);
@@ -269,11 +254,22 @@ export function PredictiveArcCanvas({
     };
   }, []);
 
-  // Prop changes (e.g. mode switch) apply automatically in the animation loop;
-  // under reduced motion there is no loop, so redraw a still frame manually.
+  // อัปเดต options + redraw เมื่อ props เปลี่ยน (loop อ่าน optionsRef ทุกเฟรมอยู่แล้ว;
+  // reduced motion ไม่มี loop จึงต้อง render เฟรมนิ่งเอง)
   useEffect(() => {
+    optionsRef.current = {
+      mode,
+      speed,
+      spacing,
+      dotSize,
+      archHeight,
+      thickness,
+      brightness,
+      hue,
+      saturation,
+    };
     rendererRef.current?.render();
-  }, [mode, speed, spacing, dotSize, archHeight, thickness, brightness]);
+  }, [mode, speed, spacing, dotSize, archHeight, thickness, brightness, hue, saturation]);
 
   return (
     <div

@@ -3,10 +3,9 @@
 import {
   createContext,
   useContext,
-  useEffect,
-  useState,
   useCallback,
   useMemo,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import type { DcaLocale, DcaLocaleStrings } from "./locale";
@@ -31,6 +30,17 @@ interface DcaLocaleProviderProps {
   storageKey?: string;
 }
 
+/** external store ของ locale — เขียนจากที่เดียว (setLocale) ก็แจ้งผู้ subscribe */
+const localeListeners = new Set<() => void>();
+const subscribeLocale = (onChange: () => void) => {
+  localeListeners.add(onChange);
+  window.addEventListener("storage", onChange);
+  return () => {
+    localeListeners.delete(onChange);
+    window.removeEventListener("storage", onChange);
+  };
+};
+
 function loadLocale(): DcaLocale {
   if (typeof window === "undefined") return DEFAULT_LOCALE;
   try {
@@ -47,21 +57,21 @@ export function DcaLocaleProvider({
   defaultLocale = DEFAULT_LOCALE,
   storageKey = STORAGE_KEY,
 }: DcaLocaleProviderProps) {
-  const [locale, setLocaleState] = useState<DcaLocale>(defaultLocale);
-
-  useEffect(() => {
-    const stored = loadLocale();
-    setLocaleState(stored);
-  }, []);
+  // locale อ่านจาก localStorage ผ่าน uSES — ไม่ setState ใน effect (กัน hydration flicker)
+  const locale = useSyncExternalStore(
+    subscribeLocale,
+    loadLocale,
+    () => defaultLocale,
+  );
 
   const setLocale = useCallback(
     (newLocale: DcaLocale) => {
-      setLocaleState(newLocale);
       try {
         localStorage.setItem(storageKey, newLocale);
       } catch (e) {
         console.warn("Failed to save locale to localStorage:", e);
       }
+      for (const listener of localeListeners) listener();
     },
     [storageKey],
   );

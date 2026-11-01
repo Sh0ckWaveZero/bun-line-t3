@@ -1,11 +1,34 @@
 "use client";
 
-import React from "react";
+import React, { useSyncExternalStore } from "react";
 
 import { CenteredModal } from "@/components/common/CenteredModal";
 import { MobileModal } from "@/components/common/MobileModal";
 import { dateFormatters } from "@/lib/utils/date-formatting";
 import { EditAttendanceModalProps } from "@/lib/types/attendance";
+
+const subscribeNoop = () => () => {};
+
+/** ตรวจอุปกรณ์เคลื่อนที่ — external store ผ่าน uSES (server snapshot = false) ไม่ setState ใน effect */
+const getIsMobileSnapshot = (): boolean => {
+  const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+  const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i.test(
+    userAgent.toLowerCase(),
+  );
+  const isSmallScreen = window.innerWidth <= 768;
+  const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+  const mobileKeywords = /mobile|android|iphone|ipad|phone|tablet/i.test(userAgent);
+  return isMobileDevice || isSmallScreen || (isTouchDevice && mobileKeywords);
+};
+
+const subscribeViewport = (onChange: () => void) => {
+  window.addEventListener("resize", onChange);
+  window.addEventListener("orientationchange", onChange);
+  return () => {
+    window.removeEventListener("resize", onChange);
+    window.removeEventListener("orientationchange", onChange);
+  };
+};
 
 export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
   isOpen,
@@ -16,41 +39,17 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
   onEditDataChange,
   onUpdate,
 }) => {
-  const [isMobile, setIsMobile] = React.useState(false);
-  const [isMounted, setIsMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setIsMounted(true);
-
-    const checkMobile = () => {
-      const userAgent =
-        navigator.userAgent || navigator.vendor || (window as any).opera;
-
-      const isMobileDevice =
-        /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i.test(
-          userAgent.toLowerCase(),
-        );
-      const isSmallScreen = window.innerWidth <= 768;
-      const isTouchDevice =
-        "ontouchstart" in window || navigator.maxTouchPoints > 0;
-      const mobileKeywords = /mobile|android|iphone|ipad|phone|tablet/i.test(
-        userAgent,
-      );
-
-      const mobile =
-        isMobileDevice || isSmallScreen || (isTouchDevice && mobileKeywords);
-      setIsMobile(mobile);
-    };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    window.addEventListener("orientationchange", checkMobile);
-
-    return () => {
-      window.removeEventListener("resize", checkMobile);
-      window.removeEventListener("orientationchange", checkMobile);
-    };
-  }, []);
+  // ค่า client เท่านั้น — uSES ให้ server snapshot เป็น false/ไม่ mount จน hydration เสร็จ
+  const isMounted = useSyncExternalStore(
+    subscribeNoop,
+    () => true,
+    () => false,
+  );
+  const isMobile = useSyncExternalStore(
+    subscribeViewport,
+    getIsMobileSnapshot,
+    () => false,
+  );
 
   if (!isOpen || !editingRecord) return null;
 

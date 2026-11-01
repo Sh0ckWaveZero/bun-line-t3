@@ -179,6 +179,8 @@ export const RevealOverlay = ({
 
   useEffect(() => {
     if (phase !== "play") return;
+    const layer = layerRef.current;
+    const stage = stageRef.current;
     const { combos, finaleBursts } = FX_RARITY_PROFILES[fxRarity];
     const tone = FX_TONES[fxRarity];
     // ขนาด/สัดส่วนยึดจอตอนเริ่มเล่น (mount) — resize กลางเล่นไม่คำนวณใหม่ (เล่นจบใน ~6.5s)
@@ -189,8 +191,8 @@ export const RevealOverlay = ({
     const playCombo = (comboIndex: number, delayMs: number) => {
       const combo = combos[comboIndex % combos.length];
       if (!combo) return;
-      const timeline = layerRef.current?.play([...combo], {
-        at: stageRef.current ?? undefined,
+      const timeline = layer?.play([...combo], {
+        at: stage ?? undefined,
         size,
         ratio,
         tone,
@@ -221,7 +223,7 @@ export const RevealOverlay = ({
       for (const timer of timers) window.clearTimeout(timer);
       for (const timeline of timelines) timeline.kill();
       // เอาทุกอย่างออกจาก layer (กัน timeline ค้าง tick หลัง unmount/skip)
-      layerRef.current?.clear();
+      layer?.clear();
     };
   }, [phase, fxRarity, fxSeed]);
 

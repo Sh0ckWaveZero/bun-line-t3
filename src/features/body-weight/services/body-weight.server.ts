@@ -317,14 +317,20 @@ export async function ingestScaleWebhook(
  */
 const guessProfileId = async (weightKg: number): Promise<string | null> => {
   const profiles = await db.scaleProfile.findMany();
+  // อ่านอย่างเดียว ไม่ขึ้นกันเอง → ดึงการชั่งล่าสุดของทุกโปรไฟล์พร้อมกัน
+  const lastMeasurements = await Promise.all(
+    profiles.map((profile) =>
+      db.scaleMeasurement.findFirst({
+        where: { profileId: profile.id },
+        orderBy: { measuredAt: "desc" },
+        select: { weightKg: true },
+      }),
+    ),
+  );
   let bestId: string | null = null;
   let bestDiff = Number.POSITIVE_INFINITY;
-  for (const profile of profiles) {
-    const last = await db.scaleMeasurement.findFirst({
-      where: { profileId: profile.id },
-      orderBy: { measuredAt: "desc" },
-      select: { weightKg: true },
-    });
+  for (const [index, profile] of profiles.entries()) {
+    const last = lastMeasurements[index];
     const reference = last?.weightKg ?? profile.refWeightKg;
     if (reference === null || reference === undefined) continue;
     const diff = Math.abs(reference - weightKg);

@@ -28,11 +28,15 @@ export function SkeletonReveal({
   const wasReadyRef = useRef(isReady);
   const [skeletonDismissed, setSkeletonDismissed] = useState(isReady);
 
+  // isReady กลับเป็น false → รีเซ็ตระหว่าง render ตาม react.dev (ไม่ใช้ effect)
+  const [prevReady, setPrevReady] = useState(isReady);
+  if (prevReady !== isReady) {
+    setPrevReady(isReady);
+    setSkeletonDismissed(isReady);
+  }
+
   useEffect(() => {
-    if (!isReady) {
-      setSkeletonDismissed(false);
-      return;
-    }
+    if (!isReady) return;
 
     if (skeletonDismissed) return;
 

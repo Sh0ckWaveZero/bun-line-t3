@@ -170,14 +170,20 @@ export function DayEventModal({
     snapPanelHeight();
   }, [movePillToSelected, snapPanelHeight]);
 
+  // handler ล่าสุดผ่าน ref — ผูก resize listener ครั้งเดียว ไม่ re-subscribe
+  const resizeSyncRef = useRef<() => void>(() => {});
   useEffect(() => {
-    const handleResize = () => {
+    resizeSyncRef.current = () => {
       movePillToSelected(false);
       snapPanelHeight();
     };
+  });
+
+  useEffect(() => {
+    const handleResize = () => resizeSyncRef.current();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [movePillToSelected, snapPanelHeight]);
+  }, []);
 
   const { isClosing, requestClose } = useDialogExit(onClose);
 

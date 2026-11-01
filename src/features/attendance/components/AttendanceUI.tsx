@@ -107,9 +107,12 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({
   );
   const [isOpen, setIsOpen] = useState(false);
 
-  React.useEffect(() => {
+  // selectedMonth เปลี่ยน → sync วันที่ระหว่าง render ตาม react.dev (ไม่ใช้ effect)
+  const [prevMonth, setPrevMonth] = useState(selectedMonth);
+  if (prevMonth !== selectedMonth) {
+    setPrevMonth(selectedMonth);
     setSelectedDate(parseMonthString(selectedMonth));
-  }, [selectedMonth]);
+  }
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {

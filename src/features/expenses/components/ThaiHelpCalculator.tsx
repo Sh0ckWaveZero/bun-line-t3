@@ -26,7 +26,7 @@ import {
   RotateCcw,
   TrendingDown,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 
 interface ExpenseCategory {
   id: string;
@@ -99,15 +99,8 @@ function ThaiHelpCalculatorContent({
   // Save error state for inline retry
   const [saveError, setSaveError] = useState(false);
 
-  // Daily Stats (client-side only to avoid SSR hydration mismatch)
-  const [dailyStats, setDailyStats] = useState({
-    todaySubsidyUsed: 0,
-    todayUserSpent: 0,
-    todayTotalBill: 0,
-    todayRemaining: CO_PAY_DAILY_MAX_SUBSIDY,
-  });
-
-  useEffect(() => {
+  // Daily Stats — derive ระหว่าง render (SSR ยังไม่มี transactions → ได้ค่าเริ่มต้นเท่าเดิม ไม่มี mismatch)
+  const dailyStats = useMemo(() => {
     const today = new Date().toISOString().split("T")[0]!;
     let todaySubsidyUsed = 0;
     let todayUserSpent = 0;
@@ -122,23 +115,16 @@ function ThaiHelpCalculatorContent({
       }
     });
 
-    setDailyStats({
+    return {
       todaySubsidyUsed,
       todayUserSpent,
       todayTotalBill: todaySubsidyUsed + todayUserSpent,
       todayRemaining: Math.max(CO_PAY_DAILY_MAX_SUBSIDY - todaySubsidyUsed, 0),
-    });
+    };
   }, [transactions]);
 
-  // Monthly Stats (client-side only to avoid SSR hydration mismatch)
-  const [stats, setStats] = useState({
-    totalSubsidyUsed: 0,
-    remainingSubsidy: 1000,
-    totalUserSpent: 0,
-    count: 0,
-  });
-
-  useEffect(() => {
+  // Monthly Stats — derive ระหว่าง render เช่นเดียวกับ daily
+  const stats = useMemo(() => {
     let totalSubsidyUsed = 0;
     let totalUserSpent = 0;
     let count = 0;
@@ -159,14 +145,12 @@ function ThaiHelpCalculatorContent({
       }
     });
 
-    const remainingSubsidy = Math.max(1000 - totalSubsidyUsed, 0);
-
-    setStats({
+    return {
       totalSubsidyUsed,
-      remainingSubsidy,
+      remainingSubsidy: Math.max(1000 - totalSubsidyUsed, 0),
       totalUserSpent,
       count,
-    });
+    };
   }, [transactions]);
 
   // Calculations for Split Bill — cap subsidy at monthly quota to prevent phantom amounts

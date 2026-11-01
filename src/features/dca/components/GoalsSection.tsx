@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useLayoutEffect, useState } from "react";
+import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 import { Pencil, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,11 +23,34 @@ const DEFAULT_GOALS: GoalValues = {
   goalSatoshi: 2_000_000,
 };
 
-function loadGoals(): GoalValues {
-  if (typeof window === "undefined") return DEFAULT_GOALS;
+function saveGoals(goals: GoalValues) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(goals));
+  notifyGoalsChanged();
+}
+
+/** external store ของเป้าหมาย — snapshot เป็น raw string (primitive) ให้ uSES เทียบค่าได้ */
+const goalsListeners = new Set<() => void>();
+const notifyGoalsChanged = () => {
+  for (const listener of goalsListeners) listener();
+};
+const subscribeGoals = (onChange: () => void) => {
+  goalsListeners.add(onChange);
+  window.addEventListener("storage", onChange);
+  return () => {
+    goalsListeners.delete(onChange);
+    window.removeEventListener("storage", onChange);
+  };
+};
+const readGoalsRaw = (): string | null => {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULT_GOALS;
+    return localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return null;
+  }
+};
+const parseGoals = (raw: string | null): GoalValues => {
+  if (!raw) return DEFAULT_GOALS;
+  try {
     const parsed = JSON.parse(raw) as Partial<GoalValues>;
     return {
       goalFiat: parsed.goalFiat ?? DEFAULT_GOALS.goalFiat,
@@ -36,11 +59,7 @@ function loadGoals(): GoalValues {
   } catch {
     return DEFAULT_GOALS;
   }
-}
-
-function saveGoals(goals: GoalValues) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(goals));
-}
+};
 
 const fmtInt = (n: number): string => Math.round(n).toLocaleString("en-US");
 const clampProgress = (value: number): number =>
@@ -58,13 +77,11 @@ type EditField = "goalFiat" | "goalSatoshi" | null;
 
 export const GoalsSection = ({ orders }: GoalsSectionProps) => {
   const { t } = useDcaLocale();
-  const [goals, setGoals] = useState<GoalValues>(DEFAULT_GOALS);
+  // เป้าหมายเก็บใน localStorage — external store ผ่าน uSES (ไม่ setState ใน effect)
+  const goalsRaw = useSyncExternalStore(subscribeGoals, readGoalsRaw, () => null);
+  const goals = useMemo(() => parseGoals(goalsRaw), [goalsRaw]);
   const [editing, setEditing] = useState<EditField>(null);
   const [draft, setDraft] = useState<string>("");
-
-  useLayoutEffect(() => {
-    setGoals(loadGoals());
-  }, []);
 
   const spendFiat = orders.reduce(
     (sum, order) => sum + toSafeNumber(order.amountTHB),
@@ -108,7 +125,6 @@ export const GoalsSection = ({ orders }: GoalsSectionProps) => {
       return;
     }
     const updated = { ...goals, [editing]: value };
-    setGoals(updated);
     saveGoals(updated);
     setEditing(null);
     setDraft("");

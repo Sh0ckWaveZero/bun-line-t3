@@ -69,12 +69,16 @@ export async function sendCheckInReminders(
   let pushSuccess = 0;
   let pushFail = 0;
 
-  for (const lineId of lineUserIds) {
-    try {
-      await sendPushMessage(lineId, messages);
-      pushSuccess++;
-    } catch {
-      pushFail++;
+  // ส่งพร้อมกันทีละ 5 คน (bounded) — คง error isolation รายคน แต่ไม่รอทีละคน
+  const CHUNK_SIZE = 5;
+  for (let offset = 0; offset < lineUserIds.length; offset += CHUNK_SIZE) {
+    const chunk = lineUserIds.slice(offset, offset + CHUNK_SIZE);
+    const results = await Promise.allSettled(
+      chunk.map((lineId) => sendPushMessage(lineId, messages)),
+    );
+    for (const result of results) {
+      if (result.status === "fulfilled") pushSuccess++;
+      else pushFail++;
     }
   }
 

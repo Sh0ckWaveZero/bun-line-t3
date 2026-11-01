@@ -70,7 +70,9 @@ const ProfileRow = ({
   onSave: ProfileEditorProps["onSave"];
 }) => {
   const { showToast } = useToast();
-  const [name, setName] = useState(profile.name);
+  // derive จาก prop + override เมื่อผู้ใช้แก้เอง — prop ใหม่ไหลเข้าเสมอ ไม่ค้างค่าเก่า
+  const [nameOverride, setNameOverride] = useState<string | null>(null);
+  const name = nameOverride ?? profile.name;
   const [heightCm, setHeightCm] = useState(
     profile.heightCm === null ? "" : String(profile.heightCm),
   );
@@ -78,7 +80,8 @@ const ProfileRow = ({
   const [refWeightKg, setRefWeightKg] = useState(
     profile.refWeightKg === null ? "" : String(profile.refWeightKg),
   );
-  const [male, setMale] = useState(profile.male);
+  const [maleOverride, setMaleOverride] = useState<boolean | null>(null);
+  const male = maleOverride ?? profile.male;
   const [ownerId, setOwnerId] = useState(profile.ownerId ?? NO_OWNER);
   const isNew = profile.id === "";
 
@@ -145,7 +148,7 @@ const ProfileRow = ({
           <input
             aria-label="ชื่อโปรไฟล์"
             value={name}
-            onChange={(event) => setName(event.target.value)}
+            onChange={(event) => setNameOverride(event.target.value)}
             placeholder="ชื่อ"
             className="text-foreground placeholder:text-muted-foreground focus-visible:ring-ring/60 w-40 rounded bg-transparent px-1 text-sm font-semibold outline-none focus-visible:ring-2 sm:w-52"
           />
@@ -217,7 +220,7 @@ const ProfileRow = ({
                 key={option.label}
                 type="button"
                 aria-pressed={male === option.value}
-                onClick={() => setMale(option.value)}
+                onClick={() => setMaleOverride(option.value)}
                 className={`flex-1 cursor-pointer px-2 py-1.5 font-mono text-xs transition-colors ${
                   male === option.value
                     ? "bg-foreground text-background"

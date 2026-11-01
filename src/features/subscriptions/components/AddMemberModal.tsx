@@ -4,7 +4,7 @@
  * AddMemberModal — modal สำหรับเพิ่มสมาชิกใน subscription
  */
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { calculateEqualShare } from "@/features/subscriptions/helpers";
 import { X, Loader2 } from "lucide-react";
 
@@ -54,8 +54,10 @@ export const AddMemberModal = ({
     note: "",
   });
 
-  // Reset form เมื่อ modal เปิดใหม่
-  useEffect(() => {
+  // Reset form เมื่อ modal เปิดใหม่ — ปรับระหว่าง render ตาม react.dev (ไม่ใช้ effect)
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
     if (open) {
       if (initialData) {
         // Edit mode: ใช้ค่าเดิม
@@ -83,7 +85,7 @@ export const AddMemberModal = ({
         });
       }
     }
-  }, [open, initialData, subscriptionId, totalPrice, currentMemberCount]);
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
