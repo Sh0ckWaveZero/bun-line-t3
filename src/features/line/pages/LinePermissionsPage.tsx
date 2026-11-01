@@ -11,126 +11,33 @@ import { useSession } from "@/lib/auth/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/components/common/ToastProvider";
 import { PermissionRow } from "@/features/line/components/PermissionRow";
+import { PermissionFilterTabs } from "@/features/line/components/PermissionFilterTabs";
+import { PermissionTableHead } from "@/features/line/components/PermissionTableHead";
+import { PermissionToolbar } from "@/features/line/components/PermissionToolbar";
+import { PermissionsSkeleton } from "@/features/line/components/PermissionsSkeleton";
+import { EmptyPermissionsState } from "@/features/line/components/PermissionsEmptyState";
 import type {
   LineApproval,
   PermissionKey,
-  PermissionUpdate,
 } from "@/features/line/types/permissions.types";
 import { cn } from "@/lib/utils";
 import {
-  AlertTriangle,
-  Bell,
-  CalendarCheck,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  RefreshCw,
-  Search,
-  UserCheck,
-  Users,
-} from "lucide-react";
-
-const LINE_PERMISSIONS_KEY = ["line-permissions"] as const;
-
-type FilterStatus = "all" | "pending" | "approved" | "rejected";
-
-const PERMISSION_TABS = [
-  ["all", "ทั้งหมด"],
-  ["pending", "รออนุมัติ"],
-  ["approved", "อนุมัติแล้ว"],
-  ["rejected", "ปฏิเสธ"],
-] as const satisfies readonly [FilterStatus, string][];
-
-const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
-
-const STATUS_COUNT_KEYS: Record<FilterStatus, LineApproval["status"] | null> = {
-  all: null,
-  pending: "PENDING",
-  approved: "APPROVED",
-  rejected: "REJECTED",
-};
-
-const SKELETON_ROW_COUNT = 5;
-/** skeleton อยู่ต่อหลัง reveal เพื่อเล่น fade-out ให้จบ (--reveal-dur 400ms + buffer) */
-const SKELETON_REMOVE_DELAY_MS = 450;
-
-function PermissionsSkeleton() {
-  return (
-    <div>
-      <div className="border-b border-slate-200 px-5 py-5 sm:px-6 dark:border-white/[0.08]">
-        <div className="skel-bar h-4 w-44 rounded-md" />
-        <div className="skel-bar mt-2.5 h-3 w-64 rounded-md" />
-      </div>
-      <div className="flex gap-6 border-b border-slate-200 px-5 py-4 sm:px-6 dark:border-white/[0.08]">
-        {Array.from({ length: PERMISSION_TABS.length }, (_, index) => (
-          <div key={index} className="skel-bar h-4 w-16 rounded-md" />
-        ))}
-      </div>
-      <div className="border-b border-slate-200 px-5 py-3 sm:px-6 dark:border-white/[0.08]">
-        <div className="skel-bar h-10 max-w-[340px] rounded-xl" />
-      </div>
-      <div>
-        {Array.from({ length: SKELETON_ROW_COUNT }, (_, index) => (
-          <div
-            key={index}
-            className="flex items-center gap-3 border-b border-slate-200/80 px-3 py-4 dark:border-white/[0.07]"
-          >
-            <div className="skel-bar size-10 shrink-0 rounded-full" />
-            <div className="min-w-0 flex-1">
-              <div className="skel-bar h-3.5 w-40 rounded-md" />
-              <div className="skel-bar mt-1.5 h-3 w-52 rounded-md" />
-            </div>
-            <div className="skel-bar h-6 w-20 shrink-0 rounded-md" />
-            <div className="flex shrink-0 gap-16 pr-2">
-              {Array.from({ length: 4 }, (_, checkboxIndex) => (
-                <div
-                  key={checkboxIndex}
-                  className="skel-bar size-5 rounded-md"
-                />
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="flex items-center justify-between border-t border-slate-200 px-5 py-4 sm:px-6 dark:border-white/[0.08]">
-        <div className="skel-bar h-5 w-24 rounded-md" />
-        <div className="skel-bar h-5 w-40 rounded-md" />
-      </div>
-    </div>
-  );
-}
-
-interface TogglePermissionInput {
-  lineUserId: string;
-  permissions: PermissionUpdate;
-}
-
-async function fetchPermissions(): Promise<LineApproval[]> {
-  const res = await fetch("/api/line/permissions");
-  if (!res.ok) {
-    throw new Error("ไม่สามารถดึงข้อมูลสิทธิ์ได้");
-  }
-  const data = await res.json();
-  return data.data;
-}
-
-function EmptyPermissionsState({ hasFilters }: { hasFilters: boolean }) {
-  return (
-    <div className="flex min-h-64 flex-col items-center justify-center px-6 py-12 text-center">
-      <div className="flex size-12 items-center justify-center rounded-2xl border border-slate-200 bg-slate-100 text-slate-500 dark:border-white/[0.1] dark:bg-white/[0.06]">
-        <Users className="size-5" aria-hidden="true" />
-      </div>
-      <h3 className="mt-4 text-sm font-semibold text-slate-800 dark:text-slate-100">
-        {hasFilters ? "ไม่พบผู้ใช้ที่ตรงกับตัวกรอง" : "ยังไม่มีผู้ใช้ขออนุมัติ"}
-      </h3>
-      <p className="mt-1 max-w-sm text-xs leading-5 text-slate-500 dark:text-slate-400">
-        {hasFilters
-          ? "ลองเปลี่ยนคำค้นหาหรือสถานะ แล้วค้นหาอีกครั้ง"
-          : "เมื่อมีผู้ใช้ขออนุมัติผ่าน LINE จะแสดงรายการในหน้านี้"}
-      </p>
-    </div>
-  );
-}
+  TablePageSizeSelect,
+  TablePagination,
+} from "@/components/ui/table-pagination";
+import { AlertTriangle, Users } from "lucide-react";
+import {
+  countPermissionStatuses,
+  fetchPermissions,
+  filterPermissionApprovals,
+  LINE_PERMISSIONS_KEY,
+  PAGE_SIZE_OPTIONS,
+  SKELETON_REMOVE_DELAY_MS,
+} from "@/features/line/line-utils/permissions";
+import type {
+  FilterStatus,
+  TogglePermissionInput,
+} from "@/features/line/line-utils/permissions";
 
 export function LinePermissionsPage() {
   const { data: session } = useSession();
@@ -211,37 +118,16 @@ export function LinePermissionsPage() {
   // พิมพ์ค้นหาได้ลื่นขึ้น: ตารางอัปเดตตามหลัง input ที่ priority สูงกว่า
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
-  const filteredApprovals = useMemo(() => {
-    const statusFilter = STATUS_COUNT_KEYS[filterStatus];
-    const query = deferredSearchQuery.trim().toLowerCase();
-    return approvals.filter((approval) => {
-      if (statusFilter && approval.status !== statusFilter) {
-        return false;
-      }
-      if (query) {
-        return (
-          approval.displayName?.toLowerCase().includes(query) ||
-          approval.lineUserId.toLowerCase().includes(query)
-        );
-      }
-      return true;
-    });
-  }, [approvals, filterStatus, deferredSearchQuery]);
+  const filteredApprovals = useMemo(
+    () =>
+      filterPermissionApprovals(approvals, filterStatus, deferredSearchQuery),
+    [approvals, filterStatus, deferredSearchQuery],
+  );
 
-  const statusCounts = useMemo(() => {
-    const counts = {
-      all: approvals.length,
-      pending: 0,
-      approved: 0,
-      rejected: 0,
-    };
-    for (const approval of approvals) {
-      if (approval.status === "PENDING") counts.pending += 1;
-      else if (approval.status === "APPROVED") counts.approved += 1;
-      else if (approval.status === "REJECTED") counts.rejected += 1;
-    }
-    return counts;
-  }, [approvals]);
+  const statusCounts = useMemo(
+    () => countPermissionStatuses(approvals),
+    [approvals],
+  );
 
   const pageCount = Math.max(1, Math.ceil(filteredApprovals.length / pageSize));
   const currentPage = Math.min(page, pageCount);
@@ -326,149 +212,31 @@ export function LinePermissionsPage() {
                 </p>
               </div>
 
-              <div
-                className="flex gap-6 overflow-x-auto border-b border-slate-200 px-5 sm:px-6 dark:border-white/[0.08]"
-                role="group"
-                aria-label="กรองตามสถานะ"
-              >
-                {PERMISSION_TABS.map(([value, label]) => {
-                  const isActive = filterStatus === value;
+              <PermissionFilterTabs
+                filterStatus={filterStatus}
+                statusCounts={statusCounts}
+                onFilterChange={(status) => {
+                  setFilterStatus(status);
+                  setPage(1);
+                }}
+              />
 
-                  return (
-                    <button
-                      key={value}
-                      type="button"
-                      aria-pressed={isActive}
-                      onClick={() => {
-                        setFilterStatus(value);
-                        setPage(1);
-                      }}
-                      className={cn(
-                        "relative flex shrink-0 cursor-pointer items-center gap-2 py-3.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none",
-                        isActive
-                          ? "text-slate-900 dark:text-white"
-                          : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200",
-                      )}
-                    >
-                      {label}
-                      <span
-                        className={cn(
-                          "rounded-full px-1.5 py-0.5 text-[10px]",
-                          isActive
-                            ? "bg-slate-100 text-slate-700 dark:bg-white/[0.1] dark:text-slate-200"
-                            : "bg-slate-100/70 text-slate-500 dark:bg-white/[0.06] dark:text-slate-400",
-                        )}
-                      >
-                        {statusCounts[value]}
-                      </span>
-                      {isActive && (
-                        <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-slate-900 dark:bg-white" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 dark:border-white/[0.08]">
-                <div className="relative w-full sm:max-w-[340px]">
-                  <Search
-                    className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-slate-400"
-                    aria-hidden="true"
-                  />
-                  <label htmlFor="permission-search" className="sr-only">
-                    ค้นหาผู้ใช้
-                  </label>
-                  <input
-                    id="permission-search"
-                    value={searchQuery}
-                    onChange={(event) => {
-                      setSearchQuery(event.target.value);
-                      setPage(1);
-                    }}
-                    placeholder="ค้นหาชื่อ หรือ LINE User ID…"
-                    className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pr-3 pl-10 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-slate-100 dark:placeholder:text-slate-600"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => void refetch()}
-                  aria-label="รีเฟรชรายการสิทธิ์ LINE"
-                  className="inline-flex h-9 cursor-pointer items-center justify-center gap-2 self-start rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none sm:self-auto dark:border-white/[0.1] dark:bg-white/[0.03] dark:text-slate-300 dark:hover:bg-white/[0.08]"
-                >
-                  <RefreshCw
-                    className={cn(
-                      "size-4 motion-reduce:animate-none",
-                      isFetching && "animate-spin",
-                    )}
-                    aria-hidden="true"
-                  />
-                  รีเฟรช
-                </button>
-              </div>
+              <PermissionToolbar
+                searchQuery={searchQuery}
+                onSearchChange={(query) => {
+                  setSearchQuery(query);
+                  setPage(1);
+                }}
+                isFetching={isFetching}
+                onRefresh={() => void refetch()}
+              />
 
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[900px] border-collapse text-left">
                   <caption className="sr-only">
                     รายชื่อ LINE users และสิทธิ์การใช้งานฟีเจอร์
                   </caption>
-                  <thead className="bg-slate-50/80 dark:bg-white/[0.02]">
-                    <tr className="text-[11px] font-semibold tracking-wide text-slate-500 dark:text-slate-400">
-                      <th
-                        scope="col"
-                        className="min-w-[260px] px-3 py-3 text-left"
-                      >
-                        User
-                      </th>
-                      <th
-                        scope="col"
-                        className="min-w-[130px] px-3 py-3 text-left"
-                      >
-                        สถานะ
-                      </th>
-                      <th
-                        scope="col"
-                        className="min-w-[120px] px-3 py-3 text-center"
-                      >
-                        <span className="inline-flex items-center gap-1.5">
-                          <CalendarCheck
-                            className="size-3.5"
-                            aria-hidden="true"
-                          />
-                          รายงานเข้างาน
-                        </span>
-                      </th>
-                      <th
-                        scope="col"
-                        className="min-w-[120px] px-3 py-3 text-center"
-                      >
-                        <span className="inline-flex items-center gap-1.5">
-                          <UserCheck className="size-3.5" aria-hidden="true" />
-                          ขอลา
-                        </span>
-                      </th>
-                      <th
-                        scope="col"
-                        className="min-w-[120px] px-3 py-3 text-center"
-                      >
-                        <span className="inline-flex items-center gap-1.5">
-                          <Bell className="size-3.5" aria-hidden="true" />
-                          แจ้งเตือน
-                        </span>
-                      </th>
-                      <th
-                        scope="col"
-                        className="min-w-[120px] px-3 py-3 text-center"
-                      >
-                        บันทึก DCA อัตโนมัติ
-                      </th>
-                      <th
-                        scope="col"
-                        className="min-w-[120px] px-3 py-3 text-center"
-                      >
-                        Onsite Report
-                      </th>
-                    </tr>
-                  </thead>
+                  <PermissionTableHead />
                   <tbody>
                     {visibleApprovals.map((approval) => (
                       <PermissionRow
@@ -485,79 +253,23 @@ export function LinePermissionsPage() {
               </div>
 
               <footer className="flex flex-col gap-4 border-t border-slate-200 px-5 py-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 dark:border-white/[0.08] dark:text-slate-400">
-                <label className="flex items-center gap-2">
-                  แถวต่อหน้า
-                  <span className="relative">
-                    <select
-                      value={pageSize}
-                      onChange={(event) => {
-                        setPageSize(Number(event.target.value));
-                        setPage(1);
-                      }}
-                      className="h-8 cursor-pointer appearance-none rounded-lg border border-slate-200 bg-white px-2.5 pr-7 text-xs font-medium text-slate-700 outline-none focus:border-emerald-500 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-slate-200"
-                    >
-                      {PAGE_SIZE_OPTIONS.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown
-                      className="pointer-events-none absolute top-1/2 right-2 size-3.5 -translate-y-1/2 text-slate-400"
-                      aria-hidden="true"
-                    />
-                  </span>
-                </label>
-                <div className="flex items-center gap-3">
-                  <span>
-                    {firstVisibleRow}–{lastVisibleRow} จาก{" "}
-                    {filteredApprovals.length} คน
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      disabled={currentPage === 1}
-                      onClick={() =>
-                        setPage((current) => Math.max(1, current - 1))
-                      }
-                      aria-label="ไปหน้าก่อนหน้า"
-                      className="inline-flex size-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-35 dark:hover:bg-white/[0.08]"
-                    >
-                      <ChevronLeft className="size-4" aria-hidden="true" />
-                    </button>
-                    {Array.from({ length: pageCount }, (_, index) => index + 1)
-                      .slice(0, 5)
-                      .map((pageNumber) => (
-                        <button
-                          key={pageNumber}
-                          type="button"
-                          aria-current={
-                            currentPage === pageNumber ? "page" : undefined
-                          }
-                          onClick={() => setPage(pageNumber)}
-                          className={cn(
-                            "inline-flex size-8 cursor-pointer items-center justify-center rounded-lg text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none",
-                            currentPage === pageNumber
-                              ? "bg-slate-200 text-slate-900 dark:bg-white/[0.12] dark:text-white"
-                              : "hover:bg-slate-100 dark:hover:bg-white/[0.08]",
-                          )}
-                        >
-                          {pageNumber}
-                        </button>
-                      ))}
-                    <button
-                      type="button"
-                      disabled={currentPage === pageCount}
-                      onClick={() =>
-                        setPage((current) => Math.min(pageCount, current + 1))
-                      }
-                      aria-label="ไปหน้าถัดไป"
-                      className="inline-flex size-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-35 dark:hover:bg-white/[0.08]"
-                    >
-                      <ChevronRight className="size-4" aria-hidden="true" />
-                    </button>
-                  </div>
-                </div>
+                <TablePageSizeSelect
+                  value={pageSize}
+                  options={PAGE_SIZE_OPTIONS}
+                  onChange={(next) => {
+                    setPageSize(next);
+                    setPage(1);
+                  }}
+                />
+                <TablePagination
+                  firstVisibleRow={firstVisibleRow}
+                  lastVisibleRow={lastVisibleRow}
+                  total={filteredApprovals.length}
+                  unit="คน"
+                  currentPage={currentPage}
+                  pageCount={pageCount}
+                  onPageChange={setPage}
+                />
               </footer>
             </div>
           </div>

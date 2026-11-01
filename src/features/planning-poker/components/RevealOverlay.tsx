@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 import {
@@ -6,7 +6,8 @@ import {
   type EffectLayerHandle,
 } from "@react-cards-opening/effects";
 import "@react-cards-opening/effects/styles.css";
-import { ArcaneReveal, FX_RARITY_PROFILES, FX_TONES } from "./ArcaneReveal";
+import { ArcaneReveal } from "./ArcaneReveal";
+import { FX_RARITY_PROFILES, FX_TONES } from "../lib/fx-profiles";
 import {
   resolveFxRarity,
   hashValue,
@@ -103,7 +104,20 @@ const TIER_LABELS: Record<VoteTier, string> = {
   neutral: "",
 };
 
-/** โทนสีเอฟเฟกต์ต่อชั้น — FX_TONES ใน ArcaneReveal (เฉด dark ของพาเลตต์ tier เพราะ scrim มืดเสมอ) */
+/** โทนสีเอฟเฟกต์ต่อชั้น — FX_TONES ใน lib/fx-profiles (เฉด dark ของพาเลตต์ tier เพราะ scrim มืดเสมอ) */
+
+const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+
+const subscribeToReducedMotion = (onChange: () => void) => {
+  const query = window.matchMedia(REDUCED_MOTION_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+};
+
+const getReducedMotionSnapshot = () =>
+  window.matchMedia(REDUCED_MOTION_QUERY).matches;
+
+const getReducedMotionServerSnapshot = () => false;
 
 /**
  * Overlay เปิดไพ่แบบ demo hero: scrim หรี่+เบลอเต็มจอ (เห็นไพ่รายคนใน roster พลิกจาง ๆ ข้างหลัง),
@@ -124,10 +138,10 @@ export const RevealOverlay = ({
   /** จำนวนรอบดีติดกันก่อนรอบนี้ — ไต่ชั้น epic → legendary → mythic */
   streak?: number;
 }) => {
-  const [isReducedMotion] = useState(
-    () =>
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  const isReducedMotion = useSyncExternalStore(
+    subscribeToReducedMotion,
+    getReducedMotionSnapshot,
+    getReducedMotionServerSnapshot,
   );
   const [phase, setPhase] = useState<"play" | "close" | "gone">("play");
   const layerRef = useRef<EffectLayerHandle>(null);
@@ -165,39 +179,52 @@ export const RevealOverlay = ({
 
   useEffect(() => {
     if (phase !== "play") return;
+    const layer = layerRef.current;
+    const stage = stageRef.current;
     const { combos, finaleBursts } = FX_RARITY_PROFILES[fxRarity];
     const tone = FX_TONES[fxRarity];
     // ขนาด/สัดส่วนยึดจอตอนเริ่มเล่น (mount) — resize กลางเล่นไม่คำนวณใหม่ (เล่นจบใน ~6.5s)
     const size = readFxSize();
     const ratio = readFxRatio();
+    // เก็บ timeline ที่ play() คืนมา — kill ตอน cleanup เพื่อไม่ให้ gsap ticker ยังเดินหลัง unmount/skip
+    const timelines: Array<{ kill: () => unknown }> = [];
     const playCombo = (comboIndex: number, delayMs: number) => {
       const combo = combos[comboIndex % combos.length];
       if (!combo) return;
-      layerRef.current?.play([...combo], {
-        at: stageRef.current ?? undefined,
+      const timeline = layer?.play([...combo], {
+        at: stage ?? undefined,
         size,
         ratio,
         tone,
         delay: delayMs / 1000,
       });
+      if (timeline) timelines.push(timeline);
     };
 
     // ชุดแรกตอนวงเวทขึ้น (delay ผ่าน lib เพื่อให้ timeline เดียวจัดจังหวะ)
     playCombo(fxSeed, BASE_FX_DELAY_MS);
     // burst ตอนไพ่พลิก — จำนวนชุดตามความหายาก เว้นห่างกันทีละ gap
-    const timers = Array.from({ length: finaleBursts }, (_, index) =>
-      window.setTimeout(
-        () => playCombo(fxSeed + index + 1, 0),
-        HERO_FLIP_DELAY_MS + FINALE_FX_OFFSET_MS + index * FINALE_BURST_GAP_MS,
-      ),
-    );
+    const timers: number[] = [];
+    for (let index = 0; index < finaleBursts; index++) {
+      timers.push(
+        window.setTimeout(
+          () => playCombo(fxSeed + index + 1, 0),
+          HERO_FLIP_DELAY_MS + FINALE_FX_OFFSET_MS + index * FINALE_BURST_GAP_MS,
+        ),
+      );
+    }
     timers.push(
       window.setTimeout(
         () => setPhase("close"),
         HERO_FLIP_DELAY_MS + PLAY_TAIL_MS,
       ),
     );
-    return () => timers.forEach((timer) => window.clearTimeout(timer));
+    return () => {
+      for (const timer of timers) window.clearTimeout(timer);
+      for (const timeline of timelines) timeline.kill();
+      // เอาทุกอย่างออกจาก layer (กัน timeline ค้าง tick หลัง unmount/skip)
+      layer?.clear();
+    };
   }, [phase, fxRarity, fxSeed]);
 
   useEffect(() => {

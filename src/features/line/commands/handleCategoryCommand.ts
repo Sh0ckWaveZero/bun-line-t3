@@ -14,9 +14,6 @@ import {
   seedDefaultCategories,
   deactivateCategory,
 } from "@/features/expenses/services/category.server";
-import type { ExpenseCategory } from "@/features/expenses/types";
-import { flexMessage } from "@/lib/utils/line-message-utils";
-import { env } from "@/env.mjs";
 
 // ---------------------------------------------------------------------------
 // Lazy import sendMessage

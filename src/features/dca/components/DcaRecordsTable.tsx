@@ -8,6 +8,7 @@ import { useToast } from "@/components/common/ToastProvider";
 import { AddDcaForm } from "@/features/dca/components/AddDcaForm";
 import type { DcaOrder } from "@/features/dca/types";
 import { useDcaLocale } from "@/features/dca/lib/dca-locale-context";
+import type { DcaLocaleStrings } from "@/features/dca/lib/locale";
 import { useAuthSession } from "@/lib/auth/session-context";
 import {
   Popover,
@@ -112,6 +113,112 @@ type SortKey =
   | "unrealized"
   | "pctUnrealized";
 
+type DcaTableTexts = DcaLocaleStrings["table"];
+
+interface DcaTableColumn {
+  key: SortKey;
+  label: string;
+  shortLabel: string;
+  left?: boolean;
+  hideMobile?: boolean;
+}
+
+interface PageNumberItem {
+  key: string;
+  page: number | "...";
+}
+
+const PAGE_SIZE_OPTIONS = [10, 30, 50, 100] as const;
+const posClass = "text-green-600 dark:text-green-400";
+const negClass = "text-red-600 dark:text-red-400";
+
+function createDcaTableColumns(t: DcaTableTexts): DcaTableColumn[] {
+  return [
+    {
+      key: "dayActive",
+      label: t.colDay,
+      shortLabel: t.colDay,
+      left: true,
+    },
+    {
+      key: "date",
+      label: t.colDate,
+      shortLabel: t.colDate,
+      left: true,
+    },
+    {
+      key: "fiat",
+      label: `Fiat (${t.colFiat})`,
+      shortLabel: t.colFiat,
+    },
+    {
+      key: "satoshi",
+      label: t.colSatoshi,
+      shortLabel: t.colSatoshi,
+    },
+    {
+      key: "price",
+      label: t.colPrice,
+      shortLabel: t.colPrice,
+      hideMobile: true,
+    },
+    {
+      key: "portfolioValue",
+      label: t.colPortfolioValue,
+      shortLabel: t.colPortfolioValue,
+      hideMobile: true,
+    },
+    {
+      key: "invested",
+      label: t.colInvested,
+      shortLabel: t.colInvested,
+      hideMobile: true,
+    },
+    {
+      key: "unrealized",
+      label: t.colUnrealized,
+      shortLabel: t.colUnrealized,
+    },
+    {
+      key: "pctUnrealized",
+      label: `% ${t.colUnrealized}`,
+      shortLabel: t.colPctUnrealized,
+      hideMobile: true,
+    },
+  ];
+}
+
+function createPageNumberItems(
+  curPage: number,
+  totalPages: number,
+): PageNumberItem[] {
+  let ellipsisNumber = 0;
+  let pages: Array<number | "...">;
+
+  if (totalPages <= 7) {
+    pages = Array.from({ length: totalPages }, (_, index) => index + 1);
+  } else if (curPage <= 4) {
+    pages = [1, 2, 3, 4, 5, "...", totalPages];
+  } else if (curPage >= totalPages - 3) {
+    pages = [
+      1,
+      "...",
+      totalPages - 4,
+      totalPages - 3,
+      totalPages - 2,
+      totalPages - 1,
+      totalPages,
+    ];
+  } else {
+    pages = [1, "...", curPage - 1, curPage, curPage + 1, "...", totalPages];
+  }
+
+  return pages.map((page) => ({
+    key: page === "..." ? `ellipsis-${ellipsisNumber++}` : `page-${page}`,
+    page,
+  }));
+}
+
 interface DcaRecordsTableProps {
   orders: DcaOrder[];
   currentPrice: number | null;
@@ -149,7 +256,6 @@ export const DcaRecordsTable = ({
     getQuerySnapshot,
     getEmptySearchQuery,
   );
-  const PAGE_SIZE_OPTIONS = [10, 30, 50, 100] as const;
 
   const handleDeleteOrder = async (order: DcaOrder) => {
     if (!lineUserId) {
@@ -259,444 +365,63 @@ export const DcaRecordsTable = ({
     }
   }
 
-  function pageNums(): Array<number | "..."> {
-    if (totalPages <= 7)
-      return Array.from({ length: totalPages }, (_, i) => i + 1);
-    if (curPage <= 4) return [1, 2, 3, 4, 5, "...", totalPages];
-    if (curPage >= totalPages - 3)
-      return [
-        1,
-        "...",
-        totalPages - 4,
-        totalPages - 3,
-        totalPages - 2,
-        totalPages - 1,
-        totalPages,
-      ];
-    return [1, "...", curPage - 1, curPage, curPage + 1, "...", totalPages];
-  }
-
-  function pageNumItems(): Array<{ key: string; page: number | "..." }> {
-    let ellipsisNumber = 0;
-
-    return pageNums().map((page) => ({
-      key: page === "..." ? `ellipsis-${ellipsisNumber++}` : `page-${page}`,
-      page,
-    }));
-  }
-
-  const posClass = "text-green-600 dark:text-green-400";
-  const negClass = "text-red-600 dark:text-red-400";
-
-  type ColDef = {
-    key: SortKey;
-    label: string;
-    shortLabel: string;
-    left?: boolean;
-    hideMobile?: boolean;
-  };
-  const columns: ColDef[] = [
-    {
-      key: "dayActive",
-      label: t.table.colDay,
-      shortLabel: t.table.colDay,
-      left: true,
-    },
-    {
-      key: "date",
-      label: t.table.colDate,
-      shortLabel: t.table.colDate,
-      left: true,
-    },
-    {
-      key: "fiat",
-      label: `Fiat (${t.table.colFiat})`,
-      shortLabel: t.table.colFiat,
-    },
-    {
-      key: "satoshi",
-      label: t.table.colSatoshi,
-      shortLabel: t.table.colSatoshi,
-    },
-    {
-      key: "price",
-      label: t.table.colPrice,
-      shortLabel: t.table.colPrice,
-      hideMobile: true,
-    },
-    {
-      key: "portfolioValue",
-      label: t.table.colPortfolioValue,
-      shortLabel: t.table.colPortfolioValue,
-      hideMobile: true,
-    },
-    {
-      key: "invested",
-      label: t.table.colInvested,
-      shortLabel: t.table.colInvested,
-      hideMobile: true,
-    },
-    {
-      key: "unrealized",
-      label: t.table.colUnrealized,
-      shortLabel: t.table.colUnrealized,
-    },
-    {
-      key: "pctUnrealized",
-      label: `% ${t.table.colUnrealized}`,
-      shortLabel: t.table.colPctUnrealized,
-      hideMobile: true,
-    },
-  ];
+  const columns = createDcaTableColumns(t.table);
+  const pageNumbers = createPageNumberItems(curPage, totalPages);
 
   return (
     <div
       id="dca-records-table"
       className="bg-card border-border overflow-hidden rounded-lg border"
     >
-      {/* Toolbar */}
-      <div className="border-border flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2.5 sm:px-4 sm:py-3">
-        <div className="flex items-center gap-2">
-          <div className="bg-muted border-border flex w-40 items-center gap-1.5 rounded border px-2 py-1 sm:w-52">
-            <Search className="text-muted-foreground h-3 w-3 shrink-0" />
-            <input
-              aria-label={t.table.searchPlaceholder}
-              placeholder={t.table.searchPlaceholder}
-              value={query}
-              onChange={(e) => {
-                updateStoredSearchQuery(searchStorageKey, e.target.value);
-                setPage(1);
-              }}
-              className="text-foreground w-full bg-transparent font-mono text-xs outline-none placeholder:text-[var(--muted-foreground)]"
-            />
-          </div>
-          <span className="text-muted-foreground font-mono text-[11px]">
-            {t.table.records(filtered.length)}
-          </span>
-        </div>
-        <div className="text-muted-foreground flex items-center gap-2 font-mono text-xs">
-          <span className="hidden sm:inline">{t.table.rowsPerPage}</span>
-          <Popover open={pageSizeOpen} onOpenChange={setPageSizeOpen}>
-            <PopoverTrigger asChild>
-              <button
-                type="button"
-                className="bg-card border-border text-foreground min-w-[64px] cursor-pointer rounded border px-2 py-1 text-right font-mono text-xs"
-              >
-                {pageSize}
-              </button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-[72px] p-1">
-              <div className="flex flex-col gap-0.5">
-                {PAGE_SIZE_OPTIONS.map((size) => (
-                  <button
-                    key={size}
-                    type="button"
-                    onClick={() => {
-                      setPageSize(size);
-                      setPage(1);
-                      setPageSizeOpen(false);
-                    }}
-                    className={`cursor-pointer rounded px-2 py-1.5 text-right font-mono text-xs ${
-                      pageSize === size
-                        ? "bg-foreground text-background"
-                        : "text-foreground hover:bg-muted"
-                    }`}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
+      <DcaRecordsToolbar
+        texts={t.table}
+        query={query}
+        filteredCount={filtered.length}
+        pageSize={pageSize}
+        pageSizeOpen={pageSizeOpen}
+        onQueryChange={(value) => {
+          updateStoredSearchQuery(searchStorageKey, value);
+          setPage(1);
+        }}
+        onPageSizeOpenChange={setPageSizeOpen}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setPage(1);
+          setPageSizeOpen(false);
+        }}
+      />
 
-      {/* Mobile card view */}
       <div className="divide-border divide-y sm:hidden">
-        {pageData.length === 0 ? (
-          <div className="text-muted-foreground py-8 text-center text-sm">
-            {t.table.noRecordsFound}
-          </div>
-        ) : (
-          pageData.map((r) => (
-            <div key={r.order.id} className="hover:bg-muted/40 px-3 py-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="bg-muted text-foreground/70 rounded px-1.5 py-0.5 font-mono text-[10px]">
-                    #{r.dayActive}
-                  </span>
-                  <span className="text-foreground text-xs font-medium">
-                    {fmtDateShort(r.order.executedAt)}
-                  </span>
-                </div>
-                <span
-                  className={`font-mono text-xs font-medium ${r.unrealized >= 0 ? posClass : negClass}`}
-                >
-                  {r.unrealized >= 0 ? "+" : ""}
-                  {fmtThb(r.unrealized)}
-                </span>
-              </div>
-              <div className="text-muted-foreground mt-1.5 grid grid-cols-3 gap-x-3 font-mono text-[10px]">
-                <div>
-                  <span className="opacity-60">Fiat</span>
-                  <div className="text-foreground text-[11px]">
-                    {fmtInt(r.order.amountTHB)} ฿
-                  </div>
-                </div>
-                <div>
-                  <span className="opacity-60">Sat</span>
-                  <div className="text-foreground text-[11px]">
-                    {fmtInt(r.satoshi)}
-                  </div>
-                </div>
-                <div>
-                  <span className="opacity-60">Price</span>
-                  <div className="text-foreground text-[11px]">
-                    {fmtInt(r.order.pricePerCoin)}
-                  </div>
-                </div>
-              </div>
-              <div className="mt-3 flex flex-wrap justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="min-h-10"
-                  onClick={() => setEditingOrder(r.order)}
-                  aria-label={`${t.table.edit} ${r.order.coin} ${fmtDateTime(r.order.executedAt)}`}
-                >
-                  <Pencil aria-hidden="true" className="mr-1.5 h-4 w-4" />
-                  {t.table.edit}
-                </Button>
-                <ConfirmMorph
-                  label={t.table.delete}
-                  ariaLabel={`${t.table.delete} ${r.order.coin} ${fmtDateTime(r.order.executedAt)}`}
-                  prompt={t.table.deleteConfirmTitle}
-                  description={t.table.deleteConfirmDescription}
-                  confirmLabel={t.table.delete}
-                  holdLabel={t.table.deleteHoldLabel}
-                  holdReleaseLabel={t.table.deleteHoldReleaseLabel}
-                  holdInstruction={t.table.deleteHoldInstruction}
-                  holdCompleteLabel={t.table.deleteHoldComplete}
-                  cancelLabel={t.table.deleteCancel}
-                  pendingLabel={t.table.deletePending}
-                  doneLabel={t.table.deleteSuccess}
-                  doneDescription={t.table.deleteLocalOnly}
-                  errorLabel={t.table.deleteError}
-                  retryLabel={t.table.deleteRetry}
-                  onConfirm={() => handleDeleteOrder(r.order)}
-                  showIdleLabel
-                  inline
-                />
-              </div>
-            </div>
-          ))
-        )}
+        <DcaMobileRecords
+          pageData={pageData}
+          texts={t.table}
+          onEdit={setEditingOrder}
+          onDelete={handleDeleteOrder}
+        />
       </div>
 
-      {/* Desktop table */}
       <div className="hidden overflow-x-auto sm:block">
-        <table className="dca-records w-full border-collapse font-mono text-xs">
-          <thead>
-            <tr>
-              {columns.map((c) => (
-                <th
-                  key={c.key}
-                  scope="col"
-                  aria-sort={
-                    sortKey === c.key
-                      ? sortDir === "asc"
-                        ? "ascending"
-                        : "descending"
-                      : undefined
-                  }
-                  className={`bg-muted text-muted-foreground border-border border-b px-3 py-2.5 text-[10px] font-medium tracking-wider whitespace-nowrap uppercase ${c.left ? "text-left" : "text-right"} ${c.hideMobile ? "hidden lg:table-cell" : ""}`}
-                >
-                  <button
-                    type="button"
-                    onClick={() => toggleSort(c.key)}
-                    className={`hover:text-foreground focus-visible:outline-ring inline-flex w-full cursor-pointer items-center gap-1 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 ${c.left ? "justify-start" : "justify-end"}`}
-                  >
-                    <span>{c.label}</span>
-                    {sortKey === c.key ? (
-                      sortDir === "asc" ? (
-                        <ArrowUp
-                          aria-hidden="true"
-                          className="h-3.5 w-3.5 shrink-0 text-orange-500"
-                        />
-                      ) : (
-                        <ArrowDown
-                          aria-hidden="true"
-                          className="h-3.5 w-3.5 shrink-0 text-orange-500"
-                        />
-                      )
-                    ) : (
-                      <ArrowUpDown
-                        aria-hidden="true"
-                        className="text-muted-foreground h-3.5 w-3.5 shrink-0 opacity-60"
-                      />
-                    )}
-                  </button>
-                </th>
-              ))}
-              <th
-                scope="col"
-                className="bg-muted text-muted-foreground border-border border-b px-3 py-2.5 text-right text-[10px] font-medium tracking-wider whitespace-nowrap uppercase"
-              >
-                {t.table.actions}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {pageData.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={columns.length + 1}
-                  className="text-muted-foreground py-8 text-center text-sm"
-                >
-                  {t.table.noRecordsFound}
-                </td>
-              </tr>
-            ) : (
-              pageData.map((r) => (
-                <tr
-                  key={r.order.id}
-                  className="hover:bg-muted/40 border-border border-b transition-colors"
-                >
-                  <td className="px-3 py-2 text-left">
-                    <span className="bg-muted text-foreground/70 inline-block rounded px-1.5 py-0.5 text-center text-[11px]">
-                      {r.dayActive}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2 text-left whitespace-nowrap">
-                    {fmtDateShort(r.order.executedAt)}
-                  </td>
-                  <td className="px-3 py-2 text-right">
-                    {fmtInt(r.order.amountTHB)}
-                  </td>
-                  <td className="px-3 py-2 text-right">{fmtInt(r.satoshi)}</td>
-                  <td className="hidden px-3 py-2 text-right lg:table-cell">
-                    {fmtInt(r.order.pricePerCoin)}
-                  </td>
-                  <td className="hidden px-3 py-2 text-right lg:table-cell">
-                    {fmtThb(r.portfolioValue)}
-                  </td>
-                  <td className="hidden px-3 py-2 text-right lg:table-cell">
-                    {fmtInt(r.invested)}
-                  </td>
-                  <td
-                    className={`px-3 py-2 text-right ${r.unrealized >= 0 ? posClass : negClass}`}
-                  >
-                    {r.unrealized >= 0 ? "+" : ""}
-                    {fmtThb(r.unrealized)}
-                  </td>
-                  <td
-                    className={`hidden px-3 py-2 text-right lg:table-cell ${r.pctUnrealized >= 0 ? posClass : negClass}`}
-                  >
-                    {r.pctUnrealized >= 0 ? "+" : ""}
-                    {r.pctUnrealized.toFixed(2)}%
-                  </td>
-                  <td className="px-3 py-2 text-right">
-                    <div className="inline-flex items-center justify-end gap-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="min-h-9 px-2"
-                        onClick={() => setEditingOrder(r.order)}
-                        aria-label={`${t.table.edit} ${r.order.coin} ${fmtDateTime(r.order.executedAt)}`}
-                      >
-                        <Pencil aria-hidden="true" className="h-4 w-4" />
-                        <span className="sr-only">{t.table.edit}</span>
-                      </Button>
-                      <ConfirmMorph
-                        label={t.table.delete}
-                        ariaLabel={`${t.table.delete} ${r.order.coin} ${fmtDateTime(r.order.executedAt)}`}
-                        prompt={t.table.deleteConfirmTitle}
-                        description={t.table.deleteConfirmDescription}
-                        confirmLabel={t.table.delete}
-                        holdLabel={t.table.deleteHoldLabel}
-                        holdReleaseLabel={t.table.deleteHoldReleaseLabel}
-                        holdInstruction={t.table.deleteHoldInstruction}
-                        holdCompleteLabel={t.table.deleteHoldComplete}
-                        cancelLabel={t.table.deleteCancel}
-                        pendingLabel={t.table.deletePending}
-                        doneLabel={t.table.deleteSuccess}
-                        doneDescription={t.table.deleteLocalOnly}
-                        errorLabel={t.table.deleteError}
-                        retryLabel={t.table.deleteRetry}
-                        onConfirm={() => handleDeleteOrder(r.order)}
-                      />
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+        <DcaDesktopRecords
+          pageData={pageData}
+          columns={columns}
+          texts={t.table}
+          sortKey={sortKey}
+          sortDir={sortDir}
+          onToggleSort={toggleSort}
+          onEdit={setEditingOrder}
+          onDelete={handleDeleteOrder}
+        />
       </div>
 
-      {/* Pagination */}
-      <div className="border-border text-muted-foreground flex flex-col items-center justify-between gap-2 border-t px-3 py-2.5 font-mono text-xs sm:flex-row sm:px-4">
-        <span>
-          {sorted.length === 0
-            ? t.table.showingEmpty
-            : t.table.showingRange(
-                (curPage - 1) * pageSize + 1,
-                Math.min(curPage * pageSize, sorted.length),
-                sorted.length,
-              )}
-        </span>
-        <div className="dca-pager flex gap-1">
-          <button
-            className="bg-card border-border text-foreground/70 cursor-pointer rounded border px-2 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-30"
-            disabled={curPage === 1}
-            onClick={() => setPage(1)}
-          >
-            &laquo;
-          </button>
-          <button
-            className="bg-card border-border text-foreground/70 cursor-pointer rounded border px-2 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-30"
-            disabled={curPage === 1}
-            onClick={() => setPage(curPage - 1)}
-          >
-            &lsaquo;
-          </button>
-          {pageNumItems().map(({ page: n, key }) =>
-            n === "..." ? (
-              <span key={key} className="px-1 opacity-50">
-                &hellip;
-              </span>
-            ) : (
-              <button
-                key={key}
-                className={`cursor-pointer rounded border px-2 py-1 text-xs ${
-                  n === curPage
-                    ? "bg-foreground text-background border-foreground"
-                    : "bg-card border-border text-foreground/70 hover:bg-muted"
-                }`}
-                onClick={() => setPage(n)}
-              >
-                {n}
-              </button>
-            ),
-          )}
-          <button
-            className="bg-card border-border text-foreground/70 cursor-pointer rounded border px-2 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-30"
-            disabled={curPage === totalPages}
-            onClick={() => setPage(curPage + 1)}
-          >
-            &rsaquo;
-          </button>
-          <button
-            className="bg-card border-border text-foreground/70 cursor-pointer rounded border px-2 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-30"
-            disabled={curPage === totalPages}
-            onClick={() => setPage(totalPages)}
-          >
-            &raquo;
-          </button>
-        </div>
-      </div>
+      <DcaRecordsPagination
+        sortedLength={sorted.length}
+        curPage={curPage}
+        totalPages={totalPages}
+        pageSize={pageSize}
+        pageNumbers={pageNumbers}
+        texts={t.table}
+        onPageChange={setPage}
+      />
 
       {editingOrder && (
         <AddDcaForm
@@ -709,3 +434,465 @@ export const DcaRecordsTable = ({
     </div>
   );
 };
+
+interface DcaRecordsToolbarProps {
+  texts: DcaTableTexts;
+  query: string;
+  filteredCount: number;
+  pageSize: number;
+  pageSizeOpen: boolean;
+  onQueryChange: (value: string) => void;
+  onPageSizeOpenChange: (open: boolean) => void;
+  onPageSizeChange: (size: number) => void;
+}
+
+function DcaRecordsToolbar({
+  texts,
+  query,
+  filteredCount,
+  pageSize,
+  pageSizeOpen,
+  onQueryChange,
+  onPageSizeOpenChange,
+  onPageSizeChange,
+}: DcaRecordsToolbarProps) {
+  return (
+    <div className="border-border flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2.5 sm:px-4 sm:py-3">
+      <div className="flex items-center gap-2">
+        <div className="bg-muted border-border flex w-40 items-center gap-1.5 rounded border px-2 py-1 sm:w-52">
+          <Search className="text-muted-foreground h-3 w-3 shrink-0" />
+          <input
+            aria-label={texts.searchPlaceholder}
+            placeholder={texts.searchPlaceholder}
+            value={query}
+            onChange={(event) => onQueryChange(event.target.value)}
+            className="text-foreground w-full bg-transparent font-mono text-xs outline-none placeholder:text-[var(--muted-foreground)]"
+          />
+        </div>
+        <span className="text-muted-foreground font-mono text-[11px]">
+          {texts.records(filteredCount)}
+        </span>
+      </div>
+      <div className="text-muted-foreground flex items-center gap-2 font-mono text-xs">
+        <span className="hidden sm:inline">{texts.rowsPerPage}</span>
+        <Popover open={pageSizeOpen} onOpenChange={onPageSizeOpenChange}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className="bg-card border-border text-foreground min-w-[64px] cursor-pointer rounded border px-2 py-1 text-right font-mono text-xs"
+            >
+              {pageSize}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-[72px] p-1">
+            <div className="flex flex-col gap-0.5">
+              {PAGE_SIZE_OPTIONS.map((size) => (
+                <button
+                  key={size}
+                  type="button"
+                  onClick={() => onPageSizeChange(size)}
+                  className={
+                    "cursor-pointer rounded px-2 py-1.5 text-right font-mono text-xs " +
+                    (pageSize === size
+                      ? "bg-foreground text-background"
+                      : "text-foreground hover:bg-muted")
+                  }
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+    </div>
+  );
+}
+
+interface DcaMobileRecordsProps {
+  pageData: EnrichedRow[];
+  texts: DcaTableTexts;
+  onEdit: (order: DcaOrder) => void;
+  onDelete: (order: DcaOrder) => Promise<void>;
+}
+
+function DcaMobileRecords({
+  pageData,
+  texts,
+  onEdit,
+  onDelete,
+}: DcaMobileRecordsProps) {
+  if (pageData.length === 0) {
+    return (
+      <div className="text-muted-foreground py-8 text-center text-sm">
+        {texts.noRecordsFound}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {pageData.map((row) => (
+        <div key={row.order.id} className="hover:bg-muted/40 px-3 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="bg-muted text-foreground/70 rounded px-1.5 py-0.5 font-mono text-[10px]">
+                #{row.dayActive}
+              </span>
+              <span className="text-foreground text-xs font-medium">
+                {fmtDateShort(row.order.executedAt)}
+              </span>
+            </div>
+            <span
+              className={
+                "font-mono text-xs font-medium " +
+                (row.unrealized >= 0 ? posClass : negClass)
+              }
+            >
+              {row.unrealized >= 0 ? "+" : ""}
+              {fmtThb(row.unrealized)}
+            </span>
+          </div>
+          <div className="text-muted-foreground mt-1.5 grid grid-cols-3 gap-x-3 font-mono text-[10px]">
+            <div>
+              <span className="opacity-60">Fiat</span>
+              <div className="text-foreground text-[11px]">
+                {fmtInt(row.order.amountTHB)} ฿
+              </div>
+            </div>
+            <div>
+              <span className="opacity-60">Sat</span>
+              <div className="text-foreground text-[11px]">
+                {fmtInt(row.satoshi)}
+              </div>
+            </div>
+            <div>
+              <span className="opacity-60">Price</span>
+              <div className="text-foreground text-[11px]">
+                {fmtInt(row.order.pricePerCoin)}
+              </div>
+            </div>
+          </div>
+          <div className="mt-3 flex flex-wrap justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="min-h-10"
+              onClick={() => onEdit(row.order)}
+              aria-label={
+                texts.edit +
+                " " +
+                row.order.coin +
+                " " +
+                fmtDateTime(row.order.executedAt)
+              }
+            >
+              <Pencil aria-hidden="true" className="mr-1.5 h-4 w-4" />
+              {texts.edit}
+            </Button>
+            <ConfirmMorph
+              label={texts.delete}
+              ariaLabel={
+                texts.delete +
+                " " +
+                row.order.coin +
+                " " +
+                fmtDateTime(row.order.executedAt)
+              }
+              prompt={texts.deleteConfirmTitle}
+              description={texts.deleteConfirmDescription}
+              confirmLabel={texts.delete}
+              holdLabel={texts.deleteHoldLabel}
+              holdReleaseLabel={texts.deleteHoldReleaseLabel}
+              holdInstruction={texts.deleteHoldInstruction}
+              holdCompleteLabel={texts.deleteHoldComplete}
+              cancelLabel={texts.deleteCancel}
+              pendingLabel={texts.deletePending}
+              doneLabel={texts.deleteSuccess}
+              doneDescription={texts.deleteLocalOnly}
+              errorLabel={texts.deleteError}
+              retryLabel={texts.deleteRetry}
+              onConfirm={() => onDelete(row.order)}
+              showIdleLabel
+              inline
+            />
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
+interface DcaDesktopRecordsProps {
+  pageData: EnrichedRow[];
+  columns: DcaTableColumn[];
+  texts: DcaTableTexts;
+  sortKey: SortKey;
+  sortDir: "asc" | "desc";
+  onToggleSort: (key: SortKey) => void;
+  onEdit: (order: DcaOrder) => void;
+  onDelete: (order: DcaOrder) => Promise<void>;
+}
+
+function DcaDesktopRecords({
+  pageData,
+  columns,
+  texts,
+  sortKey,
+  sortDir,
+  onToggleSort,
+  onEdit,
+  onDelete,
+}: DcaDesktopRecordsProps) {
+  return (
+    <table className="dca-records w-full border-collapse font-mono text-xs">
+      <thead>
+        <tr>
+          {columns.map((column) => (
+            <th
+              key={column.key}
+              scope="col"
+              aria-sort={
+                sortKey === column.key
+                  ? sortDir === "asc"
+                    ? "ascending"
+                    : "descending"
+                  : undefined
+              }
+              className={
+                "bg-muted text-muted-foreground border-border border-b px-3 py-2.5 text-[10px] font-medium tracking-wider whitespace-nowrap uppercase " +
+                (column.left ? "text-left" : "text-right") +
+                " " +
+                (column.hideMobile ? "hidden lg:table-cell" : "")
+              }
+            >
+              <button
+                type="button"
+                onClick={() => onToggleSort(column.key)}
+                className={
+                  "hover:text-foreground focus-visible:outline-ring inline-flex w-full cursor-pointer items-center gap-1 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 " +
+                  (column.left ? "justify-start" : "justify-end")
+                }
+              >
+                <span>{column.label}</span>
+                {sortKey === column.key ? (
+                  sortDir === "asc" ? (
+                    <ArrowUp
+                      aria-hidden="true"
+                      className="h-3.5 w-3.5 shrink-0 text-orange-500"
+                    />
+                  ) : (
+                    <ArrowDown
+                      aria-hidden="true"
+                      className="h-3.5 w-3.5 shrink-0 text-orange-500"
+                    />
+                  )
+                ) : (
+                  <ArrowUpDown
+                    aria-hidden="true"
+                    className="text-muted-foreground h-3.5 w-3.5 shrink-0 opacity-60"
+                  />
+                )}
+              </button>
+            </th>
+          ))}
+          <th
+            scope="col"
+            className="bg-muted text-muted-foreground border-border border-b px-3 py-2.5 text-right text-[10px] font-medium tracking-wider whitespace-nowrap uppercase"
+          >
+            {texts.actions}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {pageData.length === 0 ? (
+          <tr>
+            <td
+              colSpan={columns.length + 1}
+              className="text-muted-foreground py-8 text-center text-sm"
+            >
+              {texts.noRecordsFound}
+            </td>
+          </tr>
+        ) : (
+          pageData.map((row) => (
+            <tr
+              key={row.order.id}
+              className="hover:bg-muted/40 border-border border-b transition-colors"
+            >
+              <td className="px-3 py-2 text-left">
+                <span className="bg-muted text-foreground/70 inline-block rounded px-1.5 py-0.5 text-center text-[11px]">
+                  {row.dayActive}
+                </span>
+              </td>
+              <td className="px-3 py-2 text-left whitespace-nowrap">
+                {fmtDateShort(row.order.executedAt)}
+              </td>
+              <td className="px-3 py-2 text-right">
+                {fmtInt(row.order.amountTHB)}
+              </td>
+              <td className="px-3 py-2 text-right">{fmtInt(row.satoshi)}</td>
+              <td className="hidden px-3 py-2 text-right lg:table-cell">
+                {fmtInt(row.order.pricePerCoin)}
+              </td>
+              <td className="hidden px-3 py-2 text-right lg:table-cell">
+                {fmtThb(row.portfolioValue)}
+              </td>
+              <td className="hidden px-3 py-2 text-right lg:table-cell">
+                {fmtInt(row.invested)}
+              </td>
+              <td
+                className={
+                  "px-3 py-2 text-right " +
+                  (row.unrealized >= 0 ? posClass : negClass)
+                }
+              >
+                {row.unrealized >= 0 ? "+" : ""}
+                {fmtThb(row.unrealized)}
+              </td>
+              <td
+                className={
+                  "hidden px-3 py-2 text-right lg:table-cell " +
+                  (row.pctUnrealized >= 0 ? posClass : negClass)
+                }
+              >
+                {row.pctUnrealized >= 0 ? "+" : ""}
+                {row.pctUnrealized.toFixed(2)}%
+              </td>
+              <td className="px-3 py-2 text-right">
+                <div className="inline-flex items-center justify-end gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="min-h-9 px-2"
+                    onClick={() => onEdit(row.order)}
+                    aria-label={
+                      texts.edit +
+                      " " +
+                      row.order.coin +
+                      " " +
+                      fmtDateTime(row.order.executedAt)
+                    }
+                  >
+                    <Pencil aria-hidden="true" className="h-4 w-4" />
+                    <span className="sr-only">{texts.edit}</span>
+                  </Button>
+                  <ConfirmMorph
+                    label={texts.delete}
+                    ariaLabel={
+                      texts.delete +
+                      " " +
+                      row.order.coin +
+                      " " +
+                      fmtDateTime(row.order.executedAt)
+                    }
+                    prompt={texts.deleteConfirmTitle}
+                    description={texts.deleteConfirmDescription}
+                    confirmLabel={texts.delete}
+                    holdLabel={texts.deleteHoldLabel}
+                    holdReleaseLabel={texts.deleteHoldReleaseLabel}
+                    holdInstruction={texts.deleteHoldInstruction}
+                    holdCompleteLabel={texts.deleteHoldComplete}
+                    cancelLabel={texts.deleteCancel}
+                    pendingLabel={texts.deletePending}
+                    doneLabel={texts.deleteSuccess}
+                    doneDescription={texts.deleteLocalOnly}
+                    errorLabel={texts.deleteError}
+                    retryLabel={texts.deleteRetry}
+                    onConfirm={() => onDelete(row.order)}
+                  />
+                </div>
+              </td>
+            </tr>
+          ))
+        )}
+      </tbody>
+    </table>
+  );
+}
+
+interface DcaRecordsPaginationProps {
+  sortedLength: number;
+  curPage: number;
+  totalPages: number;
+  pageSize: number;
+  pageNumbers: PageNumberItem[];
+  texts: DcaTableTexts;
+  onPageChange: (page: number) => void;
+}
+
+function DcaRecordsPagination({
+  sortedLength,
+  curPage,
+  totalPages,
+  pageSize,
+  pageNumbers,
+  texts,
+  onPageChange,
+}: DcaRecordsPaginationProps) {
+  return (
+    <div className="border-border text-muted-foreground flex flex-col items-center justify-between gap-2 border-t px-3 py-2.5 font-mono text-xs sm:flex-row sm:px-4">
+      <span>
+        {sortedLength === 0
+          ? texts.showingEmpty
+          : texts.showingRange(
+              (curPage - 1) * pageSize + 1,
+              Math.min(curPage * pageSize, sortedLength),
+              sortedLength,
+            )}
+      </span>
+      <div className="dca-pager flex gap-1">
+        <button
+          className="bg-card border-border text-foreground/70 cursor-pointer rounded border px-2 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-30"
+          disabled={curPage === 1}
+          onClick={() => onPageChange(1)}
+        >
+          &laquo;
+        </button>
+        <button
+          className="bg-card border-border text-foreground/70 cursor-pointer rounded border px-2 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-30"
+          disabled={curPage === 1}
+          onClick={() => onPageChange(curPage - 1)}
+        >
+          &lsaquo;
+        </button>
+        {pageNumbers.map(({ page, key }) =>
+          page === "..." ? (
+            <span key={key} className="px-1 opacity-50">
+              &hellip;
+            </span>
+          ) : (
+            <button
+              key={key}
+              className={
+                "cursor-pointer rounded border px-2 py-1 text-xs " +
+                (page === curPage
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-card border-border text-foreground/70 hover:bg-muted")
+              }
+              onClick={() => onPageChange(page)}
+            >
+              {page}
+            </button>
+          ),
+        )}
+        <button
+          className="bg-card border-border text-foreground/70 cursor-pointer rounded border px-2 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-30"
+          disabled={curPage === totalPages}
+          onClick={() => onPageChange(curPage + 1)}
+        >
+          &rsaquo;
+        </button>
+        <button
+          className="bg-card border-border text-foreground/70 cursor-pointer rounded border px-2 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-30"
+          disabled={curPage === totalPages}
+          onClick={() => onPageChange(totalPages)}
+        >
+          &raquo;
+        </button>
+      </div>
+    </div>
+  );
+}

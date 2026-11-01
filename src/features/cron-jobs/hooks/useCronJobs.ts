@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   CronHttpMethod,
   CronJob,
@@ -100,6 +100,12 @@ export function useCronJobs() {
     }
   }, []);
 
+  // refresh ล่าสุดผ่าน ref — sendMutation เสถียรตลอด (refresh เป็น useCallback([]) อยู่แล้ว)
+  const refreshRef = useRef(refresh);
+  useEffect(() => {
+    refreshRef.current = refresh;
+  });
+
   const sendMutation = useCallback(
     async <T>(url: string, init: RequestInit): Promise<T> => {
       setIsMutating(true);
@@ -114,13 +120,13 @@ export function useCronJobs() {
           },
         });
         const payload = await readJson<T>(response);
-        await refresh();
+        await refreshRef.current();
         return payload;
       } finally {
         setIsMutating(false);
       }
     },
-    [refresh],
+    [],
   );
 
   const createJob = useCallback(

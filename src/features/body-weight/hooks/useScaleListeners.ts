@@ -28,13 +28,14 @@ export function useScaleListeners() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ active }),
       });
-      const json = await res.json().catch(() => ({}));
       if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
         throw new Error(
-          (json as { error?: string }).error ??
+          (errJson as { error?: string }).error ??
             "ไม่สามารถเปลี่ยนเครื่องรับสัญญาณได้",
         );
       }
+      const json = await res.json();
       return (json as { data: ScaleListenerOverview }).data;
     },
     onSuccess: (overview) => queryClient.setQueryData(QUERY_KEY, overview),

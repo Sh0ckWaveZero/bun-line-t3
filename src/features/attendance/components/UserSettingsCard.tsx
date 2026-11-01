@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -29,39 +29,44 @@ export function UserSettingsCard({ className }: UserSettingsCardProps) {
   const { showToast } = useToast();
   const { data: session, status } = useSession();
 
-  const fetchSettings = useCallback(async () => {
+  // Fetch current settings — setState เกิดหลัง await เท่านั้น (ใน closure ของ effect เอง)
+  useEffect(() => {
     if (status === "loading" || !session) return;
+    let cancelled = false;
 
-    try {
-      setLoading(true);
-      const response = await fetch("/api/user/settings");
-      const data = await response.json();
+    const load = async () => {
+      try {
+        const response = await fetch("/api/user/settings");
+        const data = await response.json();
 
-      if (response.ok) {
-        setSettings(data.settings);
-      } else {
+        if (cancelled) return;
+        if (response.ok) {
+          setSettings(data.settings);
+        } else {
+          showToast({
+            title: "เกิดข้อผิดพลาด",
+            description: data.error || "ไม่สามารถโหลดการตั้งค่าได้",
+            type: "error",
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+        if (cancelled) return;
         showToast({
           title: "เกิดข้อผิดพลาด",
-          description: data.error || "ไม่สามารถโหลดการตั้งค่าได้",
+          description: "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้",
           type: "error",
         });
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching settings:", error);
-      showToast({
-        title: "เกิดข้อผิดพลาด",
-        description: "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้",
-        type: "error",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [showToast, session, status]);
+    };
 
-  // Fetch current settings
-  useEffect(() => {
-    fetchSettings();
-  }, [fetchSettings]);
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [showToast, session, status]);
 
   const updateSetting = (key: keyof UserSettings, value: boolean | string) => {
     if (!settings) return;

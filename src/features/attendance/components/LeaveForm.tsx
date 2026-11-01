@@ -1,6 +1,7 @@
 // src/components/attendance/LeaveForm.tsx
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { DayPicker as ThaiDayPicker } from "react-day-picker";
 import { useToast } from "@/components/common/ToastProvider";
 import { useSession } from "@/lib/auth/client";
@@ -267,6 +268,8 @@ export const LeaveForm = ({ onSubmit }: LeaveFormProps) => {
   );
 
   useEffect(() => {
+    // data fetch ตามเดือน — flip loading ทันทีเป็น data-fetch pattern ที่ตั้งใจ
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchLeaves(historyMonth);
   }, [historyMonth, fetchLeaves]);
 
@@ -282,8 +285,7 @@ export const LeaveForm = ({ onSubmit }: LeaveFormProps) => {
 
       return () => clearTimeout(redirectTimeout);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+  }, [status, showToast]);
 
   // ─── Submit ───────────────────────────────────────────────────────────────
 
@@ -375,181 +377,18 @@ export const LeaveForm = ({ onSubmit }: LeaveFormProps) => {
           </p>
         </div>
 
-        {/* ── Form Card ── */}
-        <Card id="leave-form-card" className="shadow-sm">
-          <CardHeader className="pb-4">
-            <CardTitle
-              id="leave-form-title"
-              className="flex items-center gap-2 text-base"
-            >
-              <CalendarIcon
-                className="text-primary h-4 w-4"
-                aria-hidden="true"
-              />
-              ข้อมูลการลา
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form
-              id="leave-form"
-              onSubmit={handleSubmit}
-              className="space-y-5"
-              noValidate
-            >
-              {/* ── วันที่ลา ── */}
-              <div id="leave-date-field" className="space-y-1.5">
-                <Label
-                  htmlFor="leave-date-trigger"
-                  className="text-sm font-medium"
-                >
-                  วันที่ลา
-                </Label>
-
-                <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
-                  <PopoverTrigger asChild>
-                    <button
-                      id="leave-date-trigger"
-                      type="button"
-                      aria-label={`วันที่ลาที่เลือก: ${formatThaiFullDate(date)} กดเพื่อเปลี่ยน`}
-                      aria-expanded={pickerOpen}
-                      aria-haspopup="dialog"
-                      aria-controls="leave-date-popover"
-                      className="border-input bg-background focus-visible:ring-ring flex h-10 w-full items-center gap-2.5 rounded-md border px-3 text-left text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-                    >
-                      <CalendarIcon
-                        className="text-muted-foreground h-4 w-4 shrink-0"
-                        aria-hidden="true"
-                      />
-                      <span className="text-foreground font-medium">
-                        {formatThaiFullDate(date)}
-                      </span>
-                    </button>
-                  </PopoverTrigger>
-
-                  <PopoverContent
-                    id="leave-date-popover"
-                    role="dialog"
-                    aria-label="เลือกวันที่ลา"
-                    className="w-auto p-0"
-                    align="start"
-                    sideOffset={4}
-                  >
-                    <ThaiDayPicker
-                      id="leave-date-calendar"
-                      mode="single"
-                      selected={parseDateStr(date)}
-                      onSelect={(day) => {
-                        if (day) {
-                          setDate(formatDateToStr(day));
-                          setPickerOpen(false);
-                        }
-                      }}
-                      classNames={CALENDAR_CLASSNAMES}
-                      formatters={{ formatCaption: formatThaiMonthCaption }}
-                      numerals="latn"
-                      autoFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              {/* ── ประเภทวันลา ── */}
-              <div id="leave-type-field" className="space-y-2">
-                <Label
-                  id="leave-type-label"
-                  htmlFor="leave-type-grid"
-                  className="text-sm font-medium"
-                >
-                  ประเภทวันลา
-                </Label>
-                <div
-                  id="leave-type-grid"
-                  role="radiogroup"
-                  aria-labelledby="leave-type-label"
-                  className="grid grid-cols-2 gap-2"
-                >
-                  {LEAVE_TYPES.map((lt) => {
-                    const Icon = lt.icon;
-                    const isActive = type === lt.value;
-                    return (
-                      <button
-                        key={lt.value}
-                        id={`leave-type-${lt.value}`}
-                        type="button"
-                        role="radio"
-                        aria-checked={isActive}
-                        onClick={() => setType(lt.value)}
-                        className={cn(
-                          "bg-muted/30 flex items-center gap-3 rounded-xl border-2 p-3 text-left",
-                          "transition-colors duration-150",
-                          "focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
-                          isActive
-                            ? "border-primary"
-                            : "border-border hover:border-primary/40",
-                        )}
-                      >
-                        <div
-                          className="bg-muted flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
-                          aria-hidden="true"
-                        >
-                          <Icon className="text-muted-foreground h-5 w-5" />
-                        </div>
-                        <span className="text-foreground text-sm font-medium">
-                          {lt.label}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* ── เหตุผล ── */}
-              <div id="leave-reason-field" className="space-y-1.5">
-                <Label htmlFor="leave-reason" className="text-sm font-medium">
-                  เหตุผล{" "}
-                  <span className="text-muted-foreground font-normal">
-                    (ถ้ามี)
-                  </span>
-                </Label>
-                <textarea
-                  id="leave-reason"
-                  name="leave-reason"
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  rows={3}
-                  placeholder="ระบุเหตุผลเพิ่มเติม..."
-                  aria-label="เหตุผลการลา (ไม่บังคับ)"
-                  className="border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-ring w-full resize-none rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-50"
-                />
-              </div>
-
-              {/* ── Submit ── */}
-              <Button
-                id="leave-submit"
-                type="submit"
-                disabled={loading}
-                className="w-full"
-                size="lg"
-                aria-busy={loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2
-                      className="mr-2 h-4 w-4 animate-spin"
-                      aria-hidden="true"
-                    />
-                    กำลังบันทึก...
-                  </>
-                ) : (
-                  <>
-                    <CalendarIcon className="mr-2 h-4 w-4" aria-hidden="true" />
-                    บันทึกวันลา
-                  </>
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+        <LeaveFormCard
+          date={date}
+          setDate={setDate}
+          pickerOpen={pickerOpen}
+          setPickerOpen={setPickerOpen}
+          type={type}
+          setType={setType}
+          reason={reason}
+          setReason={setReason}
+          loading={loading}
+          onSubmit={handleSubmit}
+        />
 
         {/* ── Info Box ── */}
         <div
@@ -571,143 +410,352 @@ export const LeaveForm = ({ onSubmit }: LeaveFormProps) => {
         </div>
 
         {/* ── Leave History ── */}
-        <Card id="leave-history" className="shadow-sm">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle
-                id="leave-history-title"
-                className="flex items-center gap-2 text-base"
-              >
-                <ClipboardList
-                  className="text-primary h-4 w-4"
-                  aria-hidden="true"
-                />
-                ประวัติการลา
-              </CardTitle>
-
-              {/* Month navigation */}
-              <nav
-                id="leave-history-nav"
-                aria-label="นำทางเดือน"
-                className="flex items-center gap-0.5"
-              >
-                <button
-                  id="leave-history-prev"
-                  type="button"
-                  onClick={() => setHistoryMonth((m) => shiftMonth(m, -1))}
-                  aria-label="เดือนก่อนหน้า"
-                  className="hover:bg-accent focus-visible:ring-ring flex h-7 w-7 items-center justify-center rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                >
-                  <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-                </button>
-
-                <span
-                  id="leave-history-month"
-                  aria-live="polite"
-                  aria-atomic="true"
-                  className="min-w-[112px] text-center text-sm font-medium tabular-nums"
-                >
-                  {getThaiMonthLabel(historyMonth)}
-                </span>
-
-                <button
-                  id="leave-history-next"
-                  type="button"
-                  onClick={() => setHistoryMonth((m) => shiftMonth(m, 1))}
-                  disabled={historyMonth >= currentMonthStr}
-                  aria-label="เดือนถัดไป"
-                  aria-disabled={historyMonth >= currentMonthStr}
-                  className="hover:bg-accent focus-visible:ring-ring flex h-7 w-7 items-center justify-center rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40"
-                >
-                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
-                </button>
-              </nav>
-            </div>
-          </CardHeader>
-
-          <CardContent>
-            {historyLoading ? (
-              <div
-                id="leave-history-loading"
-                role="status"
-                aria-label="กำลังโหลดข้อมูลการลา"
-                className="flex justify-center py-8"
-              >
-                <Loader2
-                  className="text-muted-foreground h-5 w-5 animate-spin"
-                  aria-hidden="true"
-                />
-              </div>
-            ) : leaves.length === 0 ? (
-              <div
-                id="leave-history-empty"
-                className="flex flex-col items-center gap-2 py-8"
-              >
-                <CalendarIcon
-                  className="text-muted-foreground/40 h-8 w-8"
-                  aria-hidden="true"
-                />
-                <p className="text-muted-foreground text-sm">
-                  ไม่มีข้อมูลการลาในเดือนนี้
-                </p>
-              </div>
-            ) : (
-              <ul
-                id="leave-history-list"
-                aria-label="รายการวันลา"
-                className="space-y-2"
-              >
-                {leaves.map((leave) => {
-                  const lt = LEAVE_TYPE_MAP[leave.type];
-                  const Icon = lt?.icon;
-                  return (
-                    <li
-                      key={leave.id}
-                      id={`leave-history-item-${leave.id}`}
-                      className="bg-card hover:bg-accent/30 flex items-center justify-between rounded-xl border px-3 py-2.5 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        {Icon ? (
-                          <div
-                            className="bg-muted flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-                            aria-hidden="true"
-                          >
-                            <Icon className="text-muted-foreground h-4 w-4" />
-                          </div>
-                        ) : null}
-                        <div>
-                          <p className="text-sm font-medium">
-                            {formatThaiShortDate(leave.date)}
-                          </p>
-                          {leave.reason ? (
-                            <p className="text-muted-foreground mt-0.5 text-xs">
-                              {leave.reason}
-                            </p>
-                          ) : null}
-                        </div>
-                      </div>
-
-                      <Badge variant="outline" className="shrink-0 text-xs">
-                        {lt?.label ?? leave.type}
-                      </Badge>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-
-            {/* Summary footer */}
-            {!historyLoading && leaves.length > 0 && (
-              <p
-                id="leave-history-summary"
-                className="text-muted-foreground mt-3 text-right text-xs"
-              >
-                รวม {leaves.length} วัน
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        <LeaveHistoryCard
+          currentMonthStr={currentMonthStr}
+          historyMonth={historyMonth}
+          setHistoryMonth={setHistoryMonth}
+          leaves={leaves}
+          historyLoading={historyLoading}
+        />
       </div>
     </div>
   );
 };
+
+interface LeaveFormCardProps {
+  date: string;
+  setDate: Dispatch<SetStateAction<string>>;
+  pickerOpen: boolean;
+  setPickerOpen: Dispatch<SetStateAction<boolean>>;
+  type: LeaveTypeValue;
+  setType: Dispatch<SetStateAction<LeaveTypeValue>>;
+  reason: string;
+  setReason: Dispatch<SetStateAction<string>>;
+  loading: boolean;
+  onSubmit: (event: React.FormEvent<HTMLFormElement>) => Promise<void>;
+}
+
+function LeaveFormCard({
+  date,
+  setDate,
+  pickerOpen,
+  setPickerOpen,
+  type,
+  setType,
+  reason,
+  setReason,
+  loading,
+  onSubmit,
+}: LeaveFormCardProps) {
+  return (
+    <Card id="leave-form-card" className="shadow-sm">
+      <CardHeader className="pb-4">
+        <CardTitle
+          id="leave-form-title"
+          className="flex items-center gap-2 text-base"
+        >
+          <CalendarIcon className="text-primary h-4 w-4" aria-hidden="true" />
+          ข้อมูลการลา
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form
+          id="leave-form"
+          onSubmit={onSubmit}
+          className="space-y-5"
+          noValidate
+        >
+          <div id="leave-date-field" className="space-y-1.5">
+            <Label htmlFor="leave-date-trigger" className="text-sm font-medium">
+              วันที่ลา
+            </Label>
+            <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  id="leave-date-trigger"
+                  type="button"
+                  aria-label={`วันที่ลาที่เลือก: ${formatThaiFullDate(date)} กดเพื่อเปลี่ยน`}
+                  aria-expanded={pickerOpen}
+                  aria-haspopup="dialog"
+                  aria-controls="leave-date-popover"
+                  className="border-input bg-background focus-visible:ring-ring flex h-10 w-full items-center gap-2.5 rounded-md border px-3 text-left text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                >
+                  <CalendarIcon
+                    className="text-muted-foreground h-4 w-4 shrink-0"
+                    aria-hidden="true"
+                  />
+                  <span className="text-foreground font-medium">
+                    {formatThaiFullDate(date)}
+                  </span>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                id="leave-date-popover"
+                role="dialog"
+                aria-label="เลือกวันที่ลา"
+                className="w-auto p-0"
+                align="start"
+                sideOffset={4}
+              >
+                <ThaiDayPicker
+                  id="leave-date-calendar"
+                  mode="single"
+                  selected={parseDateStr(date)}
+                  onSelect={(day) => {
+                    if (day) {
+                      setDate(formatDateToStr(day));
+                      setPickerOpen(false);
+                    }
+                  }}
+                  classNames={CALENDAR_CLASSNAMES}
+                  formatters={{ formatCaption: formatThaiMonthCaption }}
+                  numerals="latn"
+                  autoFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div id="leave-type-field" className="space-y-2">
+            <Label
+              id="leave-type-label"
+              htmlFor="leave-type-grid"
+              className="text-sm font-medium"
+            >
+              ประเภทวันลา
+            </Label>
+            <div
+              id="leave-type-grid"
+              role="radiogroup"
+              aria-labelledby="leave-type-label"
+              className="grid grid-cols-2 gap-2"
+            >
+              {LEAVE_TYPES.map((leaveType) => {
+                const Icon = leaveType.icon;
+                const isActive = type === leaveType.value;
+                return (
+                  <button
+                    key={leaveType.value}
+                    id={`leave-type-${leaveType.value}`}
+                    type="button"
+                    role="radio"
+                    aria-checked={isActive}
+                    onClick={() => setType(leaveType.value)}
+                    className={cn(
+                      "bg-muted/30 flex items-center gap-3 rounded-xl border-2 p-3 text-left",
+                      "transition-colors duration-150",
+                      "focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+                      isActive
+                        ? "border-primary"
+                        : "border-border hover:border-primary/40",
+                    )}
+                  >
+                    <div
+                      className="bg-muted flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                      aria-hidden="true"
+                    >
+                      <Icon className="text-muted-foreground h-5 w-5" />
+                    </div>
+                    <span className="text-foreground text-sm font-medium">
+                      {leaveType.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div id="leave-reason-field" className="space-y-1.5">
+            <Label htmlFor="leave-reason" className="text-sm font-medium">
+              เหตุผล{" "}
+              <span className="text-muted-foreground font-normal">(ถ้ามี)</span>
+            </Label>
+            <textarea
+              id="leave-reason"
+              name="leave-reason"
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              rows={3}
+              placeholder="ระบุเหตุผลเพิ่มเติม..."
+              aria-label="เหตุผลการลา (ไม่บังคับ)"
+              className="border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-ring w-full resize-none rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-50"
+            />
+          </div>
+
+          <Button
+            id="leave-submit"
+            type="submit"
+            disabled={loading}
+            className="w-full"
+            size="lg"
+            aria-busy={loading}
+          >
+            {loading ? (
+              <>
+                <Loader2
+                  className="mr-2 h-4 w-4 animate-spin"
+                  aria-hidden="true"
+                />
+                กำลังบันทึก...
+              </>
+            ) : (
+              <>
+                <CalendarIcon className="mr-2 h-4 w-4" aria-hidden="true" />
+                บันทึกวันลา
+              </>
+            )}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+interface LeaveHistoryCardProps {
+  currentMonthStr: string;
+  historyMonth: string;
+  setHistoryMonth: Dispatch<SetStateAction<string>>;
+  leaves: LeaveRecord[];
+  historyLoading: boolean;
+}
+
+function LeaveHistoryCard({
+  currentMonthStr,
+  historyMonth,
+  setHistoryMonth,
+  leaves,
+  historyLoading,
+}: LeaveHistoryCardProps) {
+  return (
+    <Card id="leave-history" className="shadow-sm">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle
+            id="leave-history-title"
+            className="flex items-center gap-2 text-base"
+          >
+            <ClipboardList
+              className="text-primary h-4 w-4"
+              aria-hidden="true"
+            />
+            ประวัติการลา
+          </CardTitle>
+          <nav
+            id="leave-history-nav"
+            aria-label="นำทางเดือน"
+            className="flex items-center gap-0.5"
+          >
+            <button
+              id="leave-history-prev"
+              type="button"
+              onClick={() => setHistoryMonth((month) => shiftMonth(month, -1))}
+              aria-label="เดือนก่อนหน้า"
+              className="hover:bg-accent focus-visible:ring-ring flex h-7 w-7 items-center justify-center rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-none"
+            >
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+            </button>
+            <span
+              id="leave-history-month"
+              aria-live="polite"
+              aria-atomic="true"
+              className="min-w-[112px] text-center text-sm font-medium tabular-nums"
+            >
+              {getThaiMonthLabel(historyMonth)}
+            </span>
+            <button
+              id="leave-history-next"
+              type="button"
+              onClick={() => setHistoryMonth((month) => shiftMonth(month, 1))}
+              disabled={historyMonth >= currentMonthStr}
+              aria-label="เดือนถัดไป"
+              aria-disabled={historyMonth >= currentMonthStr}
+              className="hover:bg-accent focus-visible:ring-ring flex h-7 w-7 items-center justify-center rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40"
+            >
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </nav>
+        </div>
+      </CardHeader>
+
+      <CardContent>
+        {historyLoading ? (
+          <div
+            id="leave-history-loading"
+            role="status"
+            aria-label="กำลังโหลดข้อมูลการลา"
+            className="flex justify-center py-8"
+          >
+            <Loader2
+              className="text-muted-foreground h-5 w-5 animate-spin"
+              aria-hidden="true"
+            />
+          </div>
+        ) : leaves.length === 0 ? (
+          <div
+            id="leave-history-empty"
+            className="flex flex-col items-center gap-2 py-8"
+          >
+            <CalendarIcon
+              className="text-muted-foreground/40 h-8 w-8"
+              aria-hidden="true"
+            />
+            <p className="text-muted-foreground text-sm">
+              ไม่มีข้อมูลการลาในเดือนนี้
+            </p>
+          </div>
+        ) : (
+          <ul
+            id="leave-history-list"
+            aria-label="รายการวันลา"
+            className="space-y-2"
+          >
+            {leaves.map((leave) => {
+              const leaveType = LEAVE_TYPE_MAP[leave.type];
+              const Icon = leaveType?.icon;
+              return (
+                <li
+                  key={leave.id}
+                  id={`leave-history-item-${leave.id}`}
+                  className="bg-card hover:bg-accent/30 flex items-center justify-between rounded-xl border px-3 py-2.5 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    {Icon ? (
+                      <div
+                        className="bg-muted flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                        aria-hidden="true"
+                      >
+                        <Icon className="text-muted-foreground h-4 w-4" />
+                      </div>
+                    ) : null}
+                    <div>
+                      <p className="text-sm font-medium">
+                        {formatThaiShortDate(leave.date)}
+                      </p>
+                      {leave.reason ? (
+                        <p className="text-muted-foreground mt-0.5 text-xs">
+                          {leave.reason}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="shrink-0 text-xs">
+                    {leaveType?.label ?? leave.type}
+                  </Badge>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        {!historyLoading && leaves.length > 0 && (
+          <p
+            id="leave-history-summary"
+            className="text-muted-foreground mt-3 text-right text-xs"
+          >
+            รวม {leaves.length} วัน
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { PixelCode, PixelDice, PixelPlus } from "@/features/planning-poker/components/pixel-icons";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,8 @@ import {
 } from "../constants";
 import { LiveStats } from "../components/LiveStats";
 import { PokerApiError, createRoomRequest } from "../lib/api";
-import { loadSavedName, saveName, saveRoomToken } from "../lib/storage";
+import { saveName, saveRoomToken } from "../lib/storage";
+import { useSavedName } from "../hooks/usePokerStorage";
 
 const DECK_OPTIONS = [
   ...DECK_IDS.map((id) => ({
@@ -46,17 +47,16 @@ const normalizeCode = (value: string): string =>
 
 const CreateRoomCard = () => {
   const navigate = useNavigate();
-  const [name, setName] = useState("");
+  // seed ชื่อจาก localStorage ผ่าน external store (null = ยังไม่พิมพ์เอง → ใช้ค่าที่เคยใช้)
+  const savedName = useSavedName();
+  const [typedName, setTypedName] = useState<string | null>(null);
+  const name = typedName ?? savedName;
   const [deckId, setDeckId] = useState<string>(DEFAULT_DECK_ID);
   const [customDeckText, setCustomDeckText] = useState("0 1 2 3 5 8 13");
   const [isSpectator, setIsSpectator] = useState(false);
   const [observersCanControl, setObserversCanControl] = useState(true);
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setName(loadSavedName());
-  }, []);
 
   // ผู้สร้างเป็นผู้สังเกตการณ์ + ปิดสิทธิ์ผู้สังเกตการณ์ = ผู้สร้างเปิดไพ่ในห้องตัวเองไม่ได้
   const isCreatorLockedOut = isSpectator && !observersCanControl;
@@ -112,7 +112,7 @@ const CreateRoomCard = () => {
             <Input
               id="poker-create-name"
               value={name}
-              onChange={(event) => setName(event.target.value)}
+              onChange={(event) => setTypedName(event.target.value)}
               maxLength={POKER_LIMITS.nameMaxLength}
               placeholder="e.g. Somchai"
               autoComplete="nickname"

@@ -25,11 +25,13 @@ export const useAttendanceReport = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedMonth, setSelectedMonth] = useState("");
 
-  // 🛡️ Initialize selectedMonth safely after hydration
+  // 🛡️ Initialize selectedMonth safely after hydration — ตั้งค่าหลัง mount เพื่อไม่ให้
+  // server (TZ ต่างจาก client) render คนละเดือนแล้วเจอ hydration mismatch
   useEffect(() => {
     if (!selectedMonth) {
       const now = new Date();
       const defaultMonth = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, "0")}`;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedMonth(defaultMonth);
     }
   }, [selectedMonth]);
@@ -55,14 +57,6 @@ export const useAttendanceReport = () => {
     }
   }, [navigate, status]);
 
-  // Fetch report when userId or selectedMonth changes
-  useEffect(() => {
-    if (userId && selectedMonth) {
-      fetchReport();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, selectedMonth]); // Intentionally excluding fetchReport to avoid infinite loop
-
   // 🔐 SECURITY: Pure function for secure API calls
   const fetchReport = useCallback(async () => {
     if (!userId || !selectedMonth) return;
@@ -87,6 +81,17 @@ export const useAttendanceReport = () => {
       setLoading(false);
     }
   }, [userId, selectedMonth]);
+
+  // Fetch report when userId or selectedMonth changes
+  // (fetchReport เป็น useCallback ที่มี deps = [userId, selectedMonth] เท่ากัน —
+  // ใส่ใน deps ได้ปลอดภัย ไม่เกิด loop)
+  useEffect(() => {
+    if (userId && selectedMonth) {
+      // data fetch ตอน month/user เปลี่ยน — flip loading ทันทีเป็น data-fetch pattern ที่ตั้งใจ
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchReport();
+    }
+  }, [userId, selectedMonth, fetchReport]);
 
   // Modal Management Functions
   const openEditModal = useCallback((record: AttendanceRecord) => {

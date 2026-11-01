@@ -337,15 +337,7 @@ export function createWeighInFlexMessage(
           },
           {
             type: "text",
-            text: new Intl.DateTimeFormat("th-TH", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-              timeZone: "Asia/Bangkok",
-              hour12: false,
-            }).format(data.measuredAt),
+            text: formatDate(data.measuredAt),
             color: "#6B7280",
             size: "xs",
             margin: "sm",

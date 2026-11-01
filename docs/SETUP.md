@@ -1,573 +1,73 @@
-# 🚀 คู่มือการติดตั้งและการกำหนดค่า | Setup Guide
+# ติดตั้งและตั้งค่า
 
-> **🎯 คู่มือการติดตั้งโปรเจกต์ Bun LINE T3 Attendance System**
->
-> **⚡ ใช้เทคโนโลยี**: Bun + TanStack Start + React 19 + TypeScript + PostgreSQL
+คู่มือนี้อิงกับ Bun, TanStack Start, Prisma 7 และ PostgreSQL ที่ใช้ใน repository ปัจจุบัน
 
-## 📋 สารบัญ | Table of Contents
+## สิ่งที่ต้องมี
 
-- [🔧 ข้อกำหนดระบบ](#-ข้อกำหนดระบบ)
-- [⚡ การติดตั้งอย่างรวดเร็ว](#-การติดตั้งอย่างรวดเร็ว)
-- [🔐 การกำหนดค่า Environment](#-การกำหนดค่า-environment)
-- [🗄️ การตั้งค่าฐานข้อมูล](#️-การตั้งค่าฐานข้อมูล)
-- [💬 การตั้งค่า LINE Bot](#-การตั้งค่า-line-bot)
-- [🚀 การรันโปรเจกต์](#-การรันโปรเจกต์)
-- [🧪 การทดสอบ](#-การทดสอบ)
-- [🐳 Docker Setup](#-docker-setup)
-- [🛠️ การแก้ไขปัญหา](#️-การแก้ไขปัญหา)
+- Bun 1.4.4 stable สำหรับติดตั้งและรันแอป
+- PostgreSQL และ database URL ที่แอปเข้าถึงได้
+- Git
+- LINE Developers credentials หากจะใช้ LINE Login หรือ LINE bot
 
-## 🔧 ข้อกำหนดระบบ | Prerequisites
-
-### ✅ ซอฟต์แวร์ที่จำเป็น
-
-| เครื่องมือ                        | เวอร์ชันขั้นต่ำ | แนะนำ   | วัตถุประสงค์                           |
-| --------------------------------- | --------------- | ------- | -------------------------------------- |
-| **[Bun](https://bun.sh)**         | 1.0.0+          | 1.1.34+ | JavaScript runtime และ package manager |
-| **[Node.js](https://nodejs.org)** | 18.0.0+         | 20.11+  | สำหรับ fallback และ compatibility      |
-| **[Git](https://git-scm.com)**    | 2.25+           | latest  | Version control                        |
-| **PostgreSQL**                    | 6.0+            | 7.0+    | ฐานข้อมูลหลัก                          |
-
-### 🔍 ตรวจสอบการติดตั้ง | Verification
+## ติดตั้ง
 
 ```bash
-# ตรวจสอบ Bun
-bun --version
-
-# ตรวจสอบ Node.js
-node --version
-
-# ตรวจสอบ Git
-git --version
-
-# ตรวจสอบ PostgreSQL (หากติดตั้งแบบ local)
-psql --version
-```
-
-### 📝 การติดตั้ง Bun (หากยังไม่มี)
-
-```bash
-# macOS / Linux
-curl -fsSL https://bun.sh/install | bash
-
-# Windows
-powershell -c "irm bun.sh/install.ps1 | iex"
-
-# ตรวจสอบการติดตั้ง
-bun --version
-```
-
-## ⚡ การติดตั้งอย่างรวดเร็ว | Quick Installation
-
-### 1. Clone Repository
-
-```bash
-# Clone โปรเจกต์
 git clone <repository-url>
 cd bun-line-t3
-
-# หรือใช้ GitHub CLI
-gh repo clone <username>/bun-line-t3
-cd bun-line-t3
-```
-
-### 2. ติดตั้ง Dependencies
-
-```bash
-# ติดตั้งด้วย Bun (แนะนำ)
 bun install
-```
-
-### 3. Copy Environment File
-
-```bash
-# Copy ไฟล์ example
 cp .env.example .env
-
-# เปิดไฟล์เพื่อแก้ไข
-nano .env
-# หรือ
-code .env
 ```
 
-### 4. Setup ฐานข้อมูล
+กำหนด environment variables ก่อนเรียก Prisma หรือเริ่มแอป ใน `.env` ควรตรวจตัวแปรใน `src/env.mjs` และตั้งค่าอย่างน้อย `DATABASE_URL`, `APP_URL`, `FRONTEND_URL`, `AUTH_SECRET`, `APP_DOMAIN`, `ALLOWED_DOMAINS`, LINE credentials และ CoinMarketCap credentials ตาม validation ของแอป ค่า `AUTH_SECRET` ต้องยาวอย่างน้อย 32 ตัวอักษร และค่า URL ต้องเป็น URL ที่ถูกต้อง
+
+หากตัวอย่าง environment file มีตัวแปร legacy หรือบริการที่คุณไม่ได้ตั้งค่า ให้ตรวจ source of truth ใน [`src/env.mjs`](../src/env.mjs) และ [`docker-compose.yml`](../docker-compose.yml); อย่ากำหนดค่าที่ไม่ได้ใช้เพียงเพราะมีชื่ออยู่ในไฟล์ตัวอย่าง
+
+ตัวแปรเสริมที่เปิดใช้ความสามารถเฉพาะ ได้แก่:
+
+- `OPENAI_API_KEY` และ `MCP_AI_MODEL` สำหรับการเรียก AI
+- `BITKUB_CREDENTIAL_ENCRYPTION_KEY` สำหรับจัดเก็บ Bitkub credentials ที่เข้ารหัส เป็น 64 ตัวอักษร hex และต้องคงเดิมเพื่อถอดรหัสข้อมูลเดิม
+- `SCALE_WEBHOOK_SECRET` สำหรับ webhook และ BLE scale listener
+- `CRON_SECRET` สำหรับ cron integration
+
+ไม่ใส่ค่าจริงของ secrets ลงใน git หรือ client-side configuration
+
+## ตั้งค่าฐานข้อมูล
+
+Prisma CLI อ่าน `.env.local` และ `.env` ผ่าน [`prisma.config.ts`](../prisma.config.ts). สร้าง/ปรับ migration สำหรับ development ด้วย:
 
 ```bash
-# Generate Prisma client
-bun run db:generate
-
-# Push schema ไปยังฐานข้อมูล
-bun run db:push
-
-# (Optional) Seed ข้อมูลพื้นฐาน
-bun run seed:holidays
+bun run db:migrate
 ```
 
-### 5. รัน Development Server
+เพื่อ apply migrations ที่ commit ไว้และ generate Prisma Client:
 
 ```bash
-# รัน development server
+bun run db:deploy
+```
+
+`bun run db:push` ใช้สำหรับทดลอง schema ในเครื่องเท่านั้น ไม่ใช้แทน migration ใน production. ใช้ `bun run db:studio` เพื่อเปิด Prisma Studio
+
+## เริ่มแอป
+
+```bash
 bun run dev
-
-# เปิดเบราว์เซอร์ไปที่
-# http://localhost:4325
 ```
 
-## 🔐 การกำหนดค่า Environment | Environment Configuration
+Development server ใช้ `http://localhost:4325`. ถ้าเริ่มระบบแล้วเจอ environment validation error ให้แก้ค่าตามชื่อ field และเงื่อนไขใน `src/env.mjs`; อย่าปิด validation เพื่อซ่อนค่าที่ขาด
 
-### 📋 Environment Variables ที่จำเป็น
-
-สร้างไฟล์ `.env` จาก `.env.example` และกำหนดค่าตามตาราง:
-
-#### 🗄️ Database Configuration
-
-```env
-# PostgreSQL Connection String
-DATABASE_URL="postgresql://username:password@localhost:5432/bun_line_t3"
-
-# สำหรับ PostgreSQL Cloud (Supabase, Neon, Railway)
-DATABASE_URL="postgresql://username:password@host.region.aws.rds.amazonaws.com:5432/bun_line_t3"
-```
-
-#### 🔐 Authentication
-
-```env
-# Better Auth Configuration
-AUTH_SECRET="your-secure-secret-key-here"
-APP_URL="http://localhost:4325"
-```
-
-#### 💬 LINE Bot Configuration
-
-```env
-# LINE Developer Console
-LINE_CLIENT_ID="your-line-client-id"
-LINE_CLIENT_SECRET="your-line-client-secret"
-LINE_CHANNEL_SECRET="your-line-channel-secret"
-LINE_CHANNEL_ACCESS="your-line-channel-access-token"
-```
-
-#### 🌐 Application Settings
-
-```env
-# Environment
-NODE_ENV="development"
-APP_ENV="development"
-NEXT_PUBLIC_APP_ENV="development"
-
-# URLs
-APP_URL="http://localhost:4325"
-FRONTEND_URL="http://localhost:4325"
-LINE_MESSAGING_API="https://api.line.me/v2/bot/message"
-
-# Planning Poker — social meta (OG/Twitter) ใช้ APP_URL นี้สร้าง absolute URL
-# ต้องตั้งเป็น domain จริง (https) ใน production ไม่งั้น Facebook/LINE ไม่เห็นภาพพรีวิว
-```
-
-#### 🔧 Optional Services
-
-```env
-# Cryptocurrency API (เฉพาะถ้าใช้ฟีเจอร์ crypto)
-CMC_URL="https://pro-api.coinmarketcap.com"
-CMC_API_KEY="your-coinmarketcap-api-key"
-
-# Air Quality API (เฉพาะถ้าใช้ฟีเจอร์ air quality)
-AIRVISUAL_API_KEY="your-airvisual-api-key"
-```
-
-### 🔒 การสร้าง Secret Keys
+## ตรวจการเปลี่ยนแปลง
 
 ```bash
-# สร้าง AUTH_SECRET
-openssl rand -base64 32
-
-# หรือใช้ script ที่เตรียมไว้
-bun run generate:secrets
-```
-
-## 🗄️ การตั้งค่าฐานข้อมูล | Database Setup
-
-### 🏠 Local PostgreSQL
-
-#### 1. ติดตั้ง PostgreSQL
-
-```bash
-# macOS (Homebrew)
-brew install postgresql@16
-brew services start postgresql@16
-
-# Ubuntu/Debian
-sudo apt-get install postgresql postgresql-contrib
-sudo systemctl start postgresql
-
-# Windows - ดาวน์โหลดจาก https://www.postgresql.org/download/windows/
-```
-
-#### 2. สร้างฐานข้อมูลและผู้ใช้
-
-```bash
-# เข้า PostgreSQL shell
-psql -U postgres
-
-# สร้างฐานข้อมูล
-CREATE DATABASE bun_line_t3;
-
-# สร้างผู้ใช้
-\c bun_line_t3
-CREATE USER bun_user WITH PASSWORD 'secure_password';
-GRANT ALL PRIVILEGES ON DATABASE bun_line_t3 TO bun_user;
-```
-
-### ☁️ PostgreSQL Cloud (Supabase/Neon/Railway)
-
-#### 1. สร้างฟรี Cluster
-
-1. ไปที่ [PostgreSQL Atlas](https://www.mongodb.com/cloud/atlas)
-2. สร้างบัญชีและ Cluster ใหม่
-3. เลือก FREE tier (M0)
-4. เลือก region ที่ใกล้ที่สุด
-
-#### 2. กำหนดค่าความปลอดภัย
-
-```bash
-# IP Whitelist - เพิ่ม IP ของเครื่องคุณ
-# หรือ 0.0.0.0/0 สำหรับ development (ไม่แนะนำสำหรับ production)
-
-# สร้าง Database User
-Username: bun_user
-Password: [generate secure password]
-Roles: Atlas admin
-```
-
-#### 3. รับ Connection String
-
-```bash
-# รูปแบบ Connection String
-postgresql://<username>:<password>@<host>.<region>.<provider>.net:<port>/<dbname>?sslmode=require<password>@cluster0.xxxxx.mongodb.net/<dbname>?retryWrites=true&w=majority
-```
-
-### 🔄 Prisma Setup
-
-```bash
-# Generate Prisma client
-bunx prisma generate
-
-# Push schema ไปยังฐานข้อมูล (สำหรับ development)
-bunx prisma db push
-
-# เปิด Prisma Studio เพื่อดูข้อมูล
-bunx prisma studio
-```
-
-## 💬 การตั้งค่า LINE Bot | LINE Bot Setup
-
-### 1. สร้าง LINE Channel
-
-1. ไปที่ [LINE Developers Console](https://developers.line.biz/)
-2. สร้าง Provider และ Channel ใหม่
-3. เลือก **Messaging API**
-
-### 2. กำหนดค่าพื้นฐาน
-
-#### Basic Settings
-
-- **Channel name**: ชื่อ Bot ของคุณ
-- **Channel description**: คำอธิบาย Bot
-- **Channel icon**: รูปไอคอน Bot
-
-#### Messaging API Settings
-
-```bash
-# ใน LINE Developers Console
-Webhook URL: https://your-domain.com/api/line
-Use webhook: Enable
-Auto-reply messages: Disable
-Greeting messages: Disable
-```
-
-### 3. รับ Credentials
-
-```bash
-# ใน Basic Settings
-Channel ID: 1234567890
-Channel Secret: xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
-# ใน Messaging API
-Channel Access Token: xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-```
-
-### 4. LINE Login Setup (Optional)
-
-```bash
-# ใน LINE Login
-Callback URL: https://your-domain.com/api/auth/callback/line
-```
-
-### 5. ทดสอบ Webhook
-
-```bash
-# ใช้ ngrok สำหรับ development
-ngrok http 4325
-
-# Update Webhook URL ใน LINE Console
-https://xxxxx.ngrok.io/api/line
-```
-
-## 🚀 การรันโปรเจกต์ | Running the Project
-
-### 🛠️ Development Mode
-
-```bash
-# รัน development server
-bun run dev
-
-# รัน development server พร้อม clean cache
-bun run dev:clean
-
-# รัน development server พร้อม local environment
-bun run dev:local
-```
-
-### 🏗️ Production Build
-
-```bash
-# สร้าง production build
-bun run build
-
-# รัน production server
-bun run start
-```
-
-### 🔧 Additional Scripts
-
-```bash
-# Database operations
-bun run db:push          # Push schema changes
-bun run db:generate      # Generate Prisma client
-bun run db:deploy        # Deploy migrations
-
-# Code quality
-bun run lint             # Run ESLint
-bun run type-check       # TypeScript type checking
-
-# Testing
-bun run test             # Run tests
-bun run test:watch       # Run tests in watch mode
-
-# Build tools
-bun run tailwind:build   # Build Tailwind CSS
-bun run tailwind:watch   # Watch Tailwind changes
-```
-
-## 🧪 การทดสอบ | Testing
-
-### 🔍 Manual Testing
-
-```bash
-# ทดสอบระบบลงเวลา
-bun run scripts/test-attendance.ts
-
-# ทดสอบ LINE OAuth
-bun run scripts/test-line-oauth.ts
-
-# ทดสอบ timezone
-bun run test:timezone
-```
-
-### 🏗️ Unit Testing
-
-```bash
-# รัน unit tests
+bun check
 bun test
-
-# รัน tests ในโฟลเดอร์เฉพาะ
-bun test tests/components
-bun test tests/features
-
-# รัน tests พร้อม watch mode
-bun test --watch
+bun run format:check
+bun run build
 ```
 
-### 🔒 Security Testing
+Bun 1.4.4 stable ที่ใช้รันแอปไม่มี built-in linter. ใช้ Bun 1.4.4 canary เวอร์ชันที่ pin ไว้กับ Bun linter:
 
 ```bash
-# ตรวจสอบ dependencies
-bun audit
-
-# ตรวจสอบ TypeScript
-bunx tsc --noEmit
-
-# ตรวจสอบ linting
-bun run lint
+bunx --package bun@1.4.4-canary.20261031.1 bun lint
 ```
 
-## 🐳 Docker Setup | การใช้งาน Docker
-
-### 🔧 Prerequisites
-
-```bash
-# ติดตั้ง Docker และ Docker Compose
-# https://docs.docker.com/get-docker/
-```
-
-### 🚀 Development with Docker
-
-```bash
-# สร้างและรัน containers
-docker-compose up -d
-
-# รัน development mode
-docker-compose -f docker-compose.dev.yml up
-
-# ดู logs
-docker-compose logs -f app
-
-# หยุด containers
-docker-compose down
-```
-
-### 🏗️ Production Docker Build
-
-```bash
-# Build production image
-docker build -t bun-line-t3 .
-
-# รัน production container
-docker run -p 3000:3000 --env-file .env.prod bun-line-t3
-
-# หรือใช้ Docker Compose
-docker-compose -f docker-compose.prod.yml up -d
-```
-
-## 🛠️ การแก้ไขปัญหา | Troubleshooting
-
-### 🚫 ปัญหาที่พบบ่อย
-
-#### 1. Bun Installation Issues
-
-```bash
-# ปัญหา: bun command not found
-# แก้ไข: เพิ่ม bun ลง PATH
-export PATH="$HOME/.bun/bin:$PATH"
-
-# ปัญหา: Permission denied
-# แก้ไข: ใช้ sudo หรือเปลี่ยน ownership
-sudo chown -R $(whoami) ~/.bun
-```
-
-#### 2. Database Connection Issues
-
-```bash
-# ปัญหา: Unable to connect to PostgreSQL
-# ตรวจสอบ:
-1. PostgreSQL service running: systemctl status postgresql
-2. Connection string ถูกต้อง
-3. Network connectivity
-4. Authentication credentials
-
-# แก้ไข: รีสตาร์ท PostgreSQL
-brew services restart postgresql@16  # macOS
-sudo systemctl restart postgresql     # Linux
-```
-
-#### 3. LINE Bot Issues
-
-```bash
-# ปัญหา: Webhook verification failed
-# ตรวจสอบ:
-1. Channel Secret ถูกต้อง
-2. Webhook URL accessible
-3. SSL certificate valid (for production)
-
-# ทดสอบ webhook locally
-ngrok http 4325
-# Update webhook URL: https://xxxxx.ngrok.io/api/line
-```
-
-#### 4. Build Issues
-
-```bash
-# ปัญหา: Type errors during build
-# แก้ไข: ตรวจสอบ TypeScript
-bunx tsc --noEmit
-
-# ปัญหา: Out of memory during build
-# แก้ไข: เพิ่ม memory limit
-NODE_OPTIONS="--max_old_space_size=4096" bun run build
-```
-
-### 🔍 Debugging Commands
-
-```bash
-# ตรวจสอบ environment variables
-bun run env:status
-
-# ตรวจสอบ database connection
-bun run scripts/test-db-connection.ts
-
-# ตรวจสอบ health endpoint
-curl http://localhost:4325/api/health
-
-# ดู detailed logs
-DEBUG=* bun run dev
-```
-
-### 📊 System Requirements
-
-#### Minimum Requirements
-
-- **RAM**: 2 GB
-- **Disk**: 1 GB free space
-- **Network**: Stable internet connection
-
-#### Recommended Requirements
-
-- **RAM**: 4 GB+
-- **Disk**: 5 GB+ free space
-- **CPU**: 2+ cores
-- **Network**: Broadband connection
-
-### 🆘 การขอความช่วยเหลือ | Getting Help
-
-#### 📚 เอกสารเพิ่มเติม
-
-- **[Development Guide](./DEVELOPMENT.md)** - คู่มือการพัฒนา
-- **[API Documentation](./API.md)** - เอกสาร API
-- **[Security Guide](./SECURITY.md)** - แนวทางความปลอดภัย
-
-#### 🐛 รายงานปัญหา
-
-1. ตรวจสอบ [Issues](https://github.com/your-repo/issues) ที่มีอยู่
-2. สร้าง issue ใหม่พร้อมรายละเอียด:
-   - เวอร์ชัน OS และ Node.js
-   - ขั้นตอนการทำซ้ำปัญหา
-   - Error messages และ logs
-   - Environment configuration (ไม่รวม secrets)
-
-#### 💬 Community Support
-
-- **GitHub Discussions** - สำหรับคำถามทั่วไป
-- **Discord/Slack** - สำหรับการสนทนาแบบ real-time
-- **Stack Overflow** - tag: `bun-line-t3`
-
----
-
-## ✅ Checklist การติดตั้งสำเร็จ
-
-หลังจากติดตั้งเสร็จ ตรวจสอบรายการต่อไปนี้:
-
-- [ ] Bun และ Node.js ติดตั้งเสร็จและรันได้
-- [ ] PostgreSQL service running และเชื่อมต่อได้
-- [ ] Environment variables กำหนดค่าครบถ้วน
-- [ ] Prisma client generate สำเร็จ
-- [ ] Database schema push สำเร็จ
-- [ ] Development server รันได้ที่ port 4325
-- [ ] เข้าถึง http://localhost:4325 ได้
-- [ ] LINE Bot webhook ตั้งค่าถูกต้อง (ถ้าใช้)
-- [ ] Health check endpoint (/api/health) ตอบกลับ OK
-
-**🎉 ยินดีด้วย! โปรเจกต์พร้อมใช้งานแล้ว**
-
----
-
-**📝 อัปเดตล่าสุด**: 14 มิถุนายน 2025
-**👨‍💻 ผู้ดูแล**: Development Team
+ดูขั้นตอนเพิ่มเติมใน [คู่มือนักพัฒนา](./DEVELOPER_GUIDE.md) และ [คู่มือ deploy](./DEPLOYMENT.md)

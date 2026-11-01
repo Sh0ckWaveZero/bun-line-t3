@@ -26,7 +26,7 @@ import {
   RotateCcw,
   TrendingDown,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 
 interface ExpenseCategory {
   id: string;
@@ -99,15 +99,8 @@ function ThaiHelpCalculatorContent({
   // Save error state for inline retry
   const [saveError, setSaveError] = useState(false);
 
-  // Daily Stats (client-side only to avoid SSR hydration mismatch)
-  const [dailyStats, setDailyStats] = useState({
-    todaySubsidyUsed: 0,
-    todayUserSpent: 0,
-    todayTotalBill: 0,
-    todayRemaining: CO_PAY_DAILY_MAX_SUBSIDY,
-  });
-
-  useEffect(() => {
+  // Daily Stats — derive ระหว่าง render (SSR ยังไม่มี transactions → ได้ค่าเริ่มต้นเท่าเดิม ไม่มี mismatch)
+  const dailyStats = useMemo(() => {
     const today = new Date().toISOString().split("T")[0]!;
     let todaySubsidyUsed = 0;
     let todayUserSpent = 0;
@@ -122,23 +115,16 @@ function ThaiHelpCalculatorContent({
       }
     });
 
-    setDailyStats({
+    return {
       todaySubsidyUsed,
       todayUserSpent,
       todayTotalBill: todaySubsidyUsed + todayUserSpent,
       todayRemaining: Math.max(CO_PAY_DAILY_MAX_SUBSIDY - todaySubsidyUsed, 0),
-    });
+    };
   }, [transactions]);
 
-  // Monthly Stats (client-side only to avoid SSR hydration mismatch)
-  const [stats, setStats] = useState({
-    totalSubsidyUsed: 0,
-    remainingSubsidy: 1000,
-    totalUserSpent: 0,
-    count: 0,
-  });
-
-  useEffect(() => {
+  // Monthly Stats — derive ระหว่าง render เช่นเดียวกับ daily
+  const stats = useMemo(() => {
     let totalSubsidyUsed = 0;
     let totalUserSpent = 0;
     let count = 0;
@@ -159,14 +145,12 @@ function ThaiHelpCalculatorContent({
       }
     });
 
-    const remainingSubsidy = Math.max(1000 - totalSubsidyUsed, 0);
-
-    setStats({
+    return {
       totalSubsidyUsed,
-      remainingSubsidy,
+      remainingSubsidy: Math.max(1000 - totalSubsidyUsed, 0),
       totalUserSpent,
       count,
-    });
+    };
   }, [transactions]);
 
   // Calculations for Split Bill — cap subsidy at monthly quota to prevent phantom amounts
@@ -251,504 +235,676 @@ function ThaiHelpCalculatorContent({
 
       {!isLoading && (
         <>
-          {/* Main Header Action */}
-          <button
-            id="thai-help-toggle-btn"
-            onClick={() => setIsOpen(!isOpen)}
-            className="font-noto-sans-thai text-foreground hover:bg-muted/30 flex w-full flex-col px-4 py-3 text-left transition-colors sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4"
-          >
-            {/* Row 1: icon + title + chevron */}
-            <div className="flex items-center justify-between gap-3">
-              <div
-                id="thai-help-title-group"
-                className="flex items-center gap-2.5 sm:gap-3"
-              >
-                <div
-                  id="thai-help-icon-wrapper"
-                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-violet-500/10 text-violet-600 sm:h-10 sm:w-10 dark:bg-violet-400/15 dark:text-violet-400"
-                >
-                  <Coins className="h-4 w-4 sm:h-5 sm:w-5" />
-                </div>
-                <div>
-                  <h2
-                    id="thai-help-heading"
-                    className="font-noto-sans-thai flex items-center gap-1.5 text-sm font-bold whitespace-nowrap sm:text-base"
-                  >
-                    เครื่องคำนวณสิทธิ์ 60/40
-                    <span className="relative flex h-2 w-2 flex-shrink-0">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
-                    </span>
-                  </h2>
-                  <p
-                    id="thai-help-subheading"
-                    className="text-muted-foreground hidden text-xs font-normal sm:block"
-                  >
-                    คำนวณโครงการไทยช่วยไทย พลัส และบันทึกยอดจ่ายจริง 40% ทันที
-                  </p>
-                </div>
-              </div>
-              {/* Chevron: right on mobile row 1, kept in sm+ right cluster */}
-              <div
-                id="thai-help-chevron-mobile"
-                className="text-muted-foreground sm:hidden"
-              >
-                {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-              </div>
-            </div>
-
-            {/* Row 2 (mobile only): badges aligned under title text */}
-            <div className="mt-2 flex items-center gap-1.5 pl-[2.375rem] sm:hidden">
-              <div
-                id="thai-help-monthly-remaining-mobile"
-                className="flex items-center gap-1 rounded-full bg-violet-500/10 px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-violet-700 tabular-nums dark:bg-violet-400/15 dark:text-violet-400"
-              >
-                <span>
-                  ใช้ได้/เดือน ฿
-                  {monthlyRemainingCombined.toLocaleString("th-TH", {
-                    maximumFractionDigits: 0,
-                  })}
-                </span>
-              </div>
-              <div
-                id="thai-help-daily-remaining-mobile"
-                className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap tabular-nums ${
-                  dailyStats.todayRemaining === 0
-                    ? "bg-red-500/10 text-red-600 dark:bg-red-400/15 dark:text-red-400"
-                    : dailyStats.todayRemaining < 100
-                      ? "bg-amber-500/10 text-amber-700 dark:bg-amber-400/15 dark:text-amber-400"
-                      : "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-400"
-                }`}
-              >
-                <span>
-                  ใช้ได้/วัน ฿
-                  {dailyStats.todayRemaining.toLocaleString("th-TH", {
-                    maximumFractionDigits: 0,
-                  })}
-                </span>
-              </div>
-            </div>
-
-            {/* sm+: badges + chevron on right */}
-            <div className="hidden flex-shrink-0 items-center gap-2 sm:flex">
-              <div
-                id="thai-help-monthly-remaining"
-                className="flex items-center gap-1 rounded-full bg-violet-500/10 px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-violet-700 tabular-nums dark:bg-violet-400/15 dark:text-violet-400"
-              >
-                <span>
-                  ใช้ได้/เดือน ฿
-                  {monthlyRemainingCombined.toLocaleString("th-TH", {
-                    maximumFractionDigits: 0,
-                  })}
-                </span>
-              </div>
-              <div
-                id="thai-help-daily-remaining"
-                className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap tabular-nums ${
-                  dailyStats.todayRemaining === 0
-                    ? "bg-red-500/10 text-red-600 dark:bg-red-400/15 dark:text-red-400"
-                    : dailyStats.todayRemaining < 100
-                      ? "bg-amber-500/10 text-amber-700 dark:bg-amber-400/15 dark:text-amber-400"
-                      : "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-400"
-                }`}
-              >
-                <span>
-                  ใช้ได้/วัน ฿
-                  {dailyStats.todayRemaining.toLocaleString("th-TH", {
-                    maximumFractionDigits: 0,
-                  })}
-                </span>
-              </div>
-              <div
-                id="thai-help-chevron"
-                className="text-muted-foreground transition-colors"
-              >
-                {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-              </div>
-            </div>
-          </button>
+          <ThaiHelpCalculatorHeader
+            isOpen={isOpen}
+            dailyStats={dailyStats}
+            monthlyRemainingCombined={monthlyRemainingCombined}
+            onToggle={() => setIsOpen(!isOpen)}
+          />
 
           {isOpen && (
             <div
               id="thai-help-content"
               className="border-border/10 border-t p-5 transition-[opacity,transform] duration-300 ease-out"
             >
-              {/* Daily Budget Progress Bar */}
-              <div className="mb-5 space-y-1.5">
-                <div className="flex items-center justify-between text-xs font-medium">
-                  <span className="text-muted-foreground">สิทธิ์รัฐรายวัน</span>
-                  <span className="text-muted-foreground tabular-nums">
-                    ฿{dailyStats.todaySubsidyUsed.toFixed(0)} / ฿
-                    {CO_PAY_DAILY_MAX_SUBSIDY}
-                  </span>
-                </div>
-                <div className="bg-muted/50 h-2 w-full overflow-hidden rounded-full">
-                  <div
-                    className={`h-full rounded-full transition-[width,background-color] duration-500 ${
-                      dailyStats.todaySubsidyUsed === 0
-                        ? "bg-emerald-500"
-                        : dailyStats.todayRemaining === 0
-                          ? "bg-red-500"
-                          : dailyStats.todayRemaining < 100
-                            ? "bg-amber-500"
-                            : "bg-emerald-500"
-                    }`}
-                    style={{
-                      width: `${Math.min((dailyStats.todaySubsidyUsed / CO_PAY_DAILY_MAX_SUBSIDY) * 100, 100)}%`,
-                    }}
-                  />
-                </div>
-                {dailyStats.todayTotalBill > 0 && (
-                  <div className="text-muted-foreground flex items-center justify-between text-xs">
-                    <span>
-                      ยอดรวม 100%{" "}
-                      <span className="text-foreground font-semibold tabular-nums">
-                        ฿{dailyStats.todayTotalBill.toFixed(2)}
-                      </span>
-                    </span>
-                    <span>
-                      รัฐ{" "}
-                      <span className="font-semibold text-blue-600 tabular-nums dark:text-blue-400">
-                        ฿{dailyStats.todaySubsidyUsed.toFixed(2)}
-                      </span>{" "}
-                      + คุณ{" "}
-                      <span className="font-semibold text-emerald-600 tabular-nums dark:text-emerald-400">
-                        ฿{dailyStats.todayUserSpent.toFixed(2)}
-                      </span>
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Interactive Navigation Tabs */}
-              <div
-                id="thai-help-tabs"
-                className="bg-muted/60 relative mb-5 flex rounded-lg p-1"
-              >
-                {(["split", "topup", "stats"] as const).map((tab) => {
-                  const isActive = activeTab === tab;
-                  return (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className={`relative z-10 flex-1 rounded-md py-1.5 text-center text-xs font-semibold transition-[color,background-color,box-shadow] duration-200 ${
-                        isActive
-                          ? "bg-card text-foreground font-bold shadow-sm"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {tab === "split" && "แยกบิล (60/40)"}
-                      {tab === "topup" && "ต้องเติมเท่าไหร่"}
-                      {tab === "stats" && `สถิติเดือนนี้ (${stats.count})`}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Tab panels — always mounted, CSS crossfade on switch */}
+              <DailyBudgetProgress dailyStats={dailyStats} />
+              <CalculatorTabs
+                activeTab={activeTab}
+                count={stats.count}
+                onTabChange={setActiveTab}
+              />
               <div className="relative">
-                {/* Split Bill */}
-                <div
-                  id="thai-help-tab-split"
-                  className={`space-y-4 transition-[opacity,transform] duration-200 ease-out ${
-                    activeTab === "split"
-                      ? "relative translate-y-0 opacity-100"
-                      : "pointer-events-none absolute inset-0 translate-y-1 opacity-0"
-                  }`}
-                  aria-hidden={activeTab !== "split"}
-                >
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="total-bill-input"
-                      className="text-foreground text-sm font-semibold"
-                    >
-                      ยอดราคาสินค้าทั้งหมด (บาท)
-                    </Label>
-                    <div className="relative">
-                      <span className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 font-semibold">
-                        ฿
-                      </span>
-                      <Input
-                        id="total-bill-input"
-                        type="number"
-                        pattern="[0-9]*"
-                        inputMode="decimal"
-                        placeholder="ระบุยอดซื้อทั้งหมด เช่น 150"
-                        value={totalBill}
-                        onChange={(e) => setTotalBill(e.target.value)}
-                        className="h-11 pl-7 text-base font-bold tabular-nums"
-                      />
-                      {totalBill && (
-                        <button
-                          onClick={() => setTotalBill("")}
-                          aria-label="ล้างยอดซื้อทั้งหมด"
-                          className="text-muted-foreground hover:bg-muted hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 rounded-full p-1"
-                        >
-                          <RotateCcw size={14} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="border-border/20 bg-muted/20 rounded-xl border p-3">
-                      <span className="text-muted-foreground text-xs font-semibold tracking-wide">
-                        รัฐช่วยจ่าย ({(CO_PAY_STATE_SHARE * 100).toFixed(0)}%)
-                      </span>
-                      <p className="mt-1 text-lg font-extrabold text-blue-600 tabular-nums dark:text-blue-400">
-                        ฿{subsidy60.toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="border-border/20 rounded-xl border bg-emerald-500/5 p-3">
-                      <span className="text-muted-foreground text-xs font-semibold tracking-wide">
-                        คุณจ่ายจริง ({(CO_PAY_USER_SHARE * 100).toFixed(0)}%)
-                      </span>
-                      <p className="mt-1 text-lg font-extrabold text-emerald-600 tabular-nums dark:text-emerald-400">
-                        ฿{userPaid40.toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {monthlyQuotaExceeded && numericBill > 0 && (
-                    <div className="flex items-start gap-2 rounded-lg border border-amber-500/25 bg-amber-500/5 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
-                      <AlertCircle size={13} className="mt-0.5 shrink-0" />
-                      <span>
-                        สิทธิ์เดือนนี้เหลือ{" "}
-                        <strong className="tabular-nums">
-                          ฿{stats.remainingSubsidy.toFixed(0)}
-                        </strong>{" "}
-                        รัฐช่วยได้แค่{" "}
-                        <strong className="tabular-nums">
-                          ฿{subsidy60.toFixed(2)}
-                        </strong>{" "}
-                        ส่วนที่เหลือคุณจ่ายเอง
-                      </span>
-                    </div>
-                  )}
-
-                  {numericBill > 0 && (
-                    <div
-                      id="thai-help-save-flow"
-                      className="space-y-3 rounded-xl border border-violet-500/15 bg-violet-500/5 p-4"
-                    >
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <div className="space-y-1">
-                          <Label
-                            htmlFor="tct-category-select"
-                            className="text-muted-foreground text-xs font-semibold tracking-wide"
-                          >
-                            หมวดหมู่รายจ่าย
-                          </Label>
-                          <select
-                            id="tct-category-select"
-                            value={selectedCategoryId}
-                            onChange={(e) =>
-                              setUserSelectedCategoryId(e.target.value)
-                            }
-                            className="font-noto-sans-thai bg-card border-border/40 text-foreground h-9 w-full rounded-md border px-2 text-xs font-medium focus:ring-1 focus:ring-violet-500 focus:outline-none"
-                          >
-                            {categories
-                              .filter((c) => c.isActive)
-                              .map((c) => (
-                                <option key={c.id} value={c.id}>
-                                  {c.icon ? `${c.icon} ` : ""}
-                                  {c.name}
-                                </option>
-                              ))}
-                          </select>
-                        </div>
-                        <div className="flex items-end">
-                          <Button
-                            onClick={handleSaveExpense}
-                            disabled={isSaving}
-                            className="h-9 w-full gap-1.5 bg-violet-600 text-xs font-bold text-white hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-600"
-                          >
-                            {isSaving ? "กำลังบันทึก..." : <Plus size={14} />}
-                            บันทึกรายจ่าย ฿{userPaid40.toFixed(2)}
-                          </Button>
-                        </div>
-                      </div>
-
-                      {saveError && (
-                        <div className="flex items-center justify-between gap-2 rounded-md border border-red-500/20 bg-red-500/5 px-3 py-2">
-                          <div className="flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400">
-                            <AlertCircle size={13} className="shrink-0" />
-                            <span>บันทึกไม่สำเร็จ</span>
-                          </div>
-                          <button
-                            onClick={handleSaveExpense}
-                            disabled={isSaving}
-                            className="text-xs font-semibold text-red-600 underline underline-offset-2 hover:text-red-700 dark:text-red-400"
-                          >
-                            ลองใหม่
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Top Up */}
-                <div
-                  id="thai-help-tab-topup"
-                  className={`space-y-4 transition-[opacity,transform] duration-200 ease-out ${
-                    activeTab === "topup"
-                      ? "relative translate-y-0 opacity-100"
-                      : "pointer-events-none absolute inset-0 translate-y-1 opacity-0"
-                  }`}
-                  aria-hidden={activeTab !== "topup"}
-                >
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="desired-subsidy-input"
-                      className="text-foreground text-sm font-semibold"
-                    >
-                      ยอดเงินสนับสนุนของรัฐที่ต้องการใช้วันนี้ (บาท)
-                    </Label>
-                    <div className="relative">
-                      <span className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 font-semibold">
-                        ฿
-                      </span>
-                      <Input
-                        id="desired-subsidy-input"
-                        type="number"
-                        pattern="[0-9]*"
-                        inputMode="decimal"
-                        placeholder="เช่น 150 (ไม่เกิน 200)"
-                        value={desiredSubsidy}
-                        onChange={(e) => setDesiredSubsidy(e.target.value)}
-                        className="h-11 pl-7 text-base font-bold tabular-nums"
-                      />
-                      {desiredSubsidy && (
-                        <button
-                          onClick={() => setDesiredSubsidy("")}
-                          aria-label="ล้างจำนวนเงินสนับสนุน"
-                          className="text-muted-foreground hover:bg-muted hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 rounded-full p-1"
-                        >
-                          <RotateCcw size={14} />
-                        </button>
-                      )}
-                    </div>
-                    <p className="text-muted-foreground text-xs leading-tight">
-                      ป้อนยอดเงินรัฐที่คุณต้องการสแกนใช้
-                      เพื่อดูว่ากระเป๋าเป๋าตัง (G-Wallet)
-                      ของคุณต้องมีเงินอยู่อีกเท่าไหร่
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="border-border/20 rounded-xl border bg-emerald-500/5 p-3">
-                      <span className="text-muted-foreground text-xs font-semibold tracking-wide">
-                        เติมใน เป๋าตัง ({(CO_PAY_USER_SHARE * 100).toFixed(0)}%)
-                      </span>
-                      <div className="mt-1 flex items-center gap-2">
-                        <p className="text-lg font-extrabold text-emerald-600 tabular-nums dark:text-emerald-400">
-                          ฿{topUpNeeded.toFixed(2)}
-                        </p>
-                        {numericSubsidy > 0 && (
-                          <button
-                            onClick={() => {
-                              void navigator.clipboard.writeText(
-                                topUpNeeded.toFixed(2),
-                              );
-                              setCopied(true);
-                              setTimeout(() => setCopied(false), 2000);
-                            }}
-                            className="text-muted-foreground hover:text-foreground rounded p-0.5 transition-colors"
-                            title="คัดลอก"
-                          >
-                            {copied ? (
-                              <Check size={13} className="text-emerald-600" />
-                            ) : (
-                              <Copy size={13} />
-                            )}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    <div className="border-border/20 bg-muted/20 rounded-xl border p-3">
-                      <span className="text-muted-foreground text-xs font-semibold tracking-wide">
-                        ซื้อสินค้าได้รวม
-                      </span>
-                      <p className="text-foreground mt-1 text-lg font-extrabold tabular-nums">
-                        ฿{purchaseValue.toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Stats */}
-                <div
-                  id="thai-help-tab-stats"
-                  className={`space-y-4 transition-[opacity,transform] duration-200 ease-out ${
-                    activeTab === "stats"
-                      ? "relative translate-y-0 opacity-100"
-                      : "pointer-events-none absolute inset-0 translate-y-1 opacity-0"
-                  }`}
-                  aria-hidden={activeTab !== "stats"}
-                >
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                    <div className="border-border/10 bg-card dark:bg-muted/10 rounded-xl border p-3 shadow-sm">
-                      <span className="text-muted-foreground text-xs font-semibold tracking-wide">
-                        รัฐช่วยแล้วเดือนนี้
-                      </span>
-                      <p className="mt-1 text-lg font-extrabold text-blue-600 tabular-nums dark:text-blue-400">
-                        ฿{stats.totalSubsidyUsed.toFixed(2)}
-                      </p>
-                      <span className="text-muted-foreground mt-0.5 block text-xs">
-                        จากโควตา ฿1,000.00 / เดือน
-                      </span>
-                    </div>
-                    <div className="border-border/10 bg-card dark:bg-muted/10 rounded-xl border p-3 shadow-sm">
-                      <span className="text-muted-foreground text-xs font-semibold tracking-wide">
-                        สิทธิ์คงเหลือจากรัฐ
-                      </span>
-                      <p className="mt-1 text-lg font-extrabold text-emerald-600 tabular-nums dark:text-emerald-400">
-                        ฿{stats.remainingSubsidy.toFixed(2)}
-                      </p>
-                      <span className="text-muted-foreground mt-0.5 block text-xs">
-                        รีเซ็ตอัตโนมัติสิ้นเดือนนี้
-                      </span>
-                    </div>
-                    <div className="border-border/10 bg-card dark:bg-muted/10 rounded-xl border p-3 shadow-sm">
-                      <span className="text-muted-foreground text-xs font-semibold tracking-wide">
-                        เงินคุณที่จ่ายสมทบ
-                      </span>
-                      <p className="text-foreground mt-1 text-lg font-extrabold tabular-nums">
-                        ฿{stats.totalUserSpent.toFixed(2)}
-                      </p>
-                      <span className="text-muted-foreground mt-0.5 block text-xs">
-                        บันทึกในประวัติแล้ว {stats.count} รายการ
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Info banner */}
-                  <div className="flex items-start gap-2.5 rounded-lg border border-yellow-500/25 bg-yellow-500/5 p-3 text-xs leading-relaxed text-yellow-700 dark:text-yellow-400">
-                    <Info size={16} className="mt-0.5 shrink-0" />
-                    <p>
-                      ระบบจะค้นหาประวัติการเงินของคุณในเดือนปัจจุบันที่มีเครื่องหมายหรือหมายเหตุตัวย่อ
-                      เช่น <strong>#ไทยช่วยไทย</strong>, <strong>#ทชท</strong>,{" "}
-                      <strong>#TCT</strong>, <strong>#6040</strong>,{" "}
-                      <strong>#คนละครึ่ง</strong>, <strong>#KLK</strong>{" "}
-                      เพื่อคำนวณสิทธิ์ให้อัตโนมัติ
-                    </p>
-                  </div>
-                </div>
+                <SplitBillTab
+                  activeTab={activeTab}
+                  totalBill={totalBill}
+                  onTotalBillChange={setTotalBill}
+                  categories={categories}
+                  selectedCategoryId={selectedCategoryId}
+                  onCategoryChange={setUserSelectedCategoryId}
+                  subsidy60={subsidy60}
+                  userPaid40={userPaid40}
+                  monthlyQuotaExceeded={monthlyQuotaExceeded}
+                  numericBill={numericBill}
+                  stats={stats}
+                  saveError={saveError}
+                  isSaving={isSaving}
+                  onSaveExpense={handleSaveExpense}
+                />
+                <TopUpTab
+                  activeTab={activeTab}
+                  desiredSubsidy={desiredSubsidy}
+                  onDesiredSubsidyChange={setDesiredSubsidy}
+                  topUpNeeded={topUpNeeded}
+                  numericSubsidy={numericSubsidy}
+                  onCopiedChange={setCopied}
+                  copied={copied}
+                  purchaseValue={purchaseValue}
+                />
+                <StatsTab activeTab={activeTab} stats={stats} />
               </div>
-
-              {/* Quick Notice */}
-              <div className="mt-4 flex items-center gap-2 rounded-lg border border-red-500/10 bg-red-500/5 px-3 py-2">
-                <TrendingDown className="h-3.5 w-3.5 shrink-0 text-red-500" />
-                <p className="text-xs leading-none font-medium text-red-700 dark:text-red-400">
-                  เงิน 1,000 บาทต่อเดือน ของสิทธิ์รัฐช่วยจ่าย
-                  หากใช้ไม่หมดจะไม่ทบไปเดือนถัดไป
-                </p>
-              </div>
+              <QuickNotice />
             </div>
           )}
         </>
       )}
     </div>
+  );
+}
+
+interface DailyStats {
+  todaySubsidyUsed: number;
+  todayUserSpent: number;
+  todayTotalBill: number;
+  todayRemaining: number;
+}
+
+interface MonthlyStats {
+  totalSubsidyUsed: number;
+  remainingSubsidy: number;
+  totalUserSpent: number;
+  count: number;
+}
+
+type CalculatorTab = "split" | "topup" | "stats";
+
+interface ThaiHelpCalculatorHeaderProps {
+  isOpen: boolean;
+  dailyStats: DailyStats;
+  monthlyRemainingCombined: number;
+  onToggle: () => void;
+}
+
+function ThaiHelpCalculatorHeader({
+  isOpen,
+  dailyStats,
+  monthlyRemainingCombined,
+  onToggle,
+}: ThaiHelpCalculatorHeaderProps) {
+  return (
+    <button
+      id="thai-help-toggle-btn"
+      onClick={onToggle}
+      className="font-noto-sans-thai text-foreground hover:bg-muted/30 flex w-full flex-col px-4 py-3 text-left transition-colors sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4"
+    >
+      {/* Row 1: icon + title + chevron */}
+      <div className="flex items-center justify-between gap-3">
+        <div
+          id="thai-help-title-group"
+          className="flex items-center gap-2.5 sm:gap-3"
+        >
+          <div
+            id="thai-help-icon-wrapper"
+            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-violet-500/10 text-violet-600 sm:h-10 sm:w-10 dark:bg-violet-400/15 dark:text-violet-400"
+          >
+            <Coins className="h-4 w-4 sm:h-5 sm:w-5" />
+          </div>
+          <div>
+            <h2
+              id="thai-help-heading"
+              className="font-noto-sans-thai flex items-center gap-1.5 text-sm font-bold whitespace-nowrap sm:text-base"
+            >
+              เครื่องคำนวณสิทธิ์ 60/40
+              <span className="relative flex h-2 w-2 flex-shrink-0">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+              </span>
+            </h2>
+            <p
+              id="thai-help-subheading"
+              className="text-muted-foreground hidden text-xs font-normal sm:block"
+            >
+              คำนวณโครงการไทยช่วยไทย พลัส และบันทึกยอดจ่ายจริง 40% ทันที
+            </p>
+          </div>
+        </div>
+        {/* Chevron: right on mobile row 1, kept in sm+ right cluster */}
+        <div
+          id="thai-help-chevron-mobile"
+          className="text-muted-foreground sm:hidden"
+        >
+          {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+        </div>
+      </div>
+
+      {/* Row 2 (mobile only): badges aligned under title text */}
+      <div className="mt-2 flex items-center gap-1.5 pl-[2.375rem] sm:hidden">
+        <div
+          id="thai-help-monthly-remaining-mobile"
+          className="flex items-center gap-1 rounded-full bg-violet-500/10 px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-violet-700 tabular-nums dark:bg-violet-400/15 dark:text-violet-400"
+        >
+          <span>
+            ใช้ได้/เดือน ฿
+            {monthlyRemainingCombined.toLocaleString("th-TH", {
+              maximumFractionDigits: 0,
+            })}
+          </span>
+        </div>
+        <div
+          id="thai-help-daily-remaining-mobile"
+          className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap tabular-nums ${
+            dailyStats.todayRemaining === 0
+              ? "bg-red-500/10 text-red-600 dark:bg-red-400/15 dark:text-red-400"
+              : dailyStats.todayRemaining < 100
+                ? "bg-amber-500/10 text-amber-700 dark:bg-amber-400/15 dark:text-amber-400"
+                : "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-400"
+          }`}
+        >
+          <span>
+            ใช้ได้/วัน ฿
+            {dailyStats.todayRemaining.toLocaleString("th-TH", {
+              maximumFractionDigits: 0,
+            })}
+          </span>
+        </div>
+      </div>
+
+      {/* sm+: badges + chevron on right */}
+      <div className="hidden flex-shrink-0 items-center gap-2 sm:flex">
+        <div
+          id="thai-help-monthly-remaining"
+          className="flex items-center gap-1 rounded-full bg-violet-500/10 px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-violet-700 tabular-nums dark:bg-violet-400/15 dark:text-violet-400"
+        >
+          <span>
+            ใช้ได้/เดือน ฿
+            {monthlyRemainingCombined.toLocaleString("th-TH", {
+              maximumFractionDigits: 0,
+            })}
+          </span>
+        </div>
+        <div
+          id="thai-help-daily-remaining"
+          className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap tabular-nums ${
+            dailyStats.todayRemaining === 0
+              ? "bg-red-500/10 text-red-600 dark:bg-red-400/15 dark:text-red-400"
+              : dailyStats.todayRemaining < 100
+                ? "bg-amber-500/10 text-amber-700 dark:bg-amber-400/15 dark:text-amber-400"
+                : "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-400"
+          }`}
+        >
+          <span>
+            ใช้ได้/วัน ฿
+            {dailyStats.todayRemaining.toLocaleString("th-TH", {
+              maximumFractionDigits: 0,
+            })}
+          </span>
+        </div>
+        <div
+          id="thai-help-chevron"
+          className="text-muted-foreground transition-colors"
+        >
+          {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+        </div>
+      </div>
+    </button>
+  );
+}
+
+interface DailyBudgetProgressProps {
+  dailyStats: DailyStats;
+}
+
+function DailyBudgetProgress({ dailyStats }: DailyBudgetProgressProps) {
+  return (
+    <>
+      {/* Daily Budget Progress Bar */}
+      <div className="mb-5 space-y-1.5">
+        <div className="flex items-center justify-between text-xs font-medium">
+          <span className="text-muted-foreground">สิทธิ์รัฐรายวัน</span>
+          <span className="text-muted-foreground tabular-nums">
+            ฿{dailyStats.todaySubsidyUsed.toFixed(0)} / ฿
+            {CO_PAY_DAILY_MAX_SUBSIDY}
+          </span>
+        </div>
+        <div className="bg-muted/50 h-2 w-full overflow-hidden rounded-full">
+          <div
+            className={`h-full rounded-full transition-[width,background-color] duration-500 ${
+              dailyStats.todaySubsidyUsed === 0
+                ? "bg-emerald-500"
+                : dailyStats.todayRemaining === 0
+                  ? "bg-red-500"
+                  : dailyStats.todayRemaining < 100
+                    ? "bg-amber-500"
+                    : "bg-emerald-500"
+            }`}
+            style={{
+              width: `${Math.min((dailyStats.todaySubsidyUsed / CO_PAY_DAILY_MAX_SUBSIDY) * 100, 100)}%`,
+            }}
+          />
+        </div>
+        {dailyStats.todayTotalBill > 0 && (
+          <div className="text-muted-foreground flex items-center justify-between text-xs">
+            <span>
+              ยอดรวม 100%{" "}
+              <span className="text-foreground font-semibold tabular-nums">
+                ฿{dailyStats.todayTotalBill.toFixed(2)}
+              </span>
+            </span>
+            <span>
+              รัฐ{" "}
+              <span className="font-semibold text-blue-600 tabular-nums dark:text-blue-400">
+                ฿{dailyStats.todaySubsidyUsed.toFixed(2)}
+              </span>{" "}
+              + คุณ{" "}
+              <span className="font-semibold text-emerald-600 tabular-nums dark:text-emerald-400">
+                ฿{dailyStats.todayUserSpent.toFixed(2)}
+              </span>
+            </span>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+interface CalculatorTabsProps {
+  activeTab: CalculatorTab;
+  count: number;
+  onTabChange: (tab: CalculatorTab) => void;
+}
+
+function CalculatorTabs({
+  activeTab,
+  count,
+  onTabChange,
+}: CalculatorTabsProps) {
+  return (
+    <>
+      {/* Interactive Navigation Tabs */}
+      <div
+        id="thai-help-tabs"
+        className="bg-muted/60 relative mb-5 flex rounded-lg p-1"
+      >
+        {(["split", "topup", "stats"] as const).map((tab) => {
+          const isActive = activeTab === tab;
+          return (
+            <button
+              key={tab}
+              onClick={() => onTabChange(tab)}
+              className={`relative z-10 flex-1 rounded-md py-1.5 text-center text-xs font-semibold transition-[color,background-color,box-shadow] duration-200 ${
+                isActive
+                  ? "bg-card text-foreground font-bold shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {tab === "split" && "แยกบิล (60/40)"}
+              {tab === "topup" && "ต้องเติมเท่าไหร่"}
+              {tab === "stats" && `สถิติเดือนนี้ (${count})`}
+            </button>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
+interface SplitBillTabProps {
+  activeTab: CalculatorTab;
+  totalBill: string;
+  onTotalBillChange: (value: string) => void;
+  categories: ExpenseCategory[];
+  selectedCategoryId: string;
+  onCategoryChange: (categoryId: string) => void;
+  subsidy60: number;
+  userPaid40: number;
+  monthlyQuotaExceeded: boolean;
+  numericBill: number;
+  stats: MonthlyStats;
+  saveError: boolean;
+  isSaving: boolean;
+  onSaveExpense: () => void;
+}
+
+function SplitBillTab({
+  activeTab,
+  totalBill,
+  onTotalBillChange,
+  categories,
+  selectedCategoryId,
+  onCategoryChange,
+  subsidy60,
+  userPaid40,
+  monthlyQuotaExceeded,
+  numericBill,
+  stats,
+  saveError,
+  isSaving,
+  onSaveExpense,
+}: SplitBillTabProps) {
+  return (
+    <>
+      {/* Split Bill */}
+      <div
+        id="thai-help-tab-split"
+        className={`space-y-4 transition-[opacity,transform] duration-200 ease-out ${
+          activeTab === "split"
+            ? "relative translate-y-0 opacity-100"
+            : "pointer-events-none absolute inset-0 translate-y-1 opacity-0"
+        }`}
+        aria-hidden={activeTab !== "split"}
+      >
+        <div className="space-y-2">
+          <Label
+            htmlFor="total-bill-input"
+            className="text-foreground text-sm font-semibold"
+          >
+            ยอดราคาสินค้าทั้งหมด (บาท)
+          </Label>
+          <div className="relative">
+            <span className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 font-semibold">
+              ฿
+            </span>
+            <Input
+              id="total-bill-input"
+              type="number"
+              pattern="[0-9]*"
+              inputMode="decimal"
+              placeholder="ระบุยอดซื้อทั้งหมด เช่น 150"
+              value={totalBill}
+              onChange={(e) => onTotalBillChange(e.target.value)}
+              className="h-11 pl-7 text-base font-bold tabular-nums"
+            />
+            {totalBill && (
+              <button
+                onClick={() => onTotalBillChange("")}
+                aria-label="ล้างยอดซื้อทั้งหมด"
+                className="text-muted-foreground hover:bg-muted hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 rounded-full p-1"
+              >
+                <RotateCcw size={14} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="border-border/20 bg-muted/20 rounded-xl border p-3">
+            <span className="text-muted-foreground text-xs font-semibold tracking-wide">
+              รัฐช่วยจ่าย ({(CO_PAY_STATE_SHARE * 100).toFixed(0)}%)
+            </span>
+            <p className="mt-1 text-lg font-extrabold text-blue-600 tabular-nums dark:text-blue-400">
+              ฿{subsidy60.toFixed(2)}
+            </p>
+          </div>
+          <div className="border-border/20 rounded-xl border bg-emerald-500/5 p-3">
+            <span className="text-muted-foreground text-xs font-semibold tracking-wide">
+              คุณจ่ายจริง ({(CO_PAY_USER_SHARE * 100).toFixed(0)}%)
+            </span>
+            <p className="mt-1 text-lg font-extrabold text-emerald-600 tabular-nums dark:text-emerald-400">
+              ฿{userPaid40.toFixed(2)}
+            </p>
+          </div>
+        </div>
+
+        {monthlyQuotaExceeded && numericBill > 0 && (
+          <div className="flex items-start gap-2 rounded-lg border border-amber-500/25 bg-amber-500/5 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
+            <AlertCircle size={13} className="mt-0.5 shrink-0" />
+            <span>
+              สิทธิ์เดือนนี้เหลือ{" "}
+              <strong className="tabular-nums">
+                ฿{stats.remainingSubsidy.toFixed(0)}
+              </strong>{" "}
+              รัฐช่วยได้แค่{" "}
+              <strong className="tabular-nums">฿{subsidy60.toFixed(2)}</strong>{" "}
+              ส่วนที่เหลือคุณจ่ายเอง
+            </span>
+          </div>
+        )}
+
+        {numericBill > 0 && (
+          <div
+            id="thai-help-save-flow"
+            className="space-y-3 rounded-xl border border-violet-500/15 bg-violet-500/5 p-4"
+          >
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
+                <Label
+                  htmlFor="tct-category-select"
+                  className="text-muted-foreground text-xs font-semibold tracking-wide"
+                >
+                  หมวดหมู่รายจ่าย
+                </Label>
+                <select
+                  id="tct-category-select"
+                  value={selectedCategoryId}
+                  onChange={(e) => onCategoryChange(e.target.value)}
+                  className="font-noto-sans-thai bg-card border-border/40 text-foreground h-9 w-full rounded-md border px-2 text-xs font-medium focus:ring-1 focus:ring-violet-500 focus:outline-none"
+                >
+                  {categories
+                    .filter((c) => c.isActive)
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.icon ? `${c.icon} ` : ""}
+                        {c.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
+              <div className="flex items-end">
+                <Button
+                  onClick={onSaveExpense}
+                  disabled={isSaving}
+                  className="h-9 w-full gap-1.5 bg-violet-600 text-xs font-bold text-white hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-600"
+                >
+                  {isSaving ? "กำลังบันทึก..." : <Plus size={14} />}
+                  บันทึกรายจ่าย ฿{userPaid40.toFixed(2)}
+                </Button>
+              </div>
+            </div>
+
+            {saveError && (
+              <div className="flex items-center justify-between gap-2 rounded-md border border-red-500/20 bg-red-500/5 px-3 py-2">
+                <div className="flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400">
+                  <AlertCircle size={13} className="shrink-0" />
+                  <span>บันทึกไม่สำเร็จ</span>
+                </div>
+                <button
+                  onClick={onSaveExpense}
+                  disabled={isSaving}
+                  className="text-xs font-semibold text-red-600 underline underline-offset-2 hover:text-red-700 dark:text-red-400"
+                >
+                  ลองใหม่
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+interface TopUpTabProps {
+  activeTab: CalculatorTab;
+  desiredSubsidy: string;
+  onDesiredSubsidyChange: (value: string) => void;
+  topUpNeeded: number;
+  numericSubsidy: number;
+  onCopiedChange: (copied: boolean) => void;
+  copied: boolean;
+  purchaseValue: number;
+}
+
+function TopUpTab({
+  activeTab,
+  desiredSubsidy,
+  onDesiredSubsidyChange,
+  topUpNeeded,
+  numericSubsidy,
+  onCopiedChange,
+  copied,
+  purchaseValue,
+}: TopUpTabProps) {
+  return (
+    <>
+      {/* Top Up */}
+      <div
+        id="thai-help-tab-topup"
+        className={`space-y-4 transition-[opacity,transform] duration-200 ease-out ${
+          activeTab === "topup"
+            ? "relative translate-y-0 opacity-100"
+            : "pointer-events-none absolute inset-0 translate-y-1 opacity-0"
+        }`}
+        aria-hidden={activeTab !== "topup"}
+      >
+        <div className="space-y-2">
+          <Label
+            htmlFor="desired-subsidy-input"
+            className="text-foreground text-sm font-semibold"
+          >
+            ยอดเงินสนับสนุนของรัฐที่ต้องการใช้วันนี้ (บาท)
+          </Label>
+          <div className="relative">
+            <span className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 font-semibold">
+              ฿
+            </span>
+            <Input
+              id="desired-subsidy-input"
+              type="number"
+              pattern="[0-9]*"
+              inputMode="decimal"
+              placeholder="เช่น 150 (ไม่เกิน 200)"
+              value={desiredSubsidy}
+              onChange={(e) => onDesiredSubsidyChange(e.target.value)}
+              className="h-11 pl-7 text-base font-bold tabular-nums"
+            />
+            {desiredSubsidy && (
+              <button
+                onClick={() => onDesiredSubsidyChange("")}
+                aria-label="ล้างจำนวนเงินสนับสนุน"
+                className="text-muted-foreground hover:bg-muted hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 rounded-full p-1"
+              >
+                <RotateCcw size={14} />
+              </button>
+            )}
+          </div>
+          <p className="text-muted-foreground text-xs leading-tight">
+            ป้อนยอดเงินรัฐที่คุณต้องการสแกนใช้ เพื่อดูว่ากระเป๋าเป๋าตัง
+            (G-Wallet) ของคุณต้องมีเงินอยู่อีกเท่าไหร่
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="border-border/20 rounded-xl border bg-emerald-500/5 p-3">
+            <span className="text-muted-foreground text-xs font-semibold tracking-wide">
+              เติมใน เป๋าตัง ({(CO_PAY_USER_SHARE * 100).toFixed(0)}%)
+            </span>
+            <div className="mt-1 flex items-center gap-2">
+              <p className="text-lg font-extrabold text-emerald-600 tabular-nums dark:text-emerald-400">
+                ฿{topUpNeeded.toFixed(2)}
+              </p>
+              {numericSubsidy > 0 && (
+                <button
+                  onClick={() => {
+                    void navigator.clipboard.writeText(topUpNeeded.toFixed(2));
+                    onCopiedChange(true);
+                    setTimeout(() => onCopiedChange(false), 2000);
+                  }}
+                  className="text-muted-foreground hover:text-foreground rounded p-0.5 transition-colors"
+                  title="คัดลอก"
+                >
+                  {copied ? (
+                    <Check size={13} className="text-emerald-600" />
+                  ) : (
+                    <Copy size={13} />
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="border-border/20 bg-muted/20 rounded-xl border p-3">
+            <span className="text-muted-foreground text-xs font-semibold tracking-wide">
+              ซื้อสินค้าได้รวม
+            </span>
+            <p className="text-foreground mt-1 text-lg font-extrabold tabular-nums">
+              ฿{purchaseValue.toFixed(2)}
+            </p>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+interface StatsTabProps {
+  activeTab: CalculatorTab;
+  stats: MonthlyStats;
+}
+
+function StatsTab({ activeTab, stats }: StatsTabProps) {
+  return (
+    <>
+      {/* Stats */}
+      <div
+        id="thai-help-tab-stats"
+        className={`space-y-4 transition-[opacity,transform] duration-200 ease-out ${
+          activeTab === "stats"
+            ? "relative translate-y-0 opacity-100"
+            : "pointer-events-none absolute inset-0 translate-y-1 opacity-0"
+        }`}
+        aria-hidden={activeTab !== "stats"}
+      >
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="border-border/10 bg-card dark:bg-muted/10 rounded-xl border p-3 shadow-sm">
+            <span className="text-muted-foreground text-xs font-semibold tracking-wide">
+              รัฐช่วยแล้วเดือนนี้
+            </span>
+            <p className="mt-1 text-lg font-extrabold text-blue-600 tabular-nums dark:text-blue-400">
+              ฿{stats.totalSubsidyUsed.toFixed(2)}
+            </p>
+            <span className="text-muted-foreground mt-0.5 block text-xs">
+              จากโควตา ฿1,000.00 / เดือน
+            </span>
+          </div>
+          <div className="border-border/10 bg-card dark:bg-muted/10 rounded-xl border p-3 shadow-sm">
+            <span className="text-muted-foreground text-xs font-semibold tracking-wide">
+              สิทธิ์คงเหลือจากรัฐ
+            </span>
+            <p className="mt-1 text-lg font-extrabold text-emerald-600 tabular-nums dark:text-emerald-400">
+              ฿{stats.remainingSubsidy.toFixed(2)}
+            </p>
+            <span className="text-muted-foreground mt-0.5 block text-xs">
+              รีเซ็ตอัตโนมัติสิ้นเดือนนี้
+            </span>
+          </div>
+          <div className="border-border/10 bg-card dark:bg-muted/10 rounded-xl border p-3 shadow-sm">
+            <span className="text-muted-foreground text-xs font-semibold tracking-wide">
+              เงินคุณที่จ่ายสมทบ
+            </span>
+            <p className="text-foreground mt-1 text-lg font-extrabold tabular-nums">
+              ฿{stats.totalUserSpent.toFixed(2)}
+            </p>
+            <span className="text-muted-foreground mt-0.5 block text-xs">
+              บันทึกในประวัติแล้ว {stats.count} รายการ
+            </span>
+          </div>
+        </div>
+
+        {/* Info banner */}
+        <div className="flex items-start gap-2.5 rounded-lg border border-yellow-500/25 bg-yellow-500/5 p-3 text-xs leading-relaxed text-yellow-700 dark:text-yellow-400">
+          <Info size={16} className="mt-0.5 shrink-0" />
+          <p>
+            ระบบจะค้นหาประวัติการเงินของคุณในเดือนปัจจุบันที่มีเครื่องหมายหรือหมายเหตุตัวย่อ
+            เช่น <strong>#ไทยช่วยไทย</strong>, <strong>#ทชท</strong>,{" "}
+            <strong>#TCT</strong>, <strong>#6040</strong>,{" "}
+            <strong>#คนละครึ่ง</strong>, <strong>#KLK</strong>{" "}
+            เพื่อคำนวณสิทธิ์ให้อัตโนมัติ
+          </p>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function QuickNotice() {
+  return (
+    <>
+      {/* Quick Notice */}
+      <div className="mt-4 flex items-center gap-2 rounded-lg border border-red-500/10 bg-red-500/5 px-3 py-2">
+        <TrendingDown className="h-3.5 w-3.5 shrink-0 text-red-500" />
+        <p className="text-xs leading-none font-medium text-red-700 dark:text-red-400">
+          เงิน 1,000 บาทต่อเดือน ของสิทธิ์รัฐช่วยจ่าย
+          หากใช้ไม่หมดจะไม่ทบไปเดือนถัดไป
+        </p>
+      </div>
+    </>
   );
 }

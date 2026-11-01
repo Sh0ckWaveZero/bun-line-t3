@@ -30,7 +30,7 @@ Database migration scripts (typically one-time use, kept for reference)
 
 Database operations: seeding, health checks, maintenance
 
-- `seed-admin-roles.ts` - Create admin user accounts
+- `seed-admin-roles.ts` - Grant admin role to existing users matched by LINE account
 - `check-indexes.ts` - Verify database indexes
 - `create-missing-indexes.ts` - Create missing database indexes
 - `delete-old-line-accounts.ts` - Clean up unused LINE accounts
@@ -43,6 +43,7 @@ Database operations: seeding, health checks, maintenance
 DevOps, deployment, and environment management
 
 - `docker-entrypoint.sh` - Docker container entrypoint
+- `deploy.sh` - Production deployment stages (see `docs/DEPLOYMENT.md`)
 - `switch-env.sh` - Switch between dev/prod environments
 - `deploy-oauth-fix.sh` - Deploy LINE OAuth fixes
 - `update-cloudflare-tunnel.sh` - Update Cloudflare tunnel config
@@ -94,7 +95,7 @@ Deprecated or unused scripts (kept for historical reference)
 
 ---
 
-## 📝 NPM Scripts
+## 📝 Package Scripts
 
 Key scripts available via `bun run`:
 
@@ -132,6 +133,6 @@ bun run env:status              # Show current environment
 ## ⚙️ Adding New Scripts
 
 1. Place the script in the appropriate subdirectory
-2. Add an npm script to `package.json` if needed
+2. Add a script to `package.json` if needed
 3. Document the script in this README
 4. Use descriptive filenames with kebab-case

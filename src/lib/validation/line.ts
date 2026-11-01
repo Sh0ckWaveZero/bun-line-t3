@@ -156,8 +156,6 @@ const lottery = (infoItems: any[]) => {
 };
 
 const cryptoCurrency = (data: CryptoInfo): any => {
-  let bubbleMessageTpl = {};
-
   const boxOne = data.highPrice
     ? createBubbleBox("ราคาสูงสุด", data.highPrice)
     : createBubbleBox("ปริมาณ 24ชม.", data.volume_24h);
@@ -176,7 +174,7 @@ const cryptoCurrency = (data: CryptoInfo): any => {
     hue: "hsla",
   });
 
-  bubbleMessageTpl = {
+  const bubbleMessageTpl = {
     type: "bubble",
     size: "giga",
     header: {
@@ -340,11 +338,10 @@ const createBubbleBox = (
 };
 
 const gold = (data: any): any => {
-  let bubbleMessageTpl = {};
   const image1 = utils.randomItems(IMAGE_GOLD_URLS);
   const image2 = utils.randomItems(IMAGE_GOLD_URLS);
   const image3 = utils.randomItems(IMAGE_GOLD_URLS);
-  bubbleMessageTpl = {
+  const bubbleMessageTpl = {
     type: "bubble",
     size: "giga",
     header: {

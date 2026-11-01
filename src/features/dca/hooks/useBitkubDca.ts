@@ -165,10 +165,15 @@ export function useBitkubDca(onImported: () => void, enabled = true) {
     setSelected([]);
   };
 
-  useEffect(() => {
-    const totalPages = Math.max(1, history.data?.totalPages ?? 1);
-    if (page > totalPages) setPage(totalPages);
-  }, [history.data?.totalPages, page]);
+  // ข้อมูลหด → clamp หน้าเกินระหว่าง render ตาม react.dev (ไม่ใช้ effect)
+  const totalPages = Math.max(1, history.data?.totalPages ?? 1);
+  const [prevTotalPages, setPrevTotalPages] = useState(totalPages);
+  if (prevTotalPages !== totalPages && page > totalPages) {
+    setPrevTotalPages(totalPages);
+    setPage(totalPages);
+  } else if (prevTotalPages !== totalPages) {
+    setPrevTotalPages(totalPages);
+  }
 
   const handleSync = (cursor?: string) => {
     setIsSyncingHistory(true);

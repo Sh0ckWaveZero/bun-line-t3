@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { useMemo } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import {
   useSafeTimestamp,
   useSuppressHydrationWarning,
@@ -143,6 +143,12 @@ export function ClientOnlyWrapper({
  */
 interface UserSpecificContentProps {
   serverContent: React.ReactNode;
+  /**
+   * callback ที่คืน JSX element — ห้ามส่ง component function ตรง ๆ
+   * (UserSpecificContent จะเรียกมันระหว่าง render ทำให้ hooks ของ component
+   * นั้นถูก inline เข้า hook list ของ parent และ crash "Rendered more hooks
+   * than during the previous render" หลัง mounted เปลี่ยน)
+   */
   clientContent: () => React.ReactNode;
   className?: string;
 }
@@ -187,6 +193,40 @@ export function ConditionalSuppression({
 /**
  * 📋 ตัวอย่างการใช้งาน
  */
+/** ตัวอย่างเนื้อหา client-only — นิยามที่ระดับโมดูล กัน define-component-during-render
+ * อ่านค่า browser ผ่าน useSyncExternalStore (server snapshot ว่าง) กัน SSR อ่าน global */
+const subscribeNoop = () => () => {};
+
+const ClientHrefContent = () => {
+  const href = useSyncExternalStore(
+    subscribeNoop,
+    () => window.location.href,
+    () => "",
+  );
+  return (
+    <div className="rounded bg-yellow-100 p-2">
+      <strong>เนื้อหาเฉพาะ Client:</strong> {href}
+    </div>
+  );
+};
+
+const UserAgentContent = () => {
+  const userAgent = useSyncExternalStore(
+    subscribeNoop,
+    () => navigator.userAgent,
+    () => "",
+  );
+  return (
+    <div className="rounded bg-purple-100 p-2">
+      User Agent: {userAgent.slice(0, 50)}...
+    </div>
+  );
+};
+
+/** render callbacks ระดับโมดูล — คืน element ไม่เรียก component เอง (กัน hook inline เข้า parent) */
+const renderClientHref = () => <ClientHrefContent />;
+const renderUserAgent = () => <UserAgentContent />;
+
 export function HydrationExamples() {
   return (
     <div className="space-y-4 p-4">
@@ -215,21 +255,13 @@ export function HydrationExamples() {
       {/* ✅ Client Only Content */}
       <UserSpecificContent
         serverContent={<div>กำลังโหลด...</div>}
-        clientContent={() => (
-          <div className="rounded bg-yellow-100 p-2">
-            <strong>เนื้อหาเฉพาะ Client:</strong> {window.location.href}
-          </div>
-        )}
+        clientContent={renderClientHref}
       />
 
       {/* ✅ User Specific Content */}
       <UserSpecificContent
         serverContent={<div>เนื้อหาสำหรับ Server</div>}
-        clientContent={() => (
-          <div className="rounded bg-purple-100 p-2">
-            User Agent: {navigator.userAgent.slice(0, 50)}...
-          </div>
-        )}
+        clientContent={renderUserAgent}
       />
 
       {/* ✅ Conditional Suppression */}

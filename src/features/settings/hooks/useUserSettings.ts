@@ -83,18 +83,20 @@ export function useUserSettings(): UseUserSettingsReturn {
       : "เกิดข้อผิดพลาด"
     : null;
 
+  const { mutateAsync: updateSettingsAsync } = updateMutation;
+
   const updateSetting = useCallback(
     async <K extends keyof UpdateSettingsPayload>(
       key: K,
       value: UpdateSettingsPayload[K],
     ) => {
       try {
-        await updateMutation.mutateAsync({ key, value });
+        await updateSettingsAsync({ key, value });
       } catch {
         // The mutation exposes the error through the hook result.
       }
     },
-    [updateMutation.mutateAsync],
+    [updateSettingsAsync],
   );
 
   return {

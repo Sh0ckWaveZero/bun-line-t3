@@ -354,7 +354,7 @@ export function HelpPage() {
           {!hasResults && searchTerm && (
             <div className="py-20 text-center">
               <p className="text-foreground text-sm font-medium">
-                ไม่พบคำสั่ง "{searchTerm}"
+                ไม่พบคำสั่ง &quot;{searchTerm}&quot;
               </p>
               <p className="text-muted-foreground mt-1 text-sm">
                 ลองค้นหาด้วยคำอื่น หรือตรวจสอบการสะกด

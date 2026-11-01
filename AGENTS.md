@@ -4,9 +4,9 @@
 
 - **Dev**: `bun run dev` (TanStack Start via Vite on :4325)
 - **Build**: `bun run build` (TanStack Start production build)
-- **Lint**: `bun run lint` (ESLint flat config)
+- **Lint**: `bun lint` (Bun built-in linter; Bun 1.4.4 stable lacks it, so use `bunx --package bun@1.4.4-canary.20261031.1 bun lint` with that version)
 - **Format**: `bun run format` (Prettier with Tailwind plugin)
-- **Type Check**: `bun run type-check`
+- **Type Check**: `bun check`
 - **Test All**: `bun test`
 - **Test Single**: `bun test <filename>` or `bun test <pattern>`
 - **Test Watch**: `bun test --watch`
@@ -159,7 +159,8 @@ export function requireAdmin({ context, location }: GuardArgs) {
 - Implement authentication/authorization checks via route guards (`beforeLoad`)
 - Apply route guards to protected routes: `beforeLoad: requireAuth` or `beforeLoad: requireAdmin`
 - Never store sensitive data in client state
-- Server functions automatically validate session via route guards
+- Authenticate and authorize each protected API handler and server function on the server; a page's `beforeLoad` guard does not protect direct requests
+- Meet WCAG 2.1 AA contrast requirements: 4.5:1 for normal text and 3:1 for large text
 
 ### Error Handling
 
@@ -179,13 +180,21 @@ export function requireAdmin({ context, location }: GuardArgs) {
 - **Use `db:push`** only for prototyping
 - ID fields: `@id @default(cuid())` or `@id @default(uuid())`
 - Relations: use proper foreign key constraints
-- Schema migrations tracked in `prisma/migrations/`
+- The schema is `prisma/schema.prisma`; migrations are tracked in `prisma/migrations/`
+- Generate migrations with Prisma Migrate and inspect the generated SQL before applying it
 
 ### Testing
 
 - Write tests for all business logic and security-critical code
 - Test coverage for `src/**/*.{ts,tsx}` files
-- Use Bun test runner with patterns: `**/tests/**/*.test.{ts,tsx}`
+- Use the Bun test runner; tests live in `tests/` and alongside source files
+- `tests/e2e/` currently has no automated browser test files; do not infer browser coverage from unit tests
+
+### Scripts and CI
+
+- Run TypeScript scripts with Bun; inspect scripts that mutate data or deploy before running them
+- GitHub Actions workflows live in `.github/workflows/`; `deploy.yml` deploys to production
+- Lint runs locally only — lefthook pre-commit runs `bun lint --staged`; there is no CI lint workflow
 
 ### Feature-Based Architecture Best Practices
 
@@ -232,13 +241,3 @@ export const Route = createFileRoute("/reports")({
   component: ReportsPage,
 })
 ```
-
-## GitHub Copilot Instructions
-
-See `.github/copilot-instructions.md` for comprehensive guidelines on:
-
-- Tailwind CSS dark mode (class-based strategy)
-- WCAG 2.1 AA contrast requirements (4.5:1 normal text, 3:1 large text)
-- Security-first development with OWASP compliance
-- PostgreSQL + Prisma patterns (use migrations, proper foreign keys)
-- Functional programming with TypeScript

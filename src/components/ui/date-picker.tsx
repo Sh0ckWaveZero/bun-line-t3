@@ -75,20 +75,25 @@ const CALENDAR_CLASSNAMES = {
   hidden: "invisible",
 } as const;
 
+// hoist ไว้ระดับโมดูล — สร้าง formatter ราย call แพงและถูกเรียกทุก render
+const thaiMonthCaptionFormatter = new Intl.DateTimeFormat("th-TH-u-nu-latn", {
+  month: "long",
+  year: "numeric",
+  timeZone: "Asia/Bangkok",
+});
+
+const thaiFullDateFormatter = new Intl.DateTimeFormat("th-TH-u-nu-latn", {
+  dateStyle: "full",
+  timeZone: "Asia/Bangkok",
+});
+
 function formatThaiMonthCaption(month: Date): string {
-  return new Intl.DateTimeFormat("th-TH-u-nu-latn", {
-    month: "long",
-    year: "numeric",
-    timeZone: "Asia/Bangkok",
-  }).format(month);
+  return thaiMonthCaptionFormatter.format(month);
 }
 
 function formatThaiFullDate(date?: Date) {
   if (!date) return "";
-  return new Intl.DateTimeFormat("th-TH-u-nu-latn", {
-    dateStyle: "full",
-    timeZone: "Asia/Bangkok",
-  }).format(date);
+  return thaiFullDateFormatter.format(date);
 }
 
 const bangkokDateKeyFormatter = new Intl.DateTimeFormat("en-GB", {

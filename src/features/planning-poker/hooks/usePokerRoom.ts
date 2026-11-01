@@ -7,12 +7,8 @@ import {
   sendRoomAction,
 } from "../lib/api";
 import type { RoomAction } from "../lib/schemas";
-import {
-  clearRoomToken,
-  loadRoomToken,
-  saveName,
-  saveRoomToken,
-} from "../lib/storage";
+import { clearRoomToken, saveName, saveRoomToken } from "../lib/storage";
+import { useRoomToken } from "./usePokerStorage";
 import type { PublicRoom } from "../types";
 
 const POLL_INTERVAL_MS = 1500;
@@ -42,25 +38,29 @@ const applyOptimisticVote = (
 
 export const usePokerRoom = (code: string) => {
   const queryClient = useQueryClient();
-  const [token, setToken] = useState<string | null>(null);
-  const [isTokenLoaded, setIsTokenLoaded] = useState(false);
+  // token อยู่ใน sessionStorage — external store (เขียนที่ไหนก็แจ้ง re-read)
+  // undefined = ยังไม่อ่าน (SSR/hydration), null = อ่านแล้วไม่มี token
+  const token = useRoomToken(code);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   // กันส่งซ้ำระหว่างรอ server โดยไม่ต้อง disable ปุ่ม (disable ทำให้โฟกัสคีย์บอร์ดหลุด)
   const inFlight = useRef(false);
 
-  // อ่าน token ใน effect เพื่อไม่ให้ SSR กับ client ไม่ตรงกัน (hydration)
-  useEffect(() => {
-    setToken(loadRoomToken(code));
-    setIsTokenLoaded(true);
+  // เปลี่ยนห้อง → ล้าง error ค้างของห้องเดิม (ปรับระหว่าง render ตาม react.dev)
+  const [prevCode, setPrevCode] = useState(code);
+  if (prevCode !== code) {
+    setPrevCode(code);
     setActionError(null);
-  }, [code]);
+  }
+
+  const isTokenLoaded = token !== undefined;
 
   const queryKey = ["poker-room", code, token] as const;
 
   const query = useQuery({
     queryKey,
-    queryFn: () => fetchRoomState(code, token),
+    // enabled กัน token === undefined (ยังไม่อ่าน storage) ไว้แล้ว
+    queryFn: () => fetchRoomState(code, token ?? null),
     enabled: isTokenLoaded,
     // หยุด poll ระหว่างมี action ค้าง — กันผล poll ที่คำนวณก่อน vote ถึง server
     // ทับ optimistic state กลับไปก่อนแล้วเด้งกลับอีกที (กะพริบ)
@@ -75,12 +75,10 @@ export const usePokerRoom = (code: string) => {
   const isNotFound =
     query.error instanceof PokerApiError && query.error.status === 404;
 
-  // token ใช้ไม่ได้แล้ว (ห้อง restart / ถูกเอาออกเพราะหายไปนาน) → กลับไปหน้า join
+  // token ใช้ไม่ได้แล้ว (ห้อง restart / ถูกเอาออกเพราะหายไปนาน) → ล้าง token
+  // storage notify เป็นตัวพา token กลับเป็น null ไม่ต้อง setState
   useEffect(() => {
-    if (room && token && room.meId === null) {
-      clearRoomToken(code);
-      setToken(null);
-    }
+    if (room && token && room.meId === null) clearRoomToken(code);
   }, [room, token, code]);
 
   const run = useCallback(
@@ -93,9 +91,9 @@ export const usePokerRoom = (code: string) => {
         return await task();
       } catch (error) {
         setActionError(toMessage(error));
+        // 401 = token หมดอายุ → ล้างทิ้ง ให้กลับไปหน้า join (notify พา state ตาม)
         if (error instanceof PokerApiError && error.status === 401) {
           clearRoomToken(code);
-          setToken(null);
         }
         return null;
       } finally {
@@ -116,7 +114,6 @@ export const usePokerRoom = (code: string) => {
           ["poker-room", code, joined.token],
           joined.room,
         );
-        setToken(joined.token);
         return joined.room;
       }),
     [code, queryClient, run],
@@ -134,7 +131,7 @@ export const usePokerRoom = (code: string) => {
         if (optimistic && snapshot)
           queryClient.setQueryData<PublicRoom>(key, optimistic(snapshot));
         try {
-          const next = await sendRoomAction(code, token, action);
+          const next = await sendRoomAction(code, token ?? null, action);
           if (next) queryClient.setQueryData<PublicRoom>(key, next);
           return next;
         } catch (error) {
@@ -148,9 +145,8 @@ export const usePokerRoom = (code: string) => {
   );
 
   const leave = useCallback(async () => {
-    await run(() => sendRoomAction(code, token, { type: "leave" }));
+    await run(() => sendRoomAction(code, token ?? null, { type: "leave" }));
     clearRoomToken(code);
-    setToken(null);
   }, [code, token, run]);
 
   return {

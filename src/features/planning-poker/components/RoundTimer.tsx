@@ -27,9 +27,16 @@ export const RoundTimer = ({
   const clockOffset = useRef(0);
   const [now, setNow] = useState(serverNow);
 
+  // serverNow อัปเดตทุกรอบ poll → ปรับ now ระหว่าง render ตาม react.dev (ไม่ใช้ effect)
+  const [prevServerNow, setPrevServerNow] = useState(serverNow);
+  if (prevServerNow !== serverNow) {
+    setPrevServerNow(serverNow);
+    setNow(serverNow);
+  }
+
+  // ชดเชยนาฬิกา — เขียน ref เท่านั้น ไม่ยุบ state
   useEffect(() => {
     clockOffset.current = serverNow - Date.now();
-    setNow(serverNow);
   }, [serverNow]);
 
   useEffect(() => {

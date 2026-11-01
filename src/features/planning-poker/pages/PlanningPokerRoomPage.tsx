@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import {
   PixelChevronDown,
@@ -39,10 +40,7 @@ import { RoundHistory } from "../components/RoundHistory";
 import { RoundTimer } from "../components/RoundTimer";
 import { VoteDeck } from "../components/VoteDeck";
 import { countGoodStreak } from "../helpers/fx-rarity";
-import {
-  ACCESSIBLE_PRIMARY_CLASS,
-  POKER_LIMITS,
-} from "../constants";
+import { ACCESSIBLE_PRIMARY_CLASS, POKER_LIMITS } from "../constants";
 import { inviteRecipientsSchema } from "../lib/schemas";
 import { usePokerRoom } from "../hooks/usePokerRoom";
 import type { PublicRoom } from "../types";
@@ -119,11 +117,7 @@ const RoomActionsMenu = ({
     >
       <div className="flex flex-col gap-1">
         {isJoined && me ? (
-          <NameEditor
-            currentName={me.name}
-            isBusy={isBusy}
-            onSave={onRename}
-          />
+          <NameEditor currentName={me.name} isBusy={isBusy} onSave={onRename} />
         ) : null}
         {isJoined && me ? (
           <Button
@@ -134,7 +128,9 @@ const RoomActionsMenu = ({
             disabled={isRevealed}
             aria-describedby={isRevealed ? "poker-role-hint" : undefined}
             className="w-full justify-start"
-            onClick={() => onSwitchRole(me.role === "voter" ? "spectator" : "voter")}
+            onClick={() =>
+              onSwitchRole(me.role === "voter" ? "spectator" : "voter")
+            }
           >
             <PixelSwap aria-hidden="true" />
             {me.role === "voter" ? "Become spectator" : "Become voter"}
@@ -181,14 +177,12 @@ const RoomMessage = ({ title, detail }: { title: string; detail?: string }) => (
 const InvitePanel = ({ code }: { code: string }) => {
   const [emails, setEmails] = useState("");
   // zod validate ก่อนใช้เสมอ — อีเมลไหนไม่ผ่าน format ทั้งชุดถือว่ายังไม่พร้อมส่ง
-  const recipients = inviteRecipientsSchema
-    .catch([])
-    .parse(
-      emails
-        .split(/[,;\s]+/)
-        .map((email) => email.trim())
-        .filter((email) => email.length > 0),
-    );
+  const recipients = inviteRecipientsSchema.catch([]).parse(
+    emails
+      .split(/[,;\s]+/)
+      .map((email) => email.trim())
+      .filter((email) => email.length > 0),
+  );
 
   const getLink = () => `${window.location.origin}/planning-poker/${code}`;
 
@@ -208,7 +202,10 @@ const InvitePanel = ({ code }: { code: string }) => {
   };
 
   return (
-    <details id="poker-invite-panel" className="group bg-card rounded-lg border shadow-sm">
+    <details
+      id="poker-invite-panel"
+      className="group bg-card rounded-lg border shadow-sm"
+    >
       <summary className="focus-visible:ring-ring flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-6 py-4 focus-visible:ring-2 focus-visible:outline-none [&::-webkit-details-marker]:hidden">
         <h2 className="flex items-center gap-2 text-base font-semibold">
           <PixelMail className="h-4 w-4" aria-hidden="true" />
@@ -276,16 +273,16 @@ const StoryField = ({
   const [isEditing, setIsEditing] = useState(false);
 
   // รับค่าใหม่จาก server เฉพาะตอนที่ไม่ได้พิมพ์อยู่ ไม่งั้น polling จะทับสิ่งที่กำลังพิมพ์
-  useEffect(() => {
-    if (!isEditing) setDraft(room.story);
-  }, [room.story, isEditing]);
+  // (adjust state during render — React render ซ้ำทันทีก่อน commit ไม่มี cascade แบบ effect)
+  if (!isEditing && draft !== room.story) {
+    setDraft(room.story);
+  }
 
   useEffect(() => {
     if (!isEditing || draft === room.story) return;
     const timer = window.setTimeout(() => onSave(draft), STORY_SAVE_DELAY_MS);
     return () => window.clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft, isEditing]);
+  }, [draft, isEditing, onSave, room.story]);
 
   if (!canEdit) {
     return room.story ? (
@@ -331,11 +328,145 @@ const getAnnouncement = (
   return `Cards revealed: ${average}${room.summary.isConsensus ? " — everyone matched" : ""}`;
 };
 
+interface PlanningPokerRoomHeaderProps {
+  room: PublicRoom;
+  isJoined: boolean;
+  me: { name: string; role: "voter" | "spectator" } | null;
+  isBusy: boolean;
+  cardSize: CardSize;
+  setCardSize: Dispatch<SetStateAction<CardSize>>;
+  onRename: (name: string) => Promise<unknown>;
+  onSwitchRole: (role: "voter" | "spectator") => void;
+  onLeave: () => void;
+  onSaveStory: (story: string) => void;
+}
+
+const PlanningPokerRoomHeader = ({
+  room,
+  isJoined,
+  me,
+  isBusy,
+  cardSize,
+  setCardSize,
+  onRename,
+  onSwitchRole,
+  onLeave,
+  onSaveStory,
+}: PlanningPokerRoomHeaderProps) => (
+  <header id="poker-room-header" className="space-y-2">
+    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+      <div>
+        <p className="text-muted-foreground text-xs">
+          Planning Poker · Room code
+        </p>
+        <h1
+          className="font-mono text-2xl font-bold tracking-widest sm:text-3xl"
+          aria-label={`Planning Poker room code ${room.code.split("").join(" ")}`}
+        >
+          {room.code}
+        </h1>
+      </div>
+      <TooltipProvider delayDuration={180}>
+        <div className="ml-auto flex flex-wrap items-center gap-1.5 lg:gap-2">
+          <CopyButton
+            id="poker-copy-code"
+            label="Copy code"
+            getText={() => room.code}
+          />
+          <CopyButton
+            id="poker-copy-link"
+            label="Copy link"
+            icon={PixelShare}
+            getText={() =>
+              `${window.location.origin}/planning-poker/${room.code}`
+            }
+          />
+          <div className="flex items-center gap-1">
+            <span id="poker-card-size-label" className="sr-only">
+              Card size
+            </span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  id="poker-decrease-card-size"
+                  aria-label="Decrease card size"
+                  aria-controls="poker-player-cards"
+                  className="h-9 w-9"
+                  disabled={cardSize === "small"}
+                  onClick={() =>
+                    setCardSize((current) => PREVIOUS_CARD_SIZE[current])
+                  }
+                >
+                  <PixelMinus aria-hidden="true" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="poker-tooltip-soft">
+                Decrease card size
+              </TooltipContent>
+            </Tooltip>
+            <span className="sr-only" aria-live="polite">
+              {CARD_SIZE_LABELS[cardSize]}
+            </span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  id="poker-increase-card-size"
+                  aria-label="Increase card size"
+                  aria-controls="poker-player-cards"
+                  className="h-9 w-9"
+                  disabled={cardSize === "large"}
+                  onClick={() =>
+                    setCardSize((current) => NEXT_CARD_SIZE[current])
+                  }
+                >
+                  <PixelPlus aria-hidden="true" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="poker-tooltip-soft">
+                Increase card size
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          <RoomActionsMenu
+            isJoined={isJoined}
+            me={me}
+            isRevealed={room.revealed}
+            isBusy={isBusy}
+            onRename={onRename}
+            onSwitchRole={onSwitchRole}
+            onLeave={onLeave}
+          />
+        </div>
+      </TooltipProvider>
+    </div>
+    <StoryField room={room} canEdit={isJoined} onSave={onSaveStory} />
+    {isJoined && room.revealed ? (
+      <p
+        id="poker-role-hint"
+        className="text-muted-foreground text-xs sm:text-right"
+      >
+        You can switch roles after a new round starts
+      </p>
+    ) : null}
+  </header>
+);
+
 export const PlanningPokerRoomPage = () => {
   const { code: rawCode } = useParams({ strict: false }) as { code?: string };
   const code = (rawCode ?? "").toUpperCase();
   const poker = usePokerRoom(code);
-  const { room } = poker;
+  const { room, setStory } = poker;
+  // identity ต้องนิ่ง — StoryField ใช้ onSave ใน effect deps ของ debounced autosave
+  const handleSaveStory = useCallback(
+    (story: string) => void setStory(story),
+    [setStory],
+  );
   const [cardSize, setCardSize] = useState<CardSize>("medium");
 
   // overlay ฉลองค่าเฉลี่ยเล่นเฉพาะคนที่ "เห็นจังหวะเปิดไพ่เกิดขึ้นจริง" —
@@ -397,59 +528,6 @@ export const PlanningPokerRoomPage = () => {
     }
   }
 
-  // ตัวปรับขนาดการ์ด — ท้ายแถวปุ่มหัวห้อง (poker-room-header) เหลือแค่ปุ่ม [−][+] ทุกจอ
-  // (ชื่อ group/ค่าปัจจุบันเป็น sr-only — screen reader ยังอ่านและประกาศได้ครบ)
-  const cardSizeControls = (
-    <div className="flex items-center gap-1">
-      <span id="poker-card-size-label" className="sr-only">
-        Card size
-      </span>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            id="poker-decrease-card-size"
-            aria-label="Decrease card size"
-            aria-controls="poker-player-cards"
-            className="h-9 w-9"
-            disabled={cardSize === "small"}
-            onClick={() => setCardSize((current) => PREVIOUS_CARD_SIZE[current])}
-          >
-            <PixelMinus aria-hidden="true" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="top" className="poker-tooltip-soft">
-          Decrease card size
-        </TooltipContent>
-      </Tooltip>
-      <span className="sr-only" aria-live="polite">
-        {CARD_SIZE_LABELS[cardSize]}
-      </span>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            id="poker-increase-card-size"
-            aria-label="Increase card size"
-            aria-controls="poker-player-cards"
-            className="h-9 w-9"
-            disabled={cardSize === "large"}
-            onClick={() => setCardSize((current) => NEXT_CARD_SIZE[current])}
-          >
-            <PixelPlus aria-hidden="true" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="top" className="poker-tooltip-soft">
-          Increase card size
-        </TooltipContent>
-      </Tooltip>
-    </div>
-  );
-
   return (
     <main
       data-card-size={cardSize}
@@ -464,58 +542,18 @@ export const PlanningPokerRoomPage = () => {
         {getAnnouncement(room, votedCount, voters.length)}
       </p>
 
-      <header id="poker-room-header" className="space-y-2">
-        {/* < lg: ปุ่มทั้งหมด icon-only แถวเดียวข้าง room code (minimal บน mobile/tablet) — ≥ lg ปุ่มเต็มเหมือนเดิม */}
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-          <div>
-            <p className="text-muted-foreground text-xs">
-              Planning Poker · Room code
-            </p>
-            <h1
-              className="font-mono text-2xl font-bold tracking-widest sm:text-3xl"
-              aria-label={`Planning Poker room code ${room.code.split("").join(" ")}`}
-            >
-              {room.code}
-            </h1>
-          </div>
-          <TooltipProvider delayDuration={180}>
-          <div className="ml-auto flex flex-wrap items-center gap-1.5 lg:gap-2">
-            <CopyButton id="poker-copy-code" label="Copy code" getText={() => room.code} />
-            <CopyButton
-              id="poker-copy-link"
-              label="Copy link"
-              icon={PixelShare}
-              getText={() =>
-                `${window.location.origin}/planning-poker/${room.code}`
-              }
-            />
-            {cardSizeControls}
-            <RoomActionsMenu
-              isJoined={isJoined}
-              me={me ? { name: me.name, role: me.role } : null}
-              isRevealed={room.revealed}
-              isBusy={poker.isBusy}
-              onRename={poker.rename}
-              onSwitchRole={(role) => void poker.setRole(role)}
-              onLeave={() => void poker.leave()}
-            />
-          </div>
-          </TooltipProvider>
-        </div>
-        <StoryField
-          room={room}
-          canEdit={isJoined}
-          onSave={(story) => void poker.setStory(story)}
-        />
-        {isJoined && room.revealed ? (
-          <p
-            id="poker-role-hint"
-            className="text-muted-foreground text-xs sm:text-right"
-          >
-            You can switch roles after a new round starts
-          </p>
-        ) : null}
-      </header>
+      <PlanningPokerRoomHeader
+        room={room}
+        isJoined={isJoined}
+        me={me ? { name: me.name, role: me.role } : null}
+        isBusy={poker.isBusy}
+        cardSize={cardSize}
+        setCardSize={setCardSize}
+        onRename={poker.rename}
+        onSwitchRole={(role) => void poker.setRole(role)}
+        onLeave={() => void poker.leave()}
+        onSaveStory={handleSaveStory}
+      />
 
       {poker.actionError ? (
         <p
@@ -619,7 +657,11 @@ export const PlanningPokerRoomPage = () => {
 
           {room.canControl && room.revealed ? (
             <div className="flex justify-center">
-              <Button type="button" id="poker-new-round" onClick={() => void poker.reset()}>
+              <Button
+                type="button"
+                id="poker-new-round"
+                onClick={() => void poker.reset()}
+              >
                 <PixelRefresh aria-hidden="true" />
                 New round
               </Button>

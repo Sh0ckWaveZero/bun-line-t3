@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, memo } from "react";
+import React, { useState, memo } from "react";
 import {
   LazyBarChart,
   LazyDoughnutChart,
@@ -19,10 +19,17 @@ import { cn } from "@/lib/utils";
 import { useChartTheme } from "@/hooks/useChartTheme";
 import { PendingApprovalModal } from "@/components/auth/PendingApprovalModal";
 import { useLineApproval } from "@/lib/auth/hooks/useLineApproval";
+import { useQuery } from "@tanstack/react-query";
 
 const MONITORING_TIMESTAMP_FORMATTER = new Intl.DateTimeFormat("th-TH", {
   dateStyle: "short",
   timeStyle: "short",
+  timeZone: "Asia/Bangkok",
+});
+const MONITORING_TIME_FORMATTER = new Intl.DateTimeFormat("th-TH", {
+  hour: "numeric",
+  minute: "2-digit",
+  second: "2-digit",
   timeZone: "Asia/Bangkok",
 });
 
@@ -424,39 +431,39 @@ const LogTable = memo(function LogTable({
   );
 });
 
+/** fetch ล้วน ไม่แตะ state — apply เป็นหน้าที่ของผู้เรียก (effect/button) */
+const loadDashboard = async (): Promise<MonitoringData> => {
+  const response = await fetch("/api/monitoring/dashboard");
+  if (!response.ok) throw new Error("ไม่สามารถโหลดข้อมูลได้");
+  return (await response.json()) as MonitoringData;
+};
+
 export function MonitoringDashboardPage() {
-  const [monitoringData, setMonitoringData] = useState<MonitoringData | null>(
-    null,
-  );
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const { mounted } = useChartTheme();
   const { needsApproval } = useLineApproval();
 
-  const fetchMonitoringData = useCallback(async () => {
-    try {
-      const response = await fetch("/api/monitoring/dashboard");
-      if (!response.ok) throw new Error("ไม่สามารถโหลดข้อมูลได้");
-      const data = await response.json();
-      setMonitoringData(data);
-      setLastUpdate(new Date());
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // โหลด + auto refresh ผ่าน TanStack Query — ไม่จัดการ fetch lifecycle เอง
+  const dashboardQuery = useQuery({
+    queryKey: ["monitoring-dashboard"] as const,
+    queryFn: loadDashboard,
+    refetchInterval: autoRefresh ? 30_000 : false,
+    refetchIntervalInBackground: true,
+    retry: 1,
+  });
 
-  useEffect(() => {
-    fetchMonitoringData();
-    if (autoRefresh) {
-      const interval = setInterval(fetchMonitoringData, 30000);
-      return () => clearInterval(interval);
-    }
-  }, [autoRefresh, fetchMonitoringData]);
+  const monitoringData = dashboardQuery.data ?? null;
+  const loading = dashboardQuery.isPending;
+  const error = dashboardQuery.isError
+    ? dashboardQuery.error instanceof Error
+      ? dashboardQuery.error.message
+      : "เกิดข้อผิดพลาด"
+    : null;
+  const lastUpdateText = dashboardQuery.dataUpdatedAt
+    ? MONITORING_TIME_FORMATTER.format(dashboardQuery.dataUpdatedAt)
+    : null;
+
+  const fetchMonitoringData = () => void dashboardQuery.refetch();
 
   if (!mounted || loading) {
     return (
@@ -494,9 +501,9 @@ export function MonitoringDashboardPage() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              {lastUpdate && (
+              {lastUpdateText && (
                 <span className="text-muted-foreground hidden text-xs sm:inline">
-                  {lastUpdate.toLocaleTimeString("th-TH")}
+                  {lastUpdateText}
                 </span>
               )}
               <button

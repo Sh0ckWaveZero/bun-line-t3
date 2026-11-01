@@ -1,207 +1,44 @@
-# 📱 ตั้งค่า LINE Login ให้ใช้ Channel เดียวกับ LINE Bot
+# ตั้งค่า LINE Login และ LINE Messaging API
 
-## 🎯 วัตถุประสงค์
+ระบบใช้ credentials แยกตามการใช้งาน: Better Auth ใช้ LINE Login client credentials ส่วน webhook/bot ใช้ LINE Messaging API access token และ channel secret อย่าสรุปว่า ID จากสองเส้นทางจะตรงกันโดยอัตโนมัติจากการตั้งค่า channel เพียงอย่างเดียว; ตรวจค่าที่ระบบได้รับจริงและดู [คู่มือ account identity](./LINE_ACCOUNT_LINKING.md)
 
-แก้ปัญหา **LINE User ID ไม่ตรงกัน** ระหว่าง LINE Messaging API (Bot) และ LINE Login
+## ค่า environment ที่เกี่ยวข้อง
 
-**ปัญหา:**
+| ตัวแปร | ใช้สำหรับ |
+| --- | --- |
+| `LINE_CLIENT_ID` | LINE Login provider ใน Better Auth |
+| `LINE_CLIENT_SECRET` | LINE Login provider ใน Better Auth |
+| `LINE_CHANNEL_ACCESS` | ส่งข้อความผ่าน LINE Messaging API |
+| `LINE_CHANNEL_SECRET` | ตรวจ `x-line-signature` ของ webhook |
+| `LINE_MESSAGING_API` | Messaging API endpoint; ค่าในตัวอย่างคือ `https://api.line.me/v2/bot/message` |
+| `LINE_GET_CONTENT` | Messaging API content endpoint |
+| `APP_URL`, `FRONTEND_URL`, `APP_DOMAIN`, `ALLOWED_DOMAINS` | URL และ allowed origins ของแอป/auth |
 
-- Bot User ID: `Ufbce6312...` (จาก Webhook)
-- Login User ID: `U2b569682...` (จาก OAuth)
-- ❌ คนละตัว → ข้อมูล DCA ไม่ตรงกัน
+กำหนด credentials ใน environment ของแต่ละ environment โดยใช้ test channel สำหรับ development และ staging แยกจาก production. เก็บค่าจริงใน secret manager หรือไฟล์ local ที่ไม่ commit.
 
-**วิธีแก้:**
-ใช้ LINE Login และ LINE Messaging API อยู่ใน **Channel เดียวกัน**
+## LINE Login setup
 
----
+1. ตั้งค่า LINE Login provider ใน Better Auth ด้วย `LINE_CLIENT_ID` และ `LINE_CLIENT_SECRET`.
+2. ตั้ง application URL และ trusted domains ให้ตรงกับ environment ของแอป.
+3. กำหนด callback URL ใน LINE Developers Console ให้ตรงกับ Better Auth route ที่ใช้งานจริง (`/api/auth/*`). อย่าใช้ callback ตัวอย่างจากระบบรุ่นเก่าโดยไม่ตรวจ route/config ปัจจุบัน.
+4. ทดสอบ login ผ่าน `/login` และยืนยันว่ามี `Account` record ที่ `providerId = "line"`.
 
-## 🛠️ วิธีตั้งค่า (ทีละสภาพ)
+## Bot setup
 
-### สำหรับ Production
+1. ตั้ง webhook URL เป็น `https://<app-domain>/api/line`.
+2. ตั้ง `LINE_CHANNEL_SECRET` และ `LINE_CHANNEL_ACCESS` สำหรับ bot channel.
+3. เปิด webhook ใน LINE Developers Console แล้วส่ง event ทดสอบ.
+4. ตรวจว่าคำขอผ่าน signature validation ก่อน command handler ทำงาน.
 
-1. **เข้าสู่ [LINE Developers Console](https://developers.line.biz/console)**
+## ตรวจสอบการอนุมัติและตัวตน
 
-2. **เลือก Channel ที่ใช้เป็น Bot อยู่แล้ว**
-   - หา Channel ที่มี **LINE Messaging API** ใช้งานอยู่
-   - จด Channel ID ไว้ (เช่น `2001234567`)
+ผู้ใช้ LINE bot ครั้งแรกจะมี approval request ซึ่งแอดมินอนุมัติและกำหนด feature permissions ได้จากหน้า `/line-approval` และ `/admin/line-permissions`. LINE Login profile sync สร้าง/อัปเดต approval record ด้วย Login ID; ไม่มีการจับคู่ข้าม channel โดยดูจากชื่อหรือรูปโปรไฟล์.
 
-3. **เปิดใช้งาน LINE Login ใน Channel เดียวกัน**
-   - ไปที่ tab **LINE Login**
-   - กด **Enable** หรือ **Add**
-   - เลือก:
-     - **Callback URL**: `https://your-domain.com/api/auth/callback/line`
-     - **Email permission**: เปิดตามต้องการ
+ทดสอบ bot และ web ในบัญชี development แล้วตรวจเฉพาะว่า ID ที่ใช้แต่ละเส้นทางตรงกับข้อมูลที่คาดไว้หรือไม่ อย่าเผยแพร่ ID เต็ม, session cookie, access token หรือ webhook secret ใน logs/screenshots. ถ้า Login ID กับ Bot ID ไม่ตรงกัน การตั้งค่า channel อย่างเดียวไม่ได้สร้าง mapping ใน source ปัจจุบัน; ต้องออกแบบ/ตรวจ flow linking ก่อนพึ่งพาการแชร์ข้อมูลระหว่างสองเส้นทาง.
 
-4. **คัดลอก Credentials**
-   - **LINE Channel ID**: ใช้อันเดียวกับ Bot
-   - **LINE Channel Secret**: ใช้อันเดียวกับ Bot
-   - **LINE Login Client ID**: ใช้อันเดียวกับ Bot
-   - **LINE Login Client Secret**: ใช้อันเดียวกับ Bot
+## Source map
 
-5. **อัปเดต Environment Variables**
-
-   ```bash
-   # .env.production
-   LINE_CHANNEL_ID=2001234567              # Bot + Login (เดียวกัน)
-   LINE_CHANNEL_SECRET=your_channel_secret
-   LINE_CLIENT_ID=your_login_client_id      # ใช้อันเดียวกับ Channel ID
-   LINE_CLIENT_SECRET=your_login_secret    # ใช้อันเดียวกับ Channel Secret
-   LINE_ACCESS_TOKEN=your_bot_token
-   ```
-
-6. **Redeploy**
-   ```bash
-   bun run deploy
-   ```
-
----
-
-### สำหรับ Local
-
-ทำเหมือนกัน แต่ใช้ Channel อื่น:
-
-1. **สร้าง Channel ใหม่** (ถ้ายังไม่มี)
-   - ไปที่ [LINE Developers Console](https://developers.line.biz/console)
-   - กด **Create new provider**
-   - กด **Create a Channel**
-   - เลือก **LINE Login**
-
-2. **เปิดใช้งาน LINE Messaging API**
-   - ไปที่ tab **LINE Messaging API**
-   - กด **Enable**
-   - Generate **Channel Secret** และ **Access Token**
-
-3. **ตั้งค่า Local Environment**
-   ```bash
-   # .env.local
-   LINE_CHANNEL_ID=2009876543              # Local channel
-   LINE_CHANNEL_SECRET=local_channel_secret
-   LINE_CLIENT_ID=local_login_client_id
-   LINE_CLIENT_SECRET=local_login_secret
-   LINE_ACCESS_TOKEN=local_bot_token
-   ```
-
----
-
-## ✅ ตรวจสอบว่าทำถูกต้อง
-
-หลังจากตั้งค่าแล้ว:
-
-1. **ทดสอบ LINE Login**
-   - เข้า `https://your-domain.com/login`
-   - กด "Login with LINE"
-   - ตรวจสอบใน Database:
-     ```typescript
-     // ดูใน MongoDB compass
-     db.accounts.find({ providerId: "line" });
-     // accountId ควรเป็น LINE User ID เดียวกับ Bot
-     ```
-
-2. **ทดสอบ Bot + Login Matching**
-   - ส่งข้อความหา Bot: `/dca help`
-   - Bot จะตอบกลับมา
-   - ตรวจสอบใน `lineApprovalRequest`:
-     - `lineUserId`: Bot User ID
-     - `loginLineUserId`: ควรตรงกับ `accountId` ใน `accounts`
-
-3. **ทดสอบ DCA Integration**
-   - สร้าง DCA ผ่าน Bot: `/dca add 100 BTC 0.001 2000000`
-   - เปิดเว็บ: `https://your-domain.com/dca-history`
-   - ควรเห็นรายการที่เพิ่งสร้าง
-
----
-
-## 🔍 Debug ถ้ายังไม่ตรงกัน
-
-### 1. เช็ค LINE User IDs
-
-```typescript
-// ใน line-user-id.ts
-console.log("Account IDs (Login):", accountLineUserIds);
-console.log("Bot IDs (Approval):", botIds);
-console.log("All IDs:", allIds);
-```
-
-### 2. เช็ค Database
-
-```javascript
-// MongoDB Compass
-db.accounts.find({ providerId: "line" });
-// accountId ควรเป็น U2b569682...
-
-db.lineApprovalRequest.find({ status: "APPROVED" });
-// lineUserId: Ufbce6312... (Bot)
-// loginLineUserId: U2b569682... (Login) ← ควรตรงกัน
-```
-
-### 3. เช็ค Webhook vs OAuth
-
-```bash
-# Bot Webhook → Console log
-console.log("Bot User ID:", event.source.userId)
-// Ufbce6312...
-
-# LINE Login → Browser Console
-console.log("Login User ID:", session.user.email)
-// U2b569682...@line.local
-```
-
----
-
-## 📋 Checklist ก่อน Deploy
-
-- [ ] LINE Login และ LINE Messaging API อยู่ใน Channel เดียวกัน
-- [ ] Callback URL ตรงกับ production domain
-- [ ] Environment variables อัปเดตแล้ว
-- [ ] ทดสอบ LINE Login แล้ว
-- [ ] ทดสอบ Bot command แล้ว
-- [ ] DCA data ตรงกันระหว่าง Bot และ Web
-- [ ] Deploy แล้ว
-
----
-
-## 💡 เคล็ดลับ
-
-### ถ้ามีหลาย Environment
-
-```
-Development → Channel A (Local)
-Staging     → Channel B (Test)
-Production  → Channel C (Live)
-```
-
-แต่ละ Channel ควรมีทั้ง:
-
-- ✅ LINE Messaging API (Bot)
-- ✅ LINE Login
-
-### ถ้าต้องใช้คนละ Channel (ไม่แนะนำ)
-
-ถ้าจำเป็นต้องใช้คนละ channel:
-
-- ต้องแก้โค้ดให้รองรับการ map ID (เช่น ผ่าน `loginLineUserId`)
-- ต้องมีการ approve เสมอ
-- ซับซ้อนกว่า
-
----
-
-## 🆘 ถ้ามีปัญหา
-
-1. **Login ไม่ผ่าน**
-   - เช็ค Callback URL
-   - เช็จ Environment variables
-   - ดู Console log
-
-2. **Bot ส่งข้อความไม่ได้**
-   - เช็ค Webhook URL
-   - เช็ค Channel Secret
-   - เช็ค Signature verification
-
-3. **DCA data ไม่ตรงกัน**
-   - เช็ค `getLineUserIds()` ว่า return อะไร
-   - เช็คว่า Bot ใช้ ID ตัวไหน
-   - Clear browser cache
-
----
-
-**สรุป:** ใช้ Channel เดียวกัน = ง่ายที่สุด ✅
+- [`src/lib/auth/auth.ts`](../src/lib/auth/auth.ts) — Better Auth และ LINE Login provider
+- [`src/routes/api/line.ts`](../src/routes/api/line.ts) — LINE webhook และ signature check
+- [`src/features/line/services/approval.service.server.ts`](../src/features/line/services/approval.service.server.ts) — approval flow
+- [LINE identity notes](./LINE_ACCOUNT_LINKING.md)

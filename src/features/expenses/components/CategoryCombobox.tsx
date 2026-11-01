@@ -1,7 +1,6 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tag, ChevronDown } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -57,12 +56,12 @@ export function CategoryCombobox({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Reset search when closing
-  useEffect(() => {
-    if (!isOpen) {
-      setSearch("");
-    }
-  }, [isOpen]);
+  // Reset search when closing — ปรับระหว่าง render ตาม react.dev (ไม่ใช้ effect)
+  const [prevOpen, setPrevOpen] = useState(isOpen);
+  if (prevOpen !== isOpen) {
+    setPrevOpen(isOpen);
+    if (!isOpen) setSearch("");
+  }
 
   // Focus input when opening
   useEffect(() => {

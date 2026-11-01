@@ -1,0 +1,25 @@
+export function CalendarLegend() {
+  return (
+    <div
+      id="calendar-legend"
+      className="mb-3 flex flex-wrap gap-4 text-xs font-medium"
+    >
+      <span id="calendar-legend-holiday" className="flex items-center gap-1.5">
+        <span className="bg-destructive/80 h-2 w-2 rounded-full" />
+        <span className="text-muted-foreground">วันหยุดราชการ</span>
+      </span>
+      <span id="calendar-legend-leave" className="flex items-center gap-1.5">
+        <span className="bg-primary h-2 w-2 rounded-full" />
+        <span className="text-muted-foreground">วันลางาน</span>
+      </span>
+      <span id="calendar-legend-wfh" className="flex items-center gap-1.5">
+        <span className="h-2 w-2 rounded-full bg-emerald-500" />
+        <span className="text-muted-foreground">ทำ WFH</span>
+      </span>
+      <span id="calendar-legend-onsite" className="flex items-center gap-1.5">
+        <span className="h-2 w-2 rounded-full bg-amber-500" />
+        <span className="text-muted-foreground">ทำ On Site</span>
+      </span>
+    </div>
+  );
+}

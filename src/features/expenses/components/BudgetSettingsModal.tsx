@@ -9,7 +9,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -206,7 +205,7 @@ export function BudgetSettingsModal({
               <div className="text-muted-foreground py-8 text-center">
                 <p className="text-sm">ยังไม่มีงบประมาณ</p>
                 <p className="mt-1 text-xs">
-                  คลิก "เพิ่มงบประมาณ" เพื่อเริ่มต้น
+                  คลิก &quot;เพิ่มงบประมาณ&quot; เพื่อเริ่มต้น
                 </p>
               </div>
             ) : (

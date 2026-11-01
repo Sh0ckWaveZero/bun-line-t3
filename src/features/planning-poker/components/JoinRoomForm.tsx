@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { PixelEye, PixelLogin } from "@/features/planning-poker/components/pixel-icons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { POKER_LIMITS } from "../constants";
-import { loadSavedName } from "../lib/storage";
+import { useSavedName } from "../hooks/usePokerStorage";
 
 interface JoinRoomFormProps {
   isBusy: boolean;
@@ -14,12 +14,11 @@ interface JoinRoomFormProps {
 }
 
 export const JoinRoomForm = ({ isBusy, onJoin }: JoinRoomFormProps) => {
-  const [name, setName] = useState("");
+  // seed จาก localStorage ผ่าน external store (null = ยังไม่พิมพ์เอง → ใช้ค่าที่เคยใช้)
+  const savedName = useSavedName();
+  const [typedName, setTypedName] = useState<string | null>(null);
   const [isSpectator, setIsSpectator] = useState(false);
-
-  useEffect(() => {
-    setName(loadSavedName());
-  }, []);
+  const name = typedName ?? savedName;
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -42,7 +41,7 @@ export const JoinRoomForm = ({ isBusy, onJoin }: JoinRoomFormProps) => {
             <Input
               id="poker-join-name"
               value={name}
-              onChange={(event) => setName(event.target.value)}
+              onChange={(event) => setTypedName(event.target.value)}
               maxLength={POKER_LIMITS.nameMaxLength}
               placeholder="e.g. Somchai"
               autoComplete="nickname"

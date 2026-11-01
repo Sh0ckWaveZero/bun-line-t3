@@ -33,9 +33,9 @@ export const formatOnsiteDate = (dateKey: string): string => {
   return `${Number(day)} ${monthName} ${year}`;
 };
 
-/** 9 → "9.00", 9.5 → "9.30" — รูปแบบเวลาในชีต/ไฟล์ export จริง */
+/** 9 → "9.00", 9.5 → "9.30" — รูปแบบเวลาในชีต/ไฟล์ export จริง; null → "" (ฟอร์มเปล่า = เส้นขีดเปล่า ไม่มีขีดกลาง) */
 export const formatSheetTime = (value: number | null): string => {
-  if (value === null) return "-";
+  if (value === null) return "";
   const hours = Math.floor(value);
   const minutes = Math.round((value - hours) * 60);
   return `${hours}.${String(minutes).padStart(2, "0")}`;

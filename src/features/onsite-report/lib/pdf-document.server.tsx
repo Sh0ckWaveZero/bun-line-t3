@@ -39,10 +39,14 @@ let fontsRegistered = false;
 
 const ensureFonts = (): void => {
   if (fontsRegistered) return;
+  // ทุกไฟล์ในตระกูล Sarabun ผ่านการทดสอบ shaping ไทย (สระ ั/ใ + ตัวสะกด) ครบทุก weight
+  // — อย่าใช้ Prompt กับ PDF นี้ (fontkit shaping หลังสระ ั/ใ บาง sequence หาย เช่น "จำกัด" → "จำกั")
   Font.register({
     family: "Sarabun",
     fonts: [
       { src: path.join(FONT_DIR, "Sarabun-Regular.ttf"), fontWeight: 400 },
+      { src: path.join(FONT_DIR, "Sarabun-Medium.ttf"), fontWeight: 500 },
+      { src: path.join(FONT_DIR, "Sarabun-SemiBold.ttf"), fontWeight: 600 },
       { src: path.join(FONT_DIR, "Sarabun-Bold.ttf"), fontWeight: 700 },
     ],
   });
@@ -385,8 +389,6 @@ interface InfoFieldProps {
   value: string;
   width: number;
   labelWidth: number;
-  /** ไม่ขีดเส้นใต้ (เช่น Execution Team ที่ใช้เส้นบนของ Section 1 แทน) */
-  hasUnderline?: boolean;
   isValueBold?: boolean;
   marginLeft?: number;
 }
@@ -397,18 +399,12 @@ const InfoField = ({
   value,
   width,
   labelWidth,
-  hasUnderline = true,
   isValueBold = false,
   marginLeft = 0,
 }: InfoFieldProps) => (
   <View style={[styles.infoField, { width, marginLeft }]}>
     <Text style={[styles.infoLabel, { width: labelWidth }]}>{label}</Text>
-    <View
-      style={[
-        styles.infoValueWrap,
-        ...(hasUnderline ? [] : [{ borderBottomWidth: 0 }]),
-      ]}
-    >
+    <View style={styles.infoValueWrap}>
       <Text
         style={[
           styles.infoValue,
@@ -522,7 +518,9 @@ const OnsiteReportDocument = ({
   signatures: OnsiteReportPdfSignatures;
 }) => {
   const { logo } = company;
-  const companyLabel = company.name;
+  // สระ ำ อาจแตกเป็นสอง glyph ระหว่าง shaping แล้วทำให้ react-pdf ตัดตัวท้าย
+  // แยกสระก่อนจัด layout เพื่อให้จำนวนอักขระตรงกับ glyph ที่ใช้แสดงผล
+  const companyLabel = company.name.replaceAll("ำ", "ํา");
   const rightWidth = CONTENT_WIDTH - INFO_RIGHT_LEFT;
   const rightMargin = INFO_RIGHT_LEFT - INFO_LEFT_WIDTH;
   const dateWidth = 132.2;
@@ -576,9 +574,12 @@ const OnsiteReportDocument = ({
           <View style={styles.headerRight}>
             <View style={styles.headerDocNo}>
               <Text style={styles.docNoLabel}>Doc No:  </Text>
-              <Text style={styles.docNoValue}>
-                {report.docNo} {report.revision}
-              </Text>
+              {/* ฟอร์มยังไม่กรอก Doc No → แสดง label เปล่า ไม่งั้นเหลือ revision "-1" ลอย ๆ */}
+              {report.docNo !== "" && (
+                <Text style={styles.docNoValue}>
+                  {report.docNo} {report.revision}
+                </Text>
+              )}
             </View>
           </View>
         </View>
@@ -636,7 +637,6 @@ const OnsiteReportDocument = ({
               value={report.executionTeam}
               width={INFO_LEFT_WIDTH}
               labelWidth={INFO_LABEL_LEFT}
-              hasUnderline={false}
             />
           </View>
         </View>

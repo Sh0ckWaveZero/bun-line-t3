@@ -29,8 +29,11 @@ export default function Header() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Close menus on route change
+  // Close menus on route change — dedupe ด้วย path ล่าสุด ให้ effect ใช้ pathname จริง
+  const lastPathRef = useRef<string | null>(null);
   useEffect(() => {
+    if (lastPathRef.current === pathname) return;
+    lastPathRef.current = pathname;
     const frame = window.requestAnimationFrame(() => {
       setIsMobileMenuOpen(false);
       setOpenDropdown(null);

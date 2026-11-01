@@ -49,7 +49,7 @@ const customDeckSchema = z
   });
 
 export const createRoomSchema = z
-  .object({
+  .strictObject({
     name: nameSchema,
     deckId: z.enum([...DECK_IDS, CUSTOM_DECK_ID]),
     customDeck: customDeckSchema.optional(),
@@ -57,7 +57,6 @@ export const createRoomSchema = z
     story: storySchema.default(""),
     observersCanControl: z.boolean().default(true),
   })
-  .strict()
   .refine((input) => input.deckId !== CUSTOM_DECK_ID || input.customDeck, {
     message: "Please provide values for the custom deck",
     path: ["customDeck"],
@@ -71,25 +70,21 @@ export const inviteRecipientsSchema = z
   .max(20);
 
 export const roomActionSchema = z.discriminatedUnion("type", [
-  z
-    .object({
-      type: z.literal("join"),
-      name: nameSchema,
-      role: roleSchema.default("voter"),
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal("vote"),
-      value: z.string().min(1).max(8).nullable(),
-    })
-    .strict(),
-  z.object({ type: z.literal("reveal") }).strict(),
-  z.object({ type: z.literal("reset") }).strict(),
-  z.object({ type: z.literal("story"), story: storySchema }).strict(),
-  z.object({ type: z.literal("rename"), name: nameSchema }).strict(),
-  z.object({ type: z.literal("role"), role: roleSchema }).strict(),
-  z.object({ type: z.literal("leave") }).strict(),
+  z.strictObject({
+    type: z.literal("join"),
+    name: nameSchema,
+    role: roleSchema.default("voter"),
+  }),
+  z.strictObject({
+    type: z.literal("vote"),
+    value: z.string().min(1).max(8).nullable(),
+  }),
+  z.strictObject({ type: z.literal("reveal") }),
+  z.strictObject({ type: z.literal("reset") }),
+  z.strictObject({ type: z.literal("story"), story: storySchema }),
+  z.strictObject({ type: z.literal("rename"), name: nameSchema }),
+  z.strictObject({ type: z.literal("role"), role: roleSchema }),
+  z.strictObject({ type: z.literal("leave") }),
 ]);
 
 export type CreateRoomInput = z.infer<typeof createRoomSchema>;

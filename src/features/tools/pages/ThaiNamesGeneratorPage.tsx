@@ -54,7 +54,9 @@ export function ThaiNamesGeneratorPage() {
       await navigator.clipboard.writeText(text);
       setCopiedKey(key);
       setTimeout(() => setCopiedKey(null), 1500);
-    } catch {}
+    } catch {
+      // clipboard ไม่พร้อมใช้งาน: ไม่แสดงสถานะคัดลอก
+    }
   }, []);
 
   const handleCopyAll = useCallback(async () => {
@@ -66,7 +68,9 @@ export function ThaiNamesGeneratorPage() {
       await navigator.clipboard.writeText(text);
       setCopiedAll(true);
       setTimeout(() => setCopiedAll(false), 1500);
-    } catch {}
+    } catch {
+      // clipboard ไม่พร้อมใช้งาน: ไม่แสดงสถานะคัดลอก
+    }
   }, [generatedNames]);
 
   const handleGenerate = useCallback(() => {

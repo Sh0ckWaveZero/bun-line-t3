@@ -73,7 +73,8 @@ export function useForceThemeSync() {
     if (!hasCorrectClass || hasWrongClass) {
       forceSync();
     }
-  }, [theme, forceSync]);
+    // theme เปลี่ยน → forceSync เปลี่ยนตาม จึงไม่ต้องใส่ซ้ำใน deps
+  }, [forceSync]);
 
   return { forceSync };
 }

@@ -22,7 +22,8 @@ export function useExpensePageUI({
   const toggleHideAmounts = useCallback(() => setHideAmounts((v) => !v), []);
   const toggleCharts = useCallback(() => setShowCharts((v) => !v), []);
 
-  const handleExport = useCallback(async () => {
+  // ไม่ memoize — deps เปลี่ยน identity ทุก render อยู่แล้ว memo จึงไร้ประโยชน์
+  const handleExport = async () => {
     if (!summary || transactions.length === 0) return;
     setExporting(true);
     try {
@@ -30,7 +31,7 @@ export function useExpensePageUI({
     } finally {
       setExporting(false);
     }
-  }, [transactions, summary, currentMonth]);
+  };
 
   return {
     hideAmounts,

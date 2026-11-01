@@ -237,181 +237,26 @@ function AddTransactionModalForm({
             onSubmit={handleSubmit}
             className="space-y-4"
           >
-            <div id="transaction-type-section" className="space-y-2">
-              <Label
-                id="transaction-type-label"
-                className="text-foreground text-sm font-semibold"
-              >
-                ประเภทรายการ
-              </Label>
-              <div
-                id="transaction-type-group"
-                className="bg-muted/50 grid grid-cols-2 gap-2 rounded-xl p-1"
-              >
-                {(["EXPENSE", "INCOME"] as const).map((t) => {
-                  const isSelected = type === t;
-                  const activeClass =
-                    t === "EXPENSE"
-                      ? "bg-red-500 text-white shadow-sm"
-                      : "bg-emerald-500 text-white shadow-sm";
-                  const inactiveClass =
-                    "text-muted-foreground hover:text-foreground hover:bg-muted";
-                  return (
-                    <button
-                      key={t}
-                      id={`transaction-type-${t.toLowerCase()}-btn`}
-                      type="button"
-                      aria-label={`เลือกประเภทรายการ${t === "INCOME" ? "รายรับ" : "รายจ่าย"}`}
-                      className={`flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors ${
-                        isSelected ? activeClass : inactiveClass
-                      }`}
-                      onClick={() => setType(t)}
-                    >
-                      {t === "INCOME" ? (
-                        <TrendingUp className="h-4 w-4" />
-                      ) : (
-                        <TrendingDown className="h-4 w-4" />
-                      )}
-                      {t === "INCOME" ? "รายรับ" : "รายจ่าย"}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div id="transaction-category-group" className="space-y-2">
-              <div
-                id="transaction-category-header"
-                className="flex items-center justify-between"
-              >
-                <Label
-                  id="transaction-category-label"
-                  className="text-foreground text-sm font-semibold"
-                >
-                  หมวดหมู่
-                </Label>
-                <Button
-                  id="manage-categories-btn"
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground hover:text-foreground h-8 gap-2 px-2 text-sm"
-                  onClick={onAddCategory}
-                >
-                  <Tag id="manage-categories-icon" size={16} />
-                  <span id="manage-categories-text">จัดการ</span>
-                </Button>
-              </div>
-              {filtered.length === 0 && (
-                <p
-                  id="no-categories-msg"
-                  className="border-border bg-muted/25 text-muted-foreground rounded-lg border px-4 py-3 text-center text-sm"
-                >
-                  ยังไม่มีหมวดหมู่
-                </p>
-              )}
-              {filtered.length > 0 && (
-                <CategoryCombobox
-                  categories={filtered}
-                  value={categoryId}
-                  onChange={setCategoryId}
-                  required
-                  placeholder="เลือกหมวดหมู่"
-                />
-              )}
-            </div>
-
-            <div id="transaction-amount-group" className="space-y-2">
-              <Label
-                htmlFor="transaction-amount-input"
-                id="transaction-amount-label"
-                className="text-foreground text-sm font-semibold"
-              >
-                {isCoPayTx ? "ยอดเต็ม (ไทยช่วยไทย 60/40)" : "จำนวนเงิน"}
-              </Label>
-              <Input
-                id="transaction-amount-input"
-                type="text"
-                inputMode="decimal"
-                value={amount}
-                onChange={(e) => setAmount(formatAmount(e.target.value))}
-                required
-                placeholder={
-                  isCoPayTx ? "ยอดรวมก่อนหักส่วนลด (บาท)" : "จำนวนเงิน (บาท)"
-                }
-                className="border-border bg-background placeholder:text-muted-foreground/60 focus-visible:ring-foreground/30 h-12 rounded-lg px-4 text-base font-medium"
-              />
-              {isCoPayTx && (
-                <p className="text-muted-foreground text-xs">
-                  ระบุยอดเต็ม — ระบบจะคำนวณส่วนลด 60% ให้อัตโนมัติ
-                </p>
-              )}
-            </div>
-
-            <PopoverDatePicker
-              id="transaction-date-picker"
-              label="วันที่"
-              required
-              value={transDate ? new Date(transDate + "T00:00:00") : undefined}
-              onChange={(date) => setTransDate(date ? toTransDate(date) : "")}
-              maxDate={today}
+            <TransactionDetailsFields
+              categories={filtered}
+              type={type}
+              categoryId={categoryId}
+              amount={amount}
+              transDate={transDate}
+              note={note}
+              tags={tags}
+              isCoPayTx={isCoPayTx}
+              today={today}
+              onAddCategory={onAddCategory}
+              onTypeChange={setType}
+              onCategoryChange={setCategoryId}
+              onAmountChange={(value) => setAmount(formatAmount(value))}
+              onDateChange={(date) =>
+                setTransDate(date ? toTransDate(date) : "")
+              }
+              onNoteChange={setNote}
+              onTagsChange={setTags}
             />
-
-            <div id="transaction-note-group" className="space-y-2">
-              <Label
-                htmlFor="transaction-note-input"
-                id="transaction-note-label"
-                className="text-foreground text-sm font-semibold"
-              >
-                หมายเหตุ
-              </Label>
-              <Input
-                id="transaction-note-input"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="หมายเหตุ (ถ้ามี)"
-                className="border-border bg-background placeholder:text-muted-foreground/60 focus-visible:ring-foreground/30 h-12 rounded-lg px-4 text-base font-medium"
-                maxLength={500}
-              />
-            </div>
-
-            <div id="transaction-tags-group" className="space-y-2">
-              <Label
-                htmlFor="transaction-tags-input"
-                id="transaction-tags-label"
-                className="text-foreground text-sm font-semibold"
-              >
-                แท็ก
-              </Label>
-              <Input
-                id="transaction-tags-input"
-                value={tags}
-                onChange={(e) => setTags(e.target.value)}
-                placeholder="แท็ก เช่น lunch,office (ถ้ามี)"
-                className="border-border bg-background placeholder:text-muted-foreground/60 focus-visible:ring-foreground/30 h-12 rounded-lg px-4 text-base font-medium"
-                maxLength={200}
-              />
-              {tags && (
-                <div
-                  id="transaction-tags-preview"
-                  className="flex flex-wrap gap-1"
-                >
-                  {tags
-                    .split(",")
-                    .map((t) => t.trim())
-                    .filter(Boolean)
-                    .map((tag, index) => (
-                      <span
-                        key={`${tag}-${index}`}
-                        id={`transaction-tag-chip-${index}`}
-                        className="bg-primary/10 text-primary inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-                      >
-                        @{tag}
-                      </span>
-                    ))}
-                </div>
-              )}
-            </div>
 
             <div
               id="transaction-buttons-group"
@@ -456,5 +301,228 @@ function AddTransactionModalForm({
         </div>
       </AlertDialogContent>
     </AlertDialog>
+  );
+}
+
+type TransactionType = "INCOME" | "EXPENSE";
+
+interface TransactionDetailsFieldsProps {
+  categories: ExpenseCategory[];
+  type: TransactionType;
+  categoryId: string;
+  amount: string;
+  transDate: string;
+  note: string;
+  tags: string;
+  isCoPayTx: boolean;
+  today: Date;
+  onAddCategory: () => void;
+  onTypeChange: (type: TransactionType) => void;
+  onCategoryChange: (categoryId: string) => void;
+  onAmountChange: (amount: string) => void;
+  onDateChange: (date: Date | undefined) => void;
+  onNoteChange: (note: string) => void;
+  onTagsChange: (tags: string) => void;
+}
+
+function TransactionDetailsFields({
+  categories,
+  type,
+  categoryId,
+  amount,
+  transDate,
+  note,
+  tags,
+  isCoPayTx,
+  today,
+  onAddCategory,
+  onTypeChange,
+  onCategoryChange,
+  onAmountChange,
+  onDateChange,
+  onNoteChange,
+  onTagsChange,
+}: TransactionDetailsFieldsProps) {
+  return (
+    <>
+      <div id="transaction-type-section" className="space-y-2">
+        <Label
+          id="transaction-type-label"
+          className="text-foreground text-sm font-semibold"
+        >
+          ประเภทรายการ
+        </Label>
+        <div
+          id="transaction-type-group"
+          className="bg-muted/50 grid grid-cols-2 gap-2 rounded-xl p-1"
+        >
+          {(["EXPENSE", "INCOME"] as const).map((transactionType) => {
+            const isSelected = type === transactionType;
+            const activeClass =
+              transactionType === "EXPENSE"
+                ? "bg-red-500 text-white shadow-sm"
+                : "bg-emerald-500 text-white shadow-sm";
+            const inactiveClass =
+              "text-muted-foreground hover:text-foreground hover:bg-muted";
+            return (
+              <button
+                key={transactionType}
+                id={
+                  "transaction-type-" + transactionType.toLowerCase() + "-btn"
+                }
+                type="button"
+                aria-label={
+                  "เลือกประเภทรายการ" +
+                  (transactionType === "INCOME" ? "รายรับ" : "รายจ่าย")
+                }
+                className={
+                  "flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors " +
+                  (isSelected ? activeClass : inactiveClass)
+                }
+                onClick={() => onTypeChange(transactionType)}
+              >
+                {transactionType === "INCOME" ? (
+                  <TrendingUp className="h-4 w-4" />
+                ) : (
+                  <TrendingDown className="h-4 w-4" />
+                )}
+                {transactionType === "INCOME" ? "รายรับ" : "รายจ่าย"}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div id="transaction-category-group" className="space-y-2">
+        <div
+          id="transaction-category-header"
+          className="flex items-center justify-between"
+        >
+          <Label
+            id="transaction-category-label"
+            className="text-foreground text-sm font-semibold"
+          >
+            หมวดหมู่
+          </Label>
+          <Button
+            id="manage-categories-btn"
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground h-8 gap-2 px-2 text-sm"
+            onClick={onAddCategory}
+          >
+            <Tag id="manage-categories-icon" size={16} />
+            <span id="manage-categories-text">จัดการ</span>
+          </Button>
+        </div>
+        {categories.length === 0 && (
+          <p
+            id="no-categories-msg"
+            className="border-border bg-muted/25 text-muted-foreground rounded-lg border px-4 py-3 text-center text-sm"
+          >
+            ยังไม่มีหมวดหมู่
+          </p>
+        )}
+        {categories.length > 0 && (
+          <CategoryCombobox
+            categories={categories}
+            value={categoryId}
+            onChange={onCategoryChange}
+            required
+            placeholder="เลือกหมวดหมู่"
+          />
+        )}
+      </div>
+
+      <div id="transaction-amount-group" className="space-y-2">
+        <Label
+          htmlFor="transaction-amount-input"
+          id="transaction-amount-label"
+          className="text-foreground text-sm font-semibold"
+        >
+          {isCoPayTx ? "ยอดเต็ม (ไทยช่วยไทย 60/40)" : "จำนวนเงิน"}
+        </Label>
+        <Input
+          id="transaction-amount-input"
+          type="text"
+          inputMode="decimal"
+          value={amount}
+          onChange={(event) => onAmountChange(event.target.value)}
+          required
+          placeholder={
+            isCoPayTx ? "ยอดรวมก่อนหักส่วนลด (บาท)" : "จำนวนเงิน (บาท)"
+          }
+          className="border-border bg-background placeholder:text-muted-foreground/60 focus-visible:ring-foreground/30 h-12 rounded-lg px-4 text-base font-medium"
+        />
+        {isCoPayTx && (
+          <p className="text-muted-foreground text-xs">
+            ระบุยอดเต็ม — ระบบจะคำนวณส่วนลด 60% ให้อัตโนมัติ
+          </p>
+        )}
+      </div>
+
+      <PopoverDatePicker
+        id="transaction-date-picker"
+        label="วันที่"
+        required
+        value={transDate ? new Date(transDate + "T00:00:00") : undefined}
+        onChange={onDateChange}
+        maxDate={today}
+      />
+
+      <div id="transaction-note-group" className="space-y-2">
+        <Label
+          htmlFor="transaction-note-input"
+          id="transaction-note-label"
+          className="text-foreground text-sm font-semibold"
+        >
+          หมายเหตุ
+        </Label>
+        <Input
+          id="transaction-note-input"
+          value={note}
+          onChange={(event) => onNoteChange(event.target.value)}
+          placeholder="หมายเหตุ (ถ้ามี)"
+          className="border-border bg-background placeholder:text-muted-foreground/60 focus-visible:ring-foreground/30 h-12 rounded-lg px-4 text-base font-medium"
+          maxLength={500}
+        />
+      </div>
+
+      <div id="transaction-tags-group" className="space-y-2">
+        <Label
+          htmlFor="transaction-tags-input"
+          id="transaction-tags-label"
+          className="text-foreground text-sm font-semibold"
+        >
+          แท็ก
+        </Label>
+        <Input
+          id="transaction-tags-input"
+          value={tags}
+          onChange={(event) => onTagsChange(event.target.value)}
+          placeholder="แท็ก เช่น lunch,office (ถ้ามี)"
+          className="border-border bg-background placeholder:text-muted-foreground/60 focus-visible:ring-foreground/30 h-12 rounded-lg px-4 text-base font-medium"
+          maxLength={200}
+        />
+        {tags && (
+          <div id="transaction-tags-preview" className="flex flex-wrap gap-1">
+            {tags
+              .split(",")
+              .map((tag) => tag.trim())
+              .filter(Boolean)
+              .map((tag, index) => (
+                <span
+                  key={tag + "-" + index}
+                  id={"transaction-tag-chip-" + index}
+                  className="bg-primary/10 text-primary inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                >
+                  @{tag}
+                </span>
+              ))}
+          </div>
+        )}
+      </div>
+    </>
   );
 }

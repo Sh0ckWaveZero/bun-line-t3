@@ -36,7 +36,7 @@ interface UseContentTransitionResult {
 export function useContentTransition(
   options: UseContentTransitionOptions = {},
 ): UseContentTransitionResult {
-  const { duration = 300, offset = 20 } = options;
+  const { offset = 20 } = options;
   const [opacity, setOpacity] = useState(1);
   const [transform, setTransform] = useState(0);
 

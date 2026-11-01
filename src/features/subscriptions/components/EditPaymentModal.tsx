@@ -4,6 +4,7 @@
  * EditPaymentModal — modal สำหรับแก้ไข/ลบรายการการจ่ายเงิน
  */
 
+import { DeleteConfirmBlock } from "./DeleteConfirmBlock";
 import { useState } from "react";
 import type { SubscriptionPayment } from "@/features/subscriptions/types";
 import type { PaymentStatus } from "@/features/subscriptions/types";
@@ -214,32 +215,13 @@ function EditPaymentModalContent({
 
           {/* delete confirm */}
           {showDeleteConfirm && onDelete && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/20">
-              <p className="text-sm font-medium text-red-700 dark:text-red-400">
-                ⚠️ ยืนยันการลบรายการจ่ายเงิน?
-              </p>
-              <p className="mt-0.5 text-xs text-red-500 dark:text-red-500">
-                ข้อมูลการจ่ายเงินรายการนี้จะถูกลบถาวร
-              </p>
-              <div className="mt-2 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="flex-1 rounded-lg border border-gray-200 py-1.5 text-xs font-medium text-gray-700 dark:border-gray-600 dark:text-gray-300"
-                >
-                  ยกเลิก
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-red-600 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
-                >
-                  {isDeleting && <Loader2 className="h-3 w-3 animate-spin" />}
-                  ยืนยันลบ
-                </button>
-              </div>
-            </div>
+            <DeleteConfirmBlock
+              title="⚠️ ยืนยันการลบรายการจ่ายเงิน?"
+              description="ข้อมูลการจ่ายเงินรายการนี้จะถูกลบถาวร"
+              onCancel={() => setShowDeleteConfirm(false)}
+              onDelete={handleDelete}
+              isDeleting={isDeleting}
+            />
           )}
 
           {/* actions */}

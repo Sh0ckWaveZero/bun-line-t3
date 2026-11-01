@@ -1,32 +1,9 @@
-# 🎯 Features Tests
+# Feature tests
 
-ทดสอบฟีเจอร์ต่างๆ ของระบบตามโดเมนธุรกิจ
-
-## 📁 โครงสร้าง
-
-- `air-quality/` - ทดสอบระบบตรวจสอบคุณภาพอากาศ
-- `attendance/` - ทดสอบระบบลงเวลาทำงาน
-- `auth/` - ทดสอบระบบการยืนยันตัวตนและสิทธิ์
-- `crypto/` - ทดสอบระบบ cryptographic utilities
-- `line/` - ทดสอบ LINE Bot integration
-- `timestamp-tracker/` - ทดสอบระบบติดตามเวลา
-
-## 🧪 การรัน Test
+Contains feature and service tests, including Planning Poker and LINE approval. Other feature tests may live under `tests/src/` or alongside source files.
 
 ```bash
-# รัน feature tests ทั้งหมด
 bun test tests/features
-
-# รัน test เฉพาะ feature
-bun test tests/features/attendance
-bun test tests/features/line
 ```
 
-## 🔐 Security Features
-
-ฟีเจอร์ที่เกี่ยวข้องกับความปลอดภัยจะได้รับการทดสอบอย่างละเอียด:
-
-- Input validation และ sanitization
-- Authentication และ authorization
-- Cryptographic functions
-- Session management
+See [the test overview](../README.md) for setup and limitations.

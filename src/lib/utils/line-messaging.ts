@@ -121,7 +121,7 @@ function sanitizeFilename(filename?: string): string {
 async function processImageBuffers(
   imageBuffer: Buffer,
 ): Promise<ProcessedImage> {
-  let previewBuffer = imageBuffer;
+  let previewBuffer: Buffer;
 
   try {
     const sharp = (await import("sharp")).default;

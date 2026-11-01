@@ -2,6 +2,8 @@
 
 GitHub Actions รันบน self-hosted runner ที่มี labels `linux` และ `ARM64` เมื่อ push เข้า `main` หรือ `production` และเรียกด้วยมือได้ผ่าน `workflow_dispatch` โดยทุกการ deploy รอคิวเดียวกัน
 
+Lint ไม่รันใน CI — ตรวจผ่าน lefthook pre-commit (`bun lint --staged`) ในเครื่องผู้พัฒนาเท่านั้น
+
 ## สิ่งที่ runner ต้องมี
 
 - Docker Engine, Docker Compose ที่รองรับ `up --wait --wait-timeout` และ BuildKit secrets จาก environment (Compose 2.19 ขึ้นไป)
@@ -37,7 +39,7 @@ Compose ยังต้องหยุด container เดิมระหว่�
 
 ## Base image
 
-ใช้ `oven/bun:1.4.2-slim` สำหรับ build, production dependencies และ runtime ทั้งหมด โดย migration สืบทอดจาก build ใช้ Debian และติดตั้ง Cairo/Pango พร้อม font สำหรับวาดกราฟและข้อความไทย ไม่บังคับ build stage เป็น BUILDPLATFORM เพื่อให้ native dependencies ตรงกับ target architecture
+ใช้ `oven/bun:1.4.4-slim` สำหรับ build, production dependencies และ runtime ทั้งหมด โดย migration สืบทอดจาก build ใช้ Debian และติดตั้ง Cairo/Pango พร้อม font สำหรับวาดกราฟและข้อความไทย ไม่บังคับ build stage เป็น BUILDPLATFORM เพื่อให้ native dependencies ตรงกับ target architecture
 
 ยังไม่ตรึง digest เนื่องจากต้องทดสอบ image จริงบน runner ก่อน ส่วน cron ใช้ Alpine แยกต่างหากและไม่ได้คัดลอก native dependencies จากแอป
 

@@ -86,42 +86,11 @@ export function BitkubBuyHistory({
   outcomes,
   handleImport,
 }: BitkubHistoryProps) {
-  const selectedIds = new Set(selected);
-  const outcomesById = new Map(
-    outcomes.map((outcome) => [outcome.buyId, outcome]),
-  );
-  const describeBuyStatus = (buy: BitkubBuy) => {
-    const isLegacyConflict =
-      !buy.imported && outcomesById.get(buy.id)?.status === "legacy_conflict";
-    const statusLabel = buy.imported
-      ? "นำเข้าแล้ว"
-      : isLegacyConflict
-        ? "อาจซ้ำข้อมูลเดิม กรุณาตรวจสอบ"
-        : "พร้อมนำเข้า";
-    const statusClassName = buy.imported
-      ? "border-emerald-600/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300"
-      : isLegacyConflict
-        ? "border-amber-600/30 bg-amber-500/10 text-amber-800 dark:text-amber-300"
-        : "border-primary/30 bg-primary/10 text-primary";
-    return { statusLabel, statusClassName };
-  };
   const hasFilters =
     Boolean(search.trim()) ||
     Boolean(dateFrom) ||
     Boolean(dateTo) ||
     statusFilter !== "all";
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const activeFilterCount =
-    (search.trim() ? 1 : 0) +
-    (dateFrom ? 1 : 0) +
-    (dateTo ? 1 : 0) +
-    (statusFilter !== "all" ? 1 : 0);
-  const clearFilters = () => {
-    handleSearchChange("");
-    handleDateFromChange("");
-    handleDateToChange("");
-    handleStatusFilterChange("all" as BitkubBuyStatusFilter);
-  };
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -160,7 +129,102 @@ export function BitkubBuyHistory({
           {visibleError}
         </p>
       )}
-      {/* จอใหญ่ (lg+) เปิด filter ค้างไว้เสมอ — บนมือถือซ่อนหลังปุ่มตัวกรองเพื่อไม่ให้แผงรก */}
+      <BitkubBuyHistoryFilters
+        search={search}
+        statusFilter={statusFilter}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        pageSize={pageSize}
+        handleSearchChange={handleSearchChange}
+        handleStatusFilterChange={handleStatusFilterChange}
+        handlePageSizeChange={handlePageSizeChange}
+        handleDateFromChange={handleDateFromChange}
+        handleDateToChange={handleDateToChange}
+      />
+      <BitkubBuyHistoryResults
+        history={history}
+        dateLabels={dateLabels}
+        selected={selected}
+        setSelected={setSelected}
+        isBusy={isBusy}
+        isSyncingHistory={isSyncingHistory}
+        outcomes={outcomes}
+        hasFilters={hasFilters}
+      />
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isBusy || page <= 1}
+          onClick={() => {
+            setSelected([]);
+            setPage((current) => current - 1);
+          }}
+        >
+          หน้าก่อนหน้า
+        </Button>
+        <span className="text-muted-foreground text-sm" aria-live="polite">
+          {history.data?.total
+            ? `แสดง ${(page - 1) * pageSize + 1}–${Math.min(page * pageSize, history.data.total)} จาก ${history.data.total} รายการ · หน้า ${page} / ${Math.max(1, history.data.totalPages)}`
+            : `หน้า ${page} / ${Math.max(1, history.data?.totalPages ?? 1)}`}
+        </span>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isBusy || page >= (history.data?.totalPages ?? 1)}
+          onClick={() => {
+            setSelected([]);
+            setPage((current) => current + 1);
+          }}
+        >
+          หน้าถัดไป
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+type BitkubBuyHistoryFilterProps = Pick<
+  BitkubHistoryProps,
+  | "search"
+  | "statusFilter"
+  | "dateFrom"
+  | "dateTo"
+  | "pageSize"
+  | "handleSearchChange"
+  | "handleStatusFilterChange"
+  | "handlePageSizeChange"
+  | "handleDateFromChange"
+  | "handleDateToChange"
+>;
+
+function BitkubBuyHistoryFilters({
+  search,
+  statusFilter,
+  dateFrom,
+  dateTo,
+  pageSize,
+  handleSearchChange,
+  handleStatusFilterChange,
+  handlePageSizeChange,
+  handleDateFromChange,
+  handleDateToChange,
+}: BitkubBuyHistoryFilterProps) {
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const activeFilterCount =
+    (search.trim() ? 1 : 0) +
+    (dateFrom ? 1 : 0) +
+    (dateTo ? 1 : 0) +
+    (statusFilter !== "all" ? 1 : 0);
+  const clearFilters = () => {
+    handleSearchChange("");
+    handleDateFromChange("");
+    handleDateToChange("");
+    handleStatusFilterChange("all" as BitkubBuyStatusFilter);
+  };
+
+  return (
+    <>
       <div className="flex flex-wrap items-center gap-2 lg:hidden">
         <Button
           type="button"
@@ -275,211 +339,279 @@ export function BitkubBuyHistory({
           />
         </div>
       </div>
-      <SkeletonReveal
-        isReady={!isSyncingHistory && !history.isLoading}
-        skeleton={<BitkubHistorySkeleton />}
-      >
-        {history.data?.buys.length ? (
-          <>
-            {/* Mobile card view */}
-            <div className="divide-border divide-y sm:hidden">
-              {history.data.buys.map((buy) => {
-                const { statusLabel, statusClassName } = describeBuyStatus(buy);
-                return (
-                  <div key={buy.id} className="hover:bg-muted/40 px-3 py-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <label
-                        className={`flex min-h-10 min-w-0 flex-1 items-start gap-2 ${
-                          isBusy || buy.imported
-                            ? "cursor-not-allowed"
-                            : "cursor-pointer"
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          className="mt-0.5 size-4 shrink-0"
-                          checked={selectedIds.has(buy.id)}
-                          disabled={isBusy || buy.imported}
-                          onChange={(event) =>
-                            setSelected((current) =>
-                              event.target.checked
-                                ? [...current, buy.id]
-                                : current.filter((id) => id !== buy.id),
-                            )
-                          }
-                        />
-                        <span className="sr-only">
-                          เลือกธุรกรรม {buy.externalTradeIdentity}
-                        </span>
-                        <span className="min-w-0">
-                          <time
-                            dateTime={buy.executedAt}
-                            className="text-foreground block text-xs font-medium"
-                          >
-                            {dateLabels.get(buy.id)}
-                          </time>
-                          <span className="text-muted-foreground mt-0.5 block text-[10px] break-all">
-                            {buy.externalTradeIdentity}
-                          </span>
-                        </span>
-                      </label>
-                      <Badge
-                        variant="outline"
-                        className={`mt-0.5 max-w-28 shrink-0 px-2 py-1 text-xs font-medium ${statusClassName}`}
-                      >
-                        {statusLabel}
-                      </Badge>
-                    </div>
-                    <div className="text-muted-foreground mt-2 grid grid-cols-3 gap-x-3 font-mono text-[10px]">
-                      <div>
-                        <span className="opacity-60">ต้นทุน (฿)</span>
-                        <div className="text-foreground text-[11px]">
-                          {buy.spentTHB}
-                        </div>
-                      </div>
-                      <div>
-                        <span className="opacity-60">ค่าธรรมเนียม</span>
-                        <div className="text-foreground text-[11px]">
-                          {buy.feeTHB}
-                        </div>
-                      </div>
-                      <div>
-                        <span className="opacity-60">BTC</span>
-                        <div className="text-foreground text-[11px] break-all">
-                          {buy.receivedBTC}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+    </>
+  );
+}
 
-            {/* Desktop table */}
-            <div className="hidden overflow-x-auto sm:block">
-              <table className="w-full text-left text-sm">
-                <caption className="sr-only">
-                  รายการซื้อ BTC ที่เลือกนำเข้า DCA ได้
-                </caption>
-                <thead>
-                  <tr>
-                    <th scope="col" className="p-2">
-                      เลือก
-                    </th>
-                    <th scope="col" className="p-2">
-                      วันเวลา / รหัสธุรกรรม
-                    </th>
-                    <th scope="col" className="p-2">
-                      ต้นทุน THB รวมค่าธรรมเนียม
-                    </th>
-                    <th scope="col" className="p-2">
-                      BTC
-                    </th>
-                    <th scope="col" className="p-2">
-                      สถานะ
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {history.data.buys.map((buy) => {
-                    const { statusLabel, statusClassName } =
-                      describeBuyStatus(buy);
-                    return (
-                      <tr key={buy.id} className="border-border border-t">
-                        <td className="p-2">
-                          <label
-                            className={`flex min-h-10 min-w-10 items-center justify-center ${
-                              isBusy || buy.imported
-                                ? "cursor-not-allowed"
-                                : "cursor-pointer"
-                            }`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selectedIds.has(buy.id)}
-                              disabled={isBusy || buy.imported}
-                              onChange={(event) =>
-                                setSelected((current) =>
-                                  event.target.checked
-                                    ? [...current, buy.id]
-                                    : current.filter((id) => id !== buy.id),
-                                )
-                              }
-                            />
-                            <span className="sr-only">
-                              เลือกธุรกรรม {buy.externalTradeIdentity}
-                            </span>
-                          </label>
-                        </td>
-                        <th scope="row" className="p-2 font-normal">
-                          <time dateTime={buy.executedAt}>
-                            {dateLabels.get(buy.id)}
-                          </time>
-                          <span className="text-muted-foreground block text-xs break-all">
-                            {buy.externalTradeIdentity}
-                          </span>
-                        </th>
-                        <td className="p-2">
-                          {buy.spentTHB}
-                          <span className="text-muted-foreground block text-xs">
-                            ค่าธรรมเนียม {buy.feeTHB}
-                          </span>
-                        </td>
-                        <td className="p-2">{buy.receivedBTC}</td>
-                        <td className="p-2">
-                          <Badge
-                            variant="outline"
-                            className={`px-2 py-1 text-xs font-medium whitespace-nowrap ${statusClassName}`}
-                          >
-                            {statusLabel}
-                          </Badge>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+type BitkubBuyHistoryResultsProps = Pick<
+  BitkubHistoryProps,
+  | "history"
+  | "dateLabels"
+  | "selected"
+  | "setSelected"
+  | "isBusy"
+  | "isSyncingHistory"
+  | "outcomes"
+> & { hasFilters: boolean };
+
+function BitkubBuyHistoryResults({
+  history,
+  dateLabels,
+  selected,
+  setSelected,
+  isBusy,
+  isSyncingHistory,
+  outcomes,
+  hasFilters,
+}: BitkubBuyHistoryResultsProps) {
+  const outcomesById = new Map(
+    outcomes.map((outcome) => [outcome.buyId, outcome]),
+  );
+  const buys = history.data?.buys ?? [];
+
+  return (
+    <SkeletonReveal
+      isReady={!isSyncingHistory && !history.isLoading}
+      skeleton={<BitkubHistorySkeleton />}
+    >
+      {buys.length ? (
+        <>
+          <BitkubBuyHistoryMobileList
+            buys={buys}
+            dateLabels={dateLabels}
+            selected={selected}
+            setSelected={setSelected}
+            isBusy={isBusy}
+            outcomesById={outcomesById}
+          />
+          <BitkubBuyHistoryDesktopTable
+            buys={buys}
+            dateLabels={dateLabels}
+            selected={selected}
+            setSelected={setSelected}
+            isBusy={isBusy}
+            outcomesById={outcomesById}
+          />
+        </>
+      ) : (
+        <p className="text-muted-foreground text-sm">
+          {history.isPending
+            ? "กดโหลดประวัติล่าสุดจาก Bitkub เพื่อดึงรายการซื้อ"
+            : hasFilters
+              ? "ไม่พบรายการที่ตรงกับตัวกรอง"
+              : "ยังไม่มีรายการซื้อที่โหลดไว้"}
+        </p>
+      )}
+    </SkeletonReveal>
+  );
+}
+
+type BuyHistoryRow = NonNullable<
+  BitkubHistoryProps["history"]["data"]
+>["buys"][number];
+type BuyHistoryOutcome = BitkubHistoryProps["outcomes"][number];
+
+interface BitkubBuyHistoryListProps {
+  buys: BuyHistoryRow[];
+  dateLabels: BitkubHistoryProps["dateLabels"];
+  selected: BitkubHistoryProps["selected"];
+  setSelected: BitkubHistoryProps["setSelected"];
+  isBusy: boolean;
+  outcomesById: Map<string, BuyHistoryOutcome>;
+}
+
+function BitkubBuyHistoryMobileList(props: BitkubBuyHistoryListProps) {
+  const { buys, dateLabels, selected, setSelected, isBusy, outcomesById } =
+    props;
+  const selectedIds = new Set(selected);
+
+  return (
+    <div className="divide-border divide-y sm:hidden">
+      {buys.map((buy) => {
+        const { statusLabel, statusClassName } = describeBuyStatus(
+          buy,
+          outcomesById,
+        );
+        return (
+          <div key={buy.id} className="hover:bg-muted/40 px-3 py-3">
+            <div className="flex items-start justify-between gap-2">
+              <label
+                className={`flex min-h-10 min-w-0 flex-1 items-start gap-2 ${
+                  isBusy || buy.imported
+                    ? "cursor-not-allowed"
+                    : "cursor-pointer"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  className="mt-0.5 size-4 shrink-0"
+                  checked={selectedIds.has(buy.id)}
+                  disabled={isBusy || buy.imported}
+                  onChange={(event) =>
+                    setSelected((current) =>
+                      event.target.checked
+                        ? [...current, buy.id]
+                        : current.filter((id) => id !== buy.id),
+                    )
+                  }
+                />
+                <span className="sr-only">
+                  เลือกธุรกรรม {buy.externalTradeIdentity}
+                </span>
+                <span className="min-w-0">
+                  <time
+                    dateTime={buy.executedAt}
+                    className="text-foreground block text-xs font-medium"
+                  >
+                    {dateLabels.get(buy.id)}
+                  </time>
+                  <span className="text-muted-foreground mt-0.5 block text-[10px] break-all">
+                    {buy.externalTradeIdentity}
+                  </span>
+                </span>
+              </label>
+              <Badge
+                variant="outline"
+                className={`mt-0.5 max-w-28 shrink-0 px-2 py-1 text-xs font-medium ${statusClassName}`}
+              >
+                {statusLabel}
+              </Badge>
             </div>
-          </>
-        ) : (
-          <p className="text-muted-foreground text-sm">
-            {history.isPending
-              ? "กดโหลดประวัติล่าสุดจาก Bitkub เพื่อดึงรายการซื้อ"
-              : hasFilters
-                ? "ไม่พบรายการที่ตรงกับตัวกรอง"
-                : "ยังไม่มีรายการซื้อที่โหลดไว้"}
-          </p>
-        )}
-      </SkeletonReveal>
-      <div className="flex flex-wrap items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          disabled={isBusy || page <= 1}
-          onClick={() => {
-            setSelected([]);
-            setPage((current) => current - 1);
-          }}
-        >
-          หน้าก่อนหน้า
-        </Button>
-        <span className="text-muted-foreground text-sm" aria-live="polite">
-          {history.data?.total
-            ? `แสดง ${(page - 1) * pageSize + 1}–${Math.min(page * pageSize, history.data.total)} จาก ${history.data.total} รายการ · หน้า ${page} / ${Math.max(1, history.data.totalPages)}`
-            : `หน้า ${page} / ${Math.max(1, history.data?.totalPages ?? 1)}`}
-        </span>
-        <Button
-          type="button"
-          variant="outline"
-          disabled={isBusy || page >= (history.data?.totalPages ?? 1)}
-          onClick={() => {
-            setSelected([]);
-            setPage((current) => current + 1);
-          }}
-        >
-          หน้าถัดไป
-        </Button>
-      </div>
+            <div className="text-muted-foreground mt-2 grid grid-cols-3 gap-x-3 font-mono text-[10px]">
+              <div>
+                <span className="opacity-60">ต้นทุน (฿)</span>
+                <div className="text-foreground text-[11px]">
+                  {buy.spentTHB}
+                </div>
+              </div>
+              <div>
+                <span className="opacity-60">ค่าธรรมเนียม</span>
+                <div className="text-foreground text-[11px]">{buy.feeTHB}</div>
+              </div>
+              <div>
+                <span className="opacity-60">BTC</span>
+                <div className="text-foreground text-[11px] break-all">
+                  {buy.receivedBTC}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
+}
+
+function BitkubBuyHistoryDesktopTable(props: BitkubBuyHistoryListProps) {
+  const { buys, dateLabels, selected, setSelected, isBusy, outcomesById } =
+    props;
+  const selectedIds = new Set(selected);
+
+  return (
+    <div className="hidden overflow-x-auto sm:block">
+      <table className="w-full text-left text-sm">
+        <caption className="sr-only">
+          รายการซื้อ BTC ที่เลือกนำเข้า DCA ได้
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col" className="p-2">
+              เลือก
+            </th>
+            <th scope="col" className="p-2">
+              วันเวลา / รหัสธุรกรรม
+            </th>
+            <th scope="col" className="p-2">
+              ต้นทุน THB รวมค่าธรรมเนียม
+            </th>
+            <th scope="col" className="p-2">
+              BTC
+            </th>
+            <th scope="col" className="p-2">
+              สถานะ
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {buys.map((buy) => {
+            const { statusLabel, statusClassName } = describeBuyStatus(
+              buy,
+              outcomesById,
+            );
+            return (
+              <tr key={buy.id} className="border-border border-t">
+                <td className="p-2">
+                  <label
+                    className={`flex min-h-10 min-w-10 items-center justify-center ${
+                      isBusy || buy.imported
+                        ? "cursor-not-allowed"
+                        : "cursor-pointer"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(buy.id)}
+                      disabled={isBusy || buy.imported}
+                      onChange={(event) =>
+                        setSelected((current) =>
+                          event.target.checked
+                            ? [...current, buy.id]
+                            : current.filter((id) => id !== buy.id),
+                        )
+                      }
+                    />
+                    <span className="sr-only">
+                      เลือกธุรกรรม {buy.externalTradeIdentity}
+                    </span>
+                  </label>
+                </td>
+                <th scope="row" className="p-2 font-normal">
+                  <time dateTime={buy.executedAt}>
+                    {dateLabels.get(buy.id)}
+                  </time>
+                  <span className="text-muted-foreground block text-xs break-all">
+                    {buy.externalTradeIdentity}
+                  </span>
+                </th>
+                <td className="p-2">
+                  {buy.spentTHB}
+                  <span className="text-muted-foreground block text-xs">
+                    ค่าธรรมเนียม {buy.feeTHB}
+                  </span>
+                </td>
+                <td className="p-2">{buy.receivedBTC}</td>
+                <td className="p-2">
+                  <Badge
+                    variant="outline"
+                    className={`px-2 py-1 text-xs font-medium whitespace-nowrap ${statusClassName}`}
+                  >
+                    {statusLabel}
+                  </Badge>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function describeBuyStatus(
+  buy: BitkubBuy,
+  outcomesById: Map<string, BuyHistoryOutcome>,
+) {
+  const isLegacyConflict =
+    !buy.imported && outcomesById.get(buy.id)?.status === "legacy_conflict";
+  const statusLabel = buy.imported
+    ? "นำเข้าแล้ว"
+    : isLegacyConflict
+      ? "อาจซ้ำข้อมูลเดิม กรุณาตรวจสอบ"
+      : "พร้อมนำเข้า";
+  const statusClassName = buy.imported
+    ? "border-emerald-600/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300"
+    : isLegacyConflict
+      ? "border-amber-600/30 bg-amber-500/10 text-amber-800 dark:text-amber-300"
+      : "border-primary/30 bg-primary/10 text-primary";
+  return { statusLabel, statusClassName };
 }
