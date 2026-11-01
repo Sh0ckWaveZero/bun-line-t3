@@ -9,7 +9,10 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { METRIC_DEFINITIONS } from "@/features/body-weight/constants/metrics";
+import {
+  METRIC_DEFINITIONS,
+  type MetricDefinition,
+} from "@/features/body-weight/constants/metrics";
 import {
   getLiveStatus,
   LIVE_STATUS,
@@ -163,6 +166,246 @@ const Stepper = ({ phase }: { phase: Phase }) => (
   </ol>
 );
 
+/** ช่วงการชั่งปัจจุบัน — ขั้น "นิ่งแล้ว" มาจาก pending (ยังไม่บันทึก), บันทึกเกิดเมื่อได้ impedance ครบ */
+const getPhase = (
+  measurement: ScaleMeasurementDto | null,
+  pending: LiveScaleState["pending"],
+): Phase =>
+  measurement
+    ? measurement.impedance
+      ? PHASE.composition
+      : PHASE.stable
+    : pending
+      ? PHASE.stable
+      : PHASE.weight;
+
+/** เวลาก่อนปิดเองตามช่วง — null = ไม่ปิดเอง */
+const getCloseAfterMs = (phase: Phase, isAbandoned: boolean): number | null =>
+  phase === PHASE.composition
+    ? COMPLETE_CLOSE_MS
+    : isAbandoned
+      ? STEPPED_OFF_CLOSE_MS
+      : phase === PHASE.stable
+        ? STABLE_CLOSE_MS
+        : null;
+
+/** ครั้งก่อนของเจ้าของเดียวกัน — เอาไว้โชว์เดลต้า/เทรนด์ */
+const getReferenceMeasurement = (
+  measurement: ScaleMeasurementDto | null,
+  pending: LiveScaleState["pending"],
+  measurements: ScaleMeasurementDto[],
+): ScaleMeasurementDto | null =>
+  measurement
+    ? findReferenceMeasurement(measurements, measurement, 0)
+    : pending?.profileId
+      ? (measurements.find((m) => m.profileId === pending.profileId) ?? null)
+      : null;
+
+/** บรรทัดเดลต้าใต้น้ำหนัก — "" ก่อนรู้เจ้าของ, "การชั่งครั้งแรก" ถ้าไม่มีครั้งก่อนให้เทียบ */
+const getDeltaText = (
+  hasOwnerInfo: boolean,
+  weightKg: number | null,
+  reference: ScaleMeasurementDto | null,
+): string => {
+  if (!hasOwnerInfo) return "";
+  if (weightKg === null || !reference) return "การชั่งครั้งแรก";
+  const deltaKg = weightKg - reference.weightKg;
+  return `${deltaKg >= 0 ? "+" : "−"}${Math.abs(deltaKg).toFixed(2)} กก. จาก ${bangkokDateTimeFormatter.format(new Date(reference.measuredAt))}`;
+};
+
+/** ชิ้นสัดส่วนร่างกายหนึ่งใบ — ค่า + เทรนด์เทียบครั้งก่อน */
+const MetricTile = ({
+  definition,
+  measurement,
+  reference,
+  index,
+}: {
+  definition: MetricDefinition;
+  measurement: ScaleMeasurementDto;
+  reference: ScaleMeasurementDto | null;
+  index: number;
+}) => {
+  const value = definition.read(measurement);
+  const trend = compareMetric(
+    value,
+    reference ? definition.read(reference) : null,
+    definition.decimals,
+    definition.trend,
+  );
+
+  return (
+    <div
+      className="weigh-in-enter rounded-xl border border-white/20 bg-white/10 px-3 py-2.5 backdrop-blur-sm"
+      style={{ animationDelay: `${index * 45}ms` }}
+    >
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="font-mono text-lg font-semibold">
+          {value === null
+            ? "—"
+            : `${formatNumber(value, definition.decimals)}${definition.unit ? ` ${definition.unit}` : ""}`}
+        </span>
+        {trend && (
+          <span
+            className={`font-mono text-xs font-semibold ${TONE_CLASS[trend.tone]}`}
+          >
+            {trend.direction === "same"
+              ? "="
+              : `${trend.direction === "up" ? "▲" : "▼"} ${formatNumber(trend.amount, definition.decimals)}`}
+          </span>
+        )}
+      </div>
+      <p className="mt-0.5 flex items-center gap-1.5 text-xs text-white/75">
+        <definition.icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        {definition.label}
+      </p>
+    </div>
+  );
+};
+
+/** ตารางสัดส่วนร่างกายหลังชั่งเสร็จ — หรือข้อความบอกว่าทำไมคำนวณไม่ได้ */
+const MetricTiles = ({
+  measurement,
+  reference,
+}: {
+  measurement: ScaleMeasurementDto;
+  reference: ScaleMeasurementDto | null;
+}) => {
+  if (measurement.metrics.bmi === undefined) {
+    return (
+      <p className="mt-6 max-w-md text-center text-sm text-white/80">
+        {measurement.profileId
+          ? "เติมส่วนสูง/วันเกิดในโปรไฟล์เพื่อคำนวณสัดส่วนร่างกาย"
+          : "ยังไม่รู้ว่าเป็นของใคร — กำหนดเจ้าของได้ในประวัติการชั่ง"}
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-6 grid w-full max-w-4xl grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      {metricTiles.map((definition, index) => (
+        <MetricTile
+          key={definition.key}
+          definition={definition}
+          measurement={measurement}
+          reference={reference}
+          index={index}
+        />
+      ))}
+    </div>
+  );
+};
+
+/** ข้อความ "ปิดเอง/ค้างไว้" — null = ช่วงนี้ไม่ปิดเอง */
+const AutoCloseHint = ({
+  closeAfterMs,
+  isPinned,
+}: {
+  closeAfterMs: number | null;
+  isPinned: boolean;
+}) =>
+  closeAfterMs === null ? null : (
+    <p className="mt-8 text-xs text-white/70">
+      {isPinned
+        ? "ค้างหน้าจอไว้แล้ว · กด Esc หรือ ✕ เพื่อปิด"
+        : "ปิดเองในอีกสักครู่ · แตะเพื่อค้างไว้"}
+    </p>
+  );
+
+/** สถานะรอบการชั่งปัจจุบัน — phase, ลงก่อนวัดเสร็จ, เวลาก่อนปิดเอง */
+const getWeighInStatus = (
+  measurement: ScaleMeasurementDto | null,
+  pending: LiveScaleState["pending"],
+  reading: LiveScaleState["reading"],
+): { phase: Phase; isAbandoned: boolean; closeAfterMs: number | null } => {
+  const phase = getPhase(measurement, pending);
+  const liveStatus = getLiveStatus(reading);
+  const hasSteppedOff =
+    liveStatus === LIVE_STATUS.steppedOff || liveStatus === LIVE_STATUS.idle;
+  // ลงก่อนวัดเสร็จ = การชั่งไม่ครบ ไม่ถูกบันทึก
+  const isAbandoned = phase !== PHASE.composition && hasSteppedOff;
+  return {
+    phase,
+    isAbandoned,
+    closeAfterMs: getCloseAfterMs(phase, isAbandoned),
+  };
+};
+
+/** ค่าที่โชว์บนจอ — น้ำหนักไหลจาก reading สด → pending → ผลบันทึก ตามลำดับที่ data มาถึง */
+const getWeighInDisplay = (
+  measurement: ScaleMeasurementDto | null,
+  pending: LiveScaleState["pending"],
+  reading: LiveScaleState["reading"],
+  measurements: ScaleMeasurementDto[],
+) => ({
+  weightKg:
+    measurement?.weightKg ?? pending?.weightKg ?? reading?.weightKg ?? null,
+  profileName: measurement?.profileName ?? pending?.profileName ?? null,
+  hasOwnerInfo: measurement !== null || pending !== null,
+  reference: getReferenceMeasurement(measurement, pending, measurements),
+});
+
+/** แถบนับถอยหลังปิดเองท้ายจอ — เริ่มนับใหม่ทุกช่วง (key=phase), หยุดเมื่อ pin ไว้ */
+const CountdownBar = ({
+  phase,
+  closeAfterMs,
+  isPinned,
+}: {
+  phase: Phase;
+  closeAfterMs: number | null;
+  isPinned: boolean;
+}) => {
+  if (isPinned || closeAfterMs === null) return null;
+
+  return (
+    <div className="absolute inset-x-0 bottom-0 h-1 bg-white/15">
+      <div
+        key={phase}
+        className="weigh-in-countdown h-full bg-white/80"
+        style={
+          {
+            "--weigh-in-close-ms": `${closeAfterMs}ms`,
+          } as CSSProperties
+        }
+      />
+    </div>
+  );
+};
+
+/** pin จอ + ตัวจับเวลาปิดเอง — timer นับต่อเนื่อง ไม่รีเซ็ตเมื่อ parent re-render (poll ทุก 1 วิ) */
+const useWeighInAutoClose = ({
+  isOpen,
+  closeAfterMs,
+  onClose,
+}: {
+  isOpen: boolean;
+  closeAfterMs: number | null;
+  onClose: () => void;
+}) => {
+  const [isPinned, setIsPinned] = useState(false);
+
+  // เก็บ onClose ใน ref — timer ต้องนับต่อเนื่อง ไม่รีเซ็ตเมื่อ parent re-render
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  const handleClose = useCallback(() => {
+    setIsPinned(false);
+    onCloseRef.current();
+  }, []);
+
+  const willAutoClose = isOpen && !isPinned && closeAfterMs !== null;
+  useEffect(() => {
+    if (!willAutoClose || closeAfterMs === null) return;
+    const timer = setTimeout(handleClose, closeAfterMs);
+    return () => clearTimeout(timer);
+  }, [willAutoClose, closeAfterMs, handleClose]);
+
+  const markPinned = useCallback(() => setIsPinned(true), []);
+
+  return { isPinned, markPinned, handleClose };
+};
+
 /**
  * หน้าชั่งเต็มจอ (weigh-in.gif ของ miscale-dashboard): เปิดตั้งแต่เริ่มเหยียบ
  * แล้วไล่ น้ำหนักสด → นิ่งแล้ว (รู้เจ้าของ) → สัดส่วนร่างกายครบ แล้วปิดเอง
@@ -185,65 +428,27 @@ export function WeighInOverlay({
   measurements: ScaleMeasurementDto[];
   onClose: () => void;
 }) {
-  const [isPinned, setIsPinned] = useState(false);
-
-  // ขั้น "นิ่งแล้ว" มาจาก pending (ยังไม่บันทึก) — บันทึกเกิดเมื่อได้ impedance ครบเท่านั้น
-  const phase: Phase = measurement
-    ? measurement.impedance
-      ? PHASE.composition
-      : PHASE.stable
-    : pending
-      ? PHASE.stable
-      : PHASE.weight;
-  const liveStatus = getLiveStatus(reading);
-  const hasSteppedOff =
-    liveStatus === LIVE_STATUS.steppedOff || liveStatus === LIVE_STATUS.idle;
-  // ลงก่อนวัดเสร็จ = การชั่งไม่ครบ ไม่ถูกบันทึก
-  const isAbandoned = phase !== PHASE.composition && hasSteppedOff;
-  const closeAfterMs =
-    phase === PHASE.composition
-      ? COMPLETE_CLOSE_MS
-      : isAbandoned
-        ? STEPPED_OFF_CLOSE_MS
-        : phase === PHASE.stable
-          ? STABLE_CLOSE_MS
-          : null;
-  const willAutoClose = isOpen && !isPinned && closeAfterMs !== null;
-
-  // เก็บ onClose ใน ref — timer ต้องนับต่อเนื่อง ไม่รีเซ็ตเมื่อ parent re-render (poll ทุก 1 วิ)
-  const onCloseRef = useRef(onClose);
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
-
-  const handleClose = useCallback(() => {
-    setIsPinned(false);
-    onCloseRef.current();
-  }, []);
-
-  useEffect(() => {
-    if (!willAutoClose || closeAfterMs === null) return;
-    const timer = setTimeout(handleClose, closeAfterMs);
-    return () => clearTimeout(timer);
-  }, [willAutoClose, closeAfterMs, handleClose]);
-
-  const weightKg =
-    measurement?.weightKg ?? pending?.weightKg ?? reading?.weightKg ?? null;
-  const profileName = measurement?.profileName ?? pending?.profileName ?? null;
-  const hasOwnerInfo = measurement !== null || pending !== null;
-  const reference = measurement
-    ? findReferenceMeasurement(measurements, measurement, 0)
-    : pending?.profileId
-      ? (measurements.find((m) => m.profileId === pending.profileId) ?? null)
-      : null;
-  const deltaKg =
-    weightKg !== null && reference ? weightKg - reference.weightKg : null;
-  const hasMetrics = measurement?.metrics.bmi !== undefined;
+  const { phase, isAbandoned, closeAfterMs } = getWeighInStatus(
+    measurement,
+    pending,
+    reading,
+  );
+  const { isPinned, markPinned, handleClose } = useWeighInAutoClose({
+    isOpen,
+    closeAfterMs,
+    onClose,
+  });
+  const { weightKg, profileName, hasOwnerInfo, reference } = getWeighInDisplay(
+    measurement,
+    pending,
+    reading,
+    measurements,
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent
-        onPointerDown={() => setIsPinned(true)}
+        onPointerDown={markPinned}
         style={OVERLAY_BACKGROUND}
         className="inset-0 h-auto max-h-none w-auto max-w-none translate-x-0 translate-y-0 gap-0 overflow-hidden border-0 p-0 text-white sm:rounded-none [&>button]:top-5 [&>button]:right-5 [&>button]:flex [&>button]:h-10 [&>button]:w-10 [&>button]:items-center [&>button]:justify-center [&>button]:rounded-full [&>button]:bg-white/15 [&>button]:text-white [&>button]:opacity-100"
       >
@@ -275,11 +480,7 @@ export function WeighInOverlay({
           </p>
 
           <DialogDescription className="mt-2 min-h-6 text-base text-white/85">
-            {hasOwnerInfo
-              ? deltaKg !== null && reference
-                ? `${deltaKg >= 0 ? "+" : "−"}${Math.abs(deltaKg).toFixed(2)} กก. จาก ${bangkokDateTimeFormatter.format(new Date(reference.measuredAt))}`
-                : "การชั่งครั้งแรก"
-              : ""}
+            {getDeltaText(hasOwnerInfo, weightKg, reference)}
           </DialogDescription>
 
           <p
@@ -291,83 +492,20 @@ export function WeighInOverlay({
               : PHASE_TEXT[phase]}
           </p>
 
-          {phase === PHASE.composition ? (
-            hasMetrics && measurement ? (
-              <div className="mt-6 grid w-full max-w-4xl grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                {metricTiles.map((definition, index) => {
-                  const value = definition.read(measurement);
-                  const trend = compareMetric(
-                    value,
-                    reference ? definition.read(reference) : null,
-                    definition.decimals,
-                    definition.trend,
-                  );
-                  return (
-                    <div
-                      key={definition.key}
-                      className="weigh-in-enter rounded-xl border border-white/20 bg-white/10 px-3 py-2.5 backdrop-blur-sm"
-                      style={{ animationDelay: `${index * 45}ms` }}
-                    >
-                      <div className="flex items-baseline justify-between gap-2">
-                        <span className="font-mono text-lg font-semibold">
-                          {value === null
-                            ? "—"
-                            : `${formatNumber(value, definition.decimals)}${definition.unit ? ` ${definition.unit}` : ""}`}
-                        </span>
-                        {trend && (
-                          <span
-                            className={`font-mono text-xs font-semibold ${TONE_CLASS[trend.tone]}`}
-                          >
-                            {trend.direction === "same"
-                              ? "="
-                              : `${trend.direction === "up" ? "▲" : "▼"} ${formatNumber(trend.amount, definition.decimals)}`}
-                          </span>
-                        )}
-                      </div>
-                      <p className="mt-0.5 flex items-center gap-1.5 text-xs text-white/75">
-                        <definition.icon
-                          className="h-3.5 w-3.5 shrink-0"
-                          aria-hidden="true"
-                        />
-                        {definition.label}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="mt-6 max-w-md text-center text-sm text-white/80">
-                {measurement?.profileId
-                  ? "เติมส่วนสูง/วันเกิดในโปรไฟล์เพื่อคำนวณสัดส่วนร่างกาย"
-                  : "ยังไม่รู้ว่าเป็นของใคร — กำหนดเจ้าของได้ในประวัติการชั่ง"}
-              </p>
-            )
+          {phase === PHASE.composition && measurement ? (
+            <MetricTiles measurement={measurement} reference={reference} />
           ) : (
             <Stepper phase={phase} />
           )}
 
-          {closeAfterMs !== null && (
-            <p className="mt-8 text-xs text-white/70">
-              {isPinned
-                ? "ค้างหน้าจอไว้แล้ว · กด Esc หรือ ✕ เพื่อปิด"
-                : "ปิดเองในอีกสักครู่ · แตะเพื่อค้างไว้"}
-            </p>
-          )}
+          <AutoCloseHint closeAfterMs={closeAfterMs} isPinned={isPinned} />
         </div>
 
-        {willAutoClose && closeAfterMs !== null && (
-          <div className="absolute inset-x-0 bottom-0 h-1 bg-white/15">
-            <div
-              key={phase}
-              className="weigh-in-countdown h-full bg-white/80"
-              style={
-                {
-                  "--weigh-in-close-ms": `${closeAfterMs}ms`,
-                } as CSSProperties
-              }
-            />
-          </div>
-        )}
+        <CountdownBar
+          phase={phase}
+          closeAfterMs={closeAfterMs}
+          isPinned={isPinned}
+        />
       </DialogContent>
     </Dialog>
   );

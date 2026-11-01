@@ -45,6 +45,52 @@ import type {
 } from "@/features/line/line-utils/approvals";
 import { mapApprovalListView } from "@/features/line/line-utils/approval-views";
 
+/** 401/403 = ไม่มีสิทธิ์เห็นหน้านี้ — error อื่นให้ UI ปกติจัดการ */
+const getPermissionErrorMessage = (error: unknown): string | null => {
+  if (!(error instanceof ApprovalFetchError)) return null;
+  return error.status === 401 || error.status === 403 ? error.message : null;
+};
+
+/** หัวตาราง: สรุปจำนวนคำขอ — โชว์โน้ตตัดข้อมูลเมื่อผลลัพธ์เกินลิมิตที่เซิร์ฟเวอร์ส่งมา */
+const ApprovalListHeader = ({
+  counts,
+  visibleTotal,
+  totalCount,
+  isTruncated,
+}: {
+  counts: { all: number; PENDING: number; REJECTED: number };
+  visibleTotal: number;
+  totalCount: number;
+  isTruncated: boolean;
+}) => (
+  <div className="border-b border-slate-200 px-5 py-5 sm:px-6 dark:border-white/[0.08]">
+    <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+      คำขอทั้งหมด
+    </h2>
+    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+      {counts.all} บัญชี · {counts.PENDING} รออนุมัติ · {counts.REJECTED} ปฏิเสธ
+      {isTruncated && ` · แสดง ${visibleTotal} รายการล่าสุดจาก ${totalCount}`}
+    </p>
+  </div>
+);
+
+/** skeleton ติดตั้งแต่แรก และถูกปลดหลัง reveal + fade-out จบ (set ใน timer ไม่ใช่ effect) */
+const useDeferredSkeleton = (isRevealed: boolean) => {
+  const [skeletonDismissed, setSkeletonDismissed] = useState(false);
+  const skeletonMounted = !skeletonDismissed;
+
+  useEffect(() => {
+    if (!isRevealed) return;
+    const timer = setTimeout(
+      () => setSkeletonDismissed(true),
+      SKELETON_REMOVE_DELAY_MS,
+    );
+    return () => clearTimeout(timer);
+  }, [isRevealed]);
+
+  return { skeletonMounted };
+};
+
 export function LineApprovalPage() {
   const { status: authStatus } = useSession();
   const { needsApproval } = useLineApproval();
@@ -121,18 +167,7 @@ export function LineApprovalPage() {
   const isInitialLoading =
     authStatus !== "authenticated" || approvalsQuery.isLoading;
   const isRevealed = !isInitialLoading;
-  // skeleton ติดตั้งแต่แรก และถูกปลดหลัง reveal + fade-out จบ (set ใน timer ไม่ใช่ effect)
-  const [skeletonDismissed, setSkeletonDismissed] = useState(false);
-  const skeletonMounted = !skeletonDismissed;
-
-  useEffect(() => {
-    if (!isRevealed) return;
-    const timer = setTimeout(
-      () => setSkeletonDismissed(true),
-      SKELETON_REMOVE_DELAY_MS,
-    );
-    return () => clearTimeout(timer);
-  }, [isRevealed]);
+  const { skeletonMounted } = useDeferredSkeleton(isRevealed);
 
   const handleRefresh = useCallback(() => {
     void approvalsQuery.refetch();
@@ -154,14 +189,7 @@ export function LineApprovalPage() {
     [],
   );
 
-  const fetchError =
-    approvalsQuery.error instanceof ApprovalFetchError
-      ? approvalsQuery.error
-      : null;
-  const permissionError =
-    fetchError && (fetchError.status === 401 || fetchError.status === 403)
-      ? fetchError.message
-      : null;
+  const permissionError = getPermissionErrorMessage(approvalsQuery.error);
 
   if (permissionError) {
     return <ApprovalPermissionError message={permissionError} />;
@@ -209,17 +237,12 @@ export function LineApprovalPage() {
                 </div>
               )}
               <div className="t-skel-content" inert={!isRevealed}>
-                <div className="border-b border-slate-200 px-5 py-5 sm:px-6 dark:border-white/[0.08]">
-                  <h2 className="text-base font-semibold text-slate-900 dark:text-white">
-                    คำขอทั้งหมด
-                  </h2>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                    {counts.all} บัญชี · {counts.PENDING} รออนุมัติ ·{" "}
-                    {counts.REJECTED} ปฏิเสธ
-                    {isTruncated &&
-                      ` · แสดง ${items.length} รายการล่าสุดจาก ${approvalsQuery.data?.total ?? 0}`}
-                  </p>
-                </div>
+                <ApprovalListHeader
+                  counts={counts}
+                  visibleTotal={items.length}
+                  totalCount={approvalsQuery.data?.total ?? 0}
+                  isTruncated={isTruncated}
+                />
 
                 <ApprovalToolbar
                   activeTab={activeTab}

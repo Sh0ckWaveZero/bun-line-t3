@@ -55,6 +55,151 @@ const BLANK_PROFILE: ScaleProfileDto = {
 
 const NO_OWNER = "__none__";
 
+/** ค่า draft ที่แถวโปรไฟล์แก้ได้ — แยกไว้ให้ helper ตรวจ dirty/สร้าง payload ใช้ร่วมกัน */
+interface ProfileRowDraft {
+  name: string;
+  heightCm: string;
+  birthDate: string;
+  refWeightKg: string;
+  male: boolean;
+  ownerId: string;
+}
+
+const getProfileBadgeLabel = (profile: ScaleProfileDto): string =>
+  profile.id === "" ? "ใหม่" : profile.upstreamName ? "AUTO" : "MANUAL";
+
+const getProfileMatchHint = (profile: ScaleProfileDto): string =>
+  profile.id === ""
+    ? "บันทึกเพื่อเริ่มใช้งาน"
+    : profile.upstreamName
+      ? `อัตโนมัติ "${profile.upstreamName}"`
+      : "จากน้ำหนักล่าสุด";
+
+const isProfileRowDirty = (
+  profile: ScaleProfileDto,
+  draft: ProfileRowDraft,
+  isAdmin: boolean,
+): boolean =>
+  profile.id === "" ||
+  draft.name !== profile.name ||
+  draft.heightCm !==
+    (profile.heightCm === null ? "" : String(profile.heightCm)) ||
+  draft.birthDate !== (profile.birthDate ?? "") ||
+  draft.refWeightKg !==
+    (profile.refWeightKg === null ? "" : String(profile.refWeightKg)) ||
+  draft.male !== profile.male ||
+  (isAdmin && draft.ownerId !== (profile.ownerId ?? NO_OWNER));
+
+/** ownerId ที่จะส่งตอนบันทึก — admin เท่านั้นที่มีผล; undefined = ไม่เปลี่ยน */
+const getOwnerIdForSave = (
+  isAdmin: boolean,
+  isNew: boolean,
+  ownerId: string,
+): string | null | undefined =>
+  isAdmin && (!isNew || ownerId !== NO_OWNER)
+    ? ownerId === NO_OWNER
+      ? null
+      : ownerId
+    : undefined;
+
+const buildProfileSaveInput = (
+  profile: ScaleProfileDto,
+  draft: ProfileRowDraft,
+  isAdmin: boolean,
+  heightCm: number | null,
+  refWeightKg: number | null,
+): SaveProfileInput => {
+  const isNew = profile.id === "";
+  const ownerIdForSave = getOwnerIdForSave(isAdmin, isNew, draft.ownerId);
+
+  return {
+    id: isNew ? undefined : profile.id,
+    name: draft.name.trim() || profile.name.trim(),
+    heightCm,
+    birthDate: draft.birthDate === "" ? null : draft.birthDate,
+    male: draft.male,
+    refWeightKg,
+    ...(ownerIdForSave === undefined ? {} : { ownerId: ownerIdForSave }),
+  };
+};
+
+/** ปุ่มเลือกเพศ — กลุ่มปุ่ม 2 ทางที่ไฮไลต์ค่าที่เลือก */
+const ProfileGenderToggle = ({
+  value,
+  onChange,
+}: {
+  value: boolean;
+  onChange: (male: boolean) => void;
+}) => (
+  <div className="space-y-1">
+    <span className="text-muted-foreground block font-mono text-[10px]">
+      เพศ
+    </span>
+    <div
+      role="group"
+      aria-label="เพศ"
+      className="border-border bg-muted flex overflow-hidden rounded border"
+    >
+      {[
+        { label: "ชาย", value: true },
+        { label: "หญิง", value: false },
+      ].map((option) => (
+        <button
+          key={option.label}
+          type="button"
+          aria-pressed={value === option.value}
+          onClick={() => onChange(option.value)}
+          className={`flex-1 cursor-pointer px-2 py-1.5 font-mono text-xs transition-colors ${
+            value === option.value
+              ? "bg-foreground text-background"
+              : "text-foreground hover:bg-border/50"
+          }`}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  </div>
+);
+
+/** ผู้ดูแลกำหนดเจ้าของโปรไฟล์ (LINE) — admin เท่านั้น */
+const ProfileOwnerSelect = ({
+  profileId,
+  ownerId,
+  owners,
+  isSaving,
+  onChange,
+}: {
+  profileId: string;
+  ownerId: string;
+  owners: ScaleOwnerOption[];
+  isSaving: boolean;
+  onChange: (ownerId: string) => void;
+}) => (
+  <div className="space-y-1">
+    <label
+      htmlFor={`owner-${profileId || "new"}`}
+      className="text-muted-foreground block font-mono text-[10px]"
+    >
+      เจ้าของ (LINE)
+    </label>
+    <Select
+      id={`owner-${profileId || "new"}`}
+      value={ownerId}
+      options={[
+        { value: NO_OWNER, label: "ยังไม่กำหนด" },
+        ...owners.map((owner) => ({
+          value: owner.id,
+          label: owner.name,
+        })),
+      ]}
+      disabled={isSaving}
+      className="h-8 text-xs"
+      onValueChange={onChange}
+    />
+  </div>
+);
+
 /** แถวโปรไฟล์หนึ่งรายการ — แก้ข้อมูลแล้วบันทึก (metrics ทั้งประวัติจะถูกคำนวณใหม่) */
 const ProfileRow = ({
   profile,
@@ -83,17 +228,17 @@ const ProfileRow = ({
   const [maleOverride, setMaleOverride] = useState<boolean | null>(null);
   const male = maleOverride ?? profile.male;
   const [ownerId, setOwnerId] = useState(profile.ownerId ?? NO_OWNER);
-  const isNew = profile.id === "";
 
-  const isDirty =
-    isNew ||
-    name !== profile.name ||
-    heightCm !== (profile.heightCm === null ? "" : String(profile.heightCm)) ||
-    birthDate !== (profile.birthDate ?? "") ||
-    refWeightKg !==
-      (profile.refWeightKg === null ? "" : String(profile.refWeightKg)) ||
-    male !== profile.male ||
-    (isAdmin && ownerId !== (profile.ownerId ?? NO_OWNER));
+  const draft: ProfileRowDraft = {
+    name,
+    heightCm,
+    birthDate,
+    refWeightKg,
+    male,
+    ownerId,
+  };
+  const isNew = profile.id === "";
+  const isDirty = isProfileRowDirty(profile, draft, isAdmin);
 
   const handleSave = () => {
     const height = parseOptionalNumber(heightCm, 50, 260);
@@ -109,23 +254,15 @@ const ProfileRow = ({
       });
       return;
     }
-    const ownerIdForSave =
-      isAdmin && (!isNew || ownerId !== NO_OWNER)
-        ? ownerId === NO_OWNER
-          ? null
-          : ownerId
-        : undefined;
 
     onSave(
-      {
-        id: isNew ? undefined : profile.id,
-        name: name.trim() || profile.name.trim(),
-        heightCm: height.value,
-        birthDate: birthDate === "" ? null : birthDate,
-        male,
-        refWeightKg: refWeight.value,
-        ...(ownerIdForSave === undefined ? {} : { ownerId: ownerIdForSave }),
-      },
+      buildProfileSaveInput(
+        profile,
+        draft,
+        isAdmin,
+        height.value,
+        refWeight.value,
+      ),
       {
         onSuccess: () =>
           showToast({
@@ -143,7 +280,7 @@ const ProfileRow = ({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="bg-foreground text-background rounded-sm px-1.5 py-0.5 font-mono text-[10px]">
-            {isNew ? "ใหม่" : profile.upstreamName ? "AUTO" : "MANUAL"}
+            {getProfileBadgeLabel(profile)}
           </span>
           <input
             aria-label="ชื่อโปรไฟล์"
@@ -203,69 +340,22 @@ const ProfileRow = ({
             className={inputClassName}
           />
         </label>
-        <div className="space-y-1">
-          <span className="text-muted-foreground block font-mono text-[10px]">
-            เพศ
-          </span>
-          <div
-            role="group"
-            aria-label="เพศ"
-            className="border-border bg-muted flex overflow-hidden rounded border"
-          >
-            {[
-              { label: "ชาย", value: true },
-              { label: "หญิง", value: false },
-            ].map((option) => (
-              <button
-                key={option.label}
-                type="button"
-                aria-pressed={male === option.value}
-                onClick={() => setMaleOverride(option.value)}
-                className={`flex-1 cursor-pointer px-2 py-1.5 font-mono text-xs transition-colors ${
-                  male === option.value
-                    ? "bg-foreground text-background"
-                    : "text-foreground hover:bg-border/50"
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        <ProfileGenderToggle value={male} onChange={setMaleOverride} />
         {isAdmin && (
-          <div className="space-y-1">
-            <label
-              htmlFor={`owner-${profile.id || "new"}`}
-              className="text-muted-foreground block font-mono text-[10px]"
-            >
-              เจ้าของ (LINE)
-            </label>
-            <Select
-              id={`owner-${profile.id || "new"}`}
-              value={ownerId}
-              options={[
-                { value: NO_OWNER, label: "ยังไม่กำหนด" },
-                ...owners.map((owner) => ({
-                  value: owner.id,
-                  label: owner.name,
-                })),
-              ]}
-              disabled={isSaving}
-              className="h-8 text-xs"
-              onValueChange={setOwnerId}
-            />
-          </div>
+          <ProfileOwnerSelect
+            profileId={profile.id}
+            ownerId={ownerId}
+            owners={owners}
+            isSaving={isSaving}
+            onChange={setOwnerId}
+          />
         )}
         <div className="space-y-1">
           <span className="text-muted-foreground block font-mono text-[10px]">
             จับคู่
           </span>
           <p className="text-muted-foreground py-1.5 font-mono text-[11px]">
-            {isNew
-              ? "บันทึกเพื่อเริ่มใช้งาน"
-              : profile.upstreamName
-                ? `อัตโนมัติ "${profile.upstreamName}"`
-                : "จากน้ำหนักล่าสุด"}
+            {getProfileMatchHint(profile)}
           </p>
         </div>
       </div>

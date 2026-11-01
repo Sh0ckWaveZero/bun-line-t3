@@ -30,6 +30,45 @@ export interface MemberFormData {
   tags?: string;
 }
 
+/** ค่าเริ่มต้นของฟอร์ม — edit mode ใช้ค่าเดิม, create mode ใช้ยอดแบ่งเท่ากัน */
+const buildMemberForm = ({
+  subscriptionId,
+  initialData,
+  totalPrice,
+  currentMemberCount,
+}: {
+  subscriptionId: string;
+  initialData?: SubscriptionMember;
+  totalPrice: number;
+  currentMemberCount: number;
+}): MemberFormData =>
+  initialData
+    ? {
+        subscriptionId,
+        name: initialData.name,
+        email: initialData.email ?? "",
+        shareAmount: initialData.shareAmount,
+        note: initialData.note ?? "",
+        tags: initialData.tags ?? "",
+      }
+    : {
+        subscriptionId,
+        name: "",
+        email: "",
+        shareAmount: calculateEqualShare(totalPrice, currentMemberCount + 1),
+        note: "",
+        tags: "",
+      };
+
+const getSubmitLabel = (isLoading: boolean, isEdit: boolean): string =>
+  isLoading
+    ? isEdit
+      ? "กำลังบันทึก..."
+      : "กำลังเพิ่ม..."
+    : isEdit
+      ? "บันทึก"
+      : "เพิ่มสมาชิก";
+
 export const AddMemberModal = ({
   open,
   onClose,
@@ -46,44 +85,28 @@ export const AddMemberModal = ({
     currentMemberCount + 1,
   );
 
-  const [form, setForm] = useState<MemberFormData>({
-    subscriptionId,
-    name: "",
-    email: "",
-    shareAmount: suggestedShare,
-    note: "",
-  });
+  const [form, setForm] = useState<MemberFormData>(() =>
+    buildMemberForm({
+      subscriptionId,
+      initialData,
+      totalPrice,
+      currentMemberCount,
+    }),
+  );
 
   // Reset form เมื่อ modal เปิดใหม่ — ปรับระหว่าง render ตาม react.dev (ไม่ใช้ effect)
   const [prevOpen, setPrevOpen] = useState(open);
   if (prevOpen !== open) {
     setPrevOpen(open);
     if (open) {
-      if (initialData) {
-        // Edit mode: ใช้ค่าเดิม
-        setForm({
+      setForm(
+        buildMemberForm({
           subscriptionId,
-          name: initialData.name,
-          email: initialData.email ?? "",
-          shareAmount: initialData.shareAmount,
-          note: initialData.note ?? "",
-          tags: initialData.tags ?? "",
-        });
-      } else {
-        // Create mode: คำนวณค่าเริ่มต้น
-        const newSuggestedShare = calculateEqualShare(
+          initialData,
           totalPrice,
-          currentMemberCount + 1,
-        );
-        setForm({
-          subscriptionId,
-          name: "",
-          email: "",
-          shareAmount: newSuggestedShare,
-          note: "",
-          tags: "",
-        });
-      }
+          currentMemberCount,
+        }),
+      );
     }
   }
 
@@ -132,7 +155,10 @@ export const AddMemberModal = ({
 
           {/* name */}
           <div>
-            <label htmlFor="subscription-member-name" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="subscription-member-name"
+              className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               ชื่อสมาชิก <span className="text-red-500">*</span>
             </label>
             <input
@@ -148,7 +174,10 @@ export const AddMemberModal = ({
 
           {/* email */}
           <div>
-            <label htmlFor="subscription-member-email" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="subscription-member-email"
+              className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               อีเมล (ไม่บังคับ)
             </label>
             <input
@@ -165,7 +194,10 @@ export const AddMemberModal = ({
 
           {/* shareAmount */}
           <div>
-            <label htmlFor="subscription-member-share-amount" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="subscription-member-share-amount"
+              className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               จำนวนเงินที่ต้องจ่าย (฿) <span className="text-red-500">*</span>
             </label>
             <div className="flex gap-2">
@@ -201,7 +233,10 @@ export const AddMemberModal = ({
 
           {/* note */}
           <div>
-            <label htmlFor="subscription-member-note" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="subscription-member-note"
+              className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               หมายเหตุ (ไม่บังคับ)
             </label>
             <input
@@ -216,7 +251,10 @@ export const AddMemberModal = ({
 
           {/* tags */}
           <div>
-            <label htmlFor="subscription-member-tags" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="subscription-member-tags"
+              className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Tags (ไม่บังคับ)
             </label>
             <input
@@ -247,13 +285,7 @@ export const AddMemberModal = ({
               className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-60 dark:bg-indigo-500"
             >
               {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-              {isLoading
-                ? isEdit
-                  ? "กำลังบันทึก..."
-                  : "กำลังเพิ่ม..."
-                : isEdit
-                  ? "บันทึก"
-                  : "เพิ่มสมาชิก"}
+              {getSubmitLabel(isLoading, isEdit)}
             </button>
           </div>
         </form>

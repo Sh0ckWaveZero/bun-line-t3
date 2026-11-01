@@ -2,8 +2,49 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ChevronDown, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useBitkubConnection } from "@/features/exchanges/hooks/useBitkubConnection";
 import { useBitkubDca } from "../hooks/useBitkubDca";
 import { BitkubBuyHistory } from "./BitkubBuyHistory";
+
+type BitkubConnectionQuery = ReturnType<
+  typeof useBitkubConnection
+>["connection"];
+
+/** สถานะการเชื่อมต่อบนหัวแผง — pill เขียวเมื่อเชื่อมต่อ, ข้อความอธิบายเมื่อยังไม่แน่ใจ */
+const BitkubConnectionStatusPill = ({
+  connection,
+}: {
+  connection: BitkubConnectionQuery;
+}) => {
+  if (connection.data?.connected) {
+    return (
+      <span className="inline-flex min-h-9 max-w-full items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1 text-sm font-medium text-emerald-700 dark:text-emerald-300">
+        <span
+          aria-hidden="true"
+          className="size-2 shrink-0 rounded-full bg-emerald-500"
+        />
+        <span className="shrink-0">เชื่อมต่อแล้ว</span>
+        {connection.data.keyHint && (
+          <span className="max-w-16 truncate font-mono text-xs font-normal opacity-80">
+            {connection.data.keyHint}
+          </span>
+        )}
+      </span>
+    );
+  }
+
+  return (
+    <span className="text-muted-foreground max-w-36 truncate text-right text-sm sm:max-w-none">
+      {connection.isLoading
+        ? "กำลังตรวจสอบการเชื่อมต่อ"
+        : connection.isError
+          ? "ยังตรวจสอบสถานะการเชื่อมต่อไม่ได้"
+          : connection.data
+            ? "ยังไม่ได้เชื่อมต่อ"
+            : "เปิดแผงเพื่อจัดการประวัติซื้อ"}
+    </span>
+  );
+};
 
 export function BitkubDcaPanel({ onImported }: { onImported: () => void }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -49,37 +90,14 @@ export function BitkubDcaPanel({ onImported }: { onImported: () => void }) {
           aria-expanded={isExpanded}
           aria-controls="bitkub-panel-content"
           onClick={() => setIsExpanded((current) => !current)}
-          className="group flex min-h-11 w-full cursor-pointer flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-md text-left outline-none transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="group hover:bg-muted/40 focus-visible:ring-ring flex min-h-11 w-full cursor-pointer flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-md text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
         >
           <span className="min-w-0 text-lg font-semibold">
             Bitkub · นำเข้ารายการซื้อ BTC
           </span>
           <span className="ml-auto flex shrink-0 items-center gap-2">
-            {connection.data?.connected ? (
-              <span className="inline-flex min-h-9 max-w-full items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1 text-sm font-medium text-emerald-700 dark:text-emerald-300">
-                <span
-                  aria-hidden="true"
-                  className="size-2 shrink-0 rounded-full bg-emerald-500"
-                />
-                <span className="shrink-0">เชื่อมต่อแล้ว</span>
-                {connection.data.keyHint && (
-                  <span className="max-w-16 truncate font-mono text-xs font-normal opacity-80">
-                    {connection.data.keyHint}
-                  </span>
-                )}
-              </span>
-            ) : (
-              <span className="text-muted-foreground max-w-36 truncate text-right text-sm sm:max-w-none">
-                {connection.isLoading
-                  ? "กำลังตรวจสอบการเชื่อมต่อ"
-                  : isConnectionUnknown
-                    ? "ยังตรวจสอบสถานะการเชื่อมต่อไม่ได้"
-                    : connection.data
-                      ? "ยังไม่ได้เชื่อมต่อ"
-                      : "เปิดแผงเพื่อจัดการประวัติซื้อ"}
-              </span>
-            )}
-            <span className="text-muted-foreground grid size-8 shrink-0 place-items-center rounded-full transition-colors group-hover:bg-muted group-hover:text-foreground">
+            <BitkubConnectionStatusPill connection={connection} />
+            <span className="text-muted-foreground group-hover:bg-muted group-hover:text-foreground grid size-8 shrink-0 place-items-center rounded-full transition-colors">
               <ChevronDown
                 aria-hidden="true"
                 className={`size-4 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
@@ -90,7 +108,8 @@ export function BitkubDcaPanel({ onImported }: { onImported: () => void }) {
       </h2>
       <div id="bitkub-panel-content" hidden={!isExpanded} className="space-y-4">
         <p className="text-muted-foreground text-sm">
-          โหลดประวัติซื้อจาก Bitkub เมื่อกดปุ่มเท่านั้น แล้วเลือกรายการที่ต้องการนำเข้า DCA{" "}
+          โหลดประวัติซื้อจาก Bitkub เมื่อกดปุ่มเท่านั้น
+          แล้วเลือกรายการที่ต้องการนำเข้า DCA{" "}
           <Link
             to="/settings"
             className="text-primary underline-offset-4 hover:underline"

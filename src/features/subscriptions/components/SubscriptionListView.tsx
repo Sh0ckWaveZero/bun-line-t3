@@ -12,6 +12,60 @@ import {
 } from "@/features/subscriptions/helpers";
 import { Plus, RefreshCw } from "lucide-react";
 
+/** การ์ดสรุปค่าใช้จ่ายรวมต่อเดือน */
+const MonthlyTotalCard = ({
+  count,
+  totalMonthly,
+}: {
+  count: number;
+  totalMonthly: number;
+}) => (
+  <div className="mb-6 rounded-2xl bg-linear-to-r from-indigo-500 to-purple-600 p-5 text-white shadow-md">
+    <p className="text-sm font-medium opacity-80">ค่าใช้จ่ายรวม / เดือน</p>
+    <p className="mt-1 text-3xl font-bold">
+      {totalMonthly.toLocaleString("th-TH")}
+      <span className="ml-1 text-lg font-normal opacity-80">฿</span>
+    </p>
+    <p className="mt-1 text-xs opacity-70">
+      {count} subscription{count > 1 ? "s" : ""} ·{" "}
+      {formatBillingMonthThai(getCurrentMonthLabel())}
+    </p>
+  </div>
+);
+
+/** สถานะว่าง — admin เห็นปุ่มเพิ่มรายการแรก */
+const EmptySubscriptionState = ({
+  isAdmin,
+  onOpenAddSub,
+}: {
+  isAdmin: boolean;
+  onOpenAddSub: () => void;
+}) => (
+  <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 py-20 text-center dark:border-gray-700">
+    <span className="mb-4 text-5xl">📦</span>
+    <p className="text-base font-semibold text-gray-700 dark:text-gray-300">
+      {isAdmin
+        ? "ยังไม่มี Subscription"
+        : "คุณยังไม่ได้เป็นสมาชิก Subscription ใดๆ"}
+    </p>
+    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+      {isAdmin
+        ? 'กดปุ่ม "เพิ่มใหม่" เพื่อเริ่มต้น'
+        : "ติดต่อผู้ดูแลระบบเพื่อเพิ่มเป็นสมาชิก"}
+    </p>
+    {isAdmin && (
+      <button
+        type="button"
+        onClick={onOpenAddSub}
+        className="mt-5 flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 dark:bg-indigo-500"
+      >
+        <Plus className="h-4 w-4" />
+        เพิ่ม Subscription แรก
+      </button>
+    )}
+  </div>
+);
+
 export interface SubscriptionListViewProps {
   subscriptions: SubscriptionWithMembers[];
   isAdmin: boolean;
@@ -81,20 +135,10 @@ export function SubscriptionListView({
       </div>
 
       {subscriptions.length > 0 && (
-        <div className="mb-6 rounded-2xl bg-linear-to-r from-indigo-500 to-purple-600 p-5 text-white shadow-md">
-          <p className="text-sm font-medium opacity-80">
-            ค่าใช้จ่ายรวม / เดือน
-          </p>
-          <p className="mt-1 text-3xl font-bold">
-            {totalMonthly.toLocaleString("th-TH")}
-            <span className="ml-1 text-lg font-normal opacity-80">฿</span>
-          </p>
-          <p className="mt-1 text-xs opacity-70">
-            {subscriptions.length} subscription
-            {subscriptions.length > 1 ? "s" : ""} ·{" "}
-            {formatBillingMonthThai(getCurrentMonthLabel())}
-          </p>
-        </div>
+        <MonthlyTotalCard
+          count={subscriptions.length}
+          totalMonthly={totalMonthly}
+        />
       )}
 
       {isLoading ? (
@@ -102,29 +146,7 @@ export function SubscriptionListView({
           <RefreshCw className="h-7 w-7 animate-spin text-gray-400" />
         </div>
       ) : subscriptions.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 py-20 text-center dark:border-gray-700">
-          <span className="mb-4 text-5xl">📦</span>
-          <p className="text-base font-semibold text-gray-700 dark:text-gray-300">
-            {isAdmin
-              ? "ยังไม่มี Subscription"
-              : "คุณยังไม่ได้เป็นสมาชิก Subscription ใดๆ"}
-          </p>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {isAdmin
-              ? 'กดปุ่ม "เพิ่มใหม่" เพื่อเริ่มต้น'
-              : "ติดต่อผู้ดูแลระบบเพื่อเพิ่มเป็นสมาชิก"}
-          </p>
-          {isAdmin && (
-            <button
-              type="button"
-              onClick={onOpenAddSub}
-              className="mt-5 flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 dark:bg-indigo-500"
-            >
-              <Plus className="h-4 w-4" />
-              เพิ่ม Subscription แรก
-            </button>
-          )}
-        </div>
+        <EmptySubscriptionState isAdmin={isAdmin} onOpenAddSub={onOpenAddSub} />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {subscriptions.map((subscription) => (
