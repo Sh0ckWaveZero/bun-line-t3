@@ -457,6 +457,178 @@ const PlanningPokerRoomHeader = ({
   </header>
 );
 
+/** ลำดับ stagger ตอนเปิดไพ่: นับเฉพาะใบที่จะพลิก (ผู้โหวตที่มีค่า) — cap ที่ 6 ช่วง กันห้องใหญ่รอนาน */
+const getRevealStagger = (
+  participants: PublicRoom["participants"],
+): Map<string, number> => {
+  const revealStagger = new Map<string, number>();
+  let flipOrder = 0;
+  for (const participant of participants) {
+    if (participant.role === "voter" && participant.vote !== null) {
+      revealStagger.set(participant.id, Math.min(flipOrder, 6));
+      flipOrder += 1;
+    }
+  }
+  return revealStagger;
+};
+
+/** โต๊ะไพ่หลัก: ป้ายเวลา+ผลโหวต (พับมุมการ์ด), พัดไพ่ผู้เล่น, ปุ่มเปิดเคส/เริ่มรอบใหม่ */
+const PlayersCard = ({
+  room,
+  votedCount,
+  voterCount,
+  revealStagger,
+  onReveal,
+  onReset,
+}: {
+  room: PublicRoom;
+  votedCount: number;
+  voterCount: number;
+  revealStagger: Map<string, number>;
+  onReveal: () => void;
+  onReset: () => void;
+}) => (
+  <Card className="relative">
+    {/* ป้ายเวลา+ผลโหวต พับมุมบนซ้ายของการ์ด (สไตล์ tag เกม pixel) — เด่นเป็นจุดแรกที่ตาเจอ */}
+    <div id="poker-timer-badge" className="poker-timer-badge">
+      <RoundTimer
+        roundStartedAt={room.roundStartedAt}
+        revealedAt={room.revealedAt}
+        serverNow={room.serverNow}
+      />
+      <span className="text-muted-foreground text-sm" aria-hidden="true">
+        ·
+      </span>
+      <span className="text-sm tabular-nums">
+        Voted {votedCount}/{voterCount}
+      </span>
+    </div>
+    <CardContent className="space-y-6 pt-8">
+      {/* กล่องไพ่สไตล์ CardCase — จำนวนใบ = จำนวนผู้โหวต, กล่องคือปุ่มเปิดไพ่
+          ก่อนเปิด: เคสอยู่กลางใต้พัดไพ่ (primary action)
+          หลังเปิด: เคสหาย เหลือพัดไพ่ (ตัวปรับขนาดการ์ดอยู่ท้ายแถวปุ่มหัวห้อง) */}
+      <section
+        id="poker-players-section"
+        aria-labelledby="poker-players-heading"
+        className="space-y-4 sm:space-y-5"
+      >
+        <h2 id="poker-players-heading" className="sr-only">
+          {voterCount} {voterCount === 1 ? "card is" : "cards are"} in this case
+        </h2>
+        {room.participants.length === 0 ? (
+          <p className="text-muted-foreground text-center text-sm">
+            No players yet
+          </p>
+        ) : (
+          <div
+            id="poker-fan-scroll"
+            className="poker-player-fan-scroll"
+            role="region"
+            aria-labelledby="poker-players-heading"
+            tabIndex={0}
+          >
+            <ul id="poker-player-cards" className="poker-player-fan">
+              {/* ผู้โหวตมาก่อน spectator ท้ายสุดเสมอ (คงลำดับเข้าห้องภายในกลุ่ม) — แถวอ่านเป็น
+                  "คนโหวต" แล้วตามด้วย "คนดู" ตรงกับ Voted x/y ที่นับเฉพาะ voter */}
+              {[...room.participants]
+                .sort(
+                  (a, b) =>
+                    (a.role === "voter" ? 0 : 1) - (b.role === "voter" ? 0 : 1),
+                )
+                .map((participant, index) => (
+                  <PlayerCard
+                    key={participant.id}
+                    participant={participant}
+                    isRevealed={room.revealed}
+                    staggerIndex={revealStagger.get(participant.id)}
+                    position={{
+                      index,
+                      count: room.participants.length,
+                    }}
+                  />
+                ))}
+            </ul>
+          </div>
+        )}
+        {!room.revealed ? (
+          /* เคสเปิดไพ่ = primary action กลางใต้พัดไพ่ — กดเปิดจากการ์ดที่เห็น */
+          <div className="flex justify-center">
+            <RevealCaseButton
+              id="poker-reveal-case"
+              onClick={onReveal}
+              disabled={!room.canControl}
+            />
+          </div>
+        ) : null}
+      </section>
+
+      {room.canControl && room.revealed ? (
+        <div className="flex justify-center">
+          <Button type="button" id="poker-new-round" onClick={onReset}>
+            <PixelRefresh aria-hidden="true" />
+            New round
+          </Button>
+        </div>
+      ) : null}
+    </CardContent>
+  </Card>
+);
+
+/** โซนโหวตใต้โต๊ะ: เลือกคะแนน / ดูคะแนนตัวเอง / spectator — แยกตามบทบาทและสถานะรอบ */
+const VoteSection = ({
+  canVote,
+  isJoined,
+  isRevealed,
+  deck,
+  selected,
+  round,
+  onVote,
+}: {
+  canVote: boolean;
+  isJoined: boolean;
+  isRevealed: boolean;
+  deck: PublicRoom["deck"];
+  selected: PublicRoom["myVote"];
+  round: PublicRoom["round"];
+  onVote: (value: string | null) => void;
+}) => {
+  if (canVote && !isRevealed) {
+    return (
+      <section aria-labelledby="poker-deck-heading" className="space-y-3">
+        <h2
+          id="poker-deck-heading"
+          className="text-center text-sm font-semibold"
+        >
+          Pick your score
+        </h2>
+        <VoteDeck
+          key={round}
+          deck={deck}
+          selected={selected}
+          labelledBy="poker-deck-heading"
+          onSelect={onVote}
+        />
+      </section>
+    );
+  }
+  if (canVote) {
+    return (
+      <p className="text-center text-sm">
+        Cards are revealed — your score:{" "}
+        <strong>{selected ?? "no vote"}</strong>
+      </p>
+    );
+  }
+  if (isJoined) {
+    return (
+      <p className="text-muted-foreground text-center text-sm">
+        You&apos;re watching as a spectator — you can&apos;t vote
+      </p>
+    );
+  }
+  return null;
+};
+
 export const PlanningPokerRoomPage = () => {
   const { code: rawCode } = useParams({ strict: false }) as { code?: string };
   const code = (rawCode ?? "").toUpperCase();
@@ -518,15 +690,8 @@ export const PlanningPokerRoomPage = () => {
     (participant) => participant.hasVoted,
   ).length;
 
-  // ลำดับ stagger ตอนเปิดไพ่: นับเฉพาะใบที่จะพลิก (ผู้โหวตที่มีค่า) — cap ที่ 6 ช่วง กันห้องใหญ่รอนาน
-  const revealStagger = new Map<string, number>();
-  let flipOrder = 0;
-  for (const participant of room.participants) {
-    if (participant.role === "voter" && participant.vote !== null) {
-      revealStagger.set(participant.id, Math.min(flipOrder, 6));
-      flipOrder += 1;
-    }
-  }
+  // ลำดับ stagger ตอนเปิดไพ่ (ดู getRevealStagger)
+  const revealStagger = getRevealStagger(room.participants);
 
   return (
     <main
@@ -577,126 +742,25 @@ export const PlanningPokerRoomPage = () => {
         </div>
       ) : null}
 
-      <Card className="relative">
-        {/* ป้ายเวลา+ผลโหวต พับมุมบนซ้ายของการ์ด (สไตล์ tag เกม pixel) — เด่นเป็นจุดแรกที่ตาเจอ */}
-        <div id="poker-timer-badge" className="poker-timer-badge">
-          <RoundTimer
-            roundStartedAt={room.roundStartedAt}
-            revealedAt={room.revealedAt}
-            serverNow={room.serverNow}
-          />
-          <span className="text-muted-foreground text-sm" aria-hidden="true">
-            ·
-          </span>
-          <span className="text-sm tabular-nums">
-            Voted {votedCount}/{voters.length}
-          </span>
-        </div>
-        <CardContent className="space-y-6 pt-8">
-          {/* กล่องไพ่สไตล์ CardCase — จำนวนใบ = จำนวนผู้โหวต, กล่องคือปุ่มเปิดไพ่
-              ก่อนเปิด: เคสอยู่กลางใต้พัดไพ่ (primary action)
-              หลังเปิด: เคสหาย เหลือพัดไพ่ (ตัวปรับขนาดการ์ดอยู่ท้ายแถวปุ่มหัวห้อง) */}
-          <section
-            id="poker-players-section"
-            aria-labelledby="poker-players-heading"
-            className="space-y-4 sm:space-y-5"
-          >
-            <h2 id="poker-players-heading" className="sr-only">
-              {voters.length} {voters.length === 1 ? "card is" : "cards are"} in
-              this case
-            </h2>
-            {room.participants.length === 0 ? (
-              <p className="text-muted-foreground text-center text-sm">
-                No players yet
-              </p>
-            ) : (
-              <>
-                <div
-                  id="poker-fan-scroll"
-                  className="poker-player-fan-scroll"
-                  role="region"
-                  aria-labelledby="poker-players-heading"
-                  tabIndex={0}
-                >
-                  <ul id="poker-player-cards" className="poker-player-fan">
-                    {/* ผู้โหวตมาก่อน spectator ท้ายสุดเสมอ (คงลำดับเข้าห้องภายในกลุ่ม) — แถวอ่านเป็น
-                        "คนโหวต" แล้วตามด้วย "คนดู" ตรงกับ Voted x/y ที่นับเฉพาะ voter */}
-                    {[...room.participants]
-                      .sort(
-                        (a, b) =>
-                          (a.role === "voter" ? 0 : 1) -
-                          (b.role === "voter" ? 0 : 1),
-                      )
-                      .map((participant, index) => (
-                        <PlayerCard
-                          key={participant.id}
-                          participant={participant}
-                          isRevealed={room.revealed}
-                          staggerIndex={revealStagger.get(participant.id)}
-                          position={{
-                            index,
-                            count: room.participants.length,
-                          }}
-                        />
-                      ))}
-                  </ul>
-                </div>
-              </>
-            )}
-            {!room.revealed ? (
-              /* เคสเปิดไพ่ = primary action กลางใต้พัดไพ่ — กดเปิดจากการ์ดที่เห็น */
-              <div className="flex justify-center">
-                <RevealCaseButton
-                  id="poker-reveal-case"
-                  onClick={() => void poker.reveal()}
-                  disabled={!room.canControl}
-                />
-              </div>
-            ) : null}
-          </section>
-
-          {room.canControl && room.revealed ? (
-            <div className="flex justify-center">
-              <Button
-                type="button"
-                id="poker-new-round"
-                onClick={() => void poker.reset()}
-              >
-                <PixelRefresh aria-hidden="true" />
-                New round
-              </Button>
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
+      <PlayersCard
+        room={room}
+        votedCount={votedCount}
+        voterCount={voters.length}
+        revealStagger={revealStagger}
+        onReveal={() => void poker.reveal()}
+        onReset={() => void poker.reset()}
+      />
 
       {/* ไพ่ให้เลือกอยู่ใต้โต๊ะทันที — ไม่ต้องเลื่อนผ่านผลลัพธ์/ประวัติ และซ่อนหลังเปิดไพ่ */}
-      {canVote && !room.revealed ? (
-        <section aria-labelledby="poker-deck-heading" className="space-y-3">
-          <h2
-            id="poker-deck-heading"
-            className="text-center text-sm font-semibold"
-          >
-            Pick your score
-          </h2>
-          <VoteDeck
-            key={room.round}
-            deck={room.deck}
-            selected={room.myVote}
-            labelledBy="poker-deck-heading"
-            onSelect={(value) => void poker.vote(value)}
-          />
-        </section>
-      ) : canVote ? (
-        <p className="text-center text-sm">
-          Cards are revealed — your score:{" "}
-          <strong>{room.myVote ?? "no vote"}</strong>
-        </p>
-      ) : isJoined ? (
-        <p className="text-muted-foreground text-center text-sm">
-          You&apos;re watching as a spectator — you can&apos;t vote
-        </p>
-      ) : null}
+      <VoteSection
+        canVote={canVote}
+        isJoined={isJoined}
+        isRevealed={room.revealed}
+        deck={room.deck}
+        selected={room.myVote}
+        round={room.round}
+        onVote={(value) => void poker.vote(value)}
+      />
 
       {room.summary ? <ResultsPanel summary={room.summary} /> : null}
 

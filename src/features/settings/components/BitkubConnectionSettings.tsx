@@ -39,6 +39,103 @@ interface KeyEntryToggleProps {
   openLabel: string;
 }
 
+type BitkubConnectionQuery = ReturnType<
+  typeof useBitkubConnection
+>["connection"];
+
+/** ธงสถานะการเชื่อมต่อจากผล query — ดึง ternary ซ้อนออกจาก component */
+const getConnectionFlags = (connection: BitkubConnectionQuery) => {
+  const hasConnectionStatus = Boolean(connection.data) && !connection.isError;
+  return {
+    hasConnectionStatus,
+    isConnectionUnknown: connection.isError,
+    isConnected: hasConnectionStatus && (connection.data?.connected ?? false),
+    isConfigured: hasConnectionStatus && connection.data?.configured,
+  };
+};
+
+/** โชว์ฟอร์ม key เมื่อ: เชื่อมต่อแล้วและเปิดฟอร์มไว้ / ระบบยังไม่พร้อม / ตรวจไม่ได้และผู้ใช้เปิดฟอร์มเอง */
+const canShowKeyForm = ({
+  isConnected,
+  isConfigured,
+  isConnectionUnknown,
+  isKeyEntryOpen,
+}: {
+  isConnected: boolean;
+  isConfigured: boolean | undefined;
+  isConnectionUnknown: boolean;
+  isKeyEntryOpen: boolean;
+}): boolean =>
+  isConnected
+    ? isKeyEntryOpen
+    : isConfigured || (isConnectionUnknown && isKeyEntryOpen);
+
+/** บล็อก "ตรวจสอบไม่ได้" — ปุ่มลองใหม่ + ปุ่มเปิดฟอร์มกรอก key */
+const ConnectionUnknownBlock = ({
+  connection,
+  isKeyEntryOpen,
+  isFormBusy,
+  onToggleKeyEntry,
+}: {
+  connection: BitkubConnectionQuery;
+  isKeyEntryOpen: boolean;
+  isFormBusy: boolean;
+  onToggleKeyEntry: () => void;
+}) => (
+  <div className="space-y-3">
+    <p className="text-muted-foreground text-sm">
+      ยังตรวจสอบไม่ได้ว่ามี key เชื่อมต่ออยู่หรือไม่ หากมี key อยู่แล้ว
+      การเชื่อมต่อใหม่สำเร็จจะแทนที่ key เดิม
+    </p>
+    <div className="flex flex-wrap gap-2">
+      <Button
+        type="button"
+        variant="outline"
+        disabled={connection.isFetching}
+        onClick={() => void connection.refetch()}
+      >
+        ลองตรวจสอบสถานะอีกครั้ง
+      </Button>
+      <KeyEntryToggle
+        isKeyEntryOpen={isKeyEntryOpen}
+        isFormBusy={isFormBusy}
+        onToggle={onToggleKeyEntry}
+        openLabel="กรอก API Key"
+      />
+    </div>
+  </div>
+);
+
+/** แถว actions เมื่อเชื่อมต่อแล้ว — ปุ่มเปิดฟอร์มเปลี่ยน key + ยกเลิกการเชื่อมต่อ */
+const ConnectedActions = ({
+  isKeyEntryOpen,
+  isFormBusy,
+  onToggleKeyEntry,
+  onDisconnect,
+}: {
+  isKeyEntryOpen: boolean;
+  isFormBusy: boolean;
+  onToggleKeyEntry: () => void;
+  onDisconnect: () => void;
+}) => (
+  <div className="flex flex-wrap gap-2">
+    <KeyEntryToggle
+      isKeyEntryOpen={isKeyEntryOpen}
+      isFormBusy={isFormBusy}
+      onToggle={onToggleKeyEntry}
+      openLabel="เปลี่ยน API Key"
+    />
+    <Button
+      type="button"
+      variant="outline"
+      disabled={isFormBusy}
+      onClick={onDisconnect}
+    >
+      ยกเลิกการเชื่อมต่อ
+    </Button>
+  </div>
+);
+
 /** ปุ่มกัก/เปิดฟอร์มกรอก key — ใช้ร่วมสองบล็อก */
 const KeyEntryToggle = ({
   isKeyEntryOpen,
@@ -94,7 +191,10 @@ const KeyForm = ({
       <fieldset disabled={isFormBusy} className="space-y-3">
         <legend className="sr-only">ข้อมูลรับรอง Bitkub</legend>
         <div>
-          <label htmlFor="settings-bitkub-api-key" className="mb-1 block text-sm">
+          <label
+            htmlFor="settings-bitkub-api-key"
+            className="mb-1 block text-sm"
+          >
             API key
           </label>
           <Input
@@ -195,14 +295,20 @@ export function BitkubConnectionSettings() {
     resolver: zodResolver(bitkubCredentialsSchema),
     defaultValues: credentials,
   });
-  const hasConnectionStatus = Boolean(connection.data) && !connection.isError;
-  const isConnectionUnknown = connection.isError;
-  const isConnected = hasConnectionStatus && (connection.data?.connected ?? false);
-  const isConfigured = hasConnectionStatus && connection.data?.configured;
+  const {
+    hasConnectionStatus,
+    isConnectionUnknown,
+    isConnected,
+    isConfigured,
+  } = getConnectionFlags(connection);
   const isFormBusy = isBusy || isSubmitting;
-  const canShowKeyForm = isConnected
-    ? isKeyEntryOpen
-    : isConfigured || (isConnectionUnknown && isKeyEntryOpen);
+  const isKeyFormVisible = canShowKeyForm({
+    isConnected,
+    isConfigured,
+    isConnectionUnknown,
+    isKeyEntryOpen,
+  });
+  const toggleKeyEntry = () => setIsKeyEntryOpen((isOpen) => !isOpen);
 
   const onSubmit = handleSubmit(async (credentials) => {
     const connected = await handleConnect(credentials);
@@ -245,28 +351,12 @@ export function BitkubConnectionSettings() {
       </p>
 
       {isConnectionUnknown && (
-        <div className="space-y-3">
-          <p className="text-muted-foreground text-sm">
-            ยังตรวจสอบไม่ได้ว่ามี key เชื่อมต่ออยู่หรือไม่ หากมี key อยู่แล้ว
-            การเชื่อมต่อใหม่สำเร็จจะแทนที่ key เดิม
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={connection.isFetching}
-              onClick={() => void connection.refetch()}
-            >
-              ลองตรวจสอบสถานะอีกครั้ง
-            </Button>
-            <KeyEntryToggle
-              isKeyEntryOpen={isKeyEntryOpen}
-              isFormBusy={isFormBusy}
-              onToggle={() => setIsKeyEntryOpen((isOpen) => !isOpen)}
-              openLabel="กรอก API Key"
-            />
-          </div>
-        </div>
+        <ConnectionUnknownBlock
+          connection={connection}
+          isKeyEntryOpen={isKeyEntryOpen}
+          isFormBusy={isFormBusy}
+          onToggleKeyEntry={toggleKeyEntry}
+        />
       )}
 
       {hasConnectionStatus && !connection.data?.configured && (
@@ -276,25 +366,15 @@ export function BitkubConnectionSettings() {
       )}
 
       {isConnected && (
-        <div className="flex flex-wrap gap-2">
-          <KeyEntryToggle
-            isKeyEntryOpen={isKeyEntryOpen}
-            isFormBusy={isFormBusy}
-            onToggle={() => setIsKeyEntryOpen((isOpen) => !isOpen)}
-            openLabel="เปลี่ยน API Key"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            disabled={isFormBusy}
-            onClick={() => void handleDisconnect()}
-          >
-            ยกเลิกการเชื่อมต่อ
-          </Button>
-        </div>
+        <ConnectedActions
+          isKeyEntryOpen={isKeyEntryOpen}
+          isFormBusy={isFormBusy}
+          onToggleKeyEntry={toggleKeyEntry}
+          onDisconnect={() => void handleDisconnect()}
+        />
       )}
 
-      {canShowKeyForm && (
+      {isKeyFormVisible && (
         <KeyForm
           isConnected={isConnected}
           isFormBusy={isFormBusy}

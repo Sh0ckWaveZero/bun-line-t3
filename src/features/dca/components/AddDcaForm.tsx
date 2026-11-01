@@ -1,4 +1,6 @@
+import type { ComponentProps, ReactNode } from "react";
 import { Pencil, Plus } from "lucide-react";
+import type { UseFormRegisterReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,6 +19,54 @@ interface AddDcaFormProps {
   onSuccess: () => void;
   order?: DcaOrder;
 }
+
+const getSubmitLabel = (isSubmitting: boolean, isEditing: boolean): string =>
+  isSubmitting
+    ? "กำลังบันทึก..."
+    : isEditing
+      ? "บันทึกการแก้ไข"
+      : "เพิ่มรายการ";
+
+interface DcaFormFieldProps {
+  id: string;
+  label: ReactNode;
+  /** ข้อความ validation error — มี = แสดงใต้ช่องและตั้ง aria-invalid */
+  error?: string;
+  registration: UseFormRegisterReturn;
+  inputProps?: ComponentProps<typeof Input>;
+}
+
+/** ช่องกรอกพร้อม label + ข้อความ error — pattern เดียวกันทุกช่องของฟอร์ม DCA */
+const DcaFormField = ({
+  id,
+  label,
+  error,
+  registration,
+  inputProps,
+}: DcaFormFieldProps) => (
+  <div className="space-y-1">
+    <label htmlFor={id} className="text-muted-foreground text-sm font-medium">
+      {label}
+    </label>
+    <Input
+      id={id}
+      aria-invalid={Boolean(error)}
+      aria-describedby={error ? `${id}-error` : undefined}
+      className="h-10"
+      {...inputProps}
+      {...registration}
+    />
+    {error && (
+      <p
+        id={`${id}-error`}
+        role="alert"
+        className="text-sm text-red-600 dark:text-red-400"
+      >
+        {error}
+      </p>
+    )}
+  </div>
+);
 
 export const AddDcaForm = ({ onClose, onSuccess, order }: AddDcaFormProps) => {
   const {
@@ -62,190 +112,73 @@ export const AddDcaForm = ({ onClose, onSuccess, order }: AddDcaFormProps) => {
           )}
 
           {!isEditing && (
-            <div className="space-y-1">
-              <label
-                htmlFor="dca-order-coin"
-                className="text-muted-foreground text-sm font-medium"
-              >
-                เหรียญ
-              </label>
-              <Input
-                id="dca-order-coin"
-                {...register("coin")}
-                placeholder="BTC"
-                aria-invalid={Boolean(errors.coin)}
-                aria-describedby={
-                  errors.coin ? "dca-order-coin-error" : undefined
-                }
-                className="h-10"
-              />
-              {errors.coin?.message && (
-                <p
-                  id="dca-order-coin-error"
-                  role="alert"
-                  className="text-sm text-red-600 dark:text-red-400"
-                >
-                  {errors.coin.message}
-                </p>
-              )}
-            </div>
+            <DcaFormField
+              id="dca-order-coin"
+              label="เหรียญ"
+              error={errors.coin?.message}
+              registration={register("coin")}
+              inputProps={{ placeholder: "BTC" }}
+            />
           )}
 
-          <div className="space-y-1">
-            <label
-              htmlFor="dca-order-amount"
-              className="text-muted-foreground text-sm font-medium"
-            >
-              ยอดซื้อรวม (THB)
-            </label>
-            <Input
-              id="dca-order-amount"
-              type="number"
-              min="0"
-              step="0.01"
-              inputMode="decimal"
-              placeholder="107.99"
-              aria-invalid={Boolean(errors.amountTHB)}
-              aria-describedby={
-                errors.amountTHB ? "dca-order-amount-error" : undefined
-              }
-              className="h-10"
-              {...register("amountTHB")}
-            />
-            {errors.amountTHB?.message && (
-              <p
-                id="dca-order-amount-error"
-                role="alert"
-                className="text-sm text-red-600 dark:text-red-400"
-              >
-                {errors.amountTHB.message}
-              </p>
-            )}
-          </div>
+          <DcaFormField
+            id="dca-order-amount"
+            label="ยอดซื้อรวม (THB)"
+            error={errors.amountTHB?.message}
+            registration={register("amountTHB")}
+            inputProps={{
+              type: "number",
+              min: "0",
+              step: "0.01",
+              inputMode: "decimal",
+              placeholder: "107.99",
+            }}
+          />
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="space-y-1">
-              <label
-                htmlFor="dca-order-coin-received"
-                className="text-muted-foreground text-sm font-medium"
-              >
-                จำนวนเหรียญที่ได้รับ
-              </label>
-              <Input
-                id="dca-order-coin-received"
-                type="number"
-                min="0"
-                step="any"
-                inputMode="decimal"
-                placeholder="0.00004634"
-                aria-invalid={Boolean(errors.coinReceived)}
-                aria-describedby={
-                  errors.coinReceived
-                    ? "dca-order-coin-received-error"
-                    : undefined
-                }
-                className="h-10"
-                {...register("coinReceived")}
-              />
-              {errors.coinReceived?.message && (
-                <p
-                  id="dca-order-coin-received-error"
-                  role="alert"
-                  className="text-sm text-red-600 dark:text-red-400"
-                >
-                  {errors.coinReceived.message}
-                </p>
-              )}
-            </div>
-            <div className="space-y-1">
-              <label
-                htmlFor="dca-order-price"
-                className="text-muted-foreground text-sm font-medium"
-              >
-                ราคาต่อเหรียญ (THB)
-              </label>
-              <Input
-                id="dca-order-price"
-                type="number"
-                min="0"
-                step="any"
-                inputMode="decimal"
-                placeholder="2330307.8"
-                aria-invalid={Boolean(errors.pricePerCoin)}
-                aria-describedby={
-                  errors.pricePerCoin ? "dca-order-price-error" : undefined
-                }
-                className="h-10"
-                {...register("pricePerCoin")}
-              />
-              {errors.pricePerCoin?.message && (
-                <p
-                  id="dca-order-price-error"
-                  role="alert"
-                  className="text-sm text-red-600 dark:text-red-400"
-                >
-                  {errors.pricePerCoin.message}
-                </p>
-              )}
-            </div>
+            <DcaFormField
+              id="dca-order-coin-received"
+              label="จำนวนเหรียญที่ได้รับ"
+              error={errors.coinReceived?.message}
+              registration={register("coinReceived")}
+              inputProps={{
+                type: "number",
+                min: "0",
+                step: "any",
+                inputMode: "decimal",
+                placeholder: "0.00004634",
+              }}
+            />
+            <DcaFormField
+              id="dca-order-price"
+              label="ราคาต่อเหรียญ (THB)"
+              error={errors.pricePerCoin?.message}
+              registration={register("pricePerCoin")}
+              inputProps={{
+                type: "number",
+                min: "0",
+                step: "any",
+                inputMode: "decimal",
+                placeholder: "2330307.8",
+              }}
+            />
           </div>
 
-          <div className="space-y-1">
-            <label
-              htmlFor="dca-order-executed-at"
-              className="text-muted-foreground text-sm font-medium"
-            >
-              วันที่และเวลาดำเนินการ
-            </label>
-            <Input
-              id="dca-order-executed-at"
-              type="datetime-local"
-              aria-invalid={Boolean(errors.executedAt)}
-              aria-describedby={
-                errors.executedAt ? "dca-order-executed-at-error" : undefined
-              }
-              className="h-10"
-              {...register("executedAt")}
-            />
-            {errors.executedAt?.message && (
-              <p
-                id="dca-order-executed-at-error"
-                role="alert"
-                className="text-sm text-red-600 dark:text-red-400"
-              >
-                {errors.executedAt.message}
-              </p>
-            )}
-          </div>
+          <DcaFormField
+            id="dca-order-executed-at"
+            label="วันที่และเวลาดำเนินการ"
+            error={errors.executedAt?.message}
+            registration={register("executedAt")}
+            inputProps={{ type: "datetime-local" }}
+          />
 
-          <div className="space-y-1">
-            <label
-              htmlFor="dca-order-note"
-              className="text-muted-foreground text-sm font-medium"
-            >
-              หมายเหตุ (ไม่บังคับ)
-            </label>
-            <Input
-              id="dca-order-note"
-              maxLength={500}
-              placeholder="หมายเหตุเพิ่มเติม"
-              aria-invalid={Boolean(errors.note)}
-              aria-describedby={
-                errors.note ? "dca-order-note-error" : undefined
-              }
-              className="h-10"
-              {...register("note")}
-            />
-            {errors.note?.message && (
-              <p
-                id="dca-order-note-error"
-                role="alert"
-                className="text-sm text-red-600 dark:text-red-400"
-              >
-                {errors.note.message}
-              </p>
-            )}
-          </div>
+          <DcaFormField
+            id="dca-order-note"
+            label="หมายเหตุ (ไม่บังคับ)"
+            error={errors.note?.message}
+            registration={register("note")}
+            inputProps={{ maxLength: 500, placeholder: "หมายเหตุเพิ่มเติม" }}
+          />
 
           <DialogFooter className="border-border flex-col-reverse gap-2 border-t pt-4 sm:flex-row">
             <Button
@@ -262,11 +195,7 @@ export const AddDcaForm = ({ onClose, onSuccess, order }: AddDcaFormProps) => {
               disabled={isSubmitting}
               className="min-h-10 sm:min-w-36"
             >
-              {isSubmitting
-                ? "กำลังบันทึก..."
-                : isEditing
-                  ? "บันทึกการแก้ไข"
-                  : "เพิ่มรายการ"}
+              {getSubmitLabel(isSubmitting, isEditing)}
             </Button>
           </DialogFooter>
         </form>

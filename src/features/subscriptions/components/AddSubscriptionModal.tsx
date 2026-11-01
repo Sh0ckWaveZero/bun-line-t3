@@ -34,6 +34,41 @@ interface AddSubscriptionModalProps {
 
 export type { SubscriptionFormData } from "./SubscriptionFormFields";
 
+/** ค่าเริ่มต้นของฟอร์ม — edit mode ใช้ค่าเดิม, create mode ใช้ default ของ NETFLIX */
+const buildSubscriptionForm = (
+  initialData?: Partial<SubscriptionWithMembers>,
+): SubscriptionFormData => ({
+  name: initialData?.name ?? "",
+  service: (initialData?.service as SubscriptionService) ?? "NETFLIX",
+  planType: (initialData?.planType as SubscriptionPlanType) ?? "FAMILY",
+  billingCycle: (initialData?.billingCycle as BillingCycle) ?? "MONTHLY",
+  totalPrice:
+    initialData?.totalPrice ??
+    DEFAULT_PRICES[(initialData?.service as SubscriptionService) ?? "NETFLIX"]
+      .family,
+  billingDay: initialData?.billingDay ?? 1,
+  startDate: initialData?.startDate
+    ? new Date(initialData.startDate).toISOString().split("T")[0]!
+    : new Date().toISOString().split("T")[0]!,
+  note: initialData?.note ?? "",
+});
+
+/** ราคา default ตามบริการและประเภทแพ็ก */
+const getDefaultPrice = (
+  service: SubscriptionService,
+  planType: SubscriptionPlanType,
+): number =>
+  DEFAULT_PRICES[service][planType === "FAMILY" ? "family" : "individual"];
+
+const getSubmitLabel = (isLoading: boolean, isEdit: boolean): string =>
+  isEdit
+    ? isLoading
+      ? "กำลังบันทึก..."
+      : "บันทึก"
+    : isLoading
+      ? "กำลังสร้าง..."
+      : "สร้าง Subscription";
+
 export const AddSubscriptionModal = ({
   open,
   onClose,
@@ -47,31 +82,16 @@ export const AddSubscriptionModal = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showIconPicker, setShowIconPicker] = useState(false);
 
-  const [form, setForm] = useState<SubscriptionFormData>({
-    name: initialData?.name ?? "",
-    service: (initialData?.service as SubscriptionService) ?? "NETFLIX",
-    planType: (initialData?.planType as SubscriptionPlanType) ?? "FAMILY",
-    billingCycle: (initialData?.billingCycle as BillingCycle) ?? "MONTHLY",
-    totalPrice:
-      initialData?.totalPrice ??
-      DEFAULT_PRICES[(initialData?.service as SubscriptionService) ?? "NETFLIX"]
-        .family,
-    billingDay: initialData?.billingDay ?? 1,
-    startDate: initialData?.startDate
-      ? new Date(initialData.startDate).toISOString().split("T")[0]!
-      : new Date().toISOString().split("T")[0]!,
-    note: initialData?.note ?? "",
-  });
+  const [form, setForm] = useState<SubscriptionFormData>(() =>
+    buildSubscriptionForm(initialData),
+  );
 
   const handleServiceChange = (service: SubscriptionService) => {
     setForm((prev) => ({
       ...prev,
       service,
       name: prev.name || SUBSCRIPTION_SERVICE_LABELS[service],
-      totalPrice:
-        DEFAULT_PRICES[service][
-          prev.planType === "FAMILY" ? "family" : "individual"
-        ],
+      totalPrice: getDefaultPrice(service, prev.planType),
     }));
   };
 
@@ -79,10 +99,7 @@ export const AddSubscriptionModal = ({
     setForm((prev) => ({
       ...prev,
       planType,
-      totalPrice:
-        DEFAULT_PRICES[prev.service][
-          planType === "FAMILY" ? "family" : "individual"
-        ],
+      totalPrice: getDefaultPrice(prev.service, planType),
     }));
   };
 
@@ -180,16 +197,8 @@ export const AddSubscriptionModal = ({
                 className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-60 dark:bg-indigo-500 dark:hover:bg-indigo-600"
               >
                 {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-                {isEdit ? (
-                  <>
-                    <Pencil className="h-4 w-4" />
-                    {isLoading ? "กำลังบันทึก..." : "บันทึก"}
-                  </>
-                ) : isLoading ? (
-                  "กำลังสร้าง..."
-                ) : (
-                  "สร้าง Subscription"
-                )}
+                {isEdit && <Pencil className="h-4 w-4" />}
+                {getSubmitLabel(isLoading, isEdit)}
               </button>
             </div>
           </form>
