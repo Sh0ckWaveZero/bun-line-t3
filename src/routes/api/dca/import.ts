@@ -372,18 +372,18 @@ export async function POST(request: Request) {
       }
     }
 
-    // ─── Step 4: Create orders แบบ sequential (เรียงตาม executedAt) ──────
-    // ต้องสร้างทีละรายการเพื่อให้ getNextRound() นับ round ต่อเนื่องกันถูกต้อง
-    // parallel จะทำให้ทุก row อ่าน round เดียวกัน (race condition)
+    // ─── Step 4: Create orders เป็นชุดเดียว (atomic, เรียงตาม executedAt) ─
+    // createOrdersBatch ล็อก per-user + คำนวณ round ต่อเหรียญตามลำดับ executedAt
+    // ให้ผลเหมือน insert ทีละแถว (round ต่อเนื่อง ไม่ซ้ำ) แต่เร็วกว่ามาก
+    // แถวที่ถึงขั้นนี้ผ่าน validation + ตรวจซ้ำครบแล้ว จึงเขียนเป็นชุด atomic
     rowsToInsert.sort(
       (a, b) => a.executedAt.getTime() - b.executedAt.getTime(),
     );
-
-    for (const { data, executedAt, index } of rowsToInsert) {
-      assertImportBudget(startedAt);
-      const rowLabel = `แถวที่ ${index + 1}`;
-      try {
-        await dcaService.createOrder({
+    assertImportBudget(startedAt);
+    try {
+      result.imported = await dcaService.createOrdersBatch(
+        lineUserId,
+        rowsToInsert.map(({ data, executedAt }) => ({
           lineUserId,
           coin: data.coin,
           amountTHB: data.amountTHB,
@@ -392,14 +392,15 @@ export async function POST(request: Request) {
           executedAt,
           status: data.status,
           note: data.note || undefined,
-        });
-        result.imported++;
-      } catch {
-        if (result.errors.length < MAX_IMPORT_ERRORS) {
-          result.errors.push(`${rowLabel}: บันทึกไม่สำเร็จ`);
-        }
-        result.skipped++;
+        })),
+      );
+    } catch {
+      if (result.errors.length < MAX_IMPORT_ERRORS) {
+        result.errors.push(
+          `นำเข้า ${rowsToInsert.length} รายการไม่สำเร็จ (อาจมีรายการซ้ำเกิดขึ้นระหว่างนำเข้า — ลองนำเข้าอีกครั้ง)`,
+        );
       }
+      result.skipped += rowsToInsert.length;
     }
 
     return Response.json(result, { status: 200 });

@@ -63,36 +63,43 @@ const handleEvent = async (
   const events = req.body?.events;
   if (!Array.isArray(events) || events.length === 0)
     return res.status(400).json({ error: "No events to process" });
-  for (const event of events) {
-    const action = getAction(event);
-    if (!action) continue;
-    // สร้าง object ตรง ๆ (allowlist) — downstream อ่านแค่ body.events เสมอ
-    const eventReq: LineApiRequest = { body: { events: [event] } };
-    if (action.kind === "auto-dca") {
-      if (await canAutoRecordDca(event.source!.userId!))
-        await handleParsedDcaAdd(eventReq, action.parsed);
-      continue;
-    }
-    if (!(await handleApprovalCheck(eventReq))) continue;
-    switch (action.kind) {
-      case "command":
-        void sendLoadingAnimation(eventReq, 15);
-        await handleText(eventReq, event.message!.text!);
-        break;
-      case "sticker":
-        await handleSticker(eventReq, {
-          ...event,
-          message: { keywords: event.message?.keywords ?? [] },
-        });
-        break;
-      case "location":
-        await handleLocation(eventReq, event);
-        break;
-      case "postback":
-        await handlePostback(eventReq, event);
-        break;
-    }
-  }
+  // ประมวลผล event ควบคู่กันทุกตัว (Promise.all ตาม recipe ของ
+  // react-doctor/async-await-in-loop) — owner ยอมรับ trade-off ชัดเจน:
+  // reply ผ่าน LINE API อาจสลับลำดับในแชท และ event คู่ที่อ่านสถานะซ้อนกัน
+  // (เช่น /dca add ตามด้วย /dca list) อาจแซงกัน ถ้า event ใด throw
+  // Promise.all จะ reject → webhook ตอบ 500 ให้ LINE retry ทั้ง batch เหมือนเดิม
+  await Promise.all(
+    events.map(async (event) => {
+      const action = getAction(event);
+      if (!action) return;
+      // สร้าง object ตรง ๆ (allowlist) — downstream อ่านแค่ body.events เสมอ
+      const eventReq: LineApiRequest = { body: { events: [event] } };
+      if (action.kind === "auto-dca") {
+        if (await canAutoRecordDca(event.source!.userId!))
+          await handleParsedDcaAdd(eventReq, action.parsed);
+        return;
+      }
+      if (!(await handleApprovalCheck(eventReq))) return;
+      switch (action.kind) {
+        case "command":
+          void sendLoadingAnimation(eventReq, 15);
+          await handleText(eventReq, event.message!.text!);
+          break;
+        case "sticker":
+          await handleSticker(eventReq, {
+            ...event,
+            message: { keywords: event.message?.keywords ?? [] },
+          });
+          break;
+        case "location":
+          await handleLocation(eventReq, event);
+          break;
+        case "postback":
+          await handlePostback(eventReq, event);
+          break;
+      }
+    }),
+  );
   return res.status(200).json({ message: "ok" });
 };
 
