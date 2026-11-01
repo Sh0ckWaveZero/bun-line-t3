@@ -5,7 +5,7 @@
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { getServerAuthSession } from "@/lib/auth/auth";
+import { requireApiSession } from "@/features/onsite-report/lib/api-auth.server";
 import { onsiteReportPayloadSchema } from "@/features/onsite-report/lib/onsite-report-form";
 import {
   createOnsiteReport,
@@ -18,12 +18,10 @@ import { getCompanyAssignmentError } from "@/features/onsite-report/services/ons
  */
 export async function GET(request: Request) {
   try {
-    const session = await getServerAuthSession(request);
-    if (!session?.user?.id) {
-      return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 });
-    }
+    const auth = await requireApiSession(request, { isAdminRequired: false });
+    if (!auth.ok) return auth.response;
 
-    const reports = await listOnsiteReports(session.user.id);
+    const reports = await listOnsiteReports(auth.userId);
     return Response.json({ success: true, data: reports });
   } catch (error) {
     console.error(
@@ -39,10 +37,8 @@ export async function GET(request: Request) {
  */
 export async function POST(request: Request) {
   try {
-    const session = await getServerAuthSession(request);
-    if (!session?.user?.id) {
-      return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 });
-    }
+    const auth = await requireApiSession(request, { isAdminRequired: false });
+    if (!auth.ok) return auth.response;
 
     const body = await request.json();
     const input = onsiteReportPayloadSchema.parse(body);
@@ -52,7 +48,7 @@ export async function POST(request: Request) {
       return Response.json({ error: companyError }, { status: 400 });
     }
 
-    const report = await createOnsiteReport(session.user.id, input);
+    const report = await createOnsiteReport(auth.userId, input);
     return Response.json(
       { success: true, data: report, message: "บันทึกรายงานสำเร็จ" },
       { status: 201 },

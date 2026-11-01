@@ -3,12 +3,9 @@
 import { useParams } from "@tanstack/react-router";
 import { useOnsiteReport, useOnsiteReports } from "../hooks/useOnsiteReports";
 import { OnsiteReportForm } from "../components/OnsiteReportForm";
+import { OnsiteReportAccessGate } from "../components/OnsiteReportAccessGate";
 
-/**
- * หน้าฟอร์ม Onsite Service Report — ใช้ทั้งสร้างใหม่ (/onsite-report/new)
- * และแก้ไข (/onsite-report/$id/edit) โดยอ่าน id จาก params (ถ้ามี)
- */
-export const OnsiteReportFormPage = () => {
+const OnsiteReportFormContent = () => {
   const params = useParams({ strict: false });
   const reportId = typeof params.id === "string" ? params.id : undefined;
 
@@ -56,3 +53,13 @@ export const OnsiteReportFormPage = () => {
     </main>
   );
 };
+
+/**
+ * หน้าฟอร์ม Onsite Service Report — ใช้ทั้งสร้างใหม่ (/onsite-report/new)
+ * และแก้ไข (/onsite-report/$id/edit) โดยอ่าน id จาก params (ถ้ามี) — ต้องมีสิทธิ์ใช้งานก่อน
+ */
+export const OnsiteReportFormPage = () => (
+  <OnsiteReportAccessGate>
+    <OnsiteReportFormContent />
+  </OnsiteReportAccessGate>
+);

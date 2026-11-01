@@ -4,7 +4,7 @@
  * ใช้ pipeline เดียวกับไฟล์ดาวน์โหลดจริง เพื่อให้ preview ตรงกับเอกสารสุดท้ายเสมอ
  */
 import { createFileRoute } from "@tanstack/react-router";
-import { getServerAuthSession } from "@/lib/auth/auth";
+import { requireApiSession } from "@/features/onsite-report/lib/api-auth.server";
 import { toPreviewReport } from "@/features/onsite-report/lib/preview";
 import { renderOnsiteReportPdf } from "@/features/onsite-report/lib/pdf-document.server";
 import { getOnsiteReport } from "@/features/onsite-report/services/onsite-report.server";
@@ -18,10 +18,8 @@ import { loadSignaturesForPdf } from "@/features/onsite-report/services/onsite-r
  */
 export async function POST(request: Request) {
   try {
-    const session = await getServerAuthSession(request);
-    if (!session?.user?.id) {
-      return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 });
-    }
+    const auth = await requireApiSession(request, { isAdminRequired: false });
+    if (!auth.ok) return auth.response;
 
     const body: unknown = await request.json().catch(() => null);
     if (typeof body !== "object" || body === null) {
@@ -35,7 +33,7 @@ export async function POST(request: Request) {
     const reportId = (body as { reportId?: unknown }).reportId;
     const ownedReport =
       typeof reportId === "string" && reportId !== ""
-        ? await getOnsiteReport(reportId, session.user.id)
+        ? await getOnsiteReport(reportId, auth.userId)
         : null;
     const signatures = ownedReport
       ? await loadSignaturesForPdf(ownedReport.id)

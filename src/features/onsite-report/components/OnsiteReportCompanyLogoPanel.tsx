@@ -8,6 +8,7 @@ import { AlertDialogBox } from "@/components/ui/AlertDialog";
 import {
   ONSITE_REPORT_LOGO_MAX_BYTES,
   ONSITE_REPORT_LOGO_MIME_TYPES,
+  validateLogoImage,
 } from "../lib/logo-image";
 import { onsiteReportCompanyLogoUrl } from "../hooks/useOnsiteReportCompanies";
 import type { OnsiteReportCompany } from "../types";
@@ -21,14 +22,39 @@ interface OnsiteReportCompanyLogoPanelProps {
 
 const ACCEPT = ONSITE_REPORT_LOGO_MIME_TYPES.join(",");
 
-/** ตรวจเบื้องต้นฝั่ง client เพื่อแจ้งเร็ว — ฝั่ง API ตรวจ magic bytes จริงซ้ำเสมอ */
-const getFileError = (file: File): string | null => {
-  if (!(ONSITE_REPORT_LOGO_MIME_TYPES as readonly string[]).includes(file.type)) {
-    return "รองรับเฉพาะไฟล์ PNG หรือ JPEG";
-  }
+type FileCheck =
+  | { ok: true; previewBlob: Blob }
+  | { ok: false; error: string };
+
+/**
+ * ตรวจไฟล์ฝั่ง client จาก "ไบต์จริง" (magic bytes) ด้วย validator ตัวเดียวกับ API — ไม่เชื่อ file.type ที่ผู้ใช้แก้ได้
+ * แล้วสร้าง Blob สำหรับ preview ด้วย mime ที่ตรวจแล้ว (ไม่ใช่ mime ที่มากับไฟล์) กันไฟล์ที่ไม่ใช่รูปเข้าไปเป็น img src
+ * ฝั่ง API ยังตรวจซ้ำเสมอ
+ */
+const checkLogoFile = async (file: File): Promise<FileCheck> => {
   if (file.size > ONSITE_REPORT_LOGO_MAX_BYTES) {
-    return `ไฟล์ใหญ่เกิน ${ONSITE_REPORT_LOGO_MAX_BYTES / 1024}KB`;
+    return {
+      ok: false,
+      error: `ไฟล์ใหญ่เกิน ${ONSITE_REPORT_LOGO_MAX_BYTES / 1024}KB`,
+    };
   }
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const validation = validateLogoImage(bytes);
+  if (!validation.ok) return { ok: false, error: validation.error };
+  return {
+    ok: true,
+    previewBlob: new Blob([bytes], { type: validation.image.mimeType }),
+  };
+};
+
+/**
+ * อนุญาต src ของ <img> เฉพาะ blob: (preview ที่เราสร้างเอง) และ path ภายในของ API นี้เท่านั้น
+ * — กัน scheme อื่น เช่น javascript:/data: หลุดเข้า src ไม่ว่าค่ามาจากไหน
+ */
+const toSafeImageSrc = (url: string | null): string | null => {
+  if (url === null) return null;
+  if (url.startsWith("blob:")) return url;
+  if (url.startsWith("/api/onsite-reports/")) return url;
   return null;
 };
 
@@ -55,29 +81,34 @@ export const OnsiteReportCompanyLogoPanel = ({
     [],
   );
 
-  const setPreviewFile = (file: File | null) => {
+  const setPreview = (file: File | null, previewBlob: Blob | null) => {
     if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
-    const url = file ? URL.createObjectURL(file) : null;
+    const url = previewBlob ? URL.createObjectURL(previewBlob) : null;
     previewUrlRef.current = url;
     setSelectedFile(file);
     setPreviewUrl(url);
   };
 
   const resetSelection = () => {
-    setPreviewFile(null);
+    setPreview(null, null);
     setFileError(null);
     if (inputRef.current) inputRef.current.value = "";
   };
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) {
       resetSelection();
       return;
     }
-    const error = getFileError(file);
-    setFileError(error);
-    setPreviewFile(error ? null : file);
+    const check = await checkLogoFile(file);
+    if (check.ok) {
+      setFileError(null);
+      setPreview(file, check.previewBlob);
+    } else {
+      setFileError(check.error);
+      setPreview(null, null);
+    }
   };
 
   const handleUpload = async () => {
@@ -99,8 +130,9 @@ export const OnsiteReportCompanyLogoPanel = ({
     }
   };
 
-  const shownUrl =
-    previewUrl ?? (company.hasLogo ? onsiteReportCompanyLogoUrl(company) : null);
+  const shownUrl = toSafeImageSrc(
+    previewUrl ?? (company.hasLogo ? onsiteReportCompanyLogoUrl(company) : null),
+  );
 
   return (
     <div>
@@ -130,7 +162,7 @@ export const OnsiteReportCompanyLogoPanel = ({
         type="file"
         accept={ACCEPT}
         className="sr-only"
-        onChange={handleFileChange}
+        onChange={(event) => void handleFileChange(event)}
         disabled={isBusy}
         aria-label={`เลือกไฟล์โลโก้ของ ${company.name}`}
       />

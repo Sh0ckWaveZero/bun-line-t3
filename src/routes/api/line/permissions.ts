@@ -22,6 +22,7 @@ const updatePermissionsSchema = z.object({
   canRequestLeave: z.boolean().optional(),
   canReceiveReminders: z.boolean().optional(),
   canAutoRecordDca: z.boolean().optional(),
+  canUseOnsiteReport: z.boolean().optional(),
 });
 
 export async function GET(request: Request) {
@@ -53,6 +54,7 @@ export async function GET(request: Request) {
             canRequestLeave: false,
             canReceiveReminders: false,
             canAutoRecordDca: false,
+            canUseOnsiteReport: false,
           },
         });
       }
@@ -69,6 +71,7 @@ export async function GET(request: Request) {
           canRequestLeave: approval.canRequestLeave ?? false,
           canReceiveReminders: approval.canReceiveReminders ?? false,
           canAutoRecordDca: approval.canAutoRecordDca ?? false,
+          canUseOnsiteReport: approval.canUseOnsiteReport ?? false,
         },
       });
     }
@@ -90,6 +93,7 @@ export async function GET(request: Request) {
         canRequestLeave: true,
         canReceiveReminders: true,
         canAutoRecordDca: true,
+        canUseOnsiteReport: true,
         createdAt: true,
         approvedAt: true,
       },
@@ -136,6 +140,9 @@ export async function PATCH(request: Request) {
         }),
         ...(input.canAutoRecordDca !== undefined && {
           canAutoRecordDca: input.canAutoRecordDca,
+        }),
+        ...(input.canUseOnsiteReport !== undefined && {
+          canUseOnsiteReport: input.canUseOnsiteReport,
         }),
         ...(input.canReceiveReminders !== undefined && {
           canReceiveReminders: input.canReceiveReminders,

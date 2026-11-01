@@ -7,9 +7,9 @@ import { useAuthSession } from "@/lib/auth/session-context";
 import { useOnsiteReports } from "../hooks/useOnsiteReports";
 import { useOnsiteReportMutations } from "../hooks/useOnsiteReportMutations";
 import { OnsiteReportTable } from "../components/OnsiteReportTable";
+import { OnsiteReportAccessGate } from "../components/OnsiteReportAccessGate";
 
-/** หน้ารายการ Onsite Service Report (FM-PM-01) */
-export const OnsiteReportListPage = () => {
+const OnsiteReportListContent = () => {
   const {
     data: reports,
     isLoading,
@@ -65,3 +65,10 @@ export const OnsiteReportListPage = () => {
     </main>
   );
 };
+
+/** หน้ารายการ Onsite Service Report (FM-PM-01) — ต้องมีสิทธิ์ใช้งานก่อน */
+export const OnsiteReportListPage = () => (
+  <OnsiteReportAccessGate>
+    <OnsiteReportListContent />
+  </OnsiteReportAccessGate>
+);

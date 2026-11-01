@@ -6,7 +6,7 @@
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { getServerAuthSession } from "@/lib/auth/auth";
+import { requireApiSession } from "@/features/onsite-report/lib/api-auth.server";
 import { onsiteReportPayloadSchema } from "@/features/onsite-report/lib/onsite-report-form";
 import {
   deleteOnsiteReport,
@@ -24,12 +24,10 @@ export async function GET(request: Request, id: string) {
       return Response.json({ error: "ต้องระบุ ID" }, { status: 400 });
     }
 
-    const session = await getServerAuthSession(request);
-    if (!session?.user?.id) {
-      return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 });
-    }
+    const auth = await requireApiSession(request, { isAdminRequired: false });
+    if (!auth.ok) return auth.response;
 
-    const report = await getOnsiteReport(id, session.user.id);
+    const report = await getOnsiteReport(id, auth.userId);
     if (!report) {
       return Response.json({ error: "ไม่พบรายงาน" }, { status: 404 });
     }
@@ -53,15 +51,13 @@ export async function PATCH(request: Request, id: string) {
       return Response.json({ error: "ต้องระบุ ID" }, { status: 400 });
     }
 
-    const session = await getServerAuthSession(request);
-    if (!session?.user?.id) {
-      return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 });
-    }
+    const auth = await requireApiSession(request, { isAdminRequired: false });
+    if (!auth.ok) return auth.response;
 
     const body = await request.json();
     const input = onsiteReportPayloadSchema.parse(body);
 
-    const existing = await getOnsiteReport(id, session.user.id);
+    const existing = await getOnsiteReport(id, auth.userId);
     if (!existing) {
       return Response.json({ error: "ไม่พบรายงาน" }, { status: 404 });
     }
@@ -74,7 +70,7 @@ export async function PATCH(request: Request, id: string) {
       return Response.json({ error: companyError }, { status: 400 });
     }
 
-    const report = await updateOnsiteReport(id, session.user.id, input);
+    const report = await updateOnsiteReport(id, auth.userId, input);
     if (!report) {
       return Response.json({ error: "ไม่พบรายงาน" }, { status: 404 });
     }
@@ -111,12 +107,10 @@ export async function DELETE(request: Request, id: string) {
       return Response.json({ error: "ต้องระบุ ID" }, { status: 400 });
     }
 
-    const session = await getServerAuthSession(request);
-    if (!session?.user?.id) {
-      return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 });
-    }
+    const auth = await requireApiSession(request, { isAdminRequired: false });
+    if (!auth.ok) return auth.response;
 
-    const deleted = await deleteOnsiteReport(id, session.user.id);
+    const deleted = await deleteOnsiteReport(id, auth.userId);
     if (!deleted) {
       return Response.json({ error: "ไม่พบรายงาน" }, { status: 404 });
     }

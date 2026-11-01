@@ -558,6 +558,7 @@ model LineApprovalRequest {
   canRequestLeave            Boolean @default(false) @map("can_request_leave")
   canReceiveReminders        Boolean @default(false) @map("can_receive_reminders")
   canAutoRecordDca           Boolean @default(false) @map("can_auto_record_dca")
+  canUseOnsiteReport         Boolean @default(false) @map("can_use_onsite_report")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

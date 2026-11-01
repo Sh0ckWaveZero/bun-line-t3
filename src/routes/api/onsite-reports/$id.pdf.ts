@@ -3,7 +3,7 @@
  * GET /api/onsite-reports/$id/pdf — สร้างและส่ง PDF ของรายงาน (FM-PM-01)
  */
 import { createFileRoute } from "@tanstack/react-router";
-import { getServerAuthSession } from "@/lib/auth/auth";
+import { requireApiSession } from "@/features/onsite-report/lib/api-auth.server";
 import { renderOnsiteReportPdf } from "@/features/onsite-report/lib/pdf-document.server";
 import { getOnsiteReport } from "@/features/onsite-report/services/onsite-report.server";
 import { loadCompanyForPdf } from "@/features/onsite-report/services/onsite-report-company.server";
@@ -18,12 +18,10 @@ export async function GET(request: Request, id: string) {
       return Response.json({ error: "ต้องระบุ ID" }, { status: 400 });
     }
 
-    const session = await getServerAuthSession(request);
-    if (!session?.user?.id) {
-      return Response.json({ error: "ไม่มีสิทธิ์เข้าถึง" }, { status: 401 });
-    }
+    const auth = await requireApiSession(request, { isAdminRequired: false });
+    if (!auth.ok) return auth.response;
 
-    const report = await getOnsiteReport(id, session.user.id);
+    const report = await getOnsiteReport(id, auth.userId);
     if (!report) {
       return Response.json({ error: "ไม่พบรายงาน" }, { status: 404 });
     }

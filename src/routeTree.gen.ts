@@ -85,6 +85,7 @@ import { Route as ApiLinePermissionsRouteImport } from './routes/api/line/permis
 import { Route as ApiMonitoringDashboardRouteImport } from './routes/api/monitoring/dashboard'
 import { Route as ApiOnsiteReportsIndexRouteImport } from './routes/api/onsite-reports/index'
 import { Route as ApiOnsiteReportsIdRouteImport } from './routes/api/onsite-reports/$id'
+import { Route as ApiOnsiteReportsAccessRouteImport } from './routes/api/onsite-reports/access'
 import { Route as ApiOnsiteReportsCompaniesRouteImport } from './routes/api/onsite-reports/companies'
 import { Route as ApiOnsiteReportsPreviewPdfRouteImport } from './routes/api/onsite-reports/preview-pdf'
 import { Route as ApiPokerRoomsRouteImport } from './routes/api/poker/rooms'
@@ -496,6 +497,11 @@ const ApiOnsiteReportsIdRoute = ApiOnsiteReportsIdRouteImport.update({
   path: '/api/onsite-reports/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiOnsiteReportsAccessRoute = ApiOnsiteReportsAccessRouteImport.update({
+  id: '/api/onsite-reports/access',
+  path: '/api/onsite-reports/access',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiOnsiteReportsCompaniesRoute =
   ApiOnsiteReportsCompaniesRouteImport.update({
     id: '/api/onsite-reports/companies',
@@ -711,6 +717,7 @@ export interface FileRoutesByFullPath {
   '/api/line/permissions': typeof ApiLinePermissionsRoute
   '/api/monitoring/dashboard': typeof ApiMonitoringDashboardRoute
   '/api/onsite-reports/$id': typeof ApiOnsiteReportsIdRouteWithChildren
+  '/api/onsite-reports/access': typeof ApiOnsiteReportsAccessRoute
   '/api/onsite-reports/companies': typeof ApiOnsiteReportsCompaniesRouteWithChildren
   '/api/onsite-reports/preview-pdf': typeof ApiOnsiteReportsPreviewPdfRoute
   '/api/poker/rooms': typeof ApiPokerRoomsRouteWithChildren
@@ -814,6 +821,7 @@ export interface FileRoutesByTo {
   '/api/line/permissions': typeof ApiLinePermissionsRoute
   '/api/monitoring/dashboard': typeof ApiMonitoringDashboardRoute
   '/api/onsite-reports/$id': typeof ApiOnsiteReportsIdRouteWithChildren
+  '/api/onsite-reports/access': typeof ApiOnsiteReportsAccessRoute
   '/api/onsite-reports/companies': typeof ApiOnsiteReportsCompaniesRouteWithChildren
   '/api/onsite-reports/preview-pdf': typeof ApiOnsiteReportsPreviewPdfRoute
   '/api/poker/rooms': typeof ApiPokerRoomsRouteWithChildren
@@ -919,6 +927,7 @@ export interface FileRoutesById {
   '/api/line/permissions': typeof ApiLinePermissionsRoute
   '/api/monitoring/dashboard': typeof ApiMonitoringDashboardRoute
   '/api/onsite-reports/$id': typeof ApiOnsiteReportsIdRouteWithChildren
+  '/api/onsite-reports/access': typeof ApiOnsiteReportsAccessRoute
   '/api/onsite-reports/companies': typeof ApiOnsiteReportsCompaniesRouteWithChildren
   '/api/onsite-reports/preview-pdf': typeof ApiOnsiteReportsPreviewPdfRoute
   '/api/poker/rooms': typeof ApiPokerRoomsRouteWithChildren
@@ -1025,6 +1034,7 @@ export interface FileRouteTypes {
     | '/api/line/permissions'
     | '/api/monitoring/dashboard'
     | '/api/onsite-reports/$id'
+    | '/api/onsite-reports/access'
     | '/api/onsite-reports/companies'
     | '/api/onsite-reports/preview-pdf'
     | '/api/poker/rooms'
@@ -1128,6 +1138,7 @@ export interface FileRouteTypes {
     | '/api/line/permissions'
     | '/api/monitoring/dashboard'
     | '/api/onsite-reports/$id'
+    | '/api/onsite-reports/access'
     | '/api/onsite-reports/companies'
     | '/api/onsite-reports/preview-pdf'
     | '/api/poker/rooms'
@@ -1232,6 +1243,7 @@ export interface FileRouteTypes {
     | '/api/line/permissions'
     | '/api/monitoring/dashboard'
     | '/api/onsite-reports/$id'
+    | '/api/onsite-reports/access'
     | '/api/onsite-reports/companies'
     | '/api/onsite-reports/preview-pdf'
     | '/api/poker/rooms'
@@ -1331,6 +1343,7 @@ export interface RootRouteChildren {
   ApiExpensesSummaryRoute: typeof ApiExpensesSummaryRoute
   ApiMonitoringDashboardRoute: typeof ApiMonitoringDashboardRoute
   ApiOnsiteReportsIdRoute: typeof ApiOnsiteReportsIdRouteWithChildren
+  ApiOnsiteReportsAccessRoute: typeof ApiOnsiteReportsAccessRoute
   ApiOnsiteReportsCompaniesRoute: typeof ApiOnsiteReportsCompaniesRouteWithChildren
   ApiOnsiteReportsPreviewPdfRoute: typeof ApiOnsiteReportsPreviewPdfRoute
   ApiPokerRoomsRoute: typeof ApiPokerRoomsRouteWithChildren
@@ -1886,6 +1899,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiOnsiteReportsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/onsite-reports/access': {
+      id: '/api/onsite-reports/access'
+      path: '/api/onsite-reports/access'
+      fullPath: '/api/onsite-reports/access'
+      preLoaderRoute: typeof ApiOnsiteReportsAccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/onsite-reports/companies': {
       id: '/api/onsite-reports/companies'
       path: '/api/onsite-reports/companies'
@@ -2307,6 +2327,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiExpensesSummaryRoute: ApiExpensesSummaryRoute,
   ApiMonitoringDashboardRoute: ApiMonitoringDashboardRoute,
   ApiOnsiteReportsIdRoute: ApiOnsiteReportsIdRouteWithChildren,
+  ApiOnsiteReportsAccessRoute: ApiOnsiteReportsAccessRoute,
   ApiOnsiteReportsCompaniesRoute: ApiOnsiteReportsCompaniesRouteWithChildren,
   ApiOnsiteReportsPreviewPdfRoute: ApiOnsiteReportsPreviewPdfRoute,
   ApiPokerRoomsRoute: ApiPokerRoomsRouteWithChildren,

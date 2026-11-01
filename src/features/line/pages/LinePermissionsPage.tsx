@@ -461,6 +461,12 @@ export function LinePermissionsPage() {
                       >
                         บันทึก DCA อัตโนมัติ
                       </th>
+                      <th
+                        scope="col"
+                        className="min-w-[120px] px-3 py-3 text-center"
+                      >
+                        Onsite Report
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
