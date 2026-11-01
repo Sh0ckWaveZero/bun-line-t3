@@ -143,6 +143,12 @@ export function ClientOnlyWrapper({
  */
 interface UserSpecificContentProps {
   serverContent: React.ReactNode;
+  /**
+   * callback ที่คืน JSX element — ห้ามส่ง component function ตรง ๆ
+   * (UserSpecificContent จะเรียกมันระหว่าง render ทำให้ hooks ของ component
+   * นั้นถูก inline เข้า hook list ของ parent และ crash "Rendered more hooks
+   * than during the previous render" หลัง mounted เปลี่ยน)
+   */
   clientContent: () => React.ReactNode;
   className?: string;
 }
@@ -217,6 +223,10 @@ const UserAgentContent = () => {
   );
 };
 
+/** render callbacks ระดับโมดูล — คืน element ไม่เรียก component เอง (กัน hook inline เข้า parent) */
+const renderClientHref = () => <ClientHrefContent />;
+const renderUserAgent = () => <UserAgentContent />;
+
 export function HydrationExamples() {
   return (
     <div className="space-y-4 p-4">
@@ -245,13 +255,13 @@ export function HydrationExamples() {
       {/* ✅ Client Only Content */}
       <UserSpecificContent
         serverContent={<div>กำลังโหลด...</div>}
-        clientContent={ClientHrefContent}
+        clientContent={renderClientHref}
       />
 
       {/* ✅ User Specific Content */}
       <UserSpecificContent
         serverContent={<div>เนื้อหาสำหรับ Server</div>}
-        clientContent={UserAgentContent}
+        clientContent={renderUserAgent}
       />
 
       {/* ✅ Conditional Suppression */}
