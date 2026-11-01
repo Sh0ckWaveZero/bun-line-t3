@@ -9,6 +9,7 @@ export interface LinePermissions {
   canRequestAttendanceReport: boolean;
   canRequestLeave: boolean;
   canReceiveReminders: boolean;
+  canUseOnsiteReport: boolean;
 }
 
 /**
@@ -28,6 +29,7 @@ export async function getLinePermissions(
       canRequestAttendanceReport: false,
       canRequestLeave: false,
       canReceiveReminders: false,
+      canUseOnsiteReport: false,
     };
   }
 
@@ -37,6 +39,7 @@ export async function getLinePermissions(
       canRequestAttendanceReport: false,
       canRequestLeave: false,
       canReceiveReminders: false,
+      canUseOnsiteReport: false,
     };
   }
 
@@ -44,6 +47,7 @@ export async function getLinePermissions(
     canRequestAttendanceReport: approval.canRequestAttendanceReport ?? false,
     canRequestLeave: approval.canRequestLeave ?? false,
     canReceiveReminders: approval.canReceiveReminders ?? false,
+    canUseOnsiteReport: approval.canUseOnsiteReport ?? false,
   };
 }
 
@@ -73,6 +77,17 @@ export async function canReceiveReminders(
 ): Promise<boolean> {
   const perms = await getLinePermissions(lineUserId);
   return perms.canReceiveReminders;
+}
+
+/**
+ * เช็คว่า LINE user มีสิทธิ์ใช้ Onsite Service Report หรือไม่
+ * (ต้องผ่านการอนุมัติ + แอดมินติ๊กสิทธิ์นี้ — ไม่มีวันหมดอายุ)
+ */
+export async function canUseOnsiteReport(
+  lineUserId: string,
+): Promise<boolean> {
+  const perms = await getLinePermissions(lineUserId);
+  return perms.canUseOnsiteReport;
 }
 
 /**

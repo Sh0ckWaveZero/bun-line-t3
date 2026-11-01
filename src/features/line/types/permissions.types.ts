@@ -11,6 +11,7 @@ export const PERMISSION_KEYS = [
   "canRequestLeave",
   "canReceiveReminders",
   "canAutoRecordDca",
+  "canUseOnsiteReport",
 ] as const;
 
 export type PermissionKey = (typeof PERMISSION_KEYS)[number];
@@ -27,6 +28,7 @@ export interface LineApproval {
   canRequestLeave: boolean;
   canReceiveReminders: boolean;
   canAutoRecordDca: boolean;
+  canUseOnsiteReport: boolean;
   createdAt: string;
   approvedAt: string | null;
 }

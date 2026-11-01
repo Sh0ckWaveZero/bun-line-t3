@@ -8,6 +8,8 @@ import {
   Briefcase,
   BarChart3,
   CalendarDays,
+  FileText,
+  ImageUp,
   Wrench,
   UserRound,
   IdCard,
@@ -114,6 +116,12 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         href: "/calendar",
         icon: CalendarDays,
       },
+      {
+        id: "onsite-report",
+        label: "Onsite Service Report",
+        href: "/onsite-report",
+        icon: FileText,
+      },
     ],
   },
   {
@@ -181,6 +189,12 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         label: "จัดการสิทธิ์ LINE Features",
         href: "/admin/line-permissions",
         icon: Shield,
+      },
+      {
+        id: "onsite-report-companies",
+        label: "บริษัท Onsite Report",
+        href: "/admin/onsite-report-companies",
+        icon: ImageUp,
       },
       {
         id: "cron-jobs",
@@ -324,7 +338,8 @@ export const isNavItemActive = (item: NavItem, pathname: string): boolean => {
       return (
         pathname === "/attendance-report" ||
         pathname === "/leave" ||
-        pathname === "/calendar"
+        pathname === "/calendar" ||
+        pathname.startsWith("/onsite-report")
       );
     }
     if (item.id === "tools") {
@@ -338,7 +353,9 @@ export const isNavItemActive = (item: NavItem, pathname: string): boolean => {
     }
     if (item.id === "admin") {
       return (
-        pathname === "/admin/line-permissions" || pathname === "/line-approval"
+        pathname === "/admin/line-permissions" ||
+        pathname === "/admin/onsite-report-companies" ||
+        pathname === "/line-approval"
       );
     }
     return pathname === item.href;
@@ -360,6 +377,12 @@ export const isChildHrefActive = (child: NavItem, pathname: string): boolean => 
   // poker เข้าได้ทั้งหน้า list (/planning-poker) และหน้าห้อง (/planning-poker/CODE)
   if (child.href === "/planning-poker") {
     return pathname.startsWith(child.href);
+  }
+  // onsite report มีหน้าย่อย /new และ /$id/edit
+  if (child.href === "/onsite-report") {
+    return (
+      pathname === "/onsite-report" || pathname.startsWith("/onsite-report/")
+    );
   }
   return pathname === child.href;
 };

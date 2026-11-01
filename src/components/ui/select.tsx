@@ -50,7 +50,10 @@ export function Select({
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
     if (next) {
-      setHighlighted(selectedIndex >= 0 ? selectedIndex : 0);
+      const initialIndex = selectedIndex >= 0 ? selectedIndex : 0;
+      setHighlighted(initialIndex);
+      // รายการเลื่อนได้แล้ว — พาไปที่ตัวเลือกที่เลือกอยู่ (รอให้ Portal mount ก่อน)
+      setTimeout(() => scrollToOption(initialIndex), 0);
     }
   };
 
@@ -141,6 +144,9 @@ export function Select({
         sideOffset={4}
         className={cn(
           "w-[var(--radix-popover-trigger-width)] p-1",
+          // รายการยาว (เช่น เวลา 21 ช่อง) ต้องเลื่อนในกล่อง ไม่ล้นเกินจอ — เพดาน 18rem
+          // หรือพื้นที่ว่างจริงที่ Radix คำนวณให้ (อันที่เล็กกว่า) ตามที่ popover เปิดขึ้น/ลง
+          "max-h-[min(18rem,var(--radix-popover-content-available-height))] overflow-y-auto",
           contentClassName,
         )}
         onKeyDown={handleListKeyDown}

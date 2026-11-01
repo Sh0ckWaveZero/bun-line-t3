@@ -67,3 +67,12 @@ scripts/delete-old-line-accounts.ts
 !.agents/skills/docker-optimize/
 !.agents/skills/docker-optimize/SKILL.md
 .commandcode/
+.audit/
+.codex/
+design-plans/planning-poker-mobile-active-state.md
+
+# โลโก้แบรนด์สำหรับ Onsite Report — เก็บใน DB (อัปโหลดที่ /admin/onsite-report-companies) ไม่ขึ้น git
+assets/brand-logos/
+
+# เครื่องมือ AI/แผนงานภายในเครื่อง — อาจมีชื่อบุคคลหรือข้อมูลลูกค้า ไม่ขึ้น git
+.zcode/

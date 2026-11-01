@@ -39,6 +39,11 @@ const PERMISSION_CONTROLS: {
     ariaLabel: (lineUserId) =>
       `อนุญาตให้ ${lineUserId} บันทึก DCA จากข้อความในแชตส่วนตัวอัตโนมัติ`,
   },
+  {
+    permission: "canUseOnsiteReport",
+    ariaLabel: (lineUserId) =>
+      `อนุญาตให้ ${lineUserId} ใช้งาน Onsite Service Report`,
+  },
 ];
 
 function getStatusMeta(status: LineApproval["status"]) {
