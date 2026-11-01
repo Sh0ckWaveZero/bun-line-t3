@@ -1,0 +1,5 @@
+pre-commit:
+  jobs:
+    - name: bun-lint
+      glob: "*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}"
+      run: bunx --package bun@1.4.4-canary.20261031.1 bun lint --staged

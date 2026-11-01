@@ -17,7 +17,6 @@
     "incremental": true,
     "noUncheckedIndexedAccess": true,
     "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@/features/*": ["./src/features/*"],
@@ -38,7 +37,6 @@
     "**/*.mjs",
     "**/*.ts",
     "**/*.tsx",
-    ".eslintrc.cjs",
     "vite.config.ts",
     "src/routeTree.gen.ts",
     "tests/**/*.ts",
