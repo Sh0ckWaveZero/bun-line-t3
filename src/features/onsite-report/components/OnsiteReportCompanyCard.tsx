@@ -133,7 +133,10 @@ export const OnsiteReportCompanyCard = ({
         </div>
       </div>
       {formError && (
-        <p role="alert" className="mt-1 text-xs text-rose-600 dark:text-rose-400">
+        <p
+          role="alert"
+          className="mt-1 text-xs text-rose-600 dark:text-rose-400"
+        >
           {formError}
         </p>
       )}

@@ -86,7 +86,10 @@ export const OnsiteReportCompanyCreateForm = ({
         </Button>
       </div>
       {error && (
-        <p role="alert" className="mt-2 text-xs text-rose-600 dark:text-rose-400">
+        <p
+          role="alert"
+          className="mt-2 text-xs text-rose-600 dark:text-rose-400"
+        >
           {error}
         </p>
       )}

@@ -9,6 +9,9 @@
  * เส้นลายเซ็น 2 ฝั่ง + เลขหน้ามุมขวาล่าง
  */
 import path from "node:path";
+// ไฟล์ .server.tsx — ใช้ที่ API route ฝั่ง server เท่านั้น ไม่ถูกรวมใน client bundle
+// จึงไม่มี "page load" ให้ชะลอ และ React.lazy/next/dynamic ใช้กับฝั่ง server ไม่ได้
+// eslint-disable-next-line react-doctor/prefer-dynamic-import
 import {
   Document,
   Font,
@@ -28,6 +31,10 @@ import type { OnsiteReport } from "../types";
 
 const FONT_DIR = path.resolve(process.cwd(), "public/fonts");
 
+/** คำยาวเกินนี้ถึงยอมให้ตัดกลางคำ (รหัสโปรเจกต์/โทเคนที่ไม่มีช่องว่าง) */
+const LONG_WORD_LENGTH = 24;
+const LONG_WORD_CHUNK = 10;
+
 let fontsRegistered = false;
 
 const ensureFonts = (): void => {
@@ -39,8 +46,16 @@ const ensureFonts = (): void => {
       { src: path.join(FONT_DIR, "Sarabun-Bold.ttf"), fontWeight: 700 },
     ],
   });
-  // ปิดการตัดคำด้วย hyphen ("Presi-dent") — ให้ขึ้นบรรทัดใหม่ทั้งคำแทน
-  Font.registerHyphenationCallback((word) => [word]);
+  // คำปกติไม่ตัดด้วย hyphen ("Presi-dent") — ขึ้นบรรทัดใหม่ทั้งคำ
+  // แต่โทเคนยาวไม่มีช่องว่าง (เช่น Project Code 60 ตัว) ต้องยอมหั่นเป็นชิ้น ไม่งั้นล้นกรอบหน้ากระดาษ
+  Font.registerHyphenationCallback((word) => {
+    if (word.length <= LONG_WORD_LENGTH) return [word];
+    const chunks: string[] = [];
+    for (let i = 0; i < word.length; i += LONG_WORD_CHUNK) {
+      chunks.push(word.slice(i, i + LONG_WORD_CHUNK));
+    }
+    return chunks;
+  });
   fontsRegistered = true;
 };
 
@@ -157,14 +172,15 @@ const styles = StyleSheet.create({
     fontSize: 9,
   },
   // ข้อมูลงาน — label ตัวหนา + เส้นขีดใต้ค่า
+  // แถวสูงขั้นต่ำ 15pt แล้วขยายตามเนื้อหา (ค่ายาวขึ้นหลายบรรทัดได้ ไม่ทับแถวก่อนหน้า)
+  // ไม่ตั้ง alignItems: ค่าเริ่มต้น stretch ทำให้ทุกช่องในแถวสูงเท่ากัน
+  // label อยู่บนสุด ข้อความชิดบน และเส้นขีดใต้ของทุกช่องอยู่แนวเดียวกันที่ขอบล่างของแถว
   infoRow: {
     flexDirection: "row",
-    alignItems: "flex-end",
-    height: 15,
+    minHeight: 15,
   },
   infoField: {
     flexDirection: "row",
-    alignItems: "flex-end",
   },
   infoLabel: {
     flexShrink: 0,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { ImageUp, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import {
   validateLogoImage,
 } from "../lib/logo-image";
 import { onsiteReportCompanyLogoUrl } from "../hooks/useOnsiteReportCompanies";
+import { useObjectUrl } from "../hooks/useObjectUrl";
 import type { OnsiteReportCompany } from "../types";
 
 interface OnsiteReportCompanyLogoPanelProps {
@@ -22,9 +23,7 @@ interface OnsiteReportCompanyLogoPanelProps {
 
 const ACCEPT = ONSITE_REPORT_LOGO_MIME_TYPES.join(",");
 
-type FileCheck =
-  | { ok: true; previewBlob: Blob }
-  | { ok: false; error: string };
+type FileCheck = { ok: true; previewBlob: Blob } | { ok: false; error: string };
 
 /**
  * ตรวจไฟล์ฝั่ง client จาก "ไบต์จริง" (magic bytes) ด้วย validator ตัวเดียวกับ API — ไม่เชื่อ file.type ที่ผู้ใช้แก้ได้
@@ -69,24 +68,13 @@ export const OnsiteReportCompanyLogoPanel = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
+  const previewUrl = useObjectUrl(previewBlob);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
-  // object URL สร้าง/คืนใน event handler (ไม่ setState ใน effect) + คืนตอน unmount
-  const previewUrlRef = useRef<string | null>(null);
-  useEffect(
-    () => () => {
-      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
-    },
-    [],
-  );
-
-  const setPreview = (file: File | null, previewBlob: Blob | null) => {
-    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
-    const url = previewBlob ? URL.createObjectURL(previewBlob) : null;
-    previewUrlRef.current = url;
+  const setPreview = (file: File | null, blob: Blob | null) => {
     setSelectedFile(file);
-    setPreviewUrl(url);
+    setPreviewBlob(blob);
   };
 
   const resetSelection = () => {
@@ -131,7 +119,8 @@ export const OnsiteReportCompanyLogoPanel = ({
   };
 
   const shownUrl = toSafeImageSrc(
-    previewUrl ?? (company.hasLogo ? onsiteReportCompanyLogoUrl(company) : null),
+    previewUrl ??
+      (company.hasLogo ? onsiteReportCompanyLogoUrl(company) : null),
   );
 
   return (
@@ -152,7 +141,8 @@ export const OnsiteReportCompanyLogoPanel = ({
       </div>
       {selectedFile && (
         <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
-          ตัวอย่างไฟล์ที่เลือก ({selectedFile.name}) — ยังไม่ถูกบันทึกจนกว่าจะกดอัปโหลด
+          ตัวอย่างไฟล์ที่เลือก ({selectedFile.name}) —
+          ยังไม่ถูกบันทึกจนกว่าจะกดอัปโหลด
         </p>
       )}
 
@@ -167,11 +157,14 @@ export const OnsiteReportCompanyLogoPanel = ({
         aria-label={`เลือกไฟล์โลโก้ของ ${company.name}`}
       />
       <p className="mt-3 text-[11px] text-slate-500 dark:text-slate-400">
-        PNG หรือ JPEG ไม่เกิน {ONSITE_REPORT_LOGO_MAX_BYTES / 1024}KB
-        (แนะนำ PNG พื้นหลังโปร่งใส)
+        PNG หรือ JPEG ไม่เกิน {ONSITE_REPORT_LOGO_MAX_BYTES / 1024}KB (แนะนำ PNG
+        พื้นหลังโปร่งใส)
       </p>
       {fileError && (
-        <p role="alert" className="mt-1 text-xs text-rose-600 dark:text-rose-400">
+        <p
+          role="alert"
+          className="mt-1 text-xs text-rose-600 dark:text-rose-400"
+        >
           {fileError}
         </p>
       )}

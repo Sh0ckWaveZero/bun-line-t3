@@ -72,7 +72,9 @@ const SignatureCard = ({
       return;
     }
     if (file.size > ONSITE_REPORT_SIGNATURE_MAX_BYTES) {
-      setFileError(`ไฟล์ใหญ่เกิน ${ONSITE_REPORT_SIGNATURE_MAX_BYTES / 1024}KB`);
+      setFileError(
+        `ไฟล์ใหญ่เกิน ${ONSITE_REPORT_SIGNATURE_MAX_BYTES / 1024}KB`,
+      );
       return;
     }
     setFileError(null);
@@ -115,17 +117,16 @@ const SignatureCard = ({
         disabled={isBusy}
       />
       {fileError && (
-        <p role="alert" className="mt-1 text-xs text-rose-600 dark:text-rose-400">
+        <p
+          role="alert"
+          className="mt-1 text-xs text-rose-600 dark:text-rose-400"
+        >
           {fileError}
         </p>
       )}
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <Button
-          size="sm"
-          disabled={isBusy}
-          onClick={() => setIsPadOpen(true)}
-        >
+        <Button size="sm" disabled={isBusy} onClick={() => setIsPadOpen(true)}>
           <PenLine aria-hidden="true" />
           {signature ? "เซ็นใหม่" : "เซ็นชื่อ"}
         </Button>
@@ -161,7 +162,9 @@ const SignatureCard = ({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>เซ็นชื่อ — {SIGNATURE_PARTY_LABELS[party]}</DialogTitle>
+            <DialogTitle>
+              เซ็นชื่อ — {SIGNATURE_PARTY_LABELS[party]}
+            </DialogTitle>
             <DialogDescription>
               วาดลายเซ็นในกรอบด้านล่างด้วยนิ้ว ปากกา หรือเมาส์ แล้วกดบันทึก
             </DialogDescription>
@@ -212,8 +215,9 @@ export const OnsiteReportSignatureSection = ({
         ลายเซ็น
       </h2>
       <p className="mt-1 mb-4 text-xs text-slate-500 dark:text-slate-400">
-        ลายเซ็นแสดงเหนือเส้นเซ็นใน PDF — บันทึกทันทีเมื่อกดบันทึก
-        ไม่ต้องกด &quot;บันทึกรายงาน&quot; ซ้ำ ถ้ายังไม่เซ็น PDF จะเว้นช่องไว้ให้เซ็นด้วยปากกา
+        ลายเซ็นแสดงเหนือเส้นเซ็นใน PDF — บันทึกทันทีเมื่อกดบันทึก ไม่ต้องกด
+        &quot;บันทึกรายงาน&quot; ซ้ำ ถ้ายังไม่เซ็น PDF
+        จะเว้นช่องไว้ให้เซ็นด้วยปากกา
       </p>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <SignatureCard

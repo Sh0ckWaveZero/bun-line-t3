@@ -154,6 +154,107 @@ describe("onsiteReportFormSchema", () => {
   });
 });
 
+describe("onsiteReportFormSchema — ดัชนี error ของแถวตาราง", () => {
+  const validBase = {
+    ...emptyFormValues(),
+    company: "ACME",
+    docNo: "PRJ-ABC-24-01-1001",
+    clientName: "โรงพยาบาลตัวอย่าง",
+    projectCode: "PRJ-ABC-24-01",
+    onsiteDate: "2026-10-02",
+    mainContact: "Erin Contact",
+    executionTeam: "Alice Example",
+    objective: "ทดสอบ",
+    actionItem: "ทดสอบ",
+  };
+
+  const issuePaths = (input: unknown) => {
+    const result = onsiteReportFormSchema.safeParse(input);
+    expect(result.success).toBe(false);
+    return result.success
+      ? []
+      : result.error.issues.map((issue) => issue.path.join("."));
+  };
+
+  test("แถวแรกว่าง แถวสองกรอกไม่ครบ → error อยู่ที่ดัชนีเดิม (1) ไม่ใช่ 0", () => {
+    const paths = issuePaths({
+      ...validBase,
+      nextActions: [
+        { date: "", milestone: "", description: "" },
+        { date: "2026-10-10", milestone: "UAT", description: "" },
+      ],
+    });
+    expect(paths).toEqual(["nextActions.1.description"]);
+  });
+
+  test("attendees: แถวว่างนำหน้า แล้วแถวที่ 3 ขาดตำแหน่ง → error ที่ดัชนี 2", () => {
+    const paths = issuePaths({
+      ...validBase,
+      attendees: [
+        { name: "", position: "" },
+        { name: "Alice Example", position: "Engineer" },
+        { name: "Bob Sample", position: "" },
+      ],
+    });
+    expect(paths).toEqual(["attendees.2.position"]);
+  });
+
+  test("หลายแถวผิดพร้อมกัน → รายงานทุกแถวด้วยดัชนีเดิม", () => {
+    const paths = issuePaths({
+      ...validBase,
+      nextActions: [
+        { date: "x", milestone: "A", description: "B" },
+        { date: "", milestone: "", description: "" },
+        { date: "2026-10-10", milestone: "", description: "B" },
+      ],
+    });
+    expect(paths).toEqual(["nextActions.0.date", "nextActions.2.milestone"]);
+  });
+
+  test("ผ่าน validation แล้วค่อยตัดแถวว่างออกจาก output", () => {
+    const result = onsiteReportFormSchema.parse({
+      ...validBase,
+      nextActions: [
+        { date: "", milestone: "", description: "" },
+        { date: "2026-10-10", milestone: "UAT", description: "ทดสอบร่วมกัน" },
+        { date: "  ", milestone: " ", description: "" },
+      ],
+      attendees: [
+        { name: "", position: "" },
+        { name: "Alice Example", position: "Engineer" },
+      ],
+    });
+    expect(result.nextActions).toEqual([
+      { date: "2026-10-10", milestone: "UAT", description: "ทดสอบร่วมกัน" },
+    ]);
+    expect(result.attendees).toEqual([
+      { name: "Alice Example", position: "Engineer" },
+    ]);
+  });
+
+  test("เกินจำนวนแถวสูงสุด (นับเฉพาะแถวที่กรอกจริง) → error ระดับ field", () => {
+    const paths = issuePaths({
+      ...validBase,
+      attendees: Array.from({ length: ONSITE_REPORT_MAX_ATTENDEES + 1 }, (_, i) => ({
+        name: `Person${i}`,
+        position: "Engineer",
+      })),
+    });
+    expect(paths).toEqual(["attendees"]);
+  });
+
+  test("แถวว่างจำนวนมากไม่นับรวมเป็นเกินเพดาน", () => {
+    const result = onsiteReportFormSchema.safeParse({
+      ...validBase,
+      attendees: Array.from({ length: ONSITE_REPORT_MAX_ATTENDEES * 3 }, () => ({
+        name: "",
+        position: "",
+      })),
+    });
+    expect(result.success).toBe(true);
+  });
+});
+
 describe("onsiteReportPayloadSchema", () => {
   const basePayload = {
     company: "ACME" as const,
@@ -463,6 +564,23 @@ describe("renderOnsiteReportPdf", () => {
       "%PDF-",
     );
     expect(withLogo.byteLength).toBeGreaterThan(withoutLogo.byteLength);
+  });
+
+  test("ค่าในช่องข้อมูลงานยาวหลายบรรทัด (ตามเพดาน schema) → ยังเรนเดอร์ได้ครบ", async () => {
+    const buffer = await renderOnsiteReportPdf(
+      {
+        ...sampleReport,
+        clientName: "โรงพยาบาลตัวอย่าง ".repeat(12).trim(),
+        projectCode: "PRJ-ABC-24-01-".repeat(4).trim(),
+        mainContact: "Erin Contact, ".repeat(14).trim(),
+        executionTeam: Array.from({ length: 30 }, (_, i) => `Person${i + 1}`)
+          .join(", ")
+          .padEnd(500, "x")
+          .slice(0, 500),
+      },
+      { company: { name: "บริษัท ทดสอบ จำกัด", logo: null } },
+    );
+    expect(Buffer.from(buffer.subarray(0, 5)).toString("ascii")).toBe("%PDF-");
   });
 
   test("บริษัทไม่มีโลโก้ → ออก PDF ปกติ (ไม่ล้ม)", async () => {

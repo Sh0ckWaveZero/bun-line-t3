@@ -17,7 +17,10 @@ export const OnsiteReportAccessGate = ({
 
   if (isLoading) {
     return (
-      <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6" aria-busy="true">
+      <main
+        className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6"
+        aria-busy="true"
+      >
         <div className="h-40 animate-pulse rounded-2xl bg-slate-200 dark:bg-white/[0.08]" />
       </main>
     );

@@ -2,12 +2,7 @@
 
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import {
-  FileDown,
-  MoreHorizontal,
-  Pencil,
-  Trash2,
-} from "lucide-react";
+import { FileDown, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -83,43 +78,40 @@ export const OnsiteReportTable = ({
               </tr>
             ) : (
               reports.map((report) => (
-                  <tr
-                    key={report.id}
-                    className={cn("group", ROW_CLASS)}
-                  >
-                    <td className="px-3 py-3.5">
-                      <p className="font-medium text-slate-800 dark:text-slate-100">
-                        {report.docNo}
-                        {report.revision}.0
-                      </p>
-                      <p className="mt-0.5 text-[11px] text-slate-500">
-                        {report.companyName}
-                      </p>
-                    </td>
-                    <td className="max-w-[180px] truncate px-3 py-3.5">
-                      {report.clientName}
-                    </td>
-                    <td className="px-3 py-3.5 whitespace-nowrap">
-                      {formatDateTh(report.onsiteDate)}
-                    </td>
-                    <td className="px-3 py-3.5">{report.projectCode}</td>
-                    <td className="px-3 py-3.5">{report.phase ?? "-"}</td>
-                    <td className="w-12 px-2 text-right">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setConfirmDelete(false);
-                          setSelected(report);
-                        }}
-                        aria-label={`จัดการ ${report.docNo}`}
-                        className="cursor-pointer rounded-lg p-1.5 text-slate-400 opacity-70 transition-colors group-hover:opacity-100 hover:bg-slate-200 hover:text-slate-700 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none dark:hover:bg-white/[0.08] dark:hover:text-slate-200"
-                      >
-                        <MoreHorizontal className="size-4" aria-hidden="true" />
-                      </button>
-                    </td>
-                  </tr>
-                )))
-            }
+                <tr key={report.id} className={cn("group", ROW_CLASS)}>
+                  <td className="px-3 py-3.5">
+                    <p className="font-medium text-slate-800 dark:text-slate-100">
+                      {report.docNo}
+                      {report.revision}.0
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-slate-500">
+                      {report.companyName}
+                    </p>
+                  </td>
+                  <td className="max-w-[180px] truncate px-3 py-3.5">
+                    {report.clientName}
+                  </td>
+                  <td className="px-3 py-3.5 whitespace-nowrap">
+                    {formatDateTh(report.onsiteDate)}
+                  </td>
+                  <td className="px-3 py-3.5">{report.projectCode}</td>
+                  <td className="px-3 py-3.5">{report.phase ?? "-"}</td>
+                  <td className="w-12 px-2 text-right">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setConfirmDelete(false);
+                        setSelected(report);
+                      }}
+                      aria-label={`จัดการ ${report.docNo}`}
+                      className="cursor-pointer rounded-lg p-1.5 text-slate-400 opacity-70 transition-colors group-hover:opacity-100 hover:bg-slate-200 hover:text-slate-700 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none dark:hover:bg-white/[0.08] dark:hover:text-slate-200"
+                    >
+                      <MoreHorizontal className="size-4" aria-hidden="true" />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

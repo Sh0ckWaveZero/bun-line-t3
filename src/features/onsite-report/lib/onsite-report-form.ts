@@ -64,6 +64,51 @@ const isBlankRow = (row: Record<string, string>): boolean =>
     (value) => typeof value !== "string" || value.trim() === "",
   );
 
+/**
+ * ตรวจแถวของตาราง (Next Action / Attendees) โดยคง "ดัชนีต้นฉบับ" ใน error path ไว้
+ *
+ * แถวที่เว้นว่างทั้งแถวถูกข้าม (ไม่ validate) แต่ไม่ถูกตัดออกจนกว่า validation จะผ่านทั้งหมด
+ * ถ้ากรองแถวว่างก่อน validate ดัชนีใน error จะเลื่อน เช่น แถวที่ 2 ผิดแต่ error กลายเป็น [0]
+ * ซึ่งฟอร์ม (useFieldArray) แสดงตามดัชนีเดิม → error ไปโผล่ใต้แถวว่าง และโฟกัสช่องที่ผิดไม่ถูก
+ */
+const validatedRows = <
+  R extends z.ZodType<Record<string, string>>,
+  T extends z.ZodType,
+>(
+  rawRow: R,
+  rowSchema: T,
+  max: number,
+  maxMessage: string,
+) =>
+  z.array(rawRow).transform((rows, ctx) => {
+    const validRows: z.output<T>[] = [];
+    let isValid = true;
+
+    rows.forEach((row, index) => {
+      if (isBlankRow(row)) return;
+      const parsed = rowSchema.safeParse(row);
+      if (!parsed.success) {
+        isValid = false;
+        for (const issue of parsed.error.issues) {
+          ctx.addIssue({
+            code: "custom",
+            path: [index, ...issue.path],
+            message: issue.message,
+          });
+        }
+        return;
+      }
+      validRows.push(parsed.data);
+    });
+
+    if (isValid && validRows.length > max) {
+      ctx.addIssue({ code: "custom", message: maxMessage });
+      return z.NEVER;
+    }
+    // มี error → คืน NEVER ให้ซ้ำกับ issue ที่ใส่แล้ว (ไม่คืนแถวที่กรองแล้ว)
+    return isValid ? validRows : z.NEVER;
+  });
+
 // ─────────────────────────────────────────────
 // Schema
 // ─────────────────────────────────────────────
@@ -86,40 +131,26 @@ export const onsiteReportFormSchema = z
     objective: requiredText("วัตถุประสงค์การเข้าบริการ", 2000),
     actionItem: requiredText("รายละเอียดงาน", 2000),
     pendingNote: optionalText(2000),
-    /** คัดแถวที่เว้นว่างทิ้งก่อน validate แถวที่กรอกจริง */
-    nextActions: z
-      .array(rawNextActionRow)
-      .transform((rows) => rows.filter((row) => !isBlankRow(row)))
-      .pipe(
-        z
-          .array(
-            z.object({
-              date: dateField("วันที่"),
-              milestone: requiredText("Milestone", 200),
-              description: requiredText("รายละเอียด", 500),
-            }),
-          )
-          .max(
-            ONSITE_REPORT_MAX_NEXT_ACTIONS,
-            `การดำเนินการต่อไปไม่เกิน ${ONSITE_REPORT_MAX_NEXT_ACTIONS} แถว`,
-          ),
-      ),
-    attendees: z
-      .array(rawAttendeeRow)
-      .transform((rows) => rows.filter((row) => !isBlankRow(row)))
-      .pipe(
-        z
-          .array(
-            z.object({
-              name: requiredText("ชื่อผู้เข้าร่วม", 120),
-              position: requiredText("ตำแหน่ง", 120),
-            }),
-          )
-          .max(
-            ONSITE_REPORT_MAX_ATTENDEES,
-            `ผู้เข้าร่วมไม่เกิน ${ONSITE_REPORT_MAX_ATTENDEES} คน`,
-          ),
-      ),
+    /** ตรวจเฉพาะแถวที่กรอกจริง (error คงดัชนีต้นฉบับ) แล้วคัดแถวว่างทิ้งหลัง validate ผ่าน */
+    nextActions: validatedRows(
+      rawNextActionRow,
+      z.object({
+        date: dateField("วันที่"),
+        milestone: requiredText("Milestone", 200),
+        description: requiredText("รายละเอียด", 500),
+      }),
+      ONSITE_REPORT_MAX_NEXT_ACTIONS,
+      `การดำเนินการต่อไปไม่เกิน ${ONSITE_REPORT_MAX_NEXT_ACTIONS} แถว`,
+    ),
+    attendees: validatedRows(
+      rawAttendeeRow,
+      z.object({
+        name: requiredText("ชื่อผู้เข้าร่วม", 120),
+        position: requiredText("ตำแหน่ง", 120),
+      }),
+      ONSITE_REPORT_MAX_ATTENDEES,
+      `ผู้เข้าร่วมไม่เกิน ${ONSITE_REPORT_MAX_ATTENDEES} คน`,
+    ),
   })
   .superRefine((values, ctx) => {
     if (

@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { onsiteReportFormSchema } from "../lib/onsite-report-form";
+import { useDebouncedValue } from "../hooks/useDebouncedValue";
+import { useObjectUrl } from "../hooks/useObjectUrl";
 import type { OnsiteReportFormInput } from "../lib/onsite-report-form";
 
 /**
@@ -19,7 +22,8 @@ const STATUS_TEXT: Record<PreviewStatus, string> = {
 };
 
 const STATUS_CLASS: Record<PreviewStatus, string> = {
-  loading: "bg-slate-100 text-slate-600 dark:bg-white/[0.06] dark:text-slate-300",
+  loading:
+    "bg-slate-100 text-slate-600 dark:bg-white/[0.06] dark:text-slate-300",
   ready: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
   incomplete: "bg-amber-500/10 text-amber-700 dark:text-amber-300",
   error: "bg-rose-500/10 text-rose-700 dark:text-rose-300",
@@ -35,6 +39,20 @@ const DEBOUNCE_MS = 600;
 const VIEWER_FRAGMENT =
   "#toolbar=0&navpanes=0&scrollbar=0&view=FitH&pagemode=none";
 
+const fetchPreviewPdf = async (
+  payload: unknown,
+  signal: AbortSignal,
+): Promise<Blob> => {
+  const response = await fetch("/api/onsite-reports/preview-pdf", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    signal,
+  });
+  if (!response.ok) throw new Error("preview failed");
+  return response.blob();
+};
+
 /** ตัวอย่างเอกสาร PDF แบบ WYSIWYG — เรนเดอร์ด้วย pipeline เดียวกับไฟล์ดาวน์โหลดจริง */
 export const OnsiteReportPreview = ({
   values,
@@ -47,64 +65,40 @@ export const OnsiteReportPreview = ({
   /** เปลี่ยนค่าเมื่อลายเซ็นเปลี่ยน เพื่อให้ตัวอย่างโหลดใหม่ */
   signatureVersion?: string;
 }) => {
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
-  const [renderState, setRenderState] = useState<"loading" | "ok" | "error">(
-    "loading",
-  );
+  // รอให้หยุดพิมพ์ก่อนค่อยขอ PDF ใหม่ — react-query จัดการยกเลิกคำขอเก่า/กัน race และคงตัวอย่างเดิมไว้ระหว่างโหลด
+  const debouncedValues = useDebouncedValue(values, DEBOUNCE_MS);
+  const {
+    data: pdfBlob,
+    isError,
+    isFetching,
+  } = useQuery({
+    queryKey: [
+      "onsite-report-preview",
+      debouncedValues,
+      reportId,
+      signatureVersion,
+    ],
+    queryFn: ({ signal }) =>
+      fetchPreviewPdf({ ...debouncedValues, reportId }, signal),
+    placeholderData: keepPreviousData,
+    retry: false,
+    refetchOnWindowFocus: false,
+    gcTime: 0, // Blob ของ PDF เก่าไม่ต้องค้างใน cache
+  });
+  const blobUrl = useObjectUrl(pdfBlob ?? null);
+
   const isComplete = useMemo(
     () => onsiteReportFormSchema.safeParse(values).success,
     [values],
   );
-  const status: PreviewStatus =
-    renderState === "loading"
-      ? "loading"
-      : renderState === "error"
-        ? "error"
-        : isComplete
-          ? "ready"
-          : "incomplete";
-  const urlRef = useRef<string | null>(null);
-  const seqRef = useRef(0);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const seq = ++seqRef.current;
-      let cancelled = false;
-      void (async () => {
-        try {
-          const response = await fetch("/api/onsite-reports/preview-pdf", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...values, reportId }),
-          });
-          if (cancelled || seq !== seqRef.current) return;
-          if (!response.ok) throw new Error("preview failed");
-          const blob = await response.blob();
-          const url = URL.createObjectURL(blob);
-          if (urlRef.current) URL.revokeObjectURL(urlRef.current);
-          urlRef.current = url;
-          setBlobUrl(url);
-          setRenderState("ok");
-        } catch {
-          if (!cancelled && seq === seqRef.current) setRenderState("error");
-        }
-      })();
-      return () => {
-        cancelled = true;
-      };
-    }, DEBOUNCE_MS);
-    return () => clearTimeout(timer);
-    // signatureVersion ไม่ถูกใช้ในตัว effect โดยตั้งใจ — มีไว้เป็นตัวกระตุ้นให้ตัวอย่างโหลดใหม่เมื่อลายเซ็นเปลี่ยน
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [values, reportId, signatureVersion]);
-
-  // เคลียร์ blob URL สุดท้ายตอน unmount
-  useEffect(
-    () => () => {
-      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
-    },
-    [],
-  );
+  const isLoading = isFetching || values !== debouncedValues;
+  const status: PreviewStatus = isLoading
+    ? "loading"
+    : isError
+      ? "error"
+      : isComplete
+        ? "ready"
+        : "incomplete";
 
   return (
     <aside
@@ -127,7 +121,7 @@ export const OnsiteReportPreview = ({
           // ใน iframe ที่ sandboxed โดยไม่มี allow-scripts และใส่คู่กับ allow-same-origin
           // จะโดนกฎ react/iframe-missing-sandbox — เนื้อหาคือ PDF ที่เรา generate เอง
           // (react-pdf ไม่ฝัง /JavaScript) จึงไม่มีพื้นผิวโจมตีแบบ sandbox escape
-          // eslint-disable-next-line react/iframe-missing-sandbox
+          // eslint-disable-next-line react/iframe-missing-sandbox, react-doctor/iframe-missing-sandbox
           <iframe
             src={`${blobUrl}${VIEWER_FRAGMENT}`}
             title="ตัวอย่าง Onsite Service Report"
