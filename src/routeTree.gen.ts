@@ -25,6 +25,7 @@ import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as MonitoringRouteImport } from './routes/monitoring'
 import { Route as OnsiteReportRouteImport } from './routes/onsite-report'
 import { Route as PendingApprovalRouteImport } from './routes/pending-approval'
+import { Route as RoongiRouteImport } from './routes/roongi'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SubscriptionsRouteImport } from './routes/subscriptions'
 import { Route as ThaiIdRouteImport } from './routes/thai-id'
@@ -40,6 +41,7 @@ import { Route as ApiHolidaysRouteImport } from './routes/api/holidays'
 import { Route as ApiLeaveRouteImport } from './routes/api/leave'
 import { Route as ApiLineRouteImport } from './routes/api/line'
 import { Route as ApiLogoutRouteImport } from './routes/api/logout'
+import { Route as ApiRoongiRouteImport } from './routes/api/roongi'
 import { Route as ApiWorkModesRouteImport } from './routes/api/work-modes'
 import { Route as CalendarMobileRouteImport } from './routes/calendar.mobile'
 import { Route as OnsiteReportIndexRouteImport } from './routes/onsite-report.index'
@@ -193,6 +195,11 @@ const PendingApprovalRoute = PendingApprovalRouteImport.update({
   path: '/pending-approval',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RoongiRoute = RoongiRouteImport.update({
+  id: '/roongi',
+  path: '/roongi',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -267,6 +274,11 @@ const ApiLineRoute = ApiLineRouteImport.update({
 const ApiLogoutRoute = ApiLogoutRouteImport.update({
   id: '/api/logout',
   path: '/api/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRoongiRoute = ApiRoongiRouteImport.update({
+  id: '/api/roongi',
+  path: '/api/roongi',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiWorkModesRoute = ApiWorkModesRouteImport.update({
@@ -661,6 +673,7 @@ export interface FileRoutesByFullPath {
   '/monitoring': typeof MonitoringRoute
   '/onsite-report': typeof OnsiteReportRouteWithChildren
   '/pending-approval': typeof PendingApprovalRoute
+  '/roongi': typeof RoongiRoute
   '/settings': typeof SettingsRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/thai-id': typeof ThaiIdRoute
@@ -676,6 +689,7 @@ export interface FileRoutesByFullPath {
   '/api/leave': typeof ApiLeaveRoute
   '/api/line': typeof ApiLineRouteWithChildren
   '/api/logout': typeof ApiLogoutRoute
+  '/api/roongi': typeof ApiRoongiRoute
   '/api/work-modes': typeof ApiWorkModesRoute
   '/calendar/mobile': typeof CalendarMobileRoute
   '/onsite-report/new': typeof OnsiteReportNewRoute
@@ -765,6 +779,7 @@ export interface FileRoutesByTo {
   '/logout': typeof LogoutRoute
   '/monitoring': typeof MonitoringRoute
   '/pending-approval': typeof PendingApprovalRoute
+  '/roongi': typeof RoongiRoute
   '/settings': typeof SettingsRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/thai-id': typeof ThaiIdRoute
@@ -780,6 +795,7 @@ export interface FileRoutesByTo {
   '/api/leave': typeof ApiLeaveRoute
   '/api/line': typeof ApiLineRouteWithChildren
   '/api/logout': typeof ApiLogoutRoute
+  '/api/roongi': typeof ApiRoongiRoute
   '/api/work-modes': typeof ApiWorkModesRoute
   '/calendar/mobile': typeof CalendarMobileRoute
   '/onsite-report/new': typeof OnsiteReportNewRoute
@@ -871,6 +887,7 @@ export interface FileRoutesById {
   '/monitoring': typeof MonitoringRoute
   '/onsite-report': typeof OnsiteReportRouteWithChildren
   '/pending-approval': typeof PendingApprovalRoute
+  '/roongi': typeof RoongiRoute
   '/settings': typeof SettingsRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/thai-id': typeof ThaiIdRoute
@@ -886,6 +903,7 @@ export interface FileRoutesById {
   '/api/leave': typeof ApiLeaveRoute
   '/api/line': typeof ApiLineRouteWithChildren
   '/api/logout': typeof ApiLogoutRoute
+  '/api/roongi': typeof ApiRoongiRoute
   '/api/work-modes': typeof ApiWorkModesRoute
   '/calendar/mobile': typeof CalendarMobileRoute
   '/onsite-report/new': typeof OnsiteReportNewRoute
@@ -978,6 +996,7 @@ export interface FileRouteTypes {
     | '/monitoring'
     | '/onsite-report'
     | '/pending-approval'
+    | '/roongi'
     | '/settings'
     | '/subscriptions'
     | '/thai-id'
@@ -993,6 +1012,7 @@ export interface FileRouteTypes {
     | '/api/leave'
     | '/api/line'
     | '/api/logout'
+    | '/api/roongi'
     | '/api/work-modes'
     | '/calendar/mobile'
     | '/onsite-report/new'
@@ -1082,6 +1102,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/monitoring'
     | '/pending-approval'
+    | '/roongi'
     | '/settings'
     | '/subscriptions'
     | '/thai-id'
@@ -1097,6 +1118,7 @@ export interface FileRouteTypes {
     | '/api/leave'
     | '/api/line'
     | '/api/logout'
+    | '/api/roongi'
     | '/api/work-modes'
     | '/calendar/mobile'
     | '/onsite-report/new'
@@ -1187,6 +1209,7 @@ export interface FileRouteTypes {
     | '/monitoring'
     | '/onsite-report'
     | '/pending-approval'
+    | '/roongi'
     | '/settings'
     | '/subscriptions'
     | '/thai-id'
@@ -1202,6 +1225,7 @@ export interface FileRouteTypes {
     | '/api/leave'
     | '/api/line'
     | '/api/logout'
+    | '/api/roongi'
     | '/api/work-modes'
     | '/calendar/mobile'
     | '/onsite-report/new'
@@ -1293,6 +1317,7 @@ export interface RootRouteChildren {
   MonitoringRoute: typeof MonitoringRoute
   OnsiteReportRoute: typeof OnsiteReportRouteWithChildren
   PendingApprovalRoute: typeof PendingApprovalRoute
+  RoongiRoute: typeof RoongiRoute
   SettingsRoute: typeof SettingsRoute
   SubscriptionsRoute: typeof SubscriptionsRoute
   ThaiIdRoute: typeof ThaiIdRoute
@@ -1308,6 +1333,7 @@ export interface RootRouteChildren {
   ApiLeaveRoute: typeof ApiLeaveRoute
   ApiLineRoute: typeof ApiLineRouteWithChildren
   ApiLogoutRoute: typeof ApiLogoutRoute
+  ApiRoongiRoute: typeof ApiRoongiRoute
   ApiWorkModesRoute: typeof ApiWorkModesRoute
   PlanningPokerCodeRoute: typeof PlanningPokerCodeRoute
   PlanningPokerIndexRoute: typeof PlanningPokerIndexRoute
@@ -1479,6 +1505,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PendingApprovalRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/roongi': {
+      id: '/roongi'
+      path: '/roongi'
+      fullPath: '/roongi'
+      preLoaderRoute: typeof RoongiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -1582,6 +1615,13 @@ declare module '@tanstack/react-router' {
       path: '/api/logout'
       fullPath: '/api/logout'
       preLoaderRoute: typeof ApiLogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/roongi': {
+      id: '/api/roongi'
+      path: '/api/roongi'
+      fullPath: '/api/roongi'
+      preLoaderRoute: typeof ApiRoongiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/work-modes': {
@@ -2277,6 +2317,7 @@ const rootRouteChildren: RootRouteChildren = {
   MonitoringRoute: MonitoringRoute,
   OnsiteReportRoute: OnsiteReportRouteWithChildren,
   PendingApprovalRoute: PendingApprovalRoute,
+  RoongiRoute: RoongiRoute,
   SettingsRoute: SettingsRoute,
   SubscriptionsRoute: SubscriptionsRoute,
   ThaiIdRoute: ThaiIdRoute,
@@ -2292,6 +2333,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiLeaveRoute: ApiLeaveRoute,
   ApiLineRoute: ApiLineRouteWithChildren,
   ApiLogoutRoute: ApiLogoutRoute,
+  ApiRoongiRoute: ApiRoongiRoute,
   ApiWorkModesRoute: ApiWorkModesRoute,
   PlanningPokerCodeRoute: PlanningPokerCodeRoute,
   PlanningPokerIndexRoute: PlanningPokerIndexRoute,
