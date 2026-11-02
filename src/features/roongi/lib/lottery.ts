@@ -85,12 +85,36 @@ export function checkTicket(ticket: string, lottery: Lottery) {
         const differences = [...value].filter(
           (digit, index) => digit !== winning[index],
         ).length;
+        const delta = Number(winning) - Number(value);
         const alternative =
           key === "last3f"
             ? winning + ticket.slice(length)
             : ticket.slice(0, ticket.length - length) + winning;
-        return differences > 0 && differences <= (key === "first" ? 2 : 1)
-          ? [{ label, winning, differences, alternative }]
+        return differences > 0 &&
+          (differences <= (key === "first" ? 2 : 1) || Math.abs(delta) === 1)
+          ? [
+              {
+                label,
+                winning,
+                differences,
+                alternative,
+                ...(Math.abs(delta) === 1
+                  ? {
+                      adjustment: {
+                        direction: delta > 0 ? "เพิ่ม" : "ลด",
+                        segment:
+                          key === "last3f"
+                            ? "เลขหน้า 3 ตัว"
+                            : key === "last3b"
+                              ? "เลขท้าย 3 ตัว"
+                              : key === "last2"
+                                ? "เลขท้าย 2 ตัว"
+                                : "เลขสลาก",
+                      },
+                    }
+                  : {}),
+              },
+            ]
           : [];
       });
     });

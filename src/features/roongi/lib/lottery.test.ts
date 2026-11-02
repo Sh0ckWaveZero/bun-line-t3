@@ -49,6 +49,7 @@ describe("checkTicket", () => {
       winning: "001234",
       differences: 1,
       alternative: "001234",
+      adjustment: { direction: "ลด", segment: "เลขสลาก" },
     });
   });
   test("shows a nearby first prize even when another prize is won", () => {
@@ -69,6 +70,32 @@ describe("checkTicket", () => {
       winning: "777",
       differences: 1,
       alternative: "777123",
+      adjustment: { direction: "เพิ่ม", segment: "เลขหน้า 3 ตัว" },
+    });
+  });
+  test("detects a one-number difference across multiple digit positions", () => {
+    const sample = {
+      ...lottery,
+      data: { ...lottery.data, last3f: prize("300", "4000", 2) },
+    };
+    expect(checkTicket("299123", sample).near).toContainEqual({
+      label: "เลขหน้า 3 ตัว",
+      winning: "300",
+      differences: 3,
+      alternative: "300123",
+      adjustment: { direction: "เพิ่ม", segment: "เลขหน้า 3 ตัว" },
+    });
+    expect(
+      checkTicket("301123", {
+        ...lottery,
+        data: { ...lottery.data, last3f: prize("300", "4000", 2) },
+      }).near,
+    ).toContainEqual({
+      label: "เลขหน้า 3 ตัว",
+      winning: "300",
+      differences: 1,
+      alternative: "300123",
+      adjustment: { direction: "ลด", segment: "เลขหน้า 3 ตัว" },
     });
   });
   test("rejects malformed prize amounts", () => {

@@ -140,7 +140,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     children: [
       {
         id: "roongi",
-        label: "รู้งิ ตรวจสลาก",
+        label: "รู้งี้ ตรวจสลาก",
         href: "/roongi",
         icon: Wrench,
       },
