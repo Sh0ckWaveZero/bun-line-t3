@@ -139,6 +139,12 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     requiresAuth: false,
     children: [
       {
+        id: "roongi",
+        label: "รู้งี้ ตรวจสลาก",
+        href: "/roongi",
+        icon: Wrench,
+      },
+      {
         id: "planning-poker",
         label: "Planning Poker",
         href: "/planning-poker",
@@ -367,7 +373,10 @@ export const isNavItemActive = (item: NavItem, pathname: string): boolean => {
  * Helper function to check if a single child link is active — ใช้ทั้ง dropdown และเมนูมือถือ
  * (ต้องเรียกต่อ child แต่ละตัว ไม่ใช่ parent — ไม่งั้นทุกลิงก์ในเซกชันขึ้น active พร้อมกัน)
  */
-export const isChildHrefActive = (child: NavItem, pathname: string): boolean => {
+export const isChildHrefActive = (
+  child: NavItem,
+  pathname: string,
+): boolean => {
   if (child.href === "/dca-history") {
     return pathname === "/dca-history" || pathname.startsWith("/dca-");
   }
