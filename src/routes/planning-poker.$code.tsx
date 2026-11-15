@@ -15,6 +15,16 @@ export const Route = createFileRoute("/planning-poker/$code")({
     const image = absoluteUrl("/og-poker.png");
     const url = absoluteUrl(`/planning-poker/${code}`);
     return {
+      links: [
+        // preload ฟอนต์หลักของธีม pixel — ต้อง crossOrigin ถึงแม้ same-origin (font fetch แบบ CORS mode)
+        {
+          rel: "preload",
+          href: "/fonts/ta-8-bit.woff2",
+          as: "font",
+          type: "font/woff2",
+          crossOrigin: "anonymous",
+        },
+      ],
       meta: [
         { title },
         { name: "description", content: description },
