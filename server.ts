@@ -174,11 +174,74 @@ export function buildSecurityHeaders(
   return headers;
 }
 
+// ─── CSP Report-Only (modern-web-guidance: security Phase 2) ────────────────
+// รายงานละเมิดของ CSP เต็มรูปแบบโดยยัง "ไม่" บล็อกอะไร — เก็บ telemetry ก่อน
+// โปรโมตเป็น enforce (Phase 3) ตาม staged rollout ของ guide
+const CSP_REPORT_ENDPOINT_NAME = "csp-report";
+
+/** URL ของ endpoint รับ report (absolute ตามที่ browser ต้องการ) — ไม่รู้ APP_URL = null */
+export function buildReportingEndpoints(
+  env: Record<string, string | undefined>,
+): string | null {
+  const rawAppUrl = env.APP_URL?.trim() ?? "";
+  if (!rawAppUrl) return null;
+
+  let origin: string;
+  try {
+    origin = new URL(rawAppUrl).origin;
+  } catch {
+    origin = rawAppUrl.replace(/\/+$/, "");
+  }
+  return `${CSP_REPORT_ENDPOINT_NAME}="${origin}/api/security/csp-report"`;
+}
+
+/**
+ * Policy ที่ "ตั้งใจ" enforce ในระยะถัดไป — script-src ยังต้องยอม 'unsafe-inline'
+ * เพราะ TanStack Start ฉีด inline script (hydration) + theme/SW bootstrap ของเรา;
+ * ระยะถัดไปเปลี่ยนเป็น nonce-based ตาม guide security §3.2
+ */
+export function buildCspReportOnly(
+  reportEndpointName: string | null = CSP_REPORT_ENDPOINT_NAME,
+): string {
+  const directives = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    // LINE CDN avatars + blob: (โลโก้/ลายมือชื่อ onsite-report)
+    "img-src 'self' data: blob: https:",
+    "media-src 'self'",
+    "connect-src 'self'",
+    "worker-src 'self'",
+    "manifest-src 'self'",
+    // iframe PDF preview ผ่าน blob: URL
+    "frame-src 'self' blob:",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ];
+  if (reportEndpointName) {
+    directives.push(`report-to ${reportEndpointName}`);
+  }
+  return directives.join("; ");
+}
+// ────────────────────────────────────────────────────────────────────────────
+
 function applySecurityHeaders(response: Response): Response {
   for (const [name, value] of Object.entries(
     buildSecurityHeaders(process.env),
   )) {
     response.headers.set(name, value);
+  }
+
+  // CSP report-only ต้องมีปลายทาง report ถึงจะมีประโยชน์ — ไม่รู้ APP_URL ข้ามไป
+  const reportingEndpoints = buildReportingEndpoints(process.env);
+  if (reportingEndpoints) {
+    response.headers.set("Reporting-Endpoints", reportingEndpoints);
+    response.headers.set(
+      "Content-Security-Policy-Report-Only",
+      buildCspReportOnly(),
+    );
   }
   return response;
 }
