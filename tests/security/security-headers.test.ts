@@ -1,5 +1,9 @@
 import { describe, it, expect } from "bun:test";
-import { buildSecurityHeaders } from "../../server";
+import {
+  buildSecurityHeaders,
+  buildCspReportOnly,
+  buildReportingEndpoints,
+} from "../../server";
 
 describe("buildSecurityHeaders", () => {
   it("always sets clickjacking + baseline companion headers", () => {
@@ -34,5 +38,37 @@ describe("buildSecurityHeaders", () => {
     expect(headers["Strict-Transport-Security"]).toBe(
       "max-age=31536000; includeSubDomains",
     );
+  });
+});
+
+describe("buildCspReportOnly", () => {
+  it("ครอบ directive พื้นฐานครบ — script ยังต้อง unsafe-inline จนกว่าจะมี nonce", () => {
+    const policy = buildCspReportOnly();
+    expect(policy).toContain("default-src 'self'");
+    expect(policy).toContain("script-src 'self' 'unsafe-inline'");
+    expect(policy).toContain("object-src 'none'");
+    expect(policy).toContain("base-uri 'self'");
+    expect(policy).toContain("form-action 'self'");
+    // blob: PDF preview + Google Fonts ต้องยังผ่าน
+    expect(policy).toContain("frame-src 'self' blob:");
+    expect(policy).toContain("https://fonts.gstatic.com");
+  });
+
+  it("อ้าง report-to endpoint เมื่อกำหนดชื่อ", () => {
+    expect(buildCspReportOnly()).toContain("report-to csp-report");
+    expect(buildCspReportOnly(null)).not.toContain("report-to");
+  });
+});
+
+describe("buildReportingEndpoints", () => {
+  it("สร้าง Reporting-Endpoints จาก APP_URL (origin + path)", () => {
+    expect(
+      buildReportingEndpoints({ APP_URL: "https://app.example.com/path" }),
+    ).toBe('csp-report="https://app.example.com/api/security/csp-report"');
+  });
+
+  it("ไม่มี APP_URL → null (ไม่ตั้ง CSP-Report-Only เพราะรายงานไปไม่ถึงไหน)", () => {
+    expect(buildReportingEndpoints({})).toBeNull();
+    expect(buildReportingEndpoints({ APP_URL: "  " })).toBeNull();
   });
 });

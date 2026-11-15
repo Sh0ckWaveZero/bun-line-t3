@@ -1124,6 +1124,12 @@
   .w-\[calc\(100vw-2rem\)\] {
     width: calc(100vw - 2rem);
   }
+  .w-\[min\(calc\(100vw-2rem\)\,32rem\)\] {
+    width: min(calc(100vw - 2rem), 32rem);
+  }
+  .w-\[min\(calc\(100vw-2rem\)\,48rem\)\] {
+    width: min(calc(100vw - 2rem), 48rem);
+  }
   .w-\[var\(--radix-popover-trigger-width\)\] {
     width: var(--radix-popover-trigger-width);
   }
@@ -2291,12 +2297,6 @@
   .bg-black {
     background-color: var(--color-black);
   }
-  .bg-black\/30 {
-    background-color: color-mix(in srgb, #000 30%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      background-color: color-mix(in oklab, var(--color-black) 30%, transparent);
-    }
-  }
   .bg-black\/50 {
     background-color: color-mix(in srgb, #000 50%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -2812,12 +2812,6 @@
   }
   .bg-slate-900 {
     background-color: var(--color-slate-900);
-  }
-  .bg-slate-950\/45 {
-    background-color: color-mix(in srgb, oklch(12.9% 0.042 264.695) 45%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      background-color: color-mix(in oklab, var(--color-slate-950) 45%, transparent);
-    }
   }
   .bg-teal-400 {
     background-color: var(--color-teal-400);
@@ -4322,6 +4316,29 @@
   }
   .placeholder\:text-slate-400::placeholder {
     color: var(--color-slate-400);
+  }
+  .backdrop\:bg-black\/30::backdrop {
+    background-color: color-mix(in srgb, #000 30%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-black) 30%, transparent);
+    }
+  }
+  .backdrop\:bg-black\/60::backdrop {
+    background-color: color-mix(in srgb, #000 60%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-black) 60%, transparent);
+    }
+  }
+  .backdrop\:bg-slate-950\/45::backdrop {
+    background-color: color-mix(in srgb, oklch(12.9% 0.042 264.695) 45%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-slate-950) 45%, transparent);
+    }
+  }
+  .backdrop\:backdrop-blur-sm::backdrop {
+    --tw-backdrop-blur: blur(var(--blur-sm));
+    -webkit-backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);
+    backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);
   }
   .after\:absolute::after {
     content: var(--tw-content);
@@ -8505,6 +8522,13 @@
     opacity: 0;
     transform: scale(0.95);
   }
+}
+dialog:modal {
+  overscroll-behavior: contain;
+}
+dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
 @layer base {
   * {

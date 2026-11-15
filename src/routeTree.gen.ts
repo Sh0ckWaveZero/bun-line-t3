@@ -92,6 +92,7 @@ import { Route as ApiOnsiteReportsCompaniesRouteImport } from './routes/api/onsi
 import { Route as ApiOnsiteReportsPreviewPdfRouteImport } from './routes/api/onsite-reports/preview-pdf'
 import { Route as ApiPokerRoomsRouteImport } from './routes/api/poker/rooms'
 import { Route as ApiPokerStatsRouteImport } from './routes/api/poker/stats'
+import { Route as ApiSecurityCspReportRouteImport } from './routes/api/security/csp-report'
 import { Route as ApiSubscriptionsIndexRouteImport } from './routes/api/subscriptions/index'
 import { Route as ApiSubscriptionsSubscriptionIdRouteImport } from './routes/api/subscriptions/$subscriptionId'
 import { Route as ApiSubscriptionsMembersRouteImport } from './routes/api/subscriptions/members'
@@ -536,6 +537,11 @@ const ApiPokerStatsRoute = ApiPokerStatsRouteImport.update({
   path: '/api/poker/stats',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSecurityCspReportRoute = ApiSecurityCspReportRouteImport.update({
+  id: '/api/security/csp-report',
+  path: '/api/security/csp-report',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiSubscriptionsIndexRoute = ApiSubscriptionsIndexRouteImport.update({
   id: '/api/subscriptions/',
   path: '/api/subscriptions/',
@@ -736,6 +742,7 @@ export interface FileRoutesByFullPath {
   '/api/onsite-reports/preview-pdf': typeof ApiOnsiteReportsPreviewPdfRoute
   '/api/poker/rooms': typeof ApiPokerRoomsRouteWithChildren
   '/api/poker/stats': typeof ApiPokerStatsRoute
+  '/api/security/csp-report': typeof ApiSecurityCspReportRoute
   '/api/subscriptions/$subscriptionId': typeof ApiSubscriptionsSubscriptionIdRoute
   '/api/subscriptions/members': typeof ApiSubscriptionsMembersRoute
   '/api/subscriptions/payments': typeof ApiSubscriptionsPaymentsRoute
@@ -842,6 +849,7 @@ export interface FileRoutesByTo {
   '/api/onsite-reports/preview-pdf': typeof ApiOnsiteReportsPreviewPdfRoute
   '/api/poker/rooms': typeof ApiPokerRoomsRouteWithChildren
   '/api/poker/stats': typeof ApiPokerStatsRoute
+  '/api/security/csp-report': typeof ApiSecurityCspReportRoute
   '/api/subscriptions/$subscriptionId': typeof ApiSubscriptionsSubscriptionIdRoute
   '/api/subscriptions/members': typeof ApiSubscriptionsMembersRoute
   '/api/subscriptions/payments': typeof ApiSubscriptionsPaymentsRoute
@@ -950,6 +958,7 @@ export interface FileRoutesById {
   '/api/onsite-reports/preview-pdf': typeof ApiOnsiteReportsPreviewPdfRoute
   '/api/poker/rooms': typeof ApiPokerRoomsRouteWithChildren
   '/api/poker/stats': typeof ApiPokerStatsRoute
+  '/api/security/csp-report': typeof ApiSecurityCspReportRoute
   '/api/subscriptions/$subscriptionId': typeof ApiSubscriptionsSubscriptionIdRoute
   '/api/subscriptions/members': typeof ApiSubscriptionsMembersRoute
   '/api/subscriptions/payments': typeof ApiSubscriptionsPaymentsRoute
@@ -1059,6 +1068,7 @@ export interface FileRouteTypes {
     | '/api/onsite-reports/preview-pdf'
     | '/api/poker/rooms'
     | '/api/poker/stats'
+    | '/api/security/csp-report'
     | '/api/subscriptions/$subscriptionId'
     | '/api/subscriptions/members'
     | '/api/subscriptions/payments'
@@ -1165,6 +1175,7 @@ export interface FileRouteTypes {
     | '/api/onsite-reports/preview-pdf'
     | '/api/poker/rooms'
     | '/api/poker/stats'
+    | '/api/security/csp-report'
     | '/api/subscriptions/$subscriptionId'
     | '/api/subscriptions/members'
     | '/api/subscriptions/payments'
@@ -1272,6 +1283,7 @@ export interface FileRouteTypes {
     | '/api/onsite-reports/preview-pdf'
     | '/api/poker/rooms'
     | '/api/poker/stats'
+    | '/api/security/csp-report'
     | '/api/subscriptions/$subscriptionId'
     | '/api/subscriptions/members'
     | '/api/subscriptions/payments'
@@ -1374,6 +1386,7 @@ export interface RootRouteChildren {
   ApiOnsiteReportsPreviewPdfRoute: typeof ApiOnsiteReportsPreviewPdfRoute
   ApiPokerRoomsRoute: typeof ApiPokerRoomsRouteWithChildren
   ApiPokerStatsRoute: typeof ApiPokerStatsRoute
+  ApiSecurityCspReportRoute: typeof ApiSecurityCspReportRoute
   ApiSubscriptionsSubscriptionIdRoute: typeof ApiSubscriptionsSubscriptionIdRoute
   ApiSubscriptionsMembersRoute: typeof ApiSubscriptionsMembersRoute
   ApiSubscriptionsPaymentsRoute: typeof ApiSubscriptionsPaymentsRoute
@@ -1974,6 +1987,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPokerStatsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/security/csp-report': {
+      id: '/api/security/csp-report'
+      path: '/api/security/csp-report'
+      fullPath: '/api/security/csp-report'
+      preLoaderRoute: typeof ApiSecurityCspReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/subscriptions/': {
       id: '/api/subscriptions/'
       path: '/api/subscriptions'
@@ -2374,6 +2394,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiOnsiteReportsPreviewPdfRoute: ApiOnsiteReportsPreviewPdfRoute,
   ApiPokerRoomsRoute: ApiPokerRoomsRouteWithChildren,
   ApiPokerStatsRoute: ApiPokerStatsRoute,
+  ApiSecurityCspReportRoute: ApiSecurityCspReportRoute,
   ApiSubscriptionsSubscriptionIdRoute: ApiSubscriptionsSubscriptionIdRoute,
   ApiSubscriptionsMembersRoute: ApiSubscriptionsMembersRoute,
   ApiSubscriptionsPaymentsRoute: ApiSubscriptionsPaymentsRoute,
@@ -2393,12 +2414,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

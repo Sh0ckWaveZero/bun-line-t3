@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { useEffectEvent } from "react";
 import { createPortal } from "react-dom";
+import { useModalDialog } from "@/hooks/use-modal-dialog";
 import { useSafePortal } from "@/hooks/useHydrationSafe";
 
 interface MobileModalProps {
@@ -21,58 +21,31 @@ export const MobileModal: React.FC<MobileModalProps> = ({
   // 🛡️ ป้องกัน hydration mismatch ด้วย safe portal hook
   const { canUsePortal, portalRoot } = useSafePortal();
 
-  // 🎯 Handle escape key and prevent scroll - only when portal is ready
-  const handleEscape = useEffectEvent((e: KeyboardEvent) => {
-    if (e.key === "Escape") onClose();
-  });
+  // 🎯 showModal ให้ focus trap + inert พื้นหลัง + Esc จาก browser เอง
+  // (แทน keydown listener + body lock ยึดจอทั้งบล็อกแบบเดิม — scroll ของหน้าหลัง
+  // ถูกกั้นด้วยกฎ overscroll-behavior ของ dialog:modal ใน input.css แทน)
+  const dialogRef = useModalDialog({ isOpen, onClose });
 
-  React.useEffect(() => {
-    if (isOpen && canUsePortal) {
-      document.addEventListener("keydown", handleEscape);
-
-      // Prevent body scroll on mobile - more aggressive approach
-      document.body.style.overflow = "hidden";
-      document.body.style.position = "fixed";
-      document.body.style.width = "100%";
-      document.body.style.height = "100vh";
-      document.body.style.top = "0";
-      document.body.style.left = "0";
-
-      // Add to prevent iOS Safari bounce
-      (document.body.style as any).webkitOverflowScrolling = "touch";
-      document.body.style.touchAction = "none";
-    }
-
-    return () => {
-      if (canUsePortal) {
-        document.removeEventListener("keydown", handleEscape);
-        document.body.style.overflow = "";
-        document.body.style.position = "";
-        document.body.style.width = "";
-        document.body.style.height = "";
-        document.body.style.top = "";
-        document.body.style.left = "";
-        (document.body.style as any).webkitOverflowScrolling = "";
-        document.body.style.touchAction = "";
-      }
-    };
-  }, [isOpen, canUsePortal]);
+  // คลิกนอกการ์ด (พื้นที่ว่างของ overlay) = ปิด — เทียบเท่าปุ่มคลุมจอโปร่งใสเดิม
+  const handleBackdropClick = (event: React.MouseEvent<HTMLDialogElement>) => {
+    if (event.target === event.currentTarget) onClose();
+  };
 
   // 🔐 SECURITY: ไม่แสดง modal หากไม่เปิดหรือยังไม่พร้อม
   if (!isOpen || !canUsePortal || !portalRoot) return null;
 
   const modalElement = (
     <dialog
-      open
+      ref={dialogRef}
       className="mobile-modal-overlay"
+      aria-labelledby="modal-title"
+      aria-describedby="modal-description"
+      onClick={handleBackdropClick}
       style={{
         backgroundColor: "rgba(0, 0, 0, 0.6)", // Darker overlay
-        // Force hardware acceleration
-        transform: "translateZ(0)",
-        WebkitTransform: "translateZ(0)",
         /* ✅ UA ของ <dialog> บังคับ width/height: fit-content — ต้องบังคับเต็มจอ
-           ไม่งั้น overlay จะยึดมุมซ้ายบนขนาดเท่าเนื้อหา */
-        zIndex: 10000,
+           ไม่งั้น overlay จะยึดมุมซ้ายบนขนาดเท่าเนื้อหา — showModal ดัน element
+           เข้า top layer แล้ว z-index/translateZ hack ไม่จำเป็นอีกต่อไป */
         position: "fixed",
         inset: 0,
         width: "100%",
@@ -84,16 +57,7 @@ export const MobileModal: React.FC<MobileModalProps> = ({
         padding: 0,
         color: "inherit",
       }}
-      aria-modal="true"
-      aria-labelledby="modal-title"
-      aria-describedby="modal-description"
     >
-      <button
-        type="button"
-        className="absolute inset-0 z-0 cursor-default border-0 bg-transparent p-0 focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-inset"
-        aria-label="ปิดหน้าต่าง"
-        onClick={onClose}
-      />
       <div
         className={`mobile-modal border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 ${className}`}
         style={{
@@ -103,17 +67,8 @@ export const MobileModal: React.FC<MobileModalProps> = ({
           margin: "1rem",
           display: "flex",
           flexDirection: "column",
-          // Animation for better UX
-          transform: "scale(1)",
-          transition: "transform 0.2s ease-out",
-          // Force hardware acceleration
-          WebkitTransform: "translateZ(0) scale(1)",
-          backfaceVisibility: "hidden",
-          WebkitBackfaceVisibility: "hidden",
           /* ✅ ป้องกัน content overflow */
           overflow: "hidden",
-          /* ✅ รับประกันการมองเห็น */
-          zIndex: 10001,
           position: "relative",
         }}
       >

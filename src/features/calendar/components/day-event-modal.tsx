@@ -13,6 +13,7 @@ import {
 } from "@/features/calendar/components/day-event-modal-panels";
 import { DayEventModalTabs } from "@/features/calendar/components/day-event-modal-tabs";
 import { useDialogExit } from "@/features/calendar/hooks/useDialogExit";
+import { useModalDialog } from "@/hooks/use-modal-dialog";
 import {
   dayEventFormSchema,
   type DayEventFormValues,
@@ -178,11 +179,15 @@ export function DayEventModal({
     }
   });
 
+  // showModal ให้ focus trap + inert พื้นหลัง + Esc จาก browser เอง; onCancel
+  // คือ Esc — ส่งต่อ requestClose เพื่อเล่น exit animation ก่อนปิดจริง
+  const dialogRef = useModalDialog({ isOpen, onClose, onCancel: requestClose });
+
   if (!isOpen) return null;
 
   return (
     <dialog
-      open
+      ref={dialogRef}
       className={cn(
         "t-modal-dialog fixed inset-0 z-50 m-0 flex max-h-none max-w-none items-center justify-center border-0 bg-black/50 p-4 text-inherit shadow-none",
         isClosing && "is-closing",
@@ -193,7 +198,6 @@ export function DayEventModal({
         width: "100%",
         height: "100%",
       }}
-      aria-modal="true"
       aria-labelledby="day-event-modal-title"
     >
       <Card className="t-modal-card bg-card border-border max-h-[90vh] w-full max-w-md overflow-auto p-6">
@@ -265,7 +269,10 @@ export function DayEventModal({
               active={eventType === "leave"}
             />
 
-            <DayEventWfhPanel register={register} active={eventType === "wfh"} />
+            <DayEventWfhPanel
+              register={register}
+              active={eventType === "wfh"}
+            />
 
             <DayEventOnsitePanel
               register={register}
