@@ -209,7 +209,7 @@ function EditPaymentModalContent({
               value={form.note}
               onChange={(e) => setForm((p) => ({ ...p, note: e.target.value }))}
               placeholder="บันทึกเพิ่มเติม..."
-              className="w-full resize-none rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
+              className="w-full resize-none rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-base text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
             />
           </div>
 

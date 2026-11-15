@@ -165,16 +165,32 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     ],
     meta: [
       { charSet: "utf-8" },
-      {
-        content:
-          "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
-        name: "viewport",
-      },
+      // ห้ามปิด zoom (modern-web-guidance: html — "DON'T disable page zooming")
+      { content: "width=device-width, initial-scale=1", name: "viewport" },
+      // Opt in OS text scaling (Chrome 146+) — rem ทั้งแอปตามค่าตั้ง accessibility ของ OS
+      { content: "scale", name: "text-scale" },
       { title: "Bun LINE T3 App" },
       {
         content:
           "LINE attendance, dashboard, and utilities built with TanStack Start",
         name: "description",
+      },
+      // Social meta ระดับ root — หน้าที่ไม่ override (หน้า poker มีชุดเต็มของตัวเอง)
+      // ไม่ใส่ og:image เพราะไม่มีภาพ generic (og-poker.png เฉพาะ poker); twitter ใช้ summary
+      { property: "og:title", content: "Bun LINE T3 App" },
+      {
+        property: "og:description",
+        content:
+          "LINE attendance, dashboard, and utilities built with TanStack Start",
+      },
+      { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Bun LINE T3" },
+      { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "Bun LINE T3 App" },
+      {
+        name: "twitter:description",
+        content:
+          "LINE attendance, dashboard, and utilities built with TanStack Start",
       },
       { name: "theme-color", content: "#07b53b" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
