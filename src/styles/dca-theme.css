@@ -338,3 +338,26 @@
 .progress-bar-fill.loss {
   background: linear-gradient(90deg, var(--loss-red), var(--loss-red-border));
 }
+
+/* ── Reduced motion (modern-web-guidance: motion) ────────────────────────────
+   ปิดเฉพาะ motion (fade/slide/pulse/shimmer + การเลื่อนตำแหน่ง) — คง transition สี
+   ไว้ให้ UI ยังตอบสนอง สถานะสุดท้ายของ fade/slide ไม่เปลี่ยนเพราะไม่มี opacity: 0
+   เป็น base ของ element */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-slide-in-up,
+  .animate-pulse,
+  .skeleton {
+    animation: none;
+  }
+
+  .summary-card:hover,
+  .btn-primary:hover,
+  .mobile-order-card:active {
+    transform: none;
+  }
+
+  .progress-bar-fill {
+    transition: none;
+  }
+}

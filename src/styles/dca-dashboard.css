@@ -81,3 +81,14 @@ table.dca-records {
 .dca-pager button {
   min-width: 28px;
 }
+
+/* ── Reduced motion (modern-web-guidance: motion) — ปิด pulse + width fill ── */
+@media (prefers-reduced-motion: reduce) {
+  .dca-live-dot {
+    animation: none;
+  }
+
+  .dca-goal-fill {
+    transition: none;
+  }
+}
