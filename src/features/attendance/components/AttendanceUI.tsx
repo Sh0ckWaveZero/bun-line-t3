@@ -23,6 +23,7 @@ export const UserInfoCard: React.FC<UserInfoCardProps> = ({ user }) => (
         alt={user.name ?? "Profile"}
         width={32}
         height={32}
+        decoding="async"
         className="size-8 rounded-full border border-slate-200 object-cover dark:border-white/10"
       />
     )}

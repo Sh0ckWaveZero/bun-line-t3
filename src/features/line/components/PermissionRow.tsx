@@ -86,8 +86,11 @@ export const PermissionRow = memo(function PermissionRow({
                   <img
                     src={approval.pictureUrl}
                     alt={approval.displayName || approval.lineUserId}
-                    className="size-10 shrink-0 cursor-default rounded-full object-cover"
+                    width={40}
+                    height={40}
                     loading="lazy"
+                    decoding="async"
+                    className="size-10 shrink-0 cursor-default rounded-full object-cover"
                     referrerPolicy="no-referrer"
                   />
                 </TooltipTrigger>
@@ -96,6 +99,10 @@ export const PermissionRow = memo(function PermissionRow({
                     <img
                       src={approval.pictureUrl}
                       alt=""
+                      width={56}
+                      height={56}
+                      loading="lazy"
+                      decoding="async"
                       className="size-14 shrink-0 rounded-full object-cover"
                       referrerPolicy="no-referrer"
                     />

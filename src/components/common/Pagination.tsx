@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { isImeConfirmingKey } from "@/lib/utils/ime-safe-keyboard";
 
 interface PaginationClassNames {
   root?: string;
@@ -223,7 +224,8 @@ export const Pagination = ({
               value={jumpInput}
               onChange={(event) => setJumpInput(event.target.value)}
               onKeyDown={(event) => {
-                if (event.key === "Enter") handleJumpToPage();
+                if (event.key === "Enter" && !isImeConfirmingKey(event))
+                  handleJumpToPage();
                 if (event.key === "Escape") {
                   setShowJumpInput(false);
                   setJumpInput("");

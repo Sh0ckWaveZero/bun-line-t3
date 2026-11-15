@@ -44,9 +44,7 @@ function moveMenuFocus(
   );
   if (menuItems.length === 0) return;
   event.preventDefault();
-  const currentIndex = menuItems.indexOf(
-    document.activeElement as HTMLElement,
-  );
+  const currentIndex = menuItems.indexOf(document.activeElement as HTMLElement);
   const nextIndex =
     event.key === "ArrowDown"
       ? (currentIndex + 1) % menuItems.length
@@ -381,7 +379,7 @@ function ApprovalMenuContent({
                   value={reason}
                   onChange={onReasonChange}
                   placeholder="เช่น ไม่ผ่านเกณฑ์การใช้งาน, ข้อมูลไม่ครบ…"
-                  className="mt-1 w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-800 transition-colors outline-none placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-slate-100 dark:placeholder:text-slate-600"
+                  className="mt-1 w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-base text-slate-800 transition-colors outline-none placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-slate-100 dark:placeholder:text-slate-600"
                 />
               </label>
               <div className="mt-1.5 flex items-center justify-between gap-2">

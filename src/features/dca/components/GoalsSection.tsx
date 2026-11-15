@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
+import { isImeConfirmingKey } from "@/lib/utils/ime-safe-keyboard";
 import { Pencil, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,7 +79,11 @@ type EditField = "goalFiat" | "goalSatoshi" | null;
 export const GoalsSection = ({ orders }: GoalsSectionProps) => {
   const { t } = useDcaLocale();
   // เป้าหมายเก็บใน localStorage — external store ผ่าน uSES (ไม่ setState ใน effect)
-  const goalsRaw = useSyncExternalStore(subscribeGoals, readGoalsRaw, () => null);
+  const goalsRaw = useSyncExternalStore(
+    subscribeGoals,
+    readGoalsRaw,
+    () => null,
+  );
   const goals = useMemo(() => parseGoals(goalsRaw), [goalsRaw]);
   const [editing, setEditing] = useState<EditField>(null);
   const [draft, setDraft] = useState<string>("");
@@ -132,7 +137,7 @@ export const GoalsSection = ({ orders }: GoalsSectionProps) => {
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter") saveEdit();
+      if (e.key === "Enter" && !isImeConfirmingKey(e)) saveEdit();
       if (e.key === "Escape") cancelEdit();
     },
     [saveEdit, cancelEdit],

@@ -147,3 +147,12 @@
     width: var(--scale-top);
   }
 }
+
+/* ── Reduced motion (modern-web-guidance: motion) — วงแหวนนิ่งแต่ยังเห็นครบ ── */
+@media (prefers-reduced-motion: reduce) {
+  .ring,
+  [data-hue="true"] .ring::after,
+  [data-alternate="true"] .ring {
+    animation: none;
+  }
+}

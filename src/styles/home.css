@@ -165,7 +165,6 @@
       transparent 60%
     ),
     var(--hp-bg);
-  animation: aurora-pulse-light 20s ease-in-out infinite alternate;
 }
 
 /* ── Dark Mode: Cool, cosmic glow ──────────────────────────────────────── */
@@ -192,7 +191,6 @@
       transparent 65%
     ),
     var(--hp-bg);
-  animation: aurora-pulse-dark 24s ease-in-out infinite alternate;
 }
 
 /* ── Subtle floating blobs for extra depth ───────────────────────────────── */
@@ -202,7 +200,6 @@
   filter: blur(55px);
   mix-blend-mode: screen;
   opacity: 0.5;
-  animation: aurora-blob-float 30s ease-in-out infinite;
 }
 
 .home-aurora-blob:nth-child(1) {
@@ -323,8 +320,6 @@
   line-height: 1.05;
   text-align: center;
   font-size: clamp(2rem, 6vw, 5.25rem);
-  opacity: 0;
-  animation: home-reveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.08s forwards;
 }
 @media (max-width: 480px) {
   .home-title {
@@ -360,8 +355,6 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  opacity: 0;
-  animation: home-reveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards;
 }
 .home-login-wrapper::before {
   content: "";
@@ -390,8 +383,6 @@
   border-radius: 1.25rem;
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
-  opacity: 0;
-  animation: home-reveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards;
 }
 
 /* ── Avatar ──────────────────────────────────────────────────────────────── */
@@ -519,5 +510,38 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* ── Motion opt-in (modern-web-guidance: motion) ───────────────────────────
+   สถานะคงที่คือสถานะสุดท้ายที่มองเห็นได้ — animation ทั้งหมดของหน้านี้เปิดเฉพาะ
+   กับผู้ใช้ที่ "ไม่ได้" ตั้ง reduced motion ส่วน home-reveal ต้องอยู่ใน media
+   นี้ทั้ง opacity: 0 (สถานะเริ่ม) ด้วย ไม่งั้นเนื้อหาจะโดนซ่อนถาวรถ้าไม่มี animation */
+@media (prefers-reduced-motion: no-preference) {
+  .home-page:not(.dark) .home-aurora {
+    animation: aurora-pulse-light 20s ease-in-out infinite alternate;
+  }
+
+  .dark .home-page .home-aurora {
+    animation: aurora-pulse-dark 24s ease-in-out infinite alternate;
+  }
+
+  .home-aurora-blob {
+    animation: aurora-blob-float 30s ease-in-out infinite;
+  }
+
+  .home-title {
+    opacity: 0;
+    animation: home-reveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.08s forwards;
+  }
+
+  .home-login-wrapper {
+    opacity: 0;
+    animation: home-reveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards;
+  }
+
+  .home-card {
+    opacity: 0;
+    animation: home-reveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards;
   }
 }
