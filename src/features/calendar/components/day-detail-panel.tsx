@@ -4,6 +4,7 @@ import { Clock, FileText, Home, MapPin, Plus, Star, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useDialogExit } from "@/features/calendar/hooks/useDialogExit";
+import { useModalDialog } from "@/hooks/use-modal-dialog";
 import { renderLeaveType } from "@/features/calendar/lib/calendar-format";
 import type {
   CalendarHoliday as Holiday,
@@ -311,13 +312,20 @@ export function DayDetailPanel({
   const fullDate = format(date, "d MMMM yyyy", { locale: th });
   const dateStr = format(date, "yyyy-MM-dd");
   const { isClosing, requestClose } = useDialogExit(onClose);
+  // แผงนี้ parent render ตอนเลือกวัน (mount = เปิด) — showModal ให้ focus trap +
+  // Esc จาก browser; Esc/คลิกฉากหลัง → requestClose เพื่อเล่น exit animation
+  const dialogRef = useModalDialog({
+    isOpen: true,
+    onClose,
+    onCancel: requestClose,
+  });
 
   return (
     <dialog
-      open
+      ref={dialogRef}
       id={`day-detail-overlay-${dateStr}`}
       className={cn(
-        "t-modal-dialog fixed inset-0 z-40 m-0 flex max-h-none max-w-none items-center justify-center border-0 bg-transparent p-4 text-inherit shadow-none",
+        "t-modal-dialog fixed inset-0 z-40 m-0 flex max-h-none max-w-none items-center justify-center border-0 bg-transparent p-4 text-inherit shadow-none backdrop:bg-black/30",
         isClosing && "is-closing",
       )}
       style={{
@@ -326,15 +334,11 @@ export function DayDetailPanel({
         width: "100%",
         height: "100%",
       }}
-      aria-modal="true"
       aria-label={`รายละเอียดวันที่ ${fullDate}`}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) requestClose();
+      }}
     >
-      <button
-        type="button"
-        className="absolute inset-0 z-0 cursor-default border-0 bg-black/30 p-0 focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-inset"
-        aria-label="ปิดรายละเอียดวัน"
-        onClick={requestClose}
-      />
       <div
         id={`day-detail-panel-${dateStr}`}
         className="t-modal-card border-border bg-card relative z-10 w-full max-w-sm overflow-hidden rounded-xl"

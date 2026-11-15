@@ -36,6 +36,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useModalDialog } from "@/hooks/use-modal-dialog";
 import {
   TablePageSizeSelect,
   TablePagination,
@@ -686,135 +687,57 @@ function DialogShell({
   children: ReactNode;
   wide?: boolean;
 }) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  const onCloseRef = useRef(onClose);
-
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-
-    const previousActiveElement =
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null;
-    const focusableSelector =
-      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
-    const getFocusableElements = () =>
-      Array.from(
-        dialog.querySelectorAll<HTMLElement>(focusableSelector),
-      ).filter(
-        (element) =>
-          !element.hasAttribute("hidden") &&
-          element.getAttribute("aria-hidden") !== "true",
-      );
-
-    const initialElement =
-      getFocusableElements().find(
-        (element) => !element.hasAttribute("data-dialog-close"),
-      ) ?? dialog;
-    initialElement.focus();
-
-    const handleDialogKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        onCloseRef.current();
-        return;
-      }
-
-      if (event.key !== "Tab") return;
-
-      const focusableElements = getFocusableElements();
-      const firstElement = focusableElements[0];
-      const lastElement = focusableElements[focusableElements.length - 1];
-
-      if (!firstElement || !lastElement) {
-        event.preventDefault();
-        dialog.focus();
-        return;
-      }
-
-      if (event.shiftKey && document.activeElement === firstElement) {
-        event.preventDefault();
-        lastElement.focus();
-      } else if (!event.shiftKey && document.activeElement === lastElement) {
-        event.preventDefault();
-        firstElement.focus();
-      }
-    };
-
-    dialog.addEventListener("keydown", handleDialogKeyDown);
-
-    return () => {
-      dialog.removeEventListener("keydown", handleDialogKeyDown);
-
-      if (previousActiveElement && document.contains(previousActiveElement)) {
-        requestAnimationFrame(() => {
-          if (document.contains(previousActiveElement)) {
-            previousActiveElement.focus();
-          }
-        });
-      }
-    };
-  }, [open]);
+  // showModal ให้ focus trap + inert พื้นหลัง + Esc + คืน focus จาก browser เอง
+  // (แทน focus trap มือ + keydown listener เดิม) — คลิกนอกการ์ด (::backdrop)
+  // ปิดผ่าน onClick ที่ target === dialog
+  const dialogRef = useModalDialog({ isOpen: open, onClose });
 
   if (!open) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm"
-      role="presentation"
-      onMouseDown={(event) => {
+    <dialog
+      ref={dialogRef}
+      tabIndex={-1}
+      className={cn(
+        "fixed max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 text-inherit shadow-2xl backdrop:bg-slate-950/45 backdrop:backdrop-blur-sm dark:border-white/[0.1] dark:bg-[#17191c]",
+        wide
+          ? "w-[min(calc(100vw-2rem),48rem)]"
+          : "w-[min(calc(100vw-2rem),32rem)]",
+      )}
+      aria-labelledby="cron-dialog-title"
+      aria-describedby={description ? "cron-dialog-description" : undefined}
+      onClick={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <dialog
-        open
-        ref={dialogRef}
-        tabIndex={-1}
-        className={cn(
-          "relative m-0 max-h-[90vh] w-full max-w-none overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 text-inherit shadow-2xl dark:border-white/[0.1] dark:bg-[#17191c]",
-          wide ? "max-w-3xl" : "max-w-lg",
-        )}
-        aria-modal="true"
-        aria-labelledby="cron-dialog-title"
-        aria-describedby={description ? "cron-dialog-description" : undefined}
-      >
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2
-              id="cron-dialog-title"
-              className="text-lg font-semibold text-slate-900 dark:text-white"
-            >
-              {title}
-            </h2>
-            {description && (
-              <p
-                id="cron-dialog-description"
-                className="mt-1 text-xs leading-5 text-slate-500"
-              >
-                {description}
-              </p>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="ปิดหน้าต่าง"
-            data-dialog-close
-            className="cursor-pointer rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none dark:hover:bg-white/[0.08] dark:hover:text-slate-200"
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2
+            id="cron-dialog-title"
+            className="text-lg font-semibold text-slate-900 dark:text-white"
           >
-            <X className="size-4" aria-hidden="true" />
-          </button>
+            {title}
+          </h2>
+          {description && (
+            <p
+              id="cron-dialog-description"
+              className="mt-1 text-xs leading-5 text-slate-500"
+            >
+              {description}
+            </p>
+          )}
         </div>
-        <div className="mt-5">{children}</div>
-      </dialog>
-    </div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="ปิดหน้าต่าง"
+          className="cursor-pointer rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none dark:hover:bg-white/[0.08] dark:hover:text-slate-200"
+        >
+          <X className="size-4" aria-hidden="true" />
+        </button>
+      </div>
+      <div className="mt-5">{children}</div>
+    </dialog>
   );
 }
 
@@ -1971,6 +1894,7 @@ function CronJobsTableFilters({
   const [filterOpen, setFilterOpen] = useState(false);
   const filterButtonRef = useRef<HTMLButtonElement>(null);
   const filterTargetRef = useRef<HTMLSelectElement>(null);
+  const filterPanelRef = useRef<HTMLDivElement>(null);
 
   const handleCloseFilter = () => {
     setFilterOpen(false);
@@ -1979,7 +1903,12 @@ function CronJobsTableFilters({
 
   useEffect(() => {
     if (!filterOpen) return;
-    requestAnimationFrame(() => filterTargetRef.current?.focus());
+    requestAnimationFrame(() => {
+      // popover เป็น top layer — ต้องเรียก showPopover หลัง mount ถึงจะแสดง
+      // (แสดงผ่าน popover attribute + state ไม่พอ เหมือน dialog ที่ต้อง showModal)
+      filterPanelRef.current?.showPopover();
+      filterTargetRef.current?.focus();
+    });
   }, [filterOpen]);
 
   return (
@@ -2050,15 +1979,16 @@ function CronJobsTableFilters({
         </div>
         <div className="relative flex items-center gap-2 self-end sm:self-auto">
           {filterOpen && (
-            <dialog
-              open
+            <div
+              ref={filterPanelRef}
+              popover="auto"
               id="cron-filter-panel"
               aria-labelledby="cron-filter-title"
-              onKeyDown={(event) => {
-                if (event.key === "Escape") {
-                  event.preventDefault();
-                  handleCloseFilter();
-                }
+              onToggle={(event) => {
+                // ปิดทาง native (Esc / light dismiss) — sync state กลับและคืน focus
+                // ให้ปุ่มเปิด (modern-web-guidance html §4: UI ชั่วคราวไม่ต้อง
+                // focus trap ใช้ Popover API ไม่ใช่ dialog)
+                if (event.newState === "closed") handleCloseFilter();
               }}
               className="absolute top-11 right-0 z-20 m-0 w-64 max-w-none rounded-xl border border-slate-200 bg-white p-4 text-inherit shadow-xl dark:border-white/[0.1] dark:bg-[#1b1e22]"
             >
@@ -2114,7 +2044,7 @@ function CronJobsTableFilters({
               >
                 ล้างตัวกรองทั้งหมด
               </button>
-            </dialog>
+            </div>
           )}
           <button
             type="button"
