@@ -1,6 +1,7 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
+import { isImeConfirmingKey } from "@/lib/utils/ime-safe-keyboard";
 import { Tag, ChevronDown } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -86,7 +87,10 @@ export function CategoryCombobox({
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!isOpen) {
-      if (e.key === "ArrowDown" || e.key === "Enter") {
+      if (
+        e.key === "ArrowDown" ||
+        (e.key === "Enter" && !isImeConfirmingKey(e))
+      ) {
         e.preventDefault();
         setIsOpen(true);
       }
@@ -120,7 +124,7 @@ export function CategoryCombobox({
       (items[nextIndex] as HTMLElement)?.focus();
     }
 
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !isImeConfirmingKey(e)) {
       e.preventDefault();
       const focused = document.activeElement as HTMLLIElement;
       if (focused?.tagName === "LI") {
