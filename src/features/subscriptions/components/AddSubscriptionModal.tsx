@@ -17,6 +17,7 @@ import type {
   BillingCycle,
   SubscriptionWithMembers,
 } from "@/features/subscriptions/types";
+import { useModalDialog } from "@/hooks/use-modal-dialog";
 import { ServiceIcon } from "./ServiceIcon";
 import { ServiceIconPickerModal } from "./ServiceIconPicker";
 import { SubscriptionFormFields } from "./SubscriptionFormFields";
@@ -86,6 +87,10 @@ export const AddSubscriptionModal = ({
     buildSubscriptionForm(initialData),
   );
 
+  // 🎯 showModal ให้ focus trap + inert พื้นหลัง + Esc จาก browser เอง
+  // (แทน overlay div เขียนเอง) — Esc ยิง cancel→close แล้ว hook เรียก onClose ให้
+  const dialogRef = useModalDialog({ isOpen: open, onClose });
+
   const handleServiceChange = (service: SubscriptionService) => {
     setForm((prev) => ({
       ...prev,
@@ -129,13 +134,35 @@ export const AddSubscriptionModal = ({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center">
+      <dialog
+        ref={dialogRef}
+        aria-labelledby="add-subscription-title"
+        className="flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center"
+        style={{
+          /* ✅ UA ของ <dialog> บังคับ width/height: fit-content — ต้องบังคับเต็มจอ
+             (โครงเดียวกับ CenteredModal) — showModal ดัน element เข้า top layer
+             แล้ว z-index ไม่จำเป็นอีกต่อไป */
+          position: "fixed",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          margin: 0,
+          maxWidth: "none",
+          maxHeight: "none",
+          border: 0,
+          padding: 0,
+          color: "inherit",
+        }}
+      >
         <div className="w-full max-w-lg rounded-t-3xl bg-white shadow-2xl sm:rounded-2xl dark:bg-gray-900">
           {/* header */}
           <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
             <div className="flex items-center gap-3">
               <ServiceIcon service={form.service} size={36} variant="badge" />
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h2
+                id="add-subscription-title"
+                className="text-lg font-semibold text-gray-900 dark:text-white"
+              >
                 {isEdit ? "แก้ไข Subscription" : "เพิ่ม Subscription ใหม่"}
               </h2>
             </div>
@@ -203,9 +230,9 @@ export const AddSubscriptionModal = ({
             </div>
           </form>
         </div>
-      </div>
+      </dialog>
 
-      {/* Icon picker modal (z-[60] เพื่ออยู่บน modal หลัก) */}
+      {/* Icon picker modal — เปิดทีหลัง dialog หลัก จึงวางบนใน top layer ตามลำดับ LIFO */}
       <ServiceIconPickerModal
         open={showIconPicker}
         onClose={() => setShowIconPicker(false)}

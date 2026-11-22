@@ -13,6 +13,7 @@ import {
 } from "@/features/subscriptions/constants";
 import type { SubscriptionService } from "@/features/subscriptions/types";
 import { X, Search } from "lucide-react";
+import { useModalDialog } from "@/hooks/use-modal-dialog";
 
 interface ServiceIconPickerProps {
   value: SubscriptionService;
@@ -107,6 +108,10 @@ export const ServiceIconPickerModal = ({
   value,
   onChange,
 }: ServiceIconPickerModalProps) => {
+  // 🎯 showModal ให้ focus trap + inert พื้นหลัง + Esc จาก browser เอง —
+  // เปิดทีหลัง dialog หลัก จึงวางบนใน top layer ตามลำดับ LIFO แทน z-[60] เดิม
+  const dialogRef = useModalDialog({ isOpen: open, onClose });
+
   if (!open) return null;
 
   const handleSelect = (svc: SubscriptionService) => {
@@ -115,14 +120,35 @@ export const ServiceIconPickerModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center">
+    <dialog
+      ref={dialogRef}
+      aria-labelledby="service-icon-picker-title"
+      className="flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center"
+      style={{
+        /* ✅ UA ของ <dialog> บังคับ width/height: fit-content — ต้องบังคับเต็มจอ
+           (โครงเดียวกับ CenteredModal) */
+        position: "fixed",
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        margin: 0,
+        maxWidth: "none",
+        maxHeight: "none",
+        border: 0,
+        padding: 0,
+        color: "inherit",
+      }}
+    >
       <div className="w-full max-w-lg rounded-t-3xl bg-white shadow-2xl sm:rounded-2xl dark:bg-gray-900">
         {/* header */}
         <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-700">
           <div className="flex items-center gap-3">
             <ServiceIcon service={value} size={36} variant="badge" />
             <div>
-              <h2 className="text-base font-semibold text-gray-900 dark:text-white">
+              <h2
+                id="service-icon-picker-title"
+                className="text-base font-semibold text-gray-900 dark:text-white"
+              >
                 เลือก Service Icon
               </h2>
               <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -145,7 +171,7 @@ export const ServiceIconPickerModal = ({
           <ServiceIconPicker value={value} onChange={handleSelect} inline />
         </div>
       </div>
-    </div>
+    </dialog>
   );
 };
 

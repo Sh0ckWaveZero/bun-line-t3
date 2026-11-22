@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { ImportResult } from "@/features/dca/types";
 import { useAuthSession } from "@/lib/auth/session-context";
+import { useModalDialog } from "@/hooks/use-modal-dialog";
 
 interface DcaImportModalProps {
   onClose: () => void;
@@ -43,6 +44,10 @@ export const DcaImportModal = ({ onClose, onSuccess }: DcaImportModalProps) => {
   const [result, setResult] = useState<ImportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // 🎯 showModal ให้ focus trap + inert พื้นหลัง + Esc จาก browser เอง (parent
+  // render แบบ conditional จึงมาต์เปิดเสมอ) — Esc ยิง cancel→close เรียก onClose ให้
+  const dialogRef = useModalDialog({ isOpen: true, onClose });
 
   // ─── File handling ────────────────────────────────────────────────────────
 
@@ -120,23 +125,31 @@ export const DcaImportModal = ({ onClose, onSuccess }: DcaImportModalProps) => {
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div
+    <dialog
+      ref={dialogRef}
       id="dca-import-modal-overlay"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      aria-label="นำเข้าประวัติคำสั่งซื้อ Auto DCA"
+      className="flex items-center justify-center p-4"
+      style={{
+        /* ✅ UA ของ <dialog> บังคับ width/height: fit-content — ต้องบังคับเต็มจอ
+           (โครงเดียวกับ CenteredModal) — showModal ดัน element เข้า top layer
+           แล้ว z-index/ปุ่ม backdrop โปร่งใสไม่จำเป็นอีกต่อไป */
+        position: "fixed",
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        margin: 0,
+        maxWidth: "none",
+        maxHeight: "none",
+        border: 0,
+        color: "inherit",
+      }}
+      onClick={(event) => {
+        // คลิกนอกการ์ด (พื้นที่ว่างของ overlay) = ปิด — เทียบเท่าปุ่มคลุมจอเดิม
+        if (event.target === event.currentTarget) onClose();
+      }}
     >
-      <button
-        type="button"
-        className="absolute inset-0 cursor-pointer bg-black/60 backdrop-blur-sm focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-inset"
-        aria-label="ปิดหน้าต่างนำเข้าประวัติคำสั่งซื้อ Auto DCA"
-        onClick={onClose}
-      />
-      <Card
-        id="dca-import-modal"
-        className="border-border relative z-10 w-full max-w-md"
-        role="dialog"
-        aria-modal="true"
-        aria-label="นำเข้าประวัติคำสั่งซื้อ Auto DCA"
-      >
+      <Card id="dca-import-modal" className="border-border w-full max-w-md">
         {/* Header */}
         <div
           id="dca-import-modal-header"
@@ -182,7 +195,7 @@ export const DcaImportModal = ({ onClose, onSuccess }: DcaImportModalProps) => {
           )}
         </CardContent>
       </Card>
-    </div>
+    </dialog>
   );
 };
 

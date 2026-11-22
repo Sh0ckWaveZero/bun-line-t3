@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useModalDialog } from "@/hooks/use-modal-dialog";
 
 interface HolidayImportProps {
   onImport: (holidays: any[]) => void;
@@ -13,6 +14,10 @@ export function HolidayImport({ onImport, onClose }: HolidayImportProps) {
   const [preview, setPreview] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 🎯 showModal ให้ focus trap + inert พื้นหลัง + Esc จาก browser เอง (parent
+  // render แบบ conditional จึงมาต์เปิดเสมอ) — Esc ยิง cancel→close เรียก onClose ให้
+  const dialogRef = useModalDialog({ isOpen: true, onClose });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -113,10 +118,33 @@ export function HolidayImport({ onImport, onClose }: HolidayImportProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    <dialog
+      ref={dialogRef}
+      aria-labelledby="holiday-import-title"
+      className="flex items-center justify-center bg-black/50 p-4"
+      style={{
+        /* ✅ UA ของ <dialog> บังคับ width/height: fit-content — ต้องบังคับเต็มจอ
+           (โครงเดียวกับ CenteredModal) — showModal ดัน element เข้า top layer
+           แล้ว z-index ไม่จำเป็นอีกต่อไป */
+        position: "fixed",
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        margin: 0,
+        maxWidth: "none",
+        maxHeight: "none",
+        border: 0,
+        color: "inherit",
+      }}
+    >
       <Card className="bg-card border-border max-h-[90vh] w-full max-w-2xl overflow-auto p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-foreground text-2xl font-bold">นำเข้าวันหยุด</h2>
+          <h2
+            id="holiday-import-title"
+            className="text-foreground text-2xl font-bold"
+          >
+            นำเข้าวันหยุด
+          </h2>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
@@ -261,6 +289,6 @@ export function HolidayImport({ onImport, onClose }: HolidayImportProps) {
           </div>
         </div>
       </Card>
-    </div>
+    </dialog>
   );
 }
