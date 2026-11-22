@@ -20,13 +20,17 @@ export function formatDateToStr(date: Date): string {
 export function buildDayEventPayload(
   values: DayEventFormValues,
   dateStr: string,
+  options?: { updateExisting?: boolean },
 ): DayEventSubmit {
+  const updateExisting = options?.updateExisting === true;
   if (values.eventType === "leave") {
     return {
       kind: "leave",
       date: dateStr,
       leaveType: values.leaveType,
-      reason: values.reason || undefined,
+      // โหมดแก้ไข: เหตุผลว่าง = สั่งล้างค่าเดิม จึงส่ง "" ผ่าน PUT
+      reason: updateExisting ? values.reason : values.reason || undefined,
+      ...(updateExisting ? { updateExisting: true } : {}),
     };
   }
   if (values.eventType === "wfh") {

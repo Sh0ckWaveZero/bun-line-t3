@@ -22,20 +22,32 @@ export function useCalendarMutations(year: number) {
   }, [queryClient, year]);
 
   const handleLeaveRequest = useCallback(
-    async (data: { date: string; type: string; reason?: string }) => {
+    async (data: {
+      date: string;
+      type: string;
+      reason?: string;
+      updateExisting?: boolean;
+    }) => {
+      const isUpdate = data.updateExisting === true;
       try {
         const response = await fetch("/api/leave", {
-          method: "POST",
+          method: isUpdate ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
         });
 
-        if (!response.ok) throw new Error("ไม่สามารถส่งคำขอลาได้");
+        if (!response.ok)
+          throw new Error(
+            isUpdate ? "ไม่สามารถเปลี่ยนวันลาได้" : "ไม่สามารถส่งคำขอลาได้",
+          );
         const result = await response.json();
 
         if (result.success) {
           await refreshCalendarData();
-          showToast({ title: "แจ้งลาสำเร็จ", type: "success" });
+          showToast({
+            title: isUpdate ? "เปลี่ยนวันลาสำเร็จ" : "แจ้งลาสำเร็จ",
+            type: "success",
+          });
         } else {
           throw new Error(result.message);
         }
@@ -137,6 +149,7 @@ export function useCalendarMutations(year: number) {
             date: data.date,
             type: data.leaveType,
             reason: data.reason,
+            updateExisting: data.updateExisting,
           });
           break;
         case "wfh":

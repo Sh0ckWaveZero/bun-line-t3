@@ -23,6 +23,10 @@ import {
   type DayEventType,
 } from "@/features/calendar/components/day-event-modal";
 import { HolidayImport } from "@/features/calendar/components/holiday-import";
+import {
+  buildLeavePrefill,
+  type DayEventLeavePrefill,
+} from "@/features/calendar/lib/day-event-form";
 import { useCalendarMutations } from "@/features/calendar/hooks/useCalendarMutations";
 import {
   useCalendarData,
@@ -44,10 +48,18 @@ export function MobileCalendarPage() {
   const [showImportModal, setShowImportModal] = useState(false);
   // modal เดียวรวมทุก type (ลางาน / WFH / On Site / วันหยุด) — null = ปิด
   const [eventModal, setEventModal] = useState<DayEventType | null>(null);
+  // prefill ของโหมด "เปลี่ยนวันลา" — null = สร้างวันลาใหม่
+  const [editingLeave, setEditingLeave] = useState<DayEventLeavePrefill | null>(
+    null,
+  );
 
-  // เปิด modal ได้ทีละหนึ่ง — เปิดอันใหม่ปิดอันอื่นทิ้ง
-  const openModal = (modal: DayEventType) => {
+  // เปิด modal ได้ทีละหนึ่ง — เปิดอันใหม่ปิดอันอื่นทิ้ง (มี prefill = โหมดแก้ไขวันลา)
+  const openModal = (
+    modal: DayEventType,
+    leavePrefill?: DayEventLeavePrefill,
+  ) => {
     setEventModal(modal);
+    setEditingLeave(leavePrefill ?? null);
   };
 
   const navigateMonth = (direction: "prev" | "next") => {
@@ -96,6 +108,16 @@ export function MobileCalendarPage() {
     setSelectedDate(dateStr);
     openModal("leave");
   };
+  const handleEditLeave = (dateStr: string) => {
+    const leave = leaves.find((l) => l.date === dateStr);
+    setSelectedDate(dateStr);
+    openModal(
+      "leave",
+      leave
+        ? buildLeavePrefill({ type: leave.type, reason: leave.reason })
+        : undefined,
+    );
+  };
   const handleRequestWorkMode = (dateStr: string) => {
     setSelectedDate(dateStr);
     openModal("wfh");
@@ -140,6 +162,7 @@ export function MobileCalendarPage() {
           <MobileEventList
             events={filteredEvents}
             onRequestLeave={handleRequestLeave}
+            onEditLeave={handleEditLeave}
             onRequestWorkMode={handleRequestWorkMode}
             onCancelWorkMode={handleCancelWorkMode}
           />
@@ -208,6 +231,7 @@ export function MobileCalendarPage() {
             onSubmit={handleDayEventSubmit}
             selectedDate={selectedDate || undefined}
             initialType={eventModal}
+            initialLeave={editingLeave ?? undefined}
           />
         </div>
       )}

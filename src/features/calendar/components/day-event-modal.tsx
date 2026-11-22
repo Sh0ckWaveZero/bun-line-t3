@@ -16,6 +16,7 @@ import { useDialogExit } from "@/features/calendar/hooks/useDialogExit";
 import {
   dayEventFormSchema,
   type DayEventFormValues,
+  type DayEventLeavePrefill,
   type DayEventSubmit,
   type DayEventType,
 } from "@/features/calendar/lib/day-event-form";
@@ -38,6 +39,8 @@ const TITLES: Record<DayEventType, string> = {
   holiday: "เพิ่มวันหยุด",
 };
 
+const EDIT_LEAVE_TITLE = "เปลี่ยนวันลา";
+
 const HELP_TEXTS: Record<DayEventType, string> = {
   leave: "วันลาจะแสดงในปฏิทินหลังจากบันทึกเรียบร้อย",
   wfh: "วันที่ทำ WFH จะแสดงในปฏิทิน และจะไม่ได้รับการแจ้งเตือนเช็คอินในวันนั้น",
@@ -52,6 +55,8 @@ interface DayEventModalProps {
   onSubmit: (data: DayEventSubmit) => void;
   selectedDate?: string;
   initialType?: DayEventType;
+  /** โหมด "เปลี่ยนวันลา" — เติมค่าเดิมของวันลาที่บันทึกไว้ แล้วบันทึกด้วย PUT แทน POST */
+  initialLeave?: DayEventLeavePrefill;
 }
 
 export function DayEventModal({
@@ -60,6 +65,7 @@ export function DayEventModal({
   onSubmit,
   selectedDate,
   initialType = "leave",
+  initialLeave,
 }: DayEventModalProps) {
   const {
     register,
@@ -75,8 +81,8 @@ export function DayEventModal({
     defaultValues: {
       eventType: initialType,
       date: selectedDate ? (parseDateStr(selectedDate) ?? null) : null,
-      leaveType: "personal",
-      reason: "",
+      leaveType: initialLeave?.leaveType ?? "personal",
+      reason: initialLeave?.reason ?? "",
       noteWfh: "",
       noteOnsite: "",
       nameThai: "",
@@ -159,12 +165,17 @@ export function DayEventModal({
   const eventType = useWatch({ control, name: "eventType" });
   const yearValue = useWatch({ control, name: "year" });
 
+  // โหมดแก้ไขมีผลเฉพาะตอนบันทึกในแท็บ "ลางาน" — สลับแท็บอื่น = สร้างรายการใหม่ตามปกติ
+  const isEditingLeave = initialLeave !== undefined && eventType === "leave";
+
   const submit = handleSubmit(async (values) => {
     clearErrors("root");
     if (!values.date) return;
 
     const dateStr = formatDateToStr(values.date);
-    const payload = buildDayEventPayload(values, dateStr);
+    const payload = buildDayEventPayload(values, dateStr, {
+      updateExisting: isEditingLeave,
+    });
 
     try {
       await onSubmit(payload);
@@ -201,7 +212,7 @@ export function DayEventModal({
           <div className="flex items-center gap-2">
             <CalendarIcon className="text-primary h-5 w-5" aria-hidden="true" />
             <h2 id="day-event-modal-title" className="text-xl font-bold">
-              {TITLES[eventType]}
+              {isEditingLeave ? EDIT_LEAVE_TITLE : TITLES[eventType]}
             </h2>
           </div>
           <Button
@@ -265,7 +276,10 @@ export function DayEventModal({
               active={eventType === "leave"}
             />
 
-            <DayEventWfhPanel register={register} active={eventType === "wfh"} />
+            <DayEventWfhPanel
+              register={register}
+              active={eventType === "wfh"}
+            />
 
             <DayEventOnsitePanel
               register={register}

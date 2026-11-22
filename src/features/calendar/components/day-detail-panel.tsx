@@ -1,6 +1,15 @@
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
-import { Clock, FileText, Home, MapPin, Plus, Star, X } from "lucide-react";
+import {
+  Clock,
+  FileText,
+  Home,
+  MapPin,
+  Pencil,
+  Plus,
+  Star,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useDialogExit } from "@/features/calendar/hooks/useDialogExit";
@@ -225,14 +234,18 @@ function DayDetailContent({
 
 function DayDetailActions({
   dateStr,
+  leave,
   workMode,
   onRequestLeave,
+  onEditLeave,
   onRequestWorkMode,
   onCancelWorkMode,
 }: {
   dateStr: string;
+  leave: Leave | undefined;
   workMode: WorkModeDay | undefined;
   onRequestLeave: () => void;
+  onEditLeave: () => void;
   onRequestWorkMode: (type: "wfh" | "onsite") => void;
   onCancelWorkMode: () => void;
 }) {
@@ -241,15 +254,28 @@ function DayDetailActions({
       id={`day-detail-actions-${dateStr}`}
       className="border-border space-y-2 border-t px-5 py-3"
     >
-      <Button
-        id={`day-detail-request-leave-${dateStr}`}
-        size="sm"
-        className="w-full"
-        onClick={onRequestLeave}
-      >
-        <Plus className="h-3.5 w-3.5" />
-        แจ้งลาวันนี้
-      </Button>
+      {leave ? (
+        // มีวันลาอยู่แล้ว — เปลี่ยนประเภท/เหตุผลได้ (POST สร้างใหม่จะโดน guard duplicate)
+        <Button
+          id={`day-detail-edit-leave-${dateStr}`}
+          size="sm"
+          className="w-full"
+          onClick={onEditLeave}
+        >
+          <Pencil className="h-3.5 w-3.5" />
+          เปลี่ยนวันลา
+        </Button>
+      ) : (
+        <Button
+          id={`day-detail-request-leave-${dateStr}`}
+          size="sm"
+          className="w-full"
+          onClick={onRequestLeave}
+        >
+          <Plus className="h-3.5 w-3.5" />
+          แจ้งลาวันนี้
+        </Button>
+      )}
       <div className="flex gap-2">
         {(["wfh", "onsite"] as const).map((type) => {
           const isActive = workMode?.type === type;
@@ -293,6 +319,7 @@ interface DayDetailPanelProps {
   workMode: WorkModeDay | undefined;
   onClose: () => void;
   onRequestLeave: () => void;
+  onEditLeave: () => void;
   onRequestWorkMode: (type: "wfh" | "onsite") => void;
   onCancelWorkMode: () => void;
 }
@@ -304,6 +331,7 @@ export function DayDetailPanel({
   workMode,
   onClose,
   onRequestLeave,
+  onEditLeave,
   onRequestWorkMode,
   onCancelWorkMode,
 }: DayDetailPanelProps) {
@@ -389,8 +417,10 @@ export function DayDetailPanel({
 
         <DayDetailActions
           dateStr={dateStr}
+          leave={leave}
           workMode={workMode}
           onRequestLeave={onRequestLeave}
+          onEditLeave={onEditLeave}
           onRequestWorkMode={onRequestWorkMode}
           onCancelWorkMode={onCancelWorkMode}
         />
