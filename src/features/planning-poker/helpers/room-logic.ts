@@ -82,6 +82,8 @@ export const createRoom = (
   revealedAt: null,
   history: [],
   participants: [],
+  // creatorToken มาประกบหลังคนสร้าง join สำเร็จ (token เกิดพร้อม participant ใน addParticipant)
+  creatorToken: null,
   createdAt: now,
   updatedAt: now,
 });
@@ -325,6 +327,38 @@ export const removeParticipant = (
   updatedAt: now,
 });
 
+/** เตะผู้เล่นออกจากห้อง — เจ้าของห้องเตะได้เสมอ (ไม่ผูกบทบาท) และ spectator ทุกคนก็เตะได้ */
+export const kickParticipant = (
+  room: Room,
+  callerToken: string,
+  targetId: string,
+  now: number,
+): PokerResult<Room> => {
+  const caller = findParticipant(room, callerToken);
+  if (!caller) return fail(NOT_FOUND_MESSAGE, 401);
+  const canKick =
+    room.creatorToken === callerToken || caller.role === "spectator";
+  if (!canKick) {
+    return fail("Only the room creator or a spectator can remove players", 403);
+  }
+  const target = room.participants.find(
+    (participant) => participant.id === targetId,
+  );
+  if (!target) {
+    return fail("Player not found — they may have already left", 404);
+  }
+  if (target.token === callerToken) {
+    return fail("You can't remove yourself — use Leave room instead", 400);
+  }
+  return succeed({
+    ...room,
+    participants: room.participants.filter(
+      (participant) => participant.id !== targetId,
+    ),
+    updatedAt: now,
+  });
+};
+
 const toNumericVote = (value: string): number | null => {
   if (NON_NUMERIC_VOTES.has(value)) return null;
   if (value === "½") return 0.5;
@@ -432,6 +466,11 @@ export const toPublicRoom = (
     myRole: viewer?.role ?? null,
     myVote: viewer?.vote ?? null,
     canControl: viewer ? canControlRoom(room, viewer) : false,
+    isCreator: viewer !== undefined && room.creatorToken === viewer.token,
+    /** เตะคนอื่นออกได้ = เจ้าของห้อง หรือ กำลังเป็น spectator */
+    canKick:
+      viewer !== undefined &&
+      (room.creatorToken === viewer.token || viewer.role === "spectator"),
     summary: room.revealed ? summarizeVotes(room) : null,
   };
 };

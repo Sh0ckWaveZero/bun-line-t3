@@ -57,9 +57,9 @@ export const RoundTimer = ({
       role="timer"
       aria-live="off"
       aria-label={`This round's time ${formatElapsed(elapsed)}`}
-      className="text-muted-foreground flex items-center gap-1.5 text-sm tabular-nums"
+      className="flex items-center gap-1.5 text-xl tabular-nums text-foreground"
     >
-      <PixelClock className="h-4 w-4" aria-hidden="true" />
+      <PixelClock className="h-5 w-5 text-primary" aria-hidden="true" />
       {/* min-w 8ch = ความกว้างเลข 0 แปดตัว — ฟอนต์ pixel ไม่มี tabular figures (เลข 1 แคบกว่า 0)
           ทำให้แท็กหายใจทุกวินาทีเวลาเปลี่ยน; ล็อกกว้างไว้แล้วส่วนถัดไปจึงไม่เลื่อน */}
       <span aria-hidden="true" className="min-w-[8ch]">

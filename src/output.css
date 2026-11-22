@@ -9172,18 +9172,21 @@ dialog::backdrop {
 }
 .poker-timer-badge {
   position: absolute;
-  top: -14px;
-  left: 16px;
+  top: -16px;
+  right: 14px;
   z-index: 10;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  border: 2px solid var(--border);
-  background: var(--card);
-  padding: 4px 12px;
-  box-shadow: 4px 4px 0 0 var(--primary);
+  gap: 10px;
+  border: 3px solid var(--border);
+  background: var(--primary);
   @supports (color: color-mix(in lab, red, red)) {
-    box-shadow: 4px 4px 0 0 color-mix(in oklab, var(--primary) 28%, transparent);
+    background: color-mix(in oklab, var(--primary) 12%, var(--card));
+  }
+  padding: 6px 18px;
+  box-shadow: 8px 8px 0 0 var(--primary);
+  @supports (color: color-mix(in lab, red, red)) {
+    box-shadow: 8px 8px 0 0 color-mix(in oklab, var(--primary) 45%, transparent);
   }
 }
 .poker-arcane-flash {

@@ -162,6 +162,14 @@ export const usePokerRoom = (code: string) => {
       act({ type: "vote", value }, (room) => applyOptimisticVote(room, value)),
     reveal: () => act({ type: "reveal" }),
     reset: () => act({ type: "reset" }),
+    /** เตะผู้เล่น (เฉพาะคนสร้างห้อง) — ลบการ์ดออกจาก cache ทันที server ย้อนให้ถ้าปัด */
+    kick: (participantId: string) =>
+      act({ type: "kick", participantId }, (room) => ({
+        ...room,
+        participants: room.participants.filter(
+          (participant) => participant.id !== participantId,
+        ),
+      })),
     setStory: (story: string) => act({ type: "story", story }),
     setRole: (role: "voter" | "spectator") => act({ type: "role", role }),
     rename: async (name: string) => {

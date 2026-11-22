@@ -41,7 +41,9 @@ const PixelList = makePixelIcon("M6 6H4v2h2zm14 0H8v2h12zM4 11h2v2H4zm16 0H8v2h1
 const PixelLogin = makePixelIcon("M21 15v4h-2v-4zm-2 4v2H5v-2zM5 15v4H3v-4zm8-12v14h-2V3z");
 const PixelLogout = makePixelIcon("M19 21H5v-2h14zM5 19H3v-4h2zm16 0h-2v-4h2zM13 5h2v2h2v2h-4v8h-2V9H7V7h2V5h2V3h2z");
 const PixelSwap = makePixelIcon("M18 20h-6v-2h6zm2-2h-2v-8h2zm-10-4H8v-2H6v-2H4V8h2V6h2V4h2v4h8v2h-8z");
+/** X ทแยงจากบล็อก 2×2 — สไตล์เดียวกับ PixelCheck (ไม่มีในชุดที่ดึงมา วาดเองตาม idiom เดียวกัน) */
+const PixelX = makePixelIcon("M5 5h2v2H5zM17 5h2v2h-2zM8 8h2v2H8zM14 8h2v2h-2zM11 11h2v2h-2zM14 14h2v2h-2zM8 14h2v2H8zM17 17h2v2h-2zM5 17h2v2H5z");
 
 export {
-  PixelDice, PixelCode, PixelPlus, PixelCheck, PixelCopy, PixelEdit, PixelEye, PixelLogin, PixelClock, PixelChevronDown, PixelList, PixelGift, PixelMonitor, PixelSwap, PixelLogout, PixelMail, PixelMinus, PixelRefresh, PixelShare
+  PixelDice, PixelCode, PixelPlus, PixelCheck, PixelCopy, PixelEdit, PixelEye, PixelLogin, PixelClock, PixelChevronDown, PixelList, PixelGift, PixelMonitor, PixelSwap, PixelLogout, PixelMail, PixelMinus, PixelRefresh, PixelShare, PixelX
 };

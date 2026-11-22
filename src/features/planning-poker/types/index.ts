@@ -51,6 +51,8 @@ export interface Room {
   revealedAt: number | null;
   history: RoundRecord[];
   participants: Participant[];
+  /** token ของคนสร้างห้อง — คนนี้เตะผู้เล่นออกได้แม้สลับเป็น spectator (null ช่วงก่อนคนสร้าง join) */
+  creatorToken: string | null;
   createdAt: number;
   updatedAt: number;
 }
@@ -87,6 +89,10 @@ export interface PublicRoom {
   myVote: string | null;
   /** ผู้เรียกมีสิทธิ์เปิดไพ่ / เริ่มรอบใหม่หรือไม่ */
   canControl: boolean;
+  /** ผู้เรียกเป็นคนสร้างห้อง (ไม่ขึ้นกับบทบาทปัจจุบัน) */
+  isCreator: boolean;
+  /** ผู้เรียกเตะคนอื่นออกได้ = เจ้าของห้อง หรือ กำลังเป็น spectator */
+  canKick: boolean;
   summary: RoundSummary | null;
 }
 

@@ -1,4 +1,4 @@
-import { PixelEye } from "@/features/planning-poker/components/pixel-icons";
+import { PixelEye, PixelX } from "@/features/planning-poker/components/pixel-icons";
 import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 import { getVoteTier } from "../helpers/vote-tier";
@@ -16,6 +16,9 @@ interface PlayerCardProps {
    */
   staggerIndex?: number;
   position: FanPosition;
+  /** โชว์ปุ่ม X เตะคนนี้ออกจากห้อง — เห็นเฉพาะคนสร้างห้อง (ไม่โชว์บนการ์ดตัวเอง) */
+  canRemove?: boolean;
+  onRemove?: () => void;
 }
 
 interface FanPosition {
@@ -169,6 +172,8 @@ export const PlayerCard = ({
   isRevealed,
   staggerIndex,
   position,
+  canRemove,
+  onRemove,
 }: PlayerCardProps) => {
   const isSpectator = participant.role === "spectator";
   const revealedVote = isRevealed ? participant.vote : null;
@@ -195,7 +200,23 @@ export const PlayerCard = ({
       className={cn("poker-player-card", tier && `poker-tier--${tier}`)}
       style={getFanStyle(position)}
     >
-      <div className="poker-player-card__art">{cardVisual}</div>
+      <div className="poker-player-card__art">
+        {cardVisual}
+        {/* ปุ่มเตะ (เห็นเฉพาะคนสร้างห้อง) — วางมุมซ้ายบน เพราะพัดไพ่ซ้อนจากขวา
+            (การ์ดถัดไปทับขอบขวา ของใหม่ z สูงกว่า) มุมซ้ายจึงกดได้ทุกใบ */}
+        {canRemove && onRemove ? (
+          <button
+            type="button"
+            id={`poker-kick-${participant.id}`}
+            aria-label={`Remove ${participant.name} from the room`}
+            title="Remove from room"
+            className="absolute left-1.5 top-1.5 z-10 flex h-6 w-6 items-center justify-center border-2 border-border bg-card/90 text-muted-foreground transition-colors hover:border-destructive hover:text-destructive"
+            onClick={onRemove}
+          >
+            <PixelX className="h-3 w-3" aria-hidden="true" />
+          </button>
+        ) : null}
+      </div>
       <div className="poker-player-card__meta">
         <span
           className={cn(

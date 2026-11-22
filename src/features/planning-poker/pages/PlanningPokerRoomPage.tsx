@@ -86,8 +86,12 @@ const RoomActionsMenu = ({
   onRename: (name: string) => Promise<unknown>;
   onSwitchRole: (role: "voter" | "spectator") => void;
   onLeave: () => void;
-}) => (
-  <Popover>
+}) => {
+  // ยังไม่ได้อยู่ในห้อง (เพิ่งออก / เปิดดูอย่างเดียว) = ทุกปุ่มในเมนูใช้ไม่ได้
+  // ซ่อนปุ่ม ⋯ ทั้งปุ่ม กันเปิดแผงว่าง ๆ (join ใหม่ทำผ่าน JoinRoomForm ใต้หัวข้อแล้ว)
+  if (!isJoined) return null;
+  return (
+    <Popover>
     {/* Tooltip ครอบนอก — trigger ทั้งสอง (tooltip + popover) ต้อง asChild chain ลงปุ่มเดียวกัน
         ห้ามให้ asChild ครอบ <Tooltip> เพราะเป็น context ไม่มี DOM node (ref/handler ผูกไม่ได้ = กดไม่ได้) */}
     <Tooltip>
@@ -151,8 +155,9 @@ const RoomActionsMenu = ({
         ) : null}
       </div>
     </PopoverContent>
-  </Popover>
-);
+    </Popover>
+  );
+};
 
 const RoomMessage = ({ title, detail }: { title: string; detail?: string }) => (
   <main
@@ -480,6 +485,7 @@ const PlayersCard = ({
   revealStagger,
   onReveal,
   onReset,
+  onKick,
 }: {
   room: PublicRoom;
   votedCount: number;
@@ -487,6 +493,7 @@ const PlayersCard = ({
   revealStagger: Map<string, number>;
   onReveal: () => void;
   onReset: () => void;
+  onKick: (participantId: string) => void;
 }) => (
   <Card className="relative">
     {/* ป้ายเวลา+ผลโหวต พับมุมบนซ้ายของการ์ด (สไตล์ tag เกม pixel) — เด่นเป็นจุดแรกที่ตาเจอ */}
@@ -499,7 +506,7 @@ const PlayersCard = ({
       <span className="text-muted-foreground text-sm" aria-hidden="true">
         ·
       </span>
-      <span className="text-sm tabular-nums">
+      <span className="text-muted-foreground text-sm tabular-nums">
         Voted {votedCount}/{voterCount}
       </span>
     </div>
@@ -545,6 +552,8 @@ const PlayersCard = ({
                       index,
                       count: room.participants.length,
                     }}
+                    canRemove={room.canKick && !participant.isYou}
+                    onRemove={() => onKick(participant.id)}
                   />
                 ))}
             </ul>
@@ -749,6 +758,7 @@ export const PlanningPokerRoomPage = () => {
         revealStagger={revealStagger}
         onReveal={() => void poker.reveal()}
         onReset={() => void poker.reset()}
+        onKick={(participantId) => void poker.kick(participantId)}
       />
 
       {/* ไพ่ให้เลือกอยู่ใต้โต๊ะทันที — ไม่ต้องเลื่อนผ่านผลลัพธ์/ประวัติ และซ่อนหลังเปิดไพ่ */}

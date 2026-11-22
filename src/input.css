@@ -2964,21 +2964,22 @@ dialog::backdrop {
   );
 }
 
-/* ป้ายเวลา+ผลโหวต — พับมุมบนซ้ายของการ์ดทับขอบนิด ๆ (สไตล์ tag เกม pixel)
-   เด่นเป็นจุดแรกที่ตาเจอ และตัดแถว timer กลางล่างออกให้หน้าโล่ง */
+/* ป้ายเวลา+ผลโหวต — พับมุมบนขวาของการ์ดทับขอบนิด ๆ (สไตล์ tag เกม pixel)
+   เด่นเป็นจุดแรกที่ตาเจอ และตัดแถว timer กลางล่างออกให้หน้าโล่ง
+   ขยายป้าย: ขอบหนา พื้นผสม primary เงา pixel ใหญ่ ให้ลอยเหนือการ์ดชัด */
 .poker-timer-badge {
   position: absolute;
-  top: -14px;
-  left: 16px;
+  top: -16px;
+  right: 14px;
   z-index: 10;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  border: 2px solid var(--border);
-  background: var(--card);
-  padding: 4px 12px;
-  /* เงา pixel แข็งตามธีม */
-  box-shadow: 4px 4px 0 0 color-mix(in oklab, var(--primary) 28%, transparent);
+  gap: 10px;
+  border: 3px solid var(--border);
+  background: color-mix(in oklab, var(--primary) 12%, var(--card));
+  padding: 6px 18px;
+  /* เงา pixel แข็งตามธีม — ทึบขึ้นให้ป้ายลอยชัดกว่าเดิม */
+  box-shadow: 8px 8px 0 0 color-mix(in oklab, var(--primary) 45%, transparent);
 }
 
 /* แสงวาบตอนเริ่มเปิด — จาง ๆ พอให้รู้ว่ามี "พลังงาน" */

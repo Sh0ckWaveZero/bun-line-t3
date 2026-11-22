@@ -85,6 +85,11 @@ export const roomActionSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("rename"), name: nameSchema }),
   z.strictObject({ type: z.literal("role"), role: roleSchema }),
   z.strictObject({ type: z.literal("leave") }),
+  /** เตะผู้เล่นออกจากห้อง — เฉพาะคนสร้างห้อง (ส่ง participant id สาธารณะ ไม่ใช่ token ลับ) */
+  z.strictObject({
+    type: z.literal("kick"),
+    participantId: z.string().min(1).max(64),
+  }),
 ]);
 
 export type CreateRoomInput = z.infer<typeof createRoomSchema>;
