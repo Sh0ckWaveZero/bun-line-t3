@@ -7,6 +7,10 @@ const MODAL_CLOSE_MS = 150;
  * เล่น exit animation (.is-closing) ของ modal ก่อนเรียก onClose จริง
  * เพื่อให้ parent unmount หลัง animation จบ ไม่ใช่หายทันที
  * คู่กับ .t-modal-dialog/.t-modal-card ใน input.css
+ *
+ * Esc ไม่จัดการที่นี่แล้ว — dialog ที่เปิดด้วย showModal() ให้ event "cancel"
+ * จาก browser เอง ผู้ใช้ hook ส่ง requestClose เข้า useModalDialog({ onCancel })
+ * (Radix popover ที่เปิดอยู่ consume Esc ก่อนอยู่แล้ว จึงไม่ปิด modal ซ้ำ)
  */
 export function useDialogExit(onClose: () => void) {
   const [isClosing, setIsClosing] = useState(false);
@@ -29,18 +33,6 @@ export function useDialogExit(onClose: () => void) {
       }
     };
   }, []);
-
-  // Esc ปิด dialog — native <dialog open> (non-modal) ไม่จัดการให้เอง
-  // Radix popover ที่เปิดอยู่จะจัดการ Esc ของตัวเองและ preventDefault ก่อน จึงไม่ปิด modal ซ้ำ
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !event.defaultPrevented) {
-        requestClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [requestClose]);
 
   return { isClosing, requestClose };
 }

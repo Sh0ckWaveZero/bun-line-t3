@@ -19,6 +19,7 @@
  * ```
  */
 import { Clock, MessageSquare, ShieldCheck } from "lucide-react";
+import { useModalDialog } from "@/hooks/use-modal-dialog";
 
 interface PendingApprovalModalProps {
   open: boolean;
@@ -29,26 +30,27 @@ export function PendingApprovalModal({
   open,
   onClose: _onClose,
 }: PendingApprovalModalProps) {
+  // showModal ให้ focus trap + inert พื้นหลังจาก browser เอง; blockEscape เพราะ
+  // นี่คือ modal บังคับ — ต้องรออนุมัติ ปิดเองไม่ได้ (แทนปุ่ม backdrop จอลอยเดิม
+  // ที่พื้นหลังยัง focus ได้)
+  const dialogRef = useModalDialog({
+    isOpen: open,
+    onClose: () => {},
+    blockEscape: true,
+  });
+
   if (!open) {
     return null;
   }
 
   return (
     <dialog
-      open
+      ref={dialogRef}
       id="pending-approval-modal"
-      className="fixed inset-0 z-50 m-0 flex max-h-none max-w-none items-center justify-center border-0 bg-transparent p-4 text-inherit shadow-none"
-      aria-modal="true"
+      className="fixed inset-0 z-50 m-0 flex max-h-none max-w-none items-center justify-center border-0 bg-transparent p-4 text-inherit shadow-none backdrop:bg-black/60 backdrop:backdrop-blur-sm"
       aria-labelledby="approval-modal-title"
       aria-describedby="approval-modal-description"
     >
-      {/* Backdrop */}
-      <div
-        id="approval-modal-backdrop"
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-        aria-hidden="true"
-      />
-
       {/* Modal Content */}
       <div
         id="approval-modal-content"

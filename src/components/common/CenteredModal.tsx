@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { useEffectEvent } from "react";
 import { createPortal } from "react-dom";
+import { useModalDialog } from "@/hooks/use-modal-dialog";
 import { useSafePortal } from "@/hooks/useHydrationSafe";
 
 interface CenteredModalProps {
@@ -21,42 +21,32 @@ export const CenteredModal: React.FC<CenteredModalProps> = ({
   // 🛡️ ป้องกัน hydration mismatch ด้วย safe portal hook
   const { canUsePortal, portalRoot } = useSafePortal();
 
-  // 🎯 Handle escape key and body scroll - only when portal is ready
-  const handleEscape = useEffectEvent((e: KeyboardEvent) => {
-    if (e.key === "Escape") onClose();
-  });
+  // 🎯 showModal ให้ focus trap + inert พื้นหลัง + Esc จาก browser เอง
+  // (แทน keydown listener + body lock แบบเดิม) — Esc ยิง cancel→close แล้ว
+  // hook เรียก onClose ให้
+  const dialogRef = useModalDialog({ isOpen, onClose });
 
-  React.useEffect(() => {
-    if (isOpen && canUsePortal) {
-      document.addEventListener("keydown", handleEscape);
-      document.body.classList.add("modal-open");
-    }
-
-    return () => {
-      if (canUsePortal) {
-        document.removeEventListener("keydown", handleEscape);
-        document.body.classList.remove("modal-open");
-      }
-    };
-  }, [isOpen, canUsePortal]);
+  // คลิกนอกการ์ด (พื้นที่ว่างของ overlay) = ปิด — เทียบเท่าปุ่มคลุมจอโปร่งใสเดิม
+  const handleBackdropClick = (event: React.MouseEvent<HTMLDialogElement>) => {
+    if (event.target === event.currentTarget) onClose();
+  };
 
   // 🔐 SECURITY: ไม่แสดง modal หากไม่เปิดหรือยังไม่พร้อม
   if (!isOpen || !canUsePortal || !portalRoot) return null;
 
   const modalContent = (
     <dialog
-      open
+      ref={dialogRef}
       className="modal-grid-center"
-      aria-modal="true"
       aria-labelledby="modal-title"
       aria-describedby="modal-description"
+      onClick={handleBackdropClick}
       style={{
-        /* ✅ รับประกันการแสดงผลที่ชัดเจน */
         /* ✅ UA ของ <dialog> บังคับ width/height: fit-content — ต้องบังคับเต็มจอ
            ไม่งั้น dialog จะยึดมุมซ้ายบนขนาดเท่าเนื้อหา แล้ว place-items: center
            ของ .modal-grid-center ไม่มีพื้นที่ให้จัดกลาง (padding/background
-           ปล่อยให้ class กำหนด: เว้นขอบ 1rem + ฉากหลังดำ 60%) */
-        zIndex: 10000,
+           ปล่อยให้ class กำหนด: เว้นขอบ 1rem + ฉากหลังดำ 60%) — showModal ดัน
+           element เข้า top layer แล้ว z-index ไม่จำเป็นอีกต่อไป */
         position: "fixed",
         inset: 0,
         width: "100%",
@@ -68,12 +58,6 @@ export const CenteredModal: React.FC<CenteredModalProps> = ({
         color: "inherit",
       }}
     >
-      <button
-        type="button"
-        className="absolute inset-0 z-0 cursor-default border-0 bg-transparent p-0 focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-inset"
-        aria-label="ปิดหน้าต่าง"
-        onClick={onClose}
-      />
       <div
         className={`modal-content border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 ${className}`}
         style={{
@@ -85,8 +69,6 @@ export const CenteredModal: React.FC<CenteredModalProps> = ({
           flexDirection: "column",
           /* ✅ ป้องกัน content overflow */
           overflow: "hidden",
-          /* ✅ รับประกันการมองเห็น */
-          zIndex: 1,
           position: "relative",
           margin: "auto",
         }}

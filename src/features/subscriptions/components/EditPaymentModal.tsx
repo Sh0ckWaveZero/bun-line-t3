@@ -10,6 +10,7 @@ import type { SubscriptionPayment } from "@/features/subscriptions/types";
 import type { PaymentStatus } from "@/features/subscriptions/types";
 import { X, Loader2, Trash2 } from "lucide-react";
 import { PAYMENT_STATUS_LABELS } from "@/features/subscriptions/constants";
+import { useModalDialog } from "@/hooks/use-modal-dialog";
 
 interface EditPaymentModalProps {
   open: boolean;
@@ -68,6 +69,10 @@ function EditPaymentModalContent({
     note: payment?.note ?? "",
   }));
 
+  // 🎯 showModal ให้ focus trap + inert พื้นหลัง + Esc จาก browser เอง
+  // (แทน overlay div เขียนเอง) — Esc ยิง cancel→close แล้ว hook เรียก onClose ให้
+  const dialogRef = useModalDialog({ isOpen: true, onClose });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!payment) return;
@@ -96,11 +101,33 @@ function EditPaymentModalContent({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center">
+    <dialog
+      ref={dialogRef}
+      aria-labelledby="edit-payment-title"
+      className="flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center"
+      style={{
+        /* ✅ UA ของ <dialog> บังคับ width/height: fit-content — ต้องบังคับเต็มจอ
+           (โครงเดียวกับ CenteredModal) — showModal ดัน element เข้า top layer
+           แล้ว z-index ไม่จำเป็นอีกต่อไป */
+        position: "fixed",
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        margin: 0,
+        maxWidth: "none",
+        maxHeight: "none",
+        border: 0,
+        padding: 0,
+        color: "inherit",
+      }}
+    >
       <div className="w-full max-w-md rounded-t-3xl bg-white shadow-2xl sm:rounded-2xl dark:bg-gray-900">
         {/* header */}
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h2
+            id="edit-payment-title"
+            className="text-lg font-semibold text-gray-900 dark:text-white"
+          >
             แก้ไขรายการจ่ายเงิน
           </h2>
           <button
@@ -254,6 +281,6 @@ function EditPaymentModalContent({
           </div>
         </form>
       </div>
-    </div>
+    </dialog>
   );
 }

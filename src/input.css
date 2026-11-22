@@ -2259,6 +2259,19 @@
   }
 }
 
+/* 🪟 Native modal dialog (modern-web-guidance: prevent-page-scroll-under-modal-dialog)
+   showModal() ไม่กัน scroll ของหน้าหลังเอง — ต้อง "contain" ทั้ง dialog และ ::backdrop
+   (::backdrop ต้องตั้ง overflow เป็น scroll container ก่อน ไม่งั้น overscroll-behavior
+   ไม่มีผล) ห้ามล็อก body ด้วย overflow/position:fixed — scrollbar หาย + scroll jump */
+dialog:modal {
+  overscroll-behavior: contain;
+}
+
+dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
 @layer base {
   * {
     @apply outline-ring/50 border-border;
