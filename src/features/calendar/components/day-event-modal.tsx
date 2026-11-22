@@ -237,7 +237,10 @@ export function DayEventModal({
         {/* noValidate — validate ด้วย zod ผ่าน RHF resolver แทน native constraint validation
             (ฟิลด์ทุกแท็บ mounted ค้างไว้ ฟิลด์ที่ซ่อนอยู่จะไม่ถูกเรียกต้องกรอก) */}
         <form onSubmit={submit} noValidate className="space-y-4">
-          {/* Date Selection with DatePicker */}
+          {/* Date Selection with DatePicker
+              โหมดแก้ไขวันลาล็อกวันที่ไว้ — updateLeaveForDate ค้นหารายการจากวันที่ใน request
+              ถ้าปล่อยให้เปลี่ยนวันเป็น B แล้ว B มีวันลาอยู่ จะเขียนทับรายการของ B ผิดรายการ
+              (ต้องการย้ายวันให้ยกเลิกวันลาแล้วแจ้งลาใหม่แทน) */}
           <div>
             <Controller
               control={control}
@@ -254,9 +257,19 @@ export function DayEventModal({
                     }
                   }}
                   placeholder="เลือกวันที่"
+                  isDisabled={isEditingLeave}
                 />
               )}
             />
+            {isEditingLeave && (
+              <p
+                id="day-event-date-locked"
+                className="text-muted-foreground mt-1 text-xs"
+              >
+                ล็อกวันที่เดิมในโหมดแก้ไข —
+                ต้องการย้ายวันให้ยกเลิกวันลาแล้วแจ้งลาใหม่
+              </p>
+            )}
             {errors.date && (
               <p
                 id="day-event-date-error"
