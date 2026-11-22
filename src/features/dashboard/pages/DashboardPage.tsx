@@ -198,6 +198,7 @@ export function DashboardPage() {
                 alt=""
                 width={48}
                 height={48}
+                decoding="async"
                 className="ring-border h-12 w-12 shrink-0 rounded-full ring-2"
               />
             )}

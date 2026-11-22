@@ -578,7 +578,7 @@ function LeaveFormCard({
               rows={3}
               placeholder="ระบุเหตุผลเพิ่มเติม..."
               aria-label="เหตุผลการลา (ไม่บังคับ)"
-              className="border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-ring w-full resize-none rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-50"
+              className="border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-ring w-full resize-none rounded-md border px-3 py-2 text-base focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-50"
             />
           </div>
 

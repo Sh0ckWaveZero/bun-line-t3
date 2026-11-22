@@ -140,6 +140,50 @@ interface StaticFileResult {
   mtime: Date;
 }
 
+// ─── Security headers (modern-web-guidance: security Phase 1 + companion) ───
+// เติมบน response ทุกเส้นทาง (SSE/static/SSR) — mutate บน response เดิมเพื่อไม่
+// ต้อง clone body (สำคัญกับ SSE stream)
+/**
+ * คืน security headers ตาม environment — HSTS ใส่เฉพาะ production เพราะ dev/preview
+ * รันบน plain HTTP แล้ว header จะ cache ค้างใน browser
+ */
+export function buildSecurityHeaders(
+  env: Record<string, string | undefined>,
+): Record<string, string> {
+  const headers: Record<string, string> = {
+    // Clickjacking: อนุญาตเฉพาะ same-origin framing — หน้า onsite-report ฝัง PDF
+    // ผ่าน <iframe src="blob:..."> ซึ่ง blob document สืบทอด CSP ของหน้าสร้างมัน
+    // ('none' จะบล็อก preview ของเราเอง)
+    "Content-Security-Policy": "frame-ancestors 'self'",
+    "X-Frame-Options": "SAMEORIGIN",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    // แอปไม่ใช้ camera/geolocation/microphone
+    "Permissions-Policy": "camera=(), geolocation=(), microphone=()",
+    // เว็บนี้เปิด OAuth popup เอง (LINE Login) — allow-popups ยังคง opener ของ popup ที่เราเปิด
+    "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
+    // resource ภายในไม่ได้ถูกออกแบบให้ embed ข้าม origin
+    "Cross-Origin-Resource-Policy": "same-origin",
+  };
+
+  if (env.APP_ENV === "production") {
+    headers["Strict-Transport-Security"] =
+      "max-age=31536000; includeSubDomains";
+  }
+
+  return headers;
+}
+
+function applySecurityHeaders(response: Response): Response {
+  for (const [name, value] of Object.entries(
+    buildSecurityHeaders(process.env),
+  )) {
+    response.headers.set(name, value);
+  }
+  return response;
+}
+// ────────────────────────────────────────────────────────────────────────────
+
 interface ServerEntry {
   fetch: (request: Request) => Response | Promise<Response>;
 }
@@ -284,7 +328,7 @@ export async function startServer() {
       // จึง handle โดยตรงใน Bun native server แทน
       const url = new URL(request.url);
       if (url.pathname === "/api/dca/stream" && request.method === "GET") {
-        return handleDcaSseStream(request);
+        return applySecurityHeaders(await handleDcaSseStream(request));
       }
       // ────────────────────────────────────────────────────────────────────────
 
@@ -343,10 +387,10 @@ export async function startServer() {
       const staticResponse = await serveStaticFile(request);
 
       if (staticResponse) {
-        return staticResponse;
+        return applySecurityHeaders(staticResponse);
       }
 
-      return serverEntry.fetch(request);
+      return applySecurityHeaders(await serverEntry.fetch(request));
     },
   });
 

@@ -42,6 +42,10 @@ function UserAvatar({
       <img
         src={pictureUrl}
         alt={displayName ?? "ผู้ใช้ LINE"}
+        width={40}
+        height={40}
+        loading="lazy"
+        decoding="async"
         className="size-10 shrink-0 rounded-full object-cover ring-1 ring-slate-200 dark:ring-white/10"
         onError={() => setHasImageError(true)}
       />

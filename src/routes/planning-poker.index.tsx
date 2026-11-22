@@ -12,6 +12,16 @@ const POKER_META = {
 export const Route = createFileRoute("/planning-poker/")({
   component: PlanningPokerPage,
   head: () => ({
+    links: [
+      // preload ฟอนต์หลักของธีม pixel — ต้อง crossOrigin ถึงแม้ same-origin (font fetch แบบ CORS mode)
+      {
+        rel: "preload",
+        href: "/fonts/ta-8-bit.woff2",
+        as: "font",
+        type: "font/woff2",
+        crossOrigin: "anonymous",
+      },
+    ],
     meta: [
       { title: POKER_META.title },
       { name: "description", content: POKER_META.description },
