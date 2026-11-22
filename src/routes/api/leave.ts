@@ -135,6 +135,7 @@ export const Route = createFileRoute("/api/leave")({
       GET: ({ request }) => GET(request),
       POST: ({ request }) => POST(request),
       PUT: ({ request }) => PUT(request),
+      DELETE: ({ request }) => DELETE(request),
     },
   },
 });
@@ -186,6 +187,49 @@ export async function PUT(req: Request) {
       );
     }
     return Response.json({ success: true, message: "เปลี่ยนวันลาสำเร็จ" });
+  } catch {
+    return Response.json(
+      {
+        success: false,
+        message: "เกิดข้อผิดพลาดของระบบ กรุณาลองใหม่หรือติดต่อผู้ดูแล",
+      },
+      { status: 500 },
+    );
+  }
+}
+
+/**
+ * ยกเลิกวันลาที่บันทึกไว้แล้ว — ใช้โดยปุ่ม "ยกเลิกวันลา" ของปฏิทิน
+ * query: ?date=YYYY-MM-DD (soft delete + ลบ attendance auto-stamp คู่กัน)
+ */
+export async function DELETE(req: Request) {
+  try {
+    const access = await resolveLeaveAccess(req);
+    if ("error" in access) return access.error;
+
+    const date = new URL(req.url).searchParams.get("date");
+    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return Response.json(
+        { success: false, message: "รูปแบบวันที่ไม่ถูกต้อง" },
+        { status: 422 },
+      );
+    }
+
+    try {
+      await leaveService.cancelLeaveForDate({
+        userId: access.session.user.id,
+        date,
+      });
+    } catch (err: any) {
+      return Response.json(
+        {
+          success: false,
+          message: err?.message || "เกิดข้อผิดพลาดขณะยกเลิกวันลา",
+        },
+        { status: 400 },
+      );
+    }
+    return Response.json({ success: true, message: "ยกเลิกวันลาสำเร็จ" });
   } catch {
     return Response.json(
       {

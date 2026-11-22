@@ -141,6 +141,30 @@ export function useCalendarMutations(year: number) {
     [refreshCalendarData, showToast],
   );
 
+  const handleLeaveCancel = useCallback(
+    async (date: string) => {
+      try {
+        const response = await fetch(`/api/leave?date=${date}`, {
+          method: "DELETE",
+        });
+
+        if (!response.ok) throw new Error("ไม่สามารถยกเลิกวันลาได้");
+        const result = await response.json();
+
+        if (result.success) {
+          await refreshCalendarData();
+          showToast({ title: "ยกเลิกวันลาสำเร็จ", type: "success" });
+        } else {
+          showToast({ title: result.message, type: "error" });
+        }
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "เกิดข้อผิดพลาด";
+        showToast({ title: message, type: "error" });
+      }
+    },
+    [refreshCalendarData, showToast],
+  );
+
   const handleDayEventSubmit = useCallback(
     async (data: DayEventSubmit) => {
       switch (data.kind) {
@@ -184,6 +208,7 @@ export function useCalendarMutations(year: number) {
   return {
     refreshCalendarData,
     handleLeaveRequest,
+    handleLeaveCancel,
     handleHolidayAdd,
     handleWorkModeMark,
     handleWorkModeCancel,

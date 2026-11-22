@@ -238,6 +238,7 @@ function DayDetailActions({
   workMode,
   onRequestLeave,
   onEditLeave,
+  onCancelLeave,
   onRequestWorkMode,
   onCancelWorkMode,
 }: {
@@ -246,6 +247,7 @@ function DayDetailActions({
   workMode: WorkModeDay | undefined;
   onRequestLeave: () => void;
   onEditLeave: () => void;
+  onCancelLeave: () => void;
   onRequestWorkMode: (type: "wfh" | "onsite") => void;
   onCancelWorkMode: () => void;
 }) {
@@ -255,16 +257,28 @@ function DayDetailActions({
       className="border-border space-y-2 border-t px-5 py-3"
     >
       {leave ? (
-        // มีวันลาอยู่แล้ว — เปลี่ยนประเภท/เหตุผลได้ (POST สร้างใหม่จะโดน guard duplicate)
-        <Button
-          id={`day-detail-edit-leave-${dateStr}`}
-          size="sm"
-          className="w-full"
-          onClick={onEditLeave}
-        >
-          <Pencil className="h-3.5 w-3.5" />
-          เปลี่ยนวันลา
-        </Button>
+        // มีวันลาอยู่แล้ว — เปลี่ยนประเภท/เหตุผลหรือยกเลิกได้ (POST สร้างใหม่จะโดน guard duplicate)
+        <div className="flex gap-2">
+          <Button
+            id={`day-detail-edit-leave-${dateStr}`}
+            size="sm"
+            className="flex-1"
+            onClick={onEditLeave}
+          >
+            <Pencil className="h-3.5 w-3.5" />
+            เปลี่ยนวันลา
+          </Button>
+          <Button
+            id={`day-detail-cancel-leave-${dateStr}`}
+            size="sm"
+            variant="outline"
+            className="text-destructive hover:text-destructive flex-1"
+            onClick={onCancelLeave}
+          >
+            <X className="h-3.5 w-3.5" />
+            ยกเลิกวันลา
+          </Button>
+        </div>
       ) : (
         <Button
           id={`day-detail-request-leave-${dateStr}`}
@@ -320,6 +334,7 @@ interface DayDetailPanelProps {
   onClose: () => void;
   onRequestLeave: () => void;
   onEditLeave: () => void;
+  onCancelLeave: () => void;
   onRequestWorkMode: (type: "wfh" | "onsite") => void;
   onCancelWorkMode: () => void;
 }
@@ -332,6 +347,7 @@ export function DayDetailPanel({
   onClose,
   onRequestLeave,
   onEditLeave,
+  onCancelLeave,
   onRequestWorkMode,
   onCancelWorkMode,
 }: DayDetailPanelProps) {
@@ -421,6 +437,7 @@ export function DayDetailPanel({
           workMode={workMode}
           onRequestLeave={onRequestLeave}
           onEditLeave={onEditLeave}
+          onCancelLeave={onCancelLeave}
           onRequestWorkMode={onRequestWorkMode}
           onCancelWorkMode={onCancelWorkMode}
         />

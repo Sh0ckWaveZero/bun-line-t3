@@ -77,8 +77,12 @@ export function MobileCalendarPage() {
     end: endOfMonth(currentDate),
   });
 
-  const { refreshCalendarData, handleDayEventSubmit, handleWorkModeCancel } =
-    useCalendarMutations(getYear(currentDate));
+  const {
+    refreshCalendarData,
+    handleDayEventSubmit,
+    handleLeaveCancel,
+    handleWorkModeCancel,
+  } = useCalendarMutations(getYear(currentDate));
 
   const handleImport = async (importedHolidays: Holiday[]) => {
     if (importedHolidays.length > 0) {
@@ -125,6 +129,9 @@ export function MobileCalendarPage() {
   const handleCancelWorkMode = (dateStr: string) => {
     void handleWorkModeCancel(dateStr);
   };
+  const handleCancelLeave = (dateStr: string) => {
+    void handleLeaveCancel(dateStr);
+  };
 
   return (
     <div id="mobile-calendar-page" className="bg-background min-h-screen pb-28">
@@ -163,6 +170,7 @@ export function MobileCalendarPage() {
             events={filteredEvents}
             onRequestLeave={handleRequestLeave}
             onEditLeave={handleEditLeave}
+            onCancelLeave={handleCancelLeave}
             onRequestWorkMode={handleRequestWorkMode}
             onCancelWorkMode={handleCancelWorkMode}
           />

@@ -105,8 +105,12 @@ export function CalendarPage() {
     setCurrentDate((prev) => new Date(year, getMonth(prev), 1));
   };
 
-  const { refreshCalendarData, handleWorkModeCancel, handleDayEventSubmit } =
-    useCalendarMutations(getYear(currentDate));
+  const {
+    refreshCalendarData,
+    handleLeaveCancel,
+    handleWorkModeCancel,
+    handleDayEventSubmit,
+  } = useCalendarMutations(getYear(currentDate));
 
   const handleImport = async (importedHolidays: Holiday[]) => {
     if (importedHolidays.length > 0) {
@@ -221,6 +225,11 @@ export function CalendarPage() {
                 ? buildLeavePrefill({ type: leave.type, reason: leave.reason })
                 : undefined,
             );
+          }}
+          onCancelLeave={() => {
+            const dateStr = formatDateKey(selectedDate);
+            setShowDayDetail(false);
+            void handleLeaveCancel(dateStr);
           }}
           onRequestWorkMode={(type) => {
             setShowDayDetail(false);

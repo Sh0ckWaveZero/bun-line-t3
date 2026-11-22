@@ -142,9 +142,39 @@ export const updateLeaveForDate = async (input: {
   });
 };
 
+/**
+ * ยกเลิกวันลาที่บันทึกไว้ในวันหนึ่ง (soft delete — isActive: false เพื่อรักษาประวัติ)
+ * และลบ attendance record ที่ createLeave auto-stamp คู่กัน (อ้าง leaveId)
+ * ออกใน transaction เดียว ไม่งั้นผู้ใช้จะยังโชว์เช็คอิน/เช็คเอาต์ปลอมวันลาที่ยกเลิกแล้ว
+ */
+export const cancelLeaveForDate = async (input: {
+  userId: string;
+  date: string;
+}) => {
+  if (!input.userId || !input.date) {
+    throw new Error("userId และ date จำเป็นต้องระบุ");
+  }
+  const existing = await db.leave.findFirst({
+    where: { userId: input.userId, date: input.date, isActive: true },
+  });
+  if (!existing) {
+    throw new Error("ไม่พบวันลาที่บันทึกไว้ในวันนี้");
+  }
+  return db.$transaction(async (tx) => {
+    await tx.workAttendance.deleteMany({
+      where: { leaveId: existing.id },
+    });
+    return tx.leave.update({
+      where: { id: existing.id },
+      data: { isActive: false },
+    });
+  });
+};
+
 export const leaveService = {
   isUserOnLeave,
   getUserLeavesInMonth,
   createLeave,
   updateLeaveForDate,
+  cancelLeaveForDate,
 };
