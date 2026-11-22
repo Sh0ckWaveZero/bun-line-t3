@@ -21,7 +21,14 @@ import {
 } from "@/features/calendar/components/day-event-modal";
 import { DayDetailPanel } from "@/features/calendar/components/day-detail-panel";
 import { HolidayImport } from "@/features/calendar/components/holiday-import";
-import { findEventByDate, formatDateKey } from "@/features/calendar/lib/calendar-format";
+import {
+  buildLeavePrefill,
+  type DayEventLeavePrefill,
+} from "@/features/calendar/lib/day-event-form";
+import {
+  findEventByDate,
+  formatDateKey,
+} from "@/features/calendar/lib/calendar-format";
 import { useCalendarMutations } from "@/features/calendar/hooks/useCalendarMutations";
 import {
   useCalendarData,
@@ -37,13 +44,21 @@ export function CalendarPage() {
   const [showImportModal, setShowImportModal] = useState(false);
   // modal เดียวรวมทุก type (ลางาน / WFH / On Site / วันหยุด) — null = ปิด
   const [eventModal, setEventModal] = useState<DayEventType | null>(null);
+  // prefill ของโหมด "เปลี่ยนวันลา" — null = สร้างวันลาใหม่
+  const [editingLeave, setEditingLeave] = useState<DayEventLeavePrefill | null>(
+    null,
+  );
   const [showDayDetail, setShowDayDetail] = useState(false);
 
-  // เปิด modal ได้ทีละหนึ่ง — เปิดอันใหม่ปิดอันอื่นทิ้ง
-  const openModal = useCallback((modal: DayEventType | "import") => {
-    setShowImportModal(modal === "import");
-    setEventModal(modal === "import" ? null : modal);
-  }, []);
+  // เปิด modal ได้ทีละหนึ่ง — เปิดอันใหม่ปิดอันอื่นทิ้ง (มี prefill = โหมดแก้ไขวันลา)
+  const openModal = useCallback(
+    (modal: DayEventType | "import", leavePrefill?: DayEventLeavePrefill) => {
+      setShowImportModal(modal === "import");
+      setEventModal(modal === "import" ? null : modal);
+      setEditingLeave(leavePrefill ?? null);
+    },
+    [],
+  );
 
   useEffect(() => {
     const updateToday = () => setToday(new Date());
@@ -90,8 +105,12 @@ export function CalendarPage() {
     setCurrentDate((prev) => new Date(year, getMonth(prev), 1));
   };
 
-  const { refreshCalendarData, handleWorkModeCancel, handleDayEventSubmit } =
-    useCalendarMutations(getYear(currentDate));
+  const {
+    refreshCalendarData,
+    handleLeaveCancel,
+    handleWorkModeCancel,
+    handleDayEventSubmit,
+  } = useCalendarMutations(getYear(currentDate));
 
   const handleImport = async (importedHolidays: Holiday[]) => {
     if (importedHolidays.length > 0) {
@@ -197,6 +216,21 @@ export function CalendarPage() {
             setShowDayDetail(false);
             openModal("leave");
           }}
+          onEditLeave={() => {
+            const leave = getLeaveForDate(selectedDate);
+            setShowDayDetail(false);
+            openModal(
+              "leave",
+              leave
+                ? buildLeavePrefill({ type: leave.type, reason: leave.reason })
+                : undefined,
+            );
+          }}
+          onCancelLeave={() => {
+            const dateStr = formatDateKey(selectedDate);
+            setShowDayDetail(false);
+            void handleLeaveCancel(dateStr);
+          }}
           onRequestWorkMode={(type) => {
             setShowDayDetail(false);
             openModal(type);
@@ -231,6 +265,7 @@ export function CalendarPage() {
               selectedDate ? formatDateKey(selectedDate) : undefined
             }
             initialType={eventModal}
+            initialLeave={editingLeave ?? undefined}
           />
         </div>
       )}

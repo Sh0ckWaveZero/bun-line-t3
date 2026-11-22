@@ -17,6 +17,7 @@ import { useModalDialog } from "@/hooks/use-modal-dialog";
 import {
   dayEventFormSchema,
   type DayEventFormValues,
+  type DayEventLeavePrefill,
   type DayEventSubmit,
   type DayEventType,
 } from "@/features/calendar/lib/day-event-form";
@@ -39,6 +40,8 @@ const TITLES: Record<DayEventType, string> = {
   holiday: "เพิ่มวันหยุด",
 };
 
+const EDIT_LEAVE_TITLE = "เปลี่ยนวันลา";
+
 const HELP_TEXTS: Record<DayEventType, string> = {
   leave: "วันลาจะแสดงในปฏิทินหลังจากบันทึกเรียบร้อย",
   wfh: "วันที่ทำ WFH จะแสดงในปฏิทิน และจะไม่ได้รับการแจ้งเตือนเช็คอินในวันนั้น",
@@ -53,6 +56,8 @@ interface DayEventModalProps {
   onSubmit: (data: DayEventSubmit) => void;
   selectedDate?: string;
   initialType?: DayEventType;
+  /** โหมด "เปลี่ยนวันลา" — เติมค่าเดิมของวันลาที่บันทึกไว้ แล้วบันทึกด้วย PUT แทน POST */
+  initialLeave?: DayEventLeavePrefill;
 }
 
 export function DayEventModal({
@@ -61,6 +66,7 @@ export function DayEventModal({
   onSubmit,
   selectedDate,
   initialType = "leave",
+  initialLeave,
 }: DayEventModalProps) {
   const {
     register,
@@ -76,8 +82,8 @@ export function DayEventModal({
     defaultValues: {
       eventType: initialType,
       date: selectedDate ? (parseDateStr(selectedDate) ?? null) : null,
-      leaveType: "personal",
-      reason: "",
+      leaveType: initialLeave?.leaveType ?? "personal",
+      reason: initialLeave?.reason ?? "",
       noteWfh: "",
       noteOnsite: "",
       nameThai: "",
@@ -160,12 +166,17 @@ export function DayEventModal({
   const eventType = useWatch({ control, name: "eventType" });
   const yearValue = useWatch({ control, name: "year" });
 
+  // โหมดแก้ไขมีผลเฉพาะตอนบันทึกในแท็บ "ลางาน" — สลับแท็บอื่น = สร้างรายการใหม่ตามปกติ
+  const isEditingLeave = initialLeave !== undefined && eventType === "leave";
+
   const submit = handleSubmit(async (values) => {
     clearErrors("root");
     if (!values.date) return;
 
     const dateStr = formatDateToStr(values.date);
-    const payload = buildDayEventPayload(values, dateStr);
+    const payload = buildDayEventPayload(values, dateStr, {
+      updateExisting: isEditingLeave,
+    });
 
     try {
       await onSubmit(payload);
@@ -205,7 +216,7 @@ export function DayEventModal({
           <div className="flex items-center gap-2">
             <CalendarIcon className="text-primary h-5 w-5" aria-hidden="true" />
             <h2 id="day-event-modal-title" className="text-xl font-bold">
-              {TITLES[eventType]}
+              {isEditingLeave ? EDIT_LEAVE_TITLE : TITLES[eventType]}
             </h2>
           </div>
           <Button
@@ -230,7 +241,10 @@ export function DayEventModal({
         {/* noValidate — validate ด้วย zod ผ่าน RHF resolver แทน native constraint validation
             (ฟิลด์ทุกแท็บ mounted ค้างไว้ ฟิลด์ที่ซ่อนอยู่จะไม่ถูกเรียกต้องกรอก) */}
         <form onSubmit={submit} noValidate className="space-y-4">
-          {/* Date Selection with DatePicker */}
+          {/* Date Selection with DatePicker
+              โหมดแก้ไขวันลาล็อกวันที่ไว้ — updateLeaveForDate ค้นหารายการจากวันที่ใน request
+              ถ้าปล่อยให้เปลี่ยนวันเป็น B แล้ว B มีวันลาอยู่ จะเขียนทับรายการของ B ผิดรายการ
+              (ต้องการย้ายวันให้ยกเลิกวันลาแล้วแจ้งลาใหม่แทน) */}
           <div>
             <Controller
               control={control}
@@ -247,9 +261,19 @@ export function DayEventModal({
                     }
                   }}
                   placeholder="เลือกวันที่"
+                  isDisabled={isEditingLeave}
                 />
               )}
             />
+            {isEditingLeave && (
+              <p
+                id="day-event-date-locked"
+                className="text-muted-foreground mt-1 text-xs"
+              >
+                ล็อกวันที่เดิมในโหมดแก้ไข —
+                ต้องการย้ายวันให้ยกเลิกวันลาแล้วแจ้งลาใหม่
+              </p>
+            )}
             {errors.date && (
               <p
                 id="day-event-date-error"

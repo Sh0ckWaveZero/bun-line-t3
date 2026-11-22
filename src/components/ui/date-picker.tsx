@@ -174,7 +174,10 @@ export interface PopoverDatePickerProps {
   value?: Date;
   onChange: (date: Date | undefined) => void;
   placeholder?: string;
+  /** predicate ปิดวันเฉพาะเมื่อเลือกในปฏิทิน (ไม่ล็อก trigger) */
   disabled?: (date: Date) => boolean;
+  /** ล็อกทั้ง picker — trigger กดไม่ได้ (เช่น โหมดแก้ไขที่ห้ามเปลี่ยนวันที่) */
+  isDisabled?: boolean;
   minDate?: Date;
   maxDate?: Date;
   id?: string;
@@ -190,6 +193,7 @@ export function PopoverDatePicker({
   onChange,
   placeholder = "เลือกวันที่",
   disabled,
+  isDisabled,
   minDate,
   maxDate,
   id,
@@ -232,6 +236,7 @@ export function PopoverDatePicker({
           <button
             id={inputId}
             type="button"
+            disabled={isDisabled}
             aria-labelledby={label ? `${labelId} ${valueId}` : undefined}
             aria-label={label ? undefined : accessibleValue}
             aria-describedby={required ? describedBy : undefined}
@@ -242,6 +247,8 @@ export function PopoverDatePicker({
               "border-foreground/60 bg-background text-foreground flex h-12 w-full cursor-pointer items-center gap-2.5 rounded-lg border px-4 text-left text-base font-medium",
               "focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
               "hover:bg-accent hover:text-accent-foreground transition-colors",
+              isDisabled &&
+                "bg-muted/50 text-muted-foreground cursor-not-allowed",
               triggerClassName,
             )}
           >

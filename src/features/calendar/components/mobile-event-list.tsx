@@ -3,7 +3,10 @@ import { th } from "date-fns/locale";
 import { Calendar as CalendarIcon, Home, MapPin, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { formatDateKey, renderLeaveType } from "@/features/calendar/lib/calendar-format";
+import {
+  formatDateKey,
+  renderLeaveType,
+} from "@/features/calendar/lib/calendar-format";
 import {
   getMobileCalendarEmptyTitle,
   type CalendarEvent,
@@ -87,7 +90,10 @@ export function MobileCalendarEmptyState({
       aria-live="polite"
     >
       <div className="bg-muted mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg">
-        <CalendarIcon className="text-muted-foreground h-6 w-6" aria-hidden="true" />
+        <CalendarIcon
+          className="text-muted-foreground h-6 w-6"
+          aria-hidden="true"
+        />
       </div>
       <p
         id="mobile-calendar-empty-title"
@@ -333,19 +339,92 @@ function MobileEventOnsiteRow({
 
 interface MobileEventActionsProps {
   dateStr: string;
+  leave: CalendarEvent["leave"];
   workMode: CalendarEvent["workMode"];
   onRequestLeave: (dateStr: string) => void;
+  onEditLeave: (dateStr: string) => void;
+  onCancelLeave: (dateStr: string) => void;
   onRequestWorkMode: (dateStr: string) => void;
   onCancelWorkMode: (dateStr: string) => void;
 }
 
 function MobileEventActions({
   dateStr,
+  leave,
   workMode,
   onRequestLeave,
+  onEditLeave,
+  onCancelLeave,
   onRequestWorkMode,
   onCancelWorkMode,
 }: MobileEventActionsProps) {
+  // ปุ่ม WFH/On Site — ใช้ซ้ำทั้งเลย์เอาต์มีวันลา (แถวล่าง) และไม่มีวันลา (แถวเดียวกัน)
+  const workModeAction =
+    workMode?.type === "wfh" ? (
+      <Button
+        id={`mobile-event-cancel-wfh-${dateStr}`}
+        type="button"
+        variant="outline"
+        className="text-destructive hover:text-destructive h-9 flex-1 rounded-lg text-xs font-bold"
+        onClick={() => onCancelWorkMode(dateStr)}
+      >
+        <X className="mr-1 h-3.5 w-3.5" />
+        ยกเลิก WFH
+      </Button>
+    ) : workMode?.type === "onsite" ? (
+      <Button
+        id={`mobile-event-cancel-onsite-${dateStr}`}
+        type="button"
+        variant="outline"
+        className="text-destructive hover:text-destructive h-9 flex-1 rounded-lg text-xs font-bold"
+        onClick={() => onCancelWorkMode(dateStr)}
+      >
+        <X className="mr-1 h-3.5 w-3.5" />
+        ยกเลิก On Site
+      </Button>
+    ) : (
+      <Button
+        id={`mobile-event-request-wfh-${dateStr}`}
+        type="button"
+        variant="outline"
+        className="h-9 flex-1 rounded-lg text-xs font-bold"
+        onClick={() => onRequestWorkMode(dateStr)}
+      >
+        <Home className="mr-1 h-3.5 w-3.5" />
+        ทำ WFH
+      </Button>
+    );
+
+  if (leave) {
+    // มีวันลาอยู่แล้ว — เปลี่ยนประเภท/เหตุผล หรือยกเลิกได้ (POST สร้างใหม่จะโดน guard duplicate)
+    return (
+      <div className="mt-0.5 space-y-2">
+        <div className="flex gap-2">
+          <Button
+            id={`mobile-event-edit-leave-${dateStr}`}
+            type="button"
+            variant="outline"
+            className="h-9 flex-1 rounded-lg text-xs font-bold"
+            onClick={() => onEditLeave(dateStr)}
+          >
+            เปลี่ยนวันลา
+          </Button>
+          <Button
+            id={`mobile-event-cancel-leave-${dateStr}`}
+            type="button"
+            variant="outline"
+            className="text-destructive hover:text-destructive h-9 flex-1 rounded-lg text-xs font-bold"
+            onClick={() => onCancelLeave(dateStr)}
+          >
+            <X className="mr-1 h-3.5 w-3.5" />
+            ยกเลิกวันลา
+          </Button>
+        </div>
+        <div className="flex gap-2">{workModeAction}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="mt-0.5 flex gap-2">
       <Button
@@ -357,40 +436,7 @@ function MobileEventActions({
       >
         แจ้งลาวันนี้
       </Button>
-      {workMode?.type === "wfh" ? (
-        <Button
-          id={`mobile-event-cancel-wfh-${dateStr}`}
-          type="button"
-          variant="outline"
-          className="text-destructive hover:text-destructive h-9 flex-1 rounded-lg text-xs font-bold"
-          onClick={() => onCancelWorkMode(dateStr)}
-        >
-          <X className="mr-1 h-3.5 w-3.5" />
-          ยกเลิก WFH
-        </Button>
-      ) : workMode?.type === "onsite" ? (
-        <Button
-          id={`mobile-event-cancel-onsite-${dateStr}`}
-          type="button"
-          variant="outline"
-          className="text-destructive hover:text-destructive h-9 flex-1 rounded-lg text-xs font-bold"
-          onClick={() => onCancelWorkMode(dateStr)}
-        >
-          <X className="mr-1 h-3.5 w-3.5" />
-          ยกเลิก On Site
-        </Button>
-      ) : (
-        <Button
-          id={`mobile-event-request-wfh-${dateStr}`}
-          type="button"
-          variant="outline"
-          className="h-9 flex-1 rounded-lg text-xs font-bold"
-          onClick={() => onRequestWorkMode(dateStr)}
-        >
-          <Home className="mr-1 h-3.5 w-3.5" />
-          ทำ WFH
-        </Button>
-      )}
+      {workModeAction}
     </div>
   );
 }
@@ -401,6 +447,8 @@ interface MobileEventCardBodyProps {
   leave: CalendarEvent["leave"];
   workMode: CalendarEvent["workMode"];
   onRequestLeave: (dateStr: string) => void;
+  onEditLeave: (dateStr: string) => void;
+  onCancelLeave: (dateStr: string) => void;
   onRequestWorkMode: (dateStr: string) => void;
   onCancelWorkMode: (dateStr: string) => void;
 }
@@ -411,6 +459,8 @@ function MobileEventCardBody({
   leave,
   workMode,
   onRequestLeave,
+  onEditLeave,
+  onCancelLeave,
   onRequestWorkMode,
   onCancelWorkMode,
 }: MobileEventCardBodyProps) {
@@ -435,8 +485,11 @@ function MobileEventCardBody({
 
       <MobileEventActions
         dateStr={dateStr}
+        leave={leave}
         workMode={workMode}
         onRequestLeave={onRequestLeave}
+        onEditLeave={onEditLeave}
+        onCancelLeave={onCancelLeave}
         onRequestWorkMode={onRequestWorkMode}
         onCancelWorkMode={onCancelWorkMode}
       />
@@ -447,6 +500,8 @@ function MobileEventCardBody({
 interface MobileEventCardProps {
   event: CalendarEvent;
   onRequestLeave: (dateStr: string) => void;
+  onEditLeave: (dateStr: string) => void;
+  onCancelLeave: (dateStr: string) => void;
   onRequestWorkMode: (dateStr: string) => void;
   onCancelWorkMode: (dateStr: string) => void;
 }
@@ -454,6 +509,8 @@ interface MobileEventCardProps {
 function MobileEventCard({
   event,
   onRequestLeave,
+  onEditLeave,
+  onCancelLeave,
   onRequestWorkMode,
   onCancelWorkMode,
 }: MobileEventCardProps) {
@@ -484,6 +541,8 @@ function MobileEventCard({
         leave={leave}
         workMode={workMode}
         onRequestLeave={onRequestLeave}
+        onEditLeave={onEditLeave}
+        onCancelLeave={onCancelLeave}
         onRequestWorkMode={onRequestWorkMode}
         onCancelWorkMode={onCancelWorkMode}
       />
@@ -494,6 +553,8 @@ function MobileEventCard({
 interface MobileEventListProps {
   events: CalendarEvent[];
   onRequestLeave: (dateStr: string) => void;
+  onEditLeave: (dateStr: string) => void;
+  onCancelLeave: (dateStr: string) => void;
   onRequestWorkMode: (dateStr: string) => void;
   onCancelWorkMode: (dateStr: string) => void;
 }
@@ -501,6 +562,8 @@ interface MobileEventListProps {
 export function MobileEventList({
   events,
   onRequestLeave,
+  onEditLeave,
+  onCancelLeave,
   onRequestWorkMode,
   onCancelWorkMode,
 }: MobileEventListProps) {
@@ -519,6 +582,8 @@ export function MobileEventList({
             key={event.date.toISOString()}
             event={event}
             onRequestLeave={onRequestLeave}
+            onEditLeave={onEditLeave}
+            onCancelLeave={onCancelLeave}
             onRequestWorkMode={onRequestWorkMode}
             onCancelWorkMode={onCancelWorkMode}
           />
