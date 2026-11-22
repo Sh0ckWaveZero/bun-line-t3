@@ -12,6 +12,7 @@ import {
   findParticipant,
   generateRoomCode,
   isRoomExpired,
+  kickParticipant,
   pruneParticipants,
   removeParticipant,
   renameParticipant,
@@ -156,12 +157,17 @@ export const pokerRoomService = {
     );
     if (!joined.ok) return joined;
 
-    store.set(code, joined.value.room);
+    // จำ token คนสร้างห้อง — แหล่งสิทธิ์เตะผู้เล่น (ไม่ผูกบทบาท แม้สลับเป็น spectator ก็ยังเตะได้)
+    const roomWithCreator = {
+      ...joined.value.room,
+      creatorToken: joined.value.participant.token,
+    };
+    store.set(code, roomWithCreator);
     return {
       ok: true,
       value: {
         room: toPublicRoom(
-          joined.value.room,
+          roomWithCreator,
           joined.value.participant.token,
           now,
         ),
@@ -287,5 +293,7 @@ const applyAction = (
       return setParticipantRole(room, token, action.role, now);
     case "story":
       return setStory(room, token, action.story, now);
+    case "kick":
+      return kickParticipant(room, token, action.participantId, now);
   }
 };

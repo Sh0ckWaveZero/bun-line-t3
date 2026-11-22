@@ -9,6 +9,7 @@ import {
   castVote,
   createRoom,
   generateRoomCode,
+  kickParticipant,
   pruneParticipants,
   renameParticipant,
   resetRound,
@@ -415,5 +416,160 @@ describe("ประวัติรอบและตัวจับเวลา"
     const view = toPublicRoom(newRoom(), null, NOW + 123);
     expect(view.serverNow).toBe(NOW + 123);
     expect(view.roundStartedAt).toBe(NOW);
+  });
+});
+
+describe("kickParticipant (เตะผู้เล่น — สิทธิ์ผูกกับคนสร้างห้อง)", () => {
+  /** ห้องที่มีคนสร้าง join แล้ว (creator เป็น spectator ตาม use case หลัก) ตามด้วยผู้เล่น */
+  const roomWithCreator = (
+    names: string[],
+    creatorRole: "voter" | "spectator" = "spectator",
+  ) => {
+    const base = newRoom("fibonacci");
+    const creator = join(base, "Owner", creatorRole);
+    // จำ creatorToken แบบเดียวกับ pokerRoomService.create
+    let room: Room = {
+      ...creator.room,
+      creatorToken: creator.participant.token,
+    };
+    const participants: Participant[] = [creator.participant];
+    for (const name of names) {
+      const joined = join(room, name);
+      room = joined.room;
+      participants.push(joined.participant);
+    }
+    return { room, participants };
+  };
+
+  test("คนสร้างห้องที่สลับเป็น spectator เตะผู้เล่นออกได้", () => {
+    const { room, participants } = roomWithCreator(["A", "B"]);
+    const [owner, a] = participants as [Participant, Participant];
+
+    const next = unwrap(kickParticipant(room, owner.token, a.id, NOW));
+
+    expect(next.participants.map((p) => p.name)).toEqual(["Owner", "B"]);
+    expect(next.updatedAt).toBe(NOW);
+  });
+
+  test("คนสร้างที่ยังเป็น voter ก็เตะได้ (สิทธิ์ไม่ผูกบทบาท)", () => {
+    const { room, participants } = roomWithCreator(["A"], "voter");
+    const [owner, a] = participants as [Participant, Participant];
+
+    const next = unwrap(kickParticipant(room, owner.token, a.id, NOW));
+
+    expect(next.participants.map((p) => p.name)).toEqual(["Owner"]);
+  });
+
+  test("คนอื่นเตะไม่ได้ แม้เป็น voter", () => {
+    const { room, participants } = roomWithCreator(["A", "B"]);
+    const [, a, b] = participants as [Participant, Participant, Participant];
+
+    const result = kickParticipant(room, a.token, b.id, NOW);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.status).toBe(403);
+      expect(result.error).toBe(
+        "Only the room creator or a spectator can remove players",
+      );
+    }
+  });
+
+  test("spectator ทั่วไป (ไม่ใช่เจ้าของห้อง) เตะผู้เล่นออกได้", () => {
+    const { room, participants } = roomWithCreator(["A", "B"]);
+    const [, a, b] = participants as [Participant, Participant, Participant];
+    // A สลับเป็น spectator → เข้าข่าย "spectator ทุกคนเตะได้"
+    const withRole = unwrap(
+      setParticipantRole(room, a.token, "spectator", NOW),
+    );
+
+    const next = unwrap(kickParticipant(withRole, a.token, b.id, NOW));
+
+    expect(next.participants.map((p) => p.name)).toEqual(["Owner", "A"]);
+  });
+
+  test("spectator ทั่วไปเตะ voter ได้แม้ตัวเองไม่เคยเป็นเจ้าของ", () => {
+    const { room, participants } = roomWithCreator(["A", "B"]);
+    const [, a] = participants as [Participant, Participant];
+    const spectator = join(room, "Watcher", "spectator");
+
+    const next = unwrap(
+      kickParticipant(spectator.room, spectator.participant.token, a.id, NOW),
+    );
+
+    expect(next.participants.map((p) => p.name)).toEqual([
+      "Owner",
+      "B",
+      "Watcher",
+    ]);
+  });
+
+  test("เตะตัวเองไม่ได้ — ให้ใช้ Leave room แทน", () => {
+    const { room, participants } = roomWithCreator(["A"]);
+    const [owner] = participants as [Participant];
+
+    const result = kickParticipant(room, owner.token, owner.id, NOW);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.status).toBe(400);
+      expect(result.error).toBe(
+        "You can't remove yourself — use Leave room instead",
+      );
+    }
+  });
+
+  test("เตะ id ที่ไม่อยู่ในห้องแล้ว (ออกไปเอง/โดนเตะไปก่อน) แจ้ง 404", () => {
+    const { room, participants } = roomWithCreator(["A"]);
+    const [owner] = participants as [Participant];
+
+    const result = kickParticipant(room, owner.token, "missing-id", NOW);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.status).toBe(404);
+      expect(result.error).toBe(
+        "Player not found — they may have already left",
+      );
+    }
+  });
+
+  test("token ไม่มีในห้องแล้ว แจ้ง 401", () => {
+    const { room, participants } = roomWithCreator(["A"]);
+    const [, a] = participants as [Participant, Participant];
+
+    const result = kickParticipant(room, "stale-token", a.id, NOW);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.status).toBe(401);
+  });
+
+  test("toPublicRoom ส่ง isCreator เฉพาะคนสร้างห้อง (ไม่ขึ้นกับบทบาท)", () => {
+    const { room, participants } = roomWithCreator(["A"]);
+    const [owner, a] = participants as [Participant, Participant];
+
+    const ownerView = toPublicRoom(room, owner.token, NOW);
+    const voterView = toPublicRoom(room, a.token, NOW);
+    const guestView = toPublicRoom(room, null, NOW);
+
+    expect(ownerView.isCreator).toBe(true);
+    expect(voterView.isCreator).toBe(false);
+    expect(guestView.isCreator).toBe(false);
+  });
+
+  test("toPublicRoom ส่ง canKick = เจ้าของห้องหรือ spectator", () => {
+    const { room, participants } = roomWithCreator(["A"]);
+    const [owner, a] = participants as [Participant, Participant];
+    const spectator = join(room, "Watcher", "spectator");
+
+    const ownerView = toPublicRoom(room, owner.token, NOW);
+    const voterView = toPublicRoom(room, a.token, NOW);
+    const spectatorView = toPublicRoom(spectator.room, spectator.participant.token, NOW);
+    const guestView = toPublicRoom(room, null, NOW);
+
+    expect(ownerView.canKick).toBe(true); // เจ้าของ (แม้ creator เป็น spectator อยู่แล้ว)
+    expect(voterView.canKick).toBe(false); // voter ทั่วไป
+    expect(spectatorView.canKick).toBe(true); // spectator ทั่วไป
+    expect(guestView.canKick).toBe(false); // ยังไม่ join
   });
 });
