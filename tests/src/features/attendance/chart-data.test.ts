@@ -1,4 +1,6 @@
 import { describe, expect, test } from "bun:test";
+import { format } from "date-fns";
+import { th } from "date-fns/locale";
 import {
   buildDailyAverageHoursData,
   buildHoursChartData,
@@ -17,21 +19,31 @@ const makeRecord = (
   ...overrides,
 });
 
+/** label ที่ helper ควรสร้างจาก date-only string — คำนวณด้วยรูปแบบเดียวกันเพื่อไม่ผูกกับ TZ ของเครื่อง */
+const expectLabel = (iso: string, pattern: "d MMM" | "d"): string =>
+  format(new Date(iso), pattern, { locale: th });
+
 describe("buildHoursChartData", () => {
   test("เรียง record ตามวันที่และจับคู่ label เต็มกับ label ย่อ", () => {
-    const { points, compactLabels } = buildHoursChartData([
+    const input = [
       makeRecord({ id: "a", workDate: "2026-11-05", hoursWorked: 8 }),
       makeRecord({ id: "b", workDate: "2026-11-02", hoursWorked: 9 }),
       makeRecord({ id: "c", workDate: "2026-11-09", hoursWorked: 7.8 }),
-    ]);
+    ];
+    const { points, compactLabels } = buildHoursChartData(input);
+    const sorted = [...input].sort(
+      (a, b) => new Date(a.workDate).getTime() - new Date(b.workDate).getTime(),
+    );
 
-    expect(points.map((point) => point.label)).toEqual([
-      "2 พ.ย.",
-      "5 พ.ย.",
-      "9 พ.ย.",
-    ]);
-    expect(compactLabels).toEqual(["2", "5", "9"]);
-    expect(points.map((point) => point.value)).toEqual([9, 8, 7.8]);
+    expect(points.map((point) => point.label)).toEqual(
+      sorted.map((record) => expectLabel(record.workDate, "d MMM")),
+    );
+    expect(compactLabels).toEqual(
+      sorted.map((record) => expectLabel(record.workDate, "d")),
+    );
+    expect(points.map((point) => point.value)).toEqual(
+      sorted.map((record) => record.hoursWorked),
+    );
   });
 
   test("ชั่วโมงที่เป็น null นับเป็น 0", () => {
@@ -46,7 +58,8 @@ describe("buildHoursChartData", () => {
     ]);
     expect(points[0]?.label).toBe("Invalid");
     expect(compactLabels).toContain("Invalid");
-    expect(points[1]?.label).toBe("2 พ.ย.");
+    expect(points[1]?.label).not.toBe("Invalid");
+    expect(points[1]?.label).toBe(expectLabel("2026-11-02", "d MMM"));
   });
 });
 
@@ -66,11 +79,12 @@ describe("buildDailyAverageHoursData", () => {
   });
 
   test("เฉลี่ยชั่วโมงรายวันของสัปดาห์ถูกต้อง และวันที่ไม่มีข้อมูลเป็น 0", () => {
-    // เลือกวันที่ที่ getDay() === 1 (วันจันทร์) แบบไม่ผูกกับ timezone ของเครื่อง
+    // เลือกวันที่ที่ parse แล้วเป็นวันจันทร์ด้วยรูปแบบสตริงเดียวกับที่ helper อ่าน
+    // (workDate เป็น date-only string) — self-consistent ทุก timezone ของเครื่อง
     const monday = Array.from({ length: 7 }, (_, i) => {
-      const date = new Date(2026, 10, 2 + i);
-      return { date, iso: date.toISOString().slice(0, 10) };
-    }).find(({ date }) => date.getDay() === 1)!.iso;
+      const iso = `2026-11-${String(2 + i).padStart(2, "0")}`;
+      return { iso, day: new Date(iso).getDay() };
+    }).find(({ day }) => day === 1)!.iso;
 
     const { values, labels } = buildDailyAverageHoursData([
       makeRecord({ id: "a", workDate: monday, hoursWorked: 8 }),
