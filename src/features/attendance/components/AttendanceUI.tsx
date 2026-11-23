@@ -128,7 +128,7 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="inline-flex h-10 w-[220px] cursor-pointer items-center justify-start gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm font-medium text-slate-800 transition-colors outline-none hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08]"
+          className="inline-flex h-10 w-full cursor-pointer items-center justify-start gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm font-medium text-slate-800 transition-colors outline-none hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none sm:w-[220px] dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08]"
         >
           <CalendarIcon
             className="size-4 shrink-0 text-slate-400"
@@ -144,7 +144,8 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({
         <MonthPicker
           selected={selectedDate}
           onSelect={handleDateSelect}
-          className="p-4"
+          // จอแคบ (<360px): ลด padding ลงเพื่อให้ popover กว้าง 308px พอดีจอ ไม่ล้นขอบ
+          className="p-4 max-[359px]:p-2"
         />
       </PopoverContent>
     </Popover>

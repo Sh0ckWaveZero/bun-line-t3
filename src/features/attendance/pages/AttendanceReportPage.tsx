@@ -8,6 +8,8 @@ import {
   EditAttendanceModal,
   ErrorMessage,
   MonthSelector,
+  SUMMARY_CARD_SPANS,
+  SUMMARY_GRID_CLASS,
   UserInfoCard,
 } from "@/features/attendance/components";
 import { useAttendanceReport } from "@/features/attendance/hooks/useAttendanceReport";
@@ -24,14 +26,23 @@ function AttendanceReportSkeleton() {
   return (
     <div>
       <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 dark:border-white/[0.08]">
-        <div className="skel-bar h-10 w-[220px] rounded-xl" />
-        <div className="skel-bar h-12 w-44 rounded-xl" />
+        <div className="skel-bar h-10 w-full rounded-xl sm:w-[220px]" />
+        <div className="skel-bar h-12 w-full rounded-xl sm:w-44" />
       </div>
-      <div className="grid grid-cols-2 gap-3 border-b border-slate-200 px-5 py-5 sm:grid-cols-3 sm:px-6 lg:grid-cols-5 dark:border-white/[0.08]">
-        {Array.from({ length: 5 }, (_, index) => (
+      {/* โครงกริดเดียวกับ AttendanceSummaryCards — มือถือ 2 คอลัมน์ ใบสุดท้ายเต็มแถว */}
+      <div
+        className={cn(
+          SUMMARY_GRID_CLASS,
+          "border-b border-slate-200 px-5 py-5 sm:px-6 dark:border-white/[0.08]",
+        )}
+      >
+        {SUMMARY_CARD_SPANS.map((span, index) => (
           <div
             key={index}
-            className="rounded-xl border border-slate-200/80 bg-slate-50/60 px-4 py-3 dark:border-white/[0.06] dark:bg-white/[0.02]"
+            className={cn(
+              "rounded-xl border border-slate-200/80 bg-slate-50/60 px-3 py-3 sm:px-4 dark:border-white/[0.06] dark:bg-white/[0.02]",
+              span,
+            )}
           >
             <div className="skel-bar h-3 w-16 rounded-md" />
             <div className="skel-bar mt-2 h-6 w-12 rounded-md" />
@@ -53,20 +64,43 @@ function AttendanceReportSkeleton() {
           </div>
         ))}
       </div>
-      <div className="border-t border-slate-200 px-5 py-4 sm:px-6 dark:border-white/[0.08]">
-        <div className="skel-bar h-4 w-44 rounded-md" />
-        {Array.from({ length: 4 }, (_, index) => (
-          <div
-            key={index}
-            className="flex items-center gap-3 border-b border-slate-200/80 py-3 last:border-b-0 dark:border-white/[0.07]"
-          >
-            <div className="skel-bar h-3.5 w-24 rounded-md" />
-            <div className="skel-bar h-3.5 w-16 rounded-md" />
-            <div className="skel-bar h-3.5 w-16 rounded-md" />
-            <div className="skel-bar h-3.5 w-12 rounded-md" />
-            <div className="skel-bar h-6 w-24 rounded-full" />
-          </div>
-        ))}
+      <div className="border-t border-slate-200 px-5 pt-5 pb-4 sm:px-6 dark:border-white/[0.08]">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+          <div className="skel-bar h-4 w-44 rounded-md" />
+          <div className="skel-bar hidden h-3 w-52 rounded-md sm:block" />
+        </div>
+
+        {/* มือถือ: โครงเดียวกับรายการแบบแถวของ AttendanceTable */}
+        <div className="mt-3 divide-y divide-slate-200/80 border-t border-slate-200/80 sm:hidden dark:divide-white/[0.07] dark:border-white/[0.08]">
+          {Array.from({ length: 6 }, (_, index) => (
+            <div key={index} className="py-3">
+              <div className="flex items-center justify-between">
+                <div className="skel-bar h-4 w-24 rounded-md" />
+                <div className="skel-bar h-5 w-24 rounded-full" />
+              </div>
+              <div className="mt-2 flex items-center justify-between">
+                <div className="skel-bar h-3 w-40 rounded-md" />
+                <div className="skel-bar h-10 w-20 rounded-lg" />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* เดสก์ท็อป: โครงแบบแถวตาราง */}
+        <div className="hidden pt-3 sm:block">
+          {Array.from({ length: 4 }, (_, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-3 border-b border-slate-200/80 py-3 last:border-b-0 dark:border-white/[0.07]"
+            >
+              <div className="skel-bar h-3.5 w-24 rounded-md" />
+              <div className="skel-bar h-3.5 w-16 rounded-md" />
+              <div className="skel-bar h-3.5 w-16 rounded-md" />
+              <div className="skel-bar h-3.5 w-12 rounded-md" />
+              <div className="skel-bar h-6 w-24 rounded-full" />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

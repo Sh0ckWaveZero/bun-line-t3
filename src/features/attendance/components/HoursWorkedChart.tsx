@@ -18,7 +18,7 @@ export const HoursWorkedChart: React.FC<HoursWorkedChartProps> = ({
   records,
 }) => {
   const { isDark } = useChartTheme();
-  const points = useHoursChartData(records);
+  const { points, compactLabels } = useHoursChartData(records);
 
   if (records.length === 0) {
     return (
@@ -35,6 +35,7 @@ export const HoursWorkedChart: React.FC<HoursWorkedChartProps> = ({
       <div className="min-h-0 flex-1">
         <LazyLineChart
           points={points}
+          compactLabels={compactLabels}
           targetLine={9}
           yMax={maxHours}
           formatValue={(value) => `${value} ชม.`}

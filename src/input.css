@@ -1161,14 +1161,19 @@
 
   /* skeleton loader & reveal (transitions.dev) — วางทั้งสอง layer ใน grid cell เดียวกัน
      เพื่อให้ layer ที่สูงกว่ากำหนดความสูงจริงของ section ป้องกัน skeleton ล้นไปทับเนื้อหาถัดไป
-     พอข้อมูลมา: skeleton จาง+เบลอออก พร้อม content ชัดขึ้น (cross-fade เดียวกันทั้งคู่) */
+     พอข้อมูลมา: skeleton จาง+เบลอออก พร้อม content ชัดขึ้น (cross-fade เดียวกันทั้งคู่)
+     track เป็น minmax(0, 1fr) และทั้งสอง layer มี min-width: 0 เพื่อให้ cell กว้างเท่า container
+     เสมอ — ไม่งั้น min-content ของเนื้อหาที่กว้างกว่าจอ (เช่นตาราง min-w ใน overflow-x-auto)
+     จะดัน cell กว้างเกินจอ แล้วโดน overflow-hidden ของ section ตัดขาด กวาดดูส่วนที่ล้นไม่ได้ */
   .t-skel {
     position: relative;
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .t-skel-skeleton {
     grid-area: 1 / 1;
+    min-width: 0;
     z-index: 1;
     opacity: 1;
     filter: blur(0);
@@ -1179,6 +1184,7 @@
 
   .t-skel-content {
     grid-area: 1 / 1;
+    min-width: 0;
     opacity: 0;
     filter: blur(var(--reveal-blur));
     transition:

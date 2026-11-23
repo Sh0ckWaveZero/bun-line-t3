@@ -42,7 +42,7 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-label={open ? "ซ่อนกราฟ" : "แสดงกราฟ"}
-          className="inline-flex size-8 cursor-pointer items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none dark:text-slate-400 dark:hover:bg-white/[0.08]"
+          className="inline-flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none sm:size-8 dark:text-slate-400 dark:hover:bg-white/[0.08]"
         >
           <ChevronDown
             className={cn(
