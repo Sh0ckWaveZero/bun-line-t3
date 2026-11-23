@@ -3,6 +3,7 @@ import type {
   BarChartProps,
   DoughnutChartProps,
   DoughnutSlice,
+  LineChartPoint,
   LineChartProps,
 } from "./tanstack-charts";
 
@@ -10,6 +11,7 @@ export type {
   BarChartProps,
   DoughnutChartProps,
   DoughnutSlice,
+  LineChartPoint,
   LineChartProps,
 };
 

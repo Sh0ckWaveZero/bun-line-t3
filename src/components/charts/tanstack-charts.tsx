@@ -23,6 +23,36 @@ import { cn } from "@/lib/utils";
 const MONOTONE_X = d3Curve(curveMonotoneX);
 
 /* ------------------------------------------------------------------ */
+/* Responsive tick labels — surface แคบเกินกว่า label เต็มจะไม่ชนกัน  */
+/* ให้สลับไปใช้ compactLabels (เช่น "23 พ.ย." → "23", "พฤหัสบดี" → "พฤ.") */
+/* ------------------------------------------------------------------ */
+
+/** label เต็มของกราฟเส้น (วันที่/ตัวเลข) กว้างราว 27–32px ที่ fontSize 10 */
+const LINE_COMPACT_SLOT_PX = 42;
+/** label หมวดของกราฟแท่งเป็นคำที่ยาวกว่า (ราว 37px) — ต่ำกว่านี้ให้ย่อ */
+const BAR_COMPACT_SLOT_PX = 52;
+
+const createCompactTickFormat = (
+  labels: readonly string[],
+  compactLabels: readonly string[] | undefined,
+): ((label: string) => string) | undefined => {
+  if (!compactLabels) return undefined;
+  const compactByLabel = new Map(
+    labels.map((label, index) => [label, compactLabels[index] ?? label]),
+  );
+  return (label) => compactByLabel.get(label) ?? label;
+};
+
+/** ticks: false จะตัดทั้งขีดและ label — size: 0 ซ่อนเฉพาะขีด ยังแสดง label ของแกน x */
+const xTickOptions = (
+  formatCompactTick: ((label: string) => string) | undefined,
+  isCompact: boolean,
+) => ({
+  size: 0,
+  ...(formatCompactTick && isCompact ? { format: formatCompactTick } : {}),
+});
+
+/* ------------------------------------------------------------------ */
 /* Line chart — เส้น + พื้นที่ใต้เส้น + เส้นเป้าหมายประ                  */
 /* ------------------------------------------------------------------ */
 
@@ -33,6 +63,8 @@ export interface LineChartPoint {
 
 export interface LineChartProps {
   points: LineChartPoint[];
+  /** label ย่อ เรียงเทียบกับ points — ใช้บนแกน x เมื่อ surface แคบจน label เต็มจะชนกัน */
+  compactLabels?: readonly string[];
   /** เส้นเป้าหมายแนวนอนแบบเส้นประ (เช่น 9 ชม.) */
   targetLine?: number;
   yMax?: number;
@@ -43,6 +75,7 @@ export interface LineChartProps {
 
 export const LineChart: React.FC<LineChartProps> = ({
   points,
+  compactLabels,
   targetLine,
   yMax,
   formatValue,
@@ -57,63 +90,74 @@ export const LineChart: React.FC<LineChartProps> = ({
     if (points.length === 0) return null;
     const max = yMax ?? Math.max(10, ...points.map((point) => point.value));
     const fmt = formatValue ?? ((value: number) => `${value}`);
+    const labels = points.map((point) => point.label);
+    const formatCompactTick = createCompactTickFormat(labels, compactLabels);
 
-    return defineChart({
-      theme: chartTheme,
-      marks: [
-        areaY(points, {
-          x: "label",
-          y: "value",
-          fill: lineColor,
-          fillOpacity: 0.12,
-          curve: MONOTONE_X,
-        }),
-        lineY(points, {
-          x: "label",
-          y: "value",
-          stroke: lineColor,
-          strokeWidth: 2.5,
-          curve: MONOTONE_X,
-          points: true,
-        }),
-        ...(targetLine === undefined
-          ? []
-          : [
-              ruleY([targetLine], {
-                stroke: targetColor,
-                strokeWidth: 1.5,
-                strokeDasharray: "6 4",
-              }),
-            ]),
-      ],
-      scales: {
-        x: {
-          scale: scalePoint<string>().domain(
-            points.map((point) => point.label),
-          ),
-          axis: {
-            line: false,
-            ticks: false,
-            tickLabels: { fontSize: 10, thin: true },
+    return defineChart(
+      ({ width }) => {
+        const isCompact =
+          formatCompactTick !== undefined &&
+          width / points.length < LINE_COMPACT_SLOT_PX;
+
+        return {
+          theme: chartTheme,
+          marks: [
+            areaY(points, {
+              x: "label",
+              y: "value",
+              fill: lineColor,
+              fillOpacity: 0.12,
+              curve: MONOTONE_X,
+            }),
+            lineY(points, {
+              x: "label",
+              y: "value",
+              stroke: lineColor,
+              strokeWidth: 2.5,
+              curve: MONOTONE_X,
+              points: true,
+            }),
+            ...(targetLine === undefined
+              ? []
+              : [
+                  ruleY([targetLine], {
+                    stroke: targetColor,
+                    strokeWidth: 1.5,
+                    strokeDasharray: "6 4",
+                  }),
+                ]),
+          ],
+          scales: {
+            x: {
+              scale: scalePoint<string>().domain(labels),
+              axis: {
+                line: false,
+                ticks: xTickOptions(formatCompactTick, isCompact),
+                tickLabels: { fontSize: 10, thin: true },
+              },
+            },
+            y: {
+              scale: scaleLinear().domain([0, max]),
+              grid: true,
+              axis: {
+                line: false,
+                ticks: { count: 4, format: fmt, line: false },
+                tickLabels: { fontSize: 10 },
+              },
+            },
           },
-        },
-        y: {
-          scale: scaleLinear().domain([0, max]),
-          grid: true,
-          axis: {
-            line: false,
-            ticks: { count: 4, format: fmt, line: false },
-            tickLabels: { fontSize: 10 },
-          },
+        };
+      },
+      {
+        tooltip: {
+          use: tooltip,
+          format: (point) => `${point.datum.label}: ${fmt(point.datum.value)}`,
         },
       },
-      tooltip: {
-        use: tooltip,
-        format: (point) => `${point.datum.label}: ${fmt(point.datum.value)}`,
-      },
-    });
+    );
   }, [
     points,
+    compactLabels,
     targetLine,
     yMax,
     formatValue,
@@ -130,7 +174,12 @@ export const LineChart: React.FC<LineChartProps> = ({
       <Chart
         definition={definition}
         ariaLabel={ariaLabel}
-        style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+        }}
       />
     </div>
   );
@@ -148,6 +197,8 @@ export interface BarChartSeries {
 
 export interface BarChartProps {
   labels: string[];
+  /** label ย่อ เรียงเทียบกับ labels — ใช้บนแกน x เมื่อ surface แคบจน label เต็มจะชนกัน */
+  compactLabels?: readonly string[];
   series: BarChartSeries[];
   yMax?: number;
   /** สีรายแท่ง (override สีของ series) — ยาวเท่ากับ labels */
@@ -162,6 +213,7 @@ export interface BarChartProps {
 
 export const BarChart: React.FC<BarChartProps> = ({
   labels,
+  compactLabels,
   series,
   yMax,
   barColors,
@@ -191,55 +243,67 @@ export const BarChart: React.FC<BarChartProps> = ({
     const fmt = formatValue ?? ((value: number) => `${value}`);
     const yFmt = formatYTick ?? fmt;
     const perLabelColor = barColors !== undefined;
+    const formatCompactTick = createCompactTickFormat(labels, compactLabels);
 
-    return defineChart({
-      theme: chartTheme,
-      color: perLabelColor
-        ? { domain: labels, range: barColors }
-        : {
-            domain: series.map((item) => item.label),
-            range: series.map((item) => item.color),
+    return defineChart(
+      ({ width }) => {
+        const isCompact =
+          formatCompactTick !== undefined &&
+          width / labels.length < BAR_COMPACT_SLOT_PX;
+
+        return {
+          theme: chartTheme,
+          color: perLabelColor
+            ? { domain: labels, range: barColors }
+            : {
+                domain: series.map((item) => item.label),
+                range: series.map((item) => item.color),
+              },
+          marks: [
+            barY(rows, {
+              x: "label",
+              y: "value",
+              ...(perLabelColor
+                ? { color: "label" }
+                : { z: "series", color: "series" }),
+              radius: [4, 4, 0, 0],
+              inset: series.length > 1 ? 3 : 8,
+            }),
+          ],
+          scales: {
+            x: {
+              scale: scaleBand<string>().domain(labels),
+              axis: {
+                line: false,
+                ticks: xTickOptions(formatCompactTick, isCompact),
+                tickLabels: { fontSize: 10, thin: true },
+              },
+            },
+            y: {
+              scale: scaleLinear().domain([0, max]),
+              grid: true,
+              axis: {
+                line: false,
+                ticks: { count: 4, format: yFmt, line: false },
+                tickLabels: { fontSize: 10 },
+              },
+            },
           },
-      marks: [
-        barY(rows, {
-          x: "label",
-          y: "value",
-          ...(perLabelColor
-            ? { color: "label" }
-            : { z: "series", color: "series" }),
-          radius: [4, 4, 0, 0],
-          inset: series.length > 1 ? 3 : 8,
-        }),
-      ],
-      scales: {
-        x: {
-          scale: scaleBand<string>().domain(labels),
-          axis: {
-            line: false,
-            ticks: false,
-            tickLabels: { fontSize: 10, thin: true },
-          },
-        },
-        y: {
-          scale: scaleLinear().domain([0, max]),
-          grid: true,
-          axis: {
-            line: false,
-            ticks: { count: 4, format: yFmt, line: false },
-            tickLabels: { fontSize: 10 },
-          },
-        },
+        };
       },
-      tooltip: tooltipDisabled
-        ? false
-        : {
-            use: tooltip,
-            format: (point) =>
-              `${point.datum.series}: ${fmt(point.datum.value)}`,
-          },
-    });
+      {
+        tooltip: tooltipDisabled
+          ? false
+          : {
+              use: tooltip,
+              format: (point) =>
+                `${point.datum.series}: ${fmt(point.datum.value)}`,
+            },
+      },
+    );
   }, [
     labels,
+    compactLabels,
     series,
     yMax,
     barColors,

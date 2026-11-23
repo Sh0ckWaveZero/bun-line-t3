@@ -18,7 +18,7 @@ export const DailyAverageChart: React.FC<DailyAverageChartProps> = ({
   records,
 }) => {
   const { isDark } = useChartTheme();
-  const { labels, values } = useDailyAverageHoursData(records);
+  const { labels, values, compactLabels } = useDailyAverageHoursData(records);
 
   if (records.length === 0) {
     return (
@@ -31,6 +31,7 @@ export const DailyAverageChart: React.FC<DailyAverageChartProps> = ({
   return (
     <LazyBarChart
       labels={labels}
+      compactLabels={compactLabels}
       series={[
         {
           label: "ชั่วโมงทำงานเฉลี่ยตามวัน",

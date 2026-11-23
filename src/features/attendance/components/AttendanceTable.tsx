@@ -4,16 +4,18 @@ import React from "react";
 
 import { AttendanceStatusType } from "@/features/attendance/types/attendance-status";
 import {
-  dateFormatters,
-  formatHoursSafe,
-  formatDateSafe,
-} from "@/lib/utils/date-formatting";
+  getRecordCheckInText,
+  getRecordCheckOutText,
+  getRecordHoursText,
+} from "@/features/attendance/helpers/record-display";
+import { dateFormatters, formatDateSafe } from "@/lib/utils/date-formatting";
 import { AttendanceRecord, AttendanceTableProps } from "@/lib/types/attendance";
 import { LeaveStatusBadge } from "@/components/ui/LeaveStatusBadge";
+import { cn } from "@/lib/utils";
 import { Pencil } from "lucide-react";
 
 const EmptyTableMessage = () => (
-  <div className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+  <div className="px-5 py-8 text-center text-sm text-slate-500 sm:px-6 dark:text-slate-400">
     ไม่มีข้อมูลการเข้างานในเดือนนี้
   </div>
 );
@@ -52,6 +54,14 @@ const getStatusText = (status: AttendanceStatusType) => {
   }
 };
 
+const formatWorkDate = (workDate: string): string =>
+  formatDateSafe(workDate, {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    calendar: "buddhist",
+  });
+
 const TABLE_HEAD_CLASS =
   "text-[11px] font-semibold tracking-wide text-slate-500 dark:text-slate-400";
 const ROW_CLASS =
@@ -70,7 +80,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
 
   return (
     <div>
-      <div className="flex items-baseline justify-between px-5 pt-5 sm:px-6">
+      <div className="flex flex-col gap-1 px-5 pt-5 sm:flex-row sm:items-baseline sm:justify-between sm:px-6">
         <h2 className="text-base font-semibold text-slate-900 dark:text-white">
           รายละเอียดการเข้างาน
         </h2>
@@ -79,116 +89,172 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
           รายการ
         </p>
       </div>
-      <div className="overflow-x-auto px-5 pt-3 pb-5 sm:px-6">
-        <table className="w-full min-w-[720px] border-collapse text-left">
-          <caption className="sr-only">
-            รายการลงเวลาเข้า-ออกงานรายวันของเดือนที่เลือก
-          </caption>
-          <thead className="bg-slate-50/80 dark:bg-white/[0.02]">
-            <tr className={TABLE_HEAD_CLASS}>
-              <th
-                scope="col"
-                className="sticky left-0 z-10 min-w-[130px] bg-slate-50/80 px-3 py-3 text-left dark:bg-[#1b1e21]"
-              >
-                วันที่
-              </th>
-              <th scope="col" className="min-w-[90px] px-3 py-3 text-left">
-                เวลาเข้า
-              </th>
-              <th scope="col" className="min-w-[90px] px-3 py-3 text-left">
-                เวลาออก
-              </th>
-              <th scope="col" className="min-w-[80px] px-3 py-3 text-left">
-                ชั่วโมง
-              </th>
-              <th scope="col" className="min-w-[130px] px-3 py-3 text-left">
-                สถานะ
-              </th>
-              <th scope="col" className="min-w-[80px] px-3 py-3 text-left">
-                จัดการ
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200/80 dark:divide-white/[0.07]">
-            {sortedRecords.map((record) => {
-              const isToday = record.workDate === today;
-              return (
-                <tr key={record.id} className={ROW_CLASS}>
-                  <td
-                    className={`sticky left-0 z-10 bg-white px-3 py-3 text-sm whitespace-nowrap dark:bg-[#151719] ${
-                      isToday
-                        ? "font-semibold text-slate-900 dark:text-white"
-                        : "text-slate-700 dark:text-slate-200"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span>
-                        {formatDateSafe(record.workDate, {
-                          day: "2-digit",
-                          month: "2-digit",
-                          year: "numeric",
-                          calendar: "buddhist",
-                        })}
-                      </span>
-                      {isToday && (
-                        <span className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
-                          วันนี้
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-3 py-3 font-mono text-sm whitespace-nowrap text-slate-600 dark:text-slate-300">
-                    {record.status === AttendanceStatusType.LEAVE
-                      ? record.checkInTime
-                        ? dateFormatters.time24(record.checkInTime)
-                        : "08:00"
-                      : dateFormatters.time24(record.checkInTime)}
-                  </td>
-                  <td className="px-3 py-3 font-mono text-sm whitespace-nowrap text-slate-600 dark:text-slate-300">
-                    {record.status === AttendanceStatusType.LEAVE
-                      ? record.checkOutTime
-                        ? dateFormatters.time24(record.checkOutTime)
-                        : "17:00"
-                      : record.checkOutTime
-                        ? dateFormatters.time24(record.checkOutTime)
-                        : "-"}
-                  </td>
-                  <td className="px-3 py-3 font-mono text-sm whitespace-nowrap text-slate-600 dark:text-slate-300">
-                    {record.status === AttendanceStatusType.LEAVE
-                      ? record.hoursWorked
-                        ? formatHoursSafe(record.hoursWorked)
-                        : "9.00"
-                      : formatHoursSafe(record.hoursWorked)}
-                  </td>
-                  <td className="px-3 py-3 whitespace-nowrap">
-                    {record.status === AttendanceStatusType.LEAVE &&
-                    record.leaveInfo ? (
-                      <LeaveStatusBadge
-                        record={record}
-                        statusText={getStatusText(record.status)}
-                        statusColor={getStatusColor(record.status)}
-                        recordId={record.id}
-                      />
-                    ) : (
-                      <span
-                        className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${getStatusColor(record.status)}`}
-                      >
-                        {getStatusText(record.status)}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-3 py-3 whitespace-nowrap">
-                    <EditButton record={record} onEdit={onEditRecord} />
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
 
-        {sortedRecords.length === 0 && <EmptyTableMessage />}
-      </div>
+      {sortedRecords.length === 0 ? (
+        <EmptyTableMessage />
+      ) : (
+        <>
+          {/* มือถือ: รายการแบบแถว เห็นครบทุกช่องโดยไม่ต้องเลื่อนแนวนอน */}
+          <ul className="mt-3 divide-y divide-slate-200/80 border-t border-slate-200/80 sm:hidden dark:divide-white/[0.07] dark:border-white/[0.08]">
+            {sortedRecords.map((record) => (
+              <AttendanceRecordItem
+                key={record.id}
+                record={record}
+                isToday={record.workDate === today}
+                onEdit={onEditRecord}
+              />
+            ))}
+          </ul>
+
+          {/* เดสก์ท็อป: ตาราง */}
+          <div className="hidden overflow-x-auto px-5 pt-3 pb-5 sm:block sm:px-6">
+            <table className="w-full min-w-[720px] border-collapse text-left">
+              <caption className="sr-only">
+                รายการลงเวลาเข้า-ออกงานรายวันของเดือนที่เลือก
+              </caption>
+              <thead className="bg-slate-50/80 dark:bg-white/[0.02]">
+                <tr className={TABLE_HEAD_CLASS}>
+                  <th
+                    scope="col"
+                    className="sticky left-0 z-10 min-w-[130px] bg-slate-50/80 px-3 py-3 text-left dark:bg-[#1b1e21]"
+                  >
+                    วันที่
+                  </th>
+                  <th scope="col" className="min-w-[90px] px-3 py-3 text-left">
+                    เวลาเข้า
+                  </th>
+                  <th scope="col" className="min-w-[90px] px-3 py-3 text-left">
+                    เวลาออก
+                  </th>
+                  <th scope="col" className="min-w-[80px] px-3 py-3 text-left">
+                    ชั่วโมง
+                  </th>
+                  <th scope="col" className="min-w-[130px] px-3 py-3 text-left">
+                    สถานะ
+                  </th>
+                  <th scope="col" className="min-w-[80px] px-3 py-3 text-left">
+                    จัดการ
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200/80 dark:divide-white/[0.07]">
+                {sortedRecords.map((record) => {
+                  const isToday = record.workDate === today;
+                  return (
+                    <tr key={record.id} className={ROW_CLASS}>
+                      <td
+                        className={`sticky left-0 z-10 bg-white px-3 py-3 text-sm whitespace-nowrap dark:bg-[#151719] ${
+                          isToday
+                            ? "font-semibold text-slate-900 dark:text-white"
+                            : "text-slate-700 dark:text-slate-200"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span>{formatWorkDate(record.workDate)}</span>
+                          {isToday && <TodayBadge />}
+                        </div>
+                      </td>
+                      <td className="px-3 py-3 font-mono text-sm whitespace-nowrap text-slate-600 dark:text-slate-300">
+                        {getRecordCheckInText(record)}
+                      </td>
+                      <td className="px-3 py-3 font-mono text-sm whitespace-nowrap text-slate-600 dark:text-slate-300">
+                        {getRecordCheckOutText(record)}
+                      </td>
+                      <td className="px-3 py-3 font-mono text-sm whitespace-nowrap text-slate-600 dark:text-slate-300">
+                        {getRecordHoursText(record)}
+                      </td>
+                      <td className="px-3 py-3 whitespace-nowrap">
+                        <StatusBadge record={record} />
+                      </td>
+                      <td className="px-3 py-3 whitespace-nowrap">
+                        <EditButton record={record} onEdit={onEditRecord} />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </div>
+  );
+};
+
+const TodayBadge: React.FC = () => (
+  <span className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
+    วันนี้
+  </span>
+);
+
+const StatusBadge: React.FC<{ record: AttendanceRecord }> = ({ record }) => {
+  const statusText = getStatusText(record.status);
+  const statusColor = getStatusColor(record.status);
+
+  if (record.status === AttendanceStatusType.LEAVE && record.leaveInfo) {
+    return (
+      <LeaveStatusBadge
+        record={record}
+        statusText={statusText}
+        statusColor={statusColor}
+        recordId={record.id}
+      />
+    );
+  }
+
+  return (
+    <span
+      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${statusColor}`}
+    >
+      {statusText}
+    </span>
+  );
+};
+
+const RecordMetric: React.FC<{ label: string; value: string }> = ({
+  label,
+  value,
+}) => (
+  <div className="flex items-baseline gap-1.5">
+    <dt className="text-slate-500 dark:text-slate-400">{label}</dt>
+    <dd className="font-mono text-slate-700 tabular-nums dark:text-slate-200">
+      {value}
+    </dd>
+  </div>
+);
+
+const AttendanceRecordItem: React.FC<{
+  record: AttendanceRecord;
+  isToday: boolean;
+  onEdit: (record: AttendanceRecord) => void;
+}> = ({ record, isToday, onEdit }) => {
+  const hoursText = getRecordHoursText(record);
+
+  return (
+    <li className="px-5 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+        <p className="flex items-center gap-2 text-sm font-medium text-slate-900 dark:text-white">
+          <time dateTime={record.workDate}>
+            {formatWorkDate(record.workDate)}
+          </time>
+          {isToday && <TodayBadge />}
+        </p>
+        <StatusBadge record={record} />
+      </div>
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <dl className="flex min-w-0 flex-wrap items-baseline gap-x-4 gap-y-1 text-xs">
+          <RecordMetric label="เข้า" value={getRecordCheckInText(record)} />
+          <RecordMetric label="ออก" value={getRecordCheckOutText(record)} />
+          {/* ยังไม่ออกงาน = ยังไม่มีชั่วโมง ไม่แสดง "-" ให้รกบรรทัด */}
+          {hoursText !== "-" && (
+            <dd className="font-mono text-slate-600 tabular-nums dark:text-slate-300">
+              {hoursText}
+            </dd>
+          )}
+        </dl>
+        <EditButton record={record} onEdit={onEdit} />
+      </div>
+    </li>
   );
 };
 
@@ -203,11 +269,14 @@ const EditButton: React.FC<{
       type="button"
       onClick={() => !isLeaveDay && onEdit(record)}
       disabled={isLeaveDay}
-      className={`inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40 ${
+      className={cn(
+        "inline-flex shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40",
+        // มือถือ: สูง-กว้างอย่างน้อย 40px ให้แตะง่าย — ตาราง (sm ขึ้นไป) แน่นกว่า ใช้ขนาดปกติ
+        "min-h-10 min-w-10 sm:min-h-0 sm:min-w-0",
         isLeaveDay
           ? "text-slate-400 dark:text-slate-500"
-          : "text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/[0.08] dark:hover:text-slate-200"
-      }`}
+          : "text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/[0.08] dark:hover:text-slate-200",
+      )}
       aria-label={
         isLeaveDay
           ? `ไม่สามารถแก้ไขข้อมูลวันลาได้ วันที่ ${dateFormatters.shortDate(record.workDate)}`
