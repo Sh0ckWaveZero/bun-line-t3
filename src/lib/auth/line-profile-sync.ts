@@ -21,6 +21,12 @@ interface SyncedLineProfile {
   statusMessage?: string;
 }
 
+const isUniqueConstraintError = (error: unknown): boolean =>
+  typeof error === "object" &&
+  error !== null &&
+  "code" in error &&
+  error.code === "P2002";
+
 const fetchLineLoginProfile = async (
   accessToken: string,
 ): Promise<LineLoginProfile | null> => {
@@ -83,17 +89,50 @@ export const syncLineProfileToDatabase = async ({
 
   // Sync เฉพาะ LINE userId ที่ LINE ส่งมากับ session นี้เท่านั้น
   // ห้าม match ด้วย profile/approval เพราะอาจ map ข้าม user ได้
-  await db.lineApprovalRequest.upsert({
-    where: { lineUserId },
-    create: {
-      lineUserId,
-      displayName,
-      pictureUrl,
-      statusMessage: statusMessage ?? null,
-      status: "PENDING",
-    },
-    update: approvalUpdate,
-  });
+  let isNewApprovalRequest = false;
+
+  try {
+    await db.lineApprovalRequest.create({
+      data: {
+        lineUserId,
+        displayName,
+        pictureUrl,
+        statusMessage: statusMessage ?? null,
+        status: "PENDING",
+      },
+    });
+    isNewApprovalRequest = true;
+  } catch (error) {
+    if (!isUniqueConstraintError(error)) throw error;
+
+    const existingApprovalRequest = await db.lineApprovalRequest.findUnique({
+      where: { lineUserId },
+      select: { id: true },
+    });
+    if (!existingApprovalRequest) throw error;
+
+    await db.lineApprovalRequest.update({
+      where: { lineUserId },
+      data: approvalUpdate,
+    });
+  }
+
+  if (isNewApprovalRequest) {
+    void import("@/features/line/services/approval.service.server")
+      .then(({ approvalService }) =>
+        approvalService.notifyAdminsOfNewRequest({
+          userId: lineUserId,
+          displayName,
+          pictureUrl,
+          statusMessage,
+        }),
+      )
+      .catch((error: unknown) => {
+        console.error("[LINE Profile Sync] Admin notification failed", {
+          errorName: error instanceof Error ? error.name : "UnknownError",
+        });
+      });
+  }
 
   return {
     displayName,
