@@ -69,8 +69,10 @@ export function createCustomPrismaAdapter(
   return (betterAuthOptions: any) => {
     const baseAdapter = baseAdapterFactory(betterAuthOptions);
 
-    return {
-      ...baseAdapter,
+    const wrapAdapter = <Adapter extends Pick<typeof baseAdapter, "create">>(
+      adapter: Adapter,
+    ) => ({
+      ...adapter,
       create: async (data: any) => {
         // better-auth >= 1.7.6 reverted account identity to
         // (providerId, accountId) and no longer writes the base `issuer`
@@ -105,7 +107,7 @@ export function createCustomPrismaAdapter(
           );
 
           try {
-            return await baseAdapter.create(data);
+            return await adapter.create(data);
           } catch (error: any) {
             if (
               error?.code === "P2002" ||
@@ -230,8 +232,19 @@ export function createCustomPrismaAdapter(
         }
 
         // Default behavior for other models
-        return baseAdapter.create(data);
+        return adapter.create(data);
       },
+    });
+
+    return {
+      ...wrapAdapter(baseAdapter),
+      // Better Auth executes account creation through adapter.transaction().
+      // Prisma's no-transaction implementation passes its original adapter to
+      // the callback, which would bypass the custom issuer/upsert create logic.
+      transaction: async (callback: (adapter: any) => Promise<unknown>) =>
+        baseAdapter.transaction((transactionAdapter) =>
+          callback(wrapAdapter(transactionAdapter)),
+        ),
     } as typeof baseAdapter;
   };
 }
