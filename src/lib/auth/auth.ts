@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { getRequest } from "@tanstack/react-start/server";
+import { createHash } from "node:crypto";
 import type { PrismaClient } from "@prisma/client";
 import { env } from "@/env.mjs";
 import { db } from "../database/db";
@@ -141,6 +142,37 @@ const createSyntheticLineEmail = (lineUserId: string) => {
   return `${normalizedId}@${LINE_FALLBACK_EMAIL_DOMAIN}`;
 };
 
+const createCollisionSafeLineEmail = (lineUserId: string) => {
+  const lineUserIdHash = createHash("sha256").update(lineUserId).digest("hex");
+  return `line-${lineUserIdHash}@${LINE_FALLBACK_EMAIL_DOMAIN}`;
+};
+
+const getSyntheticLineEmail = async (lineUserId: string) => {
+  const existingLineAccount = await db.account.findUnique({
+    where: {
+      providerId_accountId: {
+        providerId: "line",
+        accountId: lineUserId,
+      },
+    },
+    select: { user: { select: { email: true } } },
+  });
+
+  if (existingLineAccount) return existingLineAccount.user.email;
+
+  const email = createSyntheticLineEmail(lineUserId);
+  const existingEmailOwner = await db.user.findUnique({
+    where: { email },
+    select: { id: true },
+  });
+
+  // Keep account linking disabled: if a different/unlinked user owns the
+  // legacy synthetic email, give this LINE subject a stable isolated email.
+  return existingEmailOwner
+    ? createCollisionSafeLineEmail(lineUserId)
+    : email;
+};
+
 const toIsoString = (value: Date | string) => {
   return value instanceof Date
     ? value.toISOString()
@@ -230,7 +262,7 @@ export const auth = betterAuth({
       clientId: env.LINE_CLIENT_ID,
       clientSecret: env.LINE_CLIENT_SECRET,
       overrideUserInfoOnSignIn: true,
-      mapProfileToUser(profile) {
+      async mapProfileToUser(profile) {
         const lineProfile = profile as {
           displayName?: string;
           email?: string;
@@ -247,7 +279,7 @@ export const auth = betterAuth({
         }
 
         return {
-          email: createSyntheticLineEmail(lineUserId),
+          email: await getSyntheticLineEmail(lineUserId),
           emailVerified: false,
           image: lineProfile.picture ?? lineProfile.pictureUrl,
           name: lineProfile.name ?? lineProfile.displayName ?? "LINE User",
