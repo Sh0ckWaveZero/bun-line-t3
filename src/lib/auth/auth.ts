@@ -1,7 +1,6 @@
 import { betterAuth } from "better-auth";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { getRequest } from "@tanstack/react-start/server";
-import { createHash } from "node:crypto";
 import type { PrismaClient } from "@prisma/client";
 import { env } from "@/env.mjs";
 import { db } from "../database/db";
@@ -9,8 +8,8 @@ import type { AppSession } from "./session-context";
 import { syncLineProfileToDatabase } from "./line-profile-sync";
 import { isAllowedHost } from "@/lib/security/url-validator";
 import { createCustomPrismaAdapter } from "./prisma-adapter";
+import { createLineEmailResolver } from "./line-email";
 
-const LINE_FALLBACK_EMAIL_DOMAIN = "line.local";
 const DEFAULT_DEV_PORT = "4325";
 
 const getLocalDevOrigin = () => {
@@ -132,47 +131,6 @@ Current ALLOWED_DOMAINS: ${domainsList.join(", ")}
   }
 };
 
-const createSyntheticLineEmail = (lineUserId: string) => {
-  const normalizedId =
-    lineUserId
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9._-]/g, "") || "line-user";
-
-  return `${normalizedId}@${LINE_FALLBACK_EMAIL_DOMAIN}`;
-};
-
-const createCollisionSafeLineEmail = (lineUserId: string) => {
-  const lineUserIdHash = createHash("sha256").update(lineUserId).digest("hex");
-  return `line-${lineUserIdHash}@${LINE_FALLBACK_EMAIL_DOMAIN}`;
-};
-
-const getSyntheticLineEmail = async (lineUserId: string) => {
-  const existingLineAccount = await db.account.findUnique({
-    where: {
-      providerId_accountId: {
-        providerId: "line",
-        accountId: lineUserId,
-      },
-    },
-    select: { user: { select: { email: true } } },
-  });
-
-  if (existingLineAccount) return existingLineAccount.user.email;
-
-  const email = createSyntheticLineEmail(lineUserId);
-  const existingEmailOwner = await db.user.findUnique({
-    where: { email },
-    select: { id: true },
-  });
-
-  // Keep account linking disabled: if a different/unlinked user owns the
-  // legacy synthetic email, give this LINE subject a stable isolated email.
-  return existingEmailOwner
-    ? createCollisionSafeLineEmail(lineUserId)
-    : email;
-};
-
 const toIsoString = (value: Date | string) => {
   return value instanceof Date
     ? value.toISOString()
@@ -219,6 +177,13 @@ validateProductionDomains();
 
 export const AUTH_COOKIE_PREFIX = "better-auth";
 
+// db เป็น extended client ($extends session.create) — structurally compatible
+// กับ LineEmailDatabase แต่ type ต่างกัน จึงต้อง cast (เทคนิคเดียวกับ adapter)
+const getSyntheticLineEmail = createLineEmailResolver({
+  db: db as unknown as Parameters<typeof createLineEmailResolver>[0]["db"],
+  domain: "line.local",
+});
+
 export const auth = betterAuth({
   baseURL: getAuthBaseUrl(),
   // db เป็น extended client ($extends session.create) — structurally compatible กับ
@@ -263,8 +228,20 @@ export const auth = betterAuth({
     // + PKCE checks for security, but do not require the extra cookie binding.
     skipStateCookieCheck: true,
     accountLinking: {
-      enabled: false,
-      disableImplicitLinking: true,
+      // เปิด implicit linking เฉพาะ LINE เพื่อ self-heal orphan user ที่ตกค้าง
+      // จากช่วงที่ createAccount ล้มเหลว (issuer NOT NULL, 30 ก.ย.–25 พ.ย. 2026):
+      // callback เจอ user จาก email แล้วผูก LINE account ให้ user เดิม แทนที่จะ
+      // ตอบ "account not linked" ตลอดไป ปลอดภัยเพราะ email ทุกตัวใน flow นี้เป็น
+      // synthetic ที่ derive จาก LINE-verified sub เท่านั้น (mapProfileToUser
+      // ทับ provider email เสมอ) และไม่มี email/password login — จึงไม่มี
+      // ทาง match ข้าม identity ของคนอื่น
+      enabled: true,
+      // LINE ไม่เคย verify email (emailVerified คง false) จึงต้องประกาศเป็น
+      // trusted provider ไม่งั้น implicit linking ถูกบล็อกทันที
+      trustedProviders: ["line"],
+      // user ทุกคนในระบบมี emailVerified: false — default ของ flag นี้ (true)
+      // จะบล็อก linking ทั้งหมด
+      requireLocalEmailVerified: false,
     },
   },
   socialProviders: {
